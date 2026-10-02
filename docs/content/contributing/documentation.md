@@ -46,7 +46,7 @@ Pages include generated material with HTML-comment directives:
 ```text
 <!-- api: functions -->
 <!-- example: docs/examples/quickstart.mojo -->
-<!-- source: docs/examples/device/core.mojo -->
+<!-- source: docs/examples/<file>.mojo -->
 ```
 
 - `api` with a package name renders the package's reference from its
@@ -56,7 +56,7 @@ Pages include generated material with HTML-comment directives:
 - `example` renders a complete program with its download link, run command and
   expected output. The program must be listed in `docs/examples.json`.
 - `source` renders a file from `docs/examples/` that is not run on its own, such
-  as a module or a GPU program.
+  as a module.
 
 Directives inside fenced code blocks are left alone. Directives never run library
 code while the site builds.

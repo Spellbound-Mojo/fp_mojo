@@ -71,8 +71,3 @@ pixi run mojo run -I src docs/examples/<name>.mojo
 | `config_parser.mojo` | Parsing configuration lazily, collecting Results and validating with a fold that stops early | [Application tutorial](../tutorial/application.md) |
 | `job_router.mojo` | Routing a queue of commands with guarded, raising clauses, a context and `attempt` | [Application tutorial](../tutorial/application.md) |
 
-## Device
-
-| Example | What it shows | Page |
-|---|---|---|
-| `device/core.mojo`, `device/run.mojo`, `device/host.mojo` | The allocation-free core inside a GPU kernel, with a CPU control | [Device example](device.md) |

@@ -28,7 +28,7 @@ tooling does this for you).
 | `tests/tooling/` | Python unit tests for the scripts |
 | `scripts/` | Test, build, measurement and documentation tooling, and the generator of the plain-function `pipe`, `flow`, `compose`, `match` and `rewrite` overloads (`python scripts/generate_plain_overloads.py`; `--check` reports drift) |
 | `docs/content/` | This site's pages; navigation is in `mkdocs.yml` |
-| `docs/examples/` | The runnable examples, including `device/` |
+| `docs/examples/` | The runnable examples |
 | `docs/theme/` | The MkDocs theme: templates, styles, scripts and bundled fonts |
 | `docs/*.json`, `docs/hooks.py` | Public export inventory, API descriptions, example outputs and the MkDocs hooks |
 

@@ -56,7 +56,6 @@ nav:
       - 7. A configuration processor: tutorial/application.md
   - Examples:
       - Example gallery: examples/index.md
-      - Device example: examples/device.md
   - Architecture:
       - Overview: architecture/overview.md
       - Design principles: architecture/principles.md

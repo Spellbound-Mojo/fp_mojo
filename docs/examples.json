@@ -25,9 +25,6 @@
     "docs/examples/control_flow.mojo": {
       "stdout": "while: 16\nfori: 10\nscan: 6 [6, 5, 3]\n"
     },
-    "docs/examples/device/host.mojo": {
-      "stdout": "device core host control: ok\n"
-    },
     "docs/examples/foundations.mojo": {
       "stdout": "fold = 15 ; match = 22 ; callbacks = 5\n"
     },

@@ -13,7 +13,7 @@ class DocumentationContractTests(unittest.TestCase):
         result = docs_contract.audit_docs()
         self.assertEqual(result['exports'], 134)
         self.assertEqual(result['modules'], 9)
-        self.assertEqual(result['examples'], 27)
+        self.assertEqual(result['examples'], 26)
 
     def test_literal_directive_in_code_is_not_expanded(self):
         text = '# Authoring\n\n```text\n<!-- api: not_a_module -->\n```\n'
