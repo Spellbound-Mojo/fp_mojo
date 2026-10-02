@@ -4,7 +4,7 @@ This program keeps positive values, doubles them, and records running totals. Ca
 
 <!-- example: docs/examples/iteration.mojo -->
 
-## Follow the pulls
+## Discussion
 
 `filter(positive, values^)` consumes the list as its source; a range such as `range(1, 4)` is already an iterator, and `iter(values)` would borrow the list instead. Creating `filter`, `map`, and `scan_left` pulls nothing from the source. The first requested scan value is a copy of the initial `0`, before any input is pulled. The next scan request skips `-1`, doubles `1`, and yields `2`. The final input `3` becomes `6`, producing the total `8`.
 

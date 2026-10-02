@@ -1,8 +1,8 @@
 # 5. Values stored in place
 
-A data type without recursive fields does not need a shared `Node`. A
-`Choice` holds one of its constructors in place, and `Result`, `ControlFlow`
-and the standard `Optional` are matched the same way.
+Let us start building towards Algebraic Data Types (ADT). First, we introduce a
+`Choice` type that holds one of its constructors in place, like native
+`Variant` type. Both are concrete implementation of ADT Sum type. We opted to implement `Choice` for performance reasons, as opposed to sticking with native `Variant`. Conceptually, they are very similar, `Choice` is just used for pattern matching.
 
 ## A Choice
 
@@ -15,10 +15,9 @@ and the standard `Optional` are matched the same way.
   allocation, like a native `Variant`. Copying it copies the constructor, and it
   is `Copyable` only when every constructor is. A constructor that is only
   `Movable` can be stored, and `unwrap[C]()` moves it out again.
-- **Matched like a Node.** A clause takes a constructor, or the whole
-  `Choice[Term]` as a catch-all; `fp.when` guards and `context=` work as in
-  chapter 4. A clause receives a reference to the stored constructor, so
-  nothing is copied.
+- **Matching.** A clause takes a constructor, or the whole
+  `Choice[Term]` as a catch-all. A clause receives a reference to the
+  stored constructor, so nothing is copied.
 - **Inspected like a Variant.** `value.isa[Pair]()`, `value[Pair]` and
   `value == Pair(15, 7)` read it without a match.
 
@@ -30,7 +29,7 @@ is the subject of the [next chapter](recursion.md).
 
 <!-- example: docs/examples/optional.mojo -->
 
-- **Result** holds `Ok[T]` or `Err[E]` in place, and clauses take those
+- **Result** holds `Ok[T]` or `Err[E]` in place. Clauses take those
   constructors. The guarded clause in `describe` applies only to large values.
   Its methods (`map`, `flat_map`, `fold`, ...) are unchanged; a match is the
   form that checks every case and allows guards.
