@@ -107,7 +107,7 @@ it is:
 - [Result, Optional and ControlFlow](data.md): typed outcomes and error bridges.
 - [Algebraic data and matching](matching.md): declared data, shared and
   in-place values, and matching.
-- [Control flow](control-flow.md) and [algebra and effects](algebra.md).
+- [Algebra and effects](algebra.md).
 - [Laws](laws.md), [performance](performance.md),
   [native Mojo boundaries](native-boundaries.md) and
   [verification](verification.md).
