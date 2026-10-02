@@ -27,6 +27,8 @@ markdown_extensions:
       permalink: true
   - codehilite:
       guess_lang: false
+not_in_nav: |
+  /search.md
 validation:
   nav:
     omitted_files: warn
@@ -87,4 +89,3 @@ nav:
       - Development: contributing/development.md
       - Benchmarks: contributing/benchmarks.md
       - Maintaining the docs: contributing/documentation.md
-  - Search: search.md

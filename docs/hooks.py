@@ -1,12 +1,24 @@
 """Include generated API declarations, maintained examples and source downloads."""
 from pathlib import Path
+import re
 import sys
+import tomllib
 
 from mkdocs.structure.files import File
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'scripts'))
 from docs_contract import EXAMPLES, audit_docs, render_markdown
+
+
+def on_config(config):
+    # The released version and the supported Mojo series come from pixi.toml,
+    # whose version is set at each release; the theme shows both.
+    pixi = tomllib.loads((ROOT / 'pixi.toml').read_text())
+    mojo = re.match(r'[=<>~^ ]*(\d+\.\d+)', pixi['dependencies']['mojo'])
+    config.extra['version'] = pixi['workspace']['version']
+    config.extra['mojo'] = mojo[1]
+    return config
 
 
 def on_pre_build(config):

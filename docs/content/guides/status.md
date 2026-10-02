@@ -1,6 +1,6 @@
 # Support and limitations
 
-This page states what FP Mojo 0.2.0 supports and known limitations. Details of every limitation that comes from the compiler are in
+This page states what FP Mojo supports and known limitations. Details of every limitation that comes from the compiler are in
 [native Mojo boundaries](../architecture/native-boundaries.md).
 
 ## Platforms

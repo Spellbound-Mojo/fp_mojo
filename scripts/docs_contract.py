@@ -23,20 +23,30 @@ def relative(page, destination):
     return posixpath.relpath(destination, posixpath.dirname(page) or '.')
 
 
+def _example_bar(key, page):
+    """The header line of an example: its file name and a download link."""
+    # A Markdown link, so MkDocs resolves the download for the page's own URL.
+    source = relative(page, 'downloads/' + key)
+    return (f'<div class="example-bar" markdown="span"><span class="example-file">{posixpath.basename(key)}</span> '
+            f'[Download]({source}){{ .example-download }}</div>')
+
+
 def example_markdown(key, page):
+    """A complete program as one unit: its file, the code, how to run it and what it prints."""
     spec = data('examples.json')['examples'][key]
     code = (ROOT / key).read_text().rstrip()
-    source = relative(page, 'downloads/' + key)
-    return (f'[Download the complete program]({source}). From the repository root:\n\n'
-            f'```sh\npixi run mojo run -I src {key}\n```\n\n'
-            f'```mojo\n{code}\n```\n\nExpected standard output:\n\n```text\n{spec["stdout"].rstrip()}\n```\n')
+    return (f'<div class="example" markdown="1">\n{_example_bar(key, page)}\n\n'
+            f'```mojo\n{code}\n```\n\n'
+            f'<div class="example-run" markdown="1"><span class="example-label">Run from the repository root</span> '
+            f'`pixi run mojo run -I src {key}`</div>\n\n'
+            f'<div class="example-output" markdown="1"><span class="example-label">Output</span>\n\n'
+            f'```text\n{spec["stdout"].rstrip()}\n```\n\n</div>\n</div>\n')
 
 
 def source_markdown(key, page):
     """Show a maintained example file that is not run on its own (a module or a device program)."""
     code = (ROOT / key).read_text().rstrip()
-    source = relative(page, 'downloads/' + key)
-    return f'[Download `{posixpath.basename(key)}`]({source}).\n\n```mojo\n{code}\n```\n'
+    return f'<div class="example" markdown="1">\n{_example_bar(key, page)}\n\n```mojo\n{code}\n```\n\n</div>\n'
 
 
 def package_page(package, page):

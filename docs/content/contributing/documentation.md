@@ -35,7 +35,7 @@ the timeout and worker count are recorded in the report.
 | `docs/examples.json` | The expected standard output of each included program |
 | `docs/public-exports.json` | The reviewed inventory of public names and their source modules |
 | `docs/api.json` | The public API's docstrings, extracted by `python scripts/api_docs.py` |
-| `docs/hooks.py` | MkDocs hooks: runs the documentation audit, expands directives and publishes source downloads |
+| `docs/hooks.py` | MkDocs hooks: reads the version from `pixi.toml`, runs the documentation audit, expands directives and publishes source downloads |
 | `docs/theme/` | The theme: `main.html` and `404.html` templates, `assets/` with styles, scripts, favicon and bundled fonts with their licenses |
 | `scripts/docs_contract.py` | The audit and directive rendering, shared by the hooks and the tooling tests |
 
@@ -53,8 +53,10 @@ Pages include generated material with HTML-comment directives:
   docstrings, extracted into `docs/api.json` by `python scripts/api_docs.py`:
   the package docstring, a summary table, then every public name with its
   signature, description, limitations, parameters, arguments, result and error.
-- `example` renders a complete program with its download link, run command and
-  expected output. The program must be listed in `docs/examples.json`.
+- `example` renders a complete program as one frame: its file name and download
+  link, the code, the run command and the expected output. The program must be
+  listed in `docs/examples.json`. The output has no copy button: it is read, not
+  pasted.
 - `source` renders a file from `docs/examples/` that is not run on its own, such
   as a module.
 
@@ -122,11 +124,22 @@ Every file in `docs/examples/` is also part of the `test` suite.
 ## Theme
 
 The theme is a small custom MkDocs theme: Jinja templates for the page shell,
-navigation and search page, a stylesheet and scripts for theme switching, mobile
-navigation and search, and the Catppuccin/Material color variables it builds on.
-Fonts are bundled, so the site makes no external requests; search uses MkDocs'
-generated index with its bundled Lunr. Keep URLs relative so the site works under
-any path. See MkDocs' [theme guide](https://www.mkdocs.org/dev-guide/themes/) and
+navigation and search page, one stylesheet (`assets/site.css`), and scripts for
+theme switching, mobile navigation, copy buttons and search. Fonts are bundled,
+so the site makes no external requests; search uses MkDocs' generated index with
+its bundled Lunr. Keep URLs relative so the site works under any path.
+
+The header shows the version from `pixi.toml` and links to its GitHub release;
+the sidebar and footer name the Mojo series from the `mojo` dependency. Both are
+read at build time, so bumping the version at a release updates the site.
+
+`site.css` defines every color as a token on `:root.light` and `:root.dark`; the
+rest of the stylesheet uses only the tokens. Syntax colors follow Catppuccin:
+Latte hues, deepened for contrast, in the light theme and Mocha in the dark.
+Keywords are purple, types amber, functions blue, modules teal, strings green,
+numbers and constants orange, decorators pink, `self` red, operators sky and
+comments grey italic. Prose is limited to about 74 characters a line; code and
+tables use the full column. See MkDocs' [theme guide](https://www.mkdocs.org/dev-guide/themes/) and
 [configuration reference](https://www.mkdocs.org/user-guide/configuration/).
 
 The minimal program used on the home page is also the smallest example of the

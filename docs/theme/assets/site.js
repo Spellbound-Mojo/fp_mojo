@@ -1,10 +1,10 @@
 (() => {
   const toggle = document.getElementById('theme-toggle');
-  const labelTheme = () => toggle.setAttribute('aria-label', document.documentElement.classList.contains('github-dimmed') ? 'Switch to light theme' : 'Switch to dark theme');
+  const labelTheme = () => toggle.setAttribute('aria-label', document.documentElement.classList.contains('dark') ? 'Switch to light theme' : 'Switch to dark theme');
   labelTheme();
   toggle.addEventListener('click', () => {
-    const dark = !document.documentElement.classList.contains('github-dimmed');
-    document.documentElement.className = dark ? 'github-dimmed' : 'catppuccin-light';
+    const dark = !document.documentElement.classList.contains('dark');
+    document.documentElement.className = dark ? 'dark' : 'light';
     try { localStorage.setItem('fp-mojo-theme', dark ? 'dark' : 'light'); } catch (_) {}
     labelTheme();
   });
@@ -22,7 +22,8 @@
   });
   document.querySelectorAll('pre').forEach(pre => {
     const code = pre.querySelector('code');
-    if (!code || !navigator.clipboard) return;
+    // Program output is read, not pasted, so it gets no copy button.
+    if (!code || !navigator.clipboard || pre.closest('.example-output')) return;
     const copy = document.createElement('button');
     copy.className = 'copy-code'; copy.textContent = 'Copy'; copy.setAttribute('aria-label', 'Copy code');
     copy.addEventListener('click', async () => {
