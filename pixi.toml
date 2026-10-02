@@ -1,0 +1,35 @@
+[workspace]
+name = "fp_mojo"
+version = "1.0.0"
+description = "Native functional programming foundations for Mojo"
+channels = ["https://conda.modular.com/max", "conda-forge"]
+platforms = ["osx-arm64", "linux-64"]
+
+[dependencies]
+mojo = "==1.1.0"
+python = "3.14.*"
+
+[tasks]
+suite = "python scripts/suite.py"
+compile-fail = "python scripts/compile_fail.py"
+build = "python scripts/build.py"
+measure-compilation = "python scripts/measure_compilation.py"
+docs-test = "python scripts/verify_docs_examples.py"
+
+[feature.docs.dependencies]
+python = "3.14.*"
+mkdocs = "==1.6.1"
+pygments = "==2.19.2"
+
+# Mojo 1.1 GPU APIs are distributed separately in MAX. Host users do not need it.
+[feature.device.dependencies]
+max-core = "==26.6.0"
+
+[feature.docs.tasks]
+docs-build = "python -m mkdocs build --strict"
+docs-serve = "python -m mkdocs serve"
+docs-check = "python scripts/check_docs.py"
+
+[environments]
+docs = { features = ["docs"], no-default-feature = true }
+device = { features = ["device"] }

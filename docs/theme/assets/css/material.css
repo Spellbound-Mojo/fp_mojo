@@ -1,0 +1,208 @@
+/* Custom Material Design styling for mdBook */
+
+:root {
+    --mono-font: "Roboto Mono", "Fira Mono", Consolas, Menlo, monospace;
+    --content-max-width: 1000px;
+    --menu-bar-height: 55px;
+}
+
+/* Base Typography */
+body {
+    font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+/* The gutter area outside the main card */
+body, .page-wrapper, .page {
+    background-color: var(--sidebar-spacer) !important;
+}
+
+/* Top App Bar Styling */
+/* It must stretch fully across .page, without margin gaps */
+.menu-bar {
+    background-color: var(--sidebar-bg) !important; /* blend smoothly with sidebar in dark modes */
+    color: var(--fg) !important;
+    box-shadow: 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.2) !important;
+    border-bottom: none;
+    z-index: 10;
+    height: var(--menu-bar-height);
+    margin: 0;
+}
+
+/* Header styling for our specific themes */
+html.catppuccin-light .menu-bar,
+html.github-dimmed .menu-bar {
+    color: #ffffff !important;
+}
+
+html.catppuccin-light .menu-title,
+html.github-dimmed .menu-title {
+    color: #ffffff !important;
+}
+
+html.catppuccin-light .menu-bar .icon-button,
+html.github-dimmed .menu-bar .icon-button,
+html.catppuccin-light .menu-bar a,
+html.github-dimmed .menu-bar a,
+html.catppuccin-light .menu-bar i,
+html.github-dimmed .menu-bar i,
+html.catppuccin-light .menu-bar svg,
+html.github-dimmed .menu-bar svg {
+    color: #ffffff !important;
+    fill: #ffffff !important;
+}
+
+html.catppuccin-light .menu-bar .icon-button:hover,
+html.github-dimmed .menu-bar .icon-button:hover,
+html.catppuccin-light .menu-bar a:hover,
+html.github-dimmed .menu-bar a:hover {
+    color: #e0e0e0 !important;
+}
+
+/* Sidebar styling */
+.sidebar {
+    background-color: var(--sidebar-bg);
+    color: var(--sidebar-fg);
+    border-right: none;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+    font-size: 0.9em;
+}
+
+/* Hide the default "book" look in sidebar */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+.sidebar::-webkit-scrollbar-thumb {
+    background: var(--scrollbar);
+    border-radius: 3px;
+}
+
+/* Sidebar links */
+.sidebar a {
+    color: var(--sidebar-fg);
+    text-decoration: none;
+    padding: 0.4rem 0.6rem;
+    display: block;
+    border-radius: 4px;
+    transition: background-color 0.2s, color 0.2s;
+    margin-bottom: 2px;
+}
+
+.sidebar a:hover {
+    background-color: var(--theme-hover);
+    color: var(--sidebar-active);
+}
+
+.sidebar .active > a {
+    color: var(--sidebar-active);
+    font-weight: 600;
+}
+
+/* Foldable sections chevron styling */
+.sidebar .sidebar-scrollbox .chapter li.expanded > a.toggle::before {
+    transform: rotate(90deg);
+}
+
+.sidebar .sidebar-scrollbox .chapter li > a.toggle {
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Main Content Card */
+.content main {
+    background-color: var(--bg); /* Actual reading background */
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    border-radius: 8px;
+    padding: 3rem;
+    margin: 2rem auto 4rem auto;
+    max-width: var(--content-max-width);
+    min-height: calc(100vh - 120px);
+}
+
+/* Scaling for larger screens to prevent "enormous" side margins */
+@media (min-width: 1400px) {
+    :root {
+        --content-max-width: 1100px;
+    }
+    body {
+        font-size: 17px;
+    }
+}
+
+@media (min-width: 1800px) {
+    :root {
+        --content-max-width: 1250px;
+    }
+    body {
+        font-size: 18px;
+    }
+}
+
+@media (min-width: 2200px) {
+    :root {
+        --content-max-width: 1450px;
+    }
+    body {
+        font-size: 19px;
+    }
+}
+
+/* Responsive card for smaller screens */
+@media (max-width: 800px) {
+    .content main {
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 1.5rem;
+    }
+}
+
+/* Adjust heading styles */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 400;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    color: var(--fg);
+}
+
+h1 {
+    font-size: 2.2em;
+    border-bottom: none;
+}
+
+h2 {
+    font-size: 1.8em;
+    border-bottom: 1px solid var(--table-border-color);
+    padding-bottom: 0.2em;
+}
+
+h3 {
+    font-size: 1.4em;
+}
+
+/* Code blocks sleek design */
+pre {
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    background: var(--quote-bg);
+}
+
+code {
+    font-family: var(--mono-font);
+    font-size: 0.9em;
+}
+
+/* Blockquote Material styling */
+blockquote {
+    border-left: 4px solid var(--sidebar-active);
+    background-color: var(--quote-bg);
+    padding: 0.5rem 1rem;
+    margin: 1rem 0;
+    border-radius: 0 4px 4px 0;
+}
+
+/* Utility class for theme toggle icons */
+.hidden {
+    display: none !important;
+}

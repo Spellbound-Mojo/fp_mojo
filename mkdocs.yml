@@ -1,0 +1,93 @@
+site_name: FP Mojo
+site_description: Functional programming for Mojo — tutorials, architecture, API reference and examples.
+site_url: https://spellbound-mojo.github.io/fp_mojo/
+repo_url: https://github.com/Spellbound-Mojo/fp_mojo
+docs_dir: docs/content
+site_dir: .cache/docs-site
+use_directory_urls: true
+strict: true
+theme:
+  name: null
+  custom_dir: docs/theme
+  static_templates: [404.html]
+plugins:
+  - search:
+      lang: en
+      min_search_length: 2
+hooks:
+  - docs/hooks.py
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - def_list
+  - fenced_code
+  - tables
+  - toc:
+      permalink: true
+  - codehilite:
+      guess_lang: false
+validation:
+  nav:
+    omitted_files: warn
+    not_found: warn
+  links:
+    not_found: warn
+    anchors: warn
+    unrecognized_links: warn
+watch:
+  - src/fp
+  - docs/examples
+  - docs/examples.json
+  - docs/public-exports.json
+  - docs/api.json
+nav:
+  - Welcome: index.md
+  - Get started:
+      - Installation: start/installation.md
+      - Ownership and errors: start/ownership.md
+  - Tutorial:
+      - 1. Immediate pipelines: tutorial/pipelines.md
+      - 2. Folds and lazy iteration: tutorial/iteration.md
+      - 3. Results and recovery: tutorial/results.md
+      - 4. Data and matching: tutorial/matching.md
+      - 5. Values stored in place: tutorial/choices.md
+      - 6. Recursive data: tutorial/recursion.md
+      - 7. A configuration processor: tutorial/application.md
+  - Examples:
+      - Example gallery: examples/index.md
+      - Device example: examples/device.md
+  - Architecture:
+      - Overview: architecture/overview.md
+      - Design principles: architecture/principles.md
+      - Callables and invocation: architecture/callables.md
+      - Functions and partial application: architecture/functions.md
+      - Iteration: architecture/iteration.md
+      - Result, Optional and ControlFlow: architecture/data.md
+      - Algebraic data and matching: architecture/matching.md
+      - Control flow: architecture/control-flow.md
+      - Algebra and effects: architecture/algebra.md
+      - Laws: architecture/laws.md
+      - Performance and targets: architecture/performance.md
+      - Native Mojo boundaries: architecture/native-boundaries.md
+      - Verification: architecture/verification.md
+      - Sources and attribution: architecture/sources.md
+  - API reference:
+      - How to read the reference: reference/index.md
+      - fp.callables: reference/callables.md
+      - fp.functions: reference/functions.md
+      - fp.iteration: reference/iteration.md
+      - fp.control: reference/control-flow.md
+      - fp.adt: reference/adt.md
+      - fp.data: reference/data.md
+      - fp.algebra: reference/algebra.md
+      - fp.effects: reference/effects.md
+      - fp.matching: reference/matching.md
+  - Guides:
+      - Support and limitations: guides/status.md
+      - Troubleshooting: guides/troubleshooting.md
+  - Contributing:
+      - Development: contributing/development.md
+      - Benchmarks: contributing/benchmarks.md
+      - Maintaining the docs: contributing/documentation.md
+  - Search: search.md

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en" class="catppuccin-light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{{ page.meta.description if page and page.meta.description else config.site_description }}">
+  <title>{% if page and page.title %}{{ page.title }} · {% endif %}{{ config.site_name }}</title>
+  <link rel="icon" href="{{ 'assets/favicon.svg' | url }}" type="image/svg+xml">
+  <script src="{{ 'assets/theme-init.js' | url }}"></script>
+  {% for file in ['assets/css/variables.css', 'assets/fonts/fonts.css', 'assets/css/custom-themes.css', 'assets/css/material.css', 'assets/site.css'] %}
+  <link rel="stylesheet" href="{{ file | url }}">
+  {% endfor %}
+  {% for file in config.extra_css %}<link rel="stylesheet" href="{{ file | url }}">{% endfor %}
+</head>
+<body>
+<noscript><style>@media (max-width:760px) { .sidebar { display:block; position:static; height:auto; } .mobile-only { display:none; } }</style></noscript>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="menu-bar">
+  <button id="nav-toggle" class="icon-button mobile-only" aria-label="Open navigation" aria-expanded="false" aria-controls="site-nav">☰</button>
+  <a class="brand" href="{{ nav.homepage.url | url }}">fp<span class="brand-dot">.</span>mojo</a>
+  <span class="version">0.2.0 · development</span>
+  <div class="header-actions">
+    <a href="{{ 'search/' | url }}" class="search-link">Search <kbd>/</kbd></a>
+    <button id="theme-toggle" class="icon-button" aria-label="Switch to dark theme">◐</button>
+  </div>
+</header>
+<div class="site-layout">
+<nav id="site-nav" class="sidebar" aria-label="Documentation">
+  {% for item in nav %}
+    {% if item.children %}
+      <details {% if item.active %}open{% endif %}>
+        <summary>{{ item.title }}</summary>
+        <ul>{% for child in item.children %}<li><a href="{{ child.url | url }}" {% if child.active %}class="active" aria-current="page"{% endif %}>{{ child.title }}</a></li>{% endfor %}</ul>
+      </details>
+    {% else %}<a href="{{ item.url | url }}" {% if item.active %}class="active" aria-current="page"{% endif %}>{{ item.title }}</a>{% endif %}
+  {% endfor %}
+  <p class="nav-note">Mojo 1.1.0<br>Native ownership. Explicit contracts.</p>
+</nav>
+<div class="content">
+  <main id="main" tabindex="-1">
+    {% if page %}<div class="eyebrow">{% if page.parent %}{{ page.parent.title }}{% else %}FP Mojo documentation{% endif %}</div>{{ page.content }}{% else %}{% block content %}{% endblock %}{% endif %}
+    {% if page and (page.previous_page or page.next_page) %}
+    <nav class="page-nav" aria-label="Previous and next pages">
+      {% if page.previous_page %}<a href="{{ page.previous_page.url | url }}"><small>Previous</small>{{ page.previous_page.title }}</a>{% else %}<span></span>{% endif %}
+      {% if page.next_page %}<a href="{{ page.next_page.url | url }}"><small>Next</small>{{ page.next_page.title }}</a>{% endif %}
+    </nav>{% endif %}
+    <footer>Experimental host library · Reviewed APIs, executable examples, explicit limitations.</footer>
+  </main>
+</div>
+{% if page and page.toc %}
+<aside class="page-toc" aria-label="On this page"><strong>On this page</strong><ul>
+{% for item in page.toc %}{% for child in item.children %}<li><a href="{{ child.url }}">{{ child.title }}</a>{% if child.children %}<ul>{% for leaf in child.children %}<li><a href="{{ leaf.url }}">{{ leaf.title }}</a></li>{% endfor %}</ul>{% endif %}</li>{% endfor %}{% endfor %}
+</ul></aside>{% endif %}
+</div>
+<script>const base_url = {{ base_url | tojson }};</script>
+<script src="{{ 'assets/site.js' | url }}" defer></script>
+{% if page and page.file.src_uri == 'search.md' %}
+<script src="{{ 'search/lunr.js' | url }}" defer></script>
+<script src="{{ 'assets/search.js' | url }}" defer></script>
+{% endif %}
+{% for script in config.extra_javascript %}{{ script | script_tag }}{% endfor %}
+</body></html>

@@ -1,0 +1,3 @@
+# fp.callables
+
+<!-- api: callables -->
