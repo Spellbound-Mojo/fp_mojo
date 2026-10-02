@@ -1,10 +1,10 @@
-# fp_mojo
+# FP Mojo
 
-**Functional programming library for Mojo.**
+**Functional programming for Mojo.**
 
 Pipelines, composition, lazy iterators, typed results, algebraic data types
-with exhaustive pattern matching, and Functor/Monad-style effects, all built from
-Mojo's own types, ownership and typed errors. 
+with exhaustive pattern matching, and Functor/Monad-style effects, built for
+Mojo!
 
 ![Mojo 1.1.0](https://img.shields.io/badge/Mojo-1.1.0-orange)
 ![Platforms](https://img.shields.io/badge/platforms-Linux%20x86--64%20%7C%20macOS%20arm64-blue)
@@ -29,7 +29,7 @@ def main():
     print(pipe(values^, sum_of_squares, report))   # sum of squares = 50
 ```
 
-## Why fp_mojo
+## Why FP Mojo
 
 - **Native all the way down.** Your data stays in `List`, `Optional`, `Variant`,
   tuples and your own structs. Callbacks are plain Mojo functions and closures.
@@ -40,17 +40,12 @@ def main():
 - **Errors keep their type.** A callback that `raises ParseError` makes the
   pipeline, fold or match raise `ParseError`. A stored `Err` stays data and
   never turns into an exception by accident.
-- **Checked by the compiler.** Matches must handle every constructor, a match clause that can never run is an error, and a pipeline
-  stage with the wrong input type is a compile error that names the stage.
-- **Recursion without recursive calls.** Clauses say what each constructor
-  means; the library evaluates recursive data in a loop, evaluates shared
-  values once and handles values a million levels deep.
-- **Zero-cost where it counts.** At O3, a call through `as_unary`, a `partial`,
-  and Reader, State and Writer pipelines compile to the same instructions as the
-  equivalent hand-written code.
-- **Tested hard.** 164 runtime, ownership, law and integration tests, 27
-  documented examples with reviewed output, and 287 programs that must *fail* to
-  compile with a specific diagnostic.
+- **Checked by the compiler.** Matches must handle every constructor, a match
+  clause that can never run is an error, and a pipeline stage with the wrong
+  input type is a compile error that names the stage.
+- **Recursion without recursive calls.** Match clauses declaratively specify
+  behavior, which the library evaluates iteratively with built-in termination
+  guarantees.
 
 ## What's inside
 
@@ -61,19 +56,19 @@ def main():
 | `fp.control` | Loops as expressions | `while_loop`, `fori_loop`, carry/output `scan` |
 | `fp.data` | Typed results and error bridges | `Result` with `map`, `flat_map`, `map_err`, `or_else`, `fold`; `attempt`, `raise_on_err`, `collect_results`, `ControlFlow` |
 | `fp.adt` | Algebraic and recursive data types from your own structs | `Data`, `Cases`; `Node` (shared, recursive) and `Choice` (stored in place) |
-| `fp.matching` | Pattern matching evaluated in a loop | `fp.match` (a `Node`, `Choice`, `Result` or `Optional`, a context, or several values), `fp.rewrite`, `fp.when`, `Next` |
+| `fp.matching` | Pattern matching | `fp.match` (a `Node`, `Choice`, `Result` or `Optional`, a context, or several values), `fp.rewrite`, `fp.when`, `Next` |
 | `fp.algebra` | Functor, Applicative, Monad, Traversable and Monoid | `map`, `pure`, `flat_map`, `map2`, `ap`, `traverse`, `sequence`; Identity, Optional, Result and List instances |
 | `fp.effects` | Reader, State and Writer, and transformer stacks | `ReaderT`, `StateT`, `WriterT`, `OptionalT`, `ResultT`; `ask`, `local`, `get`, `put`, `modify`, `tell`, `listen`, `censor`, `run` |
-| `fp.callables` | The calling protocols everything shares | `Unary`, `Binary`, `Thunk`, `as_unary`, `call_once`, `call_repeated` |
+| `fp.callables` | The calling protocols shared by other components | `Unary`, `Binary`, `Thunk`, `as_unary`, `call_once`, `call_repeated` |
 
 ## A quick tour
 
-Every snippet below is a complete program; the comments show its output.
+The best way to learn a library is through concrete examples.
 
 ### Pipelines and composition
 
-`pipe` calls functions left to right and infers every intermediate type. Errors
-keep their type: here the pipeline raises a `ParseError`, not a generic `Error`.
+`pipe` calls functions left to right and infers every intermediate type. Importantly, errors
+keep their type: here the pipeline raises a `ParseError` as opposed to a generic `Error`.
 
 ```mojo
 from fp.functions import pipe, flow, partial
@@ -103,6 +98,9 @@ def main() raises:
     print(render(5))                                 # value = 10
     var triple = partial(scale, 3)                   # bind a prefix of the arguments
     print(triple(7))                                 # 21
+
+    # Alternative piping syntax designed for long chains (> 8 functions) 
+    print(piped(String("21")).then(parse).then(twice).then(label).get()) 
 ```
 
 `pipe` takes up to eight plain functions in one call. For longer chains, or to
@@ -111,9 +109,9 @@ use closures without promoting them, chain the stages one call at a time:
 
 ### Lazy iteration
 
-Adapters are ordinary Mojo iterators. Building a chain runs nothing; each value
-is pulled through only when a terminal operation asks for it. Pass a collection
-with `^` to consume it, or any iterator such as `range`.
+Classic lazy iteration, i.e. pipelines are not executed until a terminal
+operation asks for concrete values. Pass a collection with `^` to consume
+it, or any iterator such as `range`.
 
 ```mojo
 from fp.iteration import map, filter, scan_left, collect_list, find
@@ -138,8 +136,7 @@ def main():
 
 ### Results
 
-`Ok` and `Err` convert to the `Result` your function returns, and the methods
-chain. The callback on the other branch never runs.
+Railway Oriented Programming with `Result[Ok, Err]` type. The callback on the opposite branch is never executed.
 
 ```mojo
 from fp.data import Result, Ok, Err
@@ -171,12 +168,12 @@ turns it back, with the original error type both ways.
 
 ### Algebraic data and pattern matching
 
-A data type lists its constructors, ordinary structs; a field of the type's
-parameter `R` holds a value of the same type. A match takes one clause per
-constructor, a plain function or a lambda, and its parameter type says which
-constructor it handles. Declare a recursive field as the result type and it
-arrives already evaluated; leave a constructor out and the build fails with
-`fp.match: constructor ... has no clause that cannot decline`.
+Inductive (recursive) data types, algebraic data types, and pattern matching
+on them. A match takes one clause per constructor, either a plain function or
+a lambda, whose parameter type determines the handled constructor. We make sure
+the matching is exhaustive - omitting a constructor triggers a build error:
+`fp.match: constructor ... has no clause that cannot decline`. Recursive fields
+are marked with `R` type.
 
 ```mojo
 import fp
@@ -221,8 +218,8 @@ def main():
 ```
 
 Values are immutable and shared, so they form finite acyclic graphs and every
-match ends; a shared value is evaluated once per match. `fp.match` also takes a
-`context=` for every clause, and two or three values at once.
+match ends; a shared value is evaluated once per match. `fp.match` can
+optionally take a `context=` for every clause. It can also handle two or three values at once.
 
 A type without recursive fields can be stored in place, without allocation, as
 a `Choice[F]`. `Result`, `ControlFlow` and the standard `Optional` are matched
