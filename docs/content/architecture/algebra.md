@@ -62,8 +62,7 @@ reached result types through chains of conditional aliases and passed every
 callback through per-call argument metadata. A program that only constructed a
 `Reader[Int]` value took over three minutes to compile, because naming the
 family made the compiler verify the whole effects machinery symbolically. The
-cost was in the type-level program (parameter verification and inlining), not in
-code generation, and a warm compile cache hid it completely.
+cost was in the type-level program (parameter verification and inlining).
 
 The rules above were chosen to make compile cost scale with the user's program.
 With them, small algebra and effects programs build from an empty cache in

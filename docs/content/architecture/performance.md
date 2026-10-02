@@ -1,9 +1,9 @@
 # Performance and execution targets
 
-Efficiency is a design requirement, but the library makes no universal
-zero-overhead claim. Every performance statement on this site names the
-operation, the compiler, the optimization level and how it was measured. The
-numbers here were taken on Mojo 1.1.0 (8189361e), Linux x86-64, unless stated
+We try to be as efficient as possible. However, the library does not make universal zero-overhead
+claims. Instead, we meticulously document performance and work on improvements. Every performance
+statement on this site names the operation, the compiler, the optimization level and how it was
+measured. The numbers here were taken on Mojo 1.1.0 (8189361e), Linux x86-64, unless stated
 otherwise.
 
 ## Cost model
@@ -94,25 +94,3 @@ reduced horizontally unless the callback does it explicitly, and a SIMD mask is
 never collapsed into a branch decision. A combinator adds no host-only
 allocation, logging, reflection, exceptions or runtime dispatch to a
 specialization that passes through it.
-
-## GPU and other targets
-
-The library respects the surrounding execution context and never chooses one. It
-does not launch kernels, transfer inputs, synchronize streams, infer address
-spaces or assume a device-resident handle is readable on the host. If a callback
-returns an asynchronous handle, composition treats the handle as an ordinary
-result; waiting is the caller's job.
-
-The device-compatible subset is the non-raising, allocation-free core over
-device-passable values: invocation, composition, `partial` with device-passable
-bound values, sequential device-local folds, and `Result` and constructor
-dispatch. Host-owned lists, strings, dynamically allocated recursive structures
-and exception bridges are not device-portable. The
-[device example](../examples/device.md) compiles this subset for GPU targets;
-no execution on GPU hardware has been verified yet (see
-[support and limitations](../guides/status.md)).
-
-A parallel reduction would be a separate API from sequential `reduce`, with its
-own identity, associativity, ordering and nondeterminism contract. Floating-point
-results are not promised to be bitwise identical across reduction orders or
-targets.

@@ -1,12 +1,11 @@
 # Algebraic data and matching
 
-Recursive data, algebraic data types and pattern matching are one design. The
+Recursive data, algebraic data types and pattern matching are designed holistically. The
 user writes three declarations: the shape of the data, the values, and the
 clauses that say what each constructor means. The library turns those
 declarations into an iterative program and supplies the guarantees by
 construction: matches are exhaustive and well typed, recursion terminates on
-finite data, and depth is limited only by memory. Nothing has to be proven by
-the user, and no recursive call is written by the user.
+finite data, and depth is limited only by memory.  
 
 The [data and matching](../tutorial/matching.md) and
 [recursive data](../tutorial/recursion.md) tutorials show complete programs;

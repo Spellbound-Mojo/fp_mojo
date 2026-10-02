@@ -1,15 +1,10 @@
 # Architecture overview
 
-FP Mojo is a functional-programming library written in ordinary Mojo. It adds
+FP Mojo is a functional-programming library for Mojo. It adds
 composition, partial application, folds and lazy adapters, typed success and
-failure values, algebraic data with exhaustive pattern matching evaluated in a
-loop, functional control flow and a small algebra of
-Functor/Applicative/Monad instances with effect transformers.
+failure values, algebraic data types with exhaustive pattern matching, functional control flow and a small algebra of Functor/Applicative/Monad instances with effect transformers.
 
-It is not a language, runtime or code generator. Every value is a Mojo value,
-and the compiler owns calling conventions, origins, copying, movement,
-destruction and generated code. The library supplies only the behavior that
-Mojo 1.1 does not already provide; see [design principles](principles.md).
+We have no intention of designing another language on top of Mojo. That is why the library supplies only the behavior that Mojo 1.1 does not already provide; see [design principles](principles.md).
 
 ## Packages
 
@@ -40,11 +35,13 @@ same clause sets; `clauses` holds `Next`, `Guarded` and `when`.
 
 ## Layers and dependency direction
 
+For convenience, we show the dependencies between modules:
+
 ```text
 Layer  Modules                         Builds on
   0    Mojo language and std           —
-  1    fp._internal                    native Mojo
-       fp.adt (Data, Node, Choice)     native Mojo
+  1    fp._internal                    Mojo
+       fp.adt (Data, Node, Choice)     Mojo
   2    fp.callables                    _internal
   3    fp.functions                    callables
        fp.data (Result, ControlFlow)   callables, adt
@@ -56,12 +53,10 @@ Layer  Modules                         Builds on
        data.result (integration)       algebra (collect_results)
 ```
 
-The graph is over modules, and it is acyclic. Some packages import each other
-at different modules: the Result carrier (`data._result`) sits below algebra,
-and the public `data.result` module adapts `collect_results` to the algebra
-collection kernel above it. The rules that keep the graph acyclic are:
+Some packages import each other at different modules: the Result carrier (`data._result`) sits below algebra, and the public `data.result` module adapts `collect_results` to the algebra
+collection kernel above it. We have rules that keep the graph acyclic are:
 
-- `adt.data` depends only on native Mojo. `Result` and `ControlFlow` build on
+- `adt.data` depends only on Mojo itself. `Result` and `ControlFlow` build on
   it, and can be used without importing any matching machinery.
 - Function application is independent of matching.
 - Matching builds on `adt.data` and the error helpers, and on nothing else in
@@ -98,7 +93,7 @@ contracts. Flattening owns an outer/inner state machine; scans own an initial-sn
 phase. Merging these into one erased callback or an unconstrained origin
 conversion would hide the rules their correctness depends on.
 
-## Where behavior lives
+## Explanation of behaviors
 
 Every public operation's semantics are stated in its [API reference](../reference/index.md)
 chapter. The architecture chapters explain why each package is shaped the way

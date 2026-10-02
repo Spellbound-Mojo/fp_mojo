@@ -1,38 +1,8 @@
 # Native Mojo boundaries
 
-The library is pinned to **Mojo 1.1.0 (8189361e)**. This page records what it
-relies on from Mojo, where Mojo 1.1 constrains the design, which workarounds
-follow from that, and what would let the library drop each workaround. A rejected
-encoding is an observation about one program on one compiler, not proof that a
-capability can never exist.
-
-## Reviewed upstream sources
-
-Upstream source is pinned to Modular commit
-`c6fa49f712fe15c99d0461ad2baaf2a15cbc58ce` (`mojo/v1.1.0`). A source tag and an
-installed compiler build are different artifacts: reading source never replaces
-compiling.
-
-- [Closures](https://github.com/modular/modular/blob/c6fa49f712fe15c99d0461ad2baaf2a15cbc58ce/Mojo/docs/site/manual/functions/closures.mdx),
-  [closure declaration restrictions](https://github.com/modular/modular/blob/c6fa49f712fe15c99d0461ad2baaf2a15cbc58ce/Mojo/docs/site/reference/closure-declarations.mdx),
-  [function declarations](https://github.com/modular/modular/blob/c6fa49f712fe15c99d0461ad2baaf2a15cbc58ce/Mojo/docs/site/reference/function-declarations.mdx)
-  and [typed errors](https://github.com/modular/modular/blob/c6fa49f712fe15c99d0461ad2baaf2a15cbc58ce/Mojo/docs/site/manual/errors.mdx).
-- [Iterators](https://github.com/modular/modular/blob/c6fa49f712fe15c99d0461ad2baaf2a15cbc58ce/Mojo/stdlib/std/iter/__init__.mojo),
-  [itertools](https://github.com/modular/modular/blob/c6fa49f712fe15c99d0461ad2baaf2a15cbc58ce/Mojo/stdlib/std/itertools/itertools.mojo)
-  and [functional algorithms](https://github.com/modular/modular/blob/c6fa49f712fe15c99d0461ad2baaf2a15cbc58ce/Mojo/stdlib/std/algorithm/functional.mojo).
-- [Variant](https://github.com/modular/modular/blob/c6fa49f712fe15c99d0461ad2baaf2a15cbc58ce/Mojo/stdlib/std/utils/variant.mojo),
-  [Optional](https://github.com/modular/modular/blob/c6fa49f712fe15c99d0461ad2baaf2a15cbc58ce/Mojo/stdlib/std/collections/optional.mojo),
-  [List](https://github.com/modular/modular/blob/c6fa49f712fe15c99d0461ad2baaf2a15cbc58ce/Mojo/stdlib/std/collections/list.mojo),
-  [tuples](https://github.com/modular/modular/blob/c6fa49f712fe15c99d0461ad2baaf2a15cbc58ce/Mojo/stdlib/std/builtin/tuple.mojo)
-  and [reflection](https://github.com/modular/modular/blob/c6fa49f712fe15c99d0461ad2baaf2a15cbc58ce/Mojo/stdlib/std/reflection/reflect.mojo).
-- [Type lists and argument packs](https://github.com/modular/modular/blob/c6fa49f712fe15c99d0461ad2baaf2a15cbc58ce/Mojo/stdlib/std/builtin/variadics.mojo)
-  and [type refinement](https://github.com/modular/modular/blob/c6fa49f712fe15c99d0461ad2baaf2a15cbc58ce/Mojo/stdlib/std/builtin/rebind.mojo).
-- [Native recursion tests](https://github.com/modular/modular/blob/c6fa49f712fe15c99d0461ad2baaf2a15cbc58ce/Mojo/test/mojo-integration/mojo_recursion.mojo).
-
-To read the standard library for the pin, clone
-`https://github.com/modular/modular` at branch `mojo/v1.1.0` and look under
-`Mojo/stdlib/std`; release notes are in `Mojo/docs/site/releases/`. `mojo doc`
-cannot read the compiled `std.mojoc`.
+The library is pinned to **Mojo 1.1.0**. We believe that Mojo is a fantastic language 
+but the current version is not without peculiarities. On this page we record these peculiarities of Mojo 1.1,
+how they constrains the design, our workarounds, and what would let the library drop each workaround.
 
 ## Callables and argument packs
 

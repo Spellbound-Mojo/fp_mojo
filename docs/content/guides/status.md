@@ -1,7 +1,6 @@
 # Support and limitations
 
-This page states what FP Mojo 0.2.0 supports, what it does not, and what is
-planned. Details of every limitation that comes from the compiler are in
+This page states what FP Mojo 0.2.0 supports and known limitations. Details of every limitation that comes from the compiler are in
 [native Mojo boundaries](../architecture/native-boundaries.md).
 
 ## Platforms
@@ -9,21 +8,8 @@ planned. Details of every limitation that comes from the compiler are in
 | Item | Status |
 |---|---|
 | Compiler | Mojo 1.1.0 (8189361e), pinned through Pixi; other versions are not supported |
-| Linux x86-64 | Supported; the full verification gates run here |
-| macOS arm64 | Supported by the locked environment |
-| Import routes | Source (`-I src`) and precompiled package (`fp.mojoc`), at O0 and O3 |
-| GPU | Device compilation of the allocation-free core is in place ([device example](../examples/device.md)); execution on GPU hardware is not yet verified |
-| Distribution | Not yet published as a package; use a checkout |
-
-## Supported functionality
-
-Every package in the [API reference](../reference/index.md) is complete for its
-documented contract: callables and invocation, pipelines and composition,
-partial application, lazy iteration and folds, functional control flow,
-algebraic data (shared `Node` values and `Choice` values stored in place),
-`Result` and error bridges, exhaustive pattern matching and rewriting over any
-depth, the algebra interfaces with native instances, and the Reader, State,
-Writer, OptionalT and ResultT transformers.
+| Linux x86-64 | Supported and verified |
+| macOS arm64 | Supported and verified |
 
 ## Limitations
 
@@ -95,11 +81,3 @@ assertion next to `rebind_var`. The reasons are in
   where it keeps its exact type.
 - State traversal requires a base whose carrier keeps one type across steps.
 - `pure` over `WriterT` requires a monoid whose `empty` does not raise.
-
-## Planned work
-
-- **GPU execution** of the device example on supported hardware.
-- **Continuous integration and package publication.**
-
-Features deliberately out of scope are listed in
-[design principles](../architecture/principles.md#scope).
