@@ -1,9 +1,9 @@
 # FP Mojo
 
-FP Mojo is a functional-programming library that works on Mojo's own types.
-You chain plain functions with `pipe`, process collections with lazy iterators
-and folds, keep failures as typed `Result` values, and declare data types from
-your own structs; `fp.match` rejects a match that misses a case when the
+FP Mojo is a functional-programming library that works with Mojo's native types!
+You can chain plain functions with `pipe`, process collections with lazy iterators
+and folds, keep failures as typed `Result` values, and declare inductive and algebraic
+data types from your own structs; `fp.match` rejects a match that misses a case when the
 program compiles. Callbacks keep their error types: a stage that raises
 `ParseError` makes the pipeline raise `ParseError`. The library works with
 Mojo 1.1 and is verified on Linux x86-64 and macOS arm64.
