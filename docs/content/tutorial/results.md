@@ -1,56 +1,122 @@
 # 3. Results and recovery
 
-Use `Result[T, E]` when success or domain failure is a value that should travel through your program. Native raised errors remain available independently.
-
-<!-- example: docs/examples/results.mojo -->
+`Result[T, E]` holds either a success value `Ok[T]` or a stored failure
+`Err[E]`. Use it when a failure is data that should travel through your
+program, be collected, or be decided on later. `map`, `flat_map` and the other
+methods run a callback only on the branch it applies to. A callback that raises
+still raises: a `Result` never turns a raised error into `Err` unless you ask
+for it with `attempt`.
 
 ## Transform only the active branch
 
-The successful value `21` becomes `42` through `map`. The negative input produces `Err`, so `twice` is never called. `fold` borrows the active payload and produces a single String through either `success` or `failure`.
+<!-- example: docs/examples/results.mojo -->
 
-`positive` returns `Ok(value)` or `Err(...)` directly: both convert to the declared `Checked` result. `map` is a method that consumes its Result. For a named local, write `value^.map(callback)`; the temporary returned by `positive(...)` is consumed directly. A type-changing callback creates `Result[U, E]`, moving an inactive error through unchanged.
+`positive(21)` returns `Ok(21)`, and `map(twice)` turns it into `Ok(42)`.
+`positive(-1)` returns `Err`, so `twice` never runs. `fold` borrows whichever
+payload is present and calls `success` or `failure`, which gives `"ok: 42"` and
+`"domain: expected a positive value"`.
 
-Use `flat_map` when the success callback already returns a Result. Use `map_err` to change the error payload, or `or_else` to recover from an error with another Result. The methods chain, and each invokes only the corresponding active branch. Code that is generic over algebra instances reaches the same methods through `map[ResultFamily[E]]`.
+`positive` returns `Ok(value)` or `Err(...)` directly; both convert to the
+declared `Checked` result. `map` consumes its `Result`. For a named local, write
+`value^.map(callback)`; the temporary that `positive(...)` returns is consumed
+directly. A callback that changes the type produces `Result[U, E]`, and an
+`Err` passes through unchanged.
 
-## Observe the raised callback failure
+Each method runs only on the branch it applies to, and the methods chain:
 
-`may_raise` uses `raises String`. Its failure exits `map` through native exception propagation and reaches the `except` block. It does not become a stored error, despite `Checked` also using String as its domain error type.
+- `flat_map` takes a success callback that already returns a `Result`.
+- `map_err` changes the error payload.
+- `or_else` recovers from an error with another `Result`.
 
-To make that conversion deliberately, use `attempt(may_raise, 21)`. It returns `Err("callback failed")`, retaining the declared String error type. To reverse it, consume that Result with `raise_on_err`. Recovery policy belongs at that explicit boundary.
+Code that is generic over algebra instances reaches the same methods through
+`map[ResultFamily[E]]`.
 
-`attempt` accepts zero, one or two positional arguments and invokes the callback once. The example forwards positional `7` and keyword `factor=3` to a native captured `scale` callback, producing `Result[Int, Never]` because the callback is pure. The target explicitly declares `var **options: Int`. Its counter records exactly one call. A second call consumes a `StringDict[Int]` through `**options^`, returns `28` and advances the same counter to two. Mutable prefixes retain the callback's changes even when it raises. The debit example changes balance from 5 to 2, then to -2 while returning Err("overdrawn"). Conflicting mutable borrows reject as in native calls. Borrowed resource arguments remain usable; move named consumed resources with `^`. Supply all positional arguments, including defaults. Keyword forwarding supports homogeneous native packs with zero through two positional prefixes; the bridge function and prefixes are positional-only. Ordinary fixed keyword parameters, omitted prefixes, generic positional packs remain unsupported. Bind those forms in a local native closure when its native encoding is admitted. Returning an ordinary Result from the callback nests it inside `Ok`; it does not capture that Result's domain error.
+## Keep raised errors raised
+
+`may_raise` is declared `raises String`, and raises for `21`. That failure
+leaves `positive(21).map(may_raise)` through native exception propagation, and
+the `except` block prints `raised: callback failed`. It does not become a
+stored `Err`, even though `Checked` also uses `String` as its error type.
+
+To convert it on purpose, call `attempt(may_raise, 21)`. It returns
+`Err("callback failed")` with the declared `String` error type.
+`raise_on_err` consumes that `Result` and raises the error again. Put the
+recovery policy at this explicit boundary.
+
+## Forward arguments through attempt
+
+`attempt` calls its callback exactly once with the arguments you give it. The
+example shows each rule with its own values:
+
+- `attempt(scale, 7, factor=3)` forwards the positional `7` and the keyword
+  `factor=3` to the captured closure `scale`, which declares
+  `var **options: Int`. It returns `Result[Int, Never]` holding `21`, because
+  `scale` does not raise, and the counter records one call.
+- A second call consumes a `StringDict[Int]` through `**options^`, returns
+  `28`, and brings the same counter to two.
+- A `mut` prefix keeps the callback's changes even when it raises. `debit`
+  takes `balance` from 5 to 2, then to -2 while returning `Err("overdrawn")`.
+
+What `attempt` accepts:
+
+- Zero, one or two positional arguments, optionally followed by a
+  homogeneous native keyword pack. The bridge function and the prefixes are positional-only.
+- Every positional argument, including those with defaults; omitted prefixes
+  are not supported.
+- Borrowed resource arguments stay usable after the call. Move a named resource
+  that the callback consumes with `^`.
+- Conflicting mutable borrows are rejected as in native calls.
+- Ordinary fixed keyword parameters and generic positional packs are not
+  supported. Bind those forms in a local native closure, when Mojo admits that
+  closure's encoding.
+- A callback that returns an ordinary `Result` gets it nested inside `Ok`;
+  `attempt` does not capture that `Result`'s error.
 
 ## Aggregate a sequence
 
-`collect_results` consumes Results in order. Exhaustion returns `Ok(List[T])`. The first `Err` returns immediately, with no extra input pull. Native cleanup releases the successful prefix and owned source. The [configuration processor](application.md) uses this to separate parsing from validation.
-
-See [fp.data](../reference/data.md) for every operation, its ownership mode, and exact error signatures. Next, use [patterns and guards](matching.md) to select among structured values.
+`collect_results` consumes `Result` values in order. When the source runs out,
+it returns `Ok(List[T])`. At the first `Err` it returns that error straight
+away, without pulling another input, and native cleanup releases the successful
+prefix and the owned source. The [configuration processor](application.md) uses
+this to separate parsing from validation.
 
 ## Generic transaction helpers
 
-`submit` and `transaction` are generic functions. Their returned values retain the
-target's exact success and error types. The caller keeps the Result after both
-helpers return and decides how to handle it.
+`submit` and `transaction` are generic functions whose results keep the
+callback's exact success and error types. The caller holds the `Result` after
+both helpers return and decides how to handle it.
 
 <!-- example: docs/examples/attempt_generic.mojo -->
 
-The first debit leaves balance 3 and returns a receipt. The second leaves balance
--2 and returns `Declined(-2)`. Catching the error does not roll back the debit.
-The callback is reused, each submitted transaction invokes it once, and the
-keyword values pass through both helpers. The generic declarations call the
-existing public `attempt` directly; no callable object or result cast is needed.
+The balance starts at 10. The first debit charges `purchase=6` and `fee=1`,
+leaves the balance at 3, and returns the receipt `"3"`. The second charges
+`purchase=5`, leaves the balance at -2, and returns `Declined(-2)`. Catching the
+error does not roll back the debit. The same callback serves both calls, each
+transaction invokes it once, and the keyword values pass through both helpers.
+The helpers call the public `attempt` directly, with no callable object or
+result cast.
 
 ## Generic transformations
 
-`mapped` and `forwarded` consume a Result while borrowing the same reusable
-callback. Each raising helper forwards X explicitly. The caller then chooses
+`mapped` and `forwarded` consume a `Result` and borrow the same reusable
+callback. Each raising helper forwards `X` explicitly. The caller then chooses
 whether to sequence a successful value, translate a stored error, or recover.
 
 <!-- example: docs/examples/result_transform_generic.mojo -->
 
-The three inputs produce `accepted`, `notice 107` and `raised 90`. The stored
-Domain error skips `process`, then becomes a Notice and is recovered. A raised
-ProcessingFailure leaves the chain immediately and reaches `except`; `map_err`
-and `or_else` do not capture it. The counter is two because only the two Ok
-inputs invoke `process`. The unchanged branch types of `flat_map` and `or_else`
-are part of their native callback signatures.
+The three inputs produce `accepted`, `notice 107` and `raised 90`:
+
+- `Ok(6)` becomes `12` through `process`, and `accepted` returns
+  `Ok("accepted")`.
+- `Err(Domain(7))` skips `process` and `accepted`. `map_err(explain)` turns it
+  into a `Notice` with code 107, and `or_else(recover)` recovers it.
+- `Ok(-1)` makes `process` raise `ProcessingFailure(90)`. The error leaves the
+  chain at once and reaches `except`; `map_err` and `or_else` do not see it.
+
+The counter ends at two, because only the two `Ok` inputs call `process`. The
+branch types that `flat_map` and `or_else` leave unchanged are part of their
+native callback signatures.
+
+Next, select among structured values with [data types and matching](matching.md).
+For every operation, its ownership mode and exact error signature, see
+[fp.data](../reference/data.md).

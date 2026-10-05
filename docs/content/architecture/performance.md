@@ -1,10 +1,10 @@
 # Performance and execution targets
 
-We try to be as efficient as possible. However, the library does not make universal zero-overhead
-claims. Instead, we meticulously document performance and work on improvements. Every performance
-statement on this site names the operation, the compiler, the optimization level and how it was
-measured. The numbers here were taken on Mojo 1.1.0 (8189361e), Linux x86-64, unless stated
-otherwise.
+This page gives the cost of each operation and the measurements behind it. The
+library makes no general zero-overhead claim: every performance statement on
+this site names the operation, the compiler, the optimization level and how it
+was measured. The numbers here were taken on Mojo 1.1.0 (8189361e), Linux
+x86-64, unless stated otherwise.
 
 ## Cost model
 
@@ -20,7 +20,6 @@ Costs below exclude work done inside user callbacks and source iterators.
 | `scan_left` | Linear, plus one accumulator copy per snapshot | The accumulator and the next snapshot |
 | `map`, `filter`, `filter_map` | Linear in inspected elements | Constant bookkeeping plus source and callback state |
 | `flatten`, `flat_map` | Linear in outer advances and yielded inner elements | The current inner source and outer state |
-| Visitor | One selected handler | No allocation for dispatch |
 | `fp.match` | One dispatch and the selected clause per distinct value evaluated, plus the clauses tried before it | A 32-byte frame per pending value and one result per evaluated child on a value stack; a result per shared value when the result is `Copyable` |
 | `fp.rewrite` | As `fp.match` | Plus one new node for each rebuilt value |
 

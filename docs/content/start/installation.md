@@ -1,10 +1,10 @@
 # Installation and first run
 
-## Supported environment
-
-FP Mojo works with Mojo **1.1.x** and is verified on **Linux x86-64** and
-**macOS arm64**. Its development environment pins Mojo 1.1.0 and Python 3.14
-through [Pixi](https://pixi.sh).
+You can add FP Mojo to a Pixi project as the `fp_mojo` package, or work from a
+checkout of the repository and pass `-I src` to the compiler. Either way,
+`from fp.functions import pipe` then imports the library. FP Mojo works with
+Mojo 1.1.x and is verified on Linux x86-64 and macOS arm64; the development
+environment pins Mojo 1.1.0 and Python 3.14 through [Pixi](https://pixi.sh).
 
 ## Install the package
 
@@ -18,7 +18,7 @@ channels = ["https://conda.modular.com/max", "https://repo.prefix.dev/modular-co
 ```
 
 Then add the package. It installs the precompiled `fp` package where Mojo finds
-it, so no `-I` flag is needed:
+it, so you do not need an `-I` flag:
 
 ```sh
 pixi add fp_mojo
@@ -45,16 +45,17 @@ pixi run mojo --version
 pixi run mojo run -I src docs/examples/quickstart.mojo
 ```
 
-The compiler reports `Mojo 1.1.0 (8189361e)` and the program prints `42`. Always
-use the project environment, even if another Mojo is installed on your system.
+The compiler reports `Mojo 1.1.0 (8189361e)` and the program prints `42`. Use
+the project environment even if another Mojo is installed on your system.
 Pixi downloads Mojo from `conda.modular.com`; where that host is unreachable, the
 PyPI wheel `mojo==1.1.0` is the same compiler build.
 
 ## Import from source
 
 The package lives in `src/fp`. Pass `-I src` so imports such as
-`from fp.functions import pipe` resolve. Import from the package that owns a name;
-the package root `fp` re-exports nothing.
+`from fp.functions import pipe` resolve. Import each name from the package that
+owns it. The package root `fp` re-exports only `match`, `rewrite` and `when`, so
+`import fp` is enough to write `fp.match(...)`.
 
 ```sh
 pixi run mojo run -I src docs/examples/callable_pipeline.mojo
@@ -73,7 +74,8 @@ version may not compile on the pinned one.
 
 ## Import a precompiled package
 
-A precompiled package is another way to import the same API:
+A precompiled package gives you the same API without compiling the sources on
+every run:
 
 ```sh
 mkdir -p .cache/local/package
@@ -85,7 +87,7 @@ Rebuild the package after changing the library sources. `pixi run build` does th
 same into a fresh directory and also runs an example against the result (see
 [development](../contributing/development.md)).
 
-## Documentation site
+## Build this documentation site
 
 MkDocs lives in a separate locked `docs` environment:
 

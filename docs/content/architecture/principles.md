@@ -8,7 +8,7 @@ decision, not a workaround.
 
 1. **Ordinary Mojo only.** The library is used through normal imports,
    functions, closures, structs, traits and parameters. There is no parser,
-   transpiler, source rewriting, mandatory code generation, FFI's, or Python runtime.
+   transpiler, source rewriting, mandatory code generation, FFI or Python runtime.
 2. **Add the smallest missing piece.** When a native capability covers part of
    a contract, add only the missing adapter or specialization, reuse native
    control flow, ownership and storage, and state the exact gap it fills.
@@ -22,7 +22,7 @@ decision, not a workaround.
    positional prefix of a plain function, and keyword binding is a native
    closure (see [functions](functions.md#partial-application)).
 5. **No compiler or standard-library changes.** Work that requires modifying
-   Mojo itself is outside the project.  
+   Mojo itself is outside the project.
 
 ## One implementation per concept
 
@@ -53,20 +53,21 @@ purity and termination assumptions (see [laws](laws.md)).
 
 ## Measured performance
 
-We try to be as efficient as possible. However, the library does not make universal zero-overhead
-claims. Instead, we meticulously document performance and work on improvements. Compile time is
-treated as a cost like run time and [measured cold](../contributing/benchmarks.md#measuring-compile-time).
+The library makes no general zero-overhead claim. Each performance statement
+names the operation, the compiler, the optimization level and how it was
+measured ([performance](performance.md)). Compile time is a cost like run time
+and is [measured cold](../contributing/benchmarks.md#measuring-compile-time).
 
 ## Scope
 
 In scope: callable composition and partial application, sequential folds and
 lazy iteration, typed results, algebraic data with exhaustive matching and
-elimination, recursion over finite acyclic data (Full well-founded recursion
-is out-of-scope), functional control flow, a small algebra with
+elimination, recursion over finite acyclic data (not full well-founded recursion),
+functional control flow, a small algebra with
 effect transformers, documented laws, and device-compatible specializations of
 the non-allocating, non-raising core.
 
-Out of scope (for now): automatic currying, persistent collections, optics, memoization,
+Out of scope for now: automatic currying, persistent collections, optics, memoization,
 asynchronous effects, implicit parallelism, a distributed runtime, a GPU kernel
 framework, open-world runtime class matching, regular-expression matching,
 iterator backtracking, dependent pattern matching, proof checking and automatic
@@ -86,7 +87,7 @@ Some words have deliberately narrow meanings:
 
 ## Compiler pin
 
-For now, the library is pinned to one exact compiler, **Mojo 1.1.0**, through
+The library is pinned to one exact compiler, Mojo 1.1.0, through
 Pixi. The supported range grows only after the full verification gates pass on
 a new compiler. Checking a newer compiler for new features or breakage never
 silently changes the compiler used to qualify a release. The upgrade procedure is

@@ -1,12 +1,14 @@
-# Functional programming for Mojo language
+# Functional programming for Mojo
 
 <div class="hero" markdown="1">
 
-FP Mojo is a functional-programming library for Mojo: pipelines and composition,
-partial application, lazy iterators and folds, typed results, algebraic and
-recursive data with exhaustive pattern matching evaluated in a loop, functional
-control flow, and Functor/Applicative/Monad instances with Reader, State and
-Writer transformers.
+FP Mojo is a functional-programming library that works on Mojo's own types.
+You chain plain functions with `pipe`, process collections with lazy iterators
+and folds, keep failures as typed `Result` values, and declare data types from
+your own structs; `fp.match` rejects a match that misses a case when the
+program compiles. Callbacks keep their error types: a stage that raises
+`ParseError` makes the pipeline raise `ParseError`. The library works with
+Mojo 1.1 and is verified on Linux x86-64 and macOS arm64.
 
 ```sh
 pixi add fp_mojo  # after adding the modular-community channel
@@ -24,29 +26,35 @@ pixi add fp_mojo  # after adding the modular-community channel
 <div class="card" markdown="1">
 [Pipelines](tutorial/pipelines.md)
 
-`pipe`, `flow` and `partial`, with every intermediate type and error inferred.
+Chain plain functions with `pipe`, `flow` and `partial`; each intermediate type and error is inferred.
 </div>
 <div class="card" markdown="1">
 [Pattern matching](tutorial/matching.md)
 
-Data types from your own structs, with matches checked when the program compiles.
+Declare data types from your own structs; a match that misses a case does not compile.
 </div>
 <div class="card" markdown="1">
 [Effects](reference/effects.md)
 
-Functor, Monad, and Reader, State and Writer over native values.
+Use Functor, Monad, and Reader, State and Writer over native values.
 </div>
 </div>
 
-## First program
+## Run a first program
 
-After [installing the environment](start/installation.md), run this program from the repository root.
+After [installing the environment](start/installation.md), run this program from
+the repository root.
 
 <!-- example: docs/examples/quickstart.mojo -->
 
-`pipe` implements eager chaining. The callback executes once and returns an ordinary `Int`. One can chain several plain functions in a similar way: `pipe(value, parse, check, render)` or `piped(value).then(parse).then(check).then(render).get()`. Note that intermediate types, including error types, are inferred. See more on piping in [our tutorial](tutorial/pipelines.md).
+`pipe(21, twice)` calls `twice` once with `21` and returns the `Int` `42`. Add
+stages to the same call and they run left to right:
+`pipe(value, parse, check, render)`. Each stage's result type, and the error
+type of any stage that raises, is inferred. The
+[pipeline tutorial](tutorial/pipelines.md) builds a longer pipeline and shows
+how a failing stage stops it.
 
-## Ways to explore
+## Choose where to start
 
 | Your task | Start here |
 |---|---|

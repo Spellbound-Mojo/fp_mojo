@@ -1,9 +1,13 @@
 # Ownership and errors
 
-FP Mojo uses Mojo's own ownership and error conventions. Function signatures
-provide exhaustive information about ownership, retention, and error handling.
+FP Mojo uses Mojo's own ownership and error conventions, so a signature tells
+you what an operation borrows, keeps, consumes and raises. This page explains
+how those conventions apply to library calls and callbacks, and how the library
+keeps stored failures, raised errors and the end of an iterator apart. Read it
+before the [tutorial](../tutorial/pipelines.md); each reference chapter states
+the details for its own operations.
 
-## Argument conventions
+## Read an argument convention
 
 | Spelling | Meaning in these APIs |
 |---|---|
@@ -20,7 +24,7 @@ values: `def twice(value: Int) -> Int` works as a pipeline stage, a fold step or
 a map callback, and the value is destroyed after the call. Declare a parameter
 `var` only when the callback needs to keep or consume what it receives.
 
-## Borrowing, copying and consuming
+## Know what is borrowed, copied or consumed
 
 - **Borrowing APIs** keep the source value and its origins. They never produce a
   reference that outlives the owner.
@@ -48,17 +52,17 @@ elements; `iter(values)` borrows it and yields whatever the standard iterator
 yields for a borrowed collection. A collection passed without `^` is an implicit
 copy, which Mojo rejects for `List`.
 
-## Callable state
+## Keep callable state
 
-As a general rule, an algorithm that calls a callback repeatedly keeps that one callback for the
-whole operation as opposed to copying the callback per element and composed function
-owns its components, meaning move-only components are moved in, borrowed components keep
-their origin restrictions.
+An operation that calls a callback repeatedly keeps that one callback for the
+whole operation; it does not copy the callback for each element. A composed
+function owns its components: move-only components are moved in, and borrowed
+components keep their origin restrictions. `partial` is the exception for its
+arguments: it stores a copy of each bound argument and passes a fresh copy to
+every call.
 
-**However, there is an exception: `partial`  stores a copy of each bound argument and passes a fresh copy to every call.**
-
-In this library, by "reusable" callable we mean a callable that stays valid for later well-typed calls. Please note it does not
-mean that the callback is pure or returns the same result each time.
+A *reusable* callable is one that stays valid for later well-typed calls. It
+need not be pure or return the same result each time.
 
 Each callable protocol states how its receiver is used:
 
@@ -71,24 +75,24 @@ Each callable protocol states how its receiver is used:
 Argument conventions are independent of receiver access: a shared callable can
 consume its arguments, and a consuming callable can borrow them.
 
-## Failure channels
+## Keep failure channels apart
 
-We distinguish the following sources of failures:
+The library keeps these outcomes apart:
 
 | Outcome | Representation | Who handles it |
 |---|---|---|
 | Domain failure | `Result[T, E]` holding `Err[E]` | Result operations, matching or an explicit bridge |
 | Callback or projection failure | Native `raises E` | An enclosing `try`/`except` or propagation |
-| No selected case | Empty outer `Optional[R]`, or the fallback | The caller of partial matching |
+| No applicable clause | Not a run-time outcome: `fp.match` is exhaustive, and a match that leaves a constructor without a clause that cannot decline does not compile | The compiler |
 | Iterator exhausted | `StopIteration` raised by the source | The iterator consumer |
 | Empty uninitialized reduction | `EmptyReductionError`, or its `ReductionError` alternative | The caller of `reduce` |
 
-Note that equal payload types can still have different mechanisms for raising errors.
-For example, a callback that raises `String` differs from one that returns `Err[String]`.
-Importantly, a callback that raises `StopIteration` is a callback failure, not the end of the source. 
-Source exhaustion is detected by callbacks run outside the boundary.
+The same payload type can travel through different channels. A callback that
+raises `String` differs from one that returns `Err[String]`. A callback that
+raises `StopIteration` has failed; it has not ended the source. Only the
+source's own exhaustion, detected outside the callback, ends iteration.
 
-The rules every operation follows:
+Every operation follows these rules:
 
 1. Higher-order operations propagate callback failures unchanged. They never
    catch an error silently, turn it into an empty Optional or return `Err`
@@ -103,14 +107,16 @@ The rules every operation follows:
 5. Recovery does not roll back side effects that callbacks already performed.
    Owned values and resources are still cleaned up on every failure path.
 
-**Operations that combine several callbacks (matching, composition,
-folds over several callbacks) need one common error type. Each participant must
-raise that type or nothing. If you need different error types, you can map them
-explicitly, for example into a native `Variant`; the library does not infer error unions.**
+Operations that combine several callbacks, such as matching, composition and
+folds over several callbacks, need one common error type: each participant
+raises that type or nothing. To combine different error types, map them
+explicitly, for example into a native `Variant`; the library does not infer
+error unions.
 
-## Generic callbacks
+## Write generic callbacks
 
-Accumulator and element types can differ, and so can the input and output types of pipeline stages.
+Accumulator and element types can differ, and so can the input and output types
+of pipeline stages.
 
 A predicate that selects a branch must return a scalar `Bool`. A SIMD mask is
 never collapsed silently; reduce it yourself with the standard lane operation you
@@ -120,3 +126,5 @@ Which callable forms an operation accepts (plain functions, capturing closures,
 library callables such as `Partial` or `flow(...)`, adapted native signatures) is
 stated in its reference chapter. The known compiler exclusions are listed in
 [support and limitations](../guides/status.md).
+
+Next, start the tutorial with [eager pipelines](../tutorial/pipelines.md).

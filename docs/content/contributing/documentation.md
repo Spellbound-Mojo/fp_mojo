@@ -25,6 +25,58 @@ For an example with expensive generic specialization, run it alone with
 `pixi run docs-test --only <path> --compile-timeout 1800 --jobs 1 --output <dir>`;
 the timeout and worker count are recorded in the report.
 
+## Writing style
+
+Use the [home page](../index.md) opening as a model: natural sentences,
+concrete explanations, and concise wording that keeps the technical detail.
+
+- Explain what a reader can do and what result to expect. Introduce a term when
+  it helps explain that behavior.
+- Prefer direct verbs and familiar words. Replace promotional claims with an
+  example or a precise contract. Leave out "please", "simply" and bold
+  warnings; state a limit once, plainly.
+- Walk through an example with its own values: `positive(-1)` returns `Err`, so
+  `twice` never runs.
+- Say what an operation borrows, copies, moves or destroys, when its callbacks
+  run, and how often.
+- Keep the failure channels apart: a stored `Err`, a raised error, a match with
+  no applicable clause, and iterator exhaustion. State whether a rule applies to
+  a callback, an operation, or a whole pipeline or match.
+- Give limits where they affect a reader's choice: callback forms, arities,
+  ownership conventions, compilers and targets. Keep planned features separate
+  from implemented ones.
+- Use tables for comparisons and lists for steps or parallel choices. Use
+  paragraphs for explanations that build on one another.
+- Keep proofs, compiler workarounds and benchmark evidence in the architecture
+  pages. Preserve assumptions, measurement conditions and the meaning of each
+  ratio.
+
+Each kind of page has its own shape:
+
+| Page | Shape |
+|---|---|
+| Tutorial chapter | An opening paragraph; task headings; the example; a walkthrough that uses its values; a link to the next chapter |
+| Reference page | A short paragraph that says when you need the package and where to learn it, without repeating the package docstring that the `api` directive renders right below it; the directive; handwritten sections with examples and headings that say what each shows |
+| Architecture chapter | The contract, then how the implementation meets it and why; limits and their sources |
+| Guide | Tables a reader can scan |
+
+Address the reader as "you", and avoid "we". Name headings after a task or a
+claim, such as "Transform only the active branch", rather than "Example" or
+"Discussion".
+
+## Where decisions go
+
+- A package's contract and the reasons for its design go in its architecture
+  chapter.
+- Compiler limitations go in [native Mojo boundaries](../architecture/native-boundaries.md).
+- Measurements go in [performance](../architecture/performance.md); the
+  workflows that produce them go in [development](development.md) or
+  [benchmarks](benchmarks.md).
+- What is supported today and what is planned goes in
+  [support and limitations](../guides/status.md).
+- Describe current behavior, and label any historical measurement with its
+  setup.
+
 ## Where things live
 
 | Path | Contents |
