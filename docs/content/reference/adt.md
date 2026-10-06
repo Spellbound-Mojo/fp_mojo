@@ -1,10 +1,12 @@
 # fp.adt
 
-You need `fp.adt` whenever you define a type whose value is one of several
-cases, such as a shape that is a circle, a rectangle or a dot, or a recursive
-expression; [fp.matching](matching.md) then matches it. The tutorial introduces
-it in three steps: [data and matching](../tutorial/matching.md),
-[values stored in place](../tutorial/choices.md) and
-[recursive data](../tutorial/recursion.md).
+`fp.adt` defines algebraic and inductive data types from ordinary Mojo structs.
+Use `Choice` to store a non-recursive sum type in place, or `Node` for shared
+values and recursive structures such as expression trees. Both support
+exhaustive pattern matching through [fp.matching](matching.md).
+
+The tutorial covers [algebraic data and pattern matching](../tutorial/matching.md),
+[storage in place](../tutorial/choices.md) and
+[inductive data types](../tutorial/recursion.md).
 
 <!-- api: adt -->

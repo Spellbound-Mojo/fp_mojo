@@ -1,11 +1,13 @@
 # Ownership and errors
 
-FP Mojo uses Mojo's own ownership and error conventions, so a signature tells
-you what an operation borrows, keeps, consumes and raises. This page explains
-how those conventions apply to library calls and callbacks, and how the library
-keeps stored failures, raised errors and the end of an iterator apart. Read it
-before the [tutorial](../tutorial/pipelines.md); each reference chapter states
-the details for its own operations.
+FP Mojo uses Mojo's ownership and error conventions. An operation's signature
+tells you whether it borrows or consumes a value and which errors it can raise.
+The same rules apply to higher-order functions: a pipeline, fold or match
+preserves the ownership and error types of its callbacks.
+
+This page explains the conventions used throughout the
+[tutorial](../tutorial/pipelines.md). Each reference chapter gives the details
+for its operations.
 
 ## Read an argument convention
 
@@ -32,8 +34,8 @@ a map callback, and the value is destroyed after the call. Declare a parameter
   methods or a separately named operation (`fold_owned`, `attempt_once`,
   `fold_owned_once`). Consuming an iterator is not the
   same as consuming the collection it borrows from.
-- **No hidden copies.** An operation requires `Copyable` only when its
-  semantics need a copy, for example the snapshots of `scan_left` or the bound
+- **Copying APIs** require `Copyable` only when their semantics need a copy,
+  for example the snapshots of `scan_left` or the bound
   arguments of `partial`. Copying always means the type's standard copy, not a
   deep clone.
 - **References must have a live owner.** References into consumed storage,
@@ -102,8 +104,8 @@ Every operation follows these rules:
    callbacks do not run.
 3. Error payloads keep their exact type. Nothing is converted to a string or
    erased.
-4. A non-raising specialization stays non-raising: pure callbacks produce a
-   `raises Never` (non-raising) result.
+4. Non-raising callbacks add no error type. An operation that has no other
+   source of failure specializes to `raises Never`.
 5. Recovery does not roll back side effects that callbacks already performed.
    Owned values and resources are still cleaned up on every failure path.
 

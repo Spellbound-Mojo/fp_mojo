@@ -1,10 +1,10 @@
 # 7. A configuration processor
 
-This chapter combines the earlier ones in two complete programs. The first turns
-lines of configuration into a validated message, using a lazy `map`,
-`collect_results`, a `fold_until` that stops early, and a match on the outcome.
-The second routes a queue of commands with guarded clauses that raise a typed
-error. Both keep their business logic in plain functions.
+The two programs in this chapter combine lazy iteration, Result composition and
+pattern matching. The first parses and validates configuration, stopping when a
+line or setting is invalid. The second routes a queue of commands with guarded
+clauses and handles a typed dispatch error. Both express their parsing,
+validation and dispatch rules as plain functions.
 
 ## Parse and validate configuration
 
@@ -66,3 +66,7 @@ the order of the calls:
 To look up any operation used here, start from the
 [API reference](../reference/index.md). The [example gallery](../examples/index.md)
 lists every program on the site.
+
+Next, use the same operations across `Optional`, `Result` and `List` in
+[functors, applicatives and monads](algebra.md), then compose computations with
+[Reader, State and Writer](effects.md).

@@ -1,9 +1,13 @@
 # fp.algebra
 
-You need `fp.algebra` to write one function that works over several kinds of
-values, such as an `Optional`, a `Result` and a `List`, by naming the instance
-at the call. For a single known type, the type's own methods, such as
-`Result.map`, are enough.
+`fp.algebra` provides Functor, Applicative, Monad, Traversable and Monoid
+interfaces. Their instances let you write generic operations over native values
+such as `Optional`, `Result` and `List`; select the instance at each call. When
+working with a single known type, you can also use its methods directly, such
+as `Result.map`.
+
+The [algebra tutorial](../tutorial/algebra.md) explains when to use `map`,
+`map2`, `ap`, `flat_map`, `traverse` and `sequence` through optional order values.
 
 <!-- api: algebra -->
 

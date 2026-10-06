@@ -1,9 +1,9 @@
 # fp.iteration
 
-You need `fp.iteration` to transform, filter or fold the values of a native
-iterator or collection without writing the loop yourself. The
-[iteration tutorial](../tutorial/iteration.md) shows when lazy adapters pull
-values and how to choose a terminal operation.
+`fp.iteration` provides lazy mapping, filtering and scans, together with folds,
+reductions and searches over native iterators and owned collections. The
+[iteration tutorial](../tutorial/iteration.md) follows values through a lazy
+chain and shows how a terminal operation consumes them.
 
 <!-- api: iteration -->
 

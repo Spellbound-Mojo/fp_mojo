@@ -1,9 +1,9 @@
 # fp.callables
 
-You need `fp.callables` when you write your own callable struct, such as a
-formatter that a `Result` transformation consumes once, or when you promote a
-closure with `as_unary` so that it can be a pipeline stage. Code that passes
-plain functions and closures to other packages does not import it.
+Use `fp.callables` to define callable structs or adapt a native function or
+closure with `as_unary`. For example, a formatter that owns its prefix can
+implement a consuming protocol so a `Result` transformation calls it once.
+Most calls to other packages accept native functions or closures directly.
 [Ownership and errors](../start/ownership.md#keep-callable-state) explains how
 each receiver mode treats a callable's state.
 

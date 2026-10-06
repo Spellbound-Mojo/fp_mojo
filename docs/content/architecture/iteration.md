@@ -1,9 +1,9 @@
 # Iteration
 
-`fp.iteration` adds the folds, lazy adapters and terminal operations that Mojo's
-standard library does not provide, on top of Mojo's own iterator protocol. It
-never introduces a second iterator protocol: every adapter is a native
-`Iterator`, and advancement raises only `StopIteration`.
+`fp.iteration` implements folds, lazy adapters and terminal operations using
+Mojo's iterator protocol. Every adapter is a native `Iterator`, whose
+advancement raises only `StopIteration`. The package adds operations and
+ownership forms that are missing from the standard library.
 
 ## Native first
 
@@ -83,9 +83,8 @@ absence; a failing step still raises.
 
 The pull rules:
 
-1. **Construction is inert.** Creating an adapter does not pull, and does not
-   call the callback. Moving the callback and source into the adapter is the
-   only construction work.
+1. **Construction stores the source and callback.** Creating an adapter moves
+   them in without pulling a value or calling the callback.
 2. **No speculative pulls.** Each output pulls only what it needs to produce
    that output or detect exhaustion.
 3. **Fused exhaustion.** Once a source reports exhaustion, the adapter never
@@ -175,7 +174,7 @@ a `ref` argument corrupts some captured layouts at O0.
 
 ## Errors
 
-Pure and raising callbacks have separate overloads, and a raising terminal
+Non-raising and raising callbacks have separate overloads, and a raising terminal
 propagates the callback's exact error type. Inside a generic wrapper, pass
 `E=E` explicitly at every call, including calls to another wrapper; do not read
 `F.E` from the callback type, because Mojo 1.1 does not reliably expose that

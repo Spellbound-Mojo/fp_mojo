@@ -1,8 +1,7 @@
 # Design principles
 
-These rules decide what the library contains and how it is built. Every
-architecture chapter applies them; a change that breaks one needs an explicit
-decision, not a workaround.
+These principles guide the library's scope, public contracts and implementation.
+Changing one requires an explicit design decision and updated documentation.
 
 ## Mojo, as native as possible
 
@@ -26,11 +25,11 @@ decision, not a workaround.
 
 ## One implementation per concept
 
-Each shared concept has exactly one implementation, at the lowest layer that can
-own it. Deduplication is reviewed by concept and all its consumers, across package
-boundaries. When two mechanisms turn out to be the same, migrate every consumer
-and delete the redundant one. The [overview](overview.md#shared-mechanisms) lists
-the current owners.
+Each shared concept has one implementation in the lowest layer that can own it.
+Before adding a mechanism, find its owner and every consumer, including those in
+other packages. Reuse or generalize that implementation. If two mechanisms
+serve the same purpose, move their consumers to one implementation and remove
+the duplicate. The [overview](overview.md#shared-mechanisms) lists the owners.
 
 ## Preserve types, ownership and origins
 
@@ -60,12 +59,13 @@ and is [measured cold](../contributing/benchmarks.md#measuring-compile-time).
 
 ## Scope
 
-In scope: callable composition and partial application, sequential folds and
-lazy iteration, typed results, algebraic data with exhaustive matching and
-elimination, recursion over finite acyclic data (not full well-founded recursion),
-functional control flow, a small algebra with
-effect transformers, documented laws, and device-compatible specializations of
-the non-allocating, non-raising core.
+The library covers function composition and partial application, sequential
+folds and lazy iteration, typed results, algebraic and inductive data types with
+exhaustive pattern matching, functional control flow, and algebraic interfaces
+with monad transformers. Recursion is over finite acyclic data; general
+well-founded recursion is outside this contract. The scope also includes
+documented laws and device-compatible specializations of the non-allocating,
+non-raising core.
 
 Out of scope for now: automatic currying, persistent collections, optics, memoization,
 asynchronous effects, implicit parallelism, a distributed runtime, a GPU kernel

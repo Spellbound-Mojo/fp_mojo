@@ -1,9 +1,10 @@
 # fp.data
 
-You need `fp.data` when a function returns its failure to the caller instead
-of raising it, or when a `fold_until` step decides to stop. The
-[results tutorial](../tutorial/results.md) introduces `Result` and `attempt`
-with a runnable program.
+`fp.data` provides two sum types: `Result` for success or failure, and
+`ControlFlow` for continuing or stopping a fold. Use `attempt` and `raise_on_err`
+to convert between stored failures and native exceptions. The
+[results tutorial](../tutorial/results.md) introduces these operations with a
+complete program.
 
 <!-- api: data -->
 

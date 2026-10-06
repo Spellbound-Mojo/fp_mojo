@@ -1,9 +1,9 @@
 # Support and limitations
 
-This page lists the compilers and platforms FP Mojo supports and the boundaries
-you may meet when you use it. Each boundary says what the library does today.
-The details of every boundary that comes from the compiler are in
-[native Mojo boundaries](../architecture/native-boundaries.md).
+This page lists supported platforms and the limits that affect how you call the
+library. For each restricted form, the table describes what works today.
+[Native Mojo boundaries](../architecture/native-boundaries.md) explains the
+compiler constraints behind these choices.
 
 ## Platforms
 

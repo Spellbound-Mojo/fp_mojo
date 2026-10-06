@@ -1,11 +1,10 @@
 # Result, Optional and ControlFlow
 
-`fp.data` holds the concrete functional data types: `Result` for typed success
-or failure and `ControlFlow` for early termination. Both are non-recursive
-algebraic data types stored in place, like a user's
-[`Choice`](matching.md#values-stored-in-place), and `fp.match` matches them
-like any other data value. The standard `Optional` is matched directly; the
-library adds no Maybe type.
+`fp.data` provides `Result` for typed success or failure and `ControlFlow` for
+early termination. Both are non-recursive algebraic data types stored in place,
+using the same representation as a user's
+[`Choice`](matching.md#values-stored-in-place). `fp.match` handles their
+constructors and also accepts Mojo's standard `Optional` directly.
 
 ## Result
 
@@ -20,9 +19,9 @@ or through exhaustive elimination: a method, or `fp.match` with clauses for
 `Ok[T]` and `Err[E]`. There is no unchecked unwrap and no reinterpreting cast.
 `Result` is `Copyable` only when both `T` and `E` are.
 
-Mojo already has typed native errors, and they are efficient. `Result` is a data
-representation for failures that must be stored, collected or passed along as
-values, not a replacement for `raises`.
+Use `Result` when failures need to be stored, collected or passed along as
+values. Mojo's typed `raises` remains available for exception propagation, and
+the bridges below convert between the two representations explicitly.
 
 ### Operations
 
@@ -77,15 +76,14 @@ to two positional prefixes. Mutations a target made before failing remain
 visible. The error type must be stated or inferred exactly; `attempt` never
 catches process termination or unrelated failures.
 
-`collect_results` performs no validation accumulation: an accumulating
-validator would be a different operation from short-circuiting `Result`
-sequencing. Empty input gives `Ok` of an empty list.
+`collect_results` sequences Results and stops at the first `Err`; it does not
+accumulate validation errors. Empty input gives `Ok` of an empty list.
 
 ## Optional
 
-The library adds no Maybe type. `fp.match` takes a standard `Optional[T]`
-directly: a clause takes `T` for a present value, which it borrows, `NoneType`
-for an absent one, or `Optional[T]` as a catch-all. The standard `Optional`
+`fp.match` accepts the standard `Optional[T]` directly. A clause takes `T` for
+a present value, which it borrows, `NoneType` for an absent one, or `Optional[T]`
+as a catch-all. The standard `Optional`
 owns the value, and its methods (`map`, `and_then`, `or_else`, `take`) keep
 their standard meanings. A generic function cannot name `Optional`'s element
 type, so the matcher recognizes the type by name and takes `T` from the clause

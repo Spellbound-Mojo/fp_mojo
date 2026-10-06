@@ -1,10 +1,10 @@
 # Functions and partial application
 
-`fp.functions` provides immediate application (`identity`, `pipe`), returned
-composition (`flow`, `compose`), argument flipping (`flip`) and partial
-application (`partial`). Their results are library callables that implement
-the fixed-arity protocols of the [call boundary](callables.md); pipelines and
-compositions share one planner and one traversal.
+`fp.functions` provides eager application with `identity` and `pipe`, function
+composition with `flow` and `compose`, argument flipping with `flip`, and partial
+application with `partial`. The reusable callables implement the fixed-arity
+protocols in [fp.callables](callables.md). Pipelines and compositions share the
+same stage planner and traversal.
 
 ## Semantics
 
@@ -25,9 +25,9 @@ arguments plus any remaining ones for `flip`, and a borrowed argument pack for
 
 The rules shared by every form:
 
-1. **Construction is inert.** Creating a composition, flipped callable or
-   partial never calls a target. `partial` copies its bound arguments at
-   construction; the others only move their components in.
+1. **Construction does not call the target.** Creating a composition, flipped
+   callable or partial stores what a later call needs. `partial` copies its
+   bound arguments at construction; the others only move their components in.
 2. **Each reached stage runs once, in order.** A raised error stops the chain:
    later stages do not run, and the payload keeps its exact type.
 3. **Values move or borrow as the receiving stage declares.** There are no
@@ -38,18 +38,19 @@ The rules shared by every form:
 5. **Adjacent stages must agree at compile time.** An input type that does not
    equal the previous stage's output is a compile error naming the stage.
 
-"Chaining" has three separate meanings in the library. `std.iter.chain`
-concatenates sequences. `pipe`, `flow` and `compose` are ordinary function
-application: a `Result` flows into the next stage as a value. Short-circuiting
-over results is the `flat_map` method (or `flat_map[ResultFamily[E]]` in generic
-code), chosen explicitly; native `Optional.and_then` keeps its standard meaning.
+Function composition and monadic bind differ in how they handle a `Result`.
+`pipe`, `flow` and `compose` pass the whole value to the next stage, including
+an `Err`. `Result.flat_map` calls the next computation only for `Ok`; an `Err`
+passes through unchanged. Generic code uses `flat_map[ResultFamily[E]]`, and
+native `Optional.and_then` keeps its standard meaning. Separately,
+`std.iter.chain` concatenates sequences.
 
 ## Pipelines
 
 `pipe(value, stages...)` applies stages left to right. Every stage the planner
 sees is a library value whose own contract fixes its types. Two to eight plain
 functions reach it through fixed-arity overloads that spell each stage as a thin
-signature, infer its error (`Never` for a pure function) and store it as a
+signature, infer its error (`Never` for a non-raising function) and store it as a
 `_ThinFunction`; a variadic pack keeps a plain function's type but not its
 signature, which is why these overloads are per stage count. Closures become
 stages through `as_unary`, which moves them into a `NativeUnary`. Partials and
@@ -67,9 +68,10 @@ the source. Each later stage names its own input type, so a call whose functions
 do not line up still selects its overload and reaches the per-stage check, which
 names the stage and both types instead of a generic mismatch.
 
-Errors combine by identity. Pure stages and stages declared `raises Never` are
-neutral. If every stage is pure the pipeline is non-raising; otherwise every
-inhabited error type must be identical, and that type is the pipeline's error.
+Errors combine by identity. Stages that do not raise, including those declared
+`raises Never`, add no error type. If every stage is non-raising, the pipeline
+is too. Otherwise every inhabited error type must be identical, and that type
+is the pipeline's error.
 Different error types must be normalized explicitly. The explicit forms,
 `pipe[E=Failure](...)` and `pipe[Results, E](...)`, state the error or every
 result type directly.
@@ -85,7 +87,7 @@ with identical layout, so it cannot serve as the nominal type check.
 `piped(value)` returns a `Piped[T]` holding the value, and each `then(f)` applies
 one stage and returns `Piped[R]`. A chain is therefore a sequence of ordinary
 calls, each with one function-typed parameter, so Mojo infers every stage's
-types without a planner and without a stage limit. Pure stages and library
+types without a planner and without a stage limit. Non-raising stages and library
 `Unary` values go through the single-stage `pipe(value, f)` overloads; a raising
 stage is called directly, because forwarded through `pipe` its error would be the
 callback's `F.E`, which Mojo 1.1 cannot prove equal to the stated `E`. There is
@@ -194,8 +196,8 @@ def basetwo(text: String) raises {base} -> Int:
     return atol(text, base=base)
 ```
 
-Replacement triggers: pack concatenation in calls (or a public pack
-constructor) would remove the count cap and allow flattened nesting; correct
-owned-pack conversion would allow owned remaining parameters; heterogeneous
-keyword packs forwarded into named parameters would allow keyword binding.
-
+The library could remove these restrictions if Mojo gains the corresponding
+native support. Pack concatenation or a public pack constructor would remove
+the argument cap and allow nested partials to be flattened. Correct owned-pack
+conversion would allow owned remaining parameters, and heterogeneous keyword
+packs forwarded into named parameters would allow keyword binding.

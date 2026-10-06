@@ -1,12 +1,13 @@
-# 6. Recursive data
+# 6. Inductive data types
 
-A recursive data type has constructors whose fields hold values of the same
-type. You mark those fields with the type's parameter `R`, and each clause
-decides, field by field, whether it receives a field as it is or already
-matched. The clauses read like a recursive function, but `fp.match` runs them as
-a loop over an explicit stack, so a value a million levels deep does not
-overflow the native stack. Every match ends, because a `Node` value is a finite
-acyclic graph.
+An inductive data type builds finite values from its constructors. An
+expression, for example, can be a number or an addition of two expressions.
+Declare recursive fields with the parameter `R` and store values in `Node`.
+
+`fp.match` supports structural recursion over these values. Each clause chooses
+whether to receive a recursive field as stored or as the result of matching
+that child. Evaluation uses an explicit stack, so matching a value a million
+levels deep does not overflow the native stack.
 
 ## Evaluate, render and simplify an expression
 
@@ -22,11 +23,11 @@ evaluates to `10`.
   values. A constructor such as `If[C, B]` may take more than one parameter, so
   that a clause can treat the condition differently from the branches; the
   layer passes `R` to each.
-- **Ask for a field evaluated.** The clause parameter `Add[Int]` asks for both
+- **Evaluate a child.** The clause parameter `Add[Int]` asks for both
   fields as the result type: they arrive as the results of matching the two
   children with the same clauses. `render` asks for `Add[String]` and gets the
   rendered children.
-- **Ask for a field as it is.** `If[Int, E]` asks for the condition evaluated
+- **Keep a child unevaluated.** `If[Int, E]` asks for the condition evaluated
   and the branches as stored. The clause returns `Next(...)`: the result of this
   value is the result of matching the chosen branch instead. The other branch
   is never evaluated, so `If(zero, big, 7)` returns `7` without evaluating
@@ -40,8 +41,8 @@ evaluates to `10`.
   `Add(shared, shared)` refers to one value twice. After 61 doublings of
   `Num(2)`, `evaluate(shared)` returns `4611686018427387904`, evaluating each
   shared value once per match.
-- **Go deep.** The match keeps its pending values on an explicit stack and
-  releases values in a loop. `deep` nests a million `Add` values, and
+- **Match deeply nested values.** The match keeps pending values on an explicit
+  stack and releases values in a loop. `deep` nests a million `Add` values, and
   `evaluate(deep)` returns `1000000` without a million native calls.
 
 ## Lists and optional children
@@ -59,10 +60,12 @@ stored, so it prints `latest@` without following the shortcut.
 ## Why every match ends
 
 A `Node` can refer only to values that already exist, and it never changes, so
-every value is a finite acyclic graph. Evaluated fields are parts of the value
-being matched, and `Next` must continue with a value of smaller height, so a
-match always ends. The argument is in
-[guarantees and their sources](../architecture/matching.md#guarantees-and-their-sources).
+every value is a finite acyclic graph. Structural recursion evaluates children
+of the current value; `Next` must continue with a value of smaller height.
+These rules make the matching traversal terminate. A clause's own loops or
+additional matches remain ordinary Mojo code. See
+[guarantees and their sources](../architecture/matching.md#guarantees-and-their-sources)
+for the termination argument and the runtime check on `Next`.
 
-The last chapter combines these pieces in a
+The next chapter combines these pieces in a
 [configuration processor](application.md).

@@ -27,11 +27,19 @@ the timeout and worker count are recorded in the report.
 
 ## Writing style
 
-Use the [home page](../index.md) opening as a model: natural sentences,
-concrete explanations, and concise wording that keeps the technical detail.
+Use the [home page](../index.md) opening as a model. Write as you would explain
+the library to another programmer: introduce a task or concept, show how it
+works, then explain the choices and limits that matter.
 
-- Explain what a reader can do and what result to expect. Introduce a term when
-  it helps explain that behavior.
+- Use established functional programming terms: composition, partial
+  application, folds, algebraic data types, inductive data types, exhaustive
+  pattern matching and monad transformers. Explain a term through its use;
+  for example, `Result` is a sum type with `Ok` and `Err` constructors, and
+  `flat_map` is monadic bind that skips the callback on `Err`.
+- Keep terminology precise. A non-raising callback can still mutate state;
+  call it pure only when purity is the property being discussed. Explain an
+  inductive type through its finite constructor-built values and structural
+  recursion.
 - Prefer direct verbs and familiar words. Replace promotional claims with an
   example or a precise contract. Leave out "please", "simply" and bold
   warnings; state a limit once, plainly.
@@ -47,18 +55,21 @@ concrete explanations, and concise wording that keeps the technical detail.
   from implemented ones.
 - Use tables for comparisons and lists for steps or parallel choices. Use
   paragraphs for explanations that build on one another.
+- Vary sentences to fit their subject. Avoid repeating a stock opening on every
+  page or turning every explanation into a list of bold claims. Keep an example's
+  walkthrough focused on what its values and callbacks actually do.
 - Keep proofs, compiler workarounds and benchmark evidence in the architecture
   pages. Preserve assumptions, measurement conditions and the meaning of each
   ratio.
 
-Each kind of page has its own shape:
+Organize a page around what its reader needs:
 
 | Page | Shape |
 |---|---|
-| Tutorial chapter | An opening paragraph; task headings; the example; a walkthrough that uses its values; a link to the next chapter |
-| Reference page | A short paragraph that says when you need the package and where to learn it, without repeating the package docstring that the `api` directive renders right below it; the directive; handwritten sections with examples and headings that say what each shows |
+| Tutorial chapter | Introduce the concept, show a maintained example, and explain its results. Link to the next chapter and put compiler implementation details in the architecture pages. |
+| Reference page | Help the reader choose an operation, then include the `api` directive and relevant examples. Keep the introduction distinct from the generated package docstring. |
 | Architecture chapter | The contract, then how the implementation meets it and why; limits and their sources |
-| Guide | Tables a reader can scan |
+| Guide | Explain a task or decision. Use a table when the reader needs to compare choices or look up a symptom. |
 
 Address the reader as "you", and avoid "we". Name headings after a task or a
 claim, such as "Transform only the active branch", rather than "Example" or
@@ -109,8 +120,10 @@ Pages include generated material with HTML-comment directives:
   link, the code, the run command and the expected output. The program must be
   listed in `docs/examples.json`. The output has no copy button: it is read, not
   pasted.
-- `source` renders a file from `docs/examples/` that is not run on its own, such
-  as a module.
+- `source` renders a file from `docs/examples/` without a run command or output.
+  Use it for a module, or when a page supplies its own run instructions, as in
+  the installed-package quickstart. Runnable programs still belong in the
+  example manifest and need an `example` inclusion elsewhere on the site.
 
 Directives inside fenced code blocks are left alone. Directives never run library
 code while the site builds.

@@ -1,9 +1,10 @@
 # Verification
 
-Every claim on this site is backed by a test that the verification gates run.
-Correctness claims cover the documented contracts and the tested host
-specializations. They are not formal proofs, and they do not establish that
-arbitrary user callbacks are lawful, or that code runs on a device.
+The verification gates check values, callback order, ownership, error handling
+and compiler rejections against the documented contracts. Their evidence covers
+the host specializations tested. Separate checks are needed to establish
+behavior on a device, and law tests do not prove that arbitrary user callbacks
+satisfy the same laws.
 
 ## Test layers
 
@@ -14,7 +15,7 @@ arbitrary user callbacks are lawful, or that code runs on a device.
 | Laws | `tests/laws/` (5) | The [laws](laws.md) under their stated assumptions | Proofs over arbitrary programs |
 | Integration | `tests/integration/` (15) | Several packages working together | — |
 | Compile-failure | `tests/compile_fail/` (287) | Invalid ownership, origins, descriptors, clauses and error combinations are rejected with the declared diagnostic | That a rejected encoding is impossible in general |
-| Examples | `docs/examples/` (26) | Every program on this site compiles and prints its reviewed output, through source and package imports at O0 and O3 | Behavior beyond those programs |
+| Examples | `docs/examples/` (31) | Every program on this site compiles and prints its reviewed output, through source and package imports at O0 and O3 | Behavior beyond those programs |
 | Benchmarks | `tests/benchmarks/` (2) | Library code against hand-written loops on identical inputs, reported as diagnostics | A performance guarantee |
 | Tooling | `tests/tooling/` | The runners' audit rules | — |
 

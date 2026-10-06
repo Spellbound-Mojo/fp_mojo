@@ -1,8 +1,14 @@
 {
   "version": 1,
   "examples": {
+    "docs/examples/algebra_choices.mojo": {
+      "stdout": "mapped price: 36\nmap: outer present = True ; inner present = False\nflat_map: present = False\ncombined price: 36 ; missing quantity: False\napplied price: 36\nlist combinations: 10 20 20 40\n"
+    },
     "docs/examples/algebra_core.mojo": {
       "stdout": "identity: 6\noptional: 6\nresult: 6\nlist: 2 4 6\npositive -1 present: False\ntraversed: 3\ninvalid traversal present: False\n"
+    },
+    "docs/examples/algebra_traversal.mojo": {
+      "stdout": "traverse: items = 3 ; calls = 3\nfailed traversal: present = False ; calls = 2\nsequence: 1 3\nempty traversal: present = True ; items = 0\n"
     },
     "docs/examples/attempt_generic.mojo": {
       "stdout": "generic attempt: receipt=3; declined=-2; balance=-2; calls=2\n"
@@ -24,6 +30,15 @@
     },
     "docs/examples/control_flow.mojo": {
       "stdout": "while: 16\nfori: 10\nscan: 6 [6, 5, 3]\n"
+    },
+    "docs/examples/effects_reader.mojo": {
+      "stdout": "before run: calls = 0\nstandard total: 41\nfree shipping total: 36 ; original shipping: 5\nafter both runs: calls = 2\n"
+    },
+    "docs/examples/effects_state.mojo": {
+      "stdout": "read: ticket 10 ; state = 10\nupdate: value = 11 ; state = 11\nreset: value = 0 ; state = 0\n"
+    },
+    "docs/examples/effects_writer.mojo": {
+      "stdout": "notice: ready\nvalue: 5\nlog: [start; fee +2]\nlog copied by listen: start; fee +2\n"
     },
     "docs/examples/foundations.mojo": {
       "stdout": "fold = 15 ; match = 22 ; callbacks = 5\n"

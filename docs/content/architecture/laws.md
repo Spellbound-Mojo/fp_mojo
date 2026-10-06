@@ -1,9 +1,10 @@
 # Laws
 
-Algebraic laws are part of each operation's contract, stated together with the
-assumptions under which they hold. The library does not prove them: a trait
-conformance is never advertised as evidence of lawfulness. Laws are checked by
-tests over representative types, which is evidence, not proof.
+Algebraic laws describe relationships between operations, such as mapping an
+identity function leaving a value unchanged. They are part of the contract
+under the assumptions below. Tests check these relationships for representative
+types; implementing a trait alone does not prove that an instance satisfies
+its laws.
 
 ## Assumptions
 

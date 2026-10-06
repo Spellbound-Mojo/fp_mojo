@@ -1,9 +1,9 @@
 # fp.functions
 
-You need `fp.functions` to pass a value through several functions at once, to
-build a reusable function from others, or to fix some of a function's
-arguments. The [pipeline tutorial](../tutorial/pipelines.md) introduces `pipe`
-with a runnable program.
+`fp.functions` provides eager pipelines, function composition and partial
+application. Use `pipe` to apply a sequence of functions now, `flow` or `compose`
+to build a function for later calls, and `partial` to bind leading arguments.
+The [pipeline tutorial](../tutorial/pipelines.md) starts with a complete program.
 
 <!-- api: functions -->
 

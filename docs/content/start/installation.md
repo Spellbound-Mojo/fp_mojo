@@ -1,29 +1,68 @@
 # Installation and first run
 
-You can add FP Mojo to a Pixi project as the `fp_mojo` package, or work from a
-checkout of the repository and pass `-I src` to the compiler. Either way,
-`from fp.functions import pipe` then imports the library. FP Mojo works with
-Mojo 1.1.x and is verified on Linux x86-64 and macOS arm64; the development
-environment pins Mojo 1.1.0 and Python 3.14 through [Pixi](https://pixi.sh).
+Install `fp_mojo` in a Pixi project, or run the library from a source checkout.
+Both routes use the same imports, such as `from fp.functions import pipe`.
+
+FP Mojo is verified with Mojo 1.1.0 on Linux x86-64 and macOS arm64. The steps
+below select that compiler. The development checkout also pins Python 3.14
+through [Pixi](https://pixi.sh).
 
 ## Install the package
 
-FP Mojo is published as `fp_mojo` in the
-[Modular community channel](https://github.com/modular/modular-community). Add the
-channel to your project's `pixi.toml`:
+Install [Pixi](https://pixi.sh) if it is not already on your `PATH`. Then create
+a project with the Mojo and
+[Modular community](https://github.com/modular/modular-community) channels:
+
+```sh
+pixi init fp-start \
+  --channel https://conda.modular.com/max \
+  --channel https://repo.prefix.dev/modular-community \
+  --channel conda-forge
+cd fp-start
+pixi add fp_mojo "mojo==1.1.0"
+```
+
+Run the remaining commands from `fp-start`, the directory containing the new
+`pixi.toml`. Pixi installs the precompiled `fp` package where Mojo can find it,
+so no source checkout or `-I` flag is needed.
+
+Save the following program as `quickstart.mojo` beside `pixi.toml`, or use its
+Download link and place the downloaded file there:
+
+<!-- source: docs/examples/quickstart.mojo -->
+
+Run it with:
+
+```sh
+pixi run mojo run quickstart.mojo
+```
+
+The program prints `42`. `pipe(21, twice)` passes 21 to `twice`, and the
+assertion checks the result before printing it.
+
+For an existing Pixi project, keep its current settings and add any missing
+channels to its `[workspace]` section:
 
 ```toml
 [workspace]
 channels = ["https://conda.modular.com/max", "https://repo.prefix.dev/modular-community", "conda-forge"]
 ```
 
-Then add the package. It installs the precompiled `fp` package where Mojo finds
-it, so you do not need an `-I` flag:
+Then run `pixi add fp_mojo "mojo==1.1.0"` in that project and save the same
+program beside its `pixi.toml`.
+
+### Run the tutorial examples
+
+Each example on the site has a Download link. Save the file in your Pixi
+project and run it by name, for example:
 
 ```sh
-pixi add fp_mojo
-pixi run mojo run my_program.mojo
+pixi run mojo run algebra_choices.mojo
 ```
+
+The command shown inside an example's frame runs its maintained copy from a
+repository checkout. Use the downloaded file's name, as above, when working
+with the installed package.
 
 ## Work from a checkout
 

@@ -1,11 +1,16 @@
 # Algebraic data and matching
 
-Recursive data, algebraic data types and pattern matching are designed holistically. The
-user writes three declarations: the shape of the data, the values, and the
-clauses that say what each constructor means. The library turns those
-declarations into an iterative program and supplies the guarantees by
-construction: matches are exhaustive and well typed, recursion terminates on
-finite data, and depth is limited only by memory.  
+Algebraic data types describe a value through its constructors. Inductive types
+add recursive fields, so constructors can build expressions, lists or trees
+from smaller values. In FP Mojo, you declare those constructors as structs and
+write match clauses to handle them.
+
+The compiler checks that the clauses are exhaustive and their types agree.
+For recursive values, the matching engine uses an explicit stack and follows
+only children or `Next` values of smaller height. The traversal therefore
+terminates on finite data without depending on native stack depth. Clauses
+themselves are ordinary Mojo functions; the guarantees below distinguish
+their behavior from the engine's traversal.
 
 The [data and matching](../tutorial/matching.md) and
 [recursive data](../tutorial/recursion.md) tutorials show complete programs;
@@ -32,8 +37,8 @@ struct Expr(Data):
   any other use of `R` in a field is a compile error.
 - A constructor may take several type parameters, as `If` does, so that a clause
   can treat its fields differently. The declaration passes `R` to each.
-- Constructor names are distinct within a type. A type with no recursive field is
-  an ordinary sum type and is declared the same way.
+- Constructor names are distinct within a type. The same declaration describes
+  a non-recursive sum type when none of its constructors has a recursive field.
 
 ## Values
 
@@ -73,11 +78,12 @@ struct Shape(Data):
 var s: Choice[Shape] = Circle(1.0)
 ```
 
-- **Owned, not shared.** Copying a `Choice` copies its constructor; it is
+- **Ownership.** Copying a `Choice` copies its constructor; it is
   `Copyable`, or `ImplicitlyCopyable`, only when every constructor is. A
   constructor that is only `Movable` can be stored, and `unwrap[C]()` moves it
   out.
-- **No allocation and no reference count.** It costs what the `Variant` costs.
+- **Storage.** A `Choice` adds no allocation or reference count beyond the
+  constructor stored in its `Variant`.
 - **Inspection.** `isa[C]()`, `s[C]` and `s == C(...)`, as for a `Node`.
 - **Not recursive.** A field of type `R`, `List[R]` or `Optional[R]` is a
   compile error naming the field: a recursive value is a `Node`.
@@ -169,8 +175,8 @@ copyable is copied with `.copy()` or moved with `^`.
 
 ## Admission
 
-Each rule is checked when the program compiles, and the message names the
-clause, by position from 0, or the constructor:
+The compiler checks the following rules before a match can run. Diagnostics
+identify a constructor or a clause's position, counting from 0:
 
 - Every constructor has a clause that cannot decline, or a catch-all does; with
   several subjects, every combination of constructors does.
@@ -201,12 +207,11 @@ own loops, or another match it starts on a different value, are ordinary code.
 
 ## Execution
 
-A match is one loop over a stack of pending values. What a value's match does
-is planned when the program compiles: for each constructor, the clauses tried
-in order, the fields each one has evaluated and the order in which their
-results arrive. A pending value is a 32-byte frame: the value, a step number in
-its constructor's plan, and the height of the value stack where its children's
-results start.
+A match runs one loop over a stack of pending values. At compile time, the
+engine builds a plan for each constructor: which clauses to try, which fields
+each clause needs evaluated, and where their results belong. Each pending value
+occupies a 32-byte frame containing the value, its current step in the plan,
+and the position where its children's results begin on the value stack.
 
 - The frame on top runs its steps until it needs a child. The child is started
   at once: if it completes in one step, as a leaf does, its result is pushed and

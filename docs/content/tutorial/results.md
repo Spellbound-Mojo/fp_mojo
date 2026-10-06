@@ -1,11 +1,12 @@
 # 3. Results and recovery
 
-`Result[T, E]` holds either a success value `Ok[T]` or a stored failure
-`Err[E]`. Use it when a failure is data that should travel through your
-program, be collected, or be decided on later. `map`, `flat_map` and the other
-methods run a callback only on the branch it applies to. A callback that raises
-still raises: a `Result` never turns a raised error into `Err` unless you ask
-for it with `attempt`.
+`Result[T, E]` is a sum type with two constructors: `Ok[T]` for success and
+`Err[E]` for failure. Use it to return, store or collect an outcome that the
+caller will handle later. `map` transforms a successful value; `flat_map`
+sequences computations that can themselves return an `Err`.
+
+Stored failures and raised errors are separate. If a callback raises, its
+error propagates to the caller. Use `attempt` to catch it in a `Result`.
 
 ## Transform only the active branch
 
@@ -22,9 +23,11 @@ declared `Checked` result. `map` consumes its `Result`. For a named local, write
 directly. A callback that changes the type produces `Result[U, E]`, and an
 `Err` passes through unchanged.
 
-Each method runs only on the branch it applies to, and the methods chain:
+These transformations can be chained. Each calls its callback only for the
+case it handles:
 
-- `flat_map` takes a success callback that already returns a `Result`.
+- `flat_map` is monadic bind: it passes a successful value to a callback that
+  returns another `Result`, keeping the stored error type.
 - `map_err` changes the error payload.
 - `or_else` recovers from an error with another `Result`.
 
@@ -33,15 +36,15 @@ Code that is generic over algebra instances reaches the same methods through
 
 ## Keep raised errors raised
 
-`may_raise` is declared `raises String`, and raises for `21`. That failure
-leaves `positive(21).map(may_raise)` through native exception propagation, and
-the `except` block prints `raised: callback failed`. It does not become a
-stored `Err`, even though `Checked` also uses `String` as its error type.
+`may_raise` is declared `raises String` and raises for `21`. Calling
+`positive(21).map(may_raise)` propagates that error to the `except` block, which
+prints `raised: callback failed`. The shared `String` error type does not turn
+the raised error into a stored `Err`.
 
 To convert it on purpose, call `attempt(may_raise, 21)`. It returns
 `Err("callback failed")` with the declared `String` error type.
-`raise_on_err` consumes that `Result` and raises the error again. Put the
-recovery policy at this explicit boundary.
+`raise_on_err` consumes that `Result` and raises the error again. These two
+operations let you choose where failures move between values and exceptions.
 
 ## Forward arguments through attempt
 

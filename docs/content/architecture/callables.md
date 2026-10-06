@@ -1,11 +1,13 @@
 # Callables and invocation
 
-Every higher-order operation in the library calls user code through
-`fp.callables`. The package defines what a library callable is and how its
-result and error come back, so that pipelines, folds and Result
-transformations all follow the same rules. Match clauses are plain functions and lambdas without captures, called
-through their native thin function type (see
-[algebraic data and matching](matching.md)).
+`fp.callables` defines the invocation protocols shared by pipelines, folds,
+Result transformations and other higher-order operations. A protocol specifies
+the callable's arguments, result, error type and receiver access, so consumers
+can use the same invocation rules.
+
+Match clauses use native thin function signatures directly. They accept plain
+functions and lambdas without captures; see
+[algebraic data and matching](matching.md).
 
 ## Callers of two kinds
 
@@ -21,7 +23,7 @@ parameters is used through a closure that spells the call.
 
 ## Three independent dimensions
 
-Each call has three properties that the library never merges:
+Receiver access, argument conventions and result ownership are independent:
 
 - **Receiver access.** Shared (the callable is read), exclusive (mutated in
   place) or consuming (called once and destroyed). Owning captured state does
@@ -75,7 +77,7 @@ Mojo 1.1 records a native function's signature only when the value passes
 through a parameter of that exact function type (`F: def(A) -> R`); a plain
 generic `F` loses it. Each entry point that accepts closures therefore has one
 overload per supported arity. A non-raising closure also does not match
-`def(A) raises E -> R` with `E` inferred, so pure and raising closures have
+`def(A) raises E -> R` with `E` inferred, so non-raising and raising closures have
 separate overloads, and a raising callback keeps its exact error type.
 
 Plain functions (no captures) convert to further signature shapes at a call
@@ -85,7 +87,7 @@ site, which the library uses where closures cannot reach:
   argument pack, because each call site forwards the pack unchanged.
 - `pipe`, `flow` and `compose` accept two to eight plain functions through one
   overload per stage count, each stage spelled as a thin signature whose error
-  is inferred (`Never` for a pure function). A variadic pack keeps a plain
+  is inferred (`Never` for a non-raising function). A variadic pack keeps a plain
   function's type but not its signature, so a stage's result could not be
   inferred from it. Each function is stored as a `_ThinFunction`, a `Thunk`,
   `Unary` or `Binary` value, and the chain goes through the ordinary planner.

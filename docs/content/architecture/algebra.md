@@ -1,10 +1,13 @@
 # Algebra and effects
 
-`fp.algebra` defines five small interfaces with native instances; `fp.effects`
-builds Reader, State and Writer computations and the OptionalT, ResultT, ReaderT,
-StateT and WriterT transformers on them. Mojo owns control flow, storage,
-ownership, origins, calls and exceptions. The library adds no runtime dictionary
-registry, erased action box, interpreter or parallel storage hierarchy.
+`fp.algebra` defines Functor, Applicative, Monad, Traversable and Monoid
+interfaces with instances for native values. `fp.effects` builds Reader, State
+and Writer computations on those interfaces and combines effects through monad
+transformers.
+
+Instances are selected at compile time. Computations use concrete Mojo structs,
+ordinary calls and native ownership and error handling, so their types and
+origins remain available to the compiler throughout composition.
 
 ## Scope
 
@@ -24,19 +27,19 @@ left-major order.
 
 ## Design rules
 
-1. **Behavior in methods; types by local alias.** Each result and error type is
+1. **Keep associated types local.** Each result and error type is
    an associated alias (`Mapped[V, F]`, `MapError[V, F]`, ...) that names only
    the instance's own parameters and their immediate associated types (`F.Out`,
    `F.Error`, `S.Out`). No dictionary member names an executor, a run selector or
    a conditional chain over other dictionaries, so naming a family costs no
-   type-level evaluation. Method bodies are elaborated only for concrete uses.
+   type-level evaluation. Put behavior in methods, whose bodies are elaborated
+   only for concrete uses.
 2. **One struct per operation.** A deferred computation is a concrete struct
    that stores its inputs and runs itself: Reader has `_ReaderPure`,
    `_ReaderMap`, `_ReaderBind`, `_ReaderAsk`, `_ReaderLocal`, `_ReaderLift`,
    `_ReaderLoop` and `_ReaderChoice`, and State has the corresponding
    `_State*` structs plus `_StateGet` and `_StateModify`. A composed
-   computation's type is the tree of its operations. There are no plan tags,
-   recipe tables or descriptor indirection.
+   computation's type records its tree of operations directly.
 3. **Native movement.** Values move through `var` arguments and `deinit self`.
    Hot paths use plain fields and untagged `MaybeUninit` slots
    (`callables.products._take_pair`) rather than `Optional` or `Variant` storage.
@@ -48,8 +51,8 @@ left-major order.
    `modify`, `censor` and `local` move them into a `NativeUnary`. Their
    signatures compare the callback's input with the carrier's element, origins
    included. Library values such as partials enter directly.
-5. **Separate types instead of flags.** Each transformer is its own struct, and
-   each native family owns its methods; nothing switches on a tag.
+5. **Give each transformer its own type.** Each transformer is a struct, and
+   each native family implements its own methods.
 6. **Exact errors and origins.** Every callback and computation exposes its
    native `Error`. Errors combine through `_internal.errors`: one exact type or
    `Never`. Reader runs as `run[o](deinit self, ref[o] env)`, and a result that

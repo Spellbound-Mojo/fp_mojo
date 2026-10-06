@@ -1,14 +1,15 @@
 # Examples
 
-Every program below is a complete file in `docs/examples/` that you can run
-and change. Each one checks its own results with `std.testing`, and the
-documentation tests compile and run it through source and precompiled-package
-imports at O0 and O3 with `--Werror`, comparing its output with the expected
-output shown on its page. Run any of them from the repository root:
+Each example is a complete program in `docs/examples/` that you can run and
+change. Run it from the repository root:
 
 ```sh
 pixi run mojo run -I src docs/examples/<name>.mojo
 ```
+
+The programs check their results with `std.testing`. Documentation tests also
+compile them through source and precompiled package imports at O0 and O3 with
+`--Werror`, then compare their output with the output shown on the site.
 
 ## Start with pipelines
 
@@ -54,7 +55,7 @@ pixi run mojo run -I src docs/examples/<name>.mojo
 |---|---|---|
 | `shapes.mojo` | A sum type matched with clauses, a guard, a context and a pair of values | [Matching tutorial](../tutorial/matching.md) |
 | `traffic_light.mojo` | Matching two values, and three with a plain one, by every combination of constructors | [Matching tutorial](../tutorial/matching.md#several-values-at-once) |
-| `expression.mojo` | A recursive type evaluated, rendered and rewritten; `Next`, sharing and a million-deep value | [Recursion tutorial](../tutorial/recursion.md#evaluate-render-and-simplify-an-expression) |
+| `expression.mojo` | Structural recursion over an inductive expression type: evaluation, rendering and rewriting, with `Next` and shared values | [Inductive types tutorial](../tutorial/recursion.md#evaluate-render-and-simplify-an-expression) |
 | `file_tree.mojo` | Recursive fields in a `List` and an `Optional` | [Recursion tutorial](../tutorial/recursion.md#lists-and-optional-children) |
 
 ## Use algebra and effects
@@ -62,6 +63,11 @@ pixi run mojo run -I src docs/examples/<name>.mojo
 | Example | What it shows | Page |
 |---|---|---|
 | `algebra_core.mojo` | `pure`, `map`, `flat_map` and `traverse` over four native carriers | [fp.algebra](../reference/algebra.md#use-one-set-of-operations-over-four-carriers) |
+| `algebra_choices.mojo` | Mapping, monadic bind, `map2`, `ap` and List's Cartesian combination | [Algebra tutorial](../tutorial/algebra.md#choose-the-operation-by-what-the-next-step-needs) |
+| `algebra_traversal.mojo` | `traverse` and `sequence`, early termination and empty input | [Algebra tutorial](../tutorial/algebra.md#collect-results-with-traverse-and-sequence) |
+| `effects_reader.mojo` | Pricing configuration with `ask`, `local` and a borrowed deferred callback | [Effects tutorial](../tutorial/effects.md#read-configuration-with-reader) |
+| `effects_state.mojo` | Reading, updating and resetting a counter with State | [Effects tutorial](../tutorial/effects.md#pass-an-evolving-counter-through-state) |
+| `effects_writer.mojo` | Ordered logs with Writer, `tell`, `listen` and `censor` | [Effects tutorial](../tutorial/effects.md#accumulate-output-with-writer) |
 | `state_result.mojo` | How transformer order decides whether a failure keeps its state | [fp.effects](../reference/effects.md#choose-whether-a-failure-keeps-its-state) |
 
 ## Build an application
@@ -70,4 +76,3 @@ pixi run mojo run -I src docs/examples/<name>.mojo
 |---|---|---|
 | `config_parser.mojo` | Parsing configuration lazily, collecting Results and validating with a fold that stops early | [Application tutorial](../tutorial/application.md#parse-and-validate-configuration) |
 | `job_router.mojo` | Routing a queue of commands with guarded, raising clauses, a context and `attempt` | [Application tutorial](../tutorial/application.md#route-commands-with-guarded-clauses) |
-

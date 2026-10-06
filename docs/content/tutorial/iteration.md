@@ -1,10 +1,13 @@
 # 2. Folds and lazy iteration
 
-`map`, `filter`, `scan_left` and the other adapters in `fp.iteration` build lazy
-iterators: nothing runs until you pull a value, and each pull runs only the
-callbacks that value needs. Folds such as `fold_left` pull every value and
-return one result. Lazy callbacks cannot raise; a failure inside a lazy chain
-travels as a `Result` element.
+`map`, `filter` and `scan_left` transform a sequence lazily: constructing an
+iterator does not run its callbacks. A consumer such as `fold_left` then pulls
+values through the chain and combines them into one result. `scan_left` yields
+snapshots of the initial accumulator and each updated accumulator, so you can
+inspect the intermediate steps of a fold.
+
+Callbacks in lazy adapters cannot raise. To carry a failure through the chain,
+return a `Result` element and handle it when consuming the iterator.
 
 ## Build a lazy chain and collect it
 
@@ -70,9 +73,9 @@ never mistaken for the end of the iterator.
 ## Return adapters from generic functions
 
 Use `MapIterator` and `ScanIterator` in return annotations, and build their
-values with `map` and `scan_left`. The helper receives a native iterator that
-is already typed; its `I` includes any source origin. Keeping the exact `F`
-preserves captured state and native callback origins across the return.
+values with `map` and `scan_left`. The helper's `I` parameter is the native
+iterator type, including any source origin. Keeping the exact callback type
+`F` preserves its captured state and origins when the adapter is returned.
 
 <!-- example: docs/examples/iteration_generic.mojo -->
 
@@ -132,9 +135,9 @@ three calls. Over `[4, -7, 9]`, `append` raises `InvalidEntry(-7)` on the
 second value. That exact error crosses both wrappers, and `9` is never pulled,
 so the call count ends at five. `find(even, range(3, 8))` returns `4`.
 
-Use the pure overload when the callback does not raise. The same forwarding rule
-applies to `reduce_optional`, both `reduce` forms, `fold_until`, `find`, `any`
-and `all`.
+Use the non-raising overload when the callback does not raise. The same
+forwarding rule applies to `reduce_optional`, both `reduce` forms, `fold_until`,
+`find`, `any` and `all`.
 
 Next, keep success and failure as values with
 [Result transformations](results.md). For every operation, see

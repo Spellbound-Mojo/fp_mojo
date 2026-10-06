@@ -1,9 +1,10 @@
 # fp.matching
 
-You need `fp.matching` to match a value of a declared data type, a `Result`, an
-`Optional` or several values at once, and to rewrite recursive values. The
-tutorial introduces it in [data and matching](../tutorial/matching.md) and
-continues with [recursive data](../tutorial/recursion.md).
+`fp.matching` provides exhaustive pattern matching over algebraic data types,
+`Result`, `Optional` and tuples of subjects. It also supports structural
+recursion and bottom-up rewriting of inductive data types. Start with
+[algebraic data and pattern matching](../tutorial/matching.md), then continue
+with [inductive data types](../tutorial/recursion.md).
 
 <!-- api: matching -->
 

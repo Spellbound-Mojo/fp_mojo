@@ -1,9 +1,13 @@
 # fp.effects
 
-You need `fp.effects` when a computation reads an environment, threads a state
-or accumulates a log, and you want to build it from small steps with the
-operations of [fp.algebra](algebra.md). The program below shows how the order of
-two layers changes the result.
+Reader, State and Writer describe computations that read an environment, pass
+state between steps or accumulate a log. Compose them with the operations of
+[fp.algebra](algebra.md), and combine effects with monad transformers such as
+`ResultT` and `StateT`. The example below shows how transformer order determines
+whether a failed computation returns its final state.
+
+Start with the [effects tutorial](../tutorial/effects.md) for standalone Reader,
+State and Writer programs, deferred evaluation and callback ownership.
 
 <!-- api: effects -->
 

@@ -1,12 +1,12 @@
 # API reference
 
-This reference covers every public name of FP Mojo on Mojo 1.1.0. Each package
-page opens with a short note on when you need the package, then the reference
-generated from the source's docstrings: the package's shared contracts
-(ownership, evaluation order, laziness, errors, empty and no-match behavior,
-costs), a summary table, and every public name with its signature, parameters,
-arguments, result and error. Most pages end with runnable examples.
-To learn the library from the start, follow the [tutorial](../tutorial/pipelines.md).
+This reference covers FP Mojo's public API on Mojo 1.1.0. Each package page
+describes its operations, signatures, ownership rules and errors, with
+declarations generated from the source docstrings. Shared contracts explain
+evaluation order, laziness, costs, and behavior for empty input or uncovered
+cases. Most pages also include runnable examples.
+
+For a guided introduction, follow the [tutorial](../tutorial/pipelines.md).
 
 ## Packages
 
@@ -16,10 +16,10 @@ To learn the library from the start, follow the [tutorial](../tutorial/pipelines
 | [`fp.functions`](functions.md) | Pipelines, composition, `flip` and partial application |
 | [`fp.iteration`](iteration.md) | Lazy adapters, folds, reductions and searches |
 | [`fp.control`](control-flow.md) | `while_loop`, `fori_loop` and carry/output `scan` |
-| [`fp.adt`](adt.md) | Data declarations and their values: `Data`, `Cases`, `Node`, `Choice` |
+| [`fp.adt`](adt.md) | Algebraic and inductive data types: `Data`, `Cases`, `Node`, `Choice` |
 | [`fp.data`](data.md) | `Result`, `ControlFlow` and the bridges between raised and stored errors |
 | [`fp.algebra`](algebra.md) | Functor, Applicative, Monad, Traversable and Monoid, with native instances |
-| [`fp.effects`](effects.md) | Reader, State and Writer, and their transformers |
+| [`fp.effects`](effects.md) | Reader, State and Writer, and monad transformers |
 | [`fp.matching`](matching.md) | `match`, `rewrite`, `when` guards and `Next` |
 
 Import each name from its package, for example `from fp.iteration import

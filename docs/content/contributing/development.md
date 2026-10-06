@@ -1,8 +1,9 @@
 # Development
 
-This page is for people changing the library. Read the
-[design principles](../architecture/principles.md) first: they decide what
-belongs in the library and how shared mechanisms are owned.
+Use this guide to set up the development environment, choose verification
+commands and work with the pinned Mojo compiler. Start with the
+[design principles](../architecture/principles.md), which define the library's
+scope and the ownership of shared mechanisms.
 
 ## Environment
 
@@ -141,7 +142,7 @@ limits behind them are recorded in
   and gate the callee with `comptime if admitted:` so its errors do not mask the
   admission message.
 - **Infer a callback's error as `AnyType` before catching it.** Under a
-  `Movable & Deinitable` bound, a pure function's inferred error is an
+  `Movable & Deinitable` bound, a non-raising function's inferred error is an
   uninhabited type that is not `Never`, and a `try` around a call that raises it
   crashes the compiler. Infer it as `AnyType` and normalize it with
   `_internal.errors._NativeError`, or call through `_forward`.

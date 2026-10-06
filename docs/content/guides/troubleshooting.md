@@ -9,10 +9,10 @@ pixi run mojo run -I src docs/examples/quickstart.mojo    # prints 42
 pixi run mojo run -I src my_program.mojo
 ```
 
-If the example runs and your program does not, find the exact declaration in the
-[API reference](../reference/index.md), and reduce your program toward the
-nearest working tutorial example before you change its ownership or error
-model.
+If the example runs and your program does not, compare the failing call with
+its declaration in the [API reference](../reference/index.md). Reduce it to a
+small example while keeping the types, ownership conventions and errors that
+trigger the failure.
 
 ## Symptoms
 
@@ -41,9 +41,9 @@ model.
 
 ## Diagnose a match
 
-Every admission rule of `fp.match` is checked when the program compiles, and its
-message names the clause by position, counting from 0, or the constructor. At
-run time a match tries the clauses for a value's constructor in the order
+`fp.match` checks clause types and coverage at compile time. Its diagnostics
+name a constructor or a clause's position, counting from 0. At run time a match
+tries the clauses for a value's constructor in the order
 written. A `when` clause whose guard is false passes to the next one, and a
 raised error ends the whole match at once.
 
@@ -65,8 +65,8 @@ Pair an invalid program with a nearby valid one, and never run an invalid
 program if the compiler unexpectedly accepts it.
 
 [Native Mojo boundaries](../architecture/native-boundaries.md) lists the
-Mojo 1.1 limitations and defects the library works around. They do not justify
-an erased callable store or an origin workaround in user code.
+Mojo 1.1 limitations and defects, along with supported alternatives that preserve
+callback types and origins.
 
 ## Result fold does not compile
 

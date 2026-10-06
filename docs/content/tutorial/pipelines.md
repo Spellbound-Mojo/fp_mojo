@@ -1,11 +1,14 @@
-# 1. Eager Pipelines
+# 1. Eager pipelines
 
-`pipe` passes a value through a chain of functions, left to right, and returns
-the last result straight away. You write each stage as a plain function, and
-`pipe` infers every intermediate type and the error type of any stage that
-raises. A call takes up to eight plain functions; `piped(...).then(...)` has no
-such limit. This chapter assumes an [installed environment](../start/installation.md)
-and Mojo's [ownership and error conventions](../start/ownership.md).
+`pipe` applies a sequence of functions to a value, passing each result to the
+next function. Evaluation is eager: all stages run before the call returns,
+unless one raises an error. Write each stage as a plain function; `pipe` infers
+the intermediate types and their common error type.
+
+A call accepts up to eight plain functions. For longer pipelines, use
+`piped(...).then(...)`. Before running the examples, follow
+[installation](../start/installation.md) and read
+[ownership and errors](../start/ownership.md).
 
 ## Run a pipeline over a list
 
@@ -32,11 +35,10 @@ list.
 
 How many stages a call takes depends on the form:
 
-- `pipe` takes up to eight plain functions. Mojo 1.1 keeps only the type of
-  each element of a variadic list of functions, not its signature, so `pipe`
-  cannot work out a stage's result type from it. `pipe` therefore has one
-  overload per number of plain functions, each spelling every stage's
-  signature.
+- `pipe(value, first, second, ...)` accepts up to eight plain functions in one
+  call. The limit comes from the overloads needed to infer their signatures on
+  Mojo 1.1; the [architecture chapter](../architecture/functions.md#pipelines)
+  explains how they work.
 - `piped(values^).then(accepted).then(total).then(receipt).get()` applies the
   same stages one call at a time, with no limit on their number. See
   [chained pipelines](../reference/functions.md#piped).
@@ -51,8 +53,9 @@ block reads `invalid_total` as `-4`.
 For raising stages, `pipe` infers the one error type they share. Stages that do
 not raise, or declare `raises Never`, add nothing to it. Stages that raise
 different error types do not compile together; map their errors to one type
-first. A stage that returns a `Result` holding `Err` has not failed: the `Result`
-is an ordinary value that the next stage receives.
+first. A stage that returns a `Result` holding `Err` passes that value to the
+next stage. To stop on a stored error, use `Result.flat_map`, introduced in the
+[results chapter](results.md).
 
 ## Mix closures and library values
 

@@ -1,9 +1,9 @@
 # fp.control
 
-You need `fp.control` to write a loop as an expression that returns its final
-value instead of updating variables in a `for` or `while` statement. The
-program below shows each loop form; the
-[iteration tutorial](../tutorial/iteration.md) covers folds over iterators.
+`fp.control` expresses loops as functions that pass an accumulator, or carry,
+from one step to the next. `while_loop` and `fori_loop` return the final carry;
+`scan` also collects an output from each step. For folds over native iterators,
+see the [iteration tutorial](../tutorial/iteration.md).
 
 <!-- api: control -->
 

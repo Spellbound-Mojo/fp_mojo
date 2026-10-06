@@ -1,13 +1,14 @@
 # Architecture overview
 
-FP Mojo adds composition, partial application, folds and lazy adapters, typed
-success and failure values, algebraic data types with exhaustive pattern
-matching, functional control flow, and a small algebra of
-Functor/Applicative/Monad instances with effect transformers to Mojo.
+FP Mojo builds functional programming abstractions on Mojo's native types,
+ownership and error handling. Its packages cover function composition, partial
+application, folds and lazy iteration, typed results, algebraic and inductive
+data types, exhaustive pattern matching, and monad transformers.
 
-The library is not another language on top of Mojo. It supplies only the
-behavior that Mojo 1.1 does not already provide; see
-[design principles](principles.md).
+Shared mechanisms have one implementation: packages delegate invocation, data
+storage, iteration and error propagation to their respective owners. This page
+maps those dependencies; the [design principles](principles.md) explain the
+rules behind them.
 
 ## Packages
 
@@ -20,18 +21,18 @@ write `fp.match(...)`.
 | Package | Responsibility | Modules |
 |---|---|---|
 | `fp.callables` | Fixed-arity callable protocols, borrowed endpoints, receiver dispatch and native functions as library values (`as_unary`) | `protocols`, `invoke`, `native`, `products`, `_receiver` |
-| `fp.functions` | Immediate pipelines, returned composition, argument flipping and partial application | `pipeline`, `_stages`, `composition`, `flipped`, `partial` |
+| `fp.functions` | Eager pipelines, function composition, argument flipping and partial application | `pipeline`, `_stages`, `composition`, `flipped`, `partial` |
 | `fp.iteration` | Lazy adapters, scans, folds, reductions and predicate terminals over native iterators and owned collections | `adapters`, `folds`, `_terminal`, `_advance`, `_callbacks` |
 | `fp.control` | Functional `while_loop`, `fori_loop` and carry/output `scan` | `loops`, `scan`, `_loops` |
-| `fp.adt` | Algebraic data declarations and their values: shared `Node`s and `Choice`s stored in place (`Data`, `Cases`, `Node`, `Choice`) | `data` |
+| `fp.adt` | Algebraic and inductive data types: shared `Node`s and `Choice`s stored in place (`Data`, `Cases`, `Node`, `Choice`) | `data` |
 | `fp.data` | `Result`, `ControlFlow` and native-error bridges | `_result`, `result`, `control` |
 | `fp.algebra` | Functor, Applicative, Monad, Traversable and Monoid interfaces with native instances | `protocols`, `operations`, `instances`, `_derived`, `monoids` |
 | `fp.effects` | Reader, State and Writer computations and the OptionalT, ResultT, ReaderT, StateT and WriterT transformers | `protocols`, `reader`, `state`, `writer`, `layers`, `operations`, `_adapt` |
 | `fp.matching` | `match` over data values, `Optional` and tuples, `rewrite` over `Node` values, `when` guards and `Next` | `matcher`, `clauses`, `_engine`, `_inline` |
 
-`fp._internal` is private. It holds exact error admission and propagation
-(`errors`). Helpers that belong to one domain stay in that domain's package:
-iterator step bridges live in `fp.iteration`.
+`fp._internal.errors` checks error compatibility and propagates errors without
+changing their types. Helpers used by only one domain stay in that domain's
+package; iterator step bridges, for example, live in `fp.iteration`.
 
 In matching, `matcher` holds the public entry points and their generated
 overloads; `_engine` owns clause sets, admission and the loop that matches one
@@ -58,10 +59,10 @@ Layer  Modules                         Builds on
        data.result (integration)       algebra (collect_results)
 ```
 
-Some packages import each other at different modules: the Result carrier
-(`data._result`) sits below algebra, and the public `data.result` module adapts
-`collect_results` to the algebra collection kernel above it. These rules keep
-the graph acyclic:
+Dependencies are tracked by module. For example, the Result carrier
+(`data._result`) sits below algebra, while the public `data.result` module
+implements `collect_results` by delegating to algebra's collection kernel.
+The following rules keep the dependency graph acyclic:
 
 - `adt.data` depends only on Mojo itself. `Result` and `ControlFlow` build on
   it, and can be used without importing any matching machinery.
@@ -102,9 +103,9 @@ conversion would hide the rules their correctness depends on.
 
 ## Explanation of behaviors
 
-Every public operation's semantics are stated in its [API reference](../reference/index.md)
-chapter. The architecture chapters explain why each package is shaped the way
-it is:
+The [API reference](../reference/index.md) states each operation's contract.
+The architecture chapters explain its implementation and the reasons for the
+design:
 
 - [Callables and invocation](callables.md): the call boundary every
   higher-order operation shares.

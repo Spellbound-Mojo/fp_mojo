@@ -1,11 +1,14 @@
-# 4. Data and matching
+# 4. Algebraic data and pattern matching
 
-A data type lists its constructors, a value holds one of them, and a match gives
-one clause per constructor to say what each means. `fp.match` checks the
-clauses when the program compiles, so a match that misses a constructor does not
-build, and then runs the clause for the constructor the value holds. Clauses are
-plain functions or lambdas without captures; data they need arrives through a
-context or as another matched value.
+An algebraic data type describes a value through its possible constructors and
+the fields each constructor carries. A shape, for example, can be a circle with
+a radius, a rectangle with two sides, or a dot with no fields. The choice of
+constructor is a sum type; the fields within a constructor form a product.
+
+Pattern matching handles each constructor with a clause. `fp.match` checks
+exhaustiveness at compile time, so leaving a constructor uncovered is an error.
+Clauses are plain functions or lambdas without captures. Pass any additional
+data through a context or as another matched value.
 
 ## Declare a type and match it
 
@@ -73,6 +76,6 @@ the match raises that type unchanged; the first raise stops the match. The
 [job router](application.md#route-commands-with-guarded-clauses) dispatches
 through guarded clauses that raise a typed error.
 
-The rules are summarized in [algebraic data and matching](../architecture/matching.md).
-Next, store values of a type without recursive fields [in place](choices.md), and
-match `Result` and `Optional` the same way.
+The [architecture chapter](../architecture/matching.md) explains how coverage
+is checked. Next, store non-recursive algebraic data types [in place](choices.md)
+and match `Result` and `Optional` with the same clause syntax.

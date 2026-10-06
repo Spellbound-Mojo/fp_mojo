@@ -1,11 +1,13 @@
-# 5. Values stored in place
+# 5. Algebraic data types stored in place
 
-`Choice[F]` holds one constructor of a data type in place, inside a native
-`Variant`, with no allocation. You declare the type with `Cases` as in
-[chapter 4](matching.md), and `fp.match` matches a `Choice` with the same
-clauses it uses for a `Node`. A native `Variant` on its own is not a match
-subject. A `Choice` cannot hold a type with a recursive field; that is what
-`Node` is for.
+Use `Choice[F]` for a non-recursive algebraic data type whose value should be
+stored in place. It holds one constructor inside a native `Variant`, without
+allocating storage for the `Choice` itself. Declare the constructors with
+`Cases`, as in [chapter 4](matching.md), and match them with `fp.match`.
+
+`Choice` uses the same clause syntax as `Node`. The distinction is storage:
+`Node` supports shared values and recursive fields, while `Choice` owns a
+constructor directly. A bare native `Variant` is not a match subject.
 
 ## Store a value in a Choice
 
@@ -17,18 +19,14 @@ clause, which returns `15 + 7 = 22`. `attempt(checked)` wraps that answer in
 `Ok`, and `raise_on_err` returns `22` without raising. The program prints
 `fold = 15 ; match = 22 ; callbacks = 5`.
 
-- **The declaration is the same.** `Term` lists its constructors in a `Cases`.
-  `Choice[Term]` holds one of them, and a constructor converts to it
-  implicitly.
-- **Owned, not shared.** A `Choice` lives where it is declared, with no
-  allocation, like a native `Variant`. Copying it copies the constructor, and it
-  is `Copyable` only when every constructor is. A constructor that is only
-  `Movable` can be stored, and `unwrap[C]()` moves it out again.
-- **Clauses get a reference.** A clause takes a constructor, or the whole
-  `Choice[Term]` as a catch-all. It receives a reference to the stored
-  constructor, so nothing is copied.
-- **Inspect it like a Variant.** `value.isa[Pair]()`, `value[Pair]` and
-  `value == Pair(15, 7)` read it without a match.
+`Term` lists its constructors in `Cases`, and a constructor converts implicitly
+to `Choice[Term]`. Copying a `Choice` copies that constructor, so `Choice` is
+`Copyable` only when every constructor is. It can also store a constructor that
+is only `Movable`; `unwrap[C]()` moves the constructor out again.
+
+A match clause borrows the stored constructor without copying it. A clause
+taking the whole `Choice[Term]` acts as a catch-all. For direct inspection, use
+`value.isa[Pair]()`, `value[Pair]` or `value == Pair(15, 7)`.
 
 A type with a recursive field cannot be a `Choice`. The compiler reports
 `Choice: field left of Plus is recursive; a value of a recursive data type is a

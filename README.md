@@ -1,12 +1,13 @@
 # FP Mojo
 
-FP Mojo is a functional-programming library that works with Mojo's native types!
-You can chain plain functions with `pipe`, process collections with lazy iterators
-and folds, keep failures as typed `Result` values, and declare inductive and algebraic
-data types from your own structs; `fp.match` rejects a match that misses a case when the
-program compiles. Callbacks keep their error types: a stage that raises
-`ParseError` makes the pipeline raise `ParseError`. The library works with
-Mojo 1.1 and is verified on Linux x86-64 and macOS arm64.
+FP Mojo is a functional programming library for Mojo. You can compose functions
+into pipelines, map, filter, and fold over collections, handle failures with
+typed `Result` values, and define algebraic and inductive data types from your
+own structs. Pattern matching checks that every constructor is covered at
+compile time. Functions and closures keep their native ownership conventions
+and error types.
+
+The library is verified with Mojo 1.1.0 on Linux x86-64 and macOS arm64.
 
 ![Mojo 1.1.0](https://img.shields.io/badge/Mojo-1.1.0-orange)
 ![Platforms](https://img.shields.io/badge/platforms-Linux%20x86--64%20%7C%20macOS%20arm64-blue)
@@ -37,23 +38,23 @@ one value at a time through `map` and `filter`.
 
 ## What you get
 
-- **Your data stays native.** Values stay in `List`, `Optional`, `Variant`,
-  tuples and your own structs, and callbacks are plain Mojo functions and
-  closures. The library does not box, erase or interpret them.
-- **Ownership passes through.** Move-only values, borrowed views and the `var`,
-  read and `mut` conventions pass through every operation unchanged. References
-  keep their origins, so a borrowed payload cannot escape its scope.
-- **Errors keep their type.** A callback that `raises ParseError` makes the
-  pipeline, fold or match raise `ParseError`. A stored `Err` stays data and
-  never becomes an exception unless you call `raise_on_err`.
-- **The compiler checks your matches and pipelines.** A match that misses a
-  constructor does not compile, nor does a clause that can never run. A
-  pipeline stage with the wrong input type is a compile error that names the
-  stage.
-- **Recursive data does not need recursive calls.** You write one clause per
-  constructor, and `fp.match` runs them as a loop over an explicit stack, so a
-  value a million levels deep does not overflow the native stack. Every match
-  ends, because values are finite and acyclic.
+- **Native values and callbacks.** Use `List`, `Optional`, `Variant`, tuples
+  and your own structs with ordinary Mojo functions and closures. Their types
+  remain known to the compiler, without boxing or runtime interpretation.
+- **Ownership and borrowing.** Operations support move-only values and borrowed
+  views through Mojo's `var`, read and `mut` conventions. References keep their
+  origins, tying borrowed payloads to their owners.
+- **Typed errors.** A callback that `raises ParseError` makes the pipeline, fold
+  or match raise `ParseError`. A stored `Err` remains a value until you
+  explicitly raise it with `raise_on_err`.
+- **Exhaustive pattern matching.** The compiler rejects a match that misses a
+  constructor or includes an unreachable clause. It also checks the types
+  between pipeline stages and names a stage whose input does not fit.
+- **Structural recursion.** Write clauses for the constructors of an inductive
+  data type, and `fp.match` evaluates recursive fields with an explicit stack.
+  A value a million levels deep can be matched without overflowing the native
+  stack. Matching traverses finite, acyclic values; code inside a clause follows
+  the usual rules for Mojo functions.
 
 ## Choose a package
 
@@ -63,19 +64,19 @@ one value at a time through `map` and `filter`.
 | `fp.iteration` | Lazy adapters and terminal folds over iterators and owned collections | `map`, `filter`, `filter_map`, `flat_map`, `flatten`, `scan_left`, `fold_left`, `fold_until`, `reduce`, `find`, `any`, `all`, `collect_list` |
 | `fp.control` | Loops as expressions | `while_loop`, `fori_loop`, carry/output `scan` |
 | `fp.data` | Typed results and error bridges | `Result` with `map`, `flat_map`, `map_err`, `or_else`, `fold`; `attempt`, `raise_on_err`, `collect_results`, `ControlFlow` |
-| `fp.adt` | Algebraic and recursive data types from your own structs | `Data`, `Cases`; `Node` (shared, recursive) and `Choice` (stored in place) |
+| `fp.adt` | Algebraic and inductive data types from your own structs | `Data`, `Cases`; `Node` (shared, recursive) and `Choice` (stored in place) |
 | `fp.matching` | Pattern matching | `fp.match` (a `Node`, `Choice`, `Result` or `Optional`, a context, or several values), `fp.rewrite`, `fp.when`, `Next` |
 | `fp.algebra` | Functor, Applicative, Monad, Traversable and Monoid | `map`, `pure`, `flat_map`, `map2`, `ap`, `traverse`, `sequence`; Identity, Optional, Result and List instances |
-| `fp.effects` | Reader, State and Writer, and transformer stacks | `ReaderT`, `StateT`, `WriterT`, `OptionalT`, `ResultT`; `ask`, `local`, `get`, `put`, `modify`, `tell`, `listen`, `censor`, `run` |
+| `fp.effects` | Reader, State and Writer, and monad transformers | `ReaderT`, `StateT`, `WriterT`, `OptionalT`, `ResultT`; `ask`, `local`, `get`, `put`, `modify`, `tell`, `listen`, `censor`, `run` |
 | `fp.callables` | The calling protocols shared by other components | `Unary`, `Binary`, `Thunk`, `as_unary`, `call_once`, `call_repeated` |
 
 ## See it in action
 
 ### Chain functions; errors keep their type
 
-`pipe` calls functions left to right and infers every intermediate type. When a
-stage raises, the pipeline raises that stage's own error type: here a
-`ParseError`, not a generic `Error`.
+`pipe` applies functions from left to right and infers every intermediate type.
+If a stage raises, the pipeline stops and propagates its error. In this example,
+the caller catches a `ParseError` and can read the text that failed to parse.
 
 ```mojo
 from fp.functions import pipe, piped, flow, partial
@@ -149,8 +150,9 @@ totals squares 3, 4 and 5, once each, and the totals end at 50. `find` pulls
 
 ### Run only the active branch of a Result
 
-`Result[T, E]` holds a success value `Ok[T]` or a stored failure `Err[E]`.
-`flat_map` and `fold` call only the callback for the branch that is present.
+`Result[T, E]` is a sum type with two constructors: `Ok[T]` for success and
+`Err[E]` for failure. `flat_map` sequences computations that return a `Result`,
+stopping at the first `Err`. `fold` handles either case to produce one result.
 
 ```mojo
 from fp.data import Result, Ok, Err
@@ -184,10 +186,11 @@ the original error type both ways.
 
 ### Match every constructor of your own data type
 
-You declare a data type by listing your own structs in a `Cases`, and mark a
-recursive field with the parameter `R`. A match takes one clause per
-constructor, a plain function or a lambda, whose parameter type selects the
-constructor it handles. Leave one out and the program does not compile:
+Declare an algebraic data type by listing its constructors as structs in
+`Cases`. To define an inductive type, such as an expression tree, mark its
+recursive fields with the parameter `R`. Each match clause is a plain function
+or a lambda whose parameter type selects the constructor it handles. The match
+must cover every constructor; otherwise the compiler reports
 `fp.match: constructor ... has no clause that cannot decline`.
 
 ```mojo
@@ -237,9 +240,10 @@ evaluated, and the `If` clause returns `Next` with the branch it takes, so the
 other branch is never evaluated. `simplify` rewrites `0 + 5` to `5`, and both
 calls print 5.
 
-Values are immutable and shared, so they form finite acyclic graphs and every
-match ends; a shared value is evaluated once per match. `fp.match` can also
-pass a `context=` to every clause, and match two or three values at once.
+`Node` values are immutable and can share subexpressions, forming finite acyclic
+graphs. With the `Int` result used here, each shared value is evaluated once per
+match. `fp.match` can also pass a `context=` to every clause and match two or
+three values at once.
 
 A type without recursive fields can be stored in place, without allocation, as
 a `Choice[F]`. `Result`, `ControlFlow` and the standard `Optional` are matched
@@ -249,10 +253,12 @@ Err[String]) -> Int: -1)`, or `lambda (n: NoneType) -> ...` for an absent
 
 ### Use one set of operations across contexts
 
-`map`, `flat_map` and `traverse` work over `Optional`, `Result`, `List` and the
-effect types; you name the instance at each call. `traverse` stops at the first
-failure. Reader, State and Writer computations are ordinary values that you
-compose and then run.
+Functor, Applicative, Monad and Traversable instances let you use `map`,
+`flat_map` and `traverse` with `Optional`, `Result`, `List` and the effect types.
+Select the instance at each call. `traverse` applies a computation to each element and
+collects the results, stopping at the first failure or absence. Reader, State
+and Writer let you compose computations that read an environment, pass state
+between steps or accumulate a log.
 
 ```mojo
 from fp.algebra import map, traverse, ListFamily, OptionalFamily
@@ -280,16 +286,17 @@ def main() raises:
 value 42 with the state still 21. `modify` doubles the state itself, so the
 final state is 42.
 
-Transformers stack in either order (`ResultT[State[S], E]` keeps the state on
-failure, `StateT[ResultFamily[E], S]` does not), and third-party types can join
-by implementing the same traits.
+Monad transformers combine these effects. Their order determines what survives
+a failure: `ResultT[State[S], E]` keeps the state, while
+`StateT[ResultFamily[E], S]` returns only the error. Third-party types can
+provide instances by implementing the same traits.
 
 ## Getting started
 
 FP Mojo is published as `fp_mojo` in the
 [Modular community channel](https://github.com/modular/modular-community). Add
 the channel to your [Pixi](https://pixi.sh) project and install the package. It
-works with Mojo 1.1.x on Linux x86-64 and macOS arm64:
+is verified with Mojo 1.1.0 on Linux x86-64 and macOS arm64:
 
 ```toml
 # pixi.toml
@@ -298,9 +305,18 @@ channels = ["https://conda.modular.com/max", "https://repo.prefix.dev/modular-co
 ```
 
 ```sh
-pixi add fp_mojo
-pixi run mojo run my_program.mojo          # no -I flag needed
+pixi add fp_mojo "mojo==1.1.0"
 ```
+
+Save [quickstart.mojo](docs/examples/quickstart.mojo) beside your project's
+`pixi.toml`, then run it:
+
+```sh
+pixi run mojo run quickstart.mojo          # prints 42; no -I flag needed
+```
+
+For a new project, the [installation guide](docs/content/start/installation.md)
+walks through creating the environment, saving the program and running it.
 
 To work from a checkout instead:
 
@@ -329,7 +345,7 @@ Import each name from the package that owns it, such as
 
 The documentation is published at
 [spellbound-mojo.github.io/fp_mojo](https://spellbound-mojo.github.io/fp_mojo/):
-a seven-part tutorial, runnable examples and an API reference generated from the
+a nine-part tutorial, runnable examples and an API reference generated from the
 source. Its sources are in [`docs/content`](docs/content/index.md); to browse
 them locally:
 
@@ -340,7 +356,9 @@ pixi run docs-serve
 
 | Start with | For |
 |---|---|
-| [Tutorial](docs/content/tutorial/pipelines.md) | Seven runnable lessons, from pipelines to a complete configuration processor |
+| [Tutorial](docs/content/tutorial/pipelines.md) | Nine runnable lessons covering pipelines, data types, a configuration processor, algebra and effects |
+| [Algebra](docs/content/tutorial/algebra.md) | When to use mapping, applicative combination, monadic bind and traversal |
+| [Effects](docs/content/tutorial/effects.md) | Reader, State and Writer before combining them with monad transformers |
 | [Examples](docs/content/examples/index.md) | Every example program, with its output |
 | [Ownership and errors](docs/content/start/ownership.md) | How borrowing, moving and failures work across the library |
 | [API reference](docs/content/reference/index.md) | Every public name, with its contract |
@@ -349,12 +367,11 @@ pixi run docs-serve
 
 ## Status
 
-FP Mojo 1.0.0 implements every contract its documentation states, on Mojo 1.1.
-The allocation-free core also cross-compiles for NVIDIA and AMD GPUs; running
-it on GPU hardware is not yet verified. The Mojo 1.1 limits that shape the API
-are listed in [native boundaries](docs/content/architecture/native-boundaries.md),
-and what is supported today is in
-[support and limitations](docs/content/guides/status.md).
+FP Mojo 1.0.0 targets Mojo 1.1. The allocation-free core also cross-compiles for
+NVIDIA and AMD GPUs; execution on GPU hardware has not yet been verified. See
+[support and limitations](docs/content/guides/status.md) for supported uses and
+[native boundaries](docs/content/architecture/native-boundaries.md) for the
+Mojo 1.1 constraints that shape the API.
 
 ## Development
 

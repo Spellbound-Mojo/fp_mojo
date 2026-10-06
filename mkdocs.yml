@@ -49,13 +49,15 @@ nav:
       - Installation: start/installation.md
       - Ownership and errors: start/ownership.md
   - Tutorial:
-      - 1. Immediate pipelines: tutorial/pipelines.md
+      - 1. Eager pipelines: tutorial/pipelines.md
       - 2. Folds and lazy iteration: tutorial/iteration.md
       - 3. Results and recovery: tutorial/results.md
-      - 4. Data and matching: tutorial/matching.md
-      - 5. Values stored in place: tutorial/choices.md
-      - 6. Recursive data: tutorial/recursion.md
+      - 4. Algebraic data and pattern matching: tutorial/matching.md
+      - 5. Algebraic data types stored in place: tutorial/choices.md
+      - 6. Inductive data types: tutorial/recursion.md
       - 7. A configuration processor: tutorial/application.md
+      - 8. Functors, applicatives and monads: tutorial/algebra.md
+      - 9. Reader, State and Writer: tutorial/effects.md
   - Examples:
       - Example gallery: examples/index.md
   - Architecture:
