@@ -24516,6 +24516,1746 @@
    "summary": "The type `flat_map` returns, for a generic function's return annotation.",
    "traits": []
   },
+  "iteration.Iter": {
+   "aliases": [
+    {
+     "description": "The underlying iterator's element type.",
+     "name": "Element"
+    },
+    {
+     "description": "Consuming iteration keeps the same wrapper and its position.",
+     "name": "IteratorOwnedType"
+    }
+   ],
+   "description": "Start a chain with `iterated(source)`. The wrapper stores only the native\niterator and preserves its current position and embedded origins. Methods\nuse the same implementations and contracts as the free functions.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "all": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The predicate, borrowed.",
+        "name": "predicate",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "The predicate borrows each candidate. A decisive result or predicate\nerror stops without another pull. Raising predicates preserve their error\ntype, and library `BorrowCallable` predicates are supported.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The element type.",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The native predicate type.",
+        "inferred": false,
+        "name": "F",
+        "type": "def(T) -> Bool",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "`True` if every element is accepted, otherwise `False`.",
+       "type": "Bool"
+      },
+      "signature": "def all[T: Movable & Deinitable, //, F: def(T) -> Bool](deinit self, predicate: F) -> Bool where Self.I.Element == T",
+      "summary": "Stop at the first rejected element; empty input returns `True`."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "predicate",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "def(T) raises E -> Bool",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Bool"
+      },
+      "signature": "def all[T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(T) raises E -> Bool](deinit self, predicate: F) raises E -> Bool where Self.I.Element == T",
+      "summary": "Test every element with a raising predicate, preserving its error."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C.Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Bool"
+      },
+      "signature": "def all[C: BorrowCallable](deinit self, predicate: C) raises C.Failure -> Bool where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool",
+      "summary": "Test every element with a library borrowing predicate."
+     }
+    ],
+    "any": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The predicate, borrowed.",
+        "name": "predicate",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "The predicate borrows each candidate. A decisive result or predicate\nerror stops without another pull. Raising predicates preserve their error\ntype, and library `BorrowCallable` predicates are supported.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The element type.",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The native predicate type.",
+        "inferred": false,
+        "name": "F",
+        "type": "def(T) -> Bool",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "`True` if any element is accepted, otherwise `False`.",
+       "type": "Bool"
+      },
+      "signature": "def any[T: Movable & Deinitable, //, F: def(T) -> Bool](deinit self, predicate: F) -> Bool where Self.I.Element == T",
+      "summary": "Stop at the first accepted element; empty input returns `False`."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "predicate",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "def(T) raises E -> Bool",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Bool"
+      },
+      "signature": "def any[T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(T) raises E -> Bool](deinit self, predicate: F) raises E -> Bool where Self.I.Element == T",
+      "summary": "Test any element with a raising predicate, preserving its error."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C.Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Bool"
+      },
+      "signature": "def any[C: BorrowCallable](deinit self, predicate: C) raises C.Failure -> Bool where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool",
+      "summary": "Test any element with a library borrowing predicate."
+     }
+    ],
+    "bounds": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The lower bound and optional upper bound, forwarded unchanged.",
+       "type": "Tuple[Int, Optional[Int]]"
+      },
+      "signature": "def bounds(self) -> Tuple[Int, Optional[Int]]",
+      "summary": "Return the underlying iterator's remaining length bounds."
+     }
+    ],
+    "collect_list": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `List[Element]`, with the same ownership and empty-input\nbehavior as `to_list` and the free `collect_list`.",
+       "type": "List[Self.Element]"
+      },
+      "signature": "def collect_list(deinit self) -> List[Self.Element] where conforms_to(Self.Element, Deinitable)",
+      "summary": "Alias of `to_list`; consumes the remaining elements into a list."
+     }
+    ],
+    "filter": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The non-raising predicate, stored.",
+        "name": "predicate",
+        "type": "def(T) thin -> Bool",
+        "variadic": false
+       }
+      ],
+      "description": "The predicate borrows each candidate. Rejected elements are destroyed;\naccepted elements are moved out unchanged. Plain functions, closures and\nnon-raising `BorrowCallable` values are supported.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The source element type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An `Iter` over accepted elements, in source order.",
+       "type": "Iter[FilterIterator[T, Self.I]]"
+      },
+      "signature": "def filter[T: Movable & Deinitable](deinit self, predicate: def(T) thin -> Bool) -> Iter[FilterIterator[T, Self.I]] where Self.I.Element == T",
+      "summary": "Lazily retain the original elements a borrowing predicate accepts."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "predicate",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "def(T) -> Bool",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[FilterIterator[T, Self.I, F]]"
+      },
+      "signature": "def filter[T: Movable & Deinitable, //, F: def(T) -> Bool](deinit self, var predicate: F) -> Iter[FilterIterator[T, Self.I, F]] where Self.I.Element == T",
+      "summary": "Lazily retain elements with a stored closure predicate."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[FilterIterator[Self.I.Element, Self.I, C]]"
+      },
+      "signature": "def filter[C: BorrowCallable](deinit self, var predicate: C) -> Iter[FilterIterator[Self.I.Element, Self.I, C]] where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and C.Failure == Never",
+      "summary": "Lazily retain elements with a library borrowing predicate."
+     }
+    ],
+    "filter_map": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The non-raising callback returning `Optional[U]`, stored.",
+        "name": "function",
+        "type": "def(var T) thin -> Optional[U]",
+        "variadic": false
+       }
+      ],
+      "description": "Moves each element into the callback. Only absent `Optional` values are\nskipped; a present `Result.Err` remains an ordinary element. Library\n`Unary` callbacks name the result element parameter explicitly, `U=U`.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The source element type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The element inside the returned `Optional`.",
+        "inferred": false,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An `Iter` over present results.",
+       "type": "Iter[FilterMapIterator[T, U, Self.I]]"
+      },
+      "signature": "def filter_map[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, function: def(var T) thin -> Optional[U]) -> Iter[FilterMapIterator[T, U, Self.I]] where Self.I.Element == T",
+      "summary": "Lazily transform elements, yielding present values and skipping `None`."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "def(var T) -> Optional[U]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[FilterMapIterator[T, U, Self.I, F]]"
+      },
+      "signature": "def filter_map[T: Movable & Deinitable, U: Movable & Deinitable, //, F: def(var T) -> Optional[U]](deinit self, var function: F) -> Iter[FilterMapIterator[T, U, Self.I, F]] where Self.I.Element == T",
+      "summary": "Lazily transform and filter elements with a stored closure."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "Unary",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[FilterMapIterator[F.Arg, U, Self.I, F]]"
+      },
+      "signature": "def filter_map[U: Movable & Deinitable, F: Unary](deinit self, var function: F) -> Iter[FilterMapIterator[F.Arg, U, Self.I, F]] where Self.I.Element == F.Arg and F.Out == Optional[U] and F.Error == Never",
+      "summary": "Lazily filter a library `Unary` result; name `U` explicitly."
+     }
+    ],
+    "find": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The predicate, borrowed.",
+        "name": "predicate",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "The predicate borrows each candidate. The first accepted original value\nis returned without pulling another element. Raising predicates keep\ntheir error type. Library `BorrowCallable` predicates are also accepted.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The element type.",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The native predicate type.",
+        "inferred": false,
+        "name": "F",
+        "type": "def(T) -> Bool",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The first accepted element inside `Optional`, or `None`.",
+       "type": "Optional[T]"
+      },
+      "signature": "def find[T: Movable & Deinitable, //, F: def(T) -> Bool](deinit self, predicate: F) -> Optional[T] where Self.I.Element == T",
+      "summary": "Consume through the first accepted element; no match returns `None`."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "predicate",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "def(T) raises E -> Bool",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Optional[T]"
+      },
+      "signature": "def find[T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(T) raises E -> Bool](deinit self, predicate: F) raises E -> Optional[T] where Self.I.Element == T",
+      "summary": "Find with a raising predicate, propagating its exact error."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C.Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Optional[Self.I.Element]"
+      },
+      "signature": "def find[C: BorrowCallable](deinit self, predicate: C) raises C.Failure -> Optional[Self.I.Element] where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool",
+      "summary": "Find with a library borrowing predicate."
+     }
+    ],
+    "flat_map": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The non-raising callback, stored; move owned captures in with `^`.",
+        "name": "function",
+        "type": "def(var T) thin -> U",
+        "variadic": false
+       }
+      ],
+      "description": "Moves each element into the callback and retains the returned native\niterator or owned iterable until it is exhausted or abandoned. Empty inner\nsources are skipped. A borrowed inner source retains its external origin.\nPlain functions, closures and non-raising library `Unary` values are supported.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The source element type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The inner iterator or owned iterable returned by the callback.",
+        "inferred": false,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An `Iter` over the concatenated inner elements.",
+       "type": "Iter[FlatMapIterator[T, U, Self.I]]"
+      },
+      "signature": "def flat_map[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, function: def(var T) thin -> U) -> Iter[FlatMapIterator[T, U, Self.I]] where Self.I.Element == T",
+      "summary": "Lazily expand each element and exhaust its inner source in order."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "def(var T) -> U",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[FlatMapIterator[T, U, Self.I, F]]"
+      },
+      "signature": "def flat_map[T: Movable & Deinitable, U: Movable & Deinitable, //, F: def(var T) -> U](deinit self, var function: F) -> Iter[FlatMapIterator[T, U, Self.I, F]] where Self.I.Element == T",
+      "summary": "Lazily expand each element with a stored closure."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "Unary",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[FlatMapIterator[F.Arg, F.Out, Self.I, F]]"
+      },
+      "signature": "def flat_map[F: Unary](deinit self, var function: F) -> Iter[FlatMapIterator[F.Arg, F.Out, Self.I, F]] where Self.I.Element == F.Arg and F.Error == Never",
+      "summary": "Lazily expand elements with a library `Unary` value."
+     }
+    ],
+    "flatten": [
+     {
+      "args": [],
+      "description": "Exhausts each inner iterator or owned iterable before pulling another\nouter element. Borrowed inner owners must remain alive and unmoved.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The inner source type, inferred from this iterator's element type.",
+        "inferred": false,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An `Iter` over the concatenated inner elements.",
+       "type": "Iter[_Flatten[Self.I, S]]"
+      },
+      "signature": "def flatten[S: Movable & Deinitable](deinit self) -> Iter[_Flatten[Self.I, S]] where Self.I.Element == S",
+      "summary": "Lazily concatenate inner sources, skipping empty ones."
+     }
+    ],
+    "fold_left": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The step, borrowed for the duration of the fold.",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The initial accumulator, consumed.",
+        "name": "initial",
+        "type": "A",
+        "variadic": false
+       }
+      ],
+      "description": "Empty input returns `initial` without calling the step. Steps are never\nreassociated. The callback is borrowed and may be a plain function, a\nclosure or a library `Binary` value. Raising overloads propagate the\nstep's exact error type and stop without another pull.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The accumulator type.",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The source element type.",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The native step type.",
+        "inferred": false,
+        "name": "F",
+        "type": "def(var A, var T) -> A",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The final accumulator, moved out.",
+       "type": "A"
+      },
+      "signature": "def fold_left[A: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, var T) -> A](deinit self, step: F, var initial: A) -> A where Self.I.Element == T",
+      "summary": "Consume elements in order into an accumulator."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "initial",
+        "type": "A",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "def(var A, var T) raises E -> A",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "A"
+      },
+      "signature": "def fold_left[A: Movable & Deinitable, T: Movable & Deinitable, E: AnyType, //, F: def(var A, var T) raises E -> A](deinit self, step: F, var initial: A) raises E -> A where Self.I.Element == T",
+      "summary": "Fold with a raising step, propagating its exact error type."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "initial",
+        "type": "A",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F.Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "Binary",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "A"
+      },
+      "signature": "def fold_left[A: Movable & Deinitable, F: Binary](deinit self, step: F, var initial: A) raises F.Error -> A where F.First == A and F.Second == Self.I.Element and F.Out == A",
+      "summary": "Fold with a library `Binary` step."
+     }
+    ],
+    "fold_until": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The step returning `ControlFlow[B, A]`, borrowed.",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The initial accumulator, consumed.",
+        "name": "initial",
+        "type": "A",
+        "variadic": false
+       }
+      ],
+      "description": "A break returns immediately without another pull. Empty input returns\n`Continue(initial)`. Raising overloads preserve the step's error as a\nseparate outcome from a `Break`. Library `Binary` steps are also accepted.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The accumulator type.",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The break payload type.",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The source element type.",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The native step type.",
+        "inferred": false,
+        "name": "F",
+        "type": "def(var A, var T) -> ControlFlow[B, A]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The first `Break`, or `Continue` with the final accumulator.",
+       "type": "ControlFlow[B, A]"
+      },
+      "signature": "def fold_until[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, var T) -> ControlFlow[B, A]](deinit self, step: F, var initial: A) -> ControlFlow[B, A] where Self.I.Element == T",
+      "summary": "Fold until `Break`, or return `Continue` with the final accumulator."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "initial",
+        "type": "A",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "def(var A, var T) raises E -> ControlFlow[B, A]",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "ControlFlow[B, A]"
+      },
+      "signature": "def fold_until[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, var T) raises E -> ControlFlow[B, A]](deinit self, step: F, var initial: A) raises E -> ControlFlow[B, A] where Self.I.Element == T",
+      "summary": "Fold until `Break` with a raising step, preserving its error."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "initial",
+        "type": "A",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F.Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "Binary",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "ControlFlow[B, A]"
+      },
+      "signature": "def fold_until[B: Movable & Deinitable, A: Movable & Deinitable, F: Binary](deinit self, step: F, var initial: A) raises F.Error -> ControlFlow[B, A] where F.First == A and F.Second == Self.I.Element and F.Out == ControlFlow[B, A]",
+      "summary": "Fold until `Break` with a library `Binary` step."
+     }
+    ],
+    "map": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The non-raising callback, stored; move owned captures in with `^`.",
+        "name": "function",
+        "type": "def(var T) thin -> U",
+        "variadic": false
+       }
+      ],
+      "description": "Each element is moved into the stored callback. Construction pulls nothing.\nPlain functions, capturing closures and non-raising library `Unary` values\nuse the same admission and execution as the free `map`.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The source element type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The result element type.",
+        "inferred": false,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An `Iter` over the transformed elements.",
+       "type": "Iter[MapIterator[T, U, Self.I]]"
+      },
+      "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, function: def(var T) thin -> U) -> Iter[MapIterator[T, U, Self.I]] where Self.I.Element == T",
+      "summary": "Lazily transform each element and continue the chain."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "def(var T) -> U",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[MapIterator[T, U, Self.I, F]]"
+      },
+      "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable, //, F: def(var T) -> U](deinit self, var function: F) -> Iter[MapIterator[T, U, Self.I, F]] where Self.I.Element == T",
+      "summary": "Lazily transform each element with a stored closure."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "Unary",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[MapIterator[F.Arg, F.Out, Self.I, F]]"
+      },
+      "signature": "def map[F: Unary](deinit self, var function: F) -> Iter[MapIterator[F.Arg, F.Out, Self.I, F]] where Self.I.Element == F.Arg and F.Error == Never",
+      "summary": "Lazily transform each element with a library `Unary` value."
+     }
+    ],
+    "reduce": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The step, borrowed.",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "A non-empty input of length `n` calls the step `n - 1` times. The overload\nwith `initial=` instead folds every element from that accumulator. Raising\nuninitialized reductions distinguish empty input and step failure with\n`ReductionError[E]`; initialized reductions propagate `E` directly.\nLibrary `Binary` steps preserve the same contracts.",
+      "error": "EmptyReductionError",
+      "parameters": [
+       {
+        "description": "The element and accumulator type.",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The native step type.",
+        "inferred": false,
+        "name": "F",
+        "type": "def(var T, var T) -> T",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "EmptyReductionError: The source is empty and no initializer was supplied.",
+      "returns": {
+       "doc": "The reduced value, moved out.",
+       "type": "T"
+      },
+      "signature": "def reduce[T: Movable & Deinitable, //, F: def(var T, var T) -> T](deinit self, step: F) raises EmptyReductionError -> T where Self.I.Element == T",
+      "summary": "Reduce from the first element; empty input raises `EmptyReductionError`."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "ReductionError[E]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "def(var T, var T) raises E -> T",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "T"
+      },
+      "signature": "def reduce[T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var T, var T) raises E -> T](deinit self, step: F) raises ReductionError[E] -> T where Self.I.Element == T",
+      "summary": "Reduce with a raising step, distinguishing step failure from empty input."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_ReductionFailure[F.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "Binary",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "F.Out"
+      },
+      "signature": "def reduce[F: Binary](deinit self, step: F) raises _ReductionFailure[F.Error] -> F.Out where F.First == F.Out and F.Second == F.Out and Self.I.Element == F.Out",
+      "summary": "Reduce from the first element with a library `Binary` step."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "initial",
+        "type": "A",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "def(var A, var T) -> A",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "A"
+      },
+      "signature": "def reduce[A: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, var T) -> A](deinit self, step: F, *, var initial: A) -> A where Self.I.Element == T",
+      "summary": "Reduce from an explicit initial accumulator, as `fold_left` does."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "initial",
+        "type": "A",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "def(var A, var T) raises E -> A",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "A"
+      },
+      "signature": "def reduce[A: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, var T) raises E -> A](deinit self, step: F, *, var initial: A) raises E -> A where Self.I.Element == T",
+      "summary": "Reduce from an initial accumulator, preserving the step's error."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "initial",
+        "type": "A",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F.Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "Binary",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "A"
+      },
+      "signature": "def reduce[A: Movable & Deinitable, F: Binary](deinit self, step: F, *, var initial: A) raises F.Error -> A where F.First == A and F.Second == Self.I.Element and F.Out == A",
+      "summary": "Reduce from an initial accumulator with a library `Binary` step."
+     }
+    ],
+    "reduce_optional": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The step, borrowed.",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "Only empty input becomes absence. Raising overloads propagate the exact\nstep error, including `StopIteration`, and stop without another pull.\nLibrary `Binary` steps are also accepted.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The element and accumulator type.",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The native step type.",
+        "inferred": false,
+        "name": "F",
+        "type": "def(var T, var T) -> T",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The reduced value inside `Optional`, or `None`.",
+       "type": "Optional[T]"
+      },
+      "signature": "def reduce_optional[T: Movable & Deinitable, //, F: def(var T, var T) -> T](deinit self, step: F) -> Optional[T] where Self.I.Element == T",
+      "summary": "Reduce from the first element, returning `None` for empty input."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "def(var T, var T) raises E -> T",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Optional[T]"
+      },
+      "signature": "def reduce_optional[T: Movable & Deinitable, E: AnyType, //, F: def(var T, var T) raises E -> T](deinit self, step: F) raises E -> Optional[T] where Self.I.Element == T",
+      "summary": "Reduce with a raising step; only empty input becomes `None`."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F.Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "Binary",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Optional[F.Out]"
+      },
+      "signature": "def reduce_optional[F: Binary](deinit self, step: F) raises F.Error -> Optional[F.Out] where F.First == F.Out and F.Second == F.Out and Self.I.Element == F.Out",
+      "summary": "Reduce with a library `Binary` step, returning `None` for empty input."
+     }
+    ],
+    "scan_left": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The non-raising step, stored.",
+        "name": "step",
+        "type": "def(var A, var T) thin -> A",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The initial accumulator, consumed.",
+        "name": "initial",
+        "type": "A",
+        "variadic": false
+       }
+      ],
+      "description": "The first output copies `initial` without pulling an input. Each later\noutput applies the step once, then copies the accumulator. An input of\nlength `n` yields `n + 1` snapshots. Closures and non-raising library\n`Binary` steps retain the same contract as the free `scan_left`.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The copyable accumulator type.",
+        "inferred": false,
+        "name": "A",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The source element type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An `Iter` over the accumulator snapshots.",
+       "type": "Iter[ScanIterator[A, T, Self.I]]"
+      },
+      "signature": "def scan_left[A: Copyable & Deinitable, T: Movable & Deinitable](deinit self, step: def(var A, var T) thin -> A, var initial: A) -> Iter[ScanIterator[A, T, Self.I]] where Self.I.Element == T",
+      "summary": "Lazily yield the initial accumulator and a copy after each step."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "initial",
+        "type": "A",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "def(var A, var T) -> A",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[ScanIterator[A, T, Self.I, F]]"
+      },
+      "signature": "def scan_left[A: Copyable & Deinitable, T: Movable & Deinitable, //, F: def(var A, var T) -> A](deinit self, var step: F, var initial: A) -> Iter[ScanIterator[A, T, Self.I, F]] where Self.I.Element == T",
+      "summary": "Lazily yield accumulator snapshots with a stored closure."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "initial",
+        "type": "A",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "Binary",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[ScanIterator[A, F.Second, Self.I, F]]"
+      },
+      "signature": "def scan_left[A: Copyable & Deinitable, F: Binary](deinit self, var step: F, var initial: A) -> Iter[ScanIterator[A, F.Second, Self.I, F]] where F.First == A and F.Second == Self.I.Element and F.Out == A and F.Error == Never",
+      "summary": "Lazily yield accumulator snapshots with a library `Binary` step."
+     }
+    ],
+    "to_list": [
+     {
+      "args": [],
+      "description": "Elements must be deinitializable, as for the free `collect_list`.\nEach element moves into the result; no copy requirement is added.\nTakes linear time and storage in the number of remaining elements.",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `List[Element]`; an empty list when the source is exhausted.",
+       "type": "List[Self.Element]"
+      },
+      "signature": "def to_list(deinit self) -> List[Self.Element] where conforms_to(Self.Element, Deinitable)",
+      "summary": "Consume the remaining elements into a list, in order."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The concrete native iterator type, including any borrowed origins.",
+     "inferred": false,
+     "name": "I",
+     "type": "Iterator",
+     "variadic": false
+    }
+   ],
+   "provider": "iteration/chaining",
+   "signature": "struct Iter[I: Iterator](Iterator, IterableOwned)",
+   "summary": "A native iterator with consuming transformation and terminal methods.",
+   "traits": [
+    "IterableOwned",
+    "Iterator"
+   ]
+  },
   "iteration.MapIterator": {
    "aliases": [],
    "description": "",
@@ -26137,6 +27877,44 @@
     }
    ],
    "provider": "iteration/folds",
+   "summary": ""
+  },
+  "iteration.iterated": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The source, consumed.",
+       "name": "source",
+       "type": "S",
+       "variadic": false
+      }
+     ],
+     "description": "An iterator keeps its current position. An owned collection is consumed\nthrough its native owned iterator. Pass `iter(values)` to borrow a\ncollection, keeping the owner alive and unmoved while the chain is used.\nConstruction does not pull any elements or run callbacks.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "A native iterator or an `IterableOwned` collection.",
+       "inferred": false,
+       "name": "S",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A native `Iterator` and `IterableOwned` wrapper with chaining methods.",
+      "type": "Iter[_Source[S]]"
+     },
+     "signature": "def iterated[S: Movable & Deinitable](var source: S) -> Iter[_Source[S]]",
+     "summary": "Start a consuming method chain over an iterator or owned collection."
+    }
+   ],
+   "provider": "iteration/chaining",
    "summary": ""
   },
   "iteration.map": {
@@ -53194,7 +54972,7 @@
    "summary": "Pipelines, compositions, argument flipping and partial application."
   },
   "iteration": {
-   "description": "Every operation consumes a **source**: a native iterator, used as it is and\nnever restarted, or an owned collection (any `IterableOwned`, such as `List`,\n`Set` or `Dict`), consumed as `iter(values^)` would. Pass `values^` to consume\na collection, or `iter(values)` to borrow it. Standard adapters (`chain`, `zip`,\n`enumerate`, `take`, `drop`, `peekable`, ...) come from `std.iter` and\n`std.itertools` and combine freely with these.\n\n**Lazy adapters** (`map`, `filter`, `filter_map`, `flatten`, `flat_map`,\n`scan_left`) are native iterators whose advancement raises only\n`StopIteration`:\n\n- Construction is inert: nothing is pulled and no callback runs until the first\n  `next`.\n- They are fused: after a source reports exhaustion it is never pulled again.\n- There is no lookahead: each output pulls only what it needs.\n- Abandoning one destroys its owned state without evaluating the rest.\n\nLazy callbacks do not raise, because a native iterator can raise only\n`StopIteration`; to carry a domain failure, yield `Result` elements and\naggregate them with `collect_results`. A callback is a plain function, a\ncapturing closure or, for `map`, `filter_map`, `flat_map` and `scan_left`, a\nshared-receiver `Unary`/`Binary` value such as a `Partial`. Move a closure that\nowns non-trivial state in with `callback^`. Owners of borrowed captures must\nstay alive and unmoved while the adapter is used. A generic function that\nreturns an adapter names its type with `MapIterator`, `ScanIterator`,\n`FilterIterator`, `FilterMapIterator` or `FlatMapIterator`, declares\n`I: Iterator` and `where I.Element == T`, and builds the value through the\nfunction; the types add no storage, and the source origin stays part of the\ntype.\n\n**Folds and terminals** (`fold_left`, `fold_until`, `reduce`,\n`reduce_optional`, `collect_list`, `find`, `any`, `all`) run at once:\n\n| Operation | Non-empty input | Empty input |\n|---|---|---|\n| `fold_left(step, initial, source)` | `n` calls of `step(var A, var T) -> A`, in order | `initial`, no calls |\n| `reduce(step, source, initial=value)` | The same as `fold_left` | `initial`, no calls |\n| `reduce(step, source)` | The first element seeds the accumulator; `n - 1` calls | Raises `EmptyReductionError` |\n| `reduce_optional(step, source)` | As above, wrapped in `Optional` | `None` |\n| `fold_until(step, initial, source)` | Each call returns `ControlFlow[B, A]`; `Break(b)` returns at once | `Continue(initial)` |\n| `collect_list(source)` | A `List` of every element, moved | An empty list |\n| `find(p, source)` | The first accepted element | `None` |\n| `any(p, source)` / `all(p, source)` | Stops at the first decisive element | `False` / `True` |\n\nSteps are never reassociated. Pure and raising callbacks have separate\noverloads, and a callback's error type propagates unchanged; a callback that\nraises `StopIteration` fails as a callback, never as exhaustion. The first\ndecisive result or failure stops without another pull. On failure, native\ncleanup destroys the source, the current accumulator and the pulled element;\nside effects are not rolled back. Every operation makes `O(n)` callback calls,\nor fewer after an early stop, with constant extra state.\n\nA generic function forwards to these with the native callback constraint and\n`where I.Element == T`. A raising wrapper passes `E=E` at every call and must\nnot read `F.E` or `F.T` from a callback type: Mojo 1.1 does not reliably expose\nthose attributes through a precompiled package. Keep the parameter names shown\nin the tutorial's generic examples; on Mojo 1.1 some renamings lose callback\nconformance.",
+   "description": "Every operation consumes a **source**: a native iterator, used as it is and\nnever restarted, or an owned collection (any `IterableOwned`, such as `List`,\n`Set` or `Dict`), consumed as `iter(values^)` would. Pass `values^` to consume\na collection, or `iter(values)` to borrow it. Standard adapters (`chain`, `zip`,\n`enumerate`, `take`, `drop`, `peekable`, ...) come from `std.iter` and\n`std.itertools` and combine freely with these.\n\n`iterated(source)` adds consuming method syntax to the same native iterators:\n`iterated(values^).map(f).filter(p).to_list()`. Its `Iter` wrapper implements\n`Iterator` and `IterableOwned`, so standard consuming adapters accept it\ndirectly. Wrap a standard adapter's result with `iterated` to continue chaining.\n`to_list()` and `collect_list()` are alias methods for the free `collect_list`.\nNamed chains are consumed explicitly, as in `stream^.to_list()`.\n\n**Lazy adapters** (`map`, `filter`, `filter_map`, `flatten`, `flat_map`,\n`scan_left`) are native iterators whose advancement raises only\n`StopIteration`:\n\n- Construction is inert: nothing is pulled and no callback runs until the first\n  `next`.\n- They are fused: after a source reports exhaustion it is never pulled again.\n- There is no lookahead: each output pulls only what it needs.\n- Abandoning one destroys its owned state without evaluating the rest.\n\nLazy callbacks do not raise, because a native iterator can raise only\n`StopIteration`; to carry a domain failure, yield `Result` elements and\naggregate them with `collect_results`. A callback is a plain function, a\ncapturing closure or, for `map`, `filter_map`, `flat_map` and `scan_left`, a\nshared-receiver `Unary`/`Binary` value such as a `Partial`. Move a closure that\nowns non-trivial state in with `callback^`. Owners of borrowed captures must\nstay alive and unmoved while the adapter is used. A generic function that\nreturns an adapter names its type with `MapIterator`, `ScanIterator`,\n`FilterIterator`, `FilterMapIterator` or `FlatMapIterator`, declares\n`I: Iterator` and `where I.Element == T`, and builds the value through the\nfunction; the types add no storage, and the source origin stays part of the\ntype.\n\n**Folds and terminals** (`fold_left`, `fold_until`, `reduce`,\n`reduce_optional`, `collect_list`, `find`, `any`, `all`) run at once:\n\n| Operation | Non-empty input | Empty input |\n|---|---|---|\n| `fold_left(step, initial, source)` | `n` calls of `step(var A, var T) -> A`, in order | `initial`, no calls |\n| `reduce(step, source, initial=value)` | The same as `fold_left` | `initial`, no calls |\n| `reduce(step, source)` | The first element seeds the accumulator; `n - 1` calls | Raises `EmptyReductionError` |\n| `reduce_optional(step, source)` | As above, wrapped in `Optional` | `None` |\n| `fold_until(step, initial, source)` | Each call returns `ControlFlow[B, A]`; `Break(b)` returns at once | `Continue(initial)` |\n| `collect_list(source)` | A `List` of every element, moved | An empty list |\n| `find(p, source)` | The first accepted element | `None` |\n| `any(p, source)` / `all(p, source)` | Stops at the first decisive element | `False` / `True` |\n\nSteps are never reassociated. Pure and raising callbacks have separate\noverloads, and a callback's error type propagates unchanged; a callback that\nraises `StopIteration` fails as a callback, never as exhaustion. The first\ndecisive result or failure stops without another pull. On failure, native\ncleanup destroys the source, the current accumulator and the pulled element;\nside effects are not rolled back. Every operation makes `O(n)` callback calls,\nor fewer after an early stop, with constant extra state.\n\nA generic function forwards to these with the native callback constraint and\n`where I.Element == T`. A raising wrapper passes `E=E` at every call and must\nnot read `F.E` or `F.T` from a callback type: Mojo 1.1 does not reliably expose\nthose attributes through a precompiled package. Keep the parameter names shown\nin the tutorial's generic examples; on Mojo 1.1 some renamings lose callback\nconformance.",
    "summary": "Lazy adapters, folds, reductions and terminal operations over native iterators."
   },
   "matching": {

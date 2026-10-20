@@ -9,6 +9,50 @@ inspect the intermediate steps of a fold.
 Callbacks in lazy adapters cannot raise. To carry a failure through the chain,
 return a `Result` element and handle it when consuming the iterator.
 
+## Chain operations with methods
+
+Start with `iterated(source)` to write transformations from left to right.
+Each transformation returns a native iterator with the same chaining methods.
+Finish with `to_list()` or its alias `collect_list()` to consume the remaining
+elements into a `List`.
+
+<!-- example: docs/examples/iteration_chaining.mojo -->
+
+The first chain consumes `words`, expands each word into codepoints, and
+collects ten values. It has the same behavior as
+`collect_list(flat_map(codepoints_of, words^))`: each word's codepoint list is
+built only when that word is reached. The helper still materializes an inner
+list. Returning a borrowing codepoint iterator from a temporary owned string
+would require a different ownership contract.
+
+`Iter` implements native `Iterator` and `IterableOwned`, so `enumerate`
+consumes it directly. The returned standard adapter can pass through
+`iterated(numbered^)` to resume chaining. Native `next`, consuming `for` loops,
+`zip`, `chain` and compatible `std.itertools` adapters work the same way.
+Each standard operation keeps its own type and ownership requirements.
+
+Pass `iterated(values^)` to consume a collection, or `iterated(iter(values))`
+to borrow it. Keep borrowed owners alive and unmoved for the duration of the
+chain. Borrowed sources follow the native iterator's element-copy rules;
+wrapping does not make them yield owned move-only elements.
+
+Every transformation and terminal consumes its receiver. With a named stream,
+write `stream^.map(f)` or `stream^.to_list()`. A partially consumed iterator
+continues at its current position. The wrapper adds no buffering or allocation,
+and lazy methods do not run callbacks until an element is requested.
+
+The method names and callback arguments match the free functions, with the
+source supplied by the receiver. For example, `stream^.fold_left(step, initial)`
+and `stream^.reduce(step, initial=initial)` preserve the existing fold contracts.
+`scan_left` still yields the initial snapshot before reading the source.
+The free functions remain available, and `to_list()` and `collect_list()` are
+the same consuming operation.
+
+Plain functions, closures and library callables retain their existing
+constraints. Move a closure with owned state into a lazy method with
+`callback^`. Generic raising terminal wrappers pass the error explicitly,
+as in `stream^.fold_left[E=E](step, initial^)`.
+
 ## Build a lazy chain and collect it
 
 This program keeps the positive values of `[-1, 1, 3]`, doubles them and

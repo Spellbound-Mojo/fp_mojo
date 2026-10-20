@@ -26,6 +26,7 @@ compile them through source and precompiled package imports at O0 and O3 with
 | Example | What it shows | Page |
 |---|---|---|
 | `iteration.mojo` | Lazy selection, ordered reduction and initial-first snapshots | [Iteration tutorial](../tutorial/iteration.md) |
+| `iteration_chaining.mojo` | Consuming method chains, both list collectors and native `enumerate` | [Iteration tutorial](../tutorial/iteration.md#chain-operations-with-methods) |
 | `generic_fold.mojo` | One `fold_left` over scalars, SIMD vectors and a user-defined document | [fp.iteration](../reference/iteration.md#fold-scalars-simd-vectors-and-documents-with-one-function) |
 | `iteration_generic.mojo` | Returning `map` and `scan_left` adapters from generic functions | [Iteration tutorial](../tutorial/iteration.md#return-adapters-from-generic-functions) |
 | `iteration_filtering_generic.mojo` | Returning filtering adapters from generic functions | [Iteration tutorial](../tutorial/iteration.md#return-filtering-adapters) |

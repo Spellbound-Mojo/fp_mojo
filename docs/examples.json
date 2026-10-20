@@ -49,6 +49,9 @@
     "docs/examples/iteration.mojo": {
       "stdout": "0\n2\n8\n"
     },
+    "docs/examples/iteration_chaining.mojo": {
+      "stdout": "codepoints: 10\n0 4\n1 5\n2 6\n"
+    },
     "docs/examples/iteration_filtering_generic.mojo": {
       "stdout": "generic filtering: 2, 2!, 4; tail unevaluated\n"
     },

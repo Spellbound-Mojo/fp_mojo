@@ -27,6 +27,41 @@ that is not an iterator is consumed through its `IterableOwned` iterator, so a
 value that is both is never restarted. `flatten` applies the same rule to inner
 values. Every public entry point takes its source through them.
 
+## Method chains
+
+`iterated(source)` applies the same source rule and stores the resulting native
+iterator in `Iter[I]`. The wrapper has one field and no independent traversal
+state. Its `__next__` and `bounds` methods delegate to that field.
+Its consuming `__iter__` returns itself, preserving its current position even
+when the underlying type's own `__iter__` would restart.
+
+Transforming methods consume the wrapper, pass its field to the existing free
+factory, and wrap the resulting adapter. Terminal methods pass the field to the
+existing terminal. The source conversion, callback dispatch, iteration loops,
+error handling and cleanup therefore have the same owners as free-function
+calls. `collect_list()` delegates to `to_list()`, which calls the free
+`collect_list`.
+
+`Iter` conforms to both native `Iterator` and `IterableOwned`. It can enter
+standard consuming adapters such as `enumerate`, `zip` and `chain`; their
+results can enter `iterated` to regain method syntax. The wrapper introduces
+no implicit copying or borrowed `Iterable` conformance. Standard operations
+that require those capabilities retain their native requirements.
+
+The stored iterator type keeps its embedded origins. The wrapper's native
+`Iterator` boundary yields values, as the existing iteration adapters do;
+borrowing sources retain their native copy requirements. The methods' `where`
+clauses preserve input, result and origin equality before delegation. Thin
+functions, native closures and library callables retain separate admission
+signatures, and raising terminal methods forward `E=E` explicitly for generic
+precompiled callers.
+
+Wrapping does not fuse an arbitrary source or add a new exhaustion flag.
+Lazy transformation adapters retain their existing fused behavior.
+Collection methods require deinitializable elements, just as the free
+`collect_list` does; this requirement belongs to those methods rather than the
+native iterator wrapper.
+
 Each library operation replaces itself with the standard one when Mojo provides
 the same ownership, pull order and error contract. Standard adapters keep their
 own semantics: `zip` may pull an earlier input before noticing a later one is

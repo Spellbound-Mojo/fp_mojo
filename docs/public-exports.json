@@ -472,6 +472,219 @@
       ],
       "provider": "iteration/adapters"
     },
+    "iteration.Iter": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct Iter[I: Iterator](Iterator, IterableOwned):"
+      ],
+      "methods": {
+        "bounds": [
+          {
+            "signature": "def bounds(self) -> Tuple[Int, Optional[Int]]:",
+            "sha256": "44fa8a6a228dde9f22f48cddbbbdc7bf47866773b0ded605dd75fa078ed39817"
+          }
+        ],
+        "map": [
+          {
+            "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable]( deinit self, function: def(var T) thin -> U ) -> Iter[MapIterator[T, U, Self.I]] where Self.I.Element == T:",
+            "sha256": "6453d4c8b97b498b4d9bec0429fc669db3523f4450a57f760f12fdb8dd5d34fc"
+          },
+          {
+            "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable, //, F: def(var T) -> U]( deinit self, var function: F ) -> Iter[MapIterator[T, U, Self.I, F]] where Self.I.Element == T:",
+            "sha256": "56c8962c3f183a900b59bc3a8cc00400c51ce2b2e5569092562596b74c04fcc3"
+          },
+          {
+            "signature": "def map[F: Unary](deinit self, var function: F ) -> Iter[MapIterator[F.Arg, F.Out, Self.I, F]] where Self.I.Element == F.Arg and F.Error == Never:",
+            "sha256": "4cf669756f1c1b193c008437c702c99828848d8f591dc8255151e90f6aaecd2f"
+          }
+        ],
+        "filter": [
+          {
+            "signature": "def filter[T: Movable & Deinitable]( deinit self, predicate: def(T) thin -> Bool ) -> Iter[FilterIterator[T, Self.I]] where Self.I.Element == T:",
+            "sha256": "243442bce0c072b6d8eaf49ccdaed2fd4affab4080efce4706c54750f47f9e0b"
+          },
+          {
+            "signature": "def filter[T: Movable & Deinitable, //, F: def(T) -> Bool]( deinit self, var predicate: F ) -> Iter[FilterIterator[T, Self.I, F]] where Self.I.Element == T:",
+            "sha256": "82f13a7d7d13f8d832ab89f3b9fd4e7631e0016fbc182ea6252ed2fa6d739c7c"
+          },
+          {
+            "signature": "def filter[C: BorrowCallable](deinit self, var predicate: C ) -> Iter[FilterIterator[Self.I.Element, Self.I, C]] where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and C.Failure == Never:",
+            "sha256": "d62941e9166b94296f011450725628b549877216809f552d0ae552f22417f9fb"
+          }
+        ],
+        "filter_map": [
+          {
+            "signature": "def filter_map[T: Movable & Deinitable, U: Movable & Deinitable]( deinit self, function: def(var T) thin -> Optional[U] ) -> Iter[FilterMapIterator[T, U, Self.I]] where Self.I.Element == T:",
+            "sha256": "e18d55611b4a48a41420c194640e46c6789c872aceef2ac7d15001ccac5e62ac"
+          },
+          {
+            "signature": "def filter_map[T: Movable & Deinitable, U: Movable & Deinitable, //, F: def(var T) -> Optional[U]]( deinit self, var function: F ) -> Iter[FilterMapIterator[T, U, Self.I, F]] where Self.I.Element == T:",
+            "sha256": "9318b3ebda42e6a10d3e56d7a55e4c232cd6fab49f231300405e9eb2980cb48c"
+          },
+          {
+            "signature": "def filter_map[U: Movable & Deinitable, F: Unary](deinit self, var function: F ) -> Iter[FilterMapIterator[F.Arg, U, Self.I, F]] where Self.I.Element == F.Arg and F.Out == Optional[U] and F.Error == Never:",
+            "sha256": "f1f269acbc953f560253a21ca8a13d21c24cb7453bb1603d472e3290c4dd51f3"
+          }
+        ],
+        "flat_map": [
+          {
+            "signature": "def flat_map[T: Movable & Deinitable, U: Movable & Deinitable]( deinit self, function: def(var T) thin -> U ) -> Iter[FlatMapIterator[T, U, Self.I]] where Self.I.Element == T:",
+            "sha256": "a98e7a1728bb91c5c593541e8374af42d05d7b6bbbb5b0efed9d7ce94f763a3e"
+          },
+          {
+            "signature": "def flat_map[T: Movable & Deinitable, U: Movable & Deinitable, //, F: def(var T) -> U]( deinit self, var function: F ) -> Iter[FlatMapIterator[T, U, Self.I, F]] where Self.I.Element == T:",
+            "sha256": "b99f12de31a0d3a2353e0ff7eca91cad9f22664d5488da01d6c3937a95d786c9"
+          },
+          {
+            "signature": "def flat_map[F: Unary](deinit self, var function: F ) -> Iter[FlatMapIterator[F.Arg, F.Out, Self.I, F]] where Self.I.Element == F.Arg and F.Error == Never:",
+            "sha256": "fbf1cf29568e4ff0afdde61d95b604943c8d2968f1e36a9f0ec8912d80697dd8"
+          }
+        ],
+        "flatten": [
+          {
+            "signature": "def flatten[S: Movable & Deinitable](deinit self ) -> Iter[_Flatten[Self.I, S]] where Self.I.Element == S:",
+            "sha256": "20e129fe1eefdf051e3b00a99b33691c2900d48f9985f50a7583615355407b49"
+          }
+        ],
+        "scan_left": [
+          {
+            "signature": "def scan_left[A: Copyable & Deinitable, T: Movable & Deinitable]( deinit self, step: def(var A, var T) thin -> A, var initial: A ) -> Iter[ScanIterator[A, T, Self.I]] where Self.I.Element == T:",
+            "sha256": "ab5fc10de062f766e34a61426c3e6f1e5801bdd62455da7262177c83fe40945a"
+          },
+          {
+            "signature": "def scan_left[A: Copyable & Deinitable, T: Movable & Deinitable, //, F: def(var A, var T) -> A]( deinit self, var step: F, var initial: A ) -> Iter[ScanIterator[A, T, Self.I, F]] where Self.I.Element == T:",
+            "sha256": "82f3c4f65d0a2a3e904f2bb9d17ee7692529b729480e6f6f3f005cd8b0c65b9c"
+          },
+          {
+            "signature": "def scan_left[A: Copyable & Deinitable, F: Binary]( deinit self, var step: F, var initial: A ) -> Iter[ScanIterator[A, F.Second, Self.I, F]] where F.First == A and F.Second == Self.I.Element and F.Out == A and F.Error == Never:",
+            "sha256": "6c8269729c088e9fdd54b9dfad340035c7d97b35a2a876107d58c7fbec0132a8"
+          }
+        ],
+        "to_list": [
+          {
+            "signature": "def to_list(deinit self) -> List[Self.Element] where conforms_to(Self.Element, Deinitable):",
+            "sha256": "c97c934d6db20135810a143657ba7e6e9515869abac90bd3fdd838902284d9fe"
+          }
+        ],
+        "collect_list": [
+          {
+            "signature": "def collect_list(deinit self) -> List[Self.Element] where conforms_to(Self.Element, Deinitable):",
+            "sha256": "12b9d5d4fbaabb7f4f3be3547857deb76b7e448b85096d59152cd7855df3e6f4"
+          }
+        ],
+        "fold_left": [
+          {
+            "signature": "def fold_left[A: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, var T) -> A]( deinit self, step: F, var initial: A ) -> A where Self.I.Element == T:",
+            "sha256": "fea2591f710d3cb8dbf74cb4f96b4ebb389366743cbbea175eaa949ab381c964"
+          },
+          {
+            "signature": "def fold_left[A: Movable & Deinitable, T: Movable & Deinitable, E: AnyType, //, F: def(var A, var T) raises E -> A]( deinit self, step: F, var initial: A ) raises E -> A where Self.I.Element == T:",
+            "sha256": "72098e6dad8257797c329af21864607143477825dc63a82c74e1f98a5d257ced"
+          },
+          {
+            "signature": "def fold_left[A: Movable & Deinitable, F: Binary]( deinit self, step: F, var initial: A ) raises F.Error -> A where F.First == A and F.Second == Self.I.Element and F.Out == A:",
+            "sha256": "0b28f2b02d3f7cb3732c4140fc92674fcd0f7b84583dee97207253dff924ecc2"
+          }
+        ],
+        "fold_until": [
+          {
+            "signature": "def fold_until[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, var T) -> ControlFlow[B, A]]( deinit self, step: F, var initial: A ) -> ControlFlow[B, A] where Self.I.Element == T:",
+            "sha256": "e3ce581c7b8791071180e4abe6454e4fc66765afdaed4c8bd58bc9fbe4ade736"
+          },
+          {
+            "signature": "def fold_until[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, var T) raises E -> ControlFlow[B, A]]( deinit self, step: F, var initial: A ) raises E -> ControlFlow[B, A] where Self.I.Element == T:",
+            "sha256": "f8a6c845a14bada0ce2d1759d5d7b008e3f68acfd17c6db852b168bd81a7de29"
+          },
+          {
+            "signature": "def fold_until[B: Movable & Deinitable, A: Movable & Deinitable, F: Binary]( deinit self, step: F, var initial: A ) raises F.Error -> ControlFlow[B, A] where F.First == A and F.Second == Self.I.Element and F.Out == ControlFlow[B, A]:",
+            "sha256": "0941f0cf9e57891ab1cadedcca744333e45d2278795b649b39d10cbff67ce874"
+          }
+        ],
+        "reduce": [
+          {
+            "signature": "def reduce[T: Movable & Deinitable, //, F: def(var T, var T) -> T]( deinit self, step: F ) raises EmptyReductionError -> T where Self.I.Element == T:",
+            "sha256": "675966d4236940f6e25c9a547b285f4575528bfbf94a939c0de444dc831c3ba3"
+          },
+          {
+            "signature": "def reduce[T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var T, var T) raises E -> T]( deinit self, step: F ) raises ReductionError[E] -> T where Self.I.Element == T:",
+            "sha256": "88c1c2ab7d72b561b8f09a400a73dbf5be0d1073189445f2c8b9418e193a0ed2"
+          },
+          {
+            "signature": "def reduce[F: Binary](deinit self, step: F ) raises _ReductionFailure[F.Error] -> F.Out where F.First == F.Out and F.Second == F.Out and Self.I.Element == F.Out:",
+            "sha256": "b953a05d45e37afb5b028653c6e1cffd86c32a8f44b78c1f56f82ae721a66632"
+          },
+          {
+            "signature": "def reduce[A: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, var T) -> A]( deinit self, step: F, *, var initial: A ) -> A where Self.I.Element == T:",
+            "sha256": "cfb55d75a148b3b15ebb0e05365bf624f294b6c6339dd2214027b6a063ec1193"
+          },
+          {
+            "signature": "def reduce[A: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, var T) raises E -> A]( deinit self, step: F, *, var initial: A ) raises E -> A where Self.I.Element == T:",
+            "sha256": "0780b0b8e7f9c47f53c97bc9ac1af6a1328f155b1cfdcb220f18c47fbd132206"
+          },
+          {
+            "signature": "def reduce[A: Movable & Deinitable, F: Binary]( deinit self, step: F, *, var initial: A ) raises F.Error -> A where F.First == A and F.Second == Self.I.Element and F.Out == A:",
+            "sha256": "c7e6aad1ace3bb78b1cfd68ac8871ff900ff901c0adb63781872afc61e05bf5c"
+          }
+        ],
+        "reduce_optional": [
+          {
+            "signature": "def reduce_optional[T: Movable & Deinitable, //, F: def(var T, var T) -> T]( deinit self, step: F ) -> Optional[T] where Self.I.Element == T:",
+            "sha256": "f37a3c5e083dd6e02d77ecde048592a88c0fdae82823864a72b629f3e08089ba"
+          },
+          {
+            "signature": "def reduce_optional[T: Movable & Deinitable, E: AnyType, //, F: def(var T, var T) raises E -> T]( deinit self, step: F ) raises E -> Optional[T] where Self.I.Element == T:",
+            "sha256": "b8b7ea034beb4e61497e0928bd091efd7b4d1e74675496b5ddf839749a8429c0"
+          },
+          {
+            "signature": "def reduce_optional[F: Binary](deinit self, step: F ) raises F.Error -> Optional[F.Out] where F.First == F.Out and F.Second == F.Out and Self.I.Element == F.Out:",
+            "sha256": "be5bc45595c2c19b5a576d3efb9e20a9a0b930ef6067e0db45b4688931bf4d69"
+          }
+        ],
+        "find": [
+          {
+            "signature": "def find[T: Movable & Deinitable, //, F: def(T) -> Bool]( deinit self, predicate: F ) -> Optional[T] where Self.I.Element == T:",
+            "sha256": "c0853ce62d52198b8f7ba464bab1c6b0c9f61e29f7eaf983644786f56fd86794"
+          },
+          {
+            "signature": "def find[T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(T) raises E -> Bool]( deinit self, predicate: F ) raises E -> Optional[T] where Self.I.Element == T:",
+            "sha256": "588d5ecf252f9d6215b90434fec6d354500fc9998c6908f5252d6040185d1b0a"
+          },
+          {
+            "signature": "def find[C: BorrowCallable](deinit self, predicate: C ) raises C.Failure -> Optional[Self.I.Element] where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool:",
+            "sha256": "c5f617bde5dbd58fbe2b37f80cc3a2f122529384c0ed2d7470bcaf70578cd3f4"
+          }
+        ],
+        "any": [
+          {
+            "signature": "def any[T: Movable & Deinitable, //, F: def(T) -> Bool]( deinit self, predicate: F ) -> Bool where Self.I.Element == T:",
+            "sha256": "737753821ebe0590318706fd8d2d6811e6c20839d91a3b58aec41691e9c8d3c7"
+          },
+          {
+            "signature": "def any[T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(T) raises E -> Bool]( deinit self, predicate: F ) raises E -> Bool where Self.I.Element == T:",
+            "sha256": "33cd5e1579d369aa8b1008caa106ddee8784ede13da782629e2744d6729377c1"
+          },
+          {
+            "signature": "def any[C: BorrowCallable](deinit self, predicate: C ) raises C.Failure -> Bool where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool:",
+            "sha256": "d9d64117353c1a11b171e5e9dd923534c8829a7bc7cf4d3c6bd2a09334668e20"
+          }
+        ],
+        "all": [
+          {
+            "signature": "def all[T: Movable & Deinitable, //, F: def(T) -> Bool]( deinit self, predicate: F ) -> Bool where Self.I.Element == T:",
+            "sha256": "916a3bb5450c0c926e88c1341629408a81230b47c53c7d1cb452566ed811d7fd"
+          },
+          {
+            "signature": "def all[T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(T) raises E -> Bool]( deinit self, predicate: F ) raises E -> Bool where Self.I.Element == T:",
+            "sha256": "954bcc7899920ea9c48dc3d6023d31a00fdf5d9bfe2d0d148fd3e3bb6b09b9ce"
+          },
+          {
+            "signature": "def all[C: BorrowCallable](deinit self, predicate: C ) raises C.Failure -> Bool where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool:",
+            "sha256": "f67b6e7af0911f3f4a71b9a69b1202985a5472e7cdd135f8c156457b6fb4b727"
+          }
+        ]
+      },
+      "provider": "iteration/chaining"
+    },
     "control.ScanLengthError": {
       "kind": "type or alias",
       "declarations": [
@@ -2024,6 +2237,16 @@
         }
       ],
       "provider": "iteration/adapters"
+    },
+    "iteration.iterated": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def iterated[S: Movable & Deinitable](var source: S) -> Iter[_Source[S]]:",
+          "sha256": "2208a6b68db35ca95988f12e630dbceb380ae0b344c4bb81b1673303e4f6cb52"
+        }
+      ],
+      "provider": "iteration/chaining"
     },
     "control.while_loop": {
       "kind": "function",

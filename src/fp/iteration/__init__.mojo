@@ -7,6 +7,13 @@ a collection, or `iter(values)` to borrow it. Standard adapters (`chain`, `zip`,
 `enumerate`, `take`, `drop`, `peekable`, ...) come from `std.iter` and
 `std.itertools` and combine freely with these.
 
+`iterated(source)` adds consuming method syntax to the same native iterators:
+`iterated(values^).map(f).filter(p).to_list()`. Its `Iter` wrapper implements
+`Iterator` and `IterableOwned`, so standard consuming adapters accept it
+directly. Wrap a standard adapter's result with `iterated` to continue chaining.
+`to_list()` and `collect_list()` are alias methods for the free `collect_list`.
+Named chains are consumed explicitly, as in `stream^.to_list()`.
+
 **Lazy adapters** (`map`, `filter`, `filter_map`, `flatten`, `flat_map`,
 `scan_left`) are native iterators whose advancement raises only
 `StopIteration`:
@@ -86,3 +93,4 @@ from .folds import (
     reduce,
     reduce_optional,
 )
+from .chaining import Iter, iterated
