@@ -1,7 +1,7 @@
 # fp.data
 
-`fp.data` provides `NonEmptyList` and two sum types: `Result` for success or failure, and
-`ControlFlow` for continuing or stopping a fold. Use `attempt` and `raise_on_err`
+`fp.data` provides `NonEmptyList` and three sum types: `Result` for success or failure,
+`Ior` for values with optional diagnostics, and `ControlFlow` for continuing or stopping a fold. Use `attempt` and `raise_on_err`
 to convert between stored failures and native exceptions. The
 [results tutorial](../tutorial/results.md) introduces these operations with a
 complete program.
@@ -53,3 +53,38 @@ and no NonEmptyList Monoid.
 Both failed operands contribute an error. Traversing the three positive inputs
 succeeds with a NonEmptyList whose first element is 2. Stored failures remain
 Result errors; any native raised error retains its original type.
+
+## Success with warnings
+
+`Ior[E, A]` holds `Left(E)`, `Right(A)` or `Both(E, A)`. Left has diagnostics
+without a value; Right has a value without diagnostics; Both keeps both. The
+constructors stay distinct even when E and A are the same type. Use `isa`,
+constructor indexing, consuming `unwrap` or exhaustive `fp.match`, just as for
+other Choice values. Each constructor also has consuming `into_payload`: Left
+and Right return their field; Both returns a native Tuple of diagnostics and
+value. These extractions move the fields and accept move-only values.
+
+Select a family explicitly for algebra and `piped` operations:
+
+| Family | Left input | Both input | Collection behavior |
+|---|---|---|---|
+| `IorFamily[S]` | Skips a dependent step or lazy right operand | Runs the next step and retains earlier diagnostics | Stops after the first Left |
+| `IorValidationFamily[S]` | Evaluates independent right operands | Retains a value only if every operand has one | Visits all inputs, accumulating diagnostics |
+
+`map` transforms only the value. `pure` creates Right. `flat_map` belongs to
+IorFamily and keeps diagnostics from successive steps in encounter order.
+Both families use S only when combining two present diagnostics; no empty
+identity is required. `NonEmptyListSemigroup` ensures that each diagnostic
+collection contains at least one entry.
+
+<!-- example: docs/examples/ior_validation.mojo -->
+
+The accepted zero retains its warning after mapping. Independent validation
+collects the warning and both errors. Sequential validation keeps the warning
+and the first error, then stops before checking -3. Native raised errors stop
+either policy immediately; they never become Left or Both.
+
+These families support collection traversal **into** Ior. They do not yet
+implement Ior as a Traversable source or the ApplicativeError recovery interface.
+Result-specific `par_*` inference remains unchanged; select IorValidationFamily
+explicitly through the generic algebra operations.

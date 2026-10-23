@@ -626,7 +626,8 @@ struct ListFamily(Monad, Traversable, Filterable, FunctorFilter):
     Callbacks run once per element, so they must be repeatable: a shared or
     exclusive receiver.
     """
-    comptime Element[V: Movable & Deinitable] = _ListElement[V]
+    # Traversal also accepts an existing iterator, without restarting it.
+    comptime Element[V: Movable & Deinitable] = _Item[V]
     comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = V
     comptime FilterError[V: Movable & Deinitable, P: BorrowCallable] = P.Failure
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = List[F.Out]

@@ -1,7 +1,7 @@
 """Effectful function composition, lowered to the ordinary composition engine."""
 from std.builtin.rebind import downcast, rebind_var
 from fp.algebra.protocols import Monad
-from fp.algebra._admission import _ResultCarrierCompatible
+from fp.algebra._admission import _CarrierCompatible
 from fp.callables._views import _UnaryViewable
 from fp.callables.protocols import UnaryContract, Unary, MutableUnary, OnceUnary
 from fp.callables.invoke import call_once, RepeatableUnary
@@ -207,7 +207,7 @@ struct Kleisli[I: Monad, P: _Program](_KleisliValue, OnceUnary, _UnaryViewable w
         """
         return call_once(self._program^.owned(), arg^)
 
-    def then[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, Self.P, _Leaf[F], 1]] where not conforms_to(F, _KleisliValue) and _ResultCarrierCompatible[Self.I, Self.Out] and Self.I.Element[Self.Out] == F.Arg and _ResultCarrierCompatible[Self.I, F.Out]:
+    def then[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, Self.P, _Leaf[F], 1]] where not conforms_to(F, _KleisliValue) and _CarrierCompatible[Self.I, Self.Out] and Self.I.Element[Self.Out] == F.Arg and _CarrierCompatible[Self.I, F.Out]:
         """Append an effectful callback.
 
         Parameters:
@@ -221,19 +221,19 @@ struct Kleisli[I: Monad, P: _Program](_KleisliValue, OnceUnary, _UnaryViewable w
         """
         return Kleisli[Self.I, _Join[Self.I, Self.P, _Leaf[F], 1]](_Join[Self.I, Self.P, _Leaf[F], 1](self._program^, _Leaf(function^)))
 
-    def then[A: Movable & Deinitable, R: Movable & Deinitable, //, F: _Unary[A, R]](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, Self.P, _Leaf[NativeUnary[A, R, Never, F, False]], 1]] where _ResultCarrierCompatible[Self.I, Self.Out] and Self.I.Element[Self.Out] == A and _ResultCarrierCompatible[Self.I, R]:
+    def then[A: Movable & Deinitable, R: Movable & Deinitable, //, F: _Unary[A, R]](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, Self.P, _Leaf[NativeUnary[A, R, Never, F, False]], 1]] where _CarrierCompatible[Self.I, Self.Out] and Self.I.Element[Self.Out] == A and _CarrierCompatible[Self.I, R]:
         """Append an effectful callback."""
         return self^.then(as_unary(function^))
 
-    def then[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, F: _RaisingUnary[A, R, E]](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, Self.P, _Leaf[NativeUnary[A, R, E, F, True]], 1]] where _ResultCarrierCompatible[Self.I, Self.Out] and Self.I.Element[Self.Out] == A and _ResultCarrierCompatible[Self.I, R]:
+    def then[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, F: _RaisingUnary[A, R, E]](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, Self.P, _Leaf[NativeUnary[A, R, E, F, True]], 1]] where _CarrierCompatible[Self.I, Self.Out] and Self.I.Element[Self.Out] == A and _CarrierCompatible[Self.I, R]:
         """Append an effectful callback."""
         return self^.then(as_unary(function^))
 
-    def then[Q: _Program](deinit self, var other: Kleisli[Self.I, Q]) -> Kleisli[Self.I, _Join[Self.I, Self.P, Q, 1]] where _ResultCarrierCompatible[Self.I, Self.Out] and Self.I.Element[Self.Out] == Q.Owned.Arg and _ResultCarrierCompatible[Self.I, Q.Owned.Out]:
+    def then[Q: _Program](deinit self, var other: Kleisli[Self.I, Q]) -> Kleisli[Self.I, _Join[Self.I, Self.P, Q, 1]] where _CarrierCompatible[Self.I, Self.Out] and Self.I.Element[Self.Out] == Q.Owned.Arg and _CarrierCompatible[Self.I, Q.Owned.Out]:
         """Compose another Kleisli of the same family, retaining its receiver modes."""
         return Kleisli[Self.I, _Join[Self.I, Self.P, Q, 1]](_Join[Self.I, Self.P, Q, 1](self._program^, other^._into_program()))
 
-    def map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, Self.P, _Leaf[F], 2]] where _ResultCarrierCompatible[Self.I, Self.Out] and Self.I.Element[Self.Out] == F.Arg:
+    def map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, Self.P, _Leaf[F], 2]] where _CarrierCompatible[Self.I, Self.Out] and Self.I.Element[Self.Out] == F.Arg:
         """Map the effect payload through an ordinary callback.
 
         Parameters:
@@ -247,15 +247,15 @@ struct Kleisli[I: Monad, P: _Program](_KleisliValue, OnceUnary, _UnaryViewable w
         """
         return Kleisli[Self.I, _Join[Self.I, Self.P, _Leaf[F], 2]](_Join[Self.I, Self.P, _Leaf[F], 2](self._program^, _Leaf(function^)))
 
-    def map[A: Movable & Deinitable, R: Movable & Deinitable, //, F: _Unary[A, R]](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, Self.P, _Leaf[NativeUnary[A, R, Never, F, False]], 2]] where _ResultCarrierCompatible[Self.I, Self.Out] and Self.I.Element[Self.Out] == A:
+    def map[A: Movable & Deinitable, R: Movable & Deinitable, //, F: _Unary[A, R]](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, Self.P, _Leaf[NativeUnary[A, R, Never, F, False]], 2]] where _CarrierCompatible[Self.I, Self.Out] and Self.I.Element[Self.Out] == A:
         """Map the effect payload through an ordinary callback."""
         return self^.map(as_unary(function^))
 
-    def map[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, F: _RaisingUnary[A, R, E]](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, Self.P, _Leaf[NativeUnary[A, R, E, F, True]], 2]] where _ResultCarrierCompatible[Self.I, Self.Out] and Self.I.Element[Self.Out] == A:
+    def map[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, F: _RaisingUnary[A, R, E]](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, Self.P, _Leaf[NativeUnary[A, R, E, F, True]], 2]] where _CarrierCompatible[Self.I, Self.Out] and Self.I.Element[Self.Out] == A:
         """Map the effect payload through an ordinary callback."""
         return self^.map(as_unary(function^))
 
-    def compose[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, _Leaf[F], Self.P, 1]] where not conforms_to(F, _KleisliValue) and _ResultCarrierCompatible[Self.I, Self.Out] and Self.I.Element[F.Out] == Self.Arg and _ResultCarrierCompatible[Self.I, F.Out]:
+    def compose[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, _Leaf[F], Self.P, 1]] where not conforms_to(F, _KleisliValue) and _CarrierCompatible[Self.I, Self.Out] and Self.I.Element[F.Out] == Self.Arg and _CarrierCompatible[Self.I, F.Out]:
         """Prepend an effectful callback.
 
         Parameters:
@@ -269,19 +269,19 @@ struct Kleisli[I: Monad, P: _Program](_KleisliValue, OnceUnary, _UnaryViewable w
         """
         return Kleisli[Self.I, _Join[Self.I, _Leaf[F], Self.P, 1]](_Join[Self.I, _Leaf[F], Self.P, 1](_Leaf(function^), self._program^))
 
-    def compose[A: Movable & Deinitable, R: Movable & Deinitable, //, F: _Unary[A, R]](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, _Leaf[NativeUnary[A, R, Never, F, False]], Self.P, 1]] where _ResultCarrierCompatible[Self.I, Self.Out] and Self.I.Element[R] == Self.Arg and _ResultCarrierCompatible[Self.I, R]:
+    def compose[A: Movable & Deinitable, R: Movable & Deinitable, //, F: _Unary[A, R]](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, _Leaf[NativeUnary[A, R, Never, F, False]], Self.P, 1]] where _CarrierCompatible[Self.I, Self.Out] and Self.I.Element[R] == Self.Arg and _CarrierCompatible[Self.I, R]:
         """Prepend an effectful callback."""
         return self^.compose(as_unary(function^))
 
-    def compose[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, F: _RaisingUnary[A, R, E]](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, _Leaf[NativeUnary[A, R, E, F, True]], Self.P, 1]] where _ResultCarrierCompatible[Self.I, Self.Out] and Self.I.Element[R] == Self.Arg and _ResultCarrierCompatible[Self.I, R]:
+    def compose[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, F: _RaisingUnary[A, R, E]](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, _Leaf[NativeUnary[A, R, E, F, True]], Self.P, 1]] where _CarrierCompatible[Self.I, Self.Out] and Self.I.Element[R] == Self.Arg and _CarrierCompatible[Self.I, R]:
         """Prepend an effectful callback."""
         return self^.compose(as_unary(function^))
 
-    def compose[Q: _Program](deinit self, var other: Kleisli[Self.I, Q]) -> Kleisli[Self.I, _Join[Self.I, Q, Self.P, 1]] where _ResultCarrierCompatible[Self.I, Self.Out] and Self.I.Element[Q.Owned.Out] == Self.Arg and _ResultCarrierCompatible[Self.I, Q.Owned.Out]:
+    def compose[Q: _Program](deinit self, var other: Kleisli[Self.I, Q]) -> Kleisli[Self.I, _Join[Self.I, Q, Self.P, 1]] where _CarrierCompatible[Self.I, Self.Out] and Self.I.Element[Q.Owned.Out] == Self.Arg and _CarrierCompatible[Self.I, Q.Owned.Out]:
         """Compose another Kleisli of the same family, retaining its receiver modes."""
         return Kleisli[Self.I, _Join[Self.I, Q, Self.P, 1]](_Join[Self.I, Q, Self.P, 1](other^._into_program(), self._program^))
 
-    def contramap[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, _Leaf[F], Self.P, 0]] where _ResultCarrierCompatible[Self.I, Self.Out] and F.Out == Self.Arg:
+    def contramap[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, _Leaf[F], Self.P, 0]] where _CarrierCompatible[Self.I, Self.Out] and F.Out == Self.Arg:
         """Transform the input before this computation.
 
         Parameters:
@@ -295,11 +295,11 @@ struct Kleisli[I: Monad, P: _Program](_KleisliValue, OnceUnary, _UnaryViewable w
         """
         return Kleisli[Self.I, _Join[Self.I, _Leaf[F], Self.P, 0]](_Join[Self.I, _Leaf[F], Self.P, 0](_Leaf(function^), self._program^))
 
-    def contramap[A: Movable & Deinitable, R: Movable & Deinitable, //, F: _Unary[A, R]](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, _Leaf[NativeUnary[A, R, Never, F, False]], Self.P, 0]] where _ResultCarrierCompatible[Self.I, Self.Out] and R == Self.Arg:
+    def contramap[A: Movable & Deinitable, R: Movable & Deinitable, //, F: _Unary[A, R]](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, _Leaf[NativeUnary[A, R, Never, F, False]], Self.P, 0]] where _CarrierCompatible[Self.I, Self.Out] and R == Self.Arg:
         """Transform the input before this computation."""
         return self^.contramap(as_unary(function^))
 
-    def contramap[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, F: _RaisingUnary[A, R, E]](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, _Leaf[NativeUnary[A, R, E, F, True]], Self.P, 0]] where _ResultCarrierCompatible[Self.I, Self.Out] and R == Self.Arg:
+    def contramap[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, F: _RaisingUnary[A, R, E]](deinit self, var function: F) -> Kleisli[Self.I, _Join[Self.I, _Leaf[NativeUnary[A, R, E, F, True]], Self.P, 0]] where _CarrierCompatible[Self.I, Self.Out] and R == Self.Arg:
         """Transform the input before this computation."""
         return self^.contramap(as_unary(function^))
 
@@ -314,7 +314,7 @@ struct _KleisliView[I: Monad, P: _Program, o: ImmOrigin](Unary, ImplicitlyCopyab
         return self.chain[].call(arg^)
 
 
-def kleisli[I: Monad, F: UnaryContract & Movable & Deinitable](var function: F) -> Kleisli[I, _Leaf[F]] where _ResultCarrierCompatible[I, F.Out]:
+def kleisli[I: Monad, F: UnaryContract & Movable & Deinitable](var function: F) -> Kleisli[I, _Leaf[F]] where _CarrierCompatible[I, F.Out]:
     """Store an effectful callback, with sequencing selected by family `I`.
 
     Parameters:
@@ -329,10 +329,10 @@ def kleisli[I: Monad, F: UnaryContract & Movable & Deinitable](var function: F) 
     """
     return Kleisli[I, _Leaf[F]](_Leaf(function^))
 
-def kleisli[A: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad, F: _Unary[A, R]](var function: F) -> Kleisli[I, _Leaf[NativeUnary[A, R, Never, F, False]]] where _ResultCarrierCompatible[I, R]:
+def kleisli[A: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad, F: _Unary[A, R]](var function: F) -> Kleisli[I, _Leaf[NativeUnary[A, R, Never, F, False]]] where _CarrierCompatible[I, R]:
     """Store a native function or closure, preserving its signature and captures."""
     return kleisli[I](as_unary(function^))
 
-def kleisli[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad, F: _RaisingUnary[A, R, E]](var function: F) -> Kleisli[I, _Leaf[NativeUnary[A, R, E, F, True]]] where _ResultCarrierCompatible[I, R]:
+def kleisli[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad, F: _RaisingUnary[A, R, E]](var function: F) -> Kleisli[I, _Leaf[NativeUnary[A, R, E, F, True]]] where _CarrierCompatible[I, R]:
     """Store a native function or closure, preserving its signature and captures."""
     return kleisli[I](as_unary(function^))

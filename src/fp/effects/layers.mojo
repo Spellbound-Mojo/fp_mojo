@@ -9,7 +9,7 @@ and Result families.
 """
 from std.builtin.rebind import rebind_var, rebind, downcast
 from fp.algebra.protocols import (Monad, Applicative, ApplicativeError, _Lifting, _Accumulate, _Present, _BindFirst, _Lazy, _UnaryView)
-from fp.algebra._admission import _ResultCarrierCompatible
+from fp.algebra._admission import _CarrierCompatible
 from fp.algebra.instances import IdentityFamily, OptionalFamily, ResultFamily, _OkOf
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, OnceUnary, MutableUnary
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary
@@ -323,7 +323,7 @@ struct _OptionalT[M: Monad](Monad, _Lifting, ApplicativeError where conforms_to(
 struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, _Lifting):
     """ResultT over a base other than Identity: a value is M's carrier of Result[A, E]."""
     comptime Failure = Self.E
-    comptime _ErrorCarrier[V: Movable & Deinitable] = _ResultCarrierCompatible[Self.M, V] and Self.M.Element[V] == Result[Self.Element[V], Self.E]
+    comptime _ErrorCarrier[V: Movable & Deinitable] = _CarrierCompatible[Self.M, V] and Self.M.Element[V] == Result[Self.Element[V], Self.E]
     comptime Failed[A: Movable & Deinitable] = Self.M.Pure[Result[A, Self.E]]
     comptime FailError[A: Movable & Deinitable] = Never
     comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self.M.Bound[V, _ResultGuard[Self.M, Self.E, H, False]]

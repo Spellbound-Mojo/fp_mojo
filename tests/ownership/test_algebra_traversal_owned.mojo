@@ -7,7 +7,6 @@ from std.builtin.rebind import rebind_var
 from std.memory import ArcPointer
 from std.testing import assert_equal
 from test_attempt_once import Trace, Token
-from fp._internal.errors import _propagate_error
 
 comptime Data=Result[Tuple[Int,Token[1]],Token[3]]
 
@@ -52,11 +51,7 @@ def check_traversal_ownership[M:Monad]() raises:
             items.append(Token[0](item,trace))
         comptime assert ListFamily.TraverseError[I,List[Token[0]],Produce[M]]==Never
         var computation:ListFamily.Traversed[I,List[Token[0]],Produce[M]]
-        try:
-            computation=traverse[ListFamily,I](Produce[M](Token[2](0,trace),failure),items^)
-        except error:
-            comptime assert type_of(error)==Never
-            _propagate_error[Never](error^)
+        computation=traverse[ListFamily,I](Produce[M](Token[2](0,trace),failure),items^)
         assert_equal(trace[].calls,0)
         for index in range(4):
             assert_equal(trace[].drops[index],0)

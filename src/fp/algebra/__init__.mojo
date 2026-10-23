@@ -15,7 +15,8 @@
 An instance is a compile-time dictionary named at each call: there are no
 runtime interface objects and no global registry. The native instances are
 `IdentityFamily` (the bare value), `OptionalFamily`, `ResultFamily[E]` and
-`ListFamily`; `ValidationFamily[S]` uses Result storage with accumulating errors, with `StringMonoid` and `ListMonoid[A]`; `fp.effects` adds
+`ListFamily`; `ValidationFamily[S]` uses Result storage with accumulating errors, with `StringMonoid` and `ListMonoid[A]`. `IorFamily[S]` sequences values with
+warnings; `IorValidationFamily[S]` accumulates independent diagnostics. `fp.effects` adds
 Reader, State, Writer and transformers. Each operation is a static method of
 the instance and the functions here forward to it; its result and error types
 are associated aliases of the instance, such as `I.Mapped[V, F]` and
@@ -64,3 +65,5 @@ from .conditional import if_effect
 from .validation import ValidationFamily
 
 from .non_empty import NonEmptyListFamily, NonEmptyListSemigroup
+
+from .ior import IorFamily, IorValidationFamily

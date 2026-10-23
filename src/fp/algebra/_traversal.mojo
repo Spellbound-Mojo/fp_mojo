@@ -1,4 +1,5 @@
 """Derived traversal policies over the canonical family traversal and loop."""
+from fp.algebra._admission import _BindCompatible
 from std.builtin.rebind import downcast, rebind, rebind_var
 from fp.callables.protocols import Unary, UnaryContract, BorrowCallContract
 from fp.callables._transforms import _Fill
@@ -53,6 +54,7 @@ struct _FlattenAfter[S: Monad, V: Movable & Deinitable](Unary, Copyable, Default
     comptime Out = Self.S.Bound[Self.V, Identity[Self.S.Element[Self.V]]]
     comptime Error = Self.S.BindError[Self.V, Identity[Self.S.Element[Self.V]]]
     def call(self, var value: Self.V) raises Self.Error -> Self.Out:
+        comptime assert _BindCompatible[Self.S, Self.V, Identity[Self.S.Element[Self.V]]]
         return flatten[Self.S](value^)
 
 

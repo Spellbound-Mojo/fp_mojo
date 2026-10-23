@@ -92,3 +92,8 @@ compile them through source and precompiled package imports at O0 and O3 with
 
 The [non-empty validation example](../reference/data.md#non-empty-collections-and-validation)
 uses NonEmptyList for both accumulated errors and successful traversal shapes.
+
+## Success with warnings
+
+[Inclusive-or validation](../reference/data.md#success-with-warnings) keeps a value
+with warnings and compares sequential and independent diagnostic accumulation.

@@ -663,3 +663,71 @@ admission because body-only comparisons can unify distinct embedded origins.
 The approved proposal is complete. Generalized operations retain the selected
 stored-error type; error-type-changing Result methods remain available without
 extending that behavior to other families.
+
+## Inclusive-or evaluation policies
+
+`IorFamily[S]` is a Monad with a sequential Applicative. `IorValidationFamily[S]`
+is a separate Applicative for independent diagnostic accumulation. Both operate
+on the same `data.ior.Ior` carrier and share one mapping, combination and
+ordered diagnostic-merge implementation. Independent validation has no bind:
+continuing after Left without a value cannot select a dependent callback.
+
+The following table gives independent combination, with `+` denoting S.combine
+and `f` the value combiner. Sequential combination differs only in the Left
+row: it returns the left diagnostic and never forces the right thunk.
+
+| Left operand | Right(b) | Left(y) | Both(y, b) |
+|---|---|---|---|
+| Right(a) | Right(f(a, b)) | Left(y) | Both(y, f(a, b)) |
+| Left(x) | Left(x) | Left(x + y) | Left(x + y) |
+| Both(x, a) | Both(x, f(a, b)) | Left(x + y) | Both(x + y, f(a, b)) |
+
+Evaluation is ordered: force the right thunk once, call f once when both values
+exist, then combine diagnostics if both are present. Bind calls its dependent
+callback before combining previous diagnostics with that result's diagnostics.
+The callbacks may consume their receivers. Skipped callback owners and unused
+payloads are destroyed exactly once. Any native raised error stops immediately,
+keeping its exact type; raising components must share one error type or Never.
+
+Collection supplies `_IorAccumulator` to the existing `_map_accumulate` pull
+loop. Right and Both carry the live payload accumulator; Left ends sequential
+collection, while accumulating collection keeps pulling for diagnostics alone.
+Partial payloads are discarded on failure. Empty input is Right of an empty
+List. Iterator sources continue at their current position. No second traversal
+loop is added; `_AccumulatePair` belongs to protocols and is shared with Result.
+Traversal takes linear loop work, plus callback and diagnostic-combination
+costs, and constant native stack space. The output List owns successful values;
+all partial values and diagnostics are cleaned up on native failure.
+
+Functor and Monad laws and sequential Applicative coherence assume an
+associative diagnostic Semigroup and pure, terminating callbacks. Independent
+Applicative laws use the same assumptions; diagnostics need not be commutative.
+The laws compare observable values and ordered diagnostics, not destruction
+traces or native effects.
+
+Checked algebra entry points and generated fluent methods evaluate family
+admission in their `where` clauses. `Functor.MapCompatible[V, F]`,
+`Monad.BindCompatible[V, F]`, and `Applicative.CombineCompatible[V, F, R]` /
+`CollectCompatible[V, F]` default to True. Ior overrides them to check diagnostic
+origins, callback-result types, and compatible native errors. Mapping and
+binding also require `I.Element[V] == F.Arg` at the call boundary.
+
+Generic forwarding signatures must now carry the corresponding predicates.
+For example, a wrapper around `map[I](f^, value^)` returning `I.Mapped[V, F]`
+needs `where I.Element[V] == F.Arg and I.MapCompatible[V, F]`; a wrapper around
+`traverse[S, G]` needs `where S.Element[V] == F.Arg and G.CollectCompatible[V, F]`. Bind uses the same
+input equality with `I.BindCompatible[V, F]`. The generic integration test
+exercises these public contracts through source and precompiled imports.
+Concrete families that use the defaults keep their existing behavior.
+
+The shared carrier compatibility predicate also uses mapping admission, so
+higher operations keep the same diagnostic origin. Like other dictionary
+primitives, static family methods implement these preconditions over
+already-admitted types: Mojo 1.1 does not support `where` on trait requirements.
+Call the checked free functions or fluent methods at user input boundaries.
+
+Generic native forwarders name the callback's raised type with `X=X`.
+Admission extracts diagnostic and payload types separately instead of
+reconstructing nested carrier types through callback metadata: Mojo cannot
+reliably reduce those expressions through a precompiled package. The generic
+integration test exercises mapping and binding through both import routes.

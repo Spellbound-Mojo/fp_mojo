@@ -30,7 +30,7 @@ def main() raises:
     def succeed() raises Failure -> String:
         return "value"
     var success = attempt(succeed)
-    var output = String("")
+    var output: String
     try:
         output = raise_on_err(success^)
     except error:

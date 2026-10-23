@@ -26,7 +26,7 @@ write `fp.match(...)`.
 | `fp.iteration` | Lazy adapters, scans, folds, reductions and predicate terminals over native iterators and owned collections | `adapters`, `folds`, `_terminal`, `_advance`, `_callbacks` |
 | `fp.control` | Functional `while_loop`, `fori_loop` and carry/output `scan` | `loops`, `scan`, `_loops` |
 | `fp.adt` | Algebraic and inductive data types: shared `Node`s and `Choice`s stored in place (`Data`, `Cases`, `Node`, `Choice`) | `data` |
-| `fp.data` | `Result`, `ControlFlow`, `NonEmptyList` and native-error bridges | `_result`, `result`, `control`, `non_empty_list` |
+| `fp.data` | `Result`, `Ior`, `ControlFlow`, `NonEmptyList` and native-error bridges | `_result`, `result`, `control`, `non_empty_list`, `ior` |
 | `fp.algebra` | Functor, Filterable, Applicative, Monad, Traversable and Monoid interfaces with native instances | `protocols`, `operations`, `filtering`, `instances`, `collections`, `_derived`, `monoids` |
 | `fp.effects` | Reader, State and Writer computations and the OptionalT, ResultT, ReaderT, StateT and WriterT transformers | `protocols`, `reader`, `state`, `writer`, `layers`, `operations`, `_adapt` |
 | `fp.matching` | `match` over data values, `Optional` and tuples, `rewrite` over `Node` values, `when` guards and `Next` | `matcher`, `clauses`, `_engine`, `_inline` |

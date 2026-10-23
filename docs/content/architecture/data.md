@@ -218,3 +218,28 @@ including outcome observation and recovery, remain consuming Result methods.
 These adapters use callable kernels below algebra; Result imports no algebra
 module. Generic native `map2` forwarders may need
 `A=A, B=B, R=R, X=X` to make the Piped carrier shape explicit.
+
+## Inclusive-or reuses Choice
+
+`Ior[E, A]` is an alias for `Choice[_IorCases[E, A]]`, with constructors
+Left, Right and Both. Choice owns storage, conditional copying, tag access,
+consuming extraction and the interface used by exhaustive matching. There is
+no second sum implementation or matching engine. The carrier adds no heap
+allocation and accepts move-only fields and embedded native origins.
+
+The leaf `data.ior` knows only the constructors and their structural
+projection/reconstruction. Internal owned Optional slots represent presence of
+diagnostics and a value; at least one is always present. Consuming constructor
+methods move fields into those slots, and one consuming split boundary moves
+them out, because native tuples do not provide movable indexed references.
+Each constructor exposes consuming `into_payload`; Both returns a native pair.
+Its internal projection reuses the shared native pair extraction helper.
+No callback, Semigroup or accumulation policy is imported by the carrier.
+`algebra.ior` owns transformations and the two evaluation policies.
+
+Immutable borrowed payloads and diagnostics retain their precise origins through
+mapping and binding. Mutable borrowed payloads can be stored and accessed.
+Mojo rejects a callback whose type embeds the same exclusive origin as a
+simultaneously passed argument; Ior does not relax native alias checking to
+admit that callback. Compile-failure fixtures cover payload and diagnostic
+origin mismatches as well as exclusive-origin callback aliases.

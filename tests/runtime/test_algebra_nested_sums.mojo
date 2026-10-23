@@ -8,7 +8,7 @@ from std.builtin.rebind import rebind, rebind_var
 from std.testing import assert_equal
 
 
-def check[optional_first:Bool,stateful:Bool]() raises:
+def check[optional_first:Bool,stateful:Bool]() raises where Stack[optional_first,stateful].Element[Endpoint[optional_first,stateful]] == Next[optional_first,stateful].Arg and Stack[optional_first,stateful].BindCompatible[Endpoint[optional_first,stateful],Next[optional_first,stateful]]:
     for source_failure in [0,1,2,4]:
         for next_failure in range(5):
             var trace=ArcPointer(List[Int]())

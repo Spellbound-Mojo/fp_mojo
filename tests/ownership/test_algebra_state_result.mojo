@@ -34,13 +34,9 @@ struct Next[retain:Bool](OnceUnary):
         var value=argument+self.capture.value
         if self.fail:
             raise Token[3](value,self.capture.trace)
-        try:
-            return pure[Self.I](value)
-        except error:
-            comptime assert type_of(error)==Never
-            _propagate_error[Token[3]](error^)
+        return pure[Self.I](value)
 
-def check[retain:Bool]() raises:
+def check[retain:Bool]() raises where Stack[retain].Element[Source[retain]] == Next[retain].Arg and Stack[retain].BindCompatible[Source[retain],Next[retain]]:
     comptime I=Stack[retain]
     comptime C=I.Bound[Source[retain],Next[retain]]
     comptime Out=Tuple[Data,Token[0]] if retain else Result[Tuple[Int,Token[0]],Token[2]]

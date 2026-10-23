@@ -52,7 +52,7 @@ def folds(mode, array=False):
             plan = f'_EffectFold[G, {source}, {step}, {policy}]'
             raised = f'_EntryError[{hint}, {plan}.Error]'
             condition += f' and G.Element[{effect}] == {acc} and _ErrorCompatible[{raised}, {plan}.Error]'
-            condition += f' and _ResultCarrierCompatible[G, {effect}]'
+            condition += f' and _CarrierCompatible[G, {effect}]'
             callback = build if fold else f'{step}({build})'
             result = f'{plan}.Out'
             call = f'_fold_effect[G, {source}, {step}, {policy}, {raised}]({callback}, {initial}, {value})'
@@ -104,7 +104,7 @@ def conditional(mode, family=None):
         cond = 'Self.T == Bool' if mode == 'result' else f'Self.Value == {source}' if family else f'{g}.Element[{source}] == Bool'
         cond += f' and {g}.Element[{results[0]}] == {g}.Element[{results[1]}] and _ErrorCompatible[{raised}, {actual}]'
         for effect in [source] + results:
-            cond += f' and _ResultCarrierCompatible[{g}, {effect}]'
+            cond += f' and _CarrierCompatible[{g}, {effect}]'
         call = f'_if_effect[{g}, {source}, {types[0]}, {types[1]}, {raised}]({value}, {", ".join(values)})'
         if mode == 'piped': result, call = f'Piped[{result}]', f'Piped({call})'
         if mode == 'free': args += ['var condition: V']

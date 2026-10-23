@@ -22,9 +22,18 @@ from fp.callables._receiver import _binary_repeated_as
 
 
 trait Functor:
-    """A carrier family whose payload can be transformed without changing its context: `map`."""
+    """A carrier family whose payload can be transformed without changing its context: `map`.
+
+    Checked free functions and fluent methods require the admission predicates
+    in their signatures. Generic wrappers must forward those requirements.
+    Dictionary primitives assume admitted types: Mojo 1.1 does not support
+    where clauses on trait methods. Input payload and callback argument types
+    must also match, including embedded origins.
+    """
     comptime Element[V: Movable & Deinitable]: Movable & Deinitable
     """The payload type of a carrier `V` of this family."""
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Bool = True
+    """Additional admission for map; generic forwarders preserve this in their where clause."""
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Movable & Deinitable
     """The carrier `map` returns for a carrier `V` and a callback `F`."""
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Movable & Deinitable
@@ -149,6 +158,10 @@ trait Applicative(Functor):
         return rebind_var[Self._Joined[L, R]](value^)
     comptime Pure[A: Movable & Deinitable]: Movable & Deinitable
     """The carrier `pure` returns for a payload `A`."""
+    comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable]: Bool = True
+    """Admission for combination, including family-specific carrier and error origins."""
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Bool = True
+    """Admission for collection into this family; generic traversal forwards this predicate."""
     comptime Combined[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable]: Movable & Deinitable
     """The carrier `map2_lazy` returns."""
     comptime CombineError[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable]: Movable & Deinitable
@@ -347,6 +360,8 @@ trait Monad(Applicative):
     and bind. Deferred families override `_Folded`, `_FoldError` and `_fold`
     to retain the source, initial accumulator and callbacks until execution.
     """
+    comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Bool = True
+    """Additional admission for bind, including callback-result and native-error origins."""
     comptime Bound[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Movable & Deinitable
     """The carrier `flat_map` returns: the callback's own carrier type."""
     comptime BindError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Movable & Deinitable
@@ -517,6 +532,16 @@ trait _Accumulate(_LiveAccumulator):
     @staticmethod
     def combine(var acc: Self.Acc, var item: Self.Item) raises Self.Error -> Self.Acc:
         ...
+
+
+@fieldwise_init
+struct _AccumulatePair[K: _Accumulate](Binary, Copyable, Defaultable):
+    comptime First = Self.K.Acc
+    comptime Second = Self.K.Item
+    comptime Out = Self.K.Acc
+    comptime Error = Self.K.Error
+    def call(self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out:
+        return Self.K.combine(first^, second^)
 
 
 struct _Append[B: Movable & Deinitable](_Accumulate):

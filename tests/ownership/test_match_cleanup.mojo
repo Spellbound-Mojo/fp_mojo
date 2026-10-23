@@ -29,8 +29,8 @@ struct CleanupPayload(Movable):
         self.tally = tally.copy()
         self.tally.made[] += 1
 
-    def __init__(out self, *, deinit take: Self):
-        self.tally = take.tally^
+    def __init__(out self, *, deinit move: Self):
+        self.tally = move.tally^
 
     def __deinit__(deinit self):
         self.tally.destroyed[] += 1
@@ -52,9 +52,9 @@ struct CleanupResult(Copyable):
         self.tally = copy.tally.copy()
         self.tally.made[] += 1
 
-    def __init__(out self, *, deinit take: Self):
-        self.value = take.value
-        self.tally = take.tally^
+    def __init__(out self, *, deinit move: Self):
+        self.value = move.value
+        self.tally = move.tally^
 
     def __deinit__(deinit self):
         self.tally.destroyed[] += 1
@@ -139,8 +139,8 @@ def main() raises:
     var deep: C = shared
     for _ in range(1_000_000):
         deep = CleanupAdd(deep, item)
-    deep = one
-    shared = one
+    _ = deep^
+    _ = shared^
     assert_equal(payloads.live(), 1)
     # `item` is used here, so it holds the payload until this point.
     assert_equal(item.isa[CleanupHeld](), True)
@@ -173,5 +173,5 @@ def main() raises:
     var chosen: C = CleanupPick(C(CleanupAdd(one, one)), C(CleanupAdd(one, C(CleanupHeld(CleanupPayload(payloads))))))
     assert_equal(run(chosen, results), 1)
     assert_equal(results.live(), 0)
-    chosen = one
+    _ = chosen^
     assert_equal(payloads.live(), 0)

@@ -1,4 +1,5 @@
 """Operations derived from the primitive protocols; no new execution paths."""
+from fp.algebra._admission import _BindCompatible, _CombineCompatible, _CollectCompatible
 from std.builtin.rebind import downcast
 from fp.callables.protocols import UnaryContract, BinaryContract
 from fp.functions.composition import Identity
@@ -11,6 +12,7 @@ def _map2_as[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract
              //, I: Applicative, X: Movable & Deinitable](
     var f: F, var left: V, var right: W
 ) raises X -> I.Combined[V, F, _Value[W]]:
+    comptime assert _CombineCompatible[I, V, F, _Value[W]]
     # Native carrier syntax knows the exact callback error. Keep the family's
     # public symbolic error spelling intact and admit that identity here.
     try:
@@ -26,7 +28,7 @@ comptime _Function[I: Applicative, V: Movable & Deinitable] = downcast[I.Element
 
 def map2[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, I: Applicative](
     var f: F, var left: V, var right: W
-) raises I.CombineError[V, F, _Value[W]] -> I.Combined[V, F, _Value[W]]:
+) raises I.CombineError[V, F, _Value[W]] -> I.Combined[V, F, _Value[W]] where _CombineCompatible[I, V, F, _Value[W]]:
     """Combine two carriers with `f`, where the right one is already computed.
 
     It is `map2_lazy` with a right operand that returns `right`.
@@ -52,7 +54,7 @@ def map2[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & M
 
 
 def ap[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var functions: V, var values: W
-) raises I.CombineError[V, _Apply[_Function[I, V]], _Value[W]] -> I.Combined[V, _Apply[_Function[I, V]], _Value[W]]:
+) raises I.CombineError[V, _Apply[_Function[I, V]], _Value[W]] -> I.Combined[V, _Apply[_Function[I, V]], _Value[W]] where _CombineCompatible[I, V, _Apply[_Function[I, V]], _Value[W]]:
     """Apply the callbacks a carrier holds to the values another carrier holds.
 
     Parameters:
@@ -75,7 +77,7 @@ def ap[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var
 
 
 def flatten[V: Movable & Deinitable, //, I: Monad](var nested: V
-) raises I.BindError[V, _Same[I.Element[V]]] -> I.Bound[V, _Same[I.Element[V]]]:
+) raises I.BindError[V, _Same[I.Element[V]]] -> I.Bound[V, _Same[I.Element[V]]] where _BindCompatible[I, V, _Same[I.Element[V]]]:
     """Remove one level of the same context: `flat_map` with the identity.
 
     Parameters:
@@ -95,7 +97,7 @@ def flatten[V: Movable & Deinitable, //, I: Monad](var nested: V
 
 
 def sequence[V: Movable & Deinitable, //, S: Traversable, G: Applicative](var source: V
-) raises S.TraverseError[G, V, _Same[S.Element[V]]] -> S.Traversed[G, V, _Same[S.Element[V]]]:
+) raises S.TraverseError[G, V, _Same[S.Element[V]]] -> S.Traversed[G, V, _Same[S.Element[V]]] where _CollectCompatible[G, V, _Same[S.Element[V]]]:
     """Turn a source of `G` carriers into one `G` carrier of the source: `traverse` with the identity.
 
     Parameters:
@@ -117,7 +119,7 @@ def sequence[V: Movable & Deinitable, //, S: Traversable, G: Applicative](var so
 
 
 def product[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W
-) raises I.CombineError[V, _Pair[I.Element[V], I.Element[W]], _Value[W]] -> I.Combined[V, _Pair[I.Element[V], I.Element[W]], _Value[W]]:
+) raises I.CombineError[V, _Pair[I.Element[V], I.Element[W]], _Value[W]] -> I.Combined[V, _Pair[I.Element[V], I.Element[W]], _Value[W]] where _CombineCompatible[I, V, _Pair[I.Element[V], I.Element[W]], _Value[W]]:
     """Combine already computed operands into pairs through map2.
 
     Parameters:

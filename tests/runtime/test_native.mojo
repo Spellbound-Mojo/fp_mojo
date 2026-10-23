@@ -21,6 +21,7 @@ def main() raises:
     def add(value: Int) {var amount} -> Int:
         return value + amount
     amount = 50
+    assert_equal(amount, 50)
     assert_equal(apply(add, 4), 9)
     assert_equal(apply(add, 8), 13)
     var seen = 0

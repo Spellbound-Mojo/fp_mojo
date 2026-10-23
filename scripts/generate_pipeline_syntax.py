@@ -169,6 +169,7 @@ def transform_methods(carrier=None):
         family = carrier.instance('T') if carrier else 'I'
         result = carrier.value(element) if carrier else f'I.Mapped[Self.Value, {callback}]'
         condition = f'Self.Value == {source}' if carrier else 'I.Element[Self.Value] == T'
+        if not carrier: condition += f' and _MapCompatible[I, Self.Value, {callback}]'
         effect = '' if carrier else f' raises I.MapError[Self.Value, {callback}]'
         nominal = f'        comptime assert Self.Value == {source}\n' if carrier else ''
         value = f'rebind_var[{source}](self.value^)' if carrier else 'self.value^'
@@ -208,6 +209,7 @@ def observe_methods(carrier=None):
             result = carrier.value(element) if carrier else f'I.Mapped[Self.Value, {callback}]'
             effect = error if carrier else f'I.MapError[Self.Value, {callback}]'
             condition = f'Self.Value == {source}' if carrier else 'I.Element[Self.Value] == T'
+            if not carrier: condition += f' and _MapCompatible[I, Self.Value, {callback}]'
             if not native:
                 condition += ' and C.Payload == T'
             nominal = f'        comptime assert Self.Value == {source}\n' if carrier else ''
@@ -272,7 +274,11 @@ def algebra_methods(carrier=None, *, iteration=False):
             raised = f'{family}.{error_alias}[{args}]'
             condition = f'Self.Value == {source}' if carrier else f'I.Element[Self.Value] == {elem}'
             if iteration: condition = f'Self.I.Element == {elem}'
-            if parallel: condition += f' and _ResultCarrierCompatible[{target_family}, {target}]'
+            if operation == 'flat_map' and not carrier:
+                condition += f' and _BindCompatible[{family}, {source}, {callback}]'
+            if operation == 'traverse':
+                condition += f' and _CollectCompatible[{target_family}, {source}, {callback}]'
+            if parallel: condition += f' and _CarrierCompatible[{target_family}, {target}]'
             nominal = f'        comptime assert Self.Value == {source}\n' if carrier else ''
             value = f'rebind_var[{source}](self.value^)' if carrier else 'self._iterator^' if iteration else 'self.value^'
             call = f'{family}.{operation}' + (f'[{target_family}]' if operation == 'traverse' else '')
@@ -307,7 +313,11 @@ def algebra_methods(carrier=None, *, iteration=False):
         args = f'{target_family}, {source}, {cb}' if operation == 'traverse' else f'{source}, {cb}'
         condition = f' where Self.Value == {source}' if carrier else ''
         if iteration: condition = f' where Self.I.Element == {elem}'
-        if parallel: condition += f' and _ResultCarrierCompatible[{target_family}, {elem}]'
+        if operation == 'flat_map' and not carrier:
+            condition += (' and ' if condition else ' where ') + f'_BindCompatible[{family}, {source}, {cb}]'
+        if operation == 'traverse':
+            condition += (' and ' if condition else ' where ') + f'_CollectCompatible[{target_family}, {source}, {cb}]'
+        if parallel: condition += f' and _CarrierCompatible[{target_family}, {elem}]'
         nominal = f'        comptime assert Self.Value == {source}\n' if carrier else ''
         value = f'rebind_var[{source}](self.value^)' if carrier else 'self._iterator^' if iteration else 'self.value^'
         call = f'{family}.{operation}' + (f'[{target_family}]' if operation == 'traverse' else '')

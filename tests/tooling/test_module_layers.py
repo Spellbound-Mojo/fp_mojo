@@ -22,7 +22,7 @@ class ModuleLayerTests(unittest.TestCase):
 
     def test_leaf_dependencies_do_not_reach_integration_layers(self):
         graph = dependencies(ROOT)
-        for leaf in ('data._result', 'data.control', 'data.non_empty_list', 'adt.data',
+        for leaf in ('data._result', 'data.control', 'data.non_empty_list', 'data.ior', 'adt.data',
                      'functions.composition'):
             reached, pending = set(), [leaf]
             while pending:

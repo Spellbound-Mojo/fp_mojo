@@ -1,5 +1,5 @@
 """Result error policies and accumulation over the shared native pull loop."""
-from .protocols import Semigroup, _Accumulate, _map_accumulate, _start_as
+from .protocols import Semigroup, _Accumulate, _map_accumulate, _start_as, _AccumulatePair
 from fp.data._result import Result, Ok, Err, _transform_result_owned
 from std.builtin.rebind import rebind_var
 from fp.callables.protocols import BinaryContract, ThunkContract
@@ -31,16 +31,6 @@ struct _AccumulatingErrors[S: Semigroup](_ResultPolicy):
     @staticmethod
     def combine(var left: Self.Value, var right: Self.Value) raises Self.Error -> Self.Value:
         return Self.S.combine(left^, right^)
-
-
-@fieldwise_init
-struct _AccumulatePair[K: _Accumulate](Binary, Copyable, Defaultable):
-    comptime First = Self.K.Acc
-    comptime Second = Self.K.Item
-    comptime Out = Self.K.Acc
-    comptime Error = Self.K.Error
-    def call(self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out:
-        return Self.K.combine(first^, second^)
 
 
 struct _ResultAccumulator[K: _Accumulate, P: _ResultPolicy](_Accumulate):

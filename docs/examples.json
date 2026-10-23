@@ -138,6 +138,9 @@
     },
     "docs/examples/non_empty_validation.mojo": {
       "stdout": "errors: 2\n-1 must be positive\n-2 must be positive\nfirst: 2 count: 3\n"
+    },
+    "docs/examples/ior_validation.mojo": {
+      "stdout": "value: 0\nwarning: zero accepted\nindependent diagnostics: 3\nsequential diagnostics: 2\n"
     }
   }
 }

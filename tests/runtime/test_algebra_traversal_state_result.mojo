@@ -33,6 +33,7 @@ def check[retain:Bool]() raises:
         for failure in range(4):
             var pulls=0
             var trace=ArcPointer(List[Int]())
+            comptime assert I.CollectCompatible[Counted[origin_of(pulls)],Produce[retain]]
             var computation:type_of(traverse[ListFamily,I](Produce[retain](trace,failure),Counted(Pointer(to=pulls),0,count)))
             try:
                 computation=traverse[ListFamily,I](Produce[retain](trace,failure),Counted(Pointer(to=pulls),0,count))

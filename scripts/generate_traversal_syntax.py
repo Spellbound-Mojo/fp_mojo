@@ -117,7 +117,7 @@ def methods(mode, carrier=None):
             # Probe the target's neutral carrier: non-Result targets must not
             # require a generic callback's opaque return type to be resolved.
             effect='R' if native else f'{cb}.Result' if borrowing else f'{cb}.Out'
-            condition += f' and _ResultCarrierCompatible[G, {effect}]'
+            condition += f' and _CarrierCompatible[G, {effect}]'
             if mode=='piped': result=f'Piped[{result}]';call=f'Piped({call})'
             indent='' if mode=='free' else '    '
             args=', '.join(x for x in ((arg, 'var source: V') if mode=='free' else ('deinit self', arg)) if x)

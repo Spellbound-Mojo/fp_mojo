@@ -49,6 +49,7 @@ def main() raises:
     # Copying is explicit and copies the constructor once.
     var copied = value.copy()
     assert_equal(copies[], 1)
+    assert_equal(held(copied), 1)
     # Replacing a value destroys the constructor it held.
     copied = ChoiceCleanupEmpty()
     assert_equal(drops[], 1)

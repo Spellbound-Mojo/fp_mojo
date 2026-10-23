@@ -54,7 +54,7 @@ def methods(carrier=None, *, iteration=False):
                 error = 'Never'
                 expr = f'Iter(_bind_iterator({continuation}({build}), {value}))'
             else:
-                condition += f' and _ResultCarrierCompatible[{family}, {cb.result}]'
+                condition += f' and _CarrierCompatible[{family}, {cb.result}]'
                 result = f'Piped[{family}.Bound[{source}, {continuation}]]'
                 error = cb.error if carrier else f'{family}.BindError[{source}, {continuation}]'
                 if carrier:
