@@ -124,3 +124,5 @@ from .indexed import ZipWithIterator, IndexedMapIterator, zip_with, map_with_ind
 from .terminals import first, last, is_empty, count, count_where, contains, for_each, to_non_empty_list, combine_all_optional, collect_fold
 
 from .branching import Unbounded, BoundedFail, BufferCapacityError, BufferLimitExceeded, PartitionBranches, PartitionMapBranches, UnzipBranches, partition, partition_map, unzip
+
+from .alignment import AlignIterator, AlignWithIterator, PadZipIterator, align, align_with, pad_zip

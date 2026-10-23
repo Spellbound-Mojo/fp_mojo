@@ -89710,6 +89710,102 @@
    "provider": "functions/pipeline",
    "summary": ""
   },
+  "iteration.AlignIterator": {
+   "aliases": [],
+   "description": "",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The left source element type, including origins.",
+     "inferred": false,
+     "name": "A",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The right source element type, including origins.",
+     "inferred": false,
+     "name": "B",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The normalized left iterator type.",
+     "inferred": false,
+     "name": "I",
+     "type": "Iterator",
+     "variadic": false
+    },
+    {
+     "description": "The normalized right iterator type.",
+     "inferred": false,
+     "name": "J",
+     "type": "Iterator",
+     "variadic": false
+    }
+   ],
+   "provider": "iteration/alignment",
+   "signature": "comptime AlignIterator[A: Movable & Deinitable, B: Movable & Deinitable, I: Iterator, J: Iterator] = _Align[A,B,I,J]",
+   "summary": "A fused iterator of Ior values, continuing until both sources end.",
+   "traits": []
+  },
+  "iteration.AlignWithIterator": {
+   "aliases": [],
+   "description": "",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The left source element type.",
+     "inferred": false,
+     "name": "A",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The right source element type.",
+     "inferred": false,
+     "name": "B",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The callback result type.",
+     "inferred": false,
+     "name": "U",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The normalized left iterator type.",
+     "inferred": false,
+     "name": "I",
+     "type": "Iterator",
+     "variadic": false
+    },
+    {
+     "description": "The normalized right iterator type.",
+     "inferred": false,
+     "name": "J",
+     "type": "Iterator",
+     "variadic": false
+    },
+    {
+     "description": "The concrete non-raising callback, including captures and origins.",
+     "inferred": false,
+     "name": "F",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "iteration/alignment",
+   "signature": "comptime AlignWithIterator[A: Movable & Deinitable, B: Movable & Deinitable, U: Movable & Deinitable, I: Iterator, J: Iterator, F: Movable & Deinitable] = _Map[Ior[A,B],U,_Align[A,B,I,J],F]",
+   "summary": "The map of alignment, retaining both source types and the owned callback.",
+   "traits": []
+  },
   "iteration.BoundedFail": {
    "aliases": [
     {
@@ -90029,6 +90125,249 @@
    "fields": [],
    "kind": "struct",
    "methods": {
+    "align": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The second source, consumed at its current position.",
+        "name": "other",
+        "type": "W",
+        "variadic": false
+       }
+      ],
+      "description": "Construction pulls nothing; each output pulls each live side once, left before right.\nExhausted sides are never polled again. Left and Right denote source sides.\nState is constant-sized; move-only payloads, captures and origins are preserved.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The first callback argument type.",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The second callback argument type.",
+        "inferred": false,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The second consumed source type.",
+        "inferred": false,
+        "name": "W",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Iter[AlignIterator[A, B, Self.I, _Source[W]]] with the ownership, timing and empty-input behavior described above.",
+       "type": "Iter[AlignIterator[A, B, Self.I, _Source[W]]]"
+      },
+      "signature": "def align[A: Movable & Deinitable, B: Movable & Deinitable, W: Movable & Deinitable](deinit self, var other: W) -> Iter[AlignIterator[A, B, Self.I, _Source[W]]] where Self.I.Element == A and _Source[W].Element == B",
+      "summary": "Align positions to Ior until both sources end, without truncating either side."
+     }
+    ],
+    "align_with": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The second source, consumed at its current position.",
+        "name": "other",
+        "type": "W",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "name": "function",
+        "type": "def(var T) thin -> U",
+        "variadic": false
+       }
+      ],
+      "description": "Construction pulls nothing; each output pulls each live side once, left before right.\nExhausted sides are never polled again. Left and Right denote source sides.\nState is constant-sized; move-only payloads, captures and origins are preserved.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The first callback argument type.",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The second callback argument type.",
+        "inferred": false,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The source element type, including origins.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The callback result type, including origins.",
+        "inferred": false,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The second consumed source type.",
+        "inferred": false,
+        "name": "W",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Iter[AlignWithIterator[A, B, U, Self.I, _Source[W], def(var T) thin -> U]] with the ownership, timing and empty-input behavior described above.",
+       "type": "Iter[AlignWithIterator[A, B, U, Self.I, _Source[W], def(var T) thin -> U]]"
+      },
+      "signature": "def align_with[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, U: Movable & Deinitable, W: Movable & Deinitable](deinit self, var other: W, var function: def(var T) thin -> U) -> Iter[AlignWithIterator[A, B, U, Self.I, _Source[W], def(var T) thin -> U]] where Self.I.Element == A and _Source[W].Element == B and T == Ior[A, B]",
+      "summary": "Map each owned Ior from alignment through a non-raising callback."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "other",
+        "type": "W",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "W",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_LazyUnary[T, U]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[AlignWithIterator[A, B, U, Self.I, _Source[W], F]]"
+      },
+      "signature": "def align_with[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, U: Movable & Deinitable, W: Movable & Deinitable, //, F: _LazyUnary[T, U]](deinit self, var other: W, var function: F) -> Iter[AlignWithIterator[A, B, U, Self.I, _Source[W], F]] where Self.I.Element == A and _Source[W].Element == B and T == Ior[A, B]",
+      "summary": "Map each owned Ior from alignment through a non-raising callback."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "other",
+        "type": "W",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "W",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[AlignWithIterator[A, B, F.Out, Self.I, _Source[W], F]]"
+      },
+      "signature": "def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, W: Movable & Deinitable](deinit self, var other: W, var function: F) -> Iter[AlignWithIterator[A, B, F.Out, Self.I, _Source[W], F]] where Self.I.Element == A and _Source[W].Element == B and F.Arg == Ior[A, B] and F.Error == Never and RepeatableUnary[F]",
+      "summary": "Map each owned Ior from alignment through a non-raising callback."
+     }
+    ],
     "all": [
      {
       "args": [
@@ -94222,6 +94561,52 @@
       "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
      }
     ],
+    "pad_zip": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The second source, consumed at its current position.",
+        "name": "other",
+        "type": "W",
+        "variadic": false
+       }
+      ],
+      "description": "Construction pulls nothing; each output pulls each live side once, left before right.\nExhausted sides are never polled again. Left and Right denote source sides.\nState is constant-sized; move-only payloads, captures and origins are preserved.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The first callback argument type.",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The second callback argument type.",
+        "inferred": false,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The second consumed source type.",
+        "inferred": false,
+        "name": "W",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Iter[PadZipIterator[A, B, Self.I, _Source[W]]] with the ownership, timing and empty-input behavior described above.",
+       "type": "Iter[PadZipIterator[A, B, Self.I, _Source[W]]]"
+      },
+      "signature": "def pad_zip[A: Movable & Deinitable, B: Movable & Deinitable, W: Movable & Deinitable](deinit self, var other: W) -> Iter[PadZipIterator[A, B, Self.I, _Source[W]]] where Self.I.Element == A and _Source[W].Element == B",
+      "summary": "Align positions to pairs of Optional fields, never yielding two absent fields."
+     }
+    ],
     "pair_with": [
      {
       "args": [
@@ -94705,7 +95090,7 @@
         "variadic": false
        },
        {
-        "description": "The callback result type, an exact Result for classification.",
+        "description": "The callback result type, including origins.",
         "inferred": false,
         "name": "U",
         "type": "Movable & Deinitable",
@@ -97235,6 +97620,47 @@
    "summary": "The type `map` returns, for a generic function's return annotation.",
    "traits": []
   },
+  "iteration.PadZipIterator": {
+   "aliases": [],
+   "description": "",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The left source element type.",
+     "inferred": false,
+     "name": "A",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The right source element type.",
+     "inferred": false,
+     "name": "B",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The normalized left iterator type.",
+     "inferred": false,
+     "name": "I",
+     "type": "Iterator",
+     "variadic": false
+    },
+    {
+     "description": "The normalized right iterator type.",
+     "inferred": false,
+     "name": "J",
+     "type": "Iterator",
+     "variadic": false
+    }
+   ],
+   "provider": "iteration/alignment",
+   "signature": "comptime PadZipIterator[A: Movable & Deinitable, B: Movable & Deinitable, I: Iterator, J: Iterator] = _Map[Ior[A,B],Tuple[Optional[A],Optional[B]],_Align[A,B,I,J],_Pad[A,B]]",
+   "summary": "Alignment mapped to native optional pairs; at least one field is present.",
+   "traits": []
+  },
   "iteration.PartitionBranches": {
    "aliases": [],
    "description": "",
@@ -97578,6 +98004,317 @@
    "signature": "comptime ZipWithIterator[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, I: Iterator, J: Iterator, F: Movable & Deinitable = def(var A, var B) thin -> R] = _Map[Tuple[A, B], R, _ZipIterator[MutUntrackedOrigin, I, J], F, _apply_lazy_pair[A, B, R, F, False]]",
    "summary": "The map of a native binary zip, retaining callback and source origins.",
    "traits": []
+  },
+  "iteration.align": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The source, consumed at its current position.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The second source, consumed at its current position.",
+       "name": "other",
+       "type": "W",
+       "variadic": false
+      }
+     ],
+     "description": "Construction pulls nothing; each output pulls each live side once, left before right.\nExhausted sides are never polled again. Left and Right denote source sides.\nState is constant-sized; move-only payloads, captures and origins are preserved.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first callback argument type.",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second callback argument type.",
+       "inferred": false,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The consumed native iterator or owned collection type.",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second consumed source type.",
+       "inferred": false,
+       "name": "W",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "AlignIterator[A, B, _Source[V], _Source[W]] with the ownership, timing and empty-input behavior described above.",
+      "type": "AlignIterator[A, B, _Source[V], _Source[W]]"
+     },
+     "signature": "def align[A: Movable & Deinitable, B: Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable](var source: V, var other: W) -> AlignIterator[A, B, _Source[V], _Source[W]] where _Source[V].Element == A and _Source[W].Element == B",
+     "summary": "Align positions to Ior until both sources end, without truncating either side."
+    }
+   ],
+   "provider": "iteration/alignment",
+   "summary": ""
+  },
+  "iteration.align_with": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "name": "function",
+       "type": "def(var T) thin -> U",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The source, consumed at its current position.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The second source, consumed at its current position.",
+       "name": "other",
+       "type": "W",
+       "variadic": false
+      }
+     ],
+     "description": "Construction pulls nothing; each output pulls each live side once, left before right.\nExhausted sides are never polled again. Left and Right denote source sides.\nState is constant-sized; move-only payloads, captures and origins are preserved.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first callback argument type.",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second callback argument type.",
+       "inferred": false,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The source element type, including origins.",
+       "inferred": false,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type, including origins.",
+       "inferred": false,
+       "name": "U",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The consumed native iterator or owned collection type.",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second consumed source type.",
+       "inferred": false,
+       "name": "W",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "AlignWithIterator[A, B, U, _Source[V], _Source[W], def(var T) thin -> U] with the ownership, timing and empty-input behavior described above.",
+      "type": "AlignWithIterator[A, B, U, _Source[V], _Source[W], def(var T) thin -> U]"
+     },
+     "signature": "def align_with[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, U: Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable](var function: def(var T) thin -> U, var source: V, var other: W) -> AlignWithIterator[A, B, U, _Source[V], _Source[W], def(var T) thin -> U] where _Source[V].Element == A and _Source[W].Element == B and T == Ior[A, B]",
+     "summary": "Map each owned Ior from alignment through a non-raising callback."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "other",
+       "type": "W",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "U",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "W",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_LazyUnary[T, U]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "AlignWithIterator[A, B, U, _Source[V], _Source[W], F]"
+     },
+     "signature": "def align_with[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, U: Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable, //, F: _LazyUnary[T, U]](var function: F, var source: V, var other: W) -> AlignWithIterator[A, B, U, _Source[V], _Source[W], F] where _Source[V].Element == A and _Source[W].Element == B and T == Ior[A, B]",
+     "summary": "Map each owned Ior from alignment through a non-raising callback."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "other",
+       "type": "W",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "W",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "AlignWithIterator[A, B, F.Out, _Source[V], _Source[W], F]"
+     },
+     "signature": "def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable](var function: F, var source: V, var other: W) -> AlignWithIterator[A, B, F.Out, _Source[V], _Source[W], F] where _Source[V].Element == A and _Source[W].Element == B and F.Arg == Ior[A, B] and F.Error == Never and RepeatableUnary[F]",
+     "summary": "Map each owned Ior from alignment through a non-raising callback."
+    }
+   ],
+   "provider": "iteration/alignment",
+   "summary": ""
   },
   "iteration.all": {
    "description": "",
@@ -102844,6 +103581,72 @@
    "provider": "iteration/reductions",
    "summary": ""
   },
+  "iteration.pad_zip": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The source, consumed at its current position.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The second source, consumed at its current position.",
+       "name": "other",
+       "type": "W",
+       "variadic": false
+      }
+     ],
+     "description": "Construction pulls nothing; each output pulls each live side once, left before right.\nExhausted sides are never polled again. Left and Right denote source sides.\nState is constant-sized; move-only payloads, captures and origins are preserved.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first callback argument type.",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second callback argument type.",
+       "inferred": false,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The consumed native iterator or owned collection type.",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second consumed source type.",
+       "inferred": false,
+       "name": "W",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "PadZipIterator[A, B, _Source[V], _Source[W]] with the ownership, timing and empty-input behavior described above.",
+      "type": "PadZipIterator[A, B, _Source[V], _Source[W]]"
+     },
+     "signature": "def pad_zip[A: Movable & Deinitable, B: Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable](var source: V, var other: W) -> PadZipIterator[A, B, _Source[V], _Source[W]] where _Source[V].Element == A and _Source[W].Element == B",
+     "summary": "Align positions to pairs of Optional fields, never yielding two absent fields."
+    }
+   ],
+   "provider": "iteration/alignment",
+   "summary": ""
+  },
   "iteration.pair_with": {
    "description": "",
    "kind": "function",
@@ -103189,7 +103992,7 @@
        "variadic": false
       },
       {
-       "description": "The callback result type, an exact Result for classification.",
+       "description": "The callback result type, including origins.",
        "inferred": false,
        "name": "U",
        "type": "Movable & Deinitable",

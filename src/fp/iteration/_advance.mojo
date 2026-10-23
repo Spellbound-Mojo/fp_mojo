@@ -40,3 +40,13 @@ def _next_optional[T: Movable & Deinitable, I: Iterator](mut source: I) -> Optio
         return Optional(rebind_var[T](source.__next__()))
     except:
         return None
+
+
+def _next_optional_fused[T: Movable & Deinitable, I: Iterator](
+    mut source: I, mut done: Bool
+) -> Optional[T]:
+    """Read a live source once, remembering absence without polling again."""
+    if done: return None
+    var value = _next_optional[T](source)
+    done = not value
+    return value^

@@ -1,4 +1,6 @@
 """Consuming method chains over native iterators."""
+from .alignment import AlignIterator, AlignWithIterator, PadZipIterator, align as _align, align_with as _align_with, pad_zip as _pad_zip
+from fp.data.ior import Ior
 from std.builtin.variadics import TypeList
 from std.iter import _Enumerate, _ZipIterator, _ChainedIterator, enumerate as _std_enumerate
 from std.itertools import take as _std_take, drop as _std_drop, take_while as _std_take_while, drop_while as _std_drop_while
@@ -608,7 +610,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
 
         Parameters:
             T: The source element type, including origins.
-            U: The callback result type, an exact Result for classification.
+            U: The callback result type, including origins.
             P: The admitted type parameter.
 
         Args:
@@ -651,6 +653,79 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
             UnzipBranches[A, B, Self.I, P] with the ownership, timing and empty-input behavior described above.
         """
         return _unzip[A, B](self._iterator^, buffer=buffer^)
+
+    def align[A: Movable & Deinitable, B: Movable & Deinitable, W: Movable & Deinitable](deinit self, var other: W) -> Iter[AlignIterator[A, B, Self.I, _Source[W]]] where Self.I.Element == A and _Source[W].Element == B:
+        """Align positions to Ior until both sources end, without truncating either side.
+
+        Construction pulls nothing; each output pulls each live side once, left before right.
+        Exhausted sides are never polled again. Left and Right denote source sides.
+        State is constant-sized; move-only payloads, captures and origins are preserved.
+
+        Parameters:
+            A: The first callback argument type.
+            B: The second callback argument type.
+            W: The second consumed source type.
+
+        Args:
+            other: The second source, consumed at its current position.
+
+        Returns:
+            Iter[AlignIterator[A, B, Self.I, _Source[W]]] with the ownership, timing and empty-input behavior described above.
+        """
+        return Iter(_align[A=A, B=B](self._iterator^, other^))
+
+    def pad_zip[A: Movable & Deinitable, B: Movable & Deinitable, W: Movable & Deinitable](deinit self, var other: W) -> Iter[PadZipIterator[A, B, Self.I, _Source[W]]] where Self.I.Element == A and _Source[W].Element == B:
+        """Align positions to pairs of Optional fields, never yielding two absent fields.
+
+        Construction pulls nothing; each output pulls each live side once, left before right.
+        Exhausted sides are never polled again. Left and Right denote source sides.
+        State is constant-sized; move-only payloads, captures and origins are preserved.
+
+        Parameters:
+            A: The first callback argument type.
+            B: The second callback argument type.
+            W: The second consumed source type.
+
+        Args:
+            other: The second source, consumed at its current position.
+
+        Returns:
+            Iter[PadZipIterator[A, B, Self.I, _Source[W]]] with the ownership, timing and empty-input behavior described above.
+        """
+        return Iter(_pad_zip[A=A, B=B](self._iterator^, other^))
+
+    def align_with[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, U: Movable & Deinitable, W: Movable & Deinitable](deinit self, var other: W, var function: def(var T) thin -> U) -> Iter[AlignWithIterator[A, B, U, Self.I, _Source[W], def(var T) thin -> U]] where Self.I.Element == A and _Source[W].Element == B and T == Ior[A, B]:
+        """Map each owned Ior from alignment through a non-raising callback.
+
+        Construction pulls nothing; each output pulls each live side once, left before right.
+        Exhausted sides are never polled again. Left and Right denote source sides.
+        State is constant-sized; move-only payloads, captures and origins are preserved.
+
+        Parameters:
+            A: The first callback argument type.
+            B: The second callback argument type.
+            T: The source element type, including origins.
+            U: The callback result type, including origins.
+            W: The second consumed source type.
+
+        Args:
+            other: The second source, consumed at its current position.
+            function: The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.
+
+        Returns:
+            Iter[AlignWithIterator[A, B, U, Self.I, _Source[W], def(var T) thin -> U]] with the ownership, timing and empty-input behavior described above.
+        """
+        return Iter(_align_with[A=A, B=B, T=T, U=U](function, self._iterator^, other^))
+
+    def align_with[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, U: Movable & Deinitable, W: Movable & Deinitable, //, F: _LazyUnary[T, U]](deinit self, var other: W, var function: F) -> Iter[AlignWithIterator[A, B, U, Self.I, _Source[W], F]] where Self.I.Element == A and _Source[W].Element == B and T == Ior[A, B]:
+        """Map each owned Ior from alignment through a non-raising callback.
+        """
+        return Iter(_align_with[A=A, B=B, T=T, U=U](function^, self._iterator^, other^))
+
+    def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, W: Movable & Deinitable](deinit self, var other: W, var function: F) -> Iter[AlignWithIterator[A, B, F.Out, Self.I, _Source[W], F]] where Self.I.Element == A and _Source[W].Element == B and F.Arg == Ior[A, B] and F.Error == Never and RepeatableUnary[F]:
+        """Map each owned Ior from alignment through a non-raising callback.
+        """
+        return Iter(_align_with[A=A, B=B](function^, self._iterator^, other^))
     # --- end iterator expansion syntax ---
 
     # Native thin functions and closures keep their own admission signatures,

@@ -332,7 +332,7 @@ def partition_map[T: Movable & Deinitable, U: Movable & Deinitable, V: Movable &
 
     Parameters:
         T: The source element type, including origins.
-        U: The callback result type, an exact Result for classification.
+        U: The callback result type, including origins.
         V: The consumed native iterator or owned collection type.
         P: The admitted type parameter.
 

@@ -338,6 +338,7 @@ def main():
         ('iteration/indexed.mojo', lambda path: path.read_text()),
         ('iteration/terminals.mojo', lambda path: path.read_text()),
         ('iteration/branching.mojo', lambda path: path.read_text()),
+        ('iteration/alignment.mojo', lambda path: path.read_text()),
         ('algebra/conditional.mojo', lambda path: path.read_text()),
         ('data/_result.mojo', lambda path: spliced(path, result_syntax.methods(), result_syntax.START, result_syntax.END, result_syntax.HEADER)),
         ('iteration/reductions.mojo', lambda path: spliced(path, combinator_syntax.terminal_methods('free'), combinator_syntax.START, combinator_syntax.END, combinator_syntax.HEADER)),
@@ -348,8 +349,8 @@ def main():
     ):
         path = ROOT / 'src/fp' / name
         expected = expected_of(path)
-        if name in ('iteration/prefixes.mojo', 'iteration/indexed.mojo', 'iteration/terminals.mojo', 'iteration/branching.mojo'):
-            generate = {'iteration/prefixes.mojo': iterator_syntax.prefixes, 'iteration/indexed.mojo': iterator_syntax.indexed, 'iteration/terminals.mojo': iterator_syntax.terminals, 'iteration/branching.mojo': iterator_syntax.branching}[name]
+        if name in ('iteration/prefixes.mojo', 'iteration/indexed.mojo', 'iteration/terminals.mojo', 'iteration/branching.mojo', 'iteration/alignment.mojo'):
+            generate = {'iteration/prefixes.mojo': iterator_syntax.prefixes, 'iteration/indexed.mojo': iterator_syntax.indexed, 'iteration/terminals.mojo': iterator_syntax.terminals, 'iteration/branching.mojo': iterator_syntax.branching, 'iteration/alignment.mojo': iterator_syntax.alignment}[name]
             expected = splice_source(expected, generate('free'), iterator_syntax.START, iterator_syntax.END, iterator_syntax.HEADER)
         if name == 'iteration/chaining.mojo':
             expected = splice_source(expected, iterator_syntax.methods(), '    '+iterator_syntax.START, '    '+iterator_syntax.END, '    '+iterator_syntax.HEADER)

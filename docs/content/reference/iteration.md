@@ -73,3 +73,22 @@ for it. The remaining branch continues; dropping or closing both releases the
 source and captures without further pulls. Handles retain all source and capture
 origins. Access is synchronous and sequential; reentrant or overlapping access
 aborts before another mutable borrow. See the [full contract](../architecture/iteration.md#lazy-branching-with-explicit-buffering).
+
+## Alignment
+
+<!-- example: docs/examples/iteration_alignment.mojo -->
+
+`align(left, right)` yields `Ior[A,B]` until both inputs end. Left and Right
+identify the input sides; they do not mean failure or success here.
+`align_with(function, left, right)` maps each owned Ior, and
+`pad_zip(left, right)` yields `(Optional[A], Optional[B])`. The pair always has
+at least one present field. Fluent calls are `.align(other)`,
+`.align_with(other, function)` and `.pad_zip(other)`.
+
+All three are lazy, preserve each input's current position and use constant
+iterator state. Each output pulls each live side at most once, left before
+right; an exhausted side stays exhausted. Payloads and callback captures can be
+move-only and retain their native origins. `align_with` callbacks cannot raise.
+`AlignIterator.bounds()` combines the remaining bounds by taking their maximum;
+an unknown upper bound on either live side leaves the combined upper bound
+unknown. The mapped forms retain the existing map adapter's conservative bounds.

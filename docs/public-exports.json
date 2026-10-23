@@ -4149,6 +4149,32 @@
             "sha256": "927de000e28845e09491b05062aaffcd9c9d2fc55bae04d1ace57c2400689ee7"
           }
         ],
+        "align": [
+          {
+            "signature": "def align[A: Movable & Deinitable, B: Movable & Deinitable, W: Movable & Deinitable](deinit self, var other: W) -> Iter[AlignIterator[A, B, Self.I, _Source[W]]] where Self.I.Element == A and _Source[W].Element == B:",
+            "sha256": "5ef08b7a054af610094a25730a16d0353506cf6b1cced9a9e8058a2370bff9ac"
+          }
+        ],
+        "pad_zip": [
+          {
+            "signature": "def pad_zip[A: Movable & Deinitable, B: Movable & Deinitable, W: Movable & Deinitable](deinit self, var other: W) -> Iter[PadZipIterator[A, B, Self.I, _Source[W]]] where Self.I.Element == A and _Source[W].Element == B:",
+            "sha256": "d0ff8ef18caddf87f00a3b0b1720c7d2eb56faac76265ac7c1179770fe1d4fda"
+          }
+        ],
+        "align_with": [
+          {
+            "signature": "def align_with[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, U: Movable & Deinitable, W: Movable & Deinitable](deinit self, var other: W, var function: def(var T) thin -> U) -> Iter[AlignWithIterator[A, B, U, Self.I, _Source[W], def(var T) thin -> U]] where Self.I.Element == A and _Source[W].Element == B and T == Ior[A, B]:",
+            "sha256": "b5c1581052fb597620862d34c1c89eb916eb6864589d7a0d1fd5183ff31e9e65"
+          },
+          {
+            "signature": "def align_with[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, U: Movable & Deinitable, W: Movable & Deinitable, //, F: _LazyUnary[T, U]](deinit self, var other: W, var function: F) -> Iter[AlignWithIterator[A, B, U, Self.I, _Source[W], F]] where Self.I.Element == A and _Source[W].Element == B and T == Ior[A, B]:",
+            "sha256": "5468f15924cb9e429661422428cd048f38d25df22c469252e1bd85c5960573d9"
+          },
+          {
+            "signature": "def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, W: Movable & Deinitable](deinit self, var other: W, var function: F) -> Iter[AlignWithIterator[A, B, F.Out, Self.I, _Source[W], F]] where Self.I.Element == A and _Source[W].Element == B and F.Arg == Ior[A, B] and F.Error == Never and RepeatableUnary[F]:",
+            "sha256": "3cd57fb4f63438c764f2c661ee19c14eb415474fb7bafc2dd76bee1ace76bd92"
+          }
+        ],
         "map": [
           {
             "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable]( deinit self, function: def(var T) thin -> U ) -> Iter[MapIterator[T, U, Self.I]] where Self.I.Element == T:",
@@ -4814,6 +4840,27 @@
         "comptime UnzipBranches[A: Movable & Deinitable, B: Movable & Deinitable, I: Iterator, P: _BufferPolicy] = Tuple[_Branch[_BranchItem[A, P], I, _Unzip[A, B], P, False], _Branch[_BranchItem[B, P], I, _Unzip[A, B], P, True]]"
       ],
       "provider": "iteration/branching"
+    },
+    "iteration.AlignIterator": {
+      "kind": "type or alias",
+      "declarations": [
+        "comptime AlignIterator[A: Movable & Deinitable, B: Movable & Deinitable, I: Iterator, J: Iterator] = _Align[A,B,I,J]"
+      ],
+      "provider": "iteration/alignment"
+    },
+    "iteration.AlignWithIterator": {
+      "kind": "type or alias",
+      "declarations": [
+        "comptime AlignWithIterator[A: Movable & Deinitable, B: Movable & Deinitable, U: Movable & Deinitable, I: Iterator, J: Iterator, F: Movable & Deinitable] = _Map[Ior[A,B],U,_Align[A,B,I,J],F]"
+      ],
+      "provider": "iteration/alignment"
+    },
+    "iteration.PadZipIterator": {
+      "kind": "type or alias",
+      "declarations": [
+        "comptime PadZipIterator[A: Movable & Deinitable, B: Movable & Deinitable, I: Iterator, J: Iterator] = _Map[Ior[A,B],Tuple[Optional[A],Optional[B]],_Align[A,B,I,J],_Pad[A,B]]"
+      ],
+      "provider": "iteration/alignment"
     },
     "control.ScanLengthError": {
       "kind": "type or alias",
@@ -8063,6 +8110,44 @@
         }
       ],
       "provider": "iteration/branching"
+    },
+    "iteration.align": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def align[A: Movable & Deinitable, B: Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable](var source: V, var other: W) -> AlignIterator[A, B, _Source[V], _Source[W]] where _Source[V].Element == A and _Source[W].Element == B:",
+          "sha256": "90efaedbab0f00e5f5432f0f9dd32916f958108612b8659af43c0fd656b36fe2"
+        }
+      ],
+      "provider": "iteration/alignment"
+    },
+    "iteration.pad_zip": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def pad_zip[A: Movable & Deinitable, B: Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable](var source: V, var other: W) -> PadZipIterator[A, B, _Source[V], _Source[W]] where _Source[V].Element == A and _Source[W].Element == B:",
+          "sha256": "8b0e38d3e8ce0671250862d6898cefc225eb54baa0843051701ed052eb230db2"
+        }
+      ],
+      "provider": "iteration/alignment"
+    },
+    "iteration.align_with": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def align_with[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, U: Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable](var function: def(var T) thin -> U, var source: V, var other: W) -> AlignWithIterator[A, B, U, _Source[V], _Source[W], def(var T) thin -> U] where _Source[V].Element == A and _Source[W].Element == B and T == Ior[A, B]:",
+          "sha256": "09059d455e9b5f4f02b68332b49f3eb1ae33dccd2d934a0df25535fe56fa422f"
+        },
+        {
+          "signature": "def align_with[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, U: Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable, //, F: _LazyUnary[T, U]](var function: F, var source: V, var other: W) -> AlignWithIterator[A, B, U, _Source[V], _Source[W], F] where _Source[V].Element == A and _Source[W].Element == B and T == Ior[A, B]:",
+          "sha256": "9605b1b959fafd20fd01c0be6a5f860b23d6d54e700949f3852b966b90f4ef89"
+        },
+        {
+          "signature": "def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable](var function: F, var source: V, var other: W) -> AlignWithIterator[A, B, F.Out, _Source[V], _Source[W], F] where _Source[V].Element == A and _Source[W].Element == B and F.Arg == Ior[A, B] and F.Error == Never and RepeatableUnary[F]:",
+          "sha256": "bf29ca6e58f2b167febb9fd39f1e5731d9d1fe31da64890a15fa7c5df97529da"
+        }
+      ],
+      "provider": "iteration/alignment"
     },
     "control.while_loop": {
       "kind": "function",

@@ -11,9 +11,9 @@ import docs_contract
 class DocumentationContractTests(unittest.TestCase):
     def test_complete_reviewed_inventory(self):
         result = docs_contract.audit_docs()
-        self.assertEqual(result['exports'], 263)
+        self.assertEqual(result['exports'], 269)
         self.assertEqual(result['modules'], 10)
-        self.assertEqual(result['examples'], 52)
+        self.assertEqual(result['examples'], 53)
 
     def test_literal_directive_in_code_is_not_expanded(self):
         text = '# Authoring\n\n```text\n<!-- api: not_a_module -->\n```\n'
