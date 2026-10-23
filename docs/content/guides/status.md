@@ -47,8 +47,14 @@ NonEmptyList, its concatenation Semigroup and its shape-preserving family are
 implemented; see [non-empty validation](../reference/data.md#non-empty-collections-and-validation).
 Success with warnings is implemented as Ior with explicit sequential and
 accumulating families; see [inclusive-or](../reference/data.md#success-with-warnings).
-Public MTL capabilities, fallible stream transformations and composable Resource
-scopes remain subsequent slices.
+The first public MTL slice, Ask/Local with explicit transformer lifting, is
+implemented; see [environment capabilities](../reference/effects.md#program-against-environment-capabilities).
+Stateful with explicit transformer lifting is implemented; see
+[selected state capabilities](../reference/effects.md#program-against-a-selected-state).
+Tell/Listen/Censor with explicit transformer lifting is implemented; see
+[selected log capabilities](../reference/effects.md#program-against-a-selected-log).
+Fallible stream transformations and composable Resource scopes remain subsequent
+slices.
 
 The approved combinator proposal is complete for the documented capability
 families. Shared operations derive from family primitives; no operation requires

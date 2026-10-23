@@ -1,6 +1,7 @@
 """Move both elements out of a native pair without copying either."""
-from std.builtin.rebind import rebind_var
+from std.builtin.rebind import rebind_var, rebind, downcast
 from std.memory import MaybeUninit
+from .protocols import OnceUnary, MutableUnary
 
 
 comptime _OptionalCell[T: Movable & Deinitable]: Movable & Deinitable = Optional[T]
@@ -18,3 +19,16 @@ def _take_pair[A: Movable & Deinitable, B: Movable & Deinitable](
         else:
             second.unsafe_ptr().unsafe_write(rebind_var[B](value^))
     pair^.consume_elements[put]()
+
+
+@fieldwise_init
+struct _WithSecond[A: Movable & Deinitable, S: Movable & Deinitable](OnceUnary, MutableUnary where conforms_to(S, Copyable)):
+    """Pair each base payload with an owned second value; repeated pairing copies it."""
+    var second: Self.S
+    comptime Arg = Self.A
+    comptime Out = Tuple[Self.A, Self.S]
+    def call_once(deinit self, var arg: Self.Arg) -> Self.Out:
+        return Tuple(arg^, self.second^)
+    def call_mut(mut self, var arg: Self.Arg) -> Self.Out:
+        comptime C = downcast[Self.S, Copyable & Deinitable]
+        return Tuple(arg^, rebind_var[Self.S](rebind[C](self.second).copy()))

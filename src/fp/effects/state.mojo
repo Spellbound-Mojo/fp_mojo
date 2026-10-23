@@ -6,17 +6,18 @@ Each operation is one struct whose run delegates to the base family.
 from std.builtin.rebind import rebind_var, rebind, downcast
 from std.utils import Variant
 from fp.algebra.errors import _Continue
-from fp.algebra.protocols import (ApplicativeError, _UnaryView, Monad, _Lifting, _Accumulate, _LiveAccumulator, _BindFirst, _Lazy, _Item, _iterator, _next_item, _start_as)
+from fp.algebra.protocols import (ApplicativeError, _UnaryView, Monad, _Accumulate, _LiveAccumulator, _BindFirst, _Lazy, _Item, _iterator, _next_item, _start_as)
 from fp.algebra.instances import IdentityFamily
-from fp.callables.protocols import (UnaryContract, BinaryContract, ThunkContract, Unary, OnceUnary, MutableUnary, Binary, MutableBinary)
+from fp.callables.protocols import (BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, Unary, OnceUnary, MutableUnary, Binary, MutableBinary)
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
 from fp.callables._receiver import _binary_repeated_as, _unary_once_as
-from fp.callables.native import NativeUnary, as_unary, _Unary, _RaisingUnary
 from std.memory import MaybeUninit
-from fp.callables.products import _take_pair
+from fp.callables.products import _take_pair, _WithSecond as _WithState
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from .protocols import StateAction, _StateFamily, _admit_endpoint, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
-from ._adapt import _state_run_as, _map_as, _flat_map_as
+from .protocols import Stateful, Local, Listen, _CarrierOp, _LocalLifting, StateAction, _StateFamily, _admit_endpoint, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
+from ._adapt import _op_as, _state_run_as, _map_as, _flat_map_as
+
+from ._transport import _LocalOp, _ListenOp, _ListenMapped, _ListenPair
 
 
 comptime _Action[V: Movable & Deinitable] = downcast[V, StateAction]
@@ -76,15 +77,6 @@ struct _StateModify[M: Monad, S: Movable & Deinitable, F: UnaryContract & Movabl
 
 
 @fieldwise_init
-struct _Replace[S: Movable & Deinitable](OnceUnary, Copyable where conforms_to(S, Copyable)):
-    var value: Self.S
-    comptime Arg = Self.S
-    comptime Out = Self.S
-    def call_once(deinit self, var arg: Self.Arg) -> Self.Out:
-        return self.value^
-
-
-@fieldwise_init
 struct _StateEndpoint[M: Monad, S: Movable & Deinitable, T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
     StateAction, Copyable where conforms_to(F, Copyable)
 ):
@@ -98,19 +90,6 @@ struct _StateEndpoint[M: Monad, S: Movable & Deinitable, T: Movable & Deinitable
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
         comptime assert Self.F.Arg == Self.S, "action: the endpoint must consume the State"
         return call_once(self.function^, rebind_var[Self.F.Arg](state^))
-
-
-@fieldwise_init
-struct _WithState[A: Movable & Deinitable, S: Movable & Deinitable](OnceUnary, MutableUnary where conforms_to(S, Copyable)):
-    """Pair each base payload with the state; repeated pairing copies it."""
-    var state: Self.S
-    comptime Arg = Self.A
-    comptime Out = Tuple[Self.A, Self.S]
-    def call_once(deinit self, var arg: Self.Arg) -> Self.Out:
-        return Tuple(arg^, self.state^)
-    def call_mut(mut self, var arg: Self.Arg) -> Self.Out:
-        comptime C = downcast[Self.S, Copyable & Deinitable]
-        return Tuple(arg^, rebind_var[Self.S](rebind[C](self.state).copy()))
 
 
 @fieldwise_init
@@ -470,7 +449,27 @@ struct _StateChoice[M: Monad, A: StateAction, B: StateAction](
         return Self.M._join_right[Self.A.Out, Self.B.Out](right^)
 
 
-struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, _Lifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable)):
+@fieldwise_init
+struct _StateHoist[A: Movable & Deinitable, S: StateAction, H: _CarrierOp](
+    StateAction, Copyable where conforms_to(S, Copyable) and conforms_to(H, Copyable)
+):
+    """Run the source, then apply one admitted base-carrier operation."""
+    var source: Self.S
+    var operation: Self.H
+    comptime Family = Self.S.Family
+    comptime State = Self.S.State
+    comptime Value = Self.A
+    comptime Out = Self.H.Applied[Self.S.Out]
+    comptime Error = _CommonError[Self.S.Error, Self.H.Error[Self.S.Out]]
+    def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime E = Self.Error
+        comptime assert Self.H.Compatible[Self.S.Out]
+        comptime assert _ErrorCompatible[E, Self.S.Error] and _ErrorCompatible[E, Self.H.Error[Self.S.Out]]
+        var base = _state_run_as[E](self.source^, state^)
+        return _op_as[E](self.operation^, base^)
+
+
+struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, Stateful, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable)):
     """State over the base Monad `M`: a computation consumes a state `S` when run and returns an `M` carrier of `(value, state)`.
 
     Computations are built as for `ReaderT` and run with `run`. Traversal is one
@@ -488,6 +487,71 @@ struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, _Lifting, Applica
         M: The base Monad.
         S: The state's type.
     """
+    comptime Family = Self
+    comptime GetAvailable = conforms_to(Self.S, Copyable)
+    comptime Got = _StateGet[Self.M, downcast[Self.S, Copyable & Deinitable]]
+    comptime GetError = Never
+    comptime ModifyCompatible[F: UnaryContract & Movable & Deinitable] = F.Arg == Self.S and F.Out == Self.S
+    comptime Modified[F: UnaryContract & Movable & Deinitable] = _StateModify[Self.M, Self.S, F]
+    comptime ModifyError[F: UnaryContract & Movable & Deinitable] = Never
+
+    @staticmethod
+    def get() -> Self.Got:
+        """Construct a read of this layer's copyable state.
+
+        Returns:
+            A deferred state read; construction does not copy the state.
+        """
+        comptime assert Self.GetAvailable, "get: state must be Copyable"
+        return Self.Got()
+
+    @staticmethod
+    def modify[F: UnaryContract & Movable & Deinitable](var f: F) -> Self.Modified[F]:
+        """Construct an update of this layer's state using the State kernel.
+
+        Parameters:
+            F: A consuming state-to-state callback.
+
+        Args:
+            f: The transformation, consumed.
+
+        Returns:
+            A deferred update with NoneType payload.
+        """
+        comptime assert Self.ModifyCompatible[F], "modify: the callback must map the state to a new state"
+        return Self.Modified[F](f^)
+
+    comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = _Action[V].Family == Self and _Action[V].State == Self.S and H.Compatible[_Action[V].Out] and _ErrorCompatible[_CommonError[_Action[V].Error, H.Error[_Action[V].Out]], H.Error[_Action[V].Out]]
+    comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = _StateHoist[A, _Action[V], H]
+    comptime _HoistError[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = Never
+    comptime _Listening[C: Listen, A: Movable & Deinitable] = _ListenMapped[C, Tuple[A, Self.S], _ListenPair[Self.S, A, C.Log.Value, False]]
+    @staticmethod
+    def _hoist[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp](var op: H, var value: V) -> Self._Hoisted[A, V, H]:
+        return Self._Hoisted[A, V, H](rebind_var[_Action[V]](value^), op^)
+
+    comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = _Action[V].Family == Self and _Action[V].State == Self.S and C.LocalCompatible[_Action[V].Out]
+    comptime _Scoped[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Self._Hoisted[Self.Element[V], V, _LocalOp[C, F]]
+    comptime _ScopeError[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Never
+
+    @staticmethod
+    def _scope[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](var f: F, var value: V) -> Self._Scoped[C, V, F]:
+        """Transport a selected base scope through State.
+
+        Parameters:
+            C: The selected base Local capability.
+            V: This State family's computation type.
+            F: The selected environment transformation type.
+
+        Args:
+            f: The transformation, consumed.
+            value: The computation, consumed.
+
+        Returns:
+            A State action that scopes its produced base carrier when run.
+        """
+        comptime assert C.Family == Self.Base and Self._ScopeCompatible[C, V]
+        return Self._hoist[Self.Element[V]](_LocalOp[C, F](f^), value^)
+
     comptime _Errors = downcast[Self.M, ApplicativeError]
     comptime Failure = Self._Errors.Failure
     comptime _ErrorCarrier[V: Movable & Deinitable] = _Action[V].Family == Self and _Action[V].State == Self.S and Self._Errors._ErrorCarrier[_Action[V].Out] and Self.M.Element[_Action[V].Out] == Tuple[Self.Element[V], Self.S]
@@ -687,60 +751,5 @@ Parameters:
 """
 
 
-def get[I: _StateFamily]() -> _StateGet[I.Base, downcast[I.StateType, Copyable & Deinitable]] where conforms_to(I.StateType, Copyable):
-    """A State computation whose payload is a copy of the state, which is kept.
-
-    Parameters:
-        I: The State family; its state must be `Copyable`.
-
-    Returns:
-        The computation.
-    """
-    return _StateGet[I.Base, downcast[I.StateType, Copyable & Deinitable]]()
-
-
-def modify[F: UnaryContract & Movable & Deinitable, //, I: _StateFamily](var f: F) -> _StateModify[I.Base, I.StateType, F]:
-    """A State computation that replaces the state with `f(state)`; its payload is `None`.
-
-    Other overloads take a native function or closure directly.
-
-    Parameters:
-        F: The callback's type: a library `Unary` value from state to state.
-        I: The State family.
-
-    Args:
-        f: The callback, consumed.
-
-    Returns:
-        The computation.
-    """
-    return _StateModify[I.Base, I.StateType, F](f^)
-
-
-def modify[A: Movable & Deinitable, R: Movable & Deinitable, //, I: _StateFamily, F: _Unary[A, R]](
-    var f: F
-) -> _StateModify[I.Base, I.StateType, NativeUnary[A, R, Never, F, False]] where A == I.StateType and R == I.StateType:
-    """Replace the state with f(state), for a native function or closure."""
-    return modify[I](as_unary(f^))
-
-
-def modify[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: _StateFamily, F: _RaisingUnary[A, R, E]](
-    var f: F
-) -> _StateModify[I.Base, I.StateType, NativeUnary[A, R, E, F, True]] where A == I.StateType and R == I.StateType:
-    """Raising form of the native modify; its error type is kept."""
-    return modify[I](as_unary(f^))
-
-
-def put[I: _StateFamily](var state: I.StateType) -> _StateModify[I.Base, I.StateType, _Replace[I.StateType]]:
-    """A State computation that replaces the state; the previous state is destroyed.
-
-    Parameters:
-        I: The State family.
-
-    Args:
-        state: The new state, consumed.
-
-    Returns:
-        The computation.
-    """
-    return modify[I](_Replace[I.StateType](state^))
+# Preserve the original module import path; capabilities owns the public API.
+from .capabilities import get, modify, put

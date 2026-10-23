@@ -5093,6 +5093,102 @@
       },
       "provider": "algebra/ior"
     },
+    "effects.Ask": {
+      "kind": "type or alias",
+      "declarations": [
+        "trait Ask:"
+      ],
+      "methods": {
+        "ask": [
+          {
+            "signature": "def ask() raises Self.AskError -> Self.Asked:",
+            "sha256": "056a56038fdf29994ec44cde2dfa77c3da91e6ea88fdebfe99904bf78e3a02f5"
+          }
+        ]
+      },
+      "provider": "effects/protocols"
+    },
+    "effects.Local": {
+      "kind": "type or alias",
+      "declarations": [
+        "trait Local(Ask):"
+      ],
+      "methods": {
+        "local": [
+          {
+            "signature": "def local[V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](var f: F, var value: V ) raises Self.LocalError[V, F] -> Self.Localized[V, F]:",
+            "sha256": "e8566f3c47a5812821391c9d6e7f3e3b0c2f11e175e698fdfa4bad8448be90b4"
+          }
+        ]
+      },
+      "provider": "effects/protocols"
+    },
+    "effects.Stateful": {
+      "kind": "type or alias",
+      "declarations": [
+        "trait Stateful:"
+      ],
+      "methods": {
+        "get": [
+          {
+            "signature": "def get() raises Self.GetError -> Self.Got:",
+            "sha256": "f8def326eba07b7378b47321eea2f506143e9a24e5e6c3204bb9bf2f527af3db"
+          }
+        ],
+        "modify": [
+          {
+            "signature": "def modify[F: UnaryContract & Movable & Deinitable](var f: F) raises Self.ModifyError[F] -> Self.Modified[F]:",
+            "sha256": "3e6068412c79c94d76a8e0398f9b0392f750b56f187e505b75956aaf2c6b9435"
+          }
+        ]
+      },
+      "provider": "effects/protocols"
+    },
+    "effects.Tell": {
+      "kind": "type or alias",
+      "declarations": [
+        "trait Tell:"
+      ],
+      "methods": {
+        "tell": [
+          {
+            "signature": "def tell(var log: Self.Log.Value) raises Self.TellError -> Self.Told:",
+            "sha256": "376c2fe2820efe34030c9fb62d36c419e2e379c4663b42ed37054737fbbce660"
+          }
+        ]
+      },
+      "provider": "effects/protocols"
+    },
+    "effects.Listen": {
+      "kind": "type or alias",
+      "declarations": [
+        "trait Listen(Tell):"
+      ],
+      "methods": {
+        "listen": [
+          {
+            "signature": "def listen[V: Movable & Deinitable](var value: V) raises Self.ListenError[V] -> Self.Listened[V]:",
+            "sha256": "13b5a4c91f379aeb50414af88a04a5b93fe3940980ea99b8d1b6b39d6b13e1dd"
+          }
+        ]
+      },
+      "provider": "effects/protocols"
+    },
+    "effects.Censor": {
+      "kind": "type or alias",
+      "declarations": [
+        "trait Censor(Listen):"
+      ],
+      "methods": {
+        "censor": [
+          {
+            "signature": "def censor[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V ) raises Self.CensorError[V, F] -> Self.Censored[V, F]:",
+            "sha256": "ba82886a37246aadfc062368cd896f1725ebb02d300ac619e4eab5223b2e0de0"
+          }
+        ]
+      },
+      "provider": "effects/protocols"
+    },
     "effects.ReaderAction": {
       "kind": "type or alias",
       "declarations": [
@@ -5126,9 +5222,21 @@
     "effects.ReaderT": {
       "kind": "type or alias",
       "declarations": [
-        "struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, _Lifting, ApplicativeError where conforms_to(M, ApplicativeError)):"
+        "struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, Local, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError)):"
       ],
       "methods": {
+        "ask": [
+          {
+            "signature": "def ask() -> Self.Asked:",
+            "sha256": "6742d37a9fd83c3210073ffec5b994e78d5112a5ec3237127ccb42f843b7f76a"
+          }
+        ],
+        "local": [
+          {
+            "signature": "def local[V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](var f: F, var value: V) -> Self.Localized[V, F]:",
+            "sha256": "725578adb19a95ac2d2e8f2144942c11c51f6712b8969c6d406b105478892108"
+          }
+        ],
         "fail": [
           {
             "signature": "def fail[A: Movable & Deinitable](var error: Self.Failure) -> Self.Failed[A]:",
@@ -5190,9 +5298,21 @@
     "effects.StateT": {
       "kind": "type or alias",
       "declarations": [
-        "struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, _Lifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable)):"
+        "struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, Stateful, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable)):"
       ],
       "methods": {
+        "get": [
+          {
+            "signature": "def get() -> Self.Got:",
+            "sha256": "c8a9926054260caee40d64ce9916d216b1d27c797b5c4ded7e2b9fb800a5f708"
+          }
+        ],
+        "modify": [
+          {
+            "signature": "def modify[F: UnaryContract & Movable & Deinitable](var f: F) -> Self.Modified[F]:",
+            "sha256": "1da198359e3dbdb66dbf7972d095098720e299cb3fb735f0c923d116d5d754cb"
+          }
+        ],
         "fail": [
           {
             "signature": "def fail[A: Movable & Deinitable](var error: Self.Failure) -> Self.Failed[A]:",
@@ -5269,9 +5389,27 @@
     "effects.WriterT": {
       "kind": "type or alias",
       "declarations": [
-        "struct WriterT[M: Monad, W: Monoid](_WriterFamily, _Lifting, ApplicativeError where conforms_to(M, ApplicativeError)):"
+        "struct WriterT[M: Monad, W: Monoid](_WriterFamily, Censor, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError)):"
       ],
       "methods": {
+        "tell": [
+          {
+            "signature": "def tell(var log: Self.Log.Value) -> Self.Told:",
+            "sha256": "b9528757737132c69655c788a8b6bf0853bc7807061a1b5f7354ea2e5e78c042"
+          }
+        ],
+        "listen": [
+          {
+            "signature": "def listen[V: Movable & Deinitable](var value: V) raises Self.ListenError[V] -> Self.Listened[V]:",
+            "sha256": "13b5a4c91f379aeb50414af88a04a5b93fe3940980ea99b8d1b6b39d6b13e1dd"
+          }
+        ],
+        "censor": [
+          {
+            "signature": "def censor[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) raises Self.CensorError[V, F] -> Self.Censored[V, F]:",
+            "sha256": "1961519ad5340aab7429412f4b99d6ce8f80ebe05f4e686632ed731920d98b16"
+          }
+        ],
         "fail": [
           {
             "signature": "def fail[A: Movable & Deinitable](var error: Self.Failure) raises Self.FailError[A] -> Self.Failed[A]:",
@@ -5337,6 +5475,126 @@
         "comptime ResultT[M: Monad, E: Movable & Deinitable]: Monad & ApplicativeError & _Lifting = ResultFamily[E] if M == IdentityFamily else _ResultT[M, E]"
       ],
       "provider": "effects/layers"
+    },
+    "effects.LiftAsk": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct LiftAsk[I: Monad & _Lifting, C: Ask](Ask):"
+      ],
+      "methods": {
+        "ask": [
+          {
+            "signature": "def ask() raises Self.AskError -> Self.Asked:",
+            "sha256": "056a56038fdf29994ec44cde2dfa77c3da91e6ea88fdebfe99904bf78e3a02f5"
+          }
+        ]
+      },
+      "provider": "effects/capabilities"
+    },
+    "effects.LiftLocal": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct LiftLocal[I: Monad & _Lifting, C: Local](Local):"
+      ],
+      "methods": {
+        "ask": [
+          {
+            "signature": "def ask() raises Self.AskError -> Self.Asked:",
+            "sha256": "056a56038fdf29994ec44cde2dfa77c3da91e6ea88fdebfe99904bf78e3a02f5"
+          }
+        ],
+        "local": [
+          {
+            "signature": "def local[V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](var f: F, var value: V ) raises Self.LocalError[V, F] -> Self.Localized[V, F]:",
+            "sha256": "e8566f3c47a5812821391c9d6e7f3e3b0c2f11e175e698fdfa4bad8448be90b4"
+          }
+        ]
+      },
+      "provider": "effects/capabilities"
+    },
+    "effects.LiftStateful": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct LiftStateful[I: Monad & _Lifting, C: Stateful](Stateful):"
+      ],
+      "methods": {
+        "get": [
+          {
+            "signature": "def get() raises Self.GetError -> Self.Got:",
+            "sha256": "f8def326eba07b7378b47321eea2f506143e9a24e5e6c3204bb9bf2f527af3db"
+          }
+        ],
+        "modify": [
+          {
+            "signature": "def modify[F: UnaryContract & Movable & Deinitable](var f: F) raises Self.ModifyError[F] -> Self.Modified[F]:",
+            "sha256": "3e6068412c79c94d76a8e0398f9b0392f750b56f187e505b75956aaf2c6b9435"
+          }
+        ]
+      },
+      "provider": "effects/capabilities"
+    },
+    "effects.LiftTell": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct LiftTell[I: Monad & _Lifting, C: Tell](Tell):"
+      ],
+      "methods": {
+        "tell": [
+          {
+            "signature": "def tell(var log: Self.Log.Value) raises Self.TellError -> Self.Told:",
+            "sha256": "376c2fe2820efe34030c9fb62d36c419e2e379c4663b42ed37054737fbbce660"
+          }
+        ]
+      },
+      "provider": "effects/capabilities"
+    },
+    "effects.LiftListen": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct LiftListen[I: Monad & _Lifting, C: Listen](Listen):"
+      ],
+      "methods": {
+        "tell": [
+          {
+            "signature": "def tell(var log: Self.Log.Value) raises Self.TellError -> Self.Told:",
+            "sha256": "376c2fe2820efe34030c9fb62d36c419e2e379c4663b42ed37054737fbbce660"
+          }
+        ],
+        "listen": [
+          {
+            "signature": "def listen[V: Movable & Deinitable](var value: V) raises Self.ListenError[V] -> Self.Listened[V]:",
+            "sha256": "13b5a4c91f379aeb50414af88a04a5b93fe3940980ea99b8d1b6b39d6b13e1dd"
+          }
+        ]
+      },
+      "provider": "effects/capabilities"
+    },
+    "effects.LiftCensor": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct LiftCensor[I: Monad & _Lifting, C: Censor](Censor):"
+      ],
+      "methods": {
+        "tell": [
+          {
+            "signature": "def tell(var log: Self.Log.Value) raises Self.TellError -> Self.Told:",
+            "sha256": "376c2fe2820efe34030c9fb62d36c419e2e379c4663b42ed37054737fbbce660"
+          }
+        ],
+        "listen": [
+          {
+            "signature": "def listen[V: Movable & Deinitable](var value: V) raises Self.ListenError[V] -> Self.Listened[V]:",
+            "sha256": "13b5a4c91f379aeb50414af88a04a5b93fe3940980ea99b8d1b6b39d6b13e1dd"
+          }
+        ],
+        "censor": [
+          {
+            "signature": "def censor[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) raises Self.CensorError[V, F] -> Self.Censored[V, F]:",
+            "sha256": "1961519ad5340aab7429412f4b99d6ce8f80ebe05f4e686632ed731920d98b16"
+          }
+        ]
+      },
+      "provider": "effects/capabilities"
     },
     "data.Ok": {
       "kind": "type or alias",
@@ -7645,72 +7903,6 @@
       ],
       "provider": "algebra/_derived"
     },
-    "effects.ask": {
-      "kind": "function",
-      "overloads": [
-        {
-          "signature": "def ask[I: _ReaderFamily]() -> _ReaderAsk[I.Base, downcast[I.Environment, Copyable & Deinitable]] where conforms_to(I.Environment, Copyable):",
-          "sha256": "a8185e5baeb17fd58a70dcb5962b31bb26026bc531486f0b69c1f03f31a5f604"
-        }
-      ],
-      "provider": "effects/reader"
-    },
-    "effects.local": {
-      "kind": "function",
-      "overloads": [
-        {
-          "signature": "def local[S: ReaderAction, F: BorrowCallContract & Movable & Deinitable, //, I: _ReaderFamily](var f: F, var value: S ) -> _ReaderLocal[I.Base, downcast[I.Environment, Movable & Deinitable], S, F]:",
-          "sha256": "7c6c1bb929e81d2417131d041e8e1bac207917da0a726ff587284ff2c4543ca0"
-        },
-        {
-          "signature": "def local[S: ReaderAction, P: AnyType, R: Movable & Deinitable, //, I: _ReaderFamily, F: _Borrowing[P, R]](var f: F, var value: S ) -> _ReaderLocal[I.Base, downcast[I.Environment, Movable & Deinitable], S, _NativeBorrow[P, R, Never, F, False]] where P == I.Environment and R == I.Environment:",
-          "sha256": "d8a2d3076fbf783c754967a694e20acff74306d01dd95717dd19cae7ef953558"
-        },
-        {
-          "signature": "def local[S: ReaderAction, P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable, //, I: _ReaderFamily, F: _RaisingBorrowing[P, R, E]](var f: F, var value: S ) -> _ReaderLocal[I.Base, downcast[I.Environment, Movable & Deinitable], S, _NativeBorrow[P, R, E, F, True]] where P == I.Environment and R == I.Environment:",
-          "sha256": "0543e61b56cfc3b882ef6decccb7bf970695be84ce596d26c7c2c7d20aa13986"
-        }
-      ],
-      "provider": "effects/reader"
-    },
-    "effects.get": {
-      "kind": "function",
-      "overloads": [
-        {
-          "signature": "def get[I: _StateFamily]() -> _StateGet[I.Base, downcast[I.StateType, Copyable & Deinitable]] where conforms_to(I.StateType, Copyable):",
-          "sha256": "b87940cd75f38c4e297f58f92ced60ad78c163f878863b6ea0267e35fc2a547c"
-        }
-      ],
-      "provider": "effects/state"
-    },
-    "effects.modify": {
-      "kind": "function",
-      "overloads": [
-        {
-          "signature": "def modify[F: UnaryContract & Movable & Deinitable, //, I: _StateFamily](var f: F) -> _StateModify[I.Base, I.StateType, F]:",
-          "sha256": "2e615c4ac45db19faa78987a38edb3d752b86800cff09ec9c4682175f1600c9c"
-        },
-        {
-          "signature": "def modify[A: Movable & Deinitable, R: Movable & Deinitable, //, I: _StateFamily, F: _Unary[A, R]]( var f: F ) -> _StateModify[I.Base, I.StateType, NativeUnary[A, R, Never, F, False]] where A == I.StateType and R == I.StateType:",
-          "sha256": "e6c2f07fec26fc8628d1c9c02b2dcebf18b9c695db041a8de32cc3306ec4992a"
-        },
-        {
-          "signature": "def modify[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: _StateFamily, F: _RaisingUnary[A, R, E]]( var f: F ) -> _StateModify[I.Base, I.StateType, NativeUnary[A, R, E, F, True]] where A == I.StateType and R == I.StateType:",
-          "sha256": "2918ec937d1742dc6a8509a499356ff42f0bce36a78295e2f4b7c728e0cf046f"
-        }
-      ],
-      "provider": "effects/state"
-    },
-    "effects.put": {
-      "kind": "function",
-      "overloads": [
-        {
-          "signature": "def put[I: _StateFamily](var state: I.StateType) -> _StateModify[I.Base, I.StateType, _Replace[I.StateType]]:",
-          "sha256": "ae8cd6bf9c94d22871e7f4a09557414453ed0ff98bd39d31809c9c28afb6d9a6"
-        }
-      ],
-      "provider": "effects/state"
-    },
     "effects.writer": {
       "kind": "function",
       "overloads": [
@@ -7727,44 +7919,6 @@
         {
           "signature": "def run_writer[V: Movable & Deinitable, //, I: _WriterFamily](var value: V) -> _Value[V].Storage:",
           "sha256": "f2ec7f98fda14d1f1d914bec992d8d9bd534c684a71cf19f8cd2d5911a494c83"
-        }
-      ],
-      "provider": "effects/writer"
-    },
-    "effects.tell": {
-      "kind": "function",
-      "overloads": [
-        {
-          "signature": "def tell[I: _WriterFamily](var log: I.Log.Value) -> WriterValue[I, NoneType, I.Base.Pure[Tuple[I.Log.Value, NoneType]]]:",
-          "sha256": "3afeb987decb15251878961f5ce55e37fdde8bcf29462abfa6aa200ae53b086c"
-        }
-      ],
-      "provider": "effects/writer"
-    },
-    "effects.listen": {
-      "kind": "function",
-      "overloads": [
-        {
-          "signature": "def listen[V: Movable & Deinitable, //, I: _WriterFamily](var value: V ) raises I.Base.MapError[_Value[V].Storage, _Listen[I.Log, _Value[V].Value]] -> WriterValue[ I, Tuple[_Value[V].Value, I.Log.Value], I.Base.Mapped[_Value[V].Storage, _Listen[I.Log, _Value[V].Value]]]:",
-          "sha256": "ba6cb9895f0618e4a0334edb912c8276669d1de59f5a7c625d9143916ca0c597"
-        }
-      ],
-      "provider": "effects/writer"
-    },
-    "effects.censor": {
-      "kind": "function",
-      "overloads": [
-        {
-          "signature": "def censor[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, I: _WriterFamily]( var f: F, var value: V ) raises I.Base.MapError[_Value[V].Storage, _Censor[F, _Value[V].Value]] -> WriterValue[ I, _Value[V].Value, I.Base.Mapped[_Value[V].Storage, _Censor[F, _Value[V].Value]]]:",
-          "sha256": "bed901d78408c8f3a6fac1c4516dfb44594f4dd43314cd3c598c2dd3b682dade"
-        },
-        {
-          "signature": "def censor[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, I: _WriterFamily, F: _Unary[A, R]]( var f: F, var value: V ) raises I.Base.MapError[_Value[V].Storage, _Censor[NativeUnary[A, R, Never, F, False], _Value[V].Value]] -> WriterValue[ I, _Value[V].Value, I.Base.Mapped[_Value[V].Storage, _Censor[NativeUnary[A, R, Never, F, False], _Value[V].Value]]] where A == I.Log.Value and R == I.Log.Value:",
-          "sha256": "5b0f149bb08a43ba50a75ccdc84c408e77a5cf0d3bde08e19b91479dbdc7e521"
-        },
-        {
-          "signature": "def censor[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, I: _WriterFamily, F: _RaisingUnary[A, R, E]]( var f: F, var value: V ) raises I.Base.MapError[_Value[V].Storage, _Censor[NativeUnary[A, R, E, F, True], _Value[V].Value]] -> WriterValue[ I, _Value[V].Value, I.Base.Mapped[_Value[V].Storage, _Censor[NativeUnary[A, R, E, F, True], _Value[V].Value]]] where A == I.Log.Value and R == I.Log.Value:",
-          "sha256": "17301146ffbd204f9381f1f79cc8eb239d0f935b6775a3d7778b921868478b93"
         }
       ],
       "provider": "effects/writer"
@@ -7802,6 +7956,110 @@
         }
       ],
       "provider": "effects/operations"
+    },
+    "effects.ask": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def ask[I: Ask]() raises I.AskError -> I.Asked where I.AskAvailable:",
+          "sha256": "18ce7e622c8905e9bcd2a3981ef8dd4ede5a0cae9b012771f5d129230c77a7fb"
+        }
+      ],
+      "provider": "effects/capabilities"
+    },
+    "effects.local": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def local[V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable, //, I: Local](var f: F, var value: V ) raises I.LocalError[V, F] -> I.Localized[V, F] where I.LocalCompatible[V] and F.Payload == I.Environment and F.Result == I.Environment:",
+          "sha256": "03c091c4bfb317705fb5c0f3b45b267f3e863d68ccf21ac78ba20ee1e36ea4ef"
+        },
+        {
+          "signature": "def local[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, //, I: Local, F: _Borrowing[P, R]](var f: F, var value: V ) raises I.LocalError[V, _NativeBorrow[P, R, Never, F, False]] -> I.Localized[V, _NativeBorrow[P, R, Never, F, False]] where I.LocalCompatible[V] and P == I.Environment and R == I.Environment:",
+          "sha256": "5772c841687f852bf099e3184eef7d9ac91360fe7918854201a21b81a30fab5b"
+        },
+        {
+          "signature": "def local[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Local, F: _RaisingBorrowing[P, R, E]](var f: F, var value: V ) raises I.LocalError[V, _NativeBorrow[P, R, E, F, True]] -> I.Localized[V, _NativeBorrow[P, R, E, F, True]] where I.LocalCompatible[V] and P == I.Environment and R == I.Environment:",
+          "sha256": "89d5cf0de4f100a11deed23ec6c9d365a4dbadb38b65b6d1dc935bb5efb2323a"
+        }
+      ],
+      "provider": "effects/capabilities"
+    },
+    "effects.get": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def get[I: Stateful]() raises I.GetError -> I.Got where I.GetAvailable:",
+          "sha256": "f4cf9b5d74baef67264ad791ec8945f38b8c0e3ff47d7ba848ab840ae8d28bd4"
+        }
+      ],
+      "provider": "effects/capabilities"
+    },
+    "effects.modify": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def modify[F: UnaryContract & Movable & Deinitable, //, I: Stateful](var f: F ) raises I.ModifyError[F] -> I.Modified[F] where I.ModifyCompatible[F] and F.Arg == I.StateType and F.Out == I.StateType:",
+          "sha256": "9381fcd0c5bf3541a95626690e85ab5a1563899a945f66f2410d8801ff89a87f"
+        },
+        {
+          "signature": "def modify[A: Movable & Deinitable, R: Movable & Deinitable, //, I: Stateful, F: _Unary[A, R]](var f: F ) raises I.ModifyError[NativeUnary[A, R, Never, F, False]] -> I.Modified[NativeUnary[A, R, Never, F, False]] where I.ModifyCompatible[NativeUnary[A, R, Never, F, False]] and A == I.StateType and R == I.StateType:",
+          "sha256": "f4c85a772ac8742844a59ecfe51e750f4eb78ffdecb9b66f700f9fbe44874eba"
+        },
+        {
+          "signature": "def modify[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Stateful, F: _RaisingUnary[A, R, E]](var f: F ) raises I.ModifyError[NativeUnary[A, R, E, F, True]] -> I.Modified[NativeUnary[A, R, E, F, True]] where I.ModifyCompatible[NativeUnary[A, R, E, F, True]] and A == I.StateType and R == I.StateType:",
+          "sha256": "902b99e447bbbf61a0416d22977091b5bd2fae6bce76c2314c43052412058784"
+        }
+      ],
+      "provider": "effects/capabilities"
+    },
+    "effects.put": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def put[I: Stateful](var state: I.StateType ) raises I.ModifyError[_Replace[I.StateType]] -> I.Modified[_Replace[I.StateType]] where I.ModifyCompatible[_Replace[I.StateType]]:",
+          "sha256": "27d7cfb831b0711471a05ca5731cc549af8ad2717711e8a281ed0d47add6ae98"
+        }
+      ],
+      "provider": "effects/capabilities"
+    },
+    "effects.tell": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def tell[I: Tell](var log: I.Log.Value) raises I.TellError -> I.Told where I.TellAvailable:",
+          "sha256": "d22b1025db61412691fcb116dc0f4255577c7a4a721f57f4495519cc6f4647c4"
+        }
+      ],
+      "provider": "effects/capabilities"
+    },
+    "effects.listen": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def listen[V: Movable & Deinitable, //, I: Listen](var value: V ) raises I.ListenError[V] -> I.Listened[V] where I.ListenCompatible[V]:",
+          "sha256": "ccca0b2fefbf89fc715f8ca43e5323121316140e5b0e23b5e0aab19430b2beda"
+        }
+      ],
+      "provider": "effects/capabilities"
+    },
+    "effects.censor": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def censor[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, I: Censor](var f: F, var value: V ) raises I.CensorError[V, F] -> I.Censored[V, F] where I.CensorCompatible[V, F] and F.Arg == I.Log.Value and F.Out == I.Log.Value:",
+          "sha256": "06b9e203e2e99d2c8f76f8c165984cbb479c45e445f2546cc35cd08a2fbed6d6"
+        },
+        {
+          "signature": "def censor[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, I: Censor, F: _Unary[A, R]](var f: F, var value: V ) raises I.CensorError[V, NativeUnary[A, R, Never, F, False]] -> I.Censored[V, NativeUnary[A, R, Never, F, False]] where I.CensorCompatible[V, NativeUnary[A, R, Never, F, False]] and A == I.Log.Value and R == I.Log.Value:",
+          "sha256": "84c262a7a0b18d15796ee57a79de2f291482e1164ae572fad9455d2b1b2e2aa1"
+        },
+        {
+          "signature": "def censor[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, I: Censor, F: _RaisingUnary[A, R, E]](var f: F, var value: V ) raises I.CensorError[V, NativeUnary[A, R, E, F, True]] -> I.Censored[V, NativeUnary[A, R, E, F, True]] where I.CensorCompatible[V, NativeUnary[A, R, E, F, True]] and A == I.Log.Value and R == I.Log.Value:",
+          "sha256": "114706ca1b9fe6cda3b2490ec6e72f393dccde3c3118fa8b7a3cd794cd0c6ed5"
+        }
+      ],
+      "provider": "effects/capabilities"
     },
     "data.attempt": {
       "kind": "function",

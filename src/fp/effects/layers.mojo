@@ -11,11 +11,13 @@ from std.builtin.rebind import rebind_var, rebind, downcast
 from fp.algebra.protocols import (Monad, Applicative, ApplicativeError, _Lifting, _Accumulate, _Present, _BindFirst, _Lazy, _UnaryView)
 from fp.algebra._admission import _CarrierCompatible
 from fp.algebra.instances import IdentityFamily, OptionalFamily, ResultFamily, _OkOf
-from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, OnceUnary, MutableUnary
+from fp.callables.protocols import BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, OnceUnary, MutableUnary
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary
 from fp.data._result import Result, Ok, Err, _fold_result_owned, _transformed
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
+from .protocols import Local, Listen, _CarrierOp, _LocalLifting
 from ._adapt import _map_as
+from ._transport import _LocalOp, _ListenMapped, _ListenSum
 
 
 comptime _LAYER = "transformer: different inner family or error type"
@@ -242,8 +244,24 @@ struct _ResultAcc[K: _Accumulate, E: Movable & Deinitable](_Accumulate):
         return Result[Self.K.Acc, Self.E](Ok(Self.K.combine(current^, item^._take_ok())))
 
 
-struct _OptionalT[M: Monad](Monad, _Lifting, ApplicativeError where conforms_to(M, ApplicativeError)):
+struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError)):
     """OptionalT over a base other than Identity: a value is M's carrier of Optional[A]."""
+    comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = H.Compatible[V] and Self.M.Element[V] == Optional[Self.Element[V]]
+    comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = H.Applied[V]
+    comptime _HoistError[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = H.Error[V]
+    comptime _Listening[C: Listen, A: Movable & Deinitable] = _ListenMapped[C, Optional[A], _ListenSum[OptionalFamily, A, C.Log.Value]]
+    @staticmethod
+    def _hoist[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp](var op: H, var value: V) raises Self._HoistError[A, V, H] -> Self._Hoisted[A, V, H]:
+        return op^.apply(value^)
+
+    comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = C.LocalCompatible[V] and Self.M.Element[V] == Optional[Self.Element[V]]
+    comptime _Scoped[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Self._Hoisted[Self.Element[V], V, _LocalOp[C, F]]
+    comptime _ScopeError[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = C.LocalError[V, F]
+    @staticmethod
+    def _scope[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](var f: F, var value: V) raises Self._ScopeError[C, V, F] -> Self._Scoped[C, V, F]:
+        comptime assert C.Family == Self.Base and Self._ScopeCompatible[C, V]
+        return Self._hoist[Self.Element[V]](_LocalOp[C, F](f^), value^)
+
     comptime _Errors = downcast[Self.M, ApplicativeError]
     comptime Failure = Self._Errors.Failure
     comptime _ErrorCarrier[V: Movable & Deinitable] = Self._Errors._ErrorCarrier[V] and Self.M.Element[V] == Optional[Self.Element[V]]
@@ -320,8 +338,24 @@ struct _OptionalT[M: Monad](Monad, _Lifting, ApplicativeError where conforms_to(
         return Self.M.map(_Present[Self.M.Element[V]](), value^)
 
 
-struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, _Lifting):
+struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, _LocalLifting):
     """ResultT over a base other than Identity: a value is M's carrier of Result[A, E]."""
+    comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = H.Compatible[V] and Self.M.Element[V] == Result[Self.Element[V], Self.E]
+    comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = H.Applied[V]
+    comptime _HoistError[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = H.Error[V]
+    comptime _Listening[C: Listen, A: Movable & Deinitable] = _ListenMapped[C, Result[A, Self.E], _ListenSum[ResultFamily[Self.E], A, C.Log.Value]]
+    @staticmethod
+    def _hoist[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp](var op: H, var value: V) raises Self._HoistError[A, V, H] -> Self._Hoisted[A, V, H]:
+        return op^.apply(value^)
+
+    comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = C.LocalCompatible[V] and Self.M.Element[V] == Result[Self.Element[V], Self.E]
+    comptime _Scoped[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Self._Hoisted[Self.Element[V], V, _LocalOp[C, F]]
+    comptime _ScopeError[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = C.LocalError[V, F]
+    @staticmethod
+    def _scope[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](var f: F, var value: V) raises Self._ScopeError[C, V, F] -> Self._Scoped[C, V, F]:
+        comptime assert C.Family == Self.Base and Self._ScopeCompatible[C, V]
+        return Self._hoist[Self.Element[V]](_LocalOp[C, F](f^), value^)
+
     comptime Failure = Self.E
     comptime _ErrorCarrier[V: Movable & Deinitable] = _CarrierCompatible[Self.M, V] and Self.M.Element[V] == Result[Self.Element[V], Self.E]
     comptime Failed[A: Movable & Deinitable] = Self.M.Pure[Result[A, Self.E]]

@@ -26741,6 +26741,943 @@
    "provider": "data/_result",
    "summary": ""
   },
+  "effects.Ask": {
+   "aliases": [
+    {
+     "description": "The family in which this capability operates.",
+     "name": "Family"
+    },
+    {
+     "description": "The selected environment, including its native origins.",
+     "name": "Environment"
+    },
+    {
+     "description": "Whether this selection admits copying the environment.",
+     "name": "AskAvailable"
+    },
+    {
+     "description": "The concrete carrier returned by ask.",
+     "name": "Asked"
+    },
+    {
+     "description": "The exact native error of constructing ask, separate from running it.",
+     "name": "AskError"
+    }
+   ],
+   "description": "A capability is a compile-time dictionary, not a runtime carrier. Generic\nprograms use `Family` for ordinary algebra operations. `ask` copies the\nenvironment; forward `AskAvailable` in generic function constraints.\nImplementations must return a Family carrier whose payload is Environment.",
+   "fields": [],
+   "kind": "trait",
+   "methods": {
+    "ask": [
+     {
+      "args": [],
+      "description": "",
+      "error": "Self.AskError",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The native construction error.",
+      "returns": {
+       "doc": "The selected family's environment carrier.",
+       "type": "Self.Asked"
+      },
+      "signature": "def ask() raises Self.AskError -> Self.Asked",
+      "summary": "Construct an environment read, when AskAvailable holds."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "effects/protocols",
+   "signature": "trait Ask",
+   "summary": "Read an environment in a selected effect family.",
+   "traits": []
+  },
+  "effects.Censor": {
+   "aliases": [
+    {
+     "description": "Whether V and F admit this scope, with Arg and Out equal to Log.Value.",
+     "name": "CensorCompatible"
+    },
+    {
+     "description": "The concrete scoped carrier, with the same payload type.",
+     "name": "Censored"
+    },
+    {
+     "description": "The native construction error, separate from execution.",
+     "name": "CensorError"
+    }
+   ],
+   "description": "The callback consumes the log and returns its replacement. Logs and captures\nmay be move-only even when listening is unavailable. Scopes compose in\nexecution order and do not affect surrounding writes or other Writer layers.",
+   "fields": [],
+   "kind": "trait",
+   "methods": {
+    "censor": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The transformation, consumed.",
+        "name": "f",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The computation, consumed.",
+        "name": "value",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.CensorError[V, F]",
+      "parameters": [
+       {
+        "description": "A carrier of Family.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "A consuming Log.Value-to-Log.Value transformation.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The native construction error.",
+      "returns": {
+       "doc": "A Family carrier preserving the original payload.",
+       "type": "Self.Censored[V, F]"
+      },
+      "signature": "def censor[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) raises Self.CensorError[V, F] -> Self.Censored[V, F]",
+      "summary": "Transform the selected log for an admitted computation and callback."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "effects/protocols",
+   "signature": "trait Censor(Listen)",
+   "summary": "Transform the selected log of a computation, preserving its payload.",
+   "traits": [
+    "Listen",
+    "Tell"
+   ]
+  },
+  "effects.LiftAsk": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Family"
+    },
+    {
+     "description": "",
+     "name": "Environment"
+    },
+    {
+     "description": "",
+     "name": "AskAvailable"
+    },
+    {
+     "description": "",
+     "name": "Asked"
+    },
+    {
+     "description": "",
+     "name": "AskError"
+    }
+   ],
+   "description": "Selection is explicit, including when multiple layers use the same\nenvironment type. I.Base must equal C.Family. Nest selections to cross\nmultiple layers; no runtime dictionary or carrier wrapper is introduced.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "ask": [
+     {
+      "args": [],
+      "description": "",
+      "error": "Self.AskError",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The common native construction error of ask and lift.",
+      "returns": {
+       "doc": "The destination family's carrier of the environment.",
+       "type": "Self.Asked"
+      },
+      "signature": "def ask() raises Self.AskError -> Self.Asked",
+      "summary": "Read the selected base environment and lift its carrier."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The destination transformer family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad & _Lifting",
+     "variadic": false
+    },
+    {
+     "description": "The capability of its immediate base.",
+     "inferred": false,
+     "name": "C",
+     "type": "Ask",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/capabilities",
+   "signature": "struct LiftAsk[I: Monad & _Lifting, C: Ask](Ask)",
+   "summary": "Lift a selected Ask capability through one transformer.",
+   "traits": [
+    "Ask"
+   ]
+  },
+  "effects.LiftCensor": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Family"
+    },
+    {
+     "description": "",
+     "name": "Log"
+    },
+    {
+     "description": "",
+     "name": "TellAvailable"
+    },
+    {
+     "description": "",
+     "name": "Told"
+    },
+    {
+     "description": "",
+     "name": "TellError"
+    },
+    {
+     "description": "",
+     "name": "ListenCompatible"
+    },
+    {
+     "description": "",
+     "name": "Listened"
+    },
+    {
+     "description": "",
+     "name": "ListenError"
+    },
+    {
+     "description": "",
+     "name": "CensorCompatible"
+    },
+    {
+     "description": "",
+     "name": "Censored"
+    },
+    {
+     "description": "",
+     "name": "CensorError"
+    }
+   ],
+   "description": "The selected base log stays in place. Observed logs are paired inside the\nlayer's payload, retaining states, other logs, absence and stored errors.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "censor": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The selected log transformation, consumed.",
+        "name": "f",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The computation, consumed.",
+        "name": "value",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.CensorError[V, F]",
+      "parameters": [
+       {
+        "description": "A destination carrier.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "A consuming callback admitted by CensorCompatible.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The native scope-construction error.",
+      "returns": {
+       "doc": "A destination carrier preserving the original payload.",
+       "type": "Self.Censored[V, F]"
+      },
+      "signature": "def censor[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) raises Self.CensorError[V, F] -> Self.Censored[V, F]",
+      "summary": "Transform the selected base log through the shared carrier transport."
+     }
+    ],
+    "listen": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The computation, consumed.",
+        "name": "value",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.ListenError[V]",
+      "parameters": [
+       {
+        "description": "A destination carrier admitted by ListenCompatible.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The native observation-construction error.",
+      "returns": {
+       "doc": "A destination carrier of (original payload, selected log).",
+       "type": "Self.Listened[V]"
+      },
+      "signature": "def listen[V: Movable & Deinitable](var value: V) raises Self.ListenError[V] -> Self.Listened[V]",
+      "summary": "Observe the selected log, preserving the layer's representation."
+     }
+    ],
+    "tell": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The output, consumed.",
+        "name": "log",
+        "type": "Self.Log.Value",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.TellError",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The common native construction error of tell and lift.",
+      "returns": {
+       "doc": "A destination carrier of NoneType.",
+       "type": "Self.Told"
+      },
+      "signature": "def tell(var log: Self.Log.Value) raises Self.TellError -> Self.Told",
+      "summary": "Delegate the selected write to LiftTell."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The destination transformer family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad & _Lifting",
+     "variadic": false
+    },
+    {
+     "description": "The Censor capability of its immediate base.",
+     "inferred": false,
+     "name": "C",
+     "type": "Censor",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/capabilities",
+   "signature": "struct LiftCensor[I: Monad & _Lifting, C: Censor](Censor)",
+   "summary": "Lift an explicitly selected Censor capability through one transformer.",
+   "traits": [
+    "Censor",
+    "Listen",
+    "Tell"
+   ]
+  },
+  "effects.LiftListen": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Family"
+    },
+    {
+     "description": "",
+     "name": "Log"
+    },
+    {
+     "description": "",
+     "name": "TellAvailable"
+    },
+    {
+     "description": "",
+     "name": "Told"
+    },
+    {
+     "description": "",
+     "name": "TellError"
+    },
+    {
+     "description": "",
+     "name": "ListenCompatible"
+    },
+    {
+     "description": "",
+     "name": "Listened"
+    },
+    {
+     "description": "",
+     "name": "ListenError"
+    }
+   ],
+   "description": "The selected base log stays in place. Observed logs are paired inside the\nlayer's payload, retaining states, other logs, absence and stored errors.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "listen": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The computation, consumed.",
+        "name": "value",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.ListenError[V]",
+      "parameters": [
+       {
+        "description": "A destination carrier admitted by ListenCompatible.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The native observation-construction error.",
+      "returns": {
+       "doc": "A destination carrier of (original payload, selected log).",
+       "type": "Self.Listened[V]"
+      },
+      "signature": "def listen[V: Movable & Deinitable](var value: V) raises Self.ListenError[V] -> Self.Listened[V]",
+      "summary": "Observe the selected log, preserving the layer's representation."
+     }
+    ],
+    "tell": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The output, consumed.",
+        "name": "log",
+        "type": "Self.Log.Value",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.TellError",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The common native construction error of tell and lift.",
+      "returns": {
+       "doc": "A destination carrier of NoneType.",
+       "type": "Self.Told"
+      },
+      "signature": "def tell(var log: Self.Log.Value) raises Self.TellError -> Self.Told",
+      "summary": "Delegate the selected write to LiftTell."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The destination transformer family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad & _Lifting",
+     "variadic": false
+    },
+    {
+     "description": "The Listen capability of its immediate base.",
+     "inferred": false,
+     "name": "C",
+     "type": "Listen",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/capabilities",
+   "signature": "struct LiftListen[I: Monad & _Lifting, C: Listen](Listen)",
+   "summary": "Lift an explicitly selected Listen capability through one transformer.",
+   "traits": [
+    "Listen",
+    "Tell"
+   ]
+  },
+  "effects.LiftLocal": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Family"
+    },
+    {
+     "description": "",
+     "name": "Environment"
+    },
+    {
+     "description": "",
+     "name": "AskAvailable"
+    },
+    {
+     "description": "",
+     "name": "Asked"
+    },
+    {
+     "description": "",
+     "name": "AskError"
+    },
+    {
+     "description": "",
+     "name": "LocalCompatible"
+    },
+    {
+     "description": "",
+     "name": "Localized"
+    },
+    {
+     "description": "",
+     "name": "LocalError"
+    }
+   ],
+   "description": "Reader selects its own environment by default. Use this dictionary to\ntarget a Reader in its base instead. State, Writer, OptionalT and ResultT\ntransport the selected scope without interpreting it.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "ask": [
+     {
+      "args": [],
+      "description": "",
+      "error": "Self.AskError",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The common native construction error of ask and lift.",
+      "returns": {
+       "doc": "The destination family's carrier of the environment.",
+       "type": "Self.Asked"
+      },
+      "signature": "def ask() raises Self.AskError -> Self.Asked",
+      "summary": "Delegate the selected read to LiftAsk."
+     }
+    ],
+    "local": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The transformation, consumed.",
+        "name": "f",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The computation, consumed.",
+        "name": "value",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.LocalError[V, F]",
+      "parameters": [
+       {
+        "description": "An admitted carrier of the destination family.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "A borrowing transformation of the selected environment.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact native scope-construction error.",
+      "returns": {
+       "doc": "The scoped carrier of the destination family.",
+       "type": "Self.Localized[V, F]"
+      },
+      "signature": "def local[V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](var f: F, var value: V) raises Self.LocalError[V, F] -> Self.Localized[V, F]",
+      "summary": "Transport the selected base scope through the destination layer."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The destination transformer family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad & _Lifting",
+     "variadic": false
+    },
+    {
+     "description": "The Local capability of its immediate base.",
+     "inferred": false,
+     "name": "C",
+     "type": "Local",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/capabilities",
+   "signature": "struct LiftLocal[I: Monad & _Lifting, C: Local](Local)",
+   "summary": "Lift a selected Local (and Ask) capability through one transformer.",
+   "traits": [
+    "Ask",
+    "Local"
+   ]
+  },
+  "effects.LiftStateful": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Family"
+    },
+    {
+     "description": "",
+     "name": "StateType"
+    },
+    {
+     "description": "",
+     "name": "Got"
+    },
+    {
+     "description": "",
+     "name": "GetError"
+    },
+    {
+     "description": "",
+     "name": "GetAvailable"
+    },
+    {
+     "description": "",
+     "name": "Modified"
+    },
+    {
+     "description": "",
+     "name": "ModifyError"
+    },
+    {
+     "description": "",
+     "name": "ModifyCompatible"
+    }
+   ],
+   "description": "I.Base must equal C.Family. Nest selections to cross several layers. StateT\nselects its own state by default; this dictionary selects a base state.\nExisting lifts preserve carriers, ownership, timing and stack-order rules.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "get": [
+     {
+      "args": [],
+      "description": "",
+      "error": "Self.GetError",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The common native construction error of get and lift.",
+      "returns": {
+       "doc": "A destination carrier of the selected state.",
+       "type": "Self.Got"
+      },
+      "signature": "def get() raises Self.GetError -> Self.Got",
+      "summary": "Read the selected base state and lift its carrier."
+     }
+    ],
+    "modify": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The state transformation, consumed.",
+        "name": "f",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.ModifyError[F]",
+      "parameters": [
+       {
+        "description": "A callback admitted by the selected base capability.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The common native construction error of modify and lift.",
+      "returns": {
+       "doc": "A destination carrier of NoneType.",
+       "type": "Self.Modified[F]"
+      },
+      "signature": "def modify[F: UnaryContract & Movable & Deinitable](var f: F) raises Self.ModifyError[F] -> Self.Modified[F]",
+      "summary": "Update the selected base state and lift its carrier."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The destination transformer family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad & _Lifting",
+     "variadic": false
+    },
+    {
+     "description": "The Stateful capability of its immediate base.",
+     "inferred": false,
+     "name": "C",
+     "type": "Stateful",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/capabilities",
+   "signature": "struct LiftStateful[I: Monad & _Lifting, C: Stateful](Stateful)",
+   "summary": "Lift an explicitly selected Stateful capability through one transformer.",
+   "traits": [
+    "Stateful"
+   ]
+  },
+  "effects.LiftTell": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Family"
+    },
+    {
+     "description": "",
+     "name": "Log"
+    },
+    {
+     "description": "",
+     "name": "Told"
+    },
+    {
+     "description": "",
+     "name": "TellError"
+    },
+    {
+     "description": "",
+     "name": "TellAvailable"
+    }
+   ],
+   "description": "Selection names the immediate base capability explicitly. Nest selections\nto cross several layers; identical log types do not create ambiguity.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "tell": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The output, consumed with its native origins.",
+        "name": "log",
+        "type": "Self.Log.Value",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.TellError",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The common native construction error of tell and lift.",
+      "returns": {
+       "doc": "A destination carrier of NoneType.",
+       "type": "Self.Told"
+      },
+      "signature": "def tell(var log: Self.Log.Value) raises Self.TellError -> Self.Told",
+      "summary": "Write to the selected base log and lift the resulting carrier."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The destination transformer family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad & _Lifting",
+     "variadic": false
+    },
+    {
+     "description": "The Tell capability of its immediate base.",
+     "inferred": false,
+     "name": "C",
+     "type": "Tell",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/capabilities",
+   "signature": "struct LiftTell[I: Monad & _Lifting, C: Tell](Tell)",
+   "summary": "Lift a selected Tell capability through one transformer.",
+   "traits": [
+    "Tell"
+   ]
+  },
+  "effects.Listen": {
+   "aliases": [
+    {
+     "description": "Whether V admits observation, preserving its family and native origins.",
+     "name": "ListenCompatible"
+    },
+    {
+     "description": "The concrete Family carrier of (original payload, Log.Value).",
+     "name": "Listened"
+    },
+    {
+     "description": "The native construction error; execution errors remain on the carrier.",
+     "name": "ListenError"
+    }
+   ],
+   "description": "The payload becomes (value, log). Only the supplied computation is observed;\nsurrounding writes remain outside that observation. Listening requires a\ncopyable log, but the dictionary may still support tell for move-only logs.",
+   "fields": [],
+   "kind": "trait",
+   "methods": {
+    "listen": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The computation, consumed.",
+        "name": "value",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.ListenError[V]",
+      "parameters": [
+       {
+        "description": "A carrier satisfying ListenCompatible.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The native construction error.",
+      "returns": {
+       "doc": "Its payload paired with a copy of its log, retaining the output log.",
+       "type": "Self.Listened[V]"
+      },
+      "signature": "def listen[V: Movable & Deinitable](var value: V) raises Self.ListenError[V] -> Self.Listened[V]",
+      "summary": "Observe an admitted computation's selected log."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "effects/protocols",
+   "signature": "trait Listen(Tell)",
+   "summary": "Observe the selected log of a computation without removing it.",
+   "traits": [
+    "Tell"
+   ]
+  },
+  "effects.Local": {
+   "aliases": [
+    {
+     "description": "Whether V admits this scope, preserving its family and native origins.",
+     "name": "LocalCompatible"
+    },
+    {
+     "description": "The concrete scoped carrier; its payload is unchanged.",
+     "name": "Localized"
+    },
+    {
+     "description": "The native construction error; deferred execution has its own error.",
+     "name": "LocalError"
+    }
+   ],
+   "description": "The callback borrows Environment and returns an owned Environment. The\nscoped computation and callback are consumed. An identity scope preserves\nthe result; nested scopes compose in execution order. This capability can\nscope move-only environments even when AskAvailable is false.",
+   "fields": [],
+   "kind": "trait",
+   "methods": {
+    "local": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The environment transformation, consumed.",
+        "name": "f",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The computation to scope, consumed.",
+        "name": "value",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.LocalError[V, F]",
+      "parameters": [
+       {
+        "description": "A carrier satisfying LocalCompatible.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "A borrowing callback with Payload and Result equal to Environment.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The native construction error.",
+      "returns": {
+       "doc": "A carrier of Family with the original payload type.",
+       "type": "Self.Localized[V, F]"
+      },
+      "signature": "def local[V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](var f: F, var value: V) raises Self.LocalError[V, F] -> Self.Localized[V, F]",
+      "summary": "Construct a scope for an admitted carrier and environment callback."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "effects/protocols",
+   "signature": "trait Local(Ask)",
+   "summary": "Scope a selected environment without changing the surrounding one.",
+   "traits": [
+    "Ask"
+   ]
+  },
   "effects.OptionalT": {
    "aliases": [],
    "description": "A value is the base carrier itself, run with the base's `run`. An absent value\nskips later callbacks and right operands and keeps the base's earlier effects.",
@@ -26845,6 +27782,34 @@
    "aliases": [
     {
      "description": "",
+     "name": "Family"
+    },
+    {
+     "description": "",
+     "name": "AskAvailable"
+    },
+    {
+     "description": "",
+     "name": "Asked"
+    },
+    {
+     "description": "",
+     "name": "AskError"
+    },
+    {
+     "description": "",
+     "name": "LocalCompatible"
+    },
+    {
+     "description": "",
+     "name": "Localized"
+    },
+    {
+     "description": "",
+     "name": "LocalError"
+    },
+    {
+     "description": "",
      "name": "Failure"
     },
     {
@@ -26944,6 +27909,22 @@
    "fields": [],
    "kind": "struct",
    "methods": {
+    "ask": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An environment-reading computation; requires AskAvailable.",
+       "type": "Self.Asked"
+      },
+      "signature": "def ask() -> Self.Asked",
+      "summary": "Construct a deferred copy of this Reader's environment."
+     }
+    ],
     "endpoint": [
      {
       "args": [
@@ -27091,6 +28072,52 @@
       },
       "signature": "def lift[V: Movable & Deinitable](var value: V) -> Self.Lifted[V]",
       "summary": "A Reader computation that ignores the environment and returns a base carrier."
+     }
+    ],
+    "local": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The transformation, consumed.",
+        "name": "f",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The computation, consumed.",
+        "name": "value",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An admitted computation of this Reader family.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "A borrowing environment transformation.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A deferred scope; the temporary environment cannot escape its run.",
+       "type": "Self.Localized[V, F]"
+      },
+      "signature": "def local[V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](var f: F, var value: V) -> Self.Localized[V, F]",
+      "summary": "Construct a scope for this Reader's own environment."
      }
     ],
     "map": [
@@ -27295,15 +28322,20 @@
     }
    ],
    "provider": "effects/reader",
-   "signature": "struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, _Lifting, ApplicativeError where conforms_to(M, ApplicativeError))",
+   "signature": "struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, Local, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError))",
    "summary": "Reader over the base Monad `M`: a computation borrows an environment `R` when run and returns an `M` carrier.",
    "traits": [
     "Applicative",
     "ApplicativeError",
+    "Ask",
     "Functor",
+    "Local",
     "Monad",
     "_Acting",
+    "_CapabilityLifting",
+    "_Hoisting",
     "_Lifting",
+    "_LocalLifting",
     "_ReaderFamily"
    ]
   },
@@ -27408,6 +28440,34 @@
   },
   "effects.StateT": {
    "aliases": [
+    {
+     "description": "",
+     "name": "Family"
+    },
+    {
+     "description": "",
+     "name": "GetAvailable"
+    },
+    {
+     "description": "",
+     "name": "Got"
+    },
+    {
+     "description": "",
+     "name": "GetError"
+    },
+    {
+     "description": "",
+     "name": "ModifyCompatible"
+    },
+    {
+     "description": "",
+     "name": "Modified"
+    },
+    {
+     "description": "",
+     "name": "ModifyError"
+    },
     {
      "description": "",
      "name": "Failure"
@@ -27626,6 +28686,22 @@
       "summary": "A State computation that runs `value`, then the computation `f` returns on the updated state."
      }
     ],
+    "get": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A deferred state read; construction does not copy the state.",
+       "type": "Self.Got"
+      },
+      "signature": "def get() -> Self.Got",
+      "summary": "Construct a read of this layer's copyable state."
+     }
+    ],
     "lift": [
      {
       "args": [
@@ -27764,6 +28840,38 @@
       "summary": "A State computation that runs the left operand, then the right one on the state the left produced, and combines their payloads."
      }
     ],
+    "modify": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The transformation, consumed.",
+        "name": "f",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A consuming state-to-state callback.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A deferred update with NoneType payload.",
+       "type": "Self.Modified[F]"
+      },
+      "signature": "def modify[F: UnaryContract & Movable & Deinitable](var f: F) -> Self.Modified[F]",
+      "summary": "Construct an update of this layer's state using the State kernel."
+     }
+    ],
     "or_else": [
      {
       "args": [
@@ -27860,17 +28968,173 @@
     }
    ],
    "provider": "effects/state",
-   "signature": "struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, _Lifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable))",
+   "signature": "struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, Stateful, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable))",
    "summary": "State over the base Monad `M`: a computation consumes a state `S` when run and returns an `M` carrier of `(value, state)`.",
    "traits": [
     "Applicative",
     "ApplicativeError",
     "Functor",
     "Monad",
+    "Stateful",
     "_Acting",
+    "_CapabilityLifting",
+    "_Hoisting",
     "_Lifting",
+    "_LocalLifting",
     "_StateFamily"
    ]
+  },
+  "effects.Stateful": {
+   "aliases": [
+    {
+     "description": "The family in which this capability operates.",
+     "name": "Family"
+    },
+    {
+     "description": "The selected state's exact type, including native origins.",
+     "name": "StateType"
+    },
+    {
+     "description": "Whether this selection admits copying the state.",
+     "name": "GetAvailable"
+    },
+    {
+     "description": "The concrete carrier of StateType returned by get.",
+     "name": "Got"
+    },
+    {
+     "description": "The exact native error of constructing get, separate from running it.",
+     "name": "GetError"
+    },
+    {
+     "description": "Whether F is admitted, with Arg and Out exactly equal to StateType.",
+     "name": "ModifyCompatible"
+    },
+    {
+     "description": "The concrete carrier of NoneType returned by modify.",
+     "name": "Modified"
+    },
+    {
+     "description": "The native construction error; execution has its own exact error.",
+     "name": "ModifyError"
+    }
+   ],
+   "description": "This compile-time dictionary selects one state, including when a stack has\nseveral states of the same type. Reading copies the state; modification\nconsumes it and returns its replacement. Move-only state supports updates\nwithout supporting get. Implementations preserve the ordinary state laws:\nget leaves state unchanged, the last put wins, and modifications compose\nin execution order. Native failures follow the selected family's semantics.",
+   "fields": [],
+   "kind": "trait",
+   "methods": {
+    "get": [
+     {
+      "args": [],
+      "description": "",
+      "error": "Self.GetError",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The native construction error.",
+      "returns": {
+       "doc": "A Family carrier whose payload is a copy of the selected state.",
+       "type": "Self.Got"
+      },
+      "signature": "def get() raises Self.GetError -> Self.Got",
+      "summary": "Construct a state read when GetAvailable holds."
+     }
+    ],
+    "modify": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The transformation, consumed.",
+        "name": "f",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.ModifyError[F]",
+      "parameters": [
+       {
+        "description": "A consuming callback from StateType to StateType.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The native construction error.",
+      "returns": {
+       "doc": "A Family carrier with NoneType payload.",
+       "type": "Self.Modified[F]"
+      },
+      "signature": "def modify[F: UnaryContract & Movable & Deinitable](var f: F) raises Self.ModifyError[F] -> Self.Modified[F]",
+      "summary": "Construct an update when ModifyCompatible holds."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "effects/protocols",
+   "signature": "trait Stateful",
+   "summary": "Read and update a selected state in an effect family.",
+   "traits": []
+  },
+  "effects.Tell": {
+   "aliases": [
+    {
+     "description": "The family in which the capability operates.",
+     "name": "Family"
+    },
+    {
+     "description": "The selected log monoid, retaining the exact Value type and origins.",
+     "name": "Log"
+    },
+    {
+     "description": "Whether this selection admits constructing a log write.",
+     "name": "TellAvailable"
+    },
+    {
+     "description": "The concrete carrier of NoneType returned by tell.",
+     "name": "Told"
+    },
+    {
+     "description": "The exact native construction error, separate from deferred execution.",
+     "name": "TellError"
+    }
+   ],
+   "description": "A compile-time capability dictionary, independent of Writer's representation.\nTell does not require a copyable log. Its payload is NoneType.",
+   "fields": [],
+   "kind": "trait",
+   "methods": {
+    "tell": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The output, consumed.",
+        "name": "log",
+        "type": "Self.Log.Value",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.TellError",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The native construction error.",
+      "returns": {
+       "doc": "A Family carrier with NoneType payload.",
+       "type": "Self.Told"
+      },
+      "signature": "def tell(var log: Self.Log.Value) raises Self.TellError -> Self.Told",
+      "summary": "Construct a write when TellAvailable holds."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "effects/protocols",
+   "signature": "trait Tell",
+   "summary": "Append output to one explicitly selected log, in execution order.",
+   "traits": []
   },
   "effects.Writer": {
    "aliases": [],
@@ -27894,6 +29158,46 @@
   },
   "effects.WriterT": {
    "aliases": [
+    {
+     "description": "",
+     "name": "Family"
+    },
+    {
+     "description": "",
+     "name": "TellAvailable"
+    },
+    {
+     "description": "",
+     "name": "Told"
+    },
+    {
+     "description": "",
+     "name": "TellError"
+    },
+    {
+     "description": "",
+     "name": "ListenCompatible"
+    },
+    {
+     "description": "",
+     "name": "Listened"
+    },
+    {
+     "description": "",
+     "name": "ListenError"
+    },
+    {
+     "description": "",
+     "name": "CensorCompatible"
+    },
+    {
+     "description": "",
+     "name": "Censored"
+    },
+    {
+     "description": "",
+     "name": "CensorError"
+    },
     {
      "description": "",
      "name": "Failure"
@@ -27991,6 +29295,52 @@
    "fields": [],
    "kind": "struct",
    "methods": {
+    "censor": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The log transformation, consumed.",
+        "name": "f",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The computation, consumed.",
+        "name": "value",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.CensorError[V, F]",
+      "parameters": [
+       {
+        "description": "A carrier of this Writer family.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "A callback admitted by CensorCompatible.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The base family's exact map error.",
+      "returns": {
+       "doc": "A Writer carrier with the same payload and the transformed log.",
+       "type": "Self.Censored[V, F]"
+      },
+      "signature": "def censor[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) raises Self.CensorError[V, F] -> Self.Censored[V, F]",
+      "summary": "Transform this layer using the existing consuming log kernel."
+     }
+    ],
     "fail": [
      {
       "args": [
@@ -28099,6 +29449,38 @@
       },
       "signature": "def lift[V: Movable & Deinitable](var value: V) raises Self.LiftError[V] -> Self.Lifted[V]",
       "summary": "A Writer value with a base carrier's payload and the empty log."
+     }
+    ],
+    "listen": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The computation, consumed.",
+        "name": "value",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.ListenError[V]",
+      "parameters": [
+       {
+        "description": "A carrier admitted by ListenCompatible.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The base family's exact map error.",
+      "returns": {
+       "doc": "The payload paired with a copy of its log, keeping the log.",
+       "type": "Self.Listened[V]"
+      },
+      "signature": "def listen[V: Movable & Deinitable](var value: V) raises Self.ListenError[V] -> Self.Listened[V]",
+      "summary": "Observe this layer using the existing copy-and-pair kernel."
      }
     ],
     "map": [
@@ -28284,6 +29666,30 @@
       "signature": "def pure[A: Movable & Deinitable](var value: A) -> Self.Pure[A]",
       "summary": "A Writer value with the payload and the empty log."
      }
+    ],
+    "tell": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The output, consumed.",
+        "name": "log",
+        "type": "Self.Log.Value",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A Writer carrier of NoneType.",
+       "type": "Self.Told"
+      },
+      "signature": "def tell(var log: Self.Log.Value) -> Self.Told",
+      "summary": "Record this layer's log without constructing an empty log."
+     }
     ]
    },
    "parameters": [
@@ -28303,14 +29709,20 @@
     }
    ],
    "provider": "effects/writer",
-   "signature": "struct WriterT[M: Monad, W: Monoid](_WriterFamily, _Lifting, ApplicativeError where conforms_to(M, ApplicativeError))",
+   "signature": "struct WriterT[M: Monad, W: Monoid](_WriterFamily, Censor, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError))",
    "summary": "Writer over the base Monad `M`: a value is `M`'s carrier of `(log, payload)`, and the monoid `W` accumulates the log.",
    "traits": [
     "Applicative",
     "ApplicativeError",
+    "Censor",
     "Functor",
+    "Listen",
     "Monad",
+    "Tell",
+    "_CapabilityLifting",
+    "_Hoisting",
     "_Lifting",
+    "_LocalLifting",
     "_WriterFamily"
    ]
   },
@@ -28446,28 +29858,28 @@
    "overloads": [
     {
      "args": [],
-     "description": "",
-     "error": "",
+     "description": "Reader families select their own environment. LiftAsk and LiftLocal select\na base capability explicitly. Generic forwarders retain AskAvailable.",
+     "error": "I.AskError",
      "parameters": [
       {
-       "description": "The Reader family; its environment must be `Copyable`.",
+       "description": "The Ask capability; its selected environment must be Copyable.",
        "inferred": false,
        "name": "I",
-       "type": "_ReaderFamily",
+       "type": "Ask",
        "variadic": false
       }
      ],
-     "raises": false,
-     "raises_doc": "",
+     "raises": true,
+     "raises_doc": "The capability's exact native construction error.",
      "returns": {
-      "doc": "The computation.",
-      "type": "_ReaderAsk[I.Base, downcast[I.Environment, Copyable & Deinitable]]"
+      "doc": "The concrete environment carrier. Deferred families remain deferred.",
+      "type": "I.Asked"
      },
-     "signature": "def ask[I: _ReaderFamily]() -> _ReaderAsk[I.Base, downcast[I.Environment, Copyable & Deinitable]] where conforms_to(I.Environment, Copyable)",
-     "summary": "A Reader computation whose payload is a copy of the environment."
+     "signature": "def ask[I: Ask]() raises I.AskError -> I.Asked where I.AskAvailable",
+     "summary": "Read a copy of the selected environment in the capability's family."
     }
    ],
-   "provider": "effects/reader",
+   "provider": "effects/capabilities",
    "summary": ""
   },
   "effects.censor": {
@@ -28478,52 +29890,52 @@
      "args": [
       {
        "convention": "var",
-       "description": "The callback, consumed.",
+       "description": "The log transformation, consumed.",
        "name": "f",
        "type": "F",
        "variadic": false
       },
       {
        "convention": "var",
-       "description": "The Writer value, consumed.",
+       "description": "The computation, consumed.",
        "name": "value",
        "type": "V",
        "variadic": false
       }
      ],
-     "description": "Other overloads take a native function or closure directly.",
-     "error": "I.Base.MapError[_Value[V].Storage, _Censor[F, _Value[V].Value]]",
+     "description": "The payload is preserved. The callback consumes the log; both may be\nmove-only. Other overloads accept a native function or closure. Generic\nforwarders retain CensorCompatible and the exact Arg/Out log equalities.",
+     "error": "I.CensorError[V, F]",
      "parameters": [
       {
-       "description": "The callback's type: a library `Unary` value from log to log.",
+       "description": "A consuming Log.Value-to-Log.Value callback.",
        "inferred": true,
        "name": "F",
        "type": "UnaryContract & Movable & Deinitable",
        "variadic": false
       },
       {
-       "description": "The Writer value's type.",
+       "description": "A carrier of the capability's Family.",
        "inferred": true,
        "name": "V",
        "type": "Movable & Deinitable",
        "variadic": false
       },
       {
-       "description": "The Writer family.",
+       "description": "The selected Censor capability.",
        "inferred": false,
        "name": "I",
-       "type": "_WriterFamily",
+       "type": "Censor",
        "variadic": false
       }
      ],
      "raises": true,
-     "raises_doc": "The base's `map` error, which includes the callback's.",
+     "raises_doc": "The native construction error; execution errors stay native.",
      "returns": {
-      "doc": "The Writer value with the new log.",
-      "type": "WriterValue[ I, _Value[V].Value, I.Base.Mapped[_Value[V].Storage, _Censor[F, _Value[V].Value]]]"
+      "doc": "A Family carrier preserving payload and native origins.",
+      "type": "I.Censored[V, F]"
      },
-     "signature": "def censor[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, I: _WriterFamily](var f: F, var value: V) raises I.Base.MapError[_Value[V].Storage, _Censor[F, _Value[V].Value]] -> WriterValue[ I, _Value[V].Value, I.Base.Mapped[_Value[V].Storage, _Censor[F, _Value[V].Value]]]",
-     "summary": "Replace the final log with `f(log)`."
+     "signature": "def censor[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, I: Censor](var f: F, var value: V) raises I.CensorError[V, F] -> I.Censored[V, F] where I.CensorCompatible[V, F] and F.Arg == I.Log.Value and F.Out == I.Log.Value",
+     "summary": "Replace this computation's selected log with f(log)."
     },
     {
      "args": [
@@ -28543,7 +29955,7 @@
       }
      ],
      "description": "",
-     "error": "I.Base.MapError[_Value[V].Storage, _Censor[NativeUnary[A, R, Never, F, False], _Value[V].Value]]",
+     "error": "I.CensorError[V, NativeUnary[A, R, Never, F, False]]",
      "parameters": [
       {
        "description": "",
@@ -28570,7 +29982,7 @@
        "description": "",
        "inferred": false,
        "name": "I",
-       "type": "_WriterFamily",
+       "type": "Censor",
        "variadic": false
       },
       {
@@ -28585,10 +29997,10 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "WriterValue[ I, _Value[V].Value, I.Base.Mapped[_Value[V].Storage, _Censor[NativeUnary[A, R, Never, F, False], _Value[V].Value]]]"
+      "type": "I.Censored[V, NativeUnary[A, R, Never, F, False]]"
      },
-     "signature": "def censor[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, I: _WriterFamily, F: _Unary[A, R]](var f: F, var value: V) raises I.Base.MapError[_Value[V].Storage, _Censor[NativeUnary[A, R, Never, F, False], _Value[V].Value]] -> WriterValue[ I, _Value[V].Value, I.Base.Mapped[_Value[V].Storage, _Censor[NativeUnary[A, R, Never, F, False], _Value[V].Value]]] where A == I.Log.Value and R == I.Log.Value",
-     "summary": "Replace the final log with f(log), for a native function or closure."
+     "signature": "def censor[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, I: Censor, F: _Unary[A, R]](var f: F, var value: V) raises I.CensorError[V, NativeUnary[A, R, Never, F, False]] -> I.Censored[V, NativeUnary[A, R, Never, F, False]] where I.CensorCompatible[V, NativeUnary[A, R, Never, F, False]] and A == I.Log.Value and R == I.Log.Value",
+     "summary": "Scope the selected log with an owned native consuming callback."
     },
     {
      "args": [
@@ -28608,7 +30020,7 @@
       }
      ],
      "description": "",
-     "error": "I.Base.MapError[_Value[V].Storage, _Censor[NativeUnary[A, R, E, F, True], _Value[V].Value]]",
+     "error": "I.CensorError[V, NativeUnary[A, R, E, F, True]]",
      "parameters": [
       {
        "description": "",
@@ -28642,7 +30054,7 @@
        "description": "",
        "inferred": false,
        "name": "I",
-       "type": "_WriterFamily",
+       "type": "Censor",
        "variadic": false
       },
       {
@@ -28657,13 +30069,13 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "WriterValue[ I, _Value[V].Value, I.Base.Mapped[_Value[V].Storage, _Censor[NativeUnary[A, R, E, F, True], _Value[V].Value]]]"
+      "type": "I.Censored[V, NativeUnary[A, R, E, F, True]]"
      },
-     "signature": "def censor[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, I: _WriterFamily, F: _RaisingUnary[A, R, E]](var f: F, var value: V) raises I.Base.MapError[_Value[V].Storage, _Censor[NativeUnary[A, R, E, F, True], _Value[V].Value]] -> WriterValue[ I, _Value[V].Value, I.Base.Mapped[_Value[V].Storage, _Censor[NativeUnary[A, R, E, F, True], _Value[V].Value]]] where A == I.Log.Value and R == I.Log.Value",
-     "summary": "Raising form of the native censor; its error type is kept."
+     "signature": "def censor[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, I: Censor, F: _RaisingUnary[A, R, E]](var f: F, var value: V) raises I.CensorError[V, NativeUnary[A, R, E, F, True]] -> I.Censored[V, NativeUnary[A, R, E, F, True]] where I.CensorCompatible[V, NativeUnary[A, R, E, F, True]] and A == I.Log.Value and R == I.Log.Value",
+     "summary": "Scope the selected log with a raising native callback; keep its error."
     }
    ],
-   "provider": "effects/writer",
+   "provider": "effects/capabilities",
    "summary": ""
   },
   "effects.get": {
@@ -28672,28 +30084,28 @@
    "overloads": [
     {
      "args": [],
-     "description": "",
-     "error": "",
+     "description": "State families select their own state; LiftStateful explicitly selects a\nbase state. Generic forwarders retain GetAvailable in their constraints.",
+     "error": "I.GetError",
      "parameters": [
       {
-       "description": "The State family; its state must be `Copyable`.",
+       "description": "The Stateful capability; its selected state must be Copyable.",
        "inferred": false,
        "name": "I",
-       "type": "_StateFamily",
+       "type": "Stateful",
        "variadic": false
       }
      ],
-     "raises": false,
-     "raises_doc": "",
+     "raises": true,
+     "raises_doc": "The exact native construction error, separate from execution.",
      "returns": {
-      "doc": "The computation.",
-      "type": "_StateGet[I.Base, downcast[I.StateType, Copyable & Deinitable]]"
+      "doc": "A carrier of StateType in the capability's Family.",
+      "type": "I.Got"
      },
-     "signature": "def get[I: _StateFamily]() -> _StateGet[I.Base, downcast[I.StateType, Copyable & Deinitable]] where conforms_to(I.StateType, Copyable)",
-     "summary": "A State computation whose payload is a copy of the state, which is kept."
+     "signature": "def get[I: Stateful]() raises I.GetError -> I.Got where I.GetAvailable",
+     "summary": "Read a copy of the selected state without changing it."
     }
    ],
-   "provider": "effects/state",
+   "provider": "effects/capabilities",
    "summary": ""
   },
   "effects.lift": {
@@ -28749,41 +30161,41 @@
      "args": [
       {
        "convention": "var",
-       "description": "The Writer value, consumed.",
+       "description": "The computation, consumed.",
        "name": "value",
        "type": "V",
        "variadic": false
       }
      ],
-     "description": "The log must be `Copyable`.",
-     "error": "I.Base.MapError[_Value[V].Storage, _Listen[I.Log, _Value[V].Value]]",
+     "description": "The output log is retained. Only the supplied computation's log is observed;\nsurrounding writes and other Writer layers are unchanged. Generic forwarders\nretain ListenCompatible, including log copyability and carrier origins.",
+     "error": "I.ListenError[V]",
      "parameters": [
       {
-       "description": "The Writer value's type.",
+       "description": "A carrier admitted by ListenCompatible.",
        "inferred": true,
        "name": "V",
        "type": "Movable & Deinitable",
        "variadic": false
       },
       {
-       "description": "The Writer family.",
+       "description": "The selected Listen capability.",
        "inferred": false,
        "name": "I",
-       "type": "_WriterFamily",
+       "type": "Listen",
        "variadic": false
       }
      ],
      "raises": true,
-     "raises_doc": "The base's `map` error.",
+     "raises_doc": "The native construction error, separate from deferred execution.",
      "returns": {
-      "doc": "The Writer value of `(payload, log)`.",
-      "type": "WriterValue[ I, Tuple[_Value[V].Value, I.Log.Value], I.Base.Mapped[_Value[V].Storage, _Listen[I.Log, _Value[V].Value]]]"
+      "doc": "A Family carrier whose payload is (original payload, Log.Value).",
+      "type": "I.Listened[V]"
      },
-     "signature": "def listen[V: Movable & Deinitable, //, I: _WriterFamily](var value: V) raises I.Base.MapError[_Value[V].Storage, _Listen[I.Log, _Value[V].Value]] -> WriterValue[ I, Tuple[_Value[V].Value, I.Log.Value], I.Base.Mapped[_Value[V].Storage, _Listen[I.Log, _Value[V].Value]]]",
-     "summary": "Pair the payload with a copy of the log written so far; the log is kept."
+     "signature": "def listen[V: Movable & Deinitable, //, I: Listen](var value: V) raises I.ListenError[V] -> I.Listened[V] where I.ListenCompatible[V]",
+     "summary": "Pair the payload with a copy of this computation's selected log."
     }
    ],
-   "provider": "effects/writer",
+   "provider": "effects/capabilities",
    "summary": ""
   },
   "effects.local": {
@@ -28794,7 +30206,7 @@
      "args": [
       {
        "convention": "var",
-       "description": "The callback, consumed.",
+       "description": "The environment transformation, consumed.",
        "name": "f",
        "type": "F",
        "variadic": false
@@ -28803,43 +30215,43 @@
        "convention": "var",
        "description": "The computation, consumed.",
        "name": "value",
-       "type": "S",
+       "type": "V",
        "variadic": false
       }
      ],
-     "description": "The changed environment lives only for that run, so the base must not keep\nit; `local` over such a base is a compile error. Other overloads take a\nnative function or closure that reads the current environment.",
-     "error": "",
+     "description": "The transformation borrows the current environment and returns a new owned\none. The enclosing environment is unchanged. Reader's temporary environment\ncannot escape through a deferred base; such uses remain compile errors.\nOther overloads accept a native borrowing function or closure.",
+     "error": "I.LocalError[V, F]",
      "parameters": [
       {
-       "description": "The computation's type.",
+       "description": "A carrier satisfying LocalCompatible, including scope lifetime checks.",
        "inferred": true,
-       "name": "S",
-       "type": "ReaderAction",
+       "name": "V",
+       "type": "Movable & Deinitable",
        "variadic": false
       },
       {
-       "description": "The callback's type: a `BorrowCallable` taking the environment.",
+       "description": "A borrowing callback with Payload and Result equal to Environment.",
        "inferred": true,
        "name": "F",
        "type": "BorrowCallContract & Movable & Deinitable",
        "variadic": false
       },
       {
-       "description": "The Reader family.",
+       "description": "The selected Local capability, such as Reader or LiftLocal.",
        "inferred": false,
        "name": "I",
-       "type": "_ReaderFamily",
+       "type": "Local",
        "variadic": false
       }
      ],
-     "raises": false,
-     "raises_doc": "",
+     "raises": true,
+     "raises_doc": "The capability's native construction error, separate from execution.",
      "returns": {
-      "doc": "The computation; nothing runs now.",
-      "type": "_ReaderLocal[I.Base, downcast[I.Environment, Movable & Deinitable], S, F]"
+      "doc": "The scoped carrier, preserving payload, origins and deferred execution.",
+      "type": "I.Localized[V, F]"
      },
-     "signature": "def local[S: ReaderAction, F: BorrowCallContract & Movable & Deinitable, //, I: _ReaderFamily](var f: F, var value: S) -> _ReaderLocal[I.Base, downcast[I.Environment, Movable & Deinitable], S, F]",
-     "summary": "A Reader computation that runs `value` with the environment `f` computes from the current one."
+     "signature": "def local[V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable, //, I: Local](var f: F, var value: V) raises I.LocalError[V, F] -> I.Localized[V, F] where I.LocalCompatible[V] and F.Payload == I.Environment and F.Result == I.Environment",
+     "summary": "Run a computation under a changed selected environment."
     },
     {
      "args": [
@@ -28854,18 +30266,18 @@
        "convention": "var",
        "description": "",
        "name": "value",
-       "type": "S",
+       "type": "V",
        "variadic": false
       }
      ],
      "description": "",
-     "error": "",
+     "error": "I.LocalError[V, _NativeBorrow[P, R, Never, F, False]]",
      "parameters": [
       {
        "description": "",
        "inferred": true,
-       "name": "S",
-       "type": "ReaderAction",
+       "name": "V",
+       "type": "Movable & Deinitable",
        "variadic": false
       },
       {
@@ -28886,7 +30298,7 @@
        "description": "",
        "inferred": false,
        "name": "I",
-       "type": "_ReaderFamily",
+       "type": "Local",
        "variadic": false
       },
       {
@@ -28897,14 +30309,14 @@
        "variadic": false
       }
      ],
-     "raises": false,
+     "raises": true,
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_ReaderLocal[I.Base, downcast[I.Environment, Movable & Deinitable], S, _NativeBorrow[P, R, Never, F, False]]"
+      "type": "I.Localized[V, _NativeBorrow[P, R, Never, F, False]]"
      },
-     "signature": "def local[S: ReaderAction, P: AnyType, R: Movable & Deinitable, //, I: _ReaderFamily, F: _Borrowing[P, R]](var f: F, var value: S) -> _ReaderLocal[I.Base, downcast[I.Environment, Movable & Deinitable], S, _NativeBorrow[P, R, Never, F, False]] where P == I.Environment and R == I.Environment",
-     "summary": "Run value with the environment a native function or closure computes from the current one, which it borrows."
+     "signature": "def local[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, //, I: Local, F: _Borrowing[P, R]](var f: F, var value: V) raises I.LocalError[V, _NativeBorrow[P, R, Never, F, False]] -> I.Localized[V, _NativeBorrow[P, R, Never, F, False]] where I.LocalCompatible[V] and P == I.Environment and R == I.Environment",
+     "summary": "Scope with an owned native borrowing function or closure."
     },
     {
      "args": [
@@ -28919,18 +30331,18 @@
        "convention": "var",
        "description": "",
        "name": "value",
-       "type": "S",
+       "type": "V",
        "variadic": false
       }
      ],
      "description": "",
-     "error": "",
+     "error": "I.LocalError[V, _NativeBorrow[P, R, E, F, True]]",
      "parameters": [
       {
        "description": "",
        "inferred": true,
-       "name": "S",
-       "type": "ReaderAction",
+       "name": "V",
+       "type": "Movable & Deinitable",
        "variadic": false
       },
       {
@@ -28958,7 +30370,7 @@
        "description": "",
        "inferred": false,
        "name": "I",
-       "type": "_ReaderFamily",
+       "type": "Local",
        "variadic": false
       },
       {
@@ -28969,17 +30381,17 @@
        "variadic": false
       }
      ],
-     "raises": false,
+     "raises": true,
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_ReaderLocal[I.Base, downcast[I.Environment, Movable & Deinitable], S, _NativeBorrow[P, R, E, F, True]]"
+      "type": "I.Localized[V, _NativeBorrow[P, R, E, F, True]]"
      },
-     "signature": "def local[S: ReaderAction, P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable, //, I: _ReaderFamily, F: _RaisingBorrowing[P, R, E]](var f: F, var value: S) -> _ReaderLocal[I.Base, downcast[I.Environment, Movable & Deinitable], S, _NativeBorrow[P, R, E, F, True]] where P == I.Environment and R == I.Environment",
-     "summary": "Raising form of the native local; its error type is kept."
+     "signature": "def local[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Local, F: _RaisingBorrowing[P, R, E]](var f: F, var value: V) raises I.LocalError[V, _NativeBorrow[P, R, E, F, True]] -> I.Localized[V, _NativeBorrow[P, R, E, F, True]] where I.LocalCompatible[V] and P == I.Environment and R == I.Environment",
+     "summary": "Scope with a raising native callback; keep its exact error type."
     }
    ],
-   "provider": "effects/reader",
+   "provider": "effects/capabilities",
    "summary": ""
   },
   "effects.modify": {
@@ -28990,38 +30402,38 @@
      "args": [
       {
        "convention": "var",
-       "description": "The callback, consumed.",
+       "description": "The state transformation, consumed.",
        "name": "f",
        "type": "F",
        "variadic": false
       }
      ],
-     "description": "Other overloads take a native function or closure directly.",
-     "error": "",
+     "description": "The callback consumes the old state and returns its replacement. Both state\nand callback may be move-only. Other overloads take a native function or\nclosure. Generic forwarders retain the admission and exact type constraints.",
+     "error": "I.ModifyError[F]",
      "parameters": [
       {
-       "description": "The callback's type: a library `Unary` value from state to state.",
+       "description": "A consuming callback with Arg and Out exactly equal to StateType.",
        "inferred": true,
        "name": "F",
        "type": "UnaryContract & Movable & Deinitable",
        "variadic": false
       },
       {
-       "description": "The State family.",
+       "description": "The selected Stateful capability.",
        "inferred": false,
        "name": "I",
-       "type": "_StateFamily",
+       "type": "Stateful",
        "variadic": false
       }
      ],
-     "raises": false,
-     "raises_doc": "",
+     "raises": true,
+     "raises_doc": "The capability's native construction error; execution errors stay native.",
      "returns": {
-      "doc": "The computation.",
-      "type": "_StateModify[I.Base, I.StateType, F]"
+      "doc": "A carrier of NoneType in Family, preserving deferred execution.",
+      "type": "I.Modified[F]"
      },
-     "signature": "def modify[F: UnaryContract & Movable & Deinitable, //, I: _StateFamily](var f: F) -> _StateModify[I.Base, I.StateType, F]",
-     "summary": "A State computation that replaces the state with `f(state)`; its payload is `None`."
+     "signature": "def modify[F: UnaryContract & Movable & Deinitable, //, I: Stateful](var f: F) raises I.ModifyError[F] -> I.Modified[F] where I.ModifyCompatible[F] and F.Arg == I.StateType and F.Out == I.StateType",
+     "summary": "Replace the selected state with f(state); the payload is None."
     },
     {
      "args": [
@@ -29034,7 +30446,7 @@
       }
      ],
      "description": "",
-     "error": "",
+     "error": "I.ModifyError[NativeUnary[A, R, Never, F, False]]",
      "parameters": [
       {
        "description": "",
@@ -29054,7 +30466,7 @@
        "description": "",
        "inferred": false,
        "name": "I",
-       "type": "_StateFamily",
+       "type": "Stateful",
        "variadic": false
       },
       {
@@ -29065,14 +30477,14 @@
        "variadic": false
       }
      ],
-     "raises": false,
+     "raises": true,
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_StateModify[I.Base, I.StateType, NativeUnary[A, R, Never, F, False]]"
+      "type": "I.Modified[NativeUnary[A, R, Never, F, False]]"
      },
-     "signature": "def modify[A: Movable & Deinitable, R: Movable & Deinitable, //, I: _StateFamily, F: _Unary[A, R]](var f: F) -> _StateModify[I.Base, I.StateType, NativeUnary[A, R, Never, F, False]] where A == I.StateType and R == I.StateType",
-     "summary": "Replace the state with f(state), for a native function or closure."
+     "signature": "def modify[A: Movable & Deinitable, R: Movable & Deinitable, //, I: Stateful, F: _Unary[A, R]](var f: F) raises I.ModifyError[NativeUnary[A, R, Never, F, False]] -> I.Modified[NativeUnary[A, R, Never, F, False]] where I.ModifyCompatible[NativeUnary[A, R, Never, F, False]] and A == I.StateType and R == I.StateType",
+     "summary": "Update with an owned native consuming function or closure."
     },
     {
      "args": [
@@ -29085,7 +30497,7 @@
       }
      ],
      "description": "",
-     "error": "",
+     "error": "I.ModifyError[NativeUnary[A, R, E, F, True]]",
      "parameters": [
       {
        "description": "",
@@ -29112,7 +30524,7 @@
        "description": "",
        "inferred": false,
        "name": "I",
-       "type": "_StateFamily",
+       "type": "Stateful",
        "variadic": false
       },
       {
@@ -29123,17 +30535,17 @@
        "variadic": false
       }
      ],
-     "raises": false,
+     "raises": true,
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_StateModify[I.Base, I.StateType, NativeUnary[A, R, E, F, True]]"
+      "type": "I.Modified[NativeUnary[A, R, E, F, True]]"
      },
-     "signature": "def modify[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: _StateFamily, F: _RaisingUnary[A, R, E]](var f: F) -> _StateModify[I.Base, I.StateType, NativeUnary[A, R, E, F, True]] where A == I.StateType and R == I.StateType",
-     "summary": "Raising form of the native modify; its error type is kept."
+     "signature": "def modify[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Stateful, F: _RaisingUnary[A, R, E]](var f: F) raises I.ModifyError[NativeUnary[A, R, E, F, True]] -> I.Modified[NativeUnary[A, R, E, F, True]] where I.ModifyCompatible[NativeUnary[A, R, E, F, True]] and A == I.StateType and R == I.StateType",
+     "summary": "Update with a raising native callback, preserving its exact error type."
     }
    ],
-   "provider": "effects/state",
+   "provider": "effects/capabilities",
    "summary": ""
   },
   "effects.put": {
@@ -29144,34 +30556,34 @@
      "args": [
       {
        "convention": "var",
-       "description": "The new state, consumed.",
+       "description": "The new state, consumed with its exact native origins.",
        "name": "state",
        "type": "I.StateType",
        "variadic": false
       }
      ],
-     "description": "",
-     "error": "",
+     "description": "This is modify with an owned replacement, using the same execution path.",
+     "error": "I.ModifyError[_Replace[I.StateType]]",
      "parameters": [
       {
-       "description": "The State family.",
+       "description": "The selected Stateful capability.",
        "inferred": false,
        "name": "I",
-       "type": "_StateFamily",
+       "type": "Stateful",
        "variadic": false
       }
      ],
-     "raises": false,
-     "raises_doc": "",
+     "raises": true,
+     "raises_doc": "The capability's native construction error, separate from execution.",
      "returns": {
-      "doc": "The computation.",
-      "type": "_StateModify[I.Base, I.StateType, _Replace[I.StateType]]"
+      "doc": "A carrier of NoneType in the capability's Family.",
+      "type": "I.Modified[_Replace[I.StateType]]"
      },
-     "signature": "def put[I: _StateFamily](var state: I.StateType) -> _StateModify[I.Base, I.StateType, _Replace[I.StateType]]",
-     "summary": "A State computation that replaces the state; the previous state is destroyed."
+     "signature": "def put[I: Stateful](var state: I.StateType) raises I.ModifyError[_Replace[I.StateType]] -> I.Modified[_Replace[I.StateType]] where I.ModifyCompatible[_Replace[I.StateType]]",
+     "summary": "Replace the selected state, destroying the previous state on execution."
     }
    ],
-   "provider": "effects/state",
+   "provider": "effects/capabilities",
    "summary": ""
   },
   "effects.run": {
@@ -29330,34 +30742,34 @@
      "args": [
       {
        "convention": "var",
-       "description": "The log to record, consumed.",
+       "description": "The output, consumed with its exact native origins.",
        "name": "log",
        "type": "I.Log.Value",
        "variadic": false
       }
      ],
-     "description": "",
-     "error": "",
+     "description": "Writer families select their own log. LiftTell, LiftListen and LiftCensor\nexplicitly select a base log. Generic forwarders retain TellAvailable.",
+     "error": "I.TellError",
      "parameters": [
       {
-       "description": "The Writer family.",
+       "description": "The selected Tell capability.",
        "inferred": false,
        "name": "I",
-       "type": "_WriterFamily",
+       "type": "Tell",
        "variadic": false
       }
      ],
-     "raises": false,
-     "raises_doc": "",
+     "raises": true,
+     "raises_doc": "The capability's exact native construction error.",
      "returns": {
-      "doc": "The Writer value.",
-      "type": "WriterValue[I, NoneType, I.Base.Pure[Tuple[I.Log.Value, NoneType]]]"
+      "doc": "A carrier of NoneType in the selected Family.",
+      "type": "I.Told"
      },
-     "signature": "def tell[I: _WriterFamily](var log: I.Log.Value) -> WriterValue[I, NoneType, I.Base.Pure[Tuple[I.Log.Value, NoneType]]]",
-     "summary": "A Writer value that records `log`, with payload `None`."
+     "signature": "def tell[I: Tell](var log: I.Log.Value) raises I.TellError -> I.Told where I.TellAvailable",
+     "summary": "Record output in the selected log, with NoneType payload."
     }
    ],
-   "provider": "effects/writer",
+   "provider": "effects/capabilities",
    "summary": ""
   },
   "effects.writer": {
@@ -127170,7 +128582,7 @@
    "summary": "Typed results, early termination and bridges between raised and stored errors."
   },
   "effects": {
-   "description": "| Family | Value | Additional operations |\n|---|---|---|\n| `ReaderT[M, R]` | A `ReaderAction`: borrows `R` when run, returns `M`'s carrier | `action`, `run`, `lift`, `ask`, `local` |\n| `StateT[M, S]` | A `StateAction`: consumes `S` when run, returns `M`'s carrier of `(A, S)` | `action`, `run`, `lift`, `get`, `put`, `modify` |\n| `WriterT[M, W]` | A `WriterValue` wrapping `M`'s carrier of `(W.Value, A)` | `writer`, `run_writer`, `lift`, `tell`, `listen`, `censor` |\n| `OptionalT[M]` | `M`'s carrier of `Optional[A]` | `lift` |\n| `ResultT[M, E]` | `M`'s carrier of `Result[A, E]` | `lift` |\n\n`Reader[R]`, `State[S]` and `Writer[W]` are the transformers over\n`IdentityFamily`; `OptionalT` and `ResultT` over Identity are `OptionalFamily`\nand `ResultFamily[E]` themselves. Each family is a `Monad` of `fp.algebra`, so\n`map`, `pure`, `flat_map`, `map2_lazy` and `traverse` apply to its values.\nReader and State values are deferred computations: nothing runs until `run`.\n\nTransformer order matters. `StateT` over `Result` returns no state on failure;\n`ResultT` over `State` can return a failed `Result` together with the updated\nstate. Neither rolls back external mutation. For `ResultT[State[S], E]`, run\nwith `run[State[S]]`, whose result is `Tuple[Result[A, E], S]`, and lift\nState's operations into the ResultT layer; for `StateT[ResultFamily[E], S]`,\nrun with that StateT, whose result is `Result[Tuple[A, S], E]`.\n\n| Stack | Evaluation order | Final shape |\n|---|---|---|\n| `WriterT[Reader[R], W]` | `run_writer`, then Reader `run` | `(log, value)` |\n| `ReaderT[Writer[W], R]` | Reader `run`, then `run_writer` | `(log, value)` |\n| `WriterT[State[S], W]` | `run_writer`, then State `run` | `((log, value), state)` |\n| `StateT[Writer[W], S]` | State `run`, then `run_writer` | `(log, (value, state))` |\n\n`OptionalT[ResultT[M, E]]` carries `M[Result[Optional[A], E]]`, and\n`ResultT[OptionalT[M], E]` carries `M[Optional[Result[A, E]]]`. Either an\nabsence or a stored error skips later callbacks and lazy right operands,\nwithout converting one failure kind into the other. Native exceptions from any\nstage propagate with their exact types instead of becoming `Result` data.\n\nTraversal into a layer delegates to the base's traversal loop with the layer's\naccumulation rule, so the count of pulls and callback calls is the same over\neager, deferred and third-party bases. A deferred computation can be copied or\nreplayed only when its stored inputs and callbacks support it; copying an owner\ndoes not make a consuming callback reusable.",
+   "description": "| Family | Value | Additional operations |\n|---|---|---|\n| `ReaderT[M, R]` | A `ReaderAction`: borrows `R` when run, returns `M`'s carrier | `action`, `run`, `lift`, `ask`, `local` |\n| `StateT[M, S]` | A `StateAction`: consumes `S` when run, returns `M`'s carrier of `(A, S)` | `action`, `run`, `lift`, `get`, `put`, `modify` |\n| `WriterT[M, W]` | A `WriterValue` wrapping `M`'s carrier of `(W.Value, A)` | `writer`, `run_writer`, `lift`, `tell`, `listen`, `censor` |\n| `OptionalT[M]` | `M`'s carrier of `Optional[A]` | `lift` |\n| `ResultT[M, E]` | `M`'s carrier of `Result[A, E]` | `lift` |\n\n`Reader[R]`, `State[S]` and `Writer[W]` are the transformers over\n`IdentityFamily`; `OptionalT` and `ResultT` over Identity are `OptionalFamily`\nand `ResultFamily[E]` themselves. Each family is a `Monad` of `fp.algebra`, so\n`map`, `pure`, `flat_map`, `map2_lazy` and `traverse` apply to its values.\nReader and State values are deferred computations: nothing runs until `run`.\n\nAsk/Local and Stateful are compile-time capability dictionaries. Reader and\nState select their own environment or state; LiftAsk, LiftLocal and\nLiftStateful explicitly select a capability from the immediate base. Generic\nprograms use the selected dictionary's Family for algebra operations.\nTell/Listen/Censor select a log; LiftTell, LiftListen and LiftCensor transport\nthose operations through one layer. Listen pairs the payload with an observed\nlog, while censor transforms only the selected computation's output log.\n\nTransformer order matters. `StateT` over `Result` returns no state on failure;\n`ResultT` over `State` can return a failed `Result` together with the updated\nstate. Neither rolls back external mutation. For `ResultT[State[S], E]`, run\nwith `run[State[S]]`, whose result is `Tuple[Result[A, E], S]`, and lift\nState's operations into the ResultT layer; for `StateT[ResultFamily[E], S]`,\nrun with that StateT, whose result is `Result[Tuple[A, S], E]`.\n\n| Stack | Evaluation order | Final shape |\n|---|---|---|\n| `WriterT[Reader[R], W]` | `run_writer`, then Reader `run` | `(log, value)` |\n| `ReaderT[Writer[W], R]` | Reader `run`, then `run_writer` | `(log, value)` |\n| `WriterT[State[S], W]` | `run_writer`, then State `run` | `((log, value), state)` |\n| `StateT[Writer[W], S]` | State `run`, then `run_writer` | `(log, (value, state))` |\n\n`OptionalT[ResultT[M, E]]` carries `M[Result[Optional[A], E]]`, and\n`ResultT[OptionalT[M], E]` carries `M[Optional[Result[A, E]]]`. Either an\nabsence or a stored error skips later callbacks and lazy right operands,\nwithout converting one failure kind into the other. Native exceptions from any\nstage propagate with their exact types instead of becoming `Result` data.\n\nTraversal into a layer delegates to the base's traversal loop with the layer's\naccumulation rule, so the count of pulls and callback calls is the same over\neager, deferred and third-party bases. A deferred computation can be copied or\nreplayed only when its stored inputs and callbacks support it; copying an owner\ndoes not make a consuming callback reusable.",
    "summary": "Reader, State and Writer computations and the OptionalT and ResultT layers, over any base Monad."
   },
   "functions": {

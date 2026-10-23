@@ -731,3 +731,155 @@ Admission extracts diagnostic and payload types separately instead of
 reconstructing nested carrier types through callback metadata: Mojo cannot
 reliably reduce those expressions through a precompiled package. The generic
 integration test exercises mapping and binding through both import routes.
+
+## Environment capabilities
+
+`fp.effects.Ask` and `Local` are dictionaries separate from Monad and from the
+private representation markers (`_ReaderFamily`, `_StateFamily`, `_WriterFamily`).
+A dictionary associates a `Family` with a selected `Environment` and describes
+its operations through exact carrier/error aliases. ReaderT is the direct
+instance. Explicit `LiftAsk` and `LiftLocal` dictionaries name each intervening
+layer, so equal environment types never make selection ambiguous. Third-party
+code can implement the public capability traits without implementing a Reader
+representation.
+
+There is one read kernel and one environment-changing kernel, owned by Reader.
+Ask lifting calls the selected read and the layer's existing `lift`. Scope
+transport follows each representation:
+
+| Layer | Transport of the selected base scope |
+|---|---|
+| ReaderT | Run the outer action, then scope the resulting base carrier, retaining its outer origin parameter |
+| StateT | Run the action with its owned state, then scope the resulting base carrier |
+| WriterT | Scope its existing base storage and rewrap it, retaining log and payload |
+| OptionalT / ResultT | Delegate on the base carrier; the inner sum remains unchanged |
+
+These adapters neither interpret a stack nor reproduce Reader evaluation,
+State threading, Writer accumulation or sum short-circuiting. Native construction
+errors are combined only when their exact types are compatible; deferred errors
+remain on `run`. The direct Reader entry points keep their existing names and
+native callback overloads.
+
+Admission belongs in signatures. Reader's `LocalCompatible` checks exact family
+and environment identity and verifies that both `Out[o]` and `Error[o]` are
+independent of the run environment. Empty and universal native origin witnesses are substituted only for this
+type-level check; no runtime value is assigned either origin. Using the
+universal witness also detects unions with fixed origins, which can collapse
+two finite witnesses to the same union.
+Mojo 1.1 erases origin distinctions in body-level equality assertions, so the
+older assertion in `_ReaderLocal.run` was insufficient to reject an escaping
+deferred continuation. The public predicate now rejects it before construction.
+Lifted Reader admission applies the selected base predicate under both outer
+origin substitutions, preserving an outer borrow while scoping only the inner
+environment. Generic callers forward the public admission predicates.
+
+For pure environment transformations, identity scoping preserves observation,
+nested scoping composes transformations in execution order, scoping a pure
+value leaves its payload unchanged, and scoping ask reads the transformed
+value. The enclosing environment is restored after success and native failure.
+An effectful transformation can run or raise when the selected Reader runs;
+these algebraic laws do not equate different callback side effects. Ownership
+checks cover move-only environments/state, consuming captures, abandoned
+computations and externally borrowed payload/error types. Rejection fixtures
+cover wrong layers, mismatched origins, consumed values and temporary-environment
+escapes.
+
+## State capabilities
+
+`Stateful` follows the same explicit dictionary selection as Ask/Local. It
+associates a Monad family with one exact state type, a read operation, and a
+consuming state-to-state modification operation. StateT is the direct instance;
+`LiftStateful` selects a capability belonging to the immediate base. Selection
+does not search by state type or collapse adjacent State layers.
+
+State owns the existing `_StateGet` and `_StateModify` execution kernels.
+The public `get`, `modify` and `put` entry points live in capabilities; their
+original imports from the state module remain available. StateT's dictionary
+methods construct those same kernels. `put` delegates to `modify` with an
+owned replacement callback. Each lifted primitive invokes the base capability
+and the transformer's existing lift; it needs no additional representation
+adapters, state-threading loop or carrier. Native lift-error propagation shares
+the adapter used by Ask lifting.
+
+`GetAvailable` admits copying the selected state. `ModifyCompatible[F]` admits
+the exact callback state types and, for lifting, the selected base family and
+compatible native construction errors. Public modification signatures also
+require exact Arg/Out identity with StateType; body assertions alone cannot
+protect embedded origins on Mojo 1.1. `Got`/`GetError` and
+`Modified[F]`/`ModifyError[F]` distinguish construction from deferred execution.
+Generic forwarders propagate these aliases and admission constraints. A native
+callback overload only adapts the native signature to the shared consuming
+callback contract.
+
+For pure, terminating updates: get leaves the state unchanged; get followed by
+putting the same value is observationally neutral; put followed by get observes
+the replacement; the last of two puts wins; identity modification is neutral;
+successive modifications compose in execution order. These laws compare values,
+not callback side effects or destruction traces. They inherit each stack's
+stored-failure and branching semantics. Native exceptions do not become stored
+errors and there is no transactional rollback.
+
+Qualification covers direct and lifted reads/updates through all five layers,
+nested selection, identical state types, generic third-party dictionaries,
+stored-error stack order, construction versus execution errors, move-only
+states/captures, exact borrowed state/error types and abandoned computations.
+Rejection fixtures cover wrong bases, missing generic admission, wrong callback
+types/origins and reuse after consumption.
+
+## Writer capabilities and shared carrier transport
+
+Tell, Listen and Censor are public dictionaries independent of the Writer
+representation. WriterT provides the direct instance. LiftTell uses the existing
+base write and transformer lift, sharing native lift-error propagation with
+Ask and Stateful. LiftListen and LiftCensor explicitly transport the selected
+base operation through the destination layer. Equal monoids do not collapse
+adjacent Writer layers.
+
+Writer remains the owner of log execution: tell constructs its base pair,
+listen uses `_Listen` to copy and expose the log, and censor uses `_Censor` to
+consume and replace it. The checked free functions live in capabilities and
+delegate to those primitives. Public signatures check exact carrier and log
+origins, rather than relying on body assertions.
+
+Local, Listen and Censor share `_CarrierOp` and `_Hoisting`. The operation names
+its exact input admission, output carrier and native error; each representation
+owns reaching and rewrapping its base. Reader and State each have one deferred
+transport kernel that runs the source then applies the base operation. Reader
+retains its origin parameter on both results and errors. Writer unwraps and
+rewraps its storage; OptionalT and ResultT already are base carriers. This
+replaces the earlier Local-specific deferred wrappers without changing Local's
+temporary-environment lifetime admission.
+
+Listening additionally rearranges the observed log beside the logical payload:
+
+| Layer | Base observation | Repacked base payload |
+|---|---|---|
+| ReaderT | `(A, L)` | `(A, L)` |
+| StateT | `((A, S), L)` | `((A, L), S)` |
+| WriterT | `((W, A), L)` | `(W, (A, L))` |
+| OptionalT | `(Optional[A], L)` | `Optional[(A, L)]` |
+| ResultT | `(Result[A, E], L)` | `Result[(A, L), E]` |
+
+Pair rearrangement shares the native consuming-pair helper. Sum rearrangement
+uses the existing Optional/Result map operations and the owned second-value
+pairing callback already used by State lifting. The callback now lives with the
+shared callable product operations; State retains its private import alias.
+No transformation copies a payload or context. The one observed-log copy is
+moved into success or dropped on absence/failure, leaving the output log intact.
+
+Mojo 1.1 does not reliably reduce `Element[Listened[V]]` within generic
+admission. The mapped-listen adapter instead checks the original payload type
+and the exact `(payload, log)` callback input separately. Listen's public
+contract supplies that pair, and the ordinary family mapping admission and
+native error compatibility checks still apply. This uses no runtime origin
+substitution. Reader transport checks admission under empty and universal
+origin witnesses and retains the actual origin when running.
+
+For lawful monoids and pure, terminating callbacks, consecutive tells append in
+order, listening preserves the output log, identity censor is neutral, and
+nested censors compose in execution order. Scopes affect only their argument.
+These laws compare values, not native side effects, destruction traces or
+exceptions. Stack order still decides whether a stored failure retains output.
+Qualification covers all five layers, nested and same-monoid selection, external
+dictionaries, generic forwarding, native error phases, copy counts, move-only
+logs/payloads/state/captures, borrowed origins and rejected invalid selections.

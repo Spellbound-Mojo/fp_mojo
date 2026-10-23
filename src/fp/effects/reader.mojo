@@ -7,19 +7,29 @@ environment origin in its type.
 from std.builtin.rebind import rebind_var, downcast
 from std.utils import Variant
 from fp.algebra.errors import _Continue
-from fp.algebra.protocols import ApplicativeError, Monad, _Lifting, _Accumulate, _LiveAccumulator
+from fp.algebra.protocols import ApplicativeError, Monad, _Accumulate, _LiveAccumulator
 from fp.algebra.instances import IdentityFamily
 from fp.callables.protocols import (UnaryContract, BinaryContract, ThunkContract, OnceUnary, MutableUnary,
                                     OnceThunk, MutableBinary, BorrowCallContract, BorrowCallable, BorrowOnceCallable)
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
 from fp.callables._receiver import _borrow_once_as, _binary_repeated_as
-from fp.callables.native import _NativeBorrow, _Borrowing, _RaisingBorrowing
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from .protocols import ReaderAction, _ReaderFamily, _admit_endpoint, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
-from ._adapt import _reader_run_as, _map_as, _flat_map_as, _map2_lazy_as
+from .protocols import Local, Listen, _CarrierOp, _LocalLifting, ReaderAction, _ReaderFamily, _admit_endpoint, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
+from ._adapt import _op_as, _reader_run_as, _map_as, _flat_map_as, _map2_lazy_as
+
+from ._transport import _LocalOp, _ListenOp, _ListenMapped, _ListenPair
 
 
 comptime _Action[V: Movable & Deinitable] = downcast[V, ReaderAction]
+
+# Empty and universal native origin witnesses are used only in admission
+# predicates, never to run an action or relabel a borrow. The universal witness
+# also detects unions with fixed origins (two finite witnesses can collapse
+# to the same union). If Out or Error retains the run environment, substitution
+# changes its type. Keep this check in a public
+# where clause: body-level equality assertions erase origin distinctions on
+# Mojo 1.1 and cannot protect the temporary local environment.
+comptime _LocalIndependent[V: ReaderAction] = V.Out[ImmUntrackedOrigin] == V.Out[ImmutAnyOrigin] and V.Error[ImmUntrackedOrigin] == V.Error[ImmutAnyOrigin]
 
 
 @fieldwise_init
@@ -299,7 +309,27 @@ struct _ReaderChoice[M: Monad, A: ReaderAction, B: ReaderAction](
         return Self.M._join_right[Self.A.Out[o], Self.B.Out[o]](right^)
 
 
-struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, _Lifting, ApplicativeError where conforms_to(M, ApplicativeError)):
+@fieldwise_init
+struct _ReaderHoist[A: Movable & Deinitable, S: ReaderAction, H: _CarrierOp](
+    ReaderAction, Copyable where conforms_to(S, Copyable) and conforms_to(H, Copyable)
+):
+    """Run the source, then apply one admitted base-carrier operation."""
+    var source: Self.S
+    var operation: Self.H
+    comptime Family = Self.S.Family
+    comptime Env = Self.S.Env
+    comptime Value = Self.A
+    comptime Out[o: ImmOrigin] = Self.H.Applied[Self.S.Out[o]]
+    comptime Error[o: ImmOrigin] = _CommonError[Self.S.Error[o], Self.H.Error[Self.S.Out[o]]]
+    def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Self.Out[o]:
+        comptime E = Self.Error[o]
+        comptime assert Self.H.Compatible[Self.S.Out[o]]
+        comptime assert _ErrorCompatible[E, Self.S.Error[o]] and _ErrorCompatible[E, Self.H.Error[Self.S.Out[o]]]
+        var base = _reader_run_as[E](self.source^, env)
+        return _op_as[E](self.operation^, base^)
+
+
+struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, Local, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError)):
     """Reader over the base Monad `M`: a computation borrows an environment `R` when run and returns an `M` carrier.
 
     Every operation returns a concrete computation that stores its inputs; a
@@ -317,6 +347,72 @@ struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, _Lifting, ApplicativeError w
         M: The base Monad.
         R: The environment's type.
     """
+    comptime Family = Self
+    comptime AskAvailable = conforms_to(Self.R, Copyable)
+    comptime Asked = _ReaderAsk[Self.M, downcast[Self.R, Copyable & Deinitable]]
+    comptime AskError = Never
+    comptime LocalCompatible[V: Movable & Deinitable] = _Action[V].Family == Self and _Action[V].Env == Self.R and _LocalIndependent[_Action[V]]
+    comptime Localized[V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = _ReaderLocal[Self.M, downcast[Self.R, Movable & Deinitable], _Action[V], F]
+    comptime LocalError[V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Never
+    comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = _Action[V].Family == Self and _Action[V].Env == Self.R and H.Compatible[_Action[V].Out[ImmUntrackedOrigin]] and H.Compatible[_Action[V].Out[ImmutAnyOrigin]] and _ErrorCompatible[_CommonError[_Action[V].Error[ImmUntrackedOrigin], H.Error[_Action[V].Out[ImmUntrackedOrigin]]], H.Error[_Action[V].Out[ImmUntrackedOrigin]]] and _ErrorCompatible[_CommonError[_Action[V].Error[ImmutAnyOrigin], H.Error[_Action[V].Out[ImmutAnyOrigin]]], H.Error[_Action[V].Out[ImmutAnyOrigin]]]
+    comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = _ReaderHoist[A, _Action[V], H]
+    comptime _HoistError[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = Never
+    comptime _Listening[C: Listen, A: Movable & Deinitable] = _ListenOp[C]
+    @staticmethod
+    def _hoist[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp](var op: H, var value: V) -> Self._Hoisted[A, V, H]:
+        return Self._Hoisted[A, V, H](rebind_var[_Action[V]](value^), op^)
+
+    comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = _Action[V].Family == Self and _Action[V].Env == Self.R and C.LocalCompatible[_Action[V].Out[ImmUntrackedOrigin]] and C.LocalCompatible[_Action[V].Out[ImmutAnyOrigin]]
+    comptime _Scoped[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Self._Hoisted[Self.Element[V], V, _LocalOp[C, F]]
+    comptime _ScopeError[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Never
+
+    @staticmethod
+    def ask() -> Self.Asked:
+        """Construct a deferred copy of this Reader's environment.
+
+        Returns:
+            An environment-reading computation; requires AskAvailable.
+        """
+        comptime assert Self.AskAvailable
+        return Self.Asked()
+
+    @staticmethod
+    def local[V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](var f: F, var value: V) -> Self.Localized[V, F]:
+        """Construct a scope for this Reader's own environment.
+
+        Parameters:
+            V: An admitted computation of this Reader family.
+            F: A borrowing environment transformation.
+
+        Args:
+            f: The transformation, consumed.
+            value: The computation, consumed.
+
+        Returns:
+            A deferred scope; the temporary environment cannot escape its run.
+        """
+        comptime assert Self.LocalCompatible[V], _FAMILY_MISMATCH
+        return Self.Localized[V, F](rebind_var[_Action[V]](value^), f^)
+
+    @staticmethod
+    def _scope[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](var f: F, var value: V) -> Self._Scoped[C, V, F]:
+        """Transport a base scope through this Reader's execution boundary.
+
+        Parameters:
+            C: The selected base Local capability.
+            V: This Reader's computation type.
+            F: The selected environment transformation type.
+
+        Args:
+            f: The transformation, consumed.
+            value: The computation, consumed.
+
+        Returns:
+            A Reader that scopes the base carrier produced when run.
+        """
+        comptime assert C.Family == Self.Base and Self._ScopeCompatible[C, V]
+        return Self._hoist[Self.Element[V]](_LocalOp[C, F](f^), value^)
+
     comptime _Errors = downcast[Self.M, ApplicativeError]
     comptime Failure = Self._Errors.Failure
     comptime _ErrorCarrier[V: Movable & Deinitable] = _Action[V].Family == Self and _Action[V].Env == Self.R
@@ -513,51 +609,5 @@ Parameters:
 """
 
 
-def ask[I: _ReaderFamily]() -> _ReaderAsk[I.Base, downcast[I.Environment, Copyable & Deinitable]] where conforms_to(I.Environment, Copyable):
-    """A Reader computation whose payload is a copy of the environment.
-
-    Parameters:
-        I: The Reader family; its environment must be `Copyable`.
-
-    Returns:
-        The computation.
-    """
-    return _ReaderAsk[I.Base, downcast[I.Environment, Copyable & Deinitable]]()
-
-
-def local[S: ReaderAction, F: BorrowCallContract & Movable & Deinitable, //, I: _ReaderFamily](var f: F, var value: S
-) -> _ReaderLocal[I.Base, downcast[I.Environment, Movable & Deinitable], S, F]:
-    """A Reader computation that runs `value` with the environment `f` computes from the current one.
-
-    The changed environment lives only for that run, so the base must not keep
-    it; `local` over such a base is a compile error. Other overloads take a
-    native function or closure that reads the current environment.
-
-    Parameters:
-        S: The computation's type.
-        F: The callback's type: a `BorrowCallable` taking the environment.
-        I: The Reader family.
-
-    Args:
-        f: The callback, consumed.
-        value: The computation, consumed.
-
-    Returns:
-        The computation; nothing runs now.
-    """
-    comptime assert S.Family == I, _FAMILY_MISMATCH
-    return _ReaderLocal[I.Base, downcast[I.Environment, Movable & Deinitable], S, F](value^, f^)
-
-
-def local[S: ReaderAction, P: AnyType, R: Movable & Deinitable, //, I: _ReaderFamily, F: _Borrowing[P, R]](var f: F, var value: S
-) -> _ReaderLocal[I.Base, downcast[I.Environment, Movable & Deinitable], S, _NativeBorrow[P, R, Never, F, False]] where P == I.Environment and R == I.Environment:
-    """Run value with the environment a native function or closure computes from
-    the current one, which it borrows."""
-    return local[I](_NativeBorrow[P, R, Never, F, False](f^), value^)
-
-
-def local[S: ReaderAction, P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable, //, I: _ReaderFamily,
-          F: _RaisingBorrowing[P, R, E]](var f: F, var value: S
-) -> _ReaderLocal[I.Base, downcast[I.Environment, Movable & Deinitable], S, _NativeBorrow[P, R, E, F, True]] where P == I.Environment and R == I.Environment:
-    """Raising form of the native local; its error type is kept."""
-    return local[I](_NativeBorrow[P, R, E, F, True](f^), value^)
+# Compatibility imports; public declarations live in capabilities.
+from .capabilities import ask, local

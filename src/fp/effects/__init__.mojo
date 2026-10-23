@@ -14,6 +14,14 @@ and `ResultFamily[E]` themselves. Each family is a `Monad` of `fp.algebra`, so
 `map`, `pure`, `flat_map`, `map2_lazy` and `traverse` apply to its values.
 Reader and State values are deferred computations: nothing runs until `run`.
 
+Ask/Local and Stateful are compile-time capability dictionaries. Reader and
+State select their own environment or state; LiftAsk, LiftLocal and
+LiftStateful explicitly select a capability from the immediate base. Generic
+programs use the selected dictionary's Family for algebra operations.
+Tell/Listen/Censor select a log; LiftTell, LiftListen and LiftCensor transport
+those operations through one layer. Listen pairs the payload with an observed
+log, while censor transforms only the selected computation's output log.
+
 Transformer order matters. `StateT` over `Result` returns no state on failure;
 `ResultT` over `State` can return a failed `Result` together with the updated
 state. Neither rolls back external mutation. For `ResultT[State[S], E]`, run
@@ -40,9 +48,10 @@ eager, deferred and third-party bases. A deferred computation can be copied or
 replayed only when its stored inputs and callbacks support it; copying an owner
 does not make a consuming callback reusable.
 """
-from .protocols import ReaderAction, StateAction
-from .reader import ReaderT, Reader, ask, local
-from .state import StateT, State, get, put, modify
-from .writer import WriterT, Writer, WriterValue, writer, run_writer, tell, listen, censor
+from .protocols import Ask, Local, Stateful, Tell, Listen, Censor, ReaderAction, StateAction
+from .reader import ReaderT, Reader
+from .capabilities import LiftAsk, LiftLocal, LiftStateful, LiftTell, LiftListen, LiftCensor, ask, local, get, put, modify, tell, listen, censor
+from .state import StateT, State
+from .writer import WriterT, Writer, WriterValue, writer, run_writer
 from .layers import OptionalT, ResultT
 from .operations import run, action, lift

@@ -6,17 +6,18 @@ result stays deferred; `run_writer` unwraps the base carrier without running
 it. Logs combine in execution order.
 """
 from std.builtin.rebind import rebind_var, rebind, downcast
-from fp.algebra.protocols import ApplicativeError, Monad, Monoid, _Lifting, _Accumulate, _start_as, _combine_as
+from fp.algebra.protocols import ApplicativeError, Monad, Monoid, _Accumulate, _start_as, _combine_as
 from fp.algebra.instances import IdentityFamily
-from fp.callables.protocols import (UnaryContract, BinaryContract, ThunkContract, Unary, OnceUnary, MutableUnary,
+from fp.callables.protocols import (BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, Unary, OnceUnary, MutableUnary,
                                     OnceBinary, MutableBinary, OnceThunk)
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
-from fp.callables.native import NativeUnary, as_unary, _Unary, _RaisingUnary
 from std.memory import MaybeUninit
 from fp.callables.products import _take_pair
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from .protocols import _WriterFamily, _WriterType
+from .protocols import Local, Listen, Censor, _CarrierOp, _LocalLifting, _WriterFamily, _WriterType
 from ._adapt import _map_as
+from ._transport import _LocalOp, _ListenMapped, _ListenPair
+from fp.algebra._admission import _CarrierCompatible
 
 
 comptime _Value[V: Movable & Deinitable] = downcast[V, _WriterType]
@@ -333,7 +334,7 @@ struct _WriterAcc[W: Monoid, K: _Accumulate](_Accumulate):
         return Tuple(log^, _combine_as[Self.Error, Self.K](acc_part^, item_part^))
 
 
-struct WriterT[M: Monad, W: Monoid](_WriterFamily, _Lifting, ApplicativeError where conforms_to(M, ApplicativeError)):
+struct WriterT[M: Monad, W: Monoid](_WriterFamily, Censor, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError)):
     """Writer over the base Monad `M`: a value is `M`'s carrier of `(log, payload)`, and the monoid `W` accumulates the log.
 
     Operations use the base's own `map`, `flat_map` and `map2_lazy`, so over a
@@ -344,6 +345,106 @@ struct WriterT[M: Monad, W: Monoid](_WriterFamily, _Lifting, ApplicativeError wh
         M: The base Monad.
         W: The log's monoid.
     """
+    comptime Family = Self
+    comptime TellAvailable = True
+    comptime Told = WriterValue[Self, NoneType, Self.M.Pure[Tuple[Self.W.Value, NoneType]]]
+    comptime TellError = Never
+    comptime _LogCarrier[V: Movable & Deinitable] = _Value[V].Family == Self and _CarrierCompatible[Self.M, _Value[V].Storage] and Self.M.Element[_Value[V].Storage] == Tuple[Self.W.Value, Self.Element[V]]
+    comptime ListenCompatible[V: Movable & Deinitable] = Self._LogCarrier[V] and conforms_to(Self.W.Value, Copyable) and Self.M.MapCompatible[_Value[V].Storage, _Listen[Self.W, Self.Element[V]]]
+    comptime Listened[V: Movable & Deinitable] = WriterValue[Self, Tuple[Self.Element[V], Self.W.Value], Self.M.Mapped[_Value[V].Storage, _Listen[Self.W, Self.Element[V]]]]
+    comptime ListenError[V: Movable & Deinitable] = Self.M.MapError[_Value[V].Storage, _Listen[Self.W, Self.Element[V]]]
+    comptime CensorCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self._LogCarrier[V] and F.Arg == Self.W.Value and F.Out == Self.W.Value and Self.M.MapCompatible[_Value[V].Storage, _Censor[F, Self.Element[V]]]
+    comptime Censored[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = WriterValue[Self, Self.Element[V], Self.M.Mapped[_Value[V].Storage, _Censor[F, Self.Element[V]]]]
+    comptime CensorError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.MapError[_Value[V].Storage, _Censor[F, Self.Element[V]]]
+
+    @staticmethod
+    def tell(var log: Self.Log.Value) -> Self.Told:
+        """Record this layer's log without constructing an empty log.
+
+        Args:
+            log: The output, consumed.
+
+        Returns:
+            A Writer carrier of NoneType.
+        """
+        var nothing: NoneType = None
+        return Self.Told(Self.M.pure(Tuple(log^, nothing)))
+
+    @staticmethod
+    def listen[V: Movable & Deinitable](var value: V) raises Self.ListenError[V] -> Self.Listened[V]:
+        """Observe this layer using the existing copy-and-pair kernel.
+
+        Parameters:
+            V: A carrier admitted by ListenCompatible.
+
+        Args:
+            value: The computation, consumed.
+
+        Returns:
+            The payload paired with a copy of its log, keeping the log.
+
+        Raises:
+            The base family's exact map error.
+        """
+        comptime assert Self.ListenCompatible[V]
+        return Self.Listened[V](Self.M.map(_Listen[Self.W, Self.Element[V]](), rebind_var[_Value[V]](value^).into_base()))
+
+    @staticmethod
+    def censor[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) raises Self.CensorError[V, F] -> Self.Censored[V, F]:
+        """Transform this layer using the existing consuming log kernel.
+
+        Parameters:
+            V: A carrier of this Writer family.
+            F: A callback admitted by CensorCompatible.
+
+        Args:
+            f: The log transformation, consumed.
+            value: The computation, consumed.
+
+        Returns:
+            A Writer carrier with the same payload and the transformed log.
+
+        Raises:
+            The base family's exact map error.
+        """
+        comptime assert Self.CensorCompatible[V, F]
+        return Self.Censored[V, F](Self.M.map(_Censor[F, Self.Element[V]](f^), rebind_var[_Value[V]](value^).into_base()))
+
+    comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = _Value[V].Family == Self and H.Compatible[_Value[V].Storage] and Self.M.Element[_Value[V].Storage] == Tuple[Self.W.Value, Self.Element[V]]
+    comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = WriterValue[Self, A, H.Applied[_Value[V].Storage]]
+    comptime _HoistError[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = H.Error[_Value[V].Storage]
+    comptime _Listening[C: Listen, A: Movable & Deinitable] = _ListenMapped[C, Tuple[Self.W.Value, A], _ListenPair[Self.W.Value, A, C.Log.Value, True]]
+    @staticmethod
+    def _hoist[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp](var op: H, var value: V) raises Self._HoistError[A, V, H] -> Self._Hoisted[A, V, H]:
+        var base = rebind_var[_Value[V]](value^).into_base()
+        return Self._Hoisted[A, V, H](op^.apply(base^))
+
+    comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = _Value[V].Family == Self and C.LocalCompatible[_Value[V].Storage] and Self.M.Element[_Value[V].Storage] == Tuple[Self.W.Value, Self.Element[V]]
+    comptime _Scoped[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Self._Hoisted[Self.Element[V], V, _LocalOp[C, F]]
+    comptime _ScopeError[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = C.LocalError[_Value[V].Storage, F]
+
+    @staticmethod
+    def _scope[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](var f: F, var value: V) raises Self._ScopeError[C, V, F] -> Self._Scoped[C, V, F]:
+        """Scope the existing base storage, preserving its log and payload.
+
+        Parameters:
+            C: The selected base Local capability.
+            V: This Writer family's value type.
+            F: The selected environment transformation type.
+
+        Args:
+            f: The transformation, consumed.
+            value: The Writer value, consumed.
+
+        Returns:
+            The rewrapped, scoped base carrier.
+
+        Raises:
+            The selected base capability's construction error.
+        """
+        comptime assert C.Family == Self.Base and Self._ScopeCompatible[C, V]
+        return Self._hoist[Self.Element[V]](_LocalOp[C, F](f^), value^)
+
     comptime _Errors = downcast[Self.M, ApplicativeError]
     comptime Failure = Self._Errors.Failure
     comptime _ErrorCarrier[V: Movable & Deinitable] = _Value[V].Family == Self and Self._Errors._ErrorCarrier[_Value[V].Storage] and Self.M.Element[_Value[V].Storage] == Tuple[Self.W.Value, Self.Element[V]]
@@ -597,90 +698,5 @@ def run_writer[V: Movable & Deinitable, //, I: _WriterFamily](var value: V) -> _
     return rebind_var[_Value[V]](value^).into_base()
 
 
-def tell[I: _WriterFamily](var log: I.Log.Value) -> WriterValue[I, NoneType, I.Base.Pure[Tuple[I.Log.Value, NoneType]]]:
-    """A Writer value that records `log`, with payload `None`.
-
-    Parameters:
-        I: The Writer family.
-
-    Args:
-        log: The log to record, consumed.
-
-    Returns:
-        The Writer value.
-    """
-    var nothing: NoneType = None
-    return WriterValue[I, NoneType, I.Base.Pure[Tuple[I.Log.Value, NoneType]]](I.Base.pure(Tuple(log^, nothing)))
-
-
-def listen[V: Movable & Deinitable, //, I: _WriterFamily](var value: V
-) raises I.Base.MapError[_Value[V].Storage, _Listen[I.Log, _Value[V].Value]] -> WriterValue[
-    I, Tuple[_Value[V].Value, I.Log.Value], I.Base.Mapped[_Value[V].Storage, _Listen[I.Log, _Value[V].Value]]]:
-    """Pair the payload with a copy of the log written so far; the log is kept.
-
-    The log must be `Copyable`.
-
-    Parameters:
-        V: The Writer value's type.
-        I: The Writer family.
-
-    Args:
-        value: The Writer value, consumed.
-
-    Returns:
-        The Writer value of `(payload, log)`.
-
-    Raises:
-        The base's `map` error.
-    """
-    comptime assert _Value[V].Family == I, _WRITER_FAMILY
-    comptime Listened = _Listen[I.Log, _Value[V].Value]
-    return WriterValue[I, Tuple[_Value[V].Value, I.Log.Value], I.Base.Mapped[_Value[V].Storage, Listened]](
-        I.Base.map(Listened(), rebind_var[_Value[V]](value^).into_base()))
-
-
-def censor[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, I: _WriterFamily](
-    var f: F, var value: V
-) raises I.Base.MapError[_Value[V].Storage, _Censor[F, _Value[V].Value]] -> WriterValue[
-    I, _Value[V].Value, I.Base.Mapped[_Value[V].Storage, _Censor[F, _Value[V].Value]]]:
-    """Replace the final log with `f(log)`.
-
-    Other overloads take a native function or closure directly.
-
-    Parameters:
-        F: The callback's type: a library `Unary` value from log to log.
-        V: The Writer value's type.
-        I: The Writer family.
-
-    Args:
-        f: The callback, consumed.
-        value: The Writer value, consumed.
-
-    Returns:
-        The Writer value with the new log.
-
-    Raises:
-        The base's `map` error, which includes the callback's.
-    """
-    comptime assert _Value[V].Family == I, _WRITER_FAMILY
-    comptime assert F.Arg == I.Log.Value and F.Out == I.Log.Value, "censor: the callback must map the log to a new log"
-    comptime Censored = _Censor[F, _Value[V].Value]
-    return WriterValue[I, _Value[V].Value, I.Base.Mapped[_Value[V].Storage, Censored]](
-        I.Base.map(Censored(f^), rebind_var[_Value[V]](value^).into_base()))
-
-
-def censor[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, I: _WriterFamily, F: _Unary[A, R]](
-    var f: F, var value: V
-) raises I.Base.MapError[_Value[V].Storage, _Censor[NativeUnary[A, R, Never, F, False], _Value[V].Value]] -> WriterValue[
-    I, _Value[V].Value, I.Base.Mapped[_Value[V].Storage, _Censor[NativeUnary[A, R, Never, F, False], _Value[V].Value]]] where A == I.Log.Value and R == I.Log.Value:
-    """Replace the final log with f(log), for a native function or closure."""
-    return censor[I](as_unary(f^), value^)
-
-
-def censor[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //,
-           I: _WriterFamily, F: _RaisingUnary[A, R, E]](
-    var f: F, var value: V
-) raises I.Base.MapError[_Value[V].Storage, _Censor[NativeUnary[A, R, E, F, True], _Value[V].Value]] -> WriterValue[
-    I, _Value[V].Value, I.Base.Mapped[_Value[V].Storage, _Censor[NativeUnary[A, R, E, F, True], _Value[V].Value]]] where A == I.Log.Value and R == I.Log.Value:
-    """Raising form of the native censor; its error type is kept."""
-    return censor[I](as_unary(f^), value^)
+# Preserve the original import paths; capabilities owns the checked entries.
+from .capabilities import tell, listen, censor

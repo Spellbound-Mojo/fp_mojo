@@ -141,6 +141,15 @@
     },
     "docs/examples/ior_validation.mojo": {
       "stdout": "value: 0\nwarning: zero accepted\nindependent diagnostics: 3\nsequential diagnostics: 2\n"
+    },
+    "docs/examples/environment_capabilities.mojo": {
+      "stdout": "reader config: 5\nscoped config: 8 ; state: 42\nenvironment after scope: 5\ninner config: 5\nouter config: 100\n"
+    },
+    "docs/examples/stateful_capabilities.mojo": {
+      "stdout": "state: 13\nunder reader: 13\nnested put: 25 ; success: True\ninner update: outer = 100 ; inner = 13\nouter update: outer = 103 ; inner = 10\nselected read: 10\n"
+    },
+    "docs/examples/writer_capabilities.mojo": {
+      "stdout": "output: [saved] ; observed: [saved]\nnested output: [nested] ; observed: [nested] ; state: 42\nfailed: True ; retained output: [attempted]\n"
     }
   }
 }

@@ -8,7 +8,265 @@ A Writer value wraps its base carrier; OptionalT/ResultT values are base
 carriers.
 """
 from std.builtin.rebind import downcast
-from fp.algebra.protocols import Monad, Monoid
+from fp.algebra.protocols import Monad, Monoid, _Lifting
+from fp.callables.protocols import BorrowCallContract, UnaryContract
+
+
+trait Ask:
+    """Read an environment in a selected effect family.
+
+    A capability is a compile-time dictionary, not a runtime carrier. Generic
+    programs use `Family` for ordinary algebra operations. `ask` copies the
+    environment; forward `AskAvailable` in generic function constraints.
+    Implementations must return a Family carrier whose payload is Environment.
+    """
+    comptime Family: Monad
+    """The family in which this capability operates."""
+    comptime Environment: AnyType
+    """The selected environment, including its native origins."""
+    comptime AskAvailable: Bool
+    """Whether this selection admits copying the environment."""
+    comptime Asked: Movable & Deinitable
+    """The concrete carrier returned by ask."""
+    comptime AskError: Movable & Deinitable
+    """The exact native error of constructing ask, separate from running it."""
+    @staticmethod
+    def ask() raises Self.AskError -> Self.Asked:
+        """Construct an environment read, when AskAvailable holds.
+
+        Returns:
+            The selected family's environment carrier.
+
+        Raises:
+            The native construction error.
+        """
+        ...
+
+
+trait Local(Ask):
+    """Scope a selected environment without changing the surrounding one.
+
+    The callback borrows Environment and returns an owned Environment. The
+    scoped computation and callback are consumed. An identity scope preserves
+    the result; nested scopes compose in execution order. This capability can
+    scope move-only environments even when AskAvailable is false.
+    """
+    comptime LocalCompatible[V: Movable & Deinitable]: Bool
+    """Whether V admits this scope, preserving its family and native origins."""
+    comptime Localized[V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable]: Movable & Deinitable
+    """The concrete scoped carrier; its payload is unchanged."""
+    comptime LocalError[V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable]: Movable & Deinitable
+    """The native construction error; deferred execution has its own error."""
+    @staticmethod
+    def local[V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](var f: F, var value: V
+    ) raises Self.LocalError[V, F] -> Self.Localized[V, F]:
+        """Construct a scope for an admitted carrier and environment callback.
+
+        Parameters:
+            V: A carrier satisfying LocalCompatible.
+            F: A borrowing callback with Payload and Result equal to Environment.
+
+        Args:
+            f: The environment transformation, consumed.
+            value: The computation to scope, consumed.
+
+        Returns:
+            A carrier of Family with the original payload type.
+
+        Raises:
+            The native construction error.
+        """
+        ...
+
+
+trait Stateful:
+    """Read and update a selected state in an effect family.
+
+    This compile-time dictionary selects one state, including when a stack has
+    several states of the same type. Reading copies the state; modification
+    consumes it and returns its replacement. Move-only state supports updates
+    without supporting get. Implementations preserve the ordinary state laws:
+    get leaves state unchanged, the last put wins, and modifications compose
+    in execution order. Native failures follow the selected family's semantics.
+    """
+    comptime Family: Monad
+    """The family in which this capability operates."""
+    comptime StateType: Movable & Deinitable
+    """The selected state's exact type, including native origins."""
+    comptime GetAvailable: Bool
+    """Whether this selection admits copying the state."""
+    comptime Got: Movable & Deinitable
+    """The concrete carrier of StateType returned by get."""
+    comptime GetError: Movable & Deinitable
+    """The exact native error of constructing get, separate from running it."""
+    comptime ModifyCompatible[F: UnaryContract & Movable & Deinitable]: Bool
+    """Whether F is admitted, with Arg and Out exactly equal to StateType."""
+    comptime Modified[F: UnaryContract & Movable & Deinitable]: Movable & Deinitable
+    """The concrete carrier of NoneType returned by modify."""
+    comptime ModifyError[F: UnaryContract & Movable & Deinitable]: Movable & Deinitable
+    """The native construction error; execution has its own exact error."""
+    @staticmethod
+    def get() raises Self.GetError -> Self.Got:
+        """Construct a state read when GetAvailable holds.
+
+        Returns:
+            A Family carrier whose payload is a copy of the selected state.
+
+        Raises:
+            The native construction error.
+        """
+        ...
+
+    @staticmethod
+    def modify[F: UnaryContract & Movable & Deinitable](var f: F) raises Self.ModifyError[F] -> Self.Modified[F]:
+        """Construct an update when ModifyCompatible holds.
+
+        Parameters:
+            F: A consuming callback from StateType to StateType.
+
+        Args:
+            f: The transformation, consumed.
+
+        Returns:
+            A Family carrier with NoneType payload.
+
+        Raises:
+            The native construction error.
+        """
+        ...
+
+
+trait Tell:
+    """Append output to one explicitly selected log, in execution order.
+
+    A compile-time capability dictionary, independent of Writer's representation.
+    Tell does not require a copyable log. Its payload is NoneType.
+    """
+    comptime Family: Monad
+    """The family in which the capability operates."""
+    comptime Log: Monoid
+    """The selected log monoid, retaining the exact Value type and origins."""
+    comptime TellAvailable: Bool
+    """Whether this selection admits constructing a log write."""
+    comptime Told: Movable & Deinitable
+    """The concrete carrier of NoneType returned by tell."""
+    comptime TellError: Movable & Deinitable
+    """The exact native construction error, separate from deferred execution."""
+    @staticmethod
+    def tell(var log: Self.Log.Value) raises Self.TellError -> Self.Told:
+        """Construct a write when TellAvailable holds.
+
+        Args:
+            log: The output, consumed.
+
+        Returns:
+            A Family carrier with NoneType payload.
+
+        Raises:
+            The native construction error.
+        """
+        ...
+
+
+trait Listen(Tell):
+    """Observe the selected log of a computation without removing it.
+
+    The payload becomes (value, log). Only the supplied computation is observed;
+    surrounding writes remain outside that observation. Listening requires a
+    copyable log, but the dictionary may still support tell for move-only logs.
+    """
+    comptime ListenCompatible[V: Movable & Deinitable]: Bool
+    """Whether V admits observation, preserving its family and native origins."""
+    comptime Listened[V: Movable & Deinitable]: Movable & Deinitable
+    """The concrete Family carrier of (original payload, Log.Value)."""
+    comptime ListenError[V: Movable & Deinitable]: Movable & Deinitable
+    """The native construction error; execution errors remain on the carrier."""
+    @staticmethod
+    def listen[V: Movable & Deinitable](var value: V) raises Self.ListenError[V] -> Self.Listened[V]:
+        """Observe an admitted computation's selected log.
+
+        Parameters:
+            V: A carrier satisfying ListenCompatible.
+
+        Args:
+            value: The computation, consumed.
+
+        Returns:
+            Its payload paired with a copy of its log, retaining the output log.
+
+        Raises:
+            The native construction error.
+        """
+        ...
+
+
+trait Censor(Listen):
+    """Transform the selected log of a computation, preserving its payload.
+
+    The callback consumes the log and returns its replacement. Logs and captures
+    may be move-only even when listening is unavailable. Scopes compose in
+    execution order and do not affect surrounding writes or other Writer layers.
+    """
+    comptime CensorCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Bool
+    """Whether V and F admit this scope, with Arg and Out equal to Log.Value."""
+    comptime Censored[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Movable & Deinitable
+    """The concrete scoped carrier, with the same payload type."""
+    comptime CensorError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Movable & Deinitable
+    """The native construction error, separate from execution."""
+    @staticmethod
+    def censor[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V
+    ) raises Self.CensorError[V, F] -> Self.Censored[V, F]:
+        """Transform the selected log for an admitted computation and callback.
+
+        Parameters:
+            V: A carrier of Family.
+            F: A consuming Log.Value-to-Log.Value transformation.
+
+        Args:
+            f: The transformation, consumed.
+            value: The computation, consumed.
+
+        Returns:
+            A Family carrier preserving the original payload.
+
+        Raises:
+            The native construction error.
+        """
+        ...
+
+
+trait _CarrierOp(Movable, Deinitable):
+    """A consumed transformation of a base carrier; no stack interpretation."""
+    comptime Compatible[V: Movable & Deinitable]: Bool
+    comptime Applied[V: Movable & Deinitable]: Movable & Deinitable
+    comptime Error[V: Movable & Deinitable]: Movable & Deinitable
+    def apply[V: Movable & Deinitable](deinit self, var value: V) raises Self.Error[V] -> Self.Applied[V]: ...
+
+
+trait _CapabilityLifting(_Lifting):
+    comptime Base: Monad
+
+
+trait _Hoisting(_CapabilityLifting):
+    """Transport an admitted base operation through one representation."""
+    comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp]: Bool
+    comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp]: Movable & Deinitable
+    comptime _HoistError[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp]: Movable & Deinitable
+    comptime _Listening[C: Listen, A: Movable & Deinitable]: _CarrierOp & Defaultable
+    @staticmethod
+    def _hoist[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp](var op: H, var value: V
+    ) raises Self._HoistError[A, V, H] -> Self._Hoisted[A, V, H]: ...
+
+
+trait _LocalLifting(_Hoisting):
+    """Representation-specific transport of a base scope; no interpretation."""
+    comptime _ScopeCompatible[C: Local, V: Movable & Deinitable]: Bool
+    comptime _Scoped[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable]: Movable & Deinitable
+    comptime _ScopeError[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable]: Movable & Deinitable
+    @staticmethod
+    def _scope[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](var f: F, var value: V
+    ) raises Self._ScopeError[C, V, F] -> Self._Scoped[C, V, F]:
+        ...
 
 
 comptime _FAMILY_MISMATCH = "run: computation belongs to a different effect family"
