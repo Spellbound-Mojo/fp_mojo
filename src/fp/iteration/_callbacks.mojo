@@ -13,8 +13,8 @@ kernel as typed failures.
 from std.builtin.rebind import downcast, rebind_var
 from fp.callables.native import _LazyUnary, _LazyOptional
 from fp.data.control import ControlFlow
-from fp.callables.protocols import BorrowCallable, Unary, Binary
-from fp.callables.invoke import invoke_borrowed
+from fp.callables.protocols import BorrowCallable, Unary, UnaryContract, Binary
+from fp.callables.invoke import BorrowCallCompatible, invoke_borrowed, RepeatableUnary
 from fp.callables._receiver import _unary_repeated_as, _binary_repeated_as
 
 
@@ -36,9 +36,9 @@ def _call_lazy_unary[T: Movable & Deinitable, U: Movable & Deinitable,
 
 def _apply_lazy_unary[T: Movable & Deinitable, U: Movable & Deinitable,
                       F: Movable & Deinitable](mut function: F, var value: T) -> U:
-    comptime if conforms_to(F, Unary):
-        comptime C = downcast[F, Unary]
-        comptime assert C.Error == Never and C.Arg == T and C.Out == U, "map: exact non-raising unary callable required"
+    comptime if conforms_to(F, UnaryContract):
+        comptime C = downcast[F, UnaryContract & Movable & Deinitable]
+        comptime assert RepeatableUnary[C] and C.Error == Never and C.Arg == T and C.Out == U, "map: exact non-raising unary callable required"
         return rebind_var[U](_unary_repeated_as[Never](rebind[C](function), rebind_var[C.Arg](value^)))
     elif conforms_to(F, _LazyUnary[T, U]):
         comptime Fn = downcast[F, _LazyUnary[T, U]]
@@ -80,8 +80,7 @@ def _apply_lazy_predicate[T: Movable & Deinitable, F: Movable & Deinitable](
     comptime if conforms_to(F, BorrowCallable):
         comptime C = downcast[F, BorrowCallable]
         comptime assert C.Failure == Never, "filter: non-raising callable required"
-        comptime assert C.Payload == T and C.Result == Bool, "filter: incompatible callable signature"
-        return rebind_var[Bool](invoke_borrowed[Never](value, rebind[C](function)))
+        return _predicate_callable[T, C, Never](value, rebind[C](function))
     elif conforms_to(F, _LazyPredicate[T]):
         comptime Fn = downcast[F, _LazyPredicate[T]]
         comptime assert Fn.T == T, "filter: incompatible native predicate signature"
@@ -172,8 +171,8 @@ def _control_fixed[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable 
     return rebind_var[ControlFlow[B, A]](function.call(rebind_var[F.First](accumulator^), rebind_var[F.Second](value^)))
 
 
-def _predicate_callable[T: Movable & Deinitable, C: BorrowCallable](
+def _predicate_callable[T: Movable & Deinitable, C: BorrowCallable, E: Movable & Deinitable = C.Failure](
     value: T, function: C
-) raises C.Failure capturing -> Bool:
-    comptime assert C.Payload == T and C.Result == Bool, "predicate: exact payload and Bool result required"
-    return rebind_var[Bool](invoke_borrowed[C.Failure](value, function))
+) raises E capturing -> Bool:
+    comptime assert BorrowCallCompatible[E, C, T] and C.Result == Bool, "predicate: exact payload, Bool result and compatible error required"
+    return rebind_var[Bool](invoke_borrowed[E](value, function))

@@ -60,6 +60,79 @@ when the program compiles and allows guards. `fold_once` and `fold_owned_once`
 consume both handler owners, call only the selected one and let native
 destruction release the other.
 
+### Derived Result combinators
+
+Result methods and their Piped counterparts share execution. The Piped methods
+recover the native Result type and forward; they never inspect its tag.
+`flat_tap` and `flat_pair_with` bind a borrowing projection and map its success
+with a consuming retention adapter. This moves the retained value once, so a
+move-only payload needs no copy. An inner failure releases the retained value.
+`followed_by` adapts a factory into a continuation; `before` combines that
+adaptation with retention. Neither factory runs on an initial error.
+
+`ensure`, `recover_if` and `or_else_if` share one conditional continuation. It
+borrows the selected payload for a predicate, then either retains that payload
+or consumes it in the continuation. For `ensure`, a borrowed error factory
+enters through the existing owned-to-borrowed callable adapter. For selective
+recovery, an accepted error moves directly into the recovery. `tap_err` uses
+the existing error mapping with an observation adapter. `flat_tap_err` reuses
+the retention adapter, restoring `Err` on observer success and propagating an
+observer failure. `recover` selects the error branch but wraps its
+replacement in `Ok`: the shared transformation primitive selects the output
+constructor independently of the input branch.
+
+`_fold_result_owned` owns the tag selection, payload movement, unused context
+disposal and native error propagation for consuming folds and transformations.
+`fold_owned` supplies borrowed handler contexts; `fold_owned_once` supplies
+owned handlers. Single-branch transformations provide a callback for the active
+branch and a constructor-preserving callback for the other branch. Borrowing
+folds keep their separate borrow boundary, since they do not extract or destroy
+the source payload.
+
+`map_both`, `redeem` and `redeem_with` use this same owned fold with two
+continuations. The shared `_transformed` helper wraps their outputs in the
+selected constructor, wraps either output in `Ok`, or accepts the returned
+Result unchanged. Only the source tag selects a continuation, so a returned
+error cannot accidentally trigger recovery a second time. `attempt_tap`
+extends the existing retention adapter to own the whole Result: observer success
+returns that retained Result, and observer failure replaces it.
+
+The callable layer owns borrowed receiver dispatch and payload retention. Its
+one-call dispatch prefers `BorrowOnceCallable`, otherwise `BorrowCallable`;
+Reader endpoints and `local` use that same dispatch. Result's leaf module does
+not depend on algebra instances, which already depend on Result. Its adapters
+supply the native Result mapping boundary while the callable helpers remain
+independent of the container.
+
+Native admission signatures are generated from
+`scripts/generate_result_syntax.py`. A native borrowing endpoint can supply
+its invocation to the existing borrowed-reference adapter. This preserves the
+signature at admission when Mojo 1.1 cannot reconstruct a second callback's
+native witness later. Existing callers keep the direct native bridge: routing
+its default through an extra function-valued parameter corrupts Bool predicates
+at O0 on Mojo 1.1. The eager filtering example covers that boundary.
+Native owned transformations retain Result's existing
+invocation boundary. Conditional continuations use its owned context form:
+library callbacks move into that context, while native callbacks enter by
+pointer with their admitted signature. This avoids requiring a capturing
+native invocation to conform to a non-capturing `Unary` method on Mojo 1.1.
+These adapters preserve exact input, output, error and
+origin types and contain no independent branch implementation.
+
+The two-branch native methods spell input types from the source, and
+`redeem_with` spells its Result output structurally. Piped forwards that output
+type evidence explicitly. Relationships between embedded origins are checked
+in public signature constraints, including the common native error type and
+`attempt_tap`'s stored error type; body assertions alone cannot enforce those
+relationships on Mojo 1.1.
+
+The operations execute eagerly, use constant auxiliary space, and allocate no
+container storage beyond the existing Result or tuple; callbacks determine
+additional work and allocation. Native errors stay native. Operations with two
+callbacks accept only one common native error type or a non-raising callback
+alongside it. Retained values cannot borrow from a callback's temporary storage,
+and two callbacks with conflicting mutable captures remain invalid native calls.
+
 ### Bridges between raised and stored failures
 
 | Bridge | Behavior |

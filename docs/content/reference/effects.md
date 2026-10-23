@@ -20,3 +20,17 @@ Both stacks start from state `10`, set it to `15` with `put`, then fail with
 failed `Result` together with the state `15`. With
 `StateT[ResultFamily[String], Int]`, `run` returns only the `Err`, and the state
 is lost with it.
+
+## Recover stored errors through a transformer
+
+ReaderT, WriterT, OptionalT and StateT support `ApplicativeError` when their
+base Monad does. StateT also requires copyable state for this capability.
+Use `.recover[Family](handler)` for a replacement value or
+`.or_else[Family](handler)` for a replacement effect. Native raised errors
+propagate unchanged.
+
+StateT handlers restart from the input at the recovery boundary; ResultT above
+State keeps the updated state. Reader handlers share the environment, WriterT
+handlers supply their own log when the base fails, and OptionalT leaves absence
+unchanged. See the [recovery reference](combinators.md#recover-a-selected-error-layer)
+for the runnable comparison and ownership rules.

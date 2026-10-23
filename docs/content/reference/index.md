@@ -14,11 +14,12 @@ For a guided introduction, follow the [tutorial](../tutorial/pipelines.md).
 |---|---|
 | [`fp.callables`](callables.md) | Callable protocols, receiver modes and `as_unary` |
 | [`fp.functions`](functions.md) | Pipelines, composition, `flip` and partial application |
+| [`fp.combinators`](combinators.md) | Ordinary `map`, `filter` and `fold_left` functions shared with fluent chains |
 | [`fp.iteration`](iteration.md) | Lazy adapters, folds, reductions and searches |
 | [`fp.control`](control-flow.md) | `while_loop`, `fori_loop` and carry/output `scan` |
 | [`fp.adt`](adt.md) | Algebraic and inductive data types: `Data`, `Cases`, `Node`, `Choice` |
 | [`fp.data`](data.md) | `Result`, `ControlFlow` and the bridges between raised and stored errors |
-| [`fp.algebra`](algebra.md) | Functor, Applicative, Monad, Traversable and Monoid, with native instances |
+| [`fp.algebra`](algebra.md) | Functor, Filterable, Applicative, Monad, Traversable and Monoid, with native instances |
 | [`fp.effects`](effects.md) | Reader, State and Writer, and monad transformers |
 | [`fp.matching`](matching.md) | `match`, `rewrite`, `when` guards and `Next` |
 

@@ -6,11 +6,13 @@ environment origin in its type.
 """
 from std.builtin.rebind import rebind_var, downcast
 from std.utils import Variant
-from fp.algebra.protocols import Monad, _Lifting, _Accumulate
+from fp.algebra.errors import _Continue
+from fp.algebra.protocols import ApplicativeError, Monad, _Lifting, _Accumulate, _LiveAccumulator
 from fp.algebra.instances import IdentityFamily
 from fp.callables.protocols import (UnaryContract, BinaryContract, ThunkContract, OnceUnary, MutableUnary,
-                                    OnceThunk, BorrowCallContract, BorrowCallable, BorrowOnceCallable)
-from fp.callables.invoke import call_once, call_repeated, RepeatableUnary
+                                    OnceThunk, MutableBinary, BorrowCallContract, BorrowCallable, BorrowOnceCallable)
+from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
+from fp.callables._receiver import _borrow_once_as, _binary_repeated_as
 from fp.callables.native import _NativeBorrow, _Borrowing, _RaisingBorrowing
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
 from .protocols import ReaderAction, _ReaderFamily, _admit_endpoint, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
@@ -29,6 +31,20 @@ struct _ReaderPure[M: Monad, R: AnyType, T: Movable & Deinitable](ReaderAction, 
     comptime Out[o: ImmOrigin] = Self.M.Pure[Self.T]
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) -> Self.Out[o]:
         return Self.M.pure(self.value^)
+
+
+@fieldwise_init
+struct _ReaderFail[M: Monad, R: AnyType, A: Movable & Deinitable](ReaderAction, Copyable where conforms_to(downcast[M, ApplicativeError].Failure, Copyable)):
+    """Borrowed-environment boundary for a deferred base failure."""
+    comptime Errors = downcast[Self.M, ApplicativeError]
+    var error: Self.Errors.Failure
+    comptime Family = ReaderT[Self.M, Self.R]
+    comptime Env = Self.R
+    comptime Value = Self.A
+    comptime Out[o: ImmOrigin] = Self.Errors.Failed[Self.A]
+    comptime Error[o: ImmOrigin] = Self.Errors.FailError[Self.A]
+    def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Self.Out[o]:
+        return Self.Errors.fail[Self.A](self.error^)
 
 
 @fieldwise_init
@@ -66,13 +82,7 @@ struct _ReaderEndpoint[M: Monad, R: AnyType, T: Movable & Deinitable, F: BorrowC
     comptime Error[o: ImmOrigin] = Self.F.Failure
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Self.Out[o]:
         comptime assert Self.F.Payload == Self.R, "action: the endpoint must borrow the Reader environment"
-        comptime if conforms_to(Self.F, BorrowOnceCallable):
-            comptime D = downcast[Self.F, BorrowOnceCallable]
-            return rebind_var[Self.Out[o]](rebind_var[D](self.function^).invoke_once(rebind[D.Payload](env)))
-        else:
-            comptime assert conforms_to(Self.F, BorrowCallable), "action: the endpoint must be a borrowed callable"
-            comptime D = downcast[Self.F, BorrowCallable]
-            return rebind_var[Self.Out[o]](rebind[D](self.function).invoke(rebind[D.Payload](env)))
+        return _borrow_once_as[Self.Error[o]](env, self.function^)
 
 
 @fieldwise_init
@@ -145,7 +155,7 @@ struct _ReaderMap[M: Monad, R: AnyType, S: ReaderAction, F: UnaryContract & Mova
 
 
 @fieldwise_init
-struct _ReaderBind[M: Monad, R: AnyType, S: ReaderAction, F: UnaryContract & Movable & Deinitable](
+struct _ReaderBind[M: Monad, R: AnyType, S: ReaderAction, F: UnaryContract & Movable & Deinitable, recover: Bool = False](
     ReaderAction, Copyable where conforms_to(S, Copyable) and conforms_to(F, Copyable)
 ):
     var source: Self.S
@@ -153,15 +163,16 @@ struct _ReaderBind[M: Monad, R: AnyType, S: ReaderAction, F: UnaryContract & Mov
     comptime Family = ReaderT[Self.M, Self.R]
     comptime Env = Self.R
     comptime Value = _Action[Self.F.Out].Value
+    comptime Operation = _Continue[Self.M, Self.recover]
     comptime Next[o: ImmOrigin] = _ReaderContinue[Self.Family, Self.F, Self.R, o]
-    comptime Out[o: ImmOrigin] = Self.M.Bound[Self.S.Out[o], Self.Next[o]]
-    comptime Error[o: ImmOrigin] = _CommonError[Self.S.Error[o], Self.M.BindError[Self.S.Out[o], Self.Next[o]]]
+    comptime Out[o: ImmOrigin] = Self.Operation.Out[Self.S.Out[o], Self.Next[o]]
+    comptime Error[o: ImmOrigin] = _CommonError[Self.S.Error[o], Self.Operation.Error[Self.S.Out[o], Self.Next[o]]]
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Self.Out[o]:
         comptime E = Self.Error[o]
         comptime assert _Action[Self.F.Out].Family == Self.Family, _FAMILY_MISMATCH
-        comptime assert _ErrorCompatible[E, Self.S.Error[o]] and _ErrorCompatible[E, Self.M.BindError[Self.S.Out[o], Self.Next[o]]]
+        comptime assert _ErrorCompatible[E, Self.S.Error[o]] and _ErrorCompatible[E, Self.Operation.Error[Self.S.Out[o], Self.Next[o]]]
         var base = _reader_run_as[E](self.source^, rebind[Self.S.Env](env))
-        return _flat_map_as[E, Self.M](Self.Next[o](self.function^, Pointer(to=env)), base^)
+        return Self.Operation.apply[E](Self.Next[o](self.function^, Pointer(to=env)), base^)
 
 
 @fieldwise_init
@@ -203,16 +214,7 @@ struct _ReaderLocal[M: Monad, R: Movable & Deinitable, S: ReaderAction, F: Borro
         comptime E = Self.Error[o]
         comptime assert Self.F.Payload == Self.R and Self.F.Result == Self.R, "local: the callback must map the environment to a new environment"
         comptime assert _ErrorCompatible[E, Self.F.Failure] and _ErrorCompatible[E, Self.S.Error[o]]
-        var changed: Self.R
-        try:
-            comptime if conforms_to(Self.F, BorrowOnceCallable):
-                comptime D = downcast[Self.F, BorrowOnceCallable]
-                changed = rebind_var[Self.R](rebind_var[D](self.function^).invoke_once(rebind[D.Payload](env)))
-            else:
-                comptime D = downcast[Self.F, BorrowCallable]
-                changed = rebind_var[Self.R](rebind[D](self.function).invoke(rebind[D.Payload](env)))
-        except error:
-            _propagate_error[E](error^)
+        var changed = rebind_var[Self.R](_borrow_once_as[E](env, self.function^))
         # The changed environment lives only for this run, so the result must
         # not retain it: the base must complete the computation eagerly.
         comptime assert Self.S.Out[origin_of(changed)] == Self.S.Out[o], "local: the base retains the environment; run local over an eager base"
@@ -241,6 +243,38 @@ struct _ReaderLoop[M: Monad, R: AnyType, V: Movable & Deinitable, F: UnaryContra
 
 
 @fieldwise_init
+struct _ReaderFoldStep[I: AnyType, R: AnyType, F: BinaryContract & Movable & Deinitable, o: ImmOrigin](MutableBinary):
+    var function: Self.F
+    var env: Pointer[Self.R, Self.o]
+    comptime First = Self.F.First
+    comptime Second = Self.F.Second
+    comptime Action = _Action[Self.F.Out]
+    comptime Out = Self.Action.Out[Self.o]
+    comptime Error = _CommonError[Self.F.Error, Self.Action.Error[Self.o]]
+    def call_mut(mut self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out:
+        comptime assert RepeatableBinary[Self.F] and Self.Action.Family == Self.I
+        comptime assert _ErrorCompatible[Self.Error, Self.F.Error] and _ErrorCompatible[Self.Error, Self.Action.Error[Self.o]]
+        var action = rebind_var[Self.Action](_binary_repeated_as[Self.Error](self.function, first^, second^))
+        return _reader_run_as[Self.Error](action^, rebind[Self.Action.Env](self.env[]))
+
+
+@fieldwise_init
+struct _ReaderFold[M: Monad, R: AnyType, V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator](ReaderAction):
+    var prepare: Self.P
+    var function: Self.F
+    var initial: Self.K.Acc
+    var source: Self.V
+    comptime Family = ReaderT[Self.M, Self.R]
+    comptime Env = Self.R
+    comptime Value = Self.K.Acc
+    comptime Step[o: ImmOrigin] = _ReaderFoldStep[Self.Family, Self.R, Self.F, o]
+    comptime Out[o: ImmOrigin] = Self.M._Folded[Self.V, Self.P, Self.Step[o], Self.K]
+    comptime Error[o: ImmOrigin] = Self.M._FoldError[Self.V, Self.P, Self.Step[o], Self.K]
+    def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Self.Out[o]:
+        return Self.M._fold[Self.V, Self.P, Self.Step[o], Self.K](self.prepare^, Self.Step[o](self.function^, Pointer(to=env)), self.initial^, self.source^)
+
+
+@fieldwise_init
 struct _ReaderChoice[M: Monad, A: ReaderAction, B: ReaderAction](
     ReaderAction, Copyable where conforms_to(A, Copyable) and conforms_to(B, Copyable)
 ):
@@ -265,7 +299,7 @@ struct _ReaderChoice[M: Monad, A: ReaderAction, B: ReaderAction](
         return Self.M._join_right[Self.A.Out[o], Self.B.Out[o]](right^)
 
 
-struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, _Lifting):
+struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, _Lifting, ApplicativeError where conforms_to(M, ApplicativeError)):
     """Reader over the base Monad `M`: a computation borrows an environment `R` when run and returns an `M` carrier.
 
     Every operation returns a concrete computation that stores its inputs; a
@@ -274,7 +308,8 @@ struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, _Lifting):
     exact common error of the stages it executes. On Mojo 1.1 that error cannot
     propagate from a function declared with a plain `raises`; handle it with
     `try`/`except`, where it keeps its exact type. The base is used only through
-    its `Monad` methods, so any Monad, including another Reader or State, can be
+    its Monad methods and, for recovery, its optional ApplicativeError capability.
+    Any Monad, including another Reader or State, can be
     the base. Traversal delegates to the base's `collect`, whose callback runs
     each produced computation with the borrowed environment.
 
@@ -282,6 +317,48 @@ struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, _Lifting):
         M: The base Monad.
         R: The environment's type.
     """
+    comptime _Errors = downcast[Self.M, ApplicativeError]
+    comptime Failure = Self._Errors.Failure
+    comptime _ErrorCarrier[V: Movable & Deinitable] = _Action[V].Family == Self and _Action[V].Env == Self.R
+    comptime Failed[A: Movable & Deinitable] = _ReaderFail[Self.M, Self.R, A]
+    comptime FailError[A: Movable & Deinitable] = Never
+    comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = _ReaderBind[Self.M, Self.R, _Action[V], H, True]
+    comptime HandleError[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Never
+
+    @staticmethod
+    def fail[A: Movable & Deinitable](var error: Self.Failure) -> Self.Failed[A]:
+        """Defer construction of the base failure until the Reader runs.
+
+        Parameters:
+            A: The absent success payload type.
+
+        Args:
+            error: The selected base error, consumed with its exact origins.
+
+        Returns:
+            A deferred computation; base failure construction runs only at run.
+        """
+        return Self.Failed[A](error^)
+
+    @staticmethod
+    def or_else[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V) -> Self.Handled[V, H]:
+        """Recover the base error in the same borrowed environment when run.
+
+        Parameters:
+            V: The Reader computation of this family.
+            H: The handler consuming the selected stored error and returning
+                this family with the same success type; repeatable for branching.
+
+        Args:
+            handler: The handler, consumed and skipped on success.
+            source: The source, consumed with its native origins.
+
+        Returns:
+            A deferred Reader that retains the environment borrow through its base.
+        """
+        comptime assert Self._Handles[V, H], "or_else: Reader family or payload mismatch"
+        return Self.Handled[V, H](rebind_var[_Action[V]](source^), handler^)
+
     comptime Base = Self.M
     comptime Environment = Self.R
     comptime Element[V: Movable & Deinitable] = _Action[V].Value
@@ -294,6 +371,11 @@ struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, _Lifting):
     comptime BindError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Never
     comptime _Looped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = _ReaderLoop[Self.M, Self.R, V, F, K]
     comptime _LoopError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Never
+    comptime _Folded[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator] = _ReaderFold[Self.M, Self.R, V, P, F, K]
+    comptime _FoldError[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator] = Never
+    @staticmethod
+    def _fold[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator](var prepare: P, var step: F, var initial: K.Acc, var source: V) -> Self._Folded[V, P, F, K]:
+        return Self._Folded[V, P, F, K](prepare^, step^, initial^, source^)
     comptime _Joined[L: Movable & Deinitable, Q: Movable & Deinitable] = _ReaderChoice[Self.M, _Action[L], _Action[Q]]
     comptime Lifted[V: Movable & Deinitable] = _ReaderLift[Self.M, Self.R, V]
     comptime Endpoint[T: Movable & Deinitable, F: Movable & Deinitable] = _ReaderEndpoint[

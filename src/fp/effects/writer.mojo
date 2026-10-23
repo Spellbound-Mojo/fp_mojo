@@ -6,7 +6,7 @@ result stays deferred; `run_writer` unwraps the base carrier without running
 it. Logs combine in execution order.
 """
 from std.builtin.rebind import rebind_var, rebind, downcast
-from fp.algebra.protocols import Monad, Monoid, _Lifting, _Accumulate, _start_as, _combine_as
+from fp.algebra.protocols import ApplicativeError, Monad, Monoid, _Lifting, _Accumulate, _start_as, _combine_as
 from fp.algebra.instances import IdentityFamily
 from fp.callables.protocols import (UnaryContract, BinaryContract, ThunkContract, Unary, OnceUnary, MutableUnary,
                                     OnceBinary, MutableBinary, OnceThunk)
@@ -333,7 +333,7 @@ struct _WriterAcc[W: Monoid, K: _Accumulate](_Accumulate):
         return Tuple(log^, _combine_as[Self.Error, Self.K](acc_part^, item_part^))
 
 
-struct WriterT[M: Monad, W: Monoid](_WriterFamily, _Lifting):
+struct WriterT[M: Monad, W: Monoid](_WriterFamily, _Lifting, ApplicativeError where conforms_to(M, ApplicativeError)):
     """Writer over the base Monad `M`: a value is `M`'s carrier of `(log, payload)`, and the monoid `W` accumulates the log.
 
     Operations use the base's own `map`, `flat_map` and `map2_lazy`, so over a
@@ -344,6 +344,55 @@ struct WriterT[M: Monad, W: Monoid](_WriterFamily, _Lifting):
         M: The base Monad.
         W: The log's monoid.
     """
+    comptime _Errors = downcast[Self.M, ApplicativeError]
+    comptime Failure = Self._Errors.Failure
+    comptime _ErrorCarrier[V: Movable & Deinitable] = _Value[V].Family == Self and Self._Errors._ErrorCarrier[_Value[V].Storage] and Self.M.Element[_Value[V].Storage] == Tuple[Self.W.Value, Self.Element[V]]
+    comptime Failed[A: Movable & Deinitable] = WriterValue[Self, A, Self._Errors.Failed[Tuple[Self.W.Value, A]]]
+    comptime FailError[A: Movable & Deinitable] = Self._Errors.FailError[Tuple[Self.W.Value, A]]
+    comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = WriterValue[Self, Self.Element[V], Self._Errors.Handled[_Value[V].Storage, _UnwrapResult[Self, H]]]
+    comptime HandleError[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self._Errors.HandleError[_Value[V].Storage, _UnwrapResult[Self, H]]
+
+    @staticmethod
+    def fail[A: Movable & Deinitable](var error: Self.Failure) raises Self.FailError[A] -> Self.Failed[A]:
+        """Construct a base failure without constructing an empty log.
+
+        Parameters:
+            A: The absent success payload type.
+
+        Args:
+            error: The selected base error, consumed with its exact origins.
+
+        Returns:
+            A Writer value containing the base failure, without a log payload.
+
+        Raises:
+            The base family's exact native failure-construction error.
+        """
+        return Self.Failed[A](Self._Errors.fail[Tuple[Self.W.Value, A]](error^))
+
+    @staticmethod
+    def or_else[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V) raises Self.HandleError[V, H] -> Self.Handled[V, H]:
+        """Recover the base failure with the handler's Writer value and log.
+
+        Parameters:
+            V: The Writer value of this family.
+            H: The handler consuming the selected stored error and returning
+                this family with the same success type; repeatable for branching.
+
+        Args:
+            handler: The handler, consumed and skipped on success.
+            source: The source, consumed with its native origins.
+
+        Returns:
+            A Writer value retaining successful logs or the handler's replacement log.
+
+        Raises:
+            The base family's exact native recovery-construction error.
+        """
+        comptime assert Self._Handles[V, H], "or_else: Writer family or payload mismatch"
+        var base = rebind_var[_Value[V]](source^).into_base()
+        return Self.Handled[V, H](Self._Errors.or_else(_UnwrapResult[Self, H](handler^), base^))
+
     comptime Base = Self.M
     comptime Log = Self.W
     comptime Element[V: Movable & Deinitable] = _Value[V].Value

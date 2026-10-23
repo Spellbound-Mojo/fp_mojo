@@ -24,12 +24,17 @@ def _compatible[E: Movable & Deinitable, Actual: Movable & Deinitable]() -> Bool
     return True
 
 
+def _absurd[T: Movable & Deinitable](value: Never) -> T:
+    """Eliminate the native uninhabited type without inventing a value."""
+    abort("native Never value is unreachable")
+
+
 def _propagate_error[E: Movable & Deinitable, Actual: Movable & Deinitable](
     var error: Actual
 ) raises E -> Never where _ErrorCompatible[E, Actual]:
     """Move an admitted error unchanged; Never has no reachable error value."""
     comptime if Actual == Never:
-        abort("native errors: unreachable Never error")
+        _absurd[Never](rebind[Never](error))
     else:
         raise rebind_var[E](error^)
 

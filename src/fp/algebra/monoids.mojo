@@ -5,6 +5,7 @@ from .protocols import Monoid
 struct StringMonoid(Monoid):
     """String concatenation, with the empty string as identity."""
     comptime Value = String
+    comptime Error = Never
 
     @staticmethod
     def empty() -> Self.Value:
@@ -37,6 +38,7 @@ struct ListMonoid[T: Movable & Deinitable](Monoid):
         T: The element type.
     """
     comptime Value = List[Self.T]
+    comptime Error = Never
 
     @staticmethod
     def empty() -> Self.Value:

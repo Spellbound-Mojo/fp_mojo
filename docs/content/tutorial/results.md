@@ -34,6 +34,102 @@ case it handles:
 Code that is generic over algebra instances reaches the same methods through
 `map[ResultFamily[E]]`.
 
+## Compose validation and recovery
+
+Use `ensure` to validate a successful value, `flat_tap` to sequence a Result
+computation while retaining that value, and `tap_err` to inspect a failure.
+`recover` turns a stored error into a success without an extra callback that
+wraps `Ok`:
+
+<!-- example: docs/examples/result_combinators.mojo -->
+
+For `4`, the predicate succeeds and `double` produces `8`. `record` prints the
+value and returns `Ok(9)`; `flat_tap` retains `8`. For `-2`, `invalid` constructs
+the error, both success callbacks are skipped, and `log_error` prints the error
+before `fallback` recovers it as `0`.
+
+All these methods consume the Result and execute immediately. The borrowing
+callbacks in `ensure`, `flat_tap`, `flat_pair_with` and `tap_err` leave the
+payload available for the operation to move; move-only payloads work without
+copies. `recover` passes ownership of the error to its callback and returns
+`Result[T, E]`, retaining both declared types. Native callback errors propagate
+unchanged instead of being recovered as stored errors.
+
+When the next step needs no input, use `followed_by(make_next)` to keep its
+result or `before(make_next)` to keep the preceding success. Pass the factory
+itself: it is invoked only on `Ok`. `flat_pair_with(project)` instead keeps
+both the original and projected successes in a tuple. A failure returned by
+any of these callbacks becomes the resulting `Err`.
+
+The same methods are available on `piped(result^)`, together with `map_err`
+and `or_else`; `.get()` extracts the already computed Result. Generic native
+forwarders name raising callback errors with `X=` (`Y=` for the second
+callback). A generic Piped recovery may also need `A=E, R=T` to identify the
+callback's input and output types on Mojo 1.1.
+
+## Recover selected errors
+
+Use `recover_if(predicate, recover)` when only some stored errors have a
+fallback value. Use `or_else_if(predicate, recover)` when recovery can itself
+return an error. Both predicates borrow the error; a matching recovery receives
+ownership of it. A non-matching error passes through unchanged, and `Ok` skips
+both callbacks.
+
+<!-- example: docs/examples/selective_recovery.mojo -->
+
+The `retry` error becomes `42`, the `missing` error becomes `0`, and `fatal`
+remains an error. Each observer runs before its predicate. After recovery
+succeeds, subsequent error callbacks are skipped.
+
+`flat_tap_err` sequences an observer returning `Result[U, E]`. An observer's
+`Ok` discards `U` and retains the original error; an observer's `Err` replaces
+the original error. This lets recording failures participate in the chain.
+All three methods preserve the success and stored error types. In particular,
+`or_else_if` cannot change `E`, because an unmatched error still needs that type.
+Raised errors propagate as native errors, including errors from predicates.
+
+Generic Piped forwarders may need `T=T, Failure=E` to identify the source
+Result and `X=`/`Y=` for native errors. When a generic continuation returns a
+Result, Mojo 1.1 can also require an explicit assertion that its native
+signature's nominal types match the source; follow the
+[generic forwarding conventions](../architecture/native-boundaries.md#generic-code).
+Concrete chains such as the example infer these types.
+
+## Compose either outcome
+
+Use `map_both(on_ok, on_err)` to translate both payload types in one step.
+`redeem(on_ok, on_err)` instead turns either payload into a success value;
+both handlers return the same type, which is wrapped in `Ok`. To continue with
+a computation that returns a Result, use `redeem_with(on_ok, on_err)`. Its
+handlers return the same Result type and may change both the success and
+stored error types.
+
+The argument order matches `fold_owned`: success first, error second. Each
+method consumes the source and runs only the handler for its original branch.
+An `Err` returned by a success handler stays an error; it does not invoke the
+other handler. Native raised errors also propagate unchanged.
+
+<!-- example: docs/examples/result_outcomes.mojo -->
+
+The first input keeps its invoice. The missing invoice receives a default,
+while the fatal error becomes a readable failure message. `redeem` makes all
+three final messages successful Results. Use `fold_owned` when the next step
+needs the unwrapped value instead.
+
+`attempt_tap(audit)` borrows the whole Result once, regardless of its branch.
+An observer's `Ok` discards the observer's payload and retains the original
+outcome; an observer's `Err` replaces it. The observer must keep the stored
+error type, including its origins, because an original error may survive.
+Move-only payloads and consuming library observers need no copies.
+
+Generic `redeem_with` forwarders can pass `U=U, V=V` for the returned Result,
+alongside `X=`/`Y=` for native errors and Piped's `T=T, Failure=E` for the source.
+The native signatures keep Result types structural so their component types
+remain available through precompiled packages. The existing
+[native closure boundaries](../architecture/native-boundaries.md#known-compiler-defects)
+still apply: pass borrowed views in arguments or library callable fields when
+a native closure cannot carry their origins through its captures.
+
 ## Keep raised errors raised
 
 `may_raise` is declared `raises String` and raises for `21`. Calling

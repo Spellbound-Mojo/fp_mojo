@@ -3,6 +3,8 @@ from std.builtin.rebind import rebind_var
 from std.memory import MaybeUninit
 
 
+comptime _OptionalCell[T: Movable & Deinitable]: Movable & Deinitable = Optional[T]
+
 def _take_pair[A: Movable & Deinitable, B: Movable & Deinitable](
     var pair: Tuple[A, B], mut first: MaybeUninit[A], mut second: MaybeUninit[B]
 ):

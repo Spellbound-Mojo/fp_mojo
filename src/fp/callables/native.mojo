@@ -10,6 +10,115 @@ signature, for the fixed-arity pipeline and composition overloads.
 from std.builtin.rebind import downcast, rebind, rebind_var
 from std.builtin.variadics import TypeList
 from .protocols import Thunk, Unary, Binary, BorrowCallable
+from ._receiver import _MutableBorrow
+
+
+comptime _Thunk[R: Movable & Deinitable] = def() -> R
+comptime _RaisingThunk[R: Movable & Deinitable, E: Movable & Deinitable] = def() raises E -> R
+
+
+def _native_thunk[R: Movable & Deinitable, F: _Thunk[R]](function: F) -> R:
+    return function()
+
+
+def _native_raising_thunk[R: Movable & Deinitable, X: Movable & Deinitable, F: _RaisingThunk[R, X]](function: F) raises X -> R:
+    return function()
+
+
+@fieldwise_init
+struct _NativeThunkRef[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin](Thunk, ImplicitlyCopyable):
+    # R/X is the general factory boundary; conditional branches retain their
+    # distinct U/Y and W/D native signature spellings below on Mojo 1.1.
+    var function: Pointer[Self.F, Self.o]
+    comptime Out = Self.R
+    comptime Error = Self.X
+    def call(self) raises Self.Error -> Self.Out:
+        comptime if Self.raising:
+            comptime Fn = downcast[Self.F, _RaisingThunk[Self.R, Self.X]]
+            comptime assert Fn.R == Self.R and Fn.X == Self.X
+            return _native_raising_thunk[Self.R, Self.X, Fn](rebind[Fn](self.function[]))
+        else:
+            comptime assert Self.X == Never
+            comptime Fn = downcast[Self.F, _Thunk[Self.R]]
+            comptime assert Fn.R == Self.R
+            return _native_thunk[Self.R, Fn](rebind[Fn](self.function[]))
+
+
+# Mojo 1.1's native function witnesses retain the generic result/error names.
+# Conditional syntax admits U/Y on the left and W/D on the right. Keep these
+# two native signatures here; receiver dispatch and branch selection are shared.
+@fieldwise_init
+struct _NativeBranchLeft[U: Movable & Deinitable, Y: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin](Thunk, ImplicitlyCopyable):
+    var function: Pointer[Self.F, Self.o]
+    comptime Out = Self.U
+    comptime Error = Self.Y
+    def call(self) raises Self.Y -> Self.U:
+        comptime if Self.raising:
+            comptime Fn = downcast[Self.F, _RaisingThunk[Self.U, Self.Y]]
+            return rebind[Fn](self.function[])[_U=Self.U, _Y=Self.Y]()
+        else:
+            comptime assert Self.Y == Never
+            comptime Fn = downcast[Self.F, _Thunk[Self.U]]
+            return rebind[Fn](self.function[])[_U=Self.U]()
+
+
+@fieldwise_init
+struct _NativeBranchRight[W: Movable & Deinitable, D: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin](Thunk, ImplicitlyCopyable):
+    var function: Pointer[Self.F, Self.o]
+    comptime Out = Self.W
+    comptime Error = Self.D
+    def call(self) raises Self.D -> Self.W:
+        comptime if Self.raising:
+            comptime Fn = downcast[Self.F, _RaisingThunk[Self.W, Self.D]]
+            return rebind[Fn](self.function[])[_W=Self.W, _D=Self.D]()
+        else:
+            comptime assert Self.D == Never
+            comptime Fn = downcast[Self.F, _Thunk[Self.W]]
+            return rebind[Fn](self.function[])[_W=Self.W]()
+
+
+comptime _Binary[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable] = def(var A, var B) -> R
+comptime _RaisingBinary[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable] = def(var A, var B) raises X -> R
+
+
+def _native_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable,
+                   F: _Binary[A, B, R]](function: F, var first: A, var second: B) -> R:
+    return function(first^, second^)
+
+
+def _native_binary_raising[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable,
+                           X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X]](
+    function: F, var first: A, var second: B
+) raises X -> R:
+    return function(first^, second^)
+
+
+def _call_native_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable,
+                        X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](
+    function: F, var first: A, var second: B
+) raises X -> R:
+    comptime if raising:
+        comptime Fn = downcast[F, _RaisingBinary[A, B, R, X]]
+        comptime assert Fn.A == A and Fn.B == B and Fn.R == R and Fn.X == X
+        return _native_binary_raising[A, B, R, X, Fn](rebind[Fn](function), first^, second^)
+    else:
+        comptime assert X == Never
+        comptime Fn = downcast[F, _Binary[A, B, R]]
+        comptime assert Fn.A == A and Fn.B == B and Fn.R == R
+        return _native_binary[A, B, R, Fn](rebind[Fn](function), first^, second^)
+
+
+@fieldwise_init
+struct _NativeBinaryRef[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable,
+                        X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin](Binary, ImplicitlyCopyable):
+    """Borrow the native callback with its captures and origins intact."""
+    comptime First = Self.A
+    comptime Second = Self.B
+    comptime Out = Self.R
+    comptime Error = Self.X
+    var function: Pointer[Self.F, Self.o]
+    def call(self, var first: Self.A, var second: Self.B) raises Self.X -> Self.R:
+        return _call_native_binary[Self.A, Self.B, Self.R, Self.X, Self.F, Self.raising](self.function[], first^, second^)
 
 
 comptime _Unary[A: Movable & Deinitable, R: Movable & Deinitable] = def(var A) -> R
@@ -106,7 +215,8 @@ struct NativeUnary[A: Movable & Deinitable, R: Movable & Deinitable,
 @fieldwise_init
 struct _NativeUnaryRef[A: Movable & Deinitable, R: Movable & Deinitable,
                        E: Movable & Deinitable, F: Movable & Deinitable,
-                       raising: Bool, origin: ImmOrigin](Unary, ImplicitlyCopyable):
+                       raising: Bool, origin: ImmOrigin, admitted: Bool = False,
+                       apply: def(F, var A) raises E thin -> R = _unary_ref_call[A, R, E, F, raising]](Unary, ImplicitlyCopyable):
     # A borrowed native def. Generic forwarding holds a native function by
     # reference and cannot copy it; the call is the same as NativeUnary's.
     var function: Pointer[Self.F, Self.origin]
@@ -114,7 +224,40 @@ struct _NativeUnaryRef[A: Movable & Deinitable, R: Movable & Deinitable,
     comptime Out = Self.R
     comptime Error = Self.E
     def call(self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        return _call_native[Self.A, Self.R, Self.E, Self.F, Self.raising](self.function[], arg^)
+        comptime if Self.admitted:
+            return Self.apply(self.function[], arg^)
+        else:
+            return _call_native[Self.A, Self.R, Self.E, Self.F, Self.raising](self.function[], arg^)
+
+
+def _unary_ref_call[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable,
+                    F: Movable & Deinitable, raising: Bool](function: F, var value: A) raises E -> R:
+    return _call_native[A, R, E, F, raising](function, value^)
+
+
+# Two native callbacks carry different witnesses on Mojo 1.1. These shims
+# preserve their admitted parameter names; the reference view owns storage
+# and receiver dispatch, and the family owns execution and error semantics.
+def _unary_ref_left[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable,
+                    F: Movable & Deinitable, raising: Bool](function: F, var value: A) raises X -> R:
+    comptime if raising:
+        comptime Fn = downcast[F, _RaisingUnary[A, R, X]]
+        return rebind[Fn](function)[_A=A, _R=R, _X=X](value^)
+    else:
+        comptime assert X == Never
+        comptime Fn = downcast[F, _Unary[A, R]]
+        return rebind[Fn](function)[_A=A, _R=R](value^)
+
+
+def _unary_ref_right[Q: Movable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable,
+                     F: Movable & Deinitable, raising: Bool](function: F, var value: Q) raises Y -> S:
+    comptime if raising:
+        comptime Fn = downcast[F, _RaisingUnary[Q, S, Y]]
+        return rebind[Fn](function)[_Q=Q, _S=S, _Y=Y](value^)
+    else:
+        comptime assert Y == Never
+        comptime Fn = downcast[F, _Unary[Q, S]]
+        return rebind[Fn](function)[_Q=Q, _S=S](value^)
 
 
 def as_unary[A: Movable & Deinitable, R: Movable & Deinitable, //,
@@ -147,13 +290,47 @@ def as_unary[A: Movable & Deinitable, R: Movable & Deinitable,
     return NativeUnary[A, R, E, F, True](function^)
 
 
+# Preserve the P: AnyType / R admission spelling when recovering native
+# borrowing conformance, just as owned callbacks preserve A/R above.
 comptime _Borrowing[P: AnyType, R: Movable & Deinitable] = def(P) -> R
 comptime _RaisingBorrowing[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable] = def(P) raises E -> R
 
 
-
 def _native_borrow[P: AnyType, R: Movable & Deinitable, F: _Borrowing[P, R]](function: F, ref payload: P) -> R:
     return function(payload)
+
+
+def _call_lazy_borrow[P: AnyType, R: Movable & Deinitable, F: _Borrowing[P, R]](
+    mut function: F, ref value: P
+) -> R:
+    # Owned native captures need mutable invocation at O3. The eager bridge
+    # borrows a callback in place; lazy iteration owns it between pulls.
+    return function(value)
+
+
+def _call_lazy_thunk[R: Movable & Deinitable, F: _Thunk[R]](mut function: F) -> R:
+    return function()
+
+
+@fieldwise_init
+struct _NativeBorrowMut[P: AnyType, R: Movable & Deinitable, F: Movable & Deinitable, factory: Bool = False](
+    _MutableBorrow, Copyable where conforms_to(F, Copyable)
+):
+    # Lazy pipelines own native captures and invoke them with mutable access.
+    # The shared retention adapter still owns borrowing and payload disposal.
+    var function: Self.F
+    comptime Payload = Self.P
+    comptime Result = Self.R
+    comptime Failure = Never
+    def invoke_mut(mut self, ref payload: Self.P) raises Self.Failure capturing -> Self.R:
+        comptime if Self.factory:
+            comptime Fn = downcast[Self.F, _Thunk[Self.R]]
+            comptime assert Fn.R == Self.R
+            return _call_lazy_thunk[Self.R, Fn](rebind[Fn](self.function))
+        else:
+            comptime Fn = downcast[Self.F, _Borrowing[Self.P, Self.R]]
+            comptime assert Fn.P == Self.P and Fn.R == Self.R
+            return _call_lazy_borrow[Self.P, Self.R, Fn](rebind[Fn](self.function), payload)
 
 
 def _native_raising_borrow[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable,
@@ -172,15 +349,88 @@ struct _NativeBorrow[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitabl
     var function: Self.F
 
     def invoke(self, ref payload: Self.P) raises Self.E capturing -> Self.R:
-        comptime if Self.raising:
-            comptime Fn = downcast[Self.F, _RaisingBorrowing[Self.P, Self.R, Self.E]]
-            comptime assert Fn.P == Self.P and Fn.R == Self.R and Fn.E == Self.E, "native borrow: incompatible signature"
-            return _native_raising_borrow[Self.P, Self.R, Self.E, Fn](rebind[Fn](self.function), payload)
+        return _call_native_borrow[Self.P, Self.R, Self.E, Self.F, Self.raising](self.function, payload)
+
+
+def _call_native_borrow[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable,
+                        F: Movable & Deinitable, raising: Bool](function: F, ref payload: P) raises E -> R:
+    comptime if raising:
+        comptime Fn = downcast[F, _RaisingBorrowing[P, R, E]]
+        comptime assert Fn.P == P and Fn.R == R and Fn.E == E, "native borrow: incompatible signature"
+        return _native_raising_borrow[P, R, E, Fn](rebind[Fn](function), payload)
+    else:
+        comptime assert E == Never
+        comptime Fn = downcast[F, _Borrowing[P, R]]
+        comptime assert Fn.P == P and Fn.R == R, "native borrow: incompatible signature"
+        return _native_borrow[P, R, Fn](rebind[Fn](function), payload)
+
+
+def _borrow_ref_call[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable,
+                     F: Movable & Deinitable, raising: Bool](function: F, payload: P) raises E capturing -> R:
+    return _call_native_borrow[P, R, E, F, raising](function, payload)
+
+
+def _borrow_ref_call_x[P: AnyType, R: Movable & Deinitable, X: Movable & Deinitable,
+                       F: Movable & Deinitable, raising: Bool](function: F, payload: P) raises X capturing -> R:
+    # Sequencing's established native boundary names the error X. Rebuilding
+    # that witness as E loses generic callback conformance on Mojo 1.1.
+    # Only the native invocation differs; the borrowed receiver is shared.
+    comptime if raising:
+        comptime Fn = downcast[F, _RaisingBorrowing[P, R, X]]
+        return rebind[Fn](function)[_P=P, _R=R, _X=X](payload)
+    else:
+        comptime assert X == Never
+        comptime Fn = downcast[F, _Borrowing[P, R]]
+        return rebind[Fn](function)[_P=P, _R=R](payload)
+
+
+def _borrow_predicate_call[P: AnyType, S: Movable & Deinitable, X: Movable & Deinitable,
+                           F: Movable & Deinitable, raising: Bool](function: F, payload: P) raises X capturing -> S:
+    # Two-callback error syntax reserves A/R/E for its owned handler. Mojo 1.1
+    # needs this predicate's P/S/X witness at the native call boundary; storage,
+    # receiver dispatch and error propagation remain in _NativeBorrowRef.
+    comptime if raising:
+        comptime Fn = downcast[F, _RaisingBorrowing[P, S, X]]
+        return rebind[Fn](function)[_P=P, _S=S, _X=X](payload)
+    else:
+        comptime assert X == Never
+        comptime Fn = downcast[F, _Borrowing[P, S]]
+        return rebind[Fn](function)[_P=P, _S=S](payload)
+
+
+def _borrow_factory_call[Q: AnyType, S: Movable & Deinitable, Y: Movable & Deinitable,
+                         F: Movable & Deinitable, raising: Bool](function: F, payload: Q) raises Y capturing -> S:
+    # The second borrowing callback retains its Q/S/Y admission witness.
+    comptime if raising:
+        comptime Fn = downcast[F, _RaisingBorrowing[Q, S, Y]]
+        return rebind[Fn](function)[_Q=Q, _S=S, _Y=Y](payload)
+    else:
+        comptime assert Y == Never
+        comptime Fn = downcast[F, _Borrowing[Q, S]]
+        return rebind[Fn](function)[_Q=Q, _S=S](payload)
+
+
+@fieldwise_init
+struct _NativeBorrowRef[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable,
+                        F: Movable & Deinitable, raising: Bool, o: ImmOrigin,
+                        admitted: Bool = False,
+                        apply: def(F, P) raises E capturing -> R = _borrow_ref_call[P, R, E, F, raising]](BorrowCallable, ImplicitlyCopyable):
+    """Borrow a native callback without copying its captures; invocation is shared."""
+    comptime Payload = Self.P
+    comptime Result = Self.R
+    comptime Failure = Self.E
+    var function: Pointer[Self.F, Self.o]
+    def invoke(self, ref payload: Self.P) raises Self.E capturing -> Self.R:
+        # Multiple native callbacks at one boundary may use different generic
+        # parameter names. Such boundaries supply their admitted call directly,
+        # instead of asking Mojo 1.1 to rediscover the native witness later.
+        comptime if Self.admitted:
+            return Self.apply(self.function[], payload)
         else:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[Self.F, _Borrowing[Self.P, Self.R]]
-            comptime assert Fn.P == Self.P and Fn.R == Self.R, "native borrow: incompatible signature"
-            return _native_borrow[Self.P, Self.R, Fn](rebind[Fn](self.function), payload)
+            # Keep the established path direct. Routing it through an extra
+            # function-valued generic parameter corrupts Bool predicates at O0
+            # on Mojo 1.1 (covered by docs/examples/combinators.mojo).
+            return _call_native_borrow[Self.P, Self.R, Self.E, Self.F, Self.raising](self.function[], payload)
 
 
 # A plain function whose parameter, result or error types are still symbolic at

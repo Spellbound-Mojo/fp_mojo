@@ -1,0 +1,12 @@
+# error: repeatable
+from fp.functions import piped
+from fp.algebra import OptionalFamily, ListFamily
+from fp.callables import BorrowOnceCallable
+@fieldwise_init
+struct TXRejectedOnce(BorrowOnceCallable):
+    comptime Payload = Int
+    comptime Result = Optional[Bool]
+    def invoke_once(deinit self, ref value: Int) raises Never capturing -> Optional[Bool]: return Optional(True)
+def main():
+    var xs: List[Int] = [1, 2]
+    _ = piped(xs^).filter_effect[OptionalFamily](TXRejectedOnce())

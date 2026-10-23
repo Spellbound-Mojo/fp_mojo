@@ -1,5 +1,5 @@
 # error: no matching method in call to 'then'
-# error: expected 'identical(F.T, T)'
+# error: expected 'identical(F.Value, Value)'
 from fp.functions import piped
 
 def twice(value: Int) -> Int:

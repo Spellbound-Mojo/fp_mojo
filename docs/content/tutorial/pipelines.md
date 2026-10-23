@@ -43,6 +43,28 @@ How many stages a call takes depends on the form:
   same stages one call at a time, with no limit on their number. See
   [chained pipelines](../reference/functions.md#piped).
 
+## Use combinators for collection stages
+
+Use `.filter(predicate)`, `.filter_not(predicate)`, `.map(transform)` and
+`.sum_by(project)` on `piped` and `iterated` chains. For direct calls, import the corresponding
+functions from `fp.combinators`; they are the same functions as in
+`fp.iteration`.
+
+<!-- example: docs/examples/combinators.mojo -->
+
+The filter retains `3`, `4` and `5`. On the eager path, `.filter(positive)`
+returns a list immediately, then `.sum_by(square)` squares and adds its elements
+in one pass without constructing a list of squares. The lazy path keeps an
+iterator through filtering, then consumes it in the reduction.
+`filter_not(positive)` retains the two negative values instead. Both chains compute
+`9 + 16 + 25 = 50`, without pipeline lambdas or intermediate type aliases.
+
+`Piped.map` preserves supported containers: mapping an `Array[Int, 3]` to
+strings produces `Array[String, 3]`. `Piped.sum_by` keeps the total
+in the chain, so `.then(report)` can format it. `Iter.sum_by` returns the
+total directly. `.get()` extracts a `Piped` value; it does not trigger
+evaluation. See [fp.combinators](../reference/combinators.md) for the contracts.
+
 ## Stop at the first failure
 
 Stages run left to right, once each. When a stage raises, the pipeline stops and

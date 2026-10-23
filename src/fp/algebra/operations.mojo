@@ -6,10 +6,18 @@ instance; generic code that forwards a raising native callback names its error
 type with `X=`.
 """
 from std.builtin.rebind import rebind_var, downcast
+from fp.callables._views import _UnaryViewable
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract
 from fp.callables.native import _NativeUnaryRef, _Unary, _RaisingUnary
 from fp._internal.errors import _ErrorCompatible, _propagate_error
-from .protocols import Functor, Applicative, Monad, Traversable, Monoid
+from .protocols import Functor, Applicative, Monad, Traversable, Monoid, Semigroup
+
+
+def map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Functor](
+    ref[o] f: F, var value: V
+) raises I.MapError[V, F._View[o]] -> I.Mapped[V, F._View[o]] where I.Element[V] == F._View[o].Arg:
+    """Borrow an origin-dependent callable through its internal shared view."""
+    return map[I](f._unary_view(), value^)
 
 
 def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Functor](var f: F, var value: V
@@ -86,6 +94,13 @@ def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable,
     return I.map2_lazy(f^, left^, right^)
 
 
+def flat_map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Monad](
+    ref[o] f: F, var value: V
+) raises I.BindError[V, F._View[o]] -> I.Bound[V, F._View[o]] where I.Element[V] == F._View[o].Arg:
+    """Borrow an origin-dependent callable through its internal shared view."""
+    return flat_map[I](f._unary_view(), value^)
+
+
 def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Monad](var f: F, var value: V
 ) raises I.BindError[V, F] -> I.Bound[V, F]:
     """Let `f` choose the next carrier of the same family from the payload of `value`: the `Monad` operation.
@@ -117,6 +132,13 @@ def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, /
         `I.BindError[V, F]`: the callback's error, unchanged.
     """
     return I.flat_map(f^, value^)
+
+
+def traverse[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, S: Traversable, G: Applicative](
+    ref[o] f: F, var source: V
+) raises S.TraverseError[G, V, F._View[o]] -> S.Traversed[G, V, F._View[o]] where S.Element[V] == F._View[o].Arg:
+    """Borrow an origin-dependent callable through its internal shared view."""
+    return traverse[S, G](f._unary_view(), source^)
 
 
 def traverse[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, S: Traversable, G: Applicative](
@@ -164,11 +186,11 @@ def empty[M: Monoid]() raises M.Error -> M.Value:
     return M.empty()
 
 
-def combine[M: Monoid](var left: M.Value, var right: M.Value) raises M.Error -> M.Value:
-    """Combine two values with the monoid's associative, ordered combination.
+def combine[M: Semigroup](var left: M.Value, var right: M.Value) raises M.Error -> M.Value:
+    """Combine two values with an associative, ordered Semigroup.
 
     Parameters:
-        M: The monoid.
+        M: The Semigroup or Monoid.
 
     Args:
         left: The first value, consumed.
@@ -211,14 +233,7 @@ def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitabl
         I: Functor, F: _Unary[A, R]](ref[o] f: F, var value: V
 ) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A:
     """Apply a native function or closure to each element of `value`."""
-    comptime D = _NativeUnaryRef[A, R, Never, F, False, o]
-    comptime Raised = I.MapError[V, _ErrorProbe[A, R, Never]]
-    comptime assert I.MapError[V, D] == Raised
-    try:
-        return I.map(D(Pointer(to=f)), value^)
-    except error:
-        comptime assert _ErrorCompatible[Raised, type_of(error)]
-        _propagate_error[Raised](error^)
+    return _map_native[V, A, R, Never, I, F, False, o](f, value^)
 
 
 def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //,
@@ -226,8 +241,19 @@ def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitabl
 ) raises _EntryError[X, I.MapError[V, _ErrorProbe[A, R, E]]] -> I.Mapped[V, _NativeUnaryRef[A, R, E, F, True, o]] where (
         I.Element[V] == A and (X == _InferError or X == E)):
     """Apply a raising native callback; its error type is kept."""
-    comptime D = _NativeUnaryRef[A, R, E, F, True, o]
-    comptime Raised = _EntryError[X, I.MapError[V, _ErrorProbe[A, R, E]]]
+    return _map_native[V, A, R, E, I, F, True, o,
+        _EntryError[X, I.MapError[V, _ErrorProbe[A, R, E]]]](f, value^)
+
+
+def _map_native[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable,
+                E: Movable & Deinitable, I: Functor, F: Movable & Deinitable, raising: Bool,
+                o: ImmOrigin, Raised: Movable & Deinitable = I.MapError[V, _ErrorProbe[A, R, E]]](
+    ref[o] f: F, var value: V
+) raises Raised -> I.Mapped[V, _NativeUnaryRef[A, R, E, F, raising, o]]:
+    # Native admission belongs to the public signatures. This shared bridge
+    # also serves Piped, whose forwarded F.A/F.R/F.E evidence Mojo 1.1 cannot
+    # equate with A/R/E inside a generic family's associated error alias.
+    comptime D = _NativeUnaryRef[A, R, E, F, raising, o]
     comptime assert I.MapError[V, D] == I.MapError[V, _ErrorProbe[A, R, E]]
     try:
         return I.map(D(Pointer(to=f)), value^)

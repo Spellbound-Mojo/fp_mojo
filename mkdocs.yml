@@ -76,6 +76,7 @@ nav:
   - API reference:
       - How to read the reference: reference/index.md
       - fp.callables: reference/callables.md
+      - fp.combinators: reference/combinators.md
       - fp.functions: reference/functions.md
       - fp.iteration: reference/iteration.md
       - fp.control: reference/control-flow.md

@@ -201,3 +201,307 @@ native support. Pack concatenation or a public pack constructor would remove
 the argument cap and allow nested partials to be flattened. Correct owned-pack
 conversion would allow owned remaining parameters, and heterogeneous keyword
 packs forwarded into named parameters would allow keyword binding.
+
+## Pipeline combinators
+
+`Piped` and `Iter` expose `map`, `filter` and `fold_left`. `Iter` forwards to
+the canonical iterator operations; `fp.combinators` re-exports those functions
+for direct calls. Piped delegates mapping and filtering to algebra families;
+its fold uses iteration. There are no
+operation objects, runtime registries or dispatch tokens.
+
+### Container-preserving map
+
+`Piped.map(f)` infers these native containers from its receiver:
+
+| Input | Output | Retained context |
+|---|---|---|
+| `List[A]` | `List[B]` | Element order |
+| `Array[A, N]` | `Array[B, N]` | Length and order |
+| `Deque[A]` | `Deque[B]` | Order, maximum length, capacity and shrink settings |
+| `LinkedList[A]` | `LinkedList[B]` | Element order |
+| `Dict[K, A, H]` | `Dict[K, B, H]` | Keys, insertion order and hasher |
+| `StringDict[A]` | `StringDict[B]` | String keys and native hasher |
+| `Optional[A]` | `Optional[B]` | Presence or absence |
+| `Result[A, E]` | `Result[B, E]` | The stored error, unchanged |
+
+Built-in maps run during the method call, consume their container and move
+payloads into the callback in native order. Native callbacks are borrowed;
+library callback values are consumed. Collections require repeatable callbacks;
+Optional and Result also accept consuming callbacks. Empty containers and
+absent or failed carriers skip calls. A raised error stops mapping, retains its
+exact type and destroys the unconsumed source and partial output. `StopIteration`
+raised by a callback is an error, not source exhaustion. Result errors remain data.
+
+The adapters live in `src/fp/algebra/collections.mojo`, separate from pipeline
+syntax. Existing List, Optional and Result instances remain their canonical
+owners. Identity traversal and collection construction share `_map_accumulate`
+and its existing `_Accumulate` rules; native callback adaptation is shared by
+algebra operations and Piped through `_map_native`.
+
+Mojo's native receiver constraints infer array lengths, key types and hashers.
+Dict and StringDict do not expose their value parameter through a trait, so
+private adapters specialize on the payload type inferred at that boundary.
+They are implementation dictionaries, not public element-fixed Functor families.
+No reflection into native storage layouts is used for type inference.
+
+Array mapping buffers through native lists. The pinned Mojo 1.1 owning Array
+iterator destroys source elements when moved, so using it would violate
+ownership for non-trivial elements. Native `Array.deinit_with` safely transfers
+inputs to a list; ListFamily maps them; the native Array constructor consumes
+the results. This costs O(N) temporary heap storage in addition to the returned
+array. Drop-count tests cover success and partial failure. Deque's private
+settings and StringDict's native Dict field are isolated compatibility boundaries:
+Mojo 1.1 exposes no public accessors or equivalent owning value transform.
+
+For custom containers, `.map[I](f)` uses the public `Functor` instance `I`.
+Its associated output and error types and its evaluation behavior are preserved;
+a deferred family may retain the native callback borrow. Use `as_unary(f^)` to
+transfer an owned callback into such a result. Generic code forwarding a native
+callback uses an explicit family; raising forwarding also names `E=E`. This
+avoids Mojo 1.1's inability to prove the inferred container equality through a
+generic native callback. Concrete calls retain `.map(f)`.
+
+There is no automatic map for Set, BinaryHeap, OptionalReg or Counter: arbitrary
+output types do not preserve their element constraints or collision semantics.
+Span, tuples, strings, ranges and iterators also need a different contract.
+An explicit family can supply one; otherwise choose lazy `iterated` mapping.
+
+### Container-preserving filter
+
+`Piped.filter(predicate)` runs immediately for List, Deque, LinkedList, Dict,
+StringDict and Optional, returning the same concrete container type. The
+predicate borrows each candidate once in native order and returns Bool.
+Accepted values move unchanged; rejected values are destroyed before the next
+candidate is tested. Dictionaries test values and retain accepted keys,
+insertion order and hasher. Deques retain their bound and storage policy.
+Empty inputs skip calls, and no matches produces an empty carrier.
+
+Native callbacks are borrowed for the operation. Library BorrowCallable values
+are consumed. A predicate cannot consume or mutate its input. Raised errors
+retain their exact types, stop further calls, and destroy the remaining input
+and partial output. Callback StopIteration remains a failure. Payload origins
+are checked at admission and preserved in the result. Filtering takes O(n)
+predicate calls and up to O(n) output storage, or O(1) for Optional; it need
+not preserve a list's allocated capacity.
+
+The public `Filterable` contract is independent of Functor. Native families
+implement both where appropriate; ListFamily and OptionalFamily own their
+selection methods. `.filter[I](predicate)` and `fp.algebra.filter[I]` use the
+same family, including third-party and deferred carriers. A deferred result
+may change concrete type and retain a native callback's borrow. An owned
+BorrowCallable transfers its state into that result. Generic native forwarding
+uses an explicit family; raising forwarding also names `E=E`.
+
+`algebra.filtering` owns the selection rule: a borrowed predicate turns an
+owned payload into a present or absent Optional, and `_Keep` forwards accepted
+payloads to the existing accumulator. `_map_accumulate` remains the one traversal
+loop; collection construction and insertion in `algebra.collections` are shared
+with map. Dictionary filtering projects entries onto their values and reinserts
+accepted entries through the same insertion rule. Native borrowing callback
+invocation has one owner in `callables.native`.
+
+Array cannot express arbitrary removal while keeping its fixed length. Result
+needs an explicit rejection error. They support map but have no automatic
+filter. Set, heaps, Counter, OptionalReg, tuples, strings, ranges, spans and
+iterators also have no automatic pipeline filter in this version; choose an
+explicit family or lazy iteration. Nothing silently becomes a List.
+
+### Evaluation and migration
+
+`Piped.get()` only extracts its stored value. Built-in container mapping and
+filtering have already run; explicit families retain their evaluation semantics.
+`Iter.map` and `Iter.filter` construct lazy iterators and require non-raising
+callbacks. Folds consume their sources immediately; Piped wraps the accumulator
+and Iter returns it directly.
+
+Replace the previous lazy `piped(source).map(f).get()` with
+`iterated(source).map(f)` when you need deferred iteration. For eager mapping,
+pass a supported container to Piped. Similarly, replace a lazy
+`piped(source).filter(p).get()` with `iterated(source).filter(p)`. Eager
+`piped(values^).filter(p).map(f)` needs no intermediate collection call.
+Direct `fp.combinators.map` and `filter` retain their lazy semantics.
+
+### Ordinary functions and fluent syntax
+
+The public surface consists of ordinary functions and named forwarding methods.
+The compiler infers the intermediate iterator types at each method call;
+`then(function)` remains a whole-value transformation. A new iterator operation
+can add fluent methods while reusing its canonical implementation, without
+introducing a token type and token-specific `then` signatures.
+
+The operation-token prototype supported `.then(map, function)` to work around
+Mojo 1.1's rejection of overloaded generic functions as runtime stage arguments.
+Making the tokens callable also worked, but added another set of signatures and
+a dependency from iterator chains back to the operation package. Named methods
+preserve lambda-free pipelines with fewer layers. The native functions in
+`fp.iteration` retain their signatures and ownership contracts.
+
+Migrate prototype calls as follows:
+
+| Prototype spelling | Current spelling |
+|---|---|
+| `.then(map, function)` | `.map(function)` |
+| `.then(filter, predicate)` | `.filter(predicate)` |
+| `.then(fold_left, step, initial)` | `.fold_left(step, initial)` |
+| `.then[E=E](fold_left, step, initial)` | `.fold_left[E=E](step, initial)` |
+
+`MapOperation`, `FilterOperation` and `FoldLeftOperation` are removed. The names
+`map`, `filter` and `fold_left` in `fp.combinators` now refer to ordinary
+functions. The experimental `.then(function, arguments...)` overloads are also
+removed; `then` accepts one callable receiving the whole value. Bind arguments
+in a named helper or native closure, or use `partial` when its copying and
+borrowing contract fits.
+
+A future stream keeps its own advancement and error contract through an
+explicit Functor family. Iterator syntax does not introduce a second algebra
+protocol.
+
+### Derived combinators
+
+`Piped[Value]` remains a general value wrapper. Families belong to individual
+collection operations; `.then()` can change an ordinary struct into a container
+and later into a scalar without carrying or resetting a family parameter.
+Arbitrary structs do not acquire collection semantics. Generic code selects a
+family explicitly when native container inference is unavailable.
+
+Derived combinators reuse the existing capabilities. `filter_not` adapts a
+borrowing predicate and delegates to `Filterable.filter`, so a family gains it
+without implementing another traversal. `callables._predicates` owns predicate
+inversion; `algebra.filtering` selects the predicate adapter and invokes the
+family once, retaining its associated result and error types. Filterable stays
+independent of Functor. `FunctorFilter` adds a separate `filter_map` primitive
+that can change payload type and discard absent Optional results; `compact`
+passes identity to it. The built-in filtering implementations also delegate
+through this selection path with `_Select`, while custom Filterable families
+remain independent and need no migration.
+
+`callables._transforms` owns constant mapping, equality replacement, tuple
+construction and borrowed observation. Both Piped and Iter reuse these rules.
+The observation adapters borrow the payload, then move it unchanged or pair it
+with the result. Native lazy observation uses a MutableUnary adapter so that
+owned capture updates survive O3; the existing map iterator admits that private
+adapter through the canonical repeatable-callable invocation path. The public
+lazy map callback contract remains unchanged.
+
+Terminal rules live in `iteration.reductions`. `fold_map` supplies monoidal
+accumulation to `_map_accumulate`; `find_map` uses an Optional accumulator that
+stops being live after its first present result. Extrema accumulate a value and
+its computed key, replacing it only on a strict improvement. These operations
+reuse the existing pull, error and cleanup loop. Sum uses private native Int and
+SIMD monoids; vector widths use Mojo's SIMDLength parameter, preserving native
+inference without a numeric type registry.
+
+Native dictionary terminals share one extraction boundary in
+`algebra.collections`. An internal terminal object exposes a generic `run`
+method, letting that boundary call it while the dictionary's borrowed entry
+iterator is still alive. This preserves the view's native origin and consumes
+values without allocating a second collection. StringDict delegates through
+its Dict storage. Array terminals share the mapping workaround's `_take_array`
+helper and therefore buffer O(N) moved elements before the terminal runs.
+
+Fluent `flat_map`, `flatten`, `traverse` and `sequence` delegate to the existing
+Monad and Traversable operations. Iter traversal is a terminal into the target
+Applicative's carrier of a List. There is no new implementation of effect
+sequencing or short-circuit behavior.
+
+Native forwarding signatures come from `scripts/generate_pipeline_syntax.py`.
+One carrier table describes type shapes, family adapters, extra parameters and
+supported capabilities. Operation templates produce Piped's native container
+methods; `scripts/generate_combinator_syntax.py` shares terminal signatures
+between direct calls and both chain forms. Run `python scripts/generate_plain_overloads.py`
+to regenerate them, or add `--check` to detect drift. The generated methods
+check receiver type and origins, recover the native type and delegate; they
+contain no traversal, callback invocation or collection construction. Explicit
+family methods handle custom containers, including deferred results.
+
+Adding a supported native carrier requires its primitive capability adapters
+and one table entry. Adding a derived operation requires its shared semantics
+and forwarding templates, independent of the carrier count. This removes
+manual signature repetition; generated source and overload resolution still
+grow with containers times operations. Compilation cost has not been
+benchmarked. The generator follows the repository's existing approach to
+native plain-function signatures.
+
+Iterator filtering uses the same Boolean decision rule and the existing
+private filter iterator, with a compile-time polarity parameter.
+`FilterNotIterator` names that specialization without adding storage. Native
+lazy callbacks remain owned and invoked through mutable access; eager native
+callbacks remain borrowed in place. A read-only adapter around an owned mutable
+native callback loses capture updates at O3 on pinned Mojo 1.1, so the lazy
+boundary applies the decision after the existing invocation helper. The
+iterator loop, fusion, ownership and cleanup remain shared with filter.
+
+This separation follows Cats' generic capability operations and
+[fluent syntax](https://github.com/typelevel/cats/blob/main/core/src/main/scala/cats/syntax/functorFilter.scala).
+Cats derives
+[`filterNot` in `FunctorFilter`](https://github.com/typelevel/cats/blob/main/core/src/main/scala/cats/FunctorFilter.scala).
+The tested Mojo 1.1 generic forwarding and overloaded family-selection
+encodings could not recover native container parameters. A combined constraint
+also failed to infer a Dict's key and non-default hasher. Generated native
+signatures preserve direct chaining without adding a family parameter to every
+pipeline or an extra family-view step.
+
+### Piped type parameter migration
+
+The type parameter is now `Value`, the whole pipeline payload. Change explicit
+`Piped[T=Int]` bindings to `Piped[Value=Int]` and `Piped[Int].T` references to
+`Piped[Int].Value`. Positional `Piped[Int]`, inferred `piped(value)` and explicit
+`piped[T=Int](value)` calls keep their existing spelling; the factory has its own
+parameter named `T`.
+
+The rename leaves `T` available for a mapping method's element type. Captured
+callbacks, including callbacks returning borrowed views, passed when method
+signatures used the canonical `T` and `U` names; substituting `A` for `T` failed
+during lazy callback admission on Mojo 1.1. Giving the struct and its method
+the same parameter name is rejected as a redefinition. The rename preserves
+the wrapper's single stored value and its ownership and error contracts.
+
+## Kleisli composition
+
+`kleisli[I](f)` owns a function from an owned input to an `I` carrier.
+`then(g)` adapts `g` to a carrier-level stage through `I.flat_map`; `map(g)`
+uses `I.map`. `compose` prepends a bind stage and `contramap` prepends an
+ordinary stage. These adapters feed the existing `Composition` engine and its
+stage planner. Families retain their canonical execution, branching, cleanup
+and error rules. Error adaptation shared with Reader and State lives in
+`algebra._adapt`. Retained mutable callback views share the callable-layer
+implementation already used by algebra and transformer effects.
+
+The stored program describes three callable representations: owned callbacks,
+shared receiver references, and mutable receiver references. Each representation
+is composed by the same engine. The associated output and native error types
+can depend on the receiver origin: a deferred family may retain its callback.
+`call_once` implements `OnceUnary`; the origin-dependent `call` and `call_mut`
+methods cannot themselves satisfy a protocol with one fixed `Out` type.
+
+The private callable view protocol binds that origin when a callback enters
+`map`, `flat_map` or traversal. The resulting pointer view implements ordinary
+`Unary`, so existing operations own and invoke it. Callers write `.map(chain)`;
+the adapter allocates no heap storage and copies no callback state. Eager
+operations release the view on return unless an output retains it. Lazy
+iterators and deferred outputs keep its native origin. Native container
+signatures recover their payload types at admission and then delegate to the
+same family operations. The generator owns these signatures across containers.
+
+Shared references use the whole chain origin. Mutable representations need
+disjoint origins for the program's left and right callbacks. Mojo 1.1's public
+origin API has no field-projection constructor, so the representation names four
+native `#lit.origin.field` projections for the stored fields. Safe
+`Pointer(to=field)` construction checks each projection against the actual
+field; no origin cast or untracked reference is used. A generic composition
+boundary separates the two callback types before deriving their effect-stage
+types, avoiding a spurious alias through an input type's embedded origin.
+These are pinned native-signature boundaries, confined to the representation.
+
+Native borrow rules govern retained references. They reject moving a
+noncopyable chain while a result still uses it and reject simultaneous aliased
+mutable arguments. Merely holding two deferred references need not be an error;
+sequential use follows Mojo's own access rules. The library adds no separate
+borrow checker. Result carrier identity is checked at signature admission by
+`algebra._admission`, also used by traversal and conditional operations, because
+late body assertions alone can lose stored-error origin distinctions.
+
+ReaderT and Kleisli share family primitives but keep different inputs: ReaderT
+borrows its environment, while this Kleisli consumes the value passed to each
+call. Their distinct native ownership contracts remain explicit.

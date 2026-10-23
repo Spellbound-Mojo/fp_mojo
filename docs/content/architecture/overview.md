@@ -21,12 +21,13 @@ write `fp.match(...)`.
 | Package | Responsibility | Modules |
 |---|---|---|
 | `fp.callables` | Fixed-arity callable protocols, borrowed endpoints, receiver dispatch and native functions as library values (`as_unary`) | `protocols`, `invoke`, `native`, `products`, `_receiver` |
+| `fp.combinators` | Direct exports of the iterator operations shared with fluent pipelines | Re-exports from `iteration.adapters` and `iteration.folds` |
 | `fp.functions` | Eager pipelines, function composition, argument flipping and partial application | `pipeline`, `_stages`, `composition`, `flipped`, `partial` |
 | `fp.iteration` | Lazy adapters, scans, folds, reductions and predicate terminals over native iterators and owned collections | `adapters`, `folds`, `_terminal`, `_advance`, `_callbacks` |
 | `fp.control` | Functional `while_loop`, `fori_loop` and carry/output `scan` | `loops`, `scan`, `_loops` |
 | `fp.adt` | Algebraic and inductive data types: shared `Node`s and `Choice`s stored in place (`Data`, `Cases`, `Node`, `Choice`) | `data` |
 | `fp.data` | `Result`, `ControlFlow` and native-error bridges | `_result`, `result`, `control` |
-| `fp.algebra` | Functor, Applicative, Monad, Traversable and Monoid interfaces with native instances | `protocols`, `operations`, `instances`, `_derived`, `monoids` |
+| `fp.algebra` | Functor, Filterable, Applicative, Monad, Traversable and Monoid interfaces with native instances | `protocols`, `operations`, `filtering`, `instances`, `collections`, `_derived`, `monoids` |
 | `fp.effects` | Reader, State and Writer computations and the OptionalT, ResultT, ReaderT, StateT and WriterT transformers | `protocols`, `reader`, `state`, `writer`, `layers`, `operations`, `_adapt` |
 | `fp.matching` | `match` over data values, `Optional` and tuples, `rewrite` over `Node` values, `when` guards and `Next` | `matcher`, `clauses`, `_engine`, `_inline` |
 
@@ -49,13 +50,16 @@ Layer  Modules                         Builds on
   1    fp._internal                    Mojo
        fp.adt (Data, Node, Choice)     Mojo
   2    fp.callables                    _internal
-  3    fp.functions                    callables
+  3    functions (composition, etc.)   callables
        fp.data (Result, ControlFlow)   callables, adt
        fp.matching                     adt, _internal
   4    fp.iteration                    callables, data.control
-  5    fp.control                      iteration, adt
+       iteration.chaining              iteration adapters and folds
+  5    fp.combinators                  iteration adapters and folds
+       fp.control                      iteration, adt
        fp.algebra                      data, functions (Identity), iteration
-  6    fp.effects                      algebra, data
+  6    functions.pipeline              callables, iteration, algebra
+       fp.effects                      algebra, data
        data.result (integration)       algebra (collect_results)
 ```
 
@@ -89,6 +93,8 @@ Higher packages compose that implementation and add only their own behavior.
 | Sequential consuming terminal loop | `iteration._terminal` with `data.ControlFlow` and `iteration._advance` | Folds, reductions, `collect_list`, `find`, `any`, `all` |
 | Iteration sources (an iterator as it is, or a consumed owned collection) | `iteration._advance` (`_Source`, `_source`) | Every public iteration entry point, and `flatten` for inner values |
 | Native functions as library values | `callables.native` (`NativeUnary` through `as_unary`, `_NativeUnaryRef`, `_ThinFunction`, `_NativeBorrow`, one native call in `_call_native`) | Pipelines and compositions, algebra and effect callbacks, Result methods |
+| Eager payload traversal and accumulation | `algebra.protocols._map_accumulate` and `_Accumulate` | Identity traversal, List mapping, native collection adapters |
+| Native container mapping | Existing algebra instances and `algebra.collections` | `Piped.map`; explicit families retain their own semantics |
 | Result transformations | `data._result` (`_transform_result_owned` and the four methods) | `ResultFamily.map` and `flat_map`, generic Result code |
 | Algebra operations and their result types | `algebra.protocols` (static methods and associated aliases) | Native and third-party instances, transformers |
 | Runtime-sized owned traversal | `algebra.protocols._loop` with an accumulation policy (`_Accumulate`) | `collect`; one loop per family; OptionalT, ResultT and WriterT wrap the policy and delegate to their base |

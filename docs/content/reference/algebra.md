@@ -1,6 +1,6 @@
 # fp.algebra
 
-`fp.algebra` provides Functor, Applicative, Monad, Traversable and Monoid
+`fp.algebra` provides Functor, Filterable, FunctorFilter, Applicative, ApplicativeError, Monad, Traversable, Semigroup and Monoid
 interfaces. Their instances let you write generic operations over native values
 such as `Optional`, `Result` and `List`; select the instance at each call. When
 working with a single known type, you can also use its methods directly, such
@@ -8,6 +8,39 @@ as `Result.map`.
 
 The [algebra tutorial](../tutorial/algebra.md) explains when to use `map`,
 `map2`, `ap`, `flat_map`, `traverse` and `sequence` through optional order values.
+
+`filter[ListFamily](predicate, values^)` and
+`filter[OptionalFamily](predicate, value^)` retain accepted original payloads.
+`filter_not[Family](predicate, value^)` retains rejected payloads through the
+same Filterable primitive. The predicate borrows each payload, returns Bool, and may raise a typed error.
+The independent `Filterable` interface lets custom containers define selection;
+`piped(value).filter[Family](predicate)` uses the same instance. See
+[container filtering](../architecture/functions.md#container-preserving-filter).
+
+`filter_map[Family](transform, values^)` uses `FunctorFilter` to transform
+payloads and retain present Optional results. `compact[Family](values^)`
+derives from this primitive with the identity callback. This capability can
+change payload types; it is separate from `Filterable`, which retains original
+payloads. ListFamily and OptionalFamily implement both. The fluent native
+container adapters also support Deque, LinkedList, Dict values and StringDict
+values, as described in [fp.combinators](combinators.md).
+
+`Semigroup` supplies associative `combine`, its value type and its native
+error type. `Monoid` extends it with `empty`; existing monoids remain valid
+error combiners. `ValidationFamily[ErrorCombiner]` gives native Result an
+accumulating Applicative: independent failures combine in order. Its carrier
+is still `Result[A, ErrorCombiner.Value]`. See
+[parallel validation](combinators.md#accumulate-independent-validation-errors)
+for fluent syntax and [the design](../architecture/algebra.md#accumulating-result-validation)
+for the shared execution rules.
+
+`ApplicativeError` adds a selected stored-error channel. Use
+`fail[Family, A](error)` to construct a failure, and Piped's explicit-family
+`recover` or `or_else` to handle it. ResultFamily, ValidationFamily and ResultT
+provide instances; the remaining transformers lift the capability from their
+base Monad, with copyable state required for StateT recovery. Native raised
+errors stay separate. See
+[selected-layer recovery](combinators.md#recover-a-selected-error-layer).
 
 <!-- api: algebra -->
 

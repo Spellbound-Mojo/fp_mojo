@@ -9,8 +9,8 @@ from ._stages import (_Plan, _Arity, _StageIn, _Classify, _SharedCapability, _Mu
 from .pipeline import _PipelineRunner, _pipe_at
 from fp.callables.native import _Thin0F, _Thin1F, _Thin2F
 
+from fp.callables.products import _OptionalCell as _Cell
 
-comptime _Cell[T: Movable & Deinitable]: Movable & Deinitable = Optional[T]
 
 comptime _AllShared[Fs: TypeList[Trait=Movable & Deinitable, ...]] = Fs.map[_Classify]().all_conforms_to[_SharedCapability]()
 comptime _AllMutable[Fs: TypeList[Trait=Movable & Deinitable, ...]] = Fs.map[_Classify]().all_conforms_to[_MutableCapability]()

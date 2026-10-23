@@ -8,13 +8,17 @@ forward to them. Callbacks use the fixed-arity protocols of `fp.callables`.
 from std.builtin.rebind import rebind_var, downcast
 from std.iter import IterableOwned, Iterator
 from std.builtin.rebind import rebind
+# Algebra's retained receiver view shares the callable dispatch used by
+# Kleisli. Existing consumers retain their private import name.
+from fp.callables._receiver import _MutableUnaryRef as _UnaryView
 from fp.callables.protocols import (UnaryContract, BinaryContract, ThunkContract,
-                                    Unary, Binary, OnceUnary, MutableUnary, OnceThunk)
+                                    Unary, Binary, OnceUnary, MutableUnary, OnceThunk, BorrowCallable)
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
 from fp.callables._receiver import _unary_repeated_as
 from fp.iteration._advance import _next_optional
 from fp.iteration._terminal import _append
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
+from ._monadic import _BindLoop, _bind_loop
 
 
 trait Functor:
@@ -47,8 +51,81 @@ trait Functor:
         ...
 
 
+trait Filterable:
+    """A carrier family that can discard payloads while keeping its context.
+
+    This capability is independent of Functor: removing a value and changing
+    its type have different native constraints. Rejected values must be
+    representable without inventing a payload or an error.
+    """
+    comptime Element[V: Movable & Deinitable]: Movable & Deinitable
+    """The payload type of a carrier of this family."""
+    comptime Filtered[V: Movable & Deinitable, P: BorrowCallable]: Movable & Deinitable
+    """The carrier returned by filtering; deferred families may change its concrete type."""
+    comptime FilterError[V: Movable & Deinitable, P: BorrowCallable]: Movable & Deinitable
+    """The error raised when constructing the filtered carrier."""
+    @staticmethod
+    def filter[V: Movable & Deinitable, P: BorrowCallable](var predicate: P, var value: V
+    ) raises Self.FilterError[V, P] -> Self.Filtered[V, P]:
+        """Retain payloads accepted by a borrowing Bool predicate.
+
+        Parameters:
+            V: The carrier's type.
+            P: The repeatable borrowing predicate's type.
+
+        Args:
+            predicate: The predicate, consumed; it borrows each payload.
+            value: The carrier, consumed.
+
+        Returns:
+            A carrier of accepted original payloads, retaining their types and origins.
+
+        Raises:
+            The family's filtering error, with its exact native type.
+        """
+        ...
+
+
+trait FunctorFilter(Functor):
+    """Map to Optional payloads and discard absent results in the same traversal.
+
+    Unlike Filterable, this operation may change the payload type. Fixed-size
+    or nonempty carriers need not implement it. Deferred instances keep their
+    own evaluation, error and origin semantics.
+    """
+    comptime MapFiltered[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Movable & Deinitable
+    """The carrier of present transformed payloads."""
+    comptime MapFilterError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Movable & Deinitable
+    """The exact error of constructing the transformed carrier."""
+    @staticmethod
+    def filter_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V
+    ) raises Self.MapFilterError[V, F] -> Self.MapFiltered[V, F]:
+        """Consume each payload into f, retaining only present Optional results.
+
+        Parameters:
+            V: The consumed source or carrier type.
+            F: The callback type, retaining its receiver, captures and error contract.
+
+        Args:
+            f: The callback, consumed; calls follow the operation's evaluation order.
+            value: The source, consumed with its native origins; iterator sources are not restarted.
+
+        Returns:
+            The carrier of present transformed Optional payloads, in source order.
+
+        Raises:
+            The exact callback, monoid or family error; Never for a non-raising operation.
+        """
+        ...
+
+
 trait Applicative(Functor):
     """A `Functor` that can introduce a payload (`pure`) and combine independent computations (`map2_lazy`).
+
+    The private `_Joined[L, R]`, `_join_left` and `_join_right` represent either
+    of two computations with the same payload. Eager families share one carrier
+    type; deferred families override the join to retain the selected computation.
+    Transformers and conditional recovery share this boundary without needing bind.
 
     `collect` gathers every payload a callback produces over a source into a
     `List`, and list traversal into this family uses it. It is the private
@@ -59,6 +136,17 @@ trait Applicative(Functor):
     across steps; a family whose combination changes type overrides the private
     `_Looped`, `_LoopError` and `_loop` with its own single loop.
     """
+    # Joining alternative carriers needs no bind. Conditional error recovery
+    # uses it for ApplicativeError families such as Validation as well.
+    comptime _Joined[L: Movable & Deinitable, R: Movable & Deinitable]: Movable & Deinitable = L
+    @staticmethod
+    def _join_left[L: Movable & Deinitable, R: Movable & Deinitable](var value: L) -> Self._Joined[L, R]:
+        comptime assert L == R, "choice: branches of an eager family must have one carrier type"
+        return rebind_var[Self._Joined[L, R]](value^)
+    @staticmethod
+    def _join_right[L: Movable & Deinitable, R: Movable & Deinitable](var value: R) -> Self._Joined[L, R]:
+        comptime assert L == R, "choice: branches of an eager family must have one carrier type"
+        return rebind_var[Self._Joined[L, R]](value^)
     comptime Pure[A: Movable & Deinitable]: Movable & Deinitable
     """The carrier `pure` returns for a payload `A`."""
     comptime Combined[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable]: Movable & Deinitable
@@ -94,7 +182,8 @@ trait Applicative(Functor):
         """Combine the payloads of `left` and of the carrier `right` produces with `f`.
 
         `right` runs zero or one times per combination: a left carrier with no
-        payload, such as an absent `Optional`, skips it.
+        payload, such as an absent `Optional`, may skip it. Validation forces
+        the right operand even after a stored error to accumulate both errors.
 
         Parameters:
             V: The left carrier's type.
@@ -118,8 +207,8 @@ trait Applicative(Functor):
     ) raises Self.CollectError[V, F] -> Self.Collected[V, F]:
         """Call `f` on each element of `source` and gather the payloads into one carrier of a `List`.
 
-        The first failed or absent result stops both callback calls and source
-        pulls. This is list traversal into this family.
+        The family decides whether a stored failure stops source pulls. Ordinary
+        Result and Optional stop; validation continues to accumulate errors.
 
         Parameters:
             V: The source's type: an iterator or an owned iterable.
@@ -182,20 +271,99 @@ trait Applicative(Functor):
         return rebind_var[Self._Looped[V, F, K]](result^)
 
 
+trait ApplicativeError(Applicative):
+    """An Applicative with one selected stored-error channel.
+
+    Native raised errors remain separate. Recovery consumes a selected error,
+    skips its handler on success, and preserves the success and stored-error
+    types. Concrete carrier types may change for deferred effects.
+    """
+    comptime Failure: Movable & Deinitable
+    """The selected stored error type, including its origins."""
+    comptime Failed[A: Movable & Deinitable]: Movable & Deinitable
+    """The carrier of a stored failure with success payload type A."""
+    comptime FailError[A: Movable & Deinitable]: Movable & Deinitable
+    """The native error raised while constructing that failed carrier."""
+    comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable]: Movable & Deinitable
+    """The carrier returned by handling the selected stored error of V."""
+    comptime HandleError[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable]: Movable & Deinitable
+    """The exact native error raised while constructing the handled carrier."""
+
+    # Fluent admission lives in signatures: body-level type equality alone can
+    # erase distinctions between embedded origins on Mojo 1.1. Deferred carrier
+    # types need not equal Pure; each instance validates its own native shape.
+    comptime _ErrorCarrier[V: Movable & Deinitable]: Bool = True
+    comptime _Handles[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = (
+        Self._ErrorCarrier[V] and Self._ErrorCarrier[H.Out] and
+        H.Arg == Self.Failure and Self.Element[V] == Self.Element[H.Out]
+    )
+
+    @staticmethod
+    def fail[A: Movable & Deinitable](var error: Self.Failure) raises Self.FailError[A] -> Self.Failed[A]:
+        """Construct a stored failure without a success payload.
+
+        Parameters:
+            A: The absent success payload's type.
+
+        Args:
+            error: The stored error, consumed without copying.
+
+        Returns:
+            The family's failed carrier.
+
+        Raises:
+            The family's native construction error; the stored error is not raised.
+        """
+        ...
+
+    @staticmethod
+    def or_else[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V
+    ) raises Self.HandleError[V, H] -> Self.Handled[V, H]:
+        """Recover the selected stored error with another effect of this family.
+
+        Parameters:
+            V: The consumed source carrier type.
+            H: A handler consuming Failure and returning this family's carrier
+                of the original success type; repeatable for branching sources.
+
+        Args:
+            handler: The handler, consumed; skipped on success.
+            source: The carrier, consumed with its native origins.
+
+        Returns:
+            Original successes or handler outputs in family order. A handler's
+            failure passes onward without invoking that handler again.
+
+        Raises:
+            The exact native construction error; native raises are never recovered.
+        """
+        ...
+
+
 trait Monad(Applicative):
     """An `Applicative` whose callback chooses the next computation from the current payload: `flat_map`.
 
-    A deferred family that is a transformer base also overrides the private
-    `_Joined[L, R]`, `_join_left` and `_join_right`: one carrier type holding
-    either of two computations of this family, which a transformer step that
-    returns one of two computations uses. The default serves eager families,
-    whose carriers of one payload already share one type.
+    Effectful reductions inherit the private `_fold` driver over pure, map
+    and bind. Deferred families override `_Folded`, `_FoldError` and `_fold`
+    to retain the source, initial accumulator and callbacks until execution.
     """
     comptime Bound[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Movable & Deinitable
     """The carrier `flat_map` returns: the callback's own carrier type."""
     comptime BindError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Movable & Deinitable
     """The error `flat_map` raises."""
-    comptime _Joined[L: Movable & Deinitable, R: Movable & Deinitable]: Movable & Deinitable = L
+    # One dependent accumulation boundary. Eager families inherit the loop;
+    # deferred families store its inputs and delegate when run.
+    comptime _Folded[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator]: Movable & Deinitable = Self.Pure[K.Acc]
+    comptime _FoldError[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator]: Movable & Deinitable = _BindLoop[Self, P, F, K].Error
+    @staticmethod
+    def _fold[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator](var prepare: P, var step: F, var initial: K.Acc, var source: V
+    ) raises Self._FoldError[V, P, F, K] -> Self._Folded[V, P, F, K]:
+        comptime assert Self._Folded[V, P, F, K] == Self.Pure[K.Acc]
+        try:
+            return rebind_var[Self._Folded[V, P, F, K]](_bind_loop[Self, V, P, F, K](prepare^, step^, initial^, source^))
+        except error:
+            comptime assert _ErrorCompatible[Self._FoldError[V, P, F, K], type_of(error)]
+            _propagate_error[Self._FoldError[V, P, F, K]](error^)
     @staticmethod
     def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V
     ) raises Self.BindError[V, F] -> Self.Bound[V, F]:
@@ -217,14 +385,6 @@ trait Monad(Applicative):
             The callback's error.
         """
         ...
-    @staticmethod
-    def _join_left[L: Movable & Deinitable, R: Movable & Deinitable](var value: L) -> Self._Joined[L, R]:
-        comptime assert L == R, "choice: branches of an eager family must have one carrier type"
-        return rebind_var[Self._Joined[L, R]](value^)
-    @staticmethod
-    def _join_right[L: Movable & Deinitable, R: Movable & Deinitable](var value: R) -> Self._Joined[L, R]:
-        comptime assert L == R, "choice: branches of an eager family must have one carrier type"
-        return rebind_var[Self._Joined[L, R]](value^)
 
 
 trait Traversable(Functor):
@@ -265,23 +425,12 @@ trait _Lifting:
         ...
 
 
-trait Monoid:
-    """An identity element and an associative, ordered combination: Writer logs use one."""
+trait Semigroup:
+    """An associative, ordered combination of two values, without an identity."""
     comptime Value: Movable & Deinitable
-    """The combined values' type."""
+    """The combined values' exact type, including origins."""
     comptime Error: Movable & Deinitable = Never
-    """The error `empty` and `combine` raise; `Never` by default."""
-    @staticmethod
-    def empty() raises Self.Error -> Self.Value:
-        """The identity element: combining it with a value returns the value.
-
-        Returns:
-            The identity element.
-
-        Raises:
-            `Error`; nothing when it is `Never`.
-        """
-        ...
+    """The native error of combination; Never by default."""
     @staticmethod
     def combine(var left: Self.Value, var right: Self.Value) raises Self.Error -> Self.Value:
         """Combine two values, `left` first.
@@ -298,6 +447,23 @@ trait Monoid:
         """
         ...
 
+
+trait Monoid(Semigroup):
+    """A Semigroup with an identity element; Writer logs use one.
+
+    The inherited Error covers both empty and combine.
+    """
+    @staticmethod
+    def empty() raises Self.Error -> Self.Value:
+        """The identity element: combining it with a value returns the value.
+
+        Returns:
+            The identity element.
+
+        Raises:
+            `Error`; nothing when it is `Never`.
+        """
+        ...
 
 # Owned iteration. An iterator continues from its current position; any other
 # owned iterable starts a fresh iteration. Restarting an iterator would re-pull.
@@ -328,21 +494,25 @@ struct _Present[B: Movable & Deinitable](Unary, Copyable, Defaultable):
         return Optional(arg^)
 
 
-trait _Accumulate:
+trait _LiveAccumulator:
+    """The payload of a loop and whether a branch needs another input."""
+    comptime Acc: Movable & Deinitable
+    @staticmethod
+    def live(ref acc: Self.Acc) -> Bool:
+        ...
+
+
+trait _Accumulate(_LiveAccumulator):
     """How a traversal loop folds produced payloads into its accumulator.
 
     `live` tells the loop whether pulling further elements can still change the
     accumulator. `combine` must return an accumulator that is no longer live
     unchanged.
     """
-    comptime Acc: Movable & Deinitable
     comptime Item: Movable & Deinitable
     comptime Error: Movable & Deinitable = Never
     @staticmethod
     def start() raises Self.Error -> Self.Acc:
-        ...
-    @staticmethod
-    def live(ref acc: Self.Acc) -> Bool:
         ...
     @staticmethod
     def combine(var acc: Self.Acc, var item: Self.Item) raises Self.Error -> Self.Acc:
@@ -353,6 +523,7 @@ struct _Append[B: Movable & Deinitable](_Accumulate):
     """Collect every payload in order."""
     comptime Acc = List[Self.B]
     comptime Item = Self.B
+    comptime Error = Never
     @staticmethod
     def start() -> Self.Acc:
         return List[Self.B]()
@@ -377,6 +548,29 @@ def _combine_as[E: Movable & Deinitable, K: _Accumulate](var acc: K.Acc, var ite
         return K.combine(acc^, item^)
     except error:
         _propagate_error[E](error^)
+
+
+def _map_accumulate[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate,
+                    E: Movable & Deinitable = _CommonError[F.Error, K.Error]](
+    var f: F, var source: V, var acc: K.Acc
+) raises E -> K.Acc:
+    """The Identity traversal loop, with a caller-supplied native accumulator.
+
+    Collection mapping also uses this loop: supplying the initial accumulator
+    preserves runtime container settings without a second traversal mechanism.
+    """
+    comptime assert RepeatableUnary[F], "traverse: the callback must be repeatable"
+    comptime assert _Item[V] == F.Arg, "traverse: callback argument must be the source element"
+    comptime assert F.Out == K.Item, "traverse: the accumulator must receive the callback's payload"
+    comptime assert _ErrorCompatible[E, F.Error] and _ErrorCompatible[E, K.Error]
+    var iterator = _iterator(source^)
+    while K.live(acc):
+        var item = _next_item[V](iterator)
+        if not item:
+            break
+        var produced = _unary_repeated_as[E](f, rebind_var[F.Arg](item.unsafe_take()))
+        acc = _combine_as[E, K](acc^, rebind_var[K.Item](produced^))
+    return acc^
 
 
 @fieldwise_init
@@ -425,18 +619,6 @@ struct _BindFirst[F: BinaryContract & Movable & Deinitable](
         comptime C = downcast[Self.F.First, Copyable & Deinitable]
         var first = rebind_var[Self.F.First](rebind[C](self.first).copy())
         return call_repeated(self.function, first^, arg^)
-
-
-@fieldwise_init
-struct _UnaryView[F: UnaryContract & Movable & Deinitable, o: MutOrigin](OnceUnary):
-    """Call a repeatable callback once through a pointer; the owner keeps it."""
-    var function: Pointer[Self.F, Self.o]
-    comptime Arg = Self.F.Arg
-    comptime Out = Self.F.Out
-    comptime Error = Self.F.Error
-    def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        comptime assert RepeatableUnary[Self.F], "the callback must be repeatable"
-        return call_repeated(self.function[], arg^)
 
 
 struct _Lazy[G: ThunkContract & Movable & Deinitable](

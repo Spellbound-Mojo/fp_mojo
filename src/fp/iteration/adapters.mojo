@@ -6,6 +6,8 @@ Standard `chain`, `zip`, `take` and the like stay in `std.iter` and
 `std.itertools`.
 """
 
+from fp.callables._views import _UnaryViewable
+from fp.callables._predicates import _filter_decision
 from std.iter import Iterator, IterableOwned, iter
 from std.builtin.rebind import downcast, rebind_var
 from fp.iteration._advance import _next_fused, _Source, _source
@@ -67,7 +69,7 @@ def map[T: Movable & Deinitable, U: Movable & Deinitable, I: Movable & Deinitabl
 
 @fieldwise_init
 struct _Filter[T: Movable & Deinitable, I: Iterator,
-               F: Movable & Deinitable = def(T) thin -> Bool](Iterator, IterableOwned):
+               F: Movable & Deinitable = def(T) thin -> Bool, inverted: Bool = False](Iterator, IterableOwned):
     comptime Element = Self.T
     comptime IteratorOwnedType = Self
     var function: Self.F
@@ -82,7 +84,11 @@ struct _Filter[T: Movable & Deinitable, I: Iterator,
         while True:
             var item = _next_fused(self.source, self.done)
             var value = rebind_var[Self.T](item^)
-            if _apply_lazy_predicate[Self.T](self.function, value): return value^
+            # Share the decision with eager filtering without wrapping an owned
+            # native callback in a read-only BorrowCallable. Lazy invocation must
+            # retain mutable access to captures (including at O3 on Mojo 1.1).
+            if _filter_decision[Self.inverted](_apply_lazy_predicate[Self.T](self.function, value)):
+                return value^
 
 def filter[T: Movable & Deinitable, I: Movable & Deinitable, //](
     function: def(T) thin -> Bool, var source: I
@@ -112,6 +118,45 @@ def filter[T: Movable & Deinitable, I: Movable & Deinitable, //, F: _LazyPredica
 ) -> _Filter[T, _Source[I], F] where _Source[I].Element == T:
     """Lazily keep the elements a closure predicate accepts."""
     return _Filter[T, _Source[I], F](function^, _source(source^), False)
+
+
+def filter_not[T: Movable & Deinitable, I: Movable & Deinitable, //](
+    function: def(T) thin -> Bool, var source: I
+) -> _Filter[T, _Source[I], def(T) thin -> Bool, True] where _Source[I].Element == T:
+    """Lazily retain elements the borrowing predicate rejects.
+
+    Construction pulls nothing. Each next call tests candidates once in source
+    order until the predicate returns False. Retained values move unchanged;
+    discarded values are destroyed. Exhaustion is fused, and abandoning the
+    iterator destroys owned source and callback state without further calls.
+    Callbacks cannot raise. Borrowed captures and source origins must remain
+    alive and unmoved while used; move an owned closure in with callback^.
+
+    Parameters:
+        T: The element type, including origins.
+        I: A native iterator or owned iterable, consumed without restarting it.
+
+    Args:
+        function: The borrowing Bool predicate, stored.
+        source: The source, consumed.
+
+    Returns:
+        A FilterNotIterator of the original rejected elements, in source order.
+    """
+    return _Filter[T, _Source[I], def(T) thin -> Bool, True](function, _source(source^), False)
+
+
+def filter_not[T: Movable & Deinitable, I: Movable & Deinitable, //, F: _LazyPredicate[T]](
+    var function: F, var source: I
+) -> _Filter[T, _Source[I], F, True] where _Source[I].Element == T:
+    """Lazily retain rejected elements with a stored native closure."""
+    return _Filter[T, _Source[I], F, True](function^, _source(source^), False)
+
+
+def filter_not[I: Movable & Deinitable, C: BorrowCallable](var predicate: C, var source: I
+) -> _Filter[_Source[I].Element, _Source[I], C, True] where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool and C.Failure == Never:
+    """Lazily retain rejected elements with an owned library borrowing predicate."""
+    return _Filter[_Source[I].Element, _Source[I], C, True](predicate^, _source(source^), False)
 
 
 @fieldwise_init
@@ -440,6 +485,16 @@ Parameters:
 """
 
 
+comptime FilterNotIterator[T: Movable & Deinitable, I: Iterator, F: Movable & Deinitable = def(T) thin -> Bool] = _Filter[T, I, F, True]
+"""The type filter_not returns, for a generic function's return annotation.
+
+Parameters:
+    T: The element type.
+    I: The native iterator over the source.
+    F: The predicate's type; the thin function type by default.
+"""
+
+
 comptime FilterIterator[T: Movable & Deinitable, I: Iterator, F: Movable & Deinitable = def(T) thin -> Bool] = _Filter[T, I, F]
 """The type `filter` returns, for a generic function's return annotation.
 
@@ -469,6 +524,12 @@ Parameters:
 
 
 # Fixed-arity library callables with a shared receiver, such as partials.
+def map[I: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin](ref[o] function: F, var source: I
+) -> _Map[F._View[o].Arg, F._View[o].Out, _Source[I], F._View[o]] where _Source[I].Element == F._View[o].Arg and F._View[o].Error == Never:
+    """Retain a shared callable view in the lazy iterator."""
+    return map(function._unary_view(), source^)
+
+
 def map[I: Movable & Deinitable, F: Unary](var function: F, var source: I
 ) -> _Map[F.Arg, F.Out, _Source[I], F] where _Source[I].Element == F.Arg and F.Error == Never:
     """Lazily apply a library `Unary` value, such as a partial or a composition."""
@@ -479,6 +540,12 @@ def filter_map[U: Movable & Deinitable, I: Movable & Deinitable, F: Unary](var f
 ) -> _FilterMap[F.Arg, U, _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[U] and F.Error == Never:
     """Lazily apply a library `Unary` value returning `Optional[U]`; name `U` explicitly."""
     return _FilterMap[F.Arg, U, _Source[I], F](function^, _source(source^), False)
+
+
+def flat_map[I: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin](ref[o] function: F, var source: I
+) -> _Flatten[_Map[F._View[o].Arg, F._View[o].Out, _Source[I], F._View[o]], F._View[o].Out] where _Source[I].Element == F._View[o].Arg and F._View[o].Error == Never:
+    """Retain a shared callable view in the lazy iterator."""
+    return flat_map(function._unary_view(), source^)
 
 
 def flat_map[I: Movable & Deinitable, F: Unary](var function: F, var source: I

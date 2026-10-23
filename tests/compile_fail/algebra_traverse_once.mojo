@@ -1,4 +1,4 @@
-# error: traverse: the callback must be repeatable
+# error: fold_effect: callbacks must be repeatable
 from fp.algebra import traverse, ListFamily, pure
 from fp.effects import State, run
 from fp.callables import OnceUnary

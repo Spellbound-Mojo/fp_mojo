@@ -1,7 +1,7 @@
 """Public packages and declaration providers; paths are relative to src/fp."""
 import re
 
-PUBLIC_PACKAGES = ('callables', 'functions', 'adt', 'data', 'iteration', 'control', 'algebra', 'effects', 'matching')
+PUBLIC_PACKAGES = ('callables', 'combinators', 'functions', 'adt', 'data', 'iteration', 'control', 'algebra', 'effects', 'matching')
 
 # Public operations declared as compile-time callable values rather than `def`.
 # The algebra entries are ordinary functions since the core simplification (CS-2).
@@ -12,14 +12,18 @@ SOURCE_MODULES = (
     *(( 'callables', 'callables/' + name) for name in ('protocols', 'invoke', 'native')),
     ('functions', 'functions/pipeline'),
     ('functions', 'functions/composition'),
+    ('functions', 'functions/kleisli'),
     ('functions', 'functions/flipped'),
     ('functions', 'functions/partial'),
     ('iteration', 'iteration/folds'),
     ('iteration', 'iteration/adapters'),
     ('iteration', 'iteration/chaining'),
+    ('iteration', 'iteration/derived'),
+    ('iteration', 'iteration/reductions'),
+    ('iteration', 'iteration/effectful'),
     ('control', 'control/loops'),
     ('control', 'control/scan'),
-    *(( 'algebra', 'algebra/' + name) for name in ('protocols', 'operations', 'instances', '_derived', 'monoids')),
+    *(( 'algebra', 'algebra/' + name) for name in ('protocols', 'operations', 'filtering', 'conditional', 'errors', 'instances', '_derived', 'monoids', 'validation')),
     *(( 'effects', 'effects/' + name) for name in ('protocols', 'reader', 'state', 'writer', 'layers', 'operations')),
     ('data', 'data/_result'),
     ('data', 'data/result'),
@@ -32,6 +36,12 @@ SOURCE_MODULES = (
 def declaration_providers():
     for package, provider in SOURCE_MODULES:
         yield package, provider, None
+    yield 'combinators', 'iteration/adapters', ('map', 'filter', 'filter_not', 'filter_map', 'flat_map', 'flatten')
+    yield 'combinators', 'iteration/folds', ('fold_left',)
+    yield 'combinators', 'iteration/derived', None
+    yield 'combinators', 'iteration/reductions', None
+    yield 'combinators', 'iteration/effectful', None
+    yield 'combinators', 'algebra/conditional', ('if_effect',)
     yield 'functions', 'callables/native', ('as_unary',)
 
 

@@ -13,8 +13,12 @@ a collection, or `iter(values)` to borrow it. Standard adapters (`chain`, `zip`,
 directly. Wrap a standard adapter's result with `iterated` to continue chaining.
 `to_list()` and `collect_list()` are alias methods for the free `collect_list`.
 Named chains are consumed explicitly, as in `stream^.to_list()`.
+The core functions `map`, `filter`, `filter_not` and `fold_left` are also exported by
+`fp.combinators`; both imports refer to the same native functions. `Piped` adds
+the same named methods to eager value chains. Its fold keeps the accumulator
+inside the chain, while `Iter.fold_left` returns the accumulator directly.
 
-**Lazy adapters** (`map`, `filter`, `filter_map`, `flatten`, `flat_map`,
+**Lazy adapters** (`map`, `filter`, `filter_not`, `filter_map`, `flatten`, `flat_map`,
 `scan_left`) are native iterators whose advancement raises only
 `StopIteration`:
 
@@ -32,7 +36,7 @@ shared-receiver `Unary`/`Binary` value such as a `Partial`. Move a closure that
 owns non-trivial state in with `callback^`. Owners of borrowed captures must
 stay alive and unmoved while the adapter is used. A generic function that
 returns an adapter names its type with `MapIterator`, `ScanIterator`,
-`FilterIterator`, `FilterMapIterator` or `FlatMapIterator`, declares
+`FilterIterator`, `FilterNotIterator`, `FilterMapIterator` or `FlatMapIterator`, declares
 `I: Iterator` and `where I.Element == T`, and builds the value through the
 function; the types add no storage, and the source origin stays part of the
 type.
@@ -69,6 +73,7 @@ conformance.
 
 from .adapters import (
     FilterIterator,
+    FilterNotIterator,
     FilterMapIterator,
     FlatMapIterator,
     MapIterator,
@@ -77,6 +82,7 @@ from .adapters import (
     any,
     collect_list,
     filter,
+    filter_not,
     filter_map,
     find,
     flat_map,
@@ -94,3 +100,7 @@ from .folds import (
     reduce_optional,
 )
 from .chaining import Iter, iterated
+from .derived import fill, replace, void, tuple_left, tuple_right, pair_with, tap_each, compact, traverse, sequence, traverse_void, traverse_tap, sequence_void, flat_traverse, flat_sequence, traverse_filter, filter_effect
+from .reductions import find_map, fold_map, combine_all, sum, sum_by, min_by, max_by
+
+from fp.iteration.effectful import fold_effect, any_effect, all_effect

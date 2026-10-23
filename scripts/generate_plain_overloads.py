@@ -1,5 +1,5 @@
 """Generate the plain-function overloads of pipe, flow and compose (two to eight
-stages) and of match and rewrite (one to sixteen clauses).
+stages), match and rewrite (one to sixteen clauses), and native Piped methods.
 
 Mojo 1.1 reads a plain function's signature only at a parameter of its function
 type, so each stage or clause count spells one thin signature per function. Run
@@ -16,6 +16,12 @@ import argparse
 import sys
 
 from fp_tools.runtime import ROOT
+import generate_pipeline_syntax as pipeline_syntax
+import generate_combinator_syntax as combinator_syntax
+import generate_result_syntax as result_syntax
+import generate_traversal_syntax as traversal_syntax
+import generate_effect_syntax as effect_syntax
+import generate_nary_syntax as nary_syntax
 
 MD = 'Movable & Deinitable'
 MAX = 8
@@ -301,24 +307,48 @@ def match_overloads():
 
 
 def spliced(path, text, start_marker=START, end_marker=END, header=HEADER):
-    source = path.read_text()
+    return splice_source(path.read_text(), text, start_marker, end_marker, header)
+
+
+def splice_source(source, text, start_marker=START, end_marker=END, header=HEADER):
     start = source.index(start_marker)
     end = source.index(end_marker, start) + len(end_marker)
     return source[:start] + start_marker + header + text + end_marker + source[end:]
 
 
+def pipeline_source(path):
+    source = splice_source(spliced(path, pipe_overloads()), pipeline_syntax.container_methods(),
+                           pipeline_syntax.START, pipeline_syntax.END, pipeline_syntax.HEADER)
+    return splice_source(source, result_syntax.methods(piped=True), result_syntax.START, result_syntax.END, result_syntax.HEADER)
+
+
 def main():
+    import generate_sequencing_syntax as sequencing_syntax
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--check', action='store_true', help='Fail if the sources differ from the generator')
     args = parser.parse_args()
     stale = []
     for name, expected_of in (
-        ('functions/pipeline.mojo', lambda path: spliced(path, pipe_overloads())),
+        ('functions/pipeline.mojo', pipeline_source),
+        ('callables/_nary.mojo', lambda path: nary_syntax.native()),
+        ('algebra/_nary.mojo', lambda path: spliced(path, nary_syntax.types(), nary_syntax.START, nary_syntax.END, nary_syntax.HEADER)),
+        ('iteration/effectful.mojo', lambda path: path.read_text()),
+        ('algebra/conditional.mojo', lambda path: path.read_text()),
+        ('data/_result.mojo', lambda path: spliced(path, result_syntax.methods(), result_syntax.START, result_syntax.END, result_syntax.HEADER)),
+        ('iteration/reductions.mojo', lambda path: spliced(path, combinator_syntax.terminal_methods('free'), combinator_syntax.START, combinator_syntax.END, combinator_syntax.HEADER)),
+        ('iteration/chaining.mojo', lambda path: splice_source(spliced(path, combinator_syntax.terminal_methods('iter'), '    '+combinator_syntax.START, '    '+combinator_syntax.END, '    '+combinator_syntax.HEADER), traversal_syntax.methods('iter'), '    '+traversal_syntax.START, '    '+traversal_syntax.END, '    '+traversal_syntax.HEADER)),
+        ('iteration/derived.mojo', lambda path: spliced(path, traversal_syntax.methods('free'), traversal_syntax.START, traversal_syntax.END, traversal_syntax.HEADER)),
         ('functions/composition.mojo', lambda path: spliced(path, composition_overloads())),
         ('matching/matcher.mojo', lambda path: spliced(path, match_overloads(), MATCH_START, MATCH_END, MATCH_HEADER)),
     ):
         path = ROOT / 'src/fp' / name
         expected = expected_of(path)
+        if name == 'iteration/chaining.mojo':
+            expected = splice_source(expected, sequencing_syntax.methods(iteration=True), sequencing_syntax.START, sequencing_syntax.END, sequencing_syntax.HEADER)
+        effect_mode = {'functions/pipeline.mojo': 'piped', 'iteration/chaining.mojo': 'iter', 'data/_result.mojo': 'result', 'iteration/effectful.mojo': 'free', 'algebra/conditional.mojo': 'conditional'}.get(name)
+        if effect_mode:
+            indent = '' if effect_mode in ('free', 'conditional') else '    '
+            expected = splice_source(expected, effect_syntax.methods(effect_mode), indent+effect_syntax.START, indent+effect_syntax.END, indent+effect_syntax.HEADER)
         if path.read_text() != expected:
             stale.append(str(path.relative_to(ROOT)))
             if not args.check:

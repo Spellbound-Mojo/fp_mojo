@@ -1,4 +1,4 @@
-# error: traverse: State traversal needs a base whose carrier type stays the same across steps
+# error: fold_effect: eager carrier must keep one type across steps
 from fp.algebra import pure, traverse, ListFamily
 from fp.effects import Reader, StateT, run
 from fp.callables import as_unary

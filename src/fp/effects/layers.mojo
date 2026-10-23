@@ -8,11 +8,12 @@ produced at most once. Over IdentityFamily the aliases are the native Optional
 and Result families.
 """
 from std.builtin.rebind import rebind_var, rebind, downcast
-from fp.algebra.protocols import (Monad, Applicative, _Lifting, _Accumulate, _Present, _BindFirst, _Lazy, _UnaryView)
+from fp.algebra.protocols import (Monad, Applicative, ApplicativeError, _Lifting, _Accumulate, _Present, _BindFirst, _Lazy, _UnaryView)
+from fp.algebra._admission import _ResultCarrierCompatible
 from fp.algebra.instances import IdentityFamily, OptionalFamily, ResultFamily, _OkOf
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, OnceUnary, MutableUnary
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary
-from fp.data._result import Result, Ok, Err
+from fp.data._result import Result, Ok, Err, _fold_result_owned, _transformed
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
 from ._adapt import _map_as
 
@@ -64,30 +65,47 @@ struct _OptionalGuard[M: Monad, F: UnaryContract & Movable & Deinitable](
 
 
 @fieldwise_init
-struct _ResultGuard[M: Monad, E: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
+struct _ResultGuard[M: Monad, E: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, success: Bool = True](
     OnceUnary, MutableUnary where RepeatableUnary[F], Copyable where conforms_to(F, Copyable)
 ):
-    """ResultT bind step: a stored error returns the base's pure error; success
-    calls F, whose result is the next layer value."""
+    """Bind or recover one ResultT branch through Result's consuming fold.
+
+    The unselected branch is lifted through pure; the selected branch returns
+    the callback's base effect. Base joins retain concrete deferred actions.
+    """
     var function: Self.F
     comptime B = ResultFamily[Self.E].Element[Self.M.Element[Self.F.Out]]
+    comptime A = Self.F.Arg if Self.success else Self.B
     comptime Absent = Self.M.Pure[Result[Self.B, Self.E]]
-    comptime Arg = Result[Self.F.Arg, Self.E]
+    comptime Arg = Result[Self.A, Self.E]
     comptime Out = Self.M._Joined[Self.Absent, Self.F.Out]
     comptime Error = Self.F.Error
+
+    @staticmethod
+    def _preserve[P: Movable & Deinitable](var payload: P, var unused: NoneType) capturing -> Self.Out:
+        return Self.M._join_left[Self.Absent, Self.F.Out](Self.M.pure(
+            _transformed[Self.B, Self.E, P, not Self.success, True](payload^)))
+
+    @staticmethod
+    def _continue[P: Movable & Deinitable](var payload: P, var function: Self.F) raises Self.Error capturing -> Self.Out:
+        comptime assert P == Self.F.Arg
+        return Self.M._join_right[Self.Absent, Self.F.Out](call_once(function^, rebind_var[Self.F.Arg](payload^)))
+
     def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        if arg.is_err():
-            var stored = arg^._take_err()
-            return Self.M._join_left[Self.Absent, Self.F.Out](Self.M.pure(Result[Self.B, Self.E](Err(stored^))))
-        var value = arg^._take_ok()
-        return Self.M._join_right[Self.Absent, Self.F.Out](call_once(self.function^, value^))
+        comptime if Self.success:
+            return _fold_result_owned[Self.A, Self.E, Self.Out, Self.Error, Self.Error, Never,
+                Self.F, NoneType, Self._continue[Self.A], Self._preserve[Self.E]](arg^, self.function^, None)
+        else:
+            comptime assert Self.F.Arg == Self.E, "or_else: handler must consume the selected stored error"
+            return _fold_result_owned[Self.A, Self.E, Self.Out, Self.Error, Never, Self.Error,
+                NoneType, Self.F, Self._preserve[Self.A], Self._continue[Self.E]](arg^, None, self.function^)
+
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert RepeatableUnary[Self.F]
-        if arg.is_err():
-            var stored = arg^._take_err()
-            return Self.M._join_left[Self.Absent, Self.F.Out](Self.M.pure(Result[Self.B, Self.E](Err(stored^))))
-        var value = arg^._take_ok()
-        return Self.M._join_right[Self.Absent, Self.F.Out](call_repeated(self.function, value^))
+        comptime View = _UnaryView[Self.F, origin_of(self.function)]
+        comptime Guard = _ResultGuard[Self.M, Self.E, View, Self.success]
+        comptime assert Guard.Arg == Self.Arg and Guard.Out == Self.Out
+        return rebind_var[Self.Out](Guard(View(Pointer(to=self.function))).call_once(rebind_var[Guard.Arg](arg^)))
 
 
 @fieldwise_init
@@ -224,8 +242,25 @@ struct _ResultAcc[K: _Accumulate, E: Movable & Deinitable](_Accumulate):
         return Result[Self.K.Acc, Self.E](Ok(Self.K.combine(current^, item^._take_ok())))
 
 
-struct _OptionalT[M: Monad](Monad, _Lifting):
+struct _OptionalT[M: Monad](Monad, _Lifting, ApplicativeError where conforms_to(M, ApplicativeError)):
     """OptionalT over a base other than Identity: a value is M's carrier of Optional[A]."""
+    comptime _Errors = downcast[Self.M, ApplicativeError]
+    comptime Failure = Self._Errors.Failure
+    comptime _ErrorCarrier[V: Movable & Deinitable] = Self._Errors._ErrorCarrier[V] and Self.M.Element[V] == Optional[Self.Element[V]]
+    comptime Failed[A: Movable & Deinitable] = Self._Errors.Failed[Optional[A]]
+    comptime FailError[A: Movable & Deinitable] = Self._Errors.FailError[Optional[A]]
+    comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self._Errors.Handled[V, H]
+    comptime HandleError[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self._Errors.HandleError[V, H]
+
+    @staticmethod
+    def fail[A: Movable & Deinitable](var error: Self.Failure) raises Self.FailError[A] -> Self.Failed[A]:
+        return Self._Errors.fail[Optional[A]](error^)
+
+    @staticmethod
+    def or_else[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V) raises Self.HandleError[V, H] -> Self.Handled[V, H]:
+        comptime assert Self._Handles[V, H], "or_else: OptionalT family or payload mismatch"
+        return Self._Errors.or_else(handler^, source^)
+
     comptime Base = Self.M
     comptime Element[V: Movable & Deinitable] = OptionalFamily.Element[Self.M.Element[V]]
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.Mapped[V, _InnerMap[OptionalFamily, F]]
@@ -285,8 +320,25 @@ struct _OptionalT[M: Monad](Monad, _Lifting):
         return Self.M.map(_Present[Self.M.Element[V]](), value^)
 
 
-struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, _Lifting):
+struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, _Lifting):
     """ResultT over a base other than Identity: a value is M's carrier of Result[A, E]."""
+    comptime Failure = Self.E
+    comptime _ErrorCarrier[V: Movable & Deinitable] = _ResultCarrierCompatible[Self.M, V] and Self.M.Element[V] == Result[Self.Element[V], Self.E]
+    comptime Failed[A: Movable & Deinitable] = Self.M.Pure[Result[A, Self.E]]
+    comptime FailError[A: Movable & Deinitable] = Never
+    comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self.M.Bound[V, _ResultGuard[Self.M, Self.E, H, False]]
+    comptime HandleError[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self.M.BindError[V, _ResultGuard[Self.M, Self.E, H, False]]
+
+    @staticmethod
+    def fail[A: Movable & Deinitable](var error: Self.Failure) -> Self.Failed[A]:
+        return Self.M.pure(ResultFamily[Self.E].fail[A](error^))
+
+    @staticmethod
+    def or_else[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V
+    ) raises Self.HandleError[V, H] -> Self.Handled[V, H]:
+        comptime assert Self._Handles[V, H], "or_else: handler must retain success and stored-error types"
+        return Self.M.flat_map(_ResultGuard[Self.M, Self.E, H, False](handler^), source^)
+
     comptime Base = Self.M
     comptime Element[V: Movable & Deinitable] = ResultFamily[Self.E].Element[Self.M.Element[V]]
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.Mapped[V, _InnerMap[ResultFamily[Self.E], F]]
@@ -356,7 +408,7 @@ Parameters:
     M: The base Monad.
 """
 
-comptime ResultT[M: Monad, E: Movable & Deinitable]: Monad & _Lifting = ResultFamily[E] if M == IdentityFamily else _ResultT[M, E]
+comptime ResultT[M: Monad, E: Movable & Deinitable]: Monad & ApplicativeError & _Lifting = ResultFamily[E] if M == IdentityFamily else _ResultT[M, E]
 """Result over the base Monad `M`: a value is `M`'s carrier of `Result[A, E]`; over Identity, `ResultFamily[E]`.
 
 A stored error skips later callbacks and right operands and keeps the base's

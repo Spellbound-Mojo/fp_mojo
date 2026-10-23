@@ -1,29 +1,23 @@
 """Operations derived from the primitive protocols; no new execution paths."""
 from std.builtin.rebind import downcast
-from fp.callables.protocols import UnaryContract, BinaryContract, Binary, OnceThunk
-from fp.callables.invoke import call_once
+from fp.callables.protocols import UnaryContract, BinaryContract
 from fp.functions.composition import Identity
+from fp.callables._transforms import _ValueThunk as _Value, _Pair, _Apply
 from .protocols import Applicative, Monad, Traversable
+from fp._internal.errors import _ErrorCompatible, _propagate_error
 
 
-@fieldwise_init
-struct _Value[T: Movable & Deinitable](OnceThunk, Copyable where conforms_to(T, Copyable)):
-    """An already computed right operand."""
-    var value: Self.T
-    comptime Out = Self.T
-    def call_once(deinit self) -> Self.Out:
-        return self.value^
-
-
-@fieldwise_init
-struct _Apply[U: UnaryContract & Movable & Deinitable](Binary, Copyable, Defaultable):
-    """Call the left element, a unary callback, with the right element."""
-    comptime First = Self.U
-    comptime Second = Self.U.Arg
-    comptime Out = Self.U.Out
-    comptime Error = Self.U.Error
-    def call(self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out:
-        return call_once(first^, second^)
+def _map2_as[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & Movable & Deinitable,
+             //, I: Applicative, X: Movable & Deinitable](
+    var f: F, var left: V, var right: W
+) raises X -> I.Combined[V, F, _Value[W]]:
+    # Native carrier syntax knows the exact callback error. Keep the family's
+    # public symbolic error spelling intact and admit that identity here.
+    try:
+        return map2[I](f^, left^, right^)
+    except error:
+        comptime assert _ErrorCompatible[X, type_of(error)]
+        _propagate_error[X](error^)
 
 
 comptime _Same[T: Movable & Deinitable] = Identity[T]
@@ -120,3 +114,25 @@ def sequence[V: Movable & Deinitable, //, S: Traversable, G: Applicative](var so
         Any error `G` adds.
     """
     return S.traverse[G](Identity[S.Element[V]](), source^)
+
+
+def product[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W
+) raises I.CombineError[V, _Pair[I.Element[V], I.Element[W]], _Value[W]] -> I.Combined[V, _Pair[I.Element[V], I.Element[W]], _Value[W]]:
+    """Combine already computed operands into pairs through map2.
+
+    Parameters:
+        V: The left carrier type, including origins.
+        W: The right carrier type, including origins.
+        I: The Applicative family, which defines combination and errors.
+
+    Args:
+        left: The first carrier, consumed.
+        right: The second carrier, consumed; already evaluated.
+
+    Returns:
+        The carrier of pairs. Lists form a Cartesian product in left-major order.
+
+    Raises:
+        The family's combination error, unchanged.
+    """
+    return map2[I](_Pair[I.Element[V], I.Element[W]](), left^, right^)
