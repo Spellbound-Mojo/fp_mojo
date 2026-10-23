@@ -10,7 +10,9 @@ a collection, or `iter(values)` to borrow it. Standard adapters (`chain`, `zip`,
 `iterated(source)` adds consuming method syntax to the same native iterators:
 `iterated(values^).map(f).filter(p).to_list()`. Its `Iter` wrapper implements
 `Iterator` and `IterableOwned`, so standard consuming adapters accept it
-directly. Wrap a standard adapter's result with `iterated` to continue chaining.
+directly. Native `take`, `drop`, `enumerate`, variadic `zip` and `chain` are
+also consuming methods. Wrap another standard adapter's result with `iterated`
+to continue chaining.
 `to_list()` and `collect_list()` are alias methods for the free `collect_list`.
 Named chains are consumed explicitly, as in `stream^.to_list()`.
 The core functions `map`, `filter`, `filter_not` and `fold_left` are also exported by
@@ -19,7 +21,8 @@ the same named methods to eager value chains. Its fold keeps the accumulator
 inside the chain, while `Iter.fold_left` returns the accumulator directly.
 
 **Lazy adapters** (`map`, `filter`, `filter_not`, `filter_map`, `flatten`, `flat_map`,
-`scan_left`) are native iterators whose advancement raises only
+`scan_left`, `zip_with`, `map_with_index` and value-taking `take_while`/`drop_while`)
+are native iterators whose advancement raises only
 `StopIteration`:
 
 - Construction is inert: nothing is pulled and no callback runs until the first
@@ -33,7 +36,10 @@ Lazy callbacks do not raise, because a native iterator can raise only
 aggregate them with `collect_results`. A callback is a plain function, a
 capturing closure or, for `map`, `filter_map`, `flat_map` and `scan_left`, a
 shared-receiver `Unary`/`Binary` value such as a `Partial`. Move a closure that
-owns non-trivial state in with `callback^`. Owners of borrowed captures must
+owns non-trivial state in with `callback^`. On Mojo 1.1, some native closures
+with move-only inputs/output and owned mutable state require `@always_inline`
+on the callback to preserve state writes at O3; see the native-boundaries
+architecture chapter. Owners of borrowed captures must
 stay alive and unmoved while the adapter is used. A generic function that
 returns an adapter names its type with `MapIterator`, `ScanIterator`,
 `FilterIterator`, `FilterNotIterator`, `FilterMapIterator` or `FlatMapIterator`, declares
@@ -52,6 +58,14 @@ type.
 | `reduce_optional(step, source)` | As above, wrapped in `Optional` | `None` |
 | `fold_until(step, initial, source)` | Each call returns `ControlFlow[B, A]`; `Break(b)` returns at once | `Continue(initial)` |
 | `collect_list(source)` | A `List` of every element, moved | An empty list |
+| `first(source)` / `last(source)` | First / last remaining element | `None` |
+| `is_empty(source)` | Pulls at most one value; returns `False` | `True` |
+| `count(source)` / `count_where(p, source)` | Visits and counts values / matches | `0` |
+| `contains(source, value)` | Borrows for equality, stops at first match | `False` |
+| `for_each(f, source)` | Moves each value into a callback returning `NoneType` | `None`, no calls |
+| `to_non_empty_list(source)` | `Some(NonEmptyList)` | `None` |
+| `combine_all_optional[S](source)` | Left-to-right Semigroup reduction | `None` |
+| `collect_fold[M](f, source)` | Combines present Optional results with the Monoid | Monoid identity |
 | `find(p, source)` | The first accepted element | `None` |
 | `any(p, source)` / `all(p, source)` | Stops at the first decisive element | `False` / `True` |
 
@@ -104,3 +118,7 @@ from .derived import fill, replace, void, tuple_left, tuple_right, pair_with, ta
 from .reductions import find_map, fold_map, combine_all, sum, sum_by, min_by, max_by
 
 from fp.iteration.effectful import fold_effect, any_effect, all_effect
+
+from .prefixes import TakeWhileIterator, DropWhileIterator, take_while, drop_while
+from .indexed import ZipWithIterator, IndexedMapIterator, zip_with, map_with_index
+from .terminals import first, last, is_empty, count, count_where, contains, for_each, to_non_empty_list, combine_all_optional, collect_fold

@@ -20,7 +20,8 @@ from fp.iteration._callbacks import _predicate_callable
 
 @fieldwise_init
 struct _Map[T: Movable & Deinitable, U: Movable & Deinitable,
-            I: Iterator, F: Movable & Deinitable = def(var T) thin -> U](Iterator, IterableOwned):
+            I: Iterator, F: Movable & Deinitable = def(var T) thin -> U,
+            apply: def(mut F, var T) thin -> U = _apply_lazy_unary[T, U, F]](Iterator, IterableOwned):
     comptime Element = Self.U
     comptime IteratorOwnedType = Self
     var function: Self.F
@@ -34,7 +35,7 @@ struct _Map[T: Movable & Deinitable, U: Movable & Deinitable,
         comptime assert Self.I.Element == Self.T, "map: source element type must match T"
         var item = _next_fused(self.source, self.done)
         var value = rebind_var[Self.T](item^)
-        return _apply_lazy_unary[Self.T, Self.U](self.function, value^)
+        return Self.apply(self.function, value^)
 
 def map[T: Movable & Deinitable, U: Movable & Deinitable, I: Movable & Deinitable, //](
     function: def(var T) thin -> U, var source: I

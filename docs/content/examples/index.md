@@ -97,3 +97,8 @@ uses NonEmptyList for both accumulated errors and successful traversal shapes.
 
 [Inclusive-or validation](../reference/data.md#success-with-warnings) keeps a value
 with warnings and compares sequential and independent diagnostic accumulation.
+
+## Prefixes and indexed iteration
+
+The [iterator expansion example](../reference/iteration.md#prefixes-indexed-mapping-and-consuming-terminals)
+combines lazy prefixes, native zip, indexed mapping and explicit terminals.

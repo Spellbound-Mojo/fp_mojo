@@ -25,6 +25,10 @@ built only when that word is reached. The helper still materializes an inner
 list. Returning a borrowing codepoint iterator from a temporary owned string
 would require a different ownership contract.
 
+`Iter` also offers `.take(n)`, `.drop(n)`, `.enumerate(start=0)`, variadic
+`.zip(...)` and `.chain(...)`. Captured prefix predicates and consuming
+searches are covered in the [iterator reference](../reference/iteration.md#prefixes-indexed-mapping-and-consuming-terminals).
+
 `Iter` implements native `Iterator` and `IterableOwned`, so `enumerate`
 consumes it directly. The returned standard adapter can pass through
 `iterated(numbered^)` to resume chaining. Native `next`, consuming `for` loops,

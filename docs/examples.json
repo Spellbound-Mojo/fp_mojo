@@ -150,6 +150,9 @@
     },
     "docs/examples/writer_capabilities.mojo": {
       "stdout": "output: [saved] ; observed: [saved]\nnested output: [nested] ; observed: [nested] ; state: 42\nfailed: True ; retained output: [attempted]\n"
+    },
+    "docs/examples/iteration_expansion.mojo": {
+      "stdout": "before consuming: 0\nvalues: [13, 24] ; predicate calls: 4\nzip: [(0, 10, 20), (1, 11, 21)]\nselected fold: 024\nnon-empty: 3 ; empty first: False\n"
     }
   }
 }

@@ -176,3 +176,67 @@ def _predicate_callable[T: Movable & Deinitable, C: BorrowCallable, E: Movable &
 ) raises E capturing -> Bool:
     comptime assert BorrowCallCompatible[E, C, T] and C.Result == Bool, "predicate: exact payload, Bool result and compatible error required"
     return rebind_var[Bool](invoke_borrowed[E](value, function))
+
+
+# The lazy binary bridge needs mutable access to owned native captures, unlike
+# terminal native calls. Pair unpacking and library receiver dispatch remain
+# owned by callables, as for the other lazy invocation shapes.
+from fp.callables.native import _Binary
+from fp.callables.protocols import BinaryContract
+from fp.callables.invoke import RepeatableBinary
+from fp.callables.products import _take_pair
+from std.memory import MaybeUninit
+
+
+def _call_lazy_binary[A: Movable & Deinitable, B: Movable & Deinitable,
+                      R: Movable & Deinitable, F: _Binary[A, B, R]](
+    mut function: F, var first: A, var second: B
+) -> R:
+    return function(first^, second^)
+
+
+comptime _IndexedBinary[T: Movable & Deinitable, R: Movable & Deinitable] = def(var Int, var T) -> R
+
+
+def _call_lazy_indexed[T: Movable & Deinitable, R: Movable & Deinitable,
+                       F: _IndexedBinary[T, R]](mut function: F, index: Int, var value: T) -> R:
+    return function(index, value^)
+
+
+def _apply_lazy_indexed[T: Movable & Deinitable, R: Movable & Deinitable,
+                        F: Movable & Deinitable](mut function: F, index: Int, var value: T) -> R:
+    comptime if F == def(var Int, var T) thin -> R:
+        return rebind[def(var Int, var T) thin -> R](function)(index, value^)
+    else:
+        comptime Fn = downcast[F, _IndexedBinary[T, R]]
+        comptime assert Fn.T == T and Fn.R == R
+        return _call_lazy_indexed[T, R, Fn](rebind[Fn](function), index, value^)
+
+
+# Tuple adaptation is an invocation policy of the same _Map driver. Store
+# the actual callback directly; its exact type preserves native origins and
+# mutable receiver access without introducing a second callable wrapper.
+def _apply_lazy_pair[A: Movable & Deinitable, B: Movable & Deinitable,
+                     R: Movable & Deinitable, F: Movable & Deinitable, indexed: Bool](
+    mut function: F, var arg: Tuple[A, B]
+) -> R:
+    var left = MaybeUninit[A]()
+    var right = MaybeUninit[B]()
+    _take_pair(arg^, left, right)
+    var first = left^.unsafe_assume_init()
+    var second = right^.unsafe_assume_init()
+    comptime if conforms_to(F, BinaryContract):
+        comptime C = downcast[F, BinaryContract & Movable & Deinitable]
+        comptime assert RepeatableBinary[C] and C.Error == Never and C.First == A and C.Second == B and C.Out == R
+        return rebind_var[R](_binary_repeated_as[Never](rebind[C](function), rebind_var[C.First](first^), rebind_var[C.Second](second^)))
+    elif F == def(var A, var B) thin -> R:
+        return rebind[def(var A, var B) thin -> R](function)(first^, second^)
+    elif indexed:
+        # Literal-Int and fully generic binary signatures have distinct native
+        # witness tables on Mojo 1.1. Only their invocation boundary differs.
+        comptime assert A == Int
+        return _apply_lazy_indexed[B, R](function, rebind_var[Int](first^), second^)
+    else:
+        comptime Fn = downcast[F, _Binary[A, B, R]]
+        comptime assert Fn.A == A and Fn.B == B and Fn.R == R
+        return _call_lazy_binary[A, B, R, Fn](rebind[Fn](function), first^, second^)

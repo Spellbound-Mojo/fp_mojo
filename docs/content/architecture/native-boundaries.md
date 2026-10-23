@@ -50,6 +50,13 @@ that would let the library drop it.
 
 ## Known compiler defects
 
+Mojo 1.1 can lose writes to an owned mutable closure capture at O3 when a
+native callback consumes and returns non-trivial values. A direct binary call
+reproduces this independently of the library. `@always_inline` on the callback
+avoids the faulty receiver lowering; using a library callable with explicit
+mutable receiver storage also avoids this native closure shape. The iterator
+expansion ownership tests exercise the annotated closure at O0 and O3.
+
 These are defects of Mojo 1.1.0 reproduced without importing the library. The
 library works around them where it can; the remaining forms are excluded from its
 supported API.

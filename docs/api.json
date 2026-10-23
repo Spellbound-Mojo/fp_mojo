@@ -89710,6 +89710,40 @@
    "provider": "functions/pipeline",
    "summary": ""
   },
+  "iteration.DropWhileIterator": {
+   "aliases": [],
+   "description": "",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The yielded element type.",
+     "inferred": false,
+     "name": "T",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The normalized native iterator type.",
+     "inferred": false,
+     "name": "I",
+     "type": "Iterator",
+     "variadic": false
+    },
+    {
+     "description": "The concrete non-raising borrowed predicate type.",
+     "inferred": false,
+     "name": "F",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "iteration/prefixes",
+   "signature": "comptime DropWhileIterator[T: Movable & Deinitable, I: Iterator, F: Movable & Deinitable = def(T) thin -> Bool] = _Prefix[T, I, F, False]",
+   "summary": "A fused dropping prefix; the predicate stops after the first rejection.",
+   "traits": []
+  },
   "iteration.EmptyReductionError": {
    "aliases": [],
    "description": "",
@@ -89873,6 +89907,47 @@
    "provider": "iteration/adapters",
    "signature": "comptime FlatMapIterator[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator, F: Movable & Deinitable = def(var T) thin -> U] = _Flatten[_Map[T, U, I, F], U]",
    "summary": "The type `flat_map` returns, for a generic function's return annotation.",
+   "traits": []
+  },
+  "iteration.IndexedMapIterator": {
+   "aliases": [],
+   "description": "",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The source element type.",
+     "inferred": false,
+     "name": "T",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The output type.",
+     "inferred": false,
+     "name": "R",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The normalized native iterator type.",
+     "inferred": false,
+     "name": "I",
+     "type": "Iterator",
+     "variadic": false
+    },
+    {
+     "description": "The stored non-raising binary callback type.",
+     "inferred": false,
+     "name": "F",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "iteration/indexed",
+   "signature": "comptime IndexedMapIterator[T: Movable & Deinitable, R: Movable & Deinitable, I: Iterator, F: Movable & Deinitable = def(var Int, var T) thin -> R] = _Map[Tuple[Int, T], R, _Enumerate[I], F, _apply_lazy_pair[Int, T, R, F, True]]",
+   "summary": "The map of native enumerate, with index before the owned element.",
    "traits": []
   },
   "iteration.Iter": {
@@ -90567,6 +90642,200 @@
       "summary": "Return the underlying iterator's remaining length bounds."
      }
     ],
+    "chain": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "Additional sources, consumed without restarting iterators.",
+        "name": "others",
+        "type": "*Ss",
+        "variadic": true
+       }
+      ],
+      "description": "Sources are consumed once and never restarted. Zip yields flat tuples,\nstopping at the shortest input; earlier inputs may be pulled before a later\ninput ends. Chain yields same-typed elements in source order. Construction\npulls nothing; native bounds, ownership and exhaustion remain unchanged.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The additional source types; an iterator keeps its current position.",
+        "inferred": false,
+        "name": "Ss",
+        "type": "Movable & Deinitable",
+        "variadic": true
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Iter[_ChainedIterator[*_NativeTail[Self.I, *Ss]]] with the ownership, timing and empty-input behavior described above.",
+       "type": "Iter[_ChainedIterator[*_NativeTail[Self.I, *Ss]]]"
+      },
+      "signature": "def chain[*Ss: Movable & Deinitable](deinit self, var *others: *Ss) -> Iter[_ChainedIterator[*_NativeTail[Self.I, *Ss]]] where TypeList[Trait=Movable & Deinitable, Ss.values]().all[_SameSource[Self.I.Element, _]]()",
+      "summary": "Combine the remaining sources through native chain."
+     }
+    ],
+    "collect_fold": [
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "This is a consuming terminal. Native callbacks are borrowed in place;\nlibrary callbacks are consumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.",
+      "error": "M.Error",
+      "parameters": [
+       {
+        "description": "The first callback argument type.",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The callback result type.",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The origin of the borrowed callback or comparison value.",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "The explicit Monoid; identity and combination retain its error type.",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       },
+       {
+        "description": "The concrete callback type, preserving captures and receiver semantics.",
+        "inferred": false,
+        "name": "F",
+        "type": "_Unary[A, R]",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact admitted callback or combination error; Never when non-raising.",
+      "returns": {
+       "doc": "M.Value with the ownership, timing and empty-input behavior described above.",
+       "type": "M.Value"
+      },
+      "signature": "def collect_fold[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises M.Error -> M.Value where Self.I.Element == A and R == Optional[M.Value]",
+      "summary": "Map to Optional monoid values, skip absence and combine present values in order."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingUnary[A, R, E]",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "M.Value"
+      },
+      "signature": "def collect_fold[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises E -> M.Value where Self.I.Element == A and R == Optional[M.Value] and _ErrorCompatible[E, M.Error]",
+      "summary": "Map to Optional monoid values, skip absence and combine present values in order."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[F.Error, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "M.Value"
+      },
+      "signature": "def collect_fold[F: UnaryContract & Movable & Deinitable, //, M: Monoid](deinit self, var function: F) raises _CommonError[F.Error, M.Error] -> M.Value where Self.I.Element == F.Arg and F.Out == Optional[M.Value]",
+      "summary": "Map to Optional monoid values, skip absence and combine present values in order."
+     }
+    ],
     "collect_list": [
      {
       "args": [],
@@ -90607,6 +90876,30 @@
       "summary": "Combine in order with a monoid; empty input returns its identity."
      }
     ],
+    "combine_all_optional": [
+     {
+      "args": [],
+      "description": "The source is consumed without restarting. Values are moved or destroyed\nwithout requiring copies. Early exit destroys the unconsumed owner; no\nadditional value is pulled. Collection and full reductions require finite\ninput; count visits every element even when bounds give its length.",
+      "error": "S.Error",
+      "parameters": [
+       {
+        "description": "The explicit Semigroup; no identity value is required.",
+        "inferred": false,
+        "name": "S",
+        "type": "Semigroup",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact admitted callback or combination error; Never when non-raising.",
+      "returns": {
+       "doc": "Optional[S.Value] with the ownership, timing and empty-input behavior described above.",
+       "type": "Optional[S.Value]"
+      },
+      "signature": "def combine_all_optional[S: Semigroup](deinit self) raises S.Error -> Optional[S.Value] where Self.I.Element == S.Value",
+      "summary": "Combine left to right with a Semigroup; empty input returns None."
+     }
+    ],
     "compact": [
      {
       "args": [],
@@ -90629,6 +90922,371 @@
       },
       "signature": "def compact[T: Movable & Deinitable](deinit self) -> Iter[_FilterMap[Optional[T], T, Self.I, _Same[Optional[T]]]] where Self.I.Element == Optional[T]",
       "summary": "Lazily unwrap present Optional elements and discard absent ones."
+     }
+    ],
+    "contains": [
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "The comparison value, borrowed for the duration of the terminal.",
+        "name": "value",
+        "type": "T",
+        "variadic": false
+       }
+      ],
+      "description": "The source is consumed without restarting. Values are moved or destroyed\nwithout requiring copies. Early exit destroys the unconsumed owner; no\nadditional value is pulled. Collection and full reductions require finite\ninput; count visits every element even when bounds give its length.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The source element type, including origins.",
+        "inferred": false,
+        "name": "T",
+        "type": "Equatable & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The origin of the borrowed callback or comparison value.",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Bool with the ownership, timing and empty-input behavior described above.",
+       "type": "Bool"
+      },
+      "signature": "def contains[T: Equatable & Movable & Deinitable, o: ImmOrigin](deinit self, ref[o] value: T) -> Bool where Self.I.Element == T and conforms_to(Self.I.Element, Movable & Deinitable)",
+      "summary": "Borrow candidates for native equality and stop at the first match."
+     }
+    ],
+    "count": [
+     {
+      "args": [],
+      "description": "The source is consumed without restarting. Values are moved or destroyed\nwithout requiring copies. Early exit destroys the unconsumed owner; no\nadditional value is pulled. Collection and full reductions require finite\ninput; count visits every element even when bounds give its length.",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Int with the ownership, timing and empty-input behavior described above.",
+       "type": "Int"
+      },
+      "signature": "def count(deinit self) -> Int where conforms_to(Self.I.Element, Deinitable)",
+      "summary": "Consume and count every remaining element; empty input returns zero."
+     }
+    ],
+    "count_where": [
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "name": "predicate",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "This is a consuming terminal. Native callbacks are borrowed in place;\nlibrary callbacks are consumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "The admitted type parameter.",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "The callback result type.",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The origin of the borrowed callback or comparison value.",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "The concrete callback type, preserving captures and receiver semantics.",
+        "inferred": false,
+        "name": "F",
+        "type": "_Borrowing[P, R]",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact admitted callback or combination error; Never when non-raising.",
+      "returns": {
+       "doc": "Int with the ownership, timing and empty-input behavior described above.",
+       "type": "Int"
+      },
+      "signature": "def count_where[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] predicate: F) raises Never -> Int where Self.I.Element == downcast[P, Movable & Deinitable] and R == Bool",
+      "summary": "Count accepted candidates, borrowing each once; empty input returns zero."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "predicate",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingBorrowing[P, R, E]",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Int"
+      },
+      "signature": "def count_where[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] predicate: F) raises E -> Int where Self.I.Element == downcast[P, Movable & Deinitable] and R == Bool",
+      "summary": "Count accepted candidates, borrowing each once; empty input returns zero."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C.Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Int"
+      },
+      "signature": "def count_where[C: BorrowCallable](deinit self, var predicate: C) raises C.Failure -> Int where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool",
+      "summary": "Count accepted candidates, borrowing each once; empty input returns zero."
+     }
+    ],
+    "drop": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The native take/drop count; non-positive counts retain standard behavior.",
+        "name": "n",
+        "type": "Int",
+        "variadic": false
+       }
+      ],
+      "description": "Construction pulls nothing; non-positive counts retain standard semantics.\nBounds and exhaustion delegate unchanged to the native adapter.",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Iter[_DropIterator[Self.I]] with the ownership, timing and empty-input behavior described above.",
+       "type": "Iter[_DropIterator[Self.I]]"
+      },
+      "signature": "def drop(deinit self, n: Int) -> Iter[_DropIterator[Self.I]] where conforms_to(Self.I.Element, Deinitable)",
+      "summary": "Apply native drop without restarting the source."
+     }
+    ],
+    "drop_while": [
+     {
+      "args": [],
+      "description": "Construction pulls nothing. Take consumes the first rejected candidate;\ndrop yields it and stops testing. Bounds and exhaustion remain native.\nUse the value-taking overload for an owned closure or library predicate.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The non-raising compile-time thin predicate.",
+        "inferred": false,
+        "name": "predicate",
+        "type": "def(Self.I.Element) thin -> Bool",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Iter[_DropWhileIterator[InnerIteratorType=Self.I, predicate=predicate]] with the ownership, timing and empty-input behavior described above.",
+       "type": "Iter[_DropWhileIterator[InnerIteratorType=Self.I, predicate=predicate]]"
+      },
+      "signature": "def drop_while[predicate: def(Self.I.Element) thin -> Bool](deinit self) -> Iter[_DropWhileIterator[InnerIteratorType=Self.I, predicate=predicate]] where conforms_to(Self.I.Element, Deinitable)",
+      "summary": "Apply native drop_while with a compile-time thin predicate."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "name": "predicate",
+        "type": "def(T) thin -> Bool",
+        "variadic": false
+       }
+      ],
+      "description": "Construction pulls nothing. The stored predicate borrows each candidate and cannot raise.\nExhaustion is fused; abandonment releases captures and the unconsumed source.\nUses constant state and preserves move-only elements and embedded origins.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The source element type, including origins.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Iter[DropWhileIterator[T, Self.I, def(T) thin -> Bool]] with the ownership, timing and empty-input behavior described above.",
+       "type": "Iter[DropWhileIterator[T, Self.I, def(T) thin -> Bool]]"
+      },
+      "signature": "def drop_while[T: Movable & Deinitable](deinit self, var predicate: def(T) thin -> Bool) -> Iter[DropWhileIterator[T, Self.I, def(T) thin -> Bool]] where Self.I.Element == T",
+      "summary": "Discard the matching prefix; yield the first rejection and stop testing."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "predicate",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_LazyPredicate[T]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[DropWhileIterator[T, Self.I, F]]"
+      },
+      "signature": "def drop_while[T: Movable & Deinitable, //, F: _LazyPredicate[T]](deinit self, var predicate: F) -> Iter[DropWhileIterator[T, Self.I, F]] where Self.I.Element == T",
+      "summary": "Discard the matching prefix; yield the first rejection and stop testing."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[DropWhileIterator[downcast[C.Payload, Movable & Deinitable], Self.I, C]]"
+      },
+      "signature": "def drop_while[C: BorrowCallable](deinit self, var predicate: C) -> Iter[DropWhileIterator[downcast[C.Payload, Movable & Deinitable], Self.I, C]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never",
+      "summary": "Discard the matching prefix; yield the first rejection and stop testing."
+     }
+    ],
+    "enumerate": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The first native Int index; defaults to zero.",
+        "name": "start",
+        "type": "Int",
+        "variadic": false
+       }
+      ],
+      "description": "The source keeps its current position; construction pulls nothing.\nBounds and exhaustion remain native.",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Iter[_Enumerate[Self.I]] with the ownership, timing and empty-input behavior described above.",
+       "type": "Iter[_Enumerate[Self.I]]"
+      },
+      "signature": "def enumerate(deinit self, *, start: Int = 0) -> Iter[_Enumerate[Self.I]]",
+      "summary": "Lazily attach native (index, value) pairs, starting at start."
      }
     ],
     "fill": [
@@ -91423,6 +92081,22 @@
       },
       "signature": "def find_map[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> F.Out where Self.I.Element == F.Arg",
       "summary": "Return the first present transformed result, stopping without another pull."
+     }
+    ],
+    "first": [
+     {
+      "args": [],
+      "description": "The source is consumed without restarting. Values are moved or destroyed\nwithout requiring copies. Early exit destroys the unconsumed owner; no\nadditional value is pulled. Collection and full reductions require finite\ninput; count visits every element even when bounds give its length.",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Optional[downcast[Self.I.Element, Movable & Deinitable]] with the ownership, timing and empty-input behavior described above.",
+       "type": "Optional[downcast[Self.I.Element, Movable & Deinitable]]"
+      },
+      "signature": "def first(deinit self) -> Optional[downcast[Self.I.Element, Movable & Deinitable]] where conforms_to(Self.I.Element, Deinitable)",
+      "summary": "Consume at most one element and return it, or None for empty input."
      }
     ],
     "flat_map": [
@@ -92745,6 +93419,179 @@
       "summary": "Sequence a zero-argument factory and keep its produced values."
      }
     ],
+    "for_each": [
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "This is a consuming terminal. Native callbacks are borrowed in place;\nlibrary callbacks are consumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "The first callback argument type.",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The callback result type.",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The origin of the borrowed callback or comparison value.",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "The concrete callback type, preserving captures and receiver semantics.",
+        "inferred": false,
+        "name": "F",
+        "type": "_Unary[A, R]",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact admitted callback or combination error; Never when non-raising.",
+      "returns": {
+       "doc": "NoneType with the ownership, timing and empty-input behavior described above.",
+       "type": "NoneType"
+      },
+      "signature": "def for_each[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> NoneType where Self.I.Element == A and R == NoneType",
+      "summary": "Move each element into a callback returning NoneType, then return None."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingUnary[A, R, E]",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "NoneType"
+      },
+      "signature": "def for_each[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises E -> NoneType where Self.I.Element == A and R == NoneType",
+      "summary": "Move each element into a callback returning NoneType, then return None."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F.Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "NoneType"
+      },
+      "signature": "def for_each[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) raises F.Error -> NoneType where Self.I.Element == F.Arg and F.Out == NoneType",
+      "summary": "Move each element into a callback returning NoneType, then return None."
+     }
+    ],
+    "is_empty": [
+     {
+      "args": [],
+      "description": "The source is consumed without restarting. Values are moved or destroyed\nwithout requiring copies. Early exit destroys the unconsumed owner; no\nadditional value is pulled. Collection and full reductions require finite\ninput; count visits every element even when bounds give its length.",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Bool with the ownership, timing and empty-input behavior described above.",
+       "type": "Bool"
+      },
+      "signature": "def is_empty(deinit self) -> Bool where conforms_to(Self.I.Element, Deinitable)",
+      "summary": "Consume at most one element and report whether none was present."
+     }
+    ],
+    "last": [
+     {
+      "args": [],
+      "description": "The source is consumed without restarting. Values are moved or destroyed\nwithout requiring copies. Early exit destroys the unconsumed owner; no\nadditional value is pulled. Collection and full reductions require finite\ninput; count visits every element even when bounds give its length.",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Optional[downcast[Self.I.Element, Movable & Deinitable]] with the ownership, timing and empty-input behavior described above.",
+       "type": "Optional[downcast[Self.I.Element, Movable & Deinitable]]"
+      },
+      "signature": "def last(deinit self) -> Optional[downcast[Self.I.Element, Movable & Deinitable]] where conforms_to(Self.I.Element, Deinitable)",
+      "summary": "Consume every remaining element and return the last, or None."
+     }
+    ],
     "map": [
      {
       "args": [
@@ -92893,6 +93740,140 @@
       },
       "signature": "def map[F: Unary](deinit self, var function: F) -> Iter[MapIterator[F.Arg, F.Out, Self.I, F]] where Self.I.Element == F.Arg and F.Error == Never",
       "summary": "Lazily transform each element with a library `Unary` value."
+     }
+    ],
+    "map_with_index": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "name": "function",
+        "type": "def(var Int, var T) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "The first native Int index; defaults to zero.",
+        "name": "start",
+        "type": "Int",
+        "variadic": false
+       }
+      ],
+      "description": "Construction is inert; each output moves its inputs into the non-raising callback.\nMapping fuses exhaustion and retains owned captures, move-only results and native origins.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The source element type, including origins.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The callback result type.",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Iter[IndexedMapIterator[T, R, Self.I, def(var Int, var T) thin -> R]] with the ownership, timing and empty-input behavior described above.",
+       "type": "Iter[IndexedMapIterator[T, R, Self.I, def(var Int, var T) thin -> R]]"
+      },
+      "signature": "def map_with_index[T: Movable & Deinitable, R: Movable & Deinitable](deinit self, var function: def(var Int, var T) thin -> R, *, start: Int = 0) -> Iter[IndexedMapIterator[T, R, Self.I, def(var Int, var T) thin -> R]] where Self.I.Element == T",
+      "summary": "Lazily map (index, owned element), using native enumerate then map."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "start",
+        "type": "Int",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_IndexedBinary[T, R]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[IndexedMapIterator[T, R, Self.I, F]]"
+      },
+      "signature": "def map_with_index[T: Movable & Deinitable, R: Movable & Deinitable, //, F: _IndexedBinary[T, R]](deinit self, var function: F, *, start: Int = 0) -> Iter[IndexedMapIterator[T, R, Self.I, F]] where Self.I.Element == T",
+      "summary": "Lazily map (index, owned element), using native enumerate then map."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "start",
+        "type": "Int",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "BinaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[IndexedMapIterator[F.Second, F.Out, Self.I, F]]"
+      },
+      "signature": "def map_with_index[F: BinaryContract & Movable & Deinitable](deinit self, var function: F, *, start: Int = 0) -> Iter[IndexedMapIterator[F.Second, F.Out, Self.I, F]] where Self.I.Element == F.Second and F.Error == Never and RepeatableBinary[F] and F.First == Int",
+      "summary": "Lazily map (index, owned element), using native enumerate then map."
      }
     ],
     "max_by": [
@@ -94471,6 +95452,151 @@
       "summary": "Project and add in one pass from zero, without an intermediate collection."
      }
     ],
+    "take": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The native take/drop count; non-positive counts retain standard behavior.",
+        "name": "n",
+        "type": "Int",
+        "variadic": false
+       }
+      ],
+      "description": "Construction pulls nothing; non-positive counts retain standard semantics.\nBounds and exhaustion delegate unchanged to the native adapter.",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Iter[_TakeIterator[Self.I]] with the ownership, timing and empty-input behavior described above.",
+       "type": "Iter[_TakeIterator[Self.I]]"
+      },
+      "signature": "def take(deinit self, n: Int) -> Iter[_TakeIterator[Self.I]]",
+      "summary": "Apply native take without restarting the source."
+     }
+    ],
+    "take_while": [
+     {
+      "args": [],
+      "description": "Construction pulls nothing. Take consumes the first rejected candidate;\ndrop yields it and stops testing. Bounds and exhaustion remain native.\nUse the value-taking overload for an owned closure or library predicate.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The non-raising compile-time thin predicate.",
+        "inferred": false,
+        "name": "predicate",
+        "type": "def(Self.I.Element) thin -> Bool",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Iter[_TakeWhileIterator[InnerIteratorType=Self.I, predicate=predicate]] with the ownership, timing and empty-input behavior described above.",
+       "type": "Iter[_TakeWhileIterator[InnerIteratorType=Self.I, predicate=predicate]]"
+      },
+      "signature": "def take_while[predicate: def(Self.I.Element) thin -> Bool](deinit self) -> Iter[_TakeWhileIterator[InnerIteratorType=Self.I, predicate=predicate]] where conforms_to(Self.I.Element, Deinitable)",
+      "summary": "Apply native take_while with a compile-time thin predicate."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "name": "predicate",
+        "type": "def(T) thin -> Bool",
+        "variadic": false
+       }
+      ],
+      "description": "Construction pulls nothing. The stored predicate borrows each candidate and cannot raise.\nExhaustion is fused; abandonment releases captures and the unconsumed source.\nUses constant state and preserves move-only elements and embedded origins.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The source element type, including origins.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Iter[TakeWhileIterator[T, Self.I, def(T) thin -> Bool]] with the ownership, timing and empty-input behavior described above.",
+       "type": "Iter[TakeWhileIterator[T, Self.I, def(T) thin -> Bool]]"
+      },
+      "signature": "def take_while[T: Movable & Deinitable](deinit self, var predicate: def(T) thin -> Bool) -> Iter[TakeWhileIterator[T, Self.I, def(T) thin -> Bool]] where Self.I.Element == T",
+      "summary": "Yield the initial matching prefix; consume and discard its first rejection."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "predicate",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_LazyPredicate[T]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[TakeWhileIterator[T, Self.I, F]]"
+      },
+      "signature": "def take_while[T: Movable & Deinitable, //, F: _LazyPredicate[T]](deinit self, var predicate: F) -> Iter[TakeWhileIterator[T, Self.I, F]] where Self.I.Element == T",
+      "summary": "Yield the initial matching prefix; consume and discard its first rejection."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[TakeWhileIterator[downcast[C.Payload, Movable & Deinitable], Self.I, C]]"
+      },
+      "signature": "def take_while[C: BorrowCallable](deinit self, var predicate: C) -> Iter[TakeWhileIterator[downcast[C.Payload, Movable & Deinitable], Self.I, C]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never",
+      "summary": "Yield the initial matching prefix; consume and discard its first rejection."
+     }
+    ],
     "tap_each": [
      {
       "args": [
@@ -94568,6 +95694,22 @@
       },
       "signature": "def to_list(deinit self) -> List[Self.Element] where conforms_to(Self.Element, Deinitable)",
       "summary": "Consume the remaining elements into a list, in order."
+     }
+    ],
+    "to_non_empty_list": [
+     {
+      "args": [],
+      "description": "The source is consumed without restarting. Values are moved or destroyed\nwithout requiring copies. Early exit destroys the unconsumed owner; no\nadditional value is pulled. Collection and full reductions require finite\ninput; count visits every element even when bounds give its length.",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Optional[NonEmptyList[downcast[Self.I.Element, Movable & Deinitable]]] with the ownership, timing and empty-input behavior described above.",
+       "type": "Optional[NonEmptyList[downcast[Self.I.Element, Movable & Deinitable]]]"
+      },
+      "signature": "def to_non_empty_list(deinit self) -> Optional[NonEmptyList[downcast[Self.I.Element, Movable & Deinitable]]] where conforms_to(Self.I.Element, Deinitable)",
+      "summary": "Collect once into a checked NonEmptyList, returning None when empty."
      }
     ],
     "traverse": [
@@ -95426,6 +96568,207 @@
       "signature": "def void[T: Movable & Deinitable](deinit self) -> Iter[_Map[T, NoneType, Self.I, _Fill[T, NoneType]]] where Self.I.Element == T",
       "summary": "Discard payloads while preserving their container shape. Evaluation is lazy."
      }
+    ],
+    "zip": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "Additional sources, consumed without restarting iterators.",
+        "name": "others",
+        "type": "*Ss",
+        "variadic": true
+       }
+      ],
+      "description": "Sources are consumed once and never restarted. Zip yields flat tuples,\nstopping at the shortest input; earlier inputs may be pulled before a later\ninput ends. Chain yields same-typed elements in source order. Construction\npulls nothing; native bounds, ownership and exhaustion remain unchanged.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The additional source types; an iterator keeps its current position.",
+        "inferred": false,
+        "name": "Ss",
+        "type": "Movable & Deinitable",
+        "variadic": true
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Iter[_ZipIterator[MutUntrackedOrigin, *_NativeTail[Self.I, *Ss]]] with the ownership, timing and empty-input behavior described above.",
+       "type": "Iter[_ZipIterator[MutUntrackedOrigin, *_NativeTail[Self.I, *Ss]]]"
+      },
+      "signature": "def zip[*Ss: Movable & Deinitable](deinit self, var *others: *Ss) -> Iter[_ZipIterator[MutUntrackedOrigin, *_NativeTail[Self.I, *Ss]]]",
+      "summary": "Combine the remaining sources through native zip."
+     }
+    ],
+    "zip_with": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The second source, consumed at its current position.",
+        "name": "other",
+        "type": "W",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "name": "function",
+        "type": "def(var A, var B) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "Construction is inert; each output moves its inputs into the non-raising callback.\nNative zip can consume an earlier input before a later one ends.\nMapping fuses exhaustion and retains owned captures, move-only results and native origins.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The first callback argument type.",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The second callback argument type.",
+        "inferred": false,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The callback result type.",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The second consumed source type.",
+        "inferred": false,
+        "name": "W",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Iter[ZipWithIterator[A, B, R, Self.I, _Source[W], def(var A, var B) thin -> R]] with the ownership, timing and empty-input behavior described above.",
+       "type": "Iter[ZipWithIterator[A, B, R, Self.I, _Source[W], def(var A, var B) thin -> R]]"
+      },
+      "signature": "def zip_with[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, W: Movable & Deinitable](deinit self, var other: W, var function: def(var A, var B) thin -> R) -> Iter[ZipWithIterator[A, B, R, Self.I, _Source[W], def(var A, var B) thin -> R]] where Self.I.Element == A and _Source[W].Element == B",
+      "summary": "Lazily combine pairs using native left-to-right zip followed by map."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "other",
+        "type": "W",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "W",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Binary[A, B, R]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[ZipWithIterator[A, B, R, Self.I, _Source[W], F]]"
+      },
+      "signature": "def zip_with[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, W: Movable & Deinitable, //, F: _Binary[A, B, R]](deinit self, var other: W, var function: F) -> Iter[ZipWithIterator[A, B, R, Self.I, _Source[W], F]] where Self.I.Element == A and _Source[W].Element == B",
+      "summary": "Lazily combine pairs using native left-to-right zip followed by map."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "other",
+        "type": "W",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "BinaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "W",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[ZipWithIterator[F.First, F.Second, F.Out, Self.I, _Source[W], F]]"
+      },
+      "signature": "def zip_with[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable](deinit self, var other: W, var function: F) -> Iter[ZipWithIterator[F.First, F.Second, F.Out, Self.I, _Source[W], F]] where Self.I.Element == F.First and _Source[W].Element == F.Second and F.Error == Never and RepeatableBinary[F]",
+      "summary": "Lazily combine pairs using native left-to-right zip followed by map."
+     }
     ]
    },
    "parameters": [
@@ -95590,6 +96933,95 @@
    "provider": "iteration/adapters",
    "signature": "comptime ScanIterator[A: Copyable & Deinitable, T: Movable & Deinitable, I: Iterator, F: Movable & Deinitable = def(var A, var T) thin -> A] = _Scan[A, T, I, F]",
    "summary": "The type `scan_left` returns, for a generic function's return annotation.",
+   "traits": []
+  },
+  "iteration.TakeWhileIterator": {
+   "aliases": [],
+   "description": "",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The yielded element type.",
+     "inferred": false,
+     "name": "T",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The normalized native iterator type.",
+     "inferred": false,
+     "name": "I",
+     "type": "Iterator",
+     "variadic": false
+    },
+    {
+     "description": "The concrete non-raising borrowed predicate type.",
+     "inferred": false,
+     "name": "F",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "iteration/prefixes",
+   "signature": "comptime TakeWhileIterator[T: Movable & Deinitable, I: Iterator, F: Movable & Deinitable = def(T) thin -> Bool] = _Prefix[T, I, F, True]",
+   "summary": "A fused taking prefix with a stored predicate and the source's origins.",
+   "traits": []
+  },
+  "iteration.ZipWithIterator": {
+   "aliases": [],
+   "description": "",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The first element type.",
+     "inferred": false,
+     "name": "A",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The second element type.",
+     "inferred": false,
+     "name": "B",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The output type.",
+     "inferred": false,
+     "name": "R",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The normalized first iterator type.",
+     "inferred": false,
+     "name": "I",
+     "type": "Iterator",
+     "variadic": false
+    },
+    {
+     "description": "The normalized second iterator type.",
+     "inferred": false,
+     "name": "J",
+     "type": "Iterator",
+     "variadic": false
+    },
+    {
+     "description": "The stored non-raising binary callback type.",
+     "inferred": false,
+     "name": "F",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "iteration/indexed",
+   "signature": "comptime ZipWithIterator[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, I: Iterator, J: Iterator, F: Movable & Deinitable = def(var A, var B) thin -> R] = _Map[Tuple[A, B], R, _ZipIterator[MutUntrackedOrigin, I, J], F, _apply_lazy_pair[A, B, R, F, False]]",
+   "summary": "The map of a native binary zip, retaining callback and source origins.",
    "traits": []
   },
   "iteration.all": {
@@ -96376,6 +97808,216 @@
    "provider": "iteration/effectful",
    "summary": ""
   },
+  "iteration.collect_fold": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The source, consumed at its current position.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "This is a consuming terminal. Native callbacks are borrowed in place;\nlibrary callbacks are consumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.",
+     "error": "M.Error",
+     "parameters": [
+      {
+       "description": "The first callback argument type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The origin of the borrowed callback or comparison value.",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "The consumed native iterator or owned collection type.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The explicit Monoid; identity and combination retain its error type.",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "The concrete callback type, preserving captures and receiver semantics.",
+       "inferred": false,
+       "name": "F",
+       "type": "_Unary[A, R]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The exact admitted callback or combination error; Never when non-raising.",
+     "returns": {
+      "doc": "M.Value with the ownership, timing and empty-input behavior described above.",
+      "type": "M.Value"
+     },
+     "signature": "def collect_fold[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid, F: _Unary[A, R]](ref[o] function: F, var source: V) raises M.Error -> M.Value where _Source[V].Element == A and R == Optional[M.Value]",
+     "summary": "Map to Optional monoid values, skip absence and combine present values in order."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "E",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingUnary[A, R, E]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "M.Value"
+     },
+     "signature": "def collect_fold[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](ref[o] function: F, var source: V) raises E -> M.Value where _Source[V].Element == A and R == Optional[M.Value] and _ErrorCompatible[E, M.Error]",
+     "summary": "Map to Optional monoid values, skip absence and combine present values in order."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_CommonError[F.Error, M.Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "M.Value"
+     },
+     "signature": "def collect_fold[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, M: Monoid](var function: F, var source: V) raises _CommonError[F.Error, M.Error] -> M.Value where _Source[V].Element == F.Arg and F.Out == Optional[M.Value]",
+     "summary": "Map to Optional monoid values, skip absence and combine present values in order."
+    }
+   ],
+   "provider": "iteration/terminals",
+   "summary": ""
+  },
   "iteration.collect_list": {
    "description": "",
    "kind": "function",
@@ -96466,6 +98108,51 @@
    "provider": "iteration/reductions",
    "summary": ""
   },
+  "iteration.combine_all_optional": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The source, consumed at its current position.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "The source is consumed without restarting. Values are moved or destroyed\nwithout requiring copies. Early exit destroys the unconsumed owner; no\nadditional value is pulled. Collection and full reductions require finite\ninput; count visits every element even when bounds give its length.",
+     "error": "S.Error",
+     "parameters": [
+      {
+       "description": "The explicit Semigroup; no identity value is required.",
+       "inferred": false,
+       "name": "S",
+       "type": "Semigroup",
+       "variadic": false
+      },
+      {
+       "description": "The consumed native iterator or owned collection type.",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The exact admitted callback or combination error; Never when non-raising.",
+     "returns": {
+      "doc": "Optional[S.Value] with the ownership, timing and empty-input behavior described above.",
+      "type": "Optional[S.Value]"
+     },
+     "signature": "def combine_all_optional[S: Semigroup, V: Movable & Deinitable](var source: V) raises S.Error -> Optional[S.Value] where _Source[V].Element == S.Value",
+     "summary": "Combine left to right with a Semigroup; empty input returns None."
+    }
+   ],
+   "provider": "iteration/terminals",
+   "summary": ""
+  },
   "iteration.compact": {
    "description": "",
    "kind": "function",
@@ -96509,6 +98196,439 @@
     }
    ],
    "provider": "iteration/derived",
+   "summary": ""
+  },
+  "iteration.contains": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The source, consumed at its current position.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "ref[o]",
+       "description": "The comparison value, borrowed for the duration of the terminal.",
+       "name": "value",
+       "type": "T",
+       "variadic": false
+      }
+     ],
+     "description": "The source is consumed without restarting. Values are moved or destroyed\nwithout requiring copies. Early exit destroys the unconsumed owner; no\nadditional value is pulled. Collection and full reductions require finite\ninput; count visits every element even when bounds give its length.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The source element type, including origins.",
+       "inferred": false,
+       "name": "T",
+       "type": "Equatable & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The origin of the borrowed callback or comparison value.",
+       "inferred": false,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "The consumed native iterator or owned collection type.",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "Bool with the ownership, timing and empty-input behavior described above.",
+      "type": "Bool"
+     },
+     "signature": "def contains[T: Equatable & Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable](var source: V, ref[o] value: T) -> Bool where _Source[V].Element == T and conforms_to(_Source[V].Element, Movable & Deinitable)",
+     "summary": "Borrow candidates for native equality and stop at the first match."
+    }
+   ],
+   "provider": "iteration/terminals",
+   "summary": ""
+  },
+  "iteration.count": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The source, consumed at its current position.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "The source is consumed without restarting. Values are moved or destroyed\nwithout requiring copies. Early exit destroys the unconsumed owner; no\nadditional value is pulled. Collection and full reductions require finite\ninput; count visits every element even when bounds give its length.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The consumed native iterator or owned collection type.",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "Int with the ownership, timing and empty-input behavior described above.",
+      "type": "Int"
+     },
+     "signature": "def count[V: Movable & Deinitable](var source: V) -> Int where conforms_to(_Source[V].Element, Deinitable)",
+     "summary": "Consume and count every remaining element; empty input returns zero."
+    }
+   ],
+   "provider": "iteration/terminals",
+   "summary": ""
+  },
+  "iteration.count_where": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "name": "predicate",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The source, consumed at its current position.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "This is a consuming terminal. Native callbacks are borrowed in place;\nlibrary callbacks are consumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.",
+     "error": "Never",
+     "parameters": [
+      {
+       "description": "The admitted type parameter.",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The origin of the borrowed callback or comparison value.",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "The consumed native iterator or owned collection type.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The concrete callback type, preserving captures and receiver semantics.",
+       "inferred": false,
+       "name": "F",
+       "type": "_Borrowing[P, R]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The exact admitted callback or combination error; Never when non-raising.",
+     "returns": {
+      "doc": "Int with the ownership, timing and empty-input behavior described above.",
+      "type": "Int"
+     },
+     "signature": "def count_where[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, F: _Borrowing[P, R]](ref[o] predicate: F, var source: V) raises Never -> Int where _Source[V].Element == downcast[P, Movable & Deinitable] and R == Bool",
+     "summary": "Count accepted candidates, borrowing each once; empty input returns zero."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "predicate",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "E",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingBorrowing[P, R, E]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Int"
+     },
+     "signature": "def count_where[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](ref[o] predicate: F, var source: V) raises E -> Int where _Source[V].Element == downcast[P, Movable & Deinitable] and R == Bool",
+     "summary": "Count accepted candidates, borrowing each once; empty input returns zero."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "predicate",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "C.Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "C",
+       "type": "BorrowCallable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Int"
+     },
+     "signature": "def count_where[C: BorrowCallable, V: Movable & Deinitable](var predicate: C, var source: V) raises C.Failure -> Int where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool",
+     "summary": "Count accepted candidates, borrowing each once; empty input returns zero."
+    }
+   ],
+   "provider": "iteration/terminals",
+   "summary": ""
+  },
+  "iteration.drop_while": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "name": "predicate",
+       "type": "def(T) thin -> Bool",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The source, consumed at its current position.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "Construction pulls nothing. The stored predicate borrows each candidate and cannot raise.\nExhaustion is fused; abandonment releases captures and the unconsumed source.\nUses constant state and preserves move-only elements and embedded origins.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The source element type, including origins.",
+       "inferred": false,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The consumed native iterator or owned collection type.",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "DropWhileIterator[T, _Source[V], def(T) thin -> Bool] with the ownership, timing and empty-input behavior described above.",
+      "type": "DropWhileIterator[T, _Source[V], def(T) thin -> Bool]"
+     },
+     "signature": "def drop_while[T: Movable & Deinitable, V: Movable & Deinitable](var predicate: def(T) thin -> Bool, var source: V) -> DropWhileIterator[T, _Source[V], def(T) thin -> Bool] where _Source[V].Element == T",
+     "summary": "Discard the matching prefix; yield the first rejection and stop testing."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "predicate",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_LazyPredicate[T]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "DropWhileIterator[T, _Source[V], F]"
+     },
+     "signature": "def drop_while[T: Movable & Deinitable, V: Movable & Deinitable, //, F: _LazyPredicate[T]](var predicate: F, var source: V) -> DropWhileIterator[T, _Source[V], F] where _Source[V].Element == T",
+     "summary": "Discard the matching prefix; yield the first rejection and stop testing."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "predicate",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "C",
+       "type": "BorrowCallable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "DropWhileIterator[downcast[C.Payload, Movable & Deinitable], _Source[V], C]"
+     },
+     "signature": "def drop_while[C: BorrowCallable, V: Movable & Deinitable](var predicate: C, var source: V) -> DropWhileIterator[downcast[C.Payload, Movable & Deinitable], _Source[V], C] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never",
+     "summary": "Discard the matching prefix; yield the first rejection and stop testing."
+    }
+   ],
+   "provider": "iteration/prefixes",
    "summary": ""
   },
   "iteration.fill": {
@@ -97611,6 +99731,44 @@
     }
    ],
    "provider": "iteration/reductions",
+   "summary": ""
+  },
+  "iteration.first": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The source, consumed at its current position.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "The source is consumed without restarting. Values are moved or destroyed\nwithout requiring copies. Early exit destroys the unconsumed owner; no\nadditional value is pulled. Collection and full reductions require finite\ninput; count visits every element even when bounds give its length.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The consumed native iterator or owned collection type.",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "Optional[downcast[_Source[V].Element, Movable & Deinitable]] with the ownership, timing and empty-input behavior described above.",
+      "type": "Optional[downcast[_Source[V].Element, Movable & Deinitable]]"
+     },
+     "signature": "def first[V: Movable & Deinitable](var source: V) -> Optional[downcast[_Source[V].Element, Movable & Deinitable]] where conforms_to(_Source[V].Element, Deinitable)",
+     "summary": "Consume at most one element and return it, or None for empty input."
+    }
+   ],
+   "provider": "iteration/terminals",
    "summary": ""
   },
   "iteration.flat_map": {
@@ -99056,6 +101214,233 @@
    "provider": "iteration/folds",
    "summary": ""
   },
+  "iteration.for_each": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The source, consumed at its current position.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "This is a consuming terminal. Native callbacks are borrowed in place;\nlibrary callbacks are consumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.",
+     "error": "Never",
+     "parameters": [
+      {
+       "description": "The first callback argument type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The origin of the borrowed callback or comparison value.",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "The consumed native iterator or owned collection type.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The concrete callback type, preserving captures and receiver semantics.",
+       "inferred": false,
+       "name": "F",
+       "type": "_Unary[A, R]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The exact admitted callback or combination error; Never when non-raising.",
+     "returns": {
+      "doc": "NoneType with the ownership, timing and empty-input behavior described above.",
+      "type": "NoneType"
+     },
+     "signature": "def for_each[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, F: _Unary[A, R]](ref[o] function: F, var source: V) raises Never -> NoneType where _Source[V].Element == A and R == NoneType",
+     "summary": "Move each element into a callback returning NoneType, then return None."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "E",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingUnary[A, R, E]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "NoneType"
+     },
+     "signature": "def for_each[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](ref[o] function: F, var source: V) raises E -> NoneType where _Source[V].Element == A and R == NoneType",
+     "summary": "Move each element into a callback returning NoneType, then return None."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "F.Error",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "NoneType"
+     },
+     "signature": "def for_each[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable](var function: F, var source: V) raises F.Error -> NoneType where _Source[V].Element == F.Arg and F.Out == NoneType",
+     "summary": "Move each element into a callback returning NoneType, then return None."
+    }
+   ],
+   "provider": "iteration/terminals",
+   "summary": ""
+  },
+  "iteration.is_empty": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The source, consumed at its current position.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "The source is consumed without restarting. Values are moved or destroyed\nwithout requiring copies. Early exit destroys the unconsumed owner; no\nadditional value is pulled. Collection and full reductions require finite\ninput; count visits every element even when bounds give its length.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The consumed native iterator or owned collection type.",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "Bool with the ownership, timing and empty-input behavior described above.",
+      "type": "Bool"
+     },
+     "signature": "def is_empty[V: Movable & Deinitable](var source: V) -> Bool where conforms_to(_Source[V].Element, Deinitable)",
+     "summary": "Consume at most one element and report whether none was present."
+    }
+   ],
+   "provider": "iteration/terminals",
+   "summary": ""
+  },
   "iteration.iterated": {
    "description": "",
    "kind": "function",
@@ -99092,6 +101477,44 @@
     }
    ],
    "provider": "iteration/chaining",
+   "summary": ""
+  },
+  "iteration.last": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The source, consumed at its current position.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "The source is consumed without restarting. Values are moved or destroyed\nwithout requiring copies. Early exit destroys the unconsumed owner; no\nadditional value is pulled. Collection and full reductions require finite\ninput; count visits every element even when bounds give its length.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The consumed native iterator or owned collection type.",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "Optional[downcast[_Source[V].Element, Movable & Deinitable]] with the ownership, timing and empty-input behavior described above.",
+      "type": "Optional[downcast[_Source[V].Element, Movable & Deinitable]]"
+     },
+     "signature": "def last[V: Movable & Deinitable](var source: V) -> Optional[downcast[_Source[V].Element, Movable & Deinitable]] where conforms_to(_Source[V].Element, Deinitable)",
+     "summary": "Consume every remaining element and return the last, or None."
+    }
+   ],
+   "provider": "iteration/terminals",
    "summary": ""
   },
   "iteration.map": {
@@ -99304,6 +101727,188 @@
     }
    ],
    "provider": "iteration/adapters",
+   "summary": ""
+  },
+  "iteration.map_with_index": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "name": "function",
+       "type": "def(var Int, var T) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The source, consumed at its current position.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "The first native Int index; defaults to zero.",
+       "name": "start",
+       "type": "Int",
+       "variadic": false
+      }
+     ],
+     "description": "Construction is inert; each output moves its inputs into the non-raising callback.\nMapping fuses exhaustion and retains owned captures, move-only results and native origins.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The source element type, including origins.",
+       "inferred": false,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type.",
+       "inferred": false,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The consumed native iterator or owned collection type.",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "IndexedMapIterator[T, R, _Source[V], def(var Int, var T) thin -> R] with the ownership, timing and empty-input behavior described above.",
+      "type": "IndexedMapIterator[T, R, _Source[V], def(var Int, var T) thin -> R]"
+     },
+     "signature": "def map_with_index[T: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable](var function: def(var Int, var T) thin -> R, var source: V, *, start: Int = 0) -> IndexedMapIterator[T, R, _Source[V], def(var Int, var T) thin -> R] where _Source[V].Element == T",
+     "summary": "Lazily map (index, owned element), using native enumerate then map."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "start",
+       "type": "Int",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_IndexedBinary[T, R]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IndexedMapIterator[T, R, _Source[V], F]"
+     },
+     "signature": "def map_with_index[T: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, F: _IndexedBinary[T, R]](var function: F, var source: V, *, start: Int = 0) -> IndexedMapIterator[T, R, _Source[V], F] where _Source[V].Element == T",
+     "summary": "Lazily map (index, owned element), using native enumerate then map."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "start",
+       "type": "Int",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "BinaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IndexedMapIterator[F.Second, F.Out, _Source[V], F]"
+     },
+     "signature": "def map_with_index[F: BinaryContract & Movable & Deinitable, V: Movable & Deinitable](var function: F, var source: V, *, start: Int = 0) -> IndexedMapIterator[F.Second, F.Out, _Source[V], F] where _Source[V].Element == F.Second and F.Error == Never and RepeatableBinary[F] and F.First == Int",
+     "summary": "Lazily map (index, owned element), using native enumerate then map."
+    }
+   ],
+   "provider": "iteration/indexed",
    "summary": ""
   },
   "iteration.max_by": {
@@ -101157,6 +103762,153 @@
    "provider": "iteration/reductions",
    "summary": ""
   },
+  "iteration.take_while": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "name": "predicate",
+       "type": "def(T) thin -> Bool",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The source, consumed at its current position.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "Construction pulls nothing. The stored predicate borrows each candidate and cannot raise.\nExhaustion is fused; abandonment releases captures and the unconsumed source.\nUses constant state and preserves move-only elements and embedded origins.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The source element type, including origins.",
+       "inferred": false,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The consumed native iterator or owned collection type.",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "TakeWhileIterator[T, _Source[V], def(T) thin -> Bool] with the ownership, timing and empty-input behavior described above.",
+      "type": "TakeWhileIterator[T, _Source[V], def(T) thin -> Bool]"
+     },
+     "signature": "def take_while[T: Movable & Deinitable, V: Movable & Deinitable](var predicate: def(T) thin -> Bool, var source: V) -> TakeWhileIterator[T, _Source[V], def(T) thin -> Bool] where _Source[V].Element == T",
+     "summary": "Yield the initial matching prefix; consume and discard its first rejection."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "predicate",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_LazyPredicate[T]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "TakeWhileIterator[T, _Source[V], F]"
+     },
+     "signature": "def take_while[T: Movable & Deinitable, V: Movable & Deinitable, //, F: _LazyPredicate[T]](var predicate: F, var source: V) -> TakeWhileIterator[T, _Source[V], F] where _Source[V].Element == T",
+     "summary": "Yield the initial matching prefix; consume and discard its first rejection."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "predicate",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "C",
+       "type": "BorrowCallable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "TakeWhileIterator[downcast[C.Payload, Movable & Deinitable], _Source[V], C]"
+     },
+     "signature": "def take_while[C: BorrowCallable, V: Movable & Deinitable](var predicate: C, var source: V) -> TakeWhileIterator[downcast[C.Payload, Movable & Deinitable], _Source[V], C] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never",
+     "summary": "Yield the initial matching prefix; consume and discard its first rejection."
+    }
+   ],
+   "provider": "iteration/prefixes",
+   "summary": ""
+  },
   "iteration.tap_each": {
    "description": "",
    "kind": "function",
@@ -101272,6 +104024,44 @@
     }
    ],
    "provider": "iteration/derived",
+   "summary": ""
+  },
+  "iteration.to_non_empty_list": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The source, consumed at its current position.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "The source is consumed without restarting. Values are moved or destroyed\nwithout requiring copies. Early exit destroys the unconsumed owner; no\nadditional value is pulled. Collection and full reductions require finite\ninput; count visits every element even when bounds give its length.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The consumed native iterator or owned collection type.",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "Optional[NonEmptyList[downcast[_Source[V].Element, Movable & Deinitable]]] with the ownership, timing and empty-input behavior described above.",
+      "type": "Optional[NonEmptyList[downcast[_Source[V].Element, Movable & Deinitable]]]"
+     },
+     "signature": "def to_non_empty_list[V: Movable & Deinitable](var source: V) -> Optional[NonEmptyList[downcast[_Source[V].Element, Movable & Deinitable]]] where conforms_to(_Source[V].Element, Deinitable)",
+     "summary": "Collect once into a checked NonEmptyList, returning None when empty."
+    }
+   ],
+   "provider": "iteration/terminals",
    "summary": ""
   },
   "iteration.traverse": {
@@ -102396,6 +105186,223 @@
     }
    ],
    "provider": "iteration/derived",
+   "summary": ""
+  },
+  "iteration.zip_with": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The source, consumed at its current position.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The second source, consumed at its current position.",
+       "name": "other",
+       "type": "W",
+       "variadic": false
+      }
+     ],
+     "description": "Construction is inert; each output moves its inputs into the non-raising callback.\nNative zip can consume an earlier input before a later one ends.\nMapping fuses exhaustion and retains owned captures, move-only results and native origins.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first callback argument type.",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second callback argument type.",
+       "inferred": false,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type.",
+       "inferred": false,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The consumed native iterator or owned collection type.",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second consumed source type.",
+       "inferred": false,
+       "name": "W",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "ZipWithIterator[A, B, R, _Source[V], _Source[W], def(var A, var B) thin -> R] with the ownership, timing and empty-input behavior described above.",
+      "type": "ZipWithIterator[A, B, R, _Source[V], _Source[W], def(var A, var B) thin -> R]"
+     },
+     "signature": "def zip_with[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable](var function: def(var A, var B) thin -> R, var source: V, var other: W) -> ZipWithIterator[A, B, R, _Source[V], _Source[W], def(var A, var B) thin -> R] where _Source[V].Element == A and _Source[W].Element == B",
+     "summary": "Lazily combine pairs using native left-to-right zip followed by map."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "other",
+       "type": "W",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "W",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Binary[A, B, R]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "ZipWithIterator[A, B, R, _Source[V], _Source[W], F]"
+     },
+     "signature": "def zip_with[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable, //, F: _Binary[A, B, R]](var function: F, var source: V, var other: W) -> ZipWithIterator[A, B, R, _Source[V], _Source[W], F] where _Source[V].Element == A and _Source[W].Element == B",
+     "summary": "Lazily combine pairs using native left-to-right zip followed by map."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "other",
+       "type": "W",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "BinaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "W",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "ZipWithIterator[F.First, F.Second, F.Out, _Source[V], _Source[W], F]"
+     },
+     "signature": "def zip_with[F: BinaryContract & Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable](var function: F, var source: V, var other: W) -> ZipWithIterator[F.First, F.Second, F.Out, _Source[V], _Source[W], F] where _Source[V].Element == F.First and _Source[W].Element == F.Second and F.Error == Never and RepeatableBinary[F]",
+     "summary": "Lazily combine pairs using native left-to-right zip followed by map."
+    }
+   ],
+   "provider": "iteration/indexed",
    "summary": ""
   },
   "matching.Guarded": {
@@ -128590,7 +131597,7 @@
    "summary": "Pipelines, compositions, argument flipping and partial application."
   },
   "iteration": {
-   "description": "Every operation consumes a **source**: a native iterator, used as it is and\nnever restarted, or an owned collection (any `IterableOwned`, such as `List`,\n`Set` or `Dict`), consumed as `iter(values^)` would. Pass `values^` to consume\na collection, or `iter(values)` to borrow it. Standard adapters (`chain`, `zip`,\n`enumerate`, `take`, `drop`, `peekable`, ...) come from `std.iter` and\n`std.itertools` and combine freely with these.\n\n`iterated(source)` adds consuming method syntax to the same native iterators:\n`iterated(values^).map(f).filter(p).to_list()`. Its `Iter` wrapper implements\n`Iterator` and `IterableOwned`, so standard consuming adapters accept it\ndirectly. Wrap a standard adapter's result with `iterated` to continue chaining.\n`to_list()` and `collect_list()` are alias methods for the free `collect_list`.\nNamed chains are consumed explicitly, as in `stream^.to_list()`.\nThe core functions `map`, `filter`, `filter_not` and `fold_left` are also exported by\n`fp.combinators`; both imports refer to the same native functions. `Piped` adds\nthe same named methods to eager value chains. Its fold keeps the accumulator\ninside the chain, while `Iter.fold_left` returns the accumulator directly.\n\n**Lazy adapters** (`map`, `filter`, `filter_not`, `filter_map`, `flatten`, `flat_map`,\n`scan_left`) are native iterators whose advancement raises only\n`StopIteration`:\n\n- Construction is inert: nothing is pulled and no callback runs until the first\n  `next`.\n- They are fused: after a source reports exhaustion it is never pulled again.\n- There is no lookahead: each output pulls only what it needs.\n- Abandoning one destroys its owned state without evaluating the rest.\n\nLazy callbacks do not raise, because a native iterator can raise only\n`StopIteration`; to carry a domain failure, yield `Result` elements and\naggregate them with `collect_results`. A callback is a plain function, a\ncapturing closure or, for `map`, `filter_map`, `flat_map` and `scan_left`, a\nshared-receiver `Unary`/`Binary` value such as a `Partial`. Move a closure that\nowns non-trivial state in with `callback^`. Owners of borrowed captures must\nstay alive and unmoved while the adapter is used. A generic function that\nreturns an adapter names its type with `MapIterator`, `ScanIterator`,\n`FilterIterator`, `FilterNotIterator`, `FilterMapIterator` or `FlatMapIterator`, declares\n`I: Iterator` and `where I.Element == T`, and builds the value through the\nfunction; the types add no storage, and the source origin stays part of the\ntype.\n\n**Folds and terminals** (`fold_left`, `fold_until`, `reduce`,\n`reduce_optional`, `collect_list`, `find`, `any`, `all`) run at once:\n\n| Operation | Non-empty input | Empty input |\n|---|---|---|\n| `fold_left(step, initial, source)` | `n` calls of `step(var A, var T) -> A`, in order | `initial`, no calls |\n| `reduce(step, source, initial=value)` | The same as `fold_left` | `initial`, no calls |\n| `reduce(step, source)` | The first element seeds the accumulator; `n - 1` calls | Raises `EmptyReductionError` |\n| `reduce_optional(step, source)` | As above, wrapped in `Optional` | `None` |\n| `fold_until(step, initial, source)` | Each call returns `ControlFlow[B, A]`; `Break(b)` returns at once | `Continue(initial)` |\n| `collect_list(source)` | A `List` of every element, moved | An empty list |\n| `find(p, source)` | The first accepted element | `None` |\n| `any(p, source)` / `all(p, source)` | Stops at the first decisive element | `False` / `True` |\n\nSteps are never reassociated. Pure and raising callbacks have separate\noverloads, and a callback's error type propagates unchanged; a callback that\nraises `StopIteration` fails as a callback, never as exhaustion. The first\ndecisive result or failure stops without another pull. On failure, native\ncleanup destroys the source, the current accumulator and the pulled element;\nside effects are not rolled back. Every operation makes `O(n)` callback calls,\nor fewer after an early stop, with constant extra state.\n\nA generic function forwards to these with the native callback constraint and\n`where I.Element == T`. A raising wrapper passes `E=E` at every call and must\nnot read `F.E` or `F.T` from a callback type: Mojo 1.1 does not reliably expose\nthose attributes through a precompiled package. Keep the parameter names shown\nin the tutorial's generic examples; on Mojo 1.1 some renamings lose callback\nconformance.",
+   "description": "Every operation consumes a **source**: a native iterator, used as it is and\nnever restarted, or an owned collection (any `IterableOwned`, such as `List`,\n`Set` or `Dict`), consumed as `iter(values^)` would. Pass `values^` to consume\na collection, or `iter(values)` to borrow it. Standard adapters (`chain`, `zip`,\n`enumerate`, `take`, `drop`, `peekable`, ...) come from `std.iter` and\n`std.itertools` and combine freely with these.\n\n`iterated(source)` adds consuming method syntax to the same native iterators:\n`iterated(values^).map(f).filter(p).to_list()`. Its `Iter` wrapper implements\n`Iterator` and `IterableOwned`, so standard consuming adapters accept it\ndirectly. Native `take`, `drop`, `enumerate`, variadic `zip` and `chain` are\nalso consuming methods. Wrap another standard adapter's result with `iterated`\nto continue chaining.\n`to_list()` and `collect_list()` are alias methods for the free `collect_list`.\nNamed chains are consumed explicitly, as in `stream^.to_list()`.\nThe core functions `map`, `filter`, `filter_not` and `fold_left` are also exported by\n`fp.combinators`; both imports refer to the same native functions. `Piped` adds\nthe same named methods to eager value chains. Its fold keeps the accumulator\ninside the chain, while `Iter.fold_left` returns the accumulator directly.\n\n**Lazy adapters** (`map`, `filter`, `filter_not`, `filter_map`, `flatten`, `flat_map`,\n`scan_left`, `zip_with`, `map_with_index` and value-taking `take_while`/`drop_while`)\nare native iterators whose advancement raises only\n`StopIteration`:\n\n- Construction is inert: nothing is pulled and no callback runs until the first\n  `next`.\n- They are fused: after a source reports exhaustion it is never pulled again.\n- There is no lookahead: each output pulls only what it needs.\n- Abandoning one destroys its owned state without evaluating the rest.\n\nLazy callbacks do not raise, because a native iterator can raise only\n`StopIteration`; to carry a domain failure, yield `Result` elements and\naggregate them with `collect_results`. A callback is a plain function, a\ncapturing closure or, for `map`, `filter_map`, `flat_map` and `scan_left`, a\nshared-receiver `Unary`/`Binary` value such as a `Partial`. Move a closure that\nowns non-trivial state in with `callback^`. On Mojo 1.1, some native closures\nwith move-only inputs/output and owned mutable state require `@always_inline`\non the callback to preserve state writes at O3; see the native-boundaries\narchitecture chapter. Owners of borrowed captures must\nstay alive and unmoved while the adapter is used. A generic function that\nreturns an adapter names its type with `MapIterator`, `ScanIterator`,\n`FilterIterator`, `FilterNotIterator`, `FilterMapIterator` or `FlatMapIterator`, declares\n`I: Iterator` and `where I.Element == T`, and builds the value through the\nfunction; the types add no storage, and the source origin stays part of the\ntype.\n\n**Folds and terminals** (`fold_left`, `fold_until`, `reduce`,\n`reduce_optional`, `collect_list`, `find`, `any`, `all`) run at once:\n\n| Operation | Non-empty input | Empty input |\n|---|---|---|\n| `fold_left(step, initial, source)` | `n` calls of `step(var A, var T) -> A`, in order | `initial`, no calls |\n| `reduce(step, source, initial=value)` | The same as `fold_left` | `initial`, no calls |\n| `reduce(step, source)` | The first element seeds the accumulator; `n - 1` calls | Raises `EmptyReductionError` |\n| `reduce_optional(step, source)` | As above, wrapped in `Optional` | `None` |\n| `fold_until(step, initial, source)` | Each call returns `ControlFlow[B, A]`; `Break(b)` returns at once | `Continue(initial)` |\n| `collect_list(source)` | A `List` of every element, moved | An empty list |\n| `first(source)` / `last(source)` | First / last remaining element | `None` |\n| `is_empty(source)` | Pulls at most one value; returns `False` | `True` |\n| `count(source)` / `count_where(p, source)` | Visits and counts values / matches | `0` |\n| `contains(source, value)` | Borrows for equality, stops at first match | `False` |\n| `for_each(f, source)` | Moves each value into a callback returning `NoneType` | `None`, no calls |\n| `to_non_empty_list(source)` | `Some(NonEmptyList)` | `None` |\n| `combine_all_optional[S](source)` | Left-to-right Semigroup reduction | `None` |\n| `collect_fold[M](f, source)` | Combines present Optional results with the Monoid | Monoid identity |\n| `find(p, source)` | The first accepted element | `None` |\n| `any(p, source)` / `all(p, source)` | Stops at the first decisive element | `False` / `True` |\n\nSteps are never reassociated. Pure and raising callbacks have separate\noverloads, and a callback's error type propagates unchanged; a callback that\nraises `StopIteration` fails as a callback, never as exhaustion. The first\ndecisive result or failure stops without another pull. On failure, native\ncleanup destroys the source, the current accumulator and the pulled element;\nside effects are not rolled back. Every operation makes `O(n)` callback calls,\nor fewer after an early stop, with constant extra state.\n\nA generic function forwards to these with the native callback constraint and\n`where I.Element == T`. A raising wrapper passes `E=E` at every call and must\nnot read `F.E` or `F.T` from a callback type: Mojo 1.1 does not reliably expose\nthose attributes through a precompiled package. Keep the parameter names shown\nin the tutorial's generic examples; on Mojo 1.1 some renamings lose callback\nconformance.",
    "summary": "Lazy adapters, folds, reductions and terminal operations over native iterators."
   },
   "matching": {

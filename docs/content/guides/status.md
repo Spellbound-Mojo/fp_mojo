@@ -56,6 +56,14 @@ Tell/Listen/Censor with explicit transformer lifting is implemented; see
 Fallible stream transformations and composable Resource scopes remain subsequent
 slices.
 
+Before fallible streams, an [iterator expansion](../architecture/iteration.md#iterator-expansion)
+adds native adapter method chains, consuming terminals, lazy partitioning with
+explicit buffering policies, and alignment, with stateful and effectful
+follow-ups. Partition, partition_map and unzip return iterator branches;
+collection stays explicit. I1 and I2 are implemented: native adapter method chains, indexed mapping,
+captured prefixes and consuming terminals. I3 through I6 remain planned; I3
+adds lazy branching with an explicit buffering policy.
+
 The approved combinator proposal is complete for the documented capability
 families. Shared operations derive from family primitives; no operation requires
 a separate implementation for each container. Generalizing error-type-changing

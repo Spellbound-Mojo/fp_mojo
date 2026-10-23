@@ -18,6 +18,7 @@ import sys
 from fp_tools.runtime import ROOT
 import generate_pipeline_syntax as pipeline_syntax
 import generate_combinator_syntax as combinator_syntax
+import generate_iterator_syntax as iterator_syntax
 import generate_result_syntax as result_syntax
 import generate_traversal_syntax as traversal_syntax
 import generate_effect_syntax as effect_syntax
@@ -333,6 +334,9 @@ def main():
         ('callables/_nary.mojo', lambda path: nary_syntax.native()),
         ('algebra/_nary.mojo', lambda path: spliced(path, nary_syntax.types(), nary_syntax.START, nary_syntax.END, nary_syntax.HEADER)),
         ('iteration/effectful.mojo', lambda path: path.read_text()),
+        ('iteration/prefixes.mojo', lambda path: path.read_text()),
+        ('iteration/indexed.mojo', lambda path: path.read_text()),
+        ('iteration/terminals.mojo', lambda path: path.read_text()),
         ('algebra/conditional.mojo', lambda path: path.read_text()),
         ('data/_result.mojo', lambda path: spliced(path, result_syntax.methods(), result_syntax.START, result_syntax.END, result_syntax.HEADER)),
         ('iteration/reductions.mojo', lambda path: spliced(path, combinator_syntax.terminal_methods('free'), combinator_syntax.START, combinator_syntax.END, combinator_syntax.HEADER)),
@@ -343,7 +347,11 @@ def main():
     ):
         path = ROOT / 'src/fp' / name
         expected = expected_of(path)
+        if name in ('iteration/prefixes.mojo', 'iteration/indexed.mojo', 'iteration/terminals.mojo'):
+            generate = {'iteration/prefixes.mojo': iterator_syntax.prefixes, 'iteration/indexed.mojo': iterator_syntax.indexed, 'iteration/terminals.mojo': iterator_syntax.terminals}[name]
+            expected = splice_source(expected, generate('free'), iterator_syntax.START, iterator_syntax.END, iterator_syntax.HEADER)
         if name == 'iteration/chaining.mojo':
+            expected = splice_source(expected, iterator_syntax.methods(), '    '+iterator_syntax.START, '    '+iterator_syntax.END, '    '+iterator_syntax.HEADER)
             expected = splice_source(expected, sequencing_syntax.methods(iteration=True), sequencing_syntax.START, sequencing_syntax.END, sequencing_syntax.HEADER)
         effect_mode = {'functions/pipeline.mojo': 'piped', 'iteration/chaining.mojo': 'iter', 'iteration/effectful.mojo': 'free', 'algebra/conditional.mojo': 'conditional'}.get(name)
         if effect_mode:
