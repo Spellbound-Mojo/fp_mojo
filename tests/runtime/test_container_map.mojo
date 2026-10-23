@@ -1,6 +1,6 @@
 """Piped.map preserves native shape, evaluation, ownership and exact errors."""
 from std.collections import Array, Deque, LinkedList, StringDict
-from std.hashlib import default_comp_time_hasher, Hasher
+from std.hash import default_comp_time_hasher, Hasher
 from std.memory import ArcPointer
 from std.testing import assert_equal
 from fp.functions import piped, Piped

@@ -11,6 +11,7 @@ from fp.algebra.instances import IdentityFamily
 from fp.callables.protocols import (BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, Unary, OnceUnary, MutableUnary,
                                     OnceBinary, MutableBinary, OnceThunk)
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
+from fp.callables._receiver import _unary_once_as, _binary_once_as
 from std.memory import MaybeUninit
 from fp.callables.products import _take_pair
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
@@ -154,11 +155,7 @@ struct _WriterStep[I: _WriterFamily, F: UnaryContract & Movable & Deinitable](
         _take_pair(arg^, log_slot, value_slot)
         var log_part = log_slot^.unsafe_assume_init()
         var value_part = value_slot^.unsafe_assume_init()
-        var next: Self.Next
-        try:
-            next = rebind_var[Self.Next](call_once(self.function^, value_part^))
-        except error:
-            _propagate_error[Self.Error](error^)
+        var next = rebind_var[Self.Next](_unary_once_as[Self.Error](self.function^, value_part^))
         return Self._join(log_part^, next^)
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert RepeatableUnary[Self.F]
@@ -199,11 +196,7 @@ struct _WriterCombine[W: Monoid, F: BinaryContract & Movable & Deinitable](
         var second_log = second_log_slot^.unsafe_assume_init()
         var right = right_slot^.unsafe_assume_init()
         var log = _append_log_as[Self.Error, Self.W](first_log^, second_log^)
-        var value: Self.F.Out
-        try:
-            value = call_once(self.function^, left^, right^)
-        except error:
-            _propagate_error[Self.Error](error^)
+        var value = _binary_once_as[Self.Error](self.function^, left^, right^)
         return Tuple(log^, value^)
     def call_mut(mut self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out:
         comptime assert RepeatableBinary[Self.F]

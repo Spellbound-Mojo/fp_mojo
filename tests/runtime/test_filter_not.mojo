@@ -1,6 +1,6 @@
 """Derived rejection filtering preserves carrier, timing, errors and ownership."""
 from std.collections import Deque, LinkedList, StringDict
-from std.hashlib import default_comp_time_hasher
+from std.hash import default_comp_time_hasher
 from std.memory import ArcPointer
 from std.iter import Iterator, IterableOwned
 from std.testing import assert_equal

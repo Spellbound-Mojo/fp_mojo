@@ -211,11 +211,7 @@ struct _StatePrepare[I: AnyType, M: Monad, S: Movable & Deinitable, F: BinaryCon
         return _map_as[Self.Error, Self.M](Self.Combine(_BindFirst[Self.F](function^, value_part^)), based^)
     def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert _ErrorCompatible[Self.Error, Self.G.Error]
-        var action: Self.Action
-        try:
-            action = rebind_var[Self.Action](self.right^.take())
-        except error:
-            _propagate_error[Self.Error](error^)
+        var action = rebind_var[Self.Action](self.right^.take[Self.Error]())
         return Self._combine(action^, self.function^, arg^)
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert conforms_to(Self.F, Copyable), "map2: repeated branches copy the callback and the right computation"
@@ -380,8 +376,12 @@ struct _StateLoop[M: Monad, S: Movable & Deinitable, V: Movable & Deinitable, F:
         comptime assert Self.M._Folded[Self.V, Self.F, Self.Step, Self.Policy] == Self.Out, "traverse: State traversal needs a base whose carrier type stays the same across steps"
         comptime assert _ErrorCompatible[E, Self.K.Error]
         var initial = Tuple(_start_as[E, Self.K](), state^)
+        return Self._fold(self.function^, initial^, self.source^)
+    @staticmethod
+    def _fold(var function: Self.F, var initial: Self.Policy.Acc, var source: Self.V) raises Self.Error -> Self.Out:
+        comptime E = Self.Error
         try:
-            return rebind_var[Self.Out](Self.M._fold[Self.V, Self.F, Self.Step, Self.Policy](self.function^, Self.Step(), initial^, self.source^))
+            return rebind_var[Self.Out](Self.M._fold[Self.V, Self.F, Self.Step, Self.Policy](function^, Self.Step(), initial^, source^))
         except error:
             comptime assert _ErrorCompatible[E, type_of(error)]
             _propagate_error[E](error^)

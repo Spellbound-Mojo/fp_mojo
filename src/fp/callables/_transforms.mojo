@@ -181,6 +181,6 @@ struct _ObserveNative[P: AnyType, R: Movable & Deinitable,
     comptime Out = Tuple[downcast[Self.P, Movable & Deinitable], Self.R] if Self.paired else downcast[Self.P, Movable & Deinitable]
     def call_mut(mut self, var arg: downcast[Self.P, Movable & Deinitable]) -> Self.Out:
         comptime Fn = downcast[Self.F, _Borrowing[Self.P, Self.R]]
-        comptime assert Fn.P == Self.P and Fn.R == Self.R
+        comptime assert conforms_to(Fn, _Borrowing[Self.P, Self.R])
         var result = _call_lazy_borrow[Self.P, Self.R, Fn](rebind[Fn](self.function), arg)
         return _observed[downcast[Self.P, Movable & Deinitable], Self.R, Self.paired](arg^, result^)

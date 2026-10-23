@@ -14,7 +14,7 @@ from fp.callables._receiver import _MutableUnaryRef as _UnaryView
 from fp.callables.protocols import (UnaryContract, BinaryContract, ThunkContract,
                                     Unary, Binary, OnceUnary, MutableUnary, OnceThunk, BorrowCallable)
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
-from fp.callables._receiver import _unary_repeated_as
+from fp.callables._receiver import _unary_repeated_as, _thunk_once_as
 from fp.iteration._advance import _next_optional
 from fp.iteration._terminal import _append
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
@@ -656,13 +656,13 @@ struct _Lazy[G: ThunkContract & Movable & Deinitable](
     def __init__(out self, var thunk: Self.G):
         self.thunk = Optional(thunk^)
         self.produced = Optional[Self.G.Out]()
-    def take(deinit self) raises Self.G.Error -> Self.G.Out:
+    def take[X: Movable & Deinitable = Self.G.Error](deinit self) raises X -> Self.G.Out where _ErrorCompatible[X, Self.G.Error]:
         """Consume the operand: the retained value, or produce it now."""
         var produced = self.produced^
         if produced:
             return produced.unsafe_take()
         var thunk = self.thunk^
-        return call_once(thunk.unsafe_take())
+        return _thunk_once_as[X](thunk.unsafe_take())
     def copy_value(mut self) raises Self.G.Error -> Self.G.Out:
         """Produce the operand on first use and return a copy of it."""
         comptime assert conforms_to(Self.G.Out, Copyable), "map2: repeated branches copy the right operand"

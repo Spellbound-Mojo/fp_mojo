@@ -87,7 +87,6 @@ def reduce_optional[T: Movable & Deinitable, I: Movable & Deinitable, E: AnyType
     step: F, var iterator: I
 ) raises E -> Optional[T] where _Source[I].Element == T:
     """Reduce with a raising step; empty input gives `None`, and the step's error is kept."""
-    comptime assert F.E == E
     return _reduce_optional[T, _Source[I], E, F, _binary_raising[T, T, T, E, F]](
         step, _source(iterator^)
     )

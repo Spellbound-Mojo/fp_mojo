@@ -1,7 +1,7 @@
 """Eager filtering preserves containers, borrowed payloads and exact failures."""
 from std.builtin.rebind import rebind_var, downcast
 from std.collections import Deque, LinkedList, StringDict
-from std.hashlib import default_comp_time_hasher
+from std.hash import default_comp_time_hasher
 from std.memory import ArcPointer
 from std.testing import assert_equal
 from fp.functions import piped, Piped

@@ -9,9 +9,9 @@ compiler constraints behind these choices.
 
 | Item | Status |
 |---|---|
-| Compiler | Mojo 1.1.0 (8189361e), pinned through Pixi; other versions are not supported |
-| Linux x86-64 | Supported and verified |
-| macOS arm64 | Supported and verified |
+| Compiler | Mojo 1.2.0 (2016d0cd), pinned through Pixi for `nightly`; published FP Mojo 1.0.0 requires Mojo 1.1.0 |
+| Linux x86-64 | Mojo 1.2 environment installed; full qualification fails ([details](../architecture/native-boundaries.md#mojo-12-qualification)). Last complete verification used Mojo 1.1.0. |
+| macOS arm64 | Locked environment available; last runtime verification was on Mojo 1.1.0 |
 
 ## Combinator roadmap
 

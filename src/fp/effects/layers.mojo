@@ -133,11 +133,7 @@ struct _OptionalCombine[M: Monad, F: BinaryContract & Movable & Deinitable, G: T
         comptime assert _ErrorCompatible[Self.Error, Self.G.Error]
         if not arg:
             return Self.M._join_left[Self.Absent, Self.Present](Self.M.pure(Optional[Self.F.Out]()))
-        var right: Self.G.Out
-        try:
-            right = self.right^.take()
-        except error:
-            _propagate_error[Self.Error](error^)
+        var right = self.right^.take[Self.Error]()
         return Self._apply(self.function^, arg.unsafe_take(), right^)
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert conforms_to(Self.F, Copyable), "map2: repeated branches copy the callback and the right operand"
@@ -179,11 +175,7 @@ struct _ResultCombine[M: Monad, E: Movable & Deinitable, F: BinaryContract & Mov
         if arg.is_err():
             var stored = arg^._take_err()
             return Self.M._join_left[Self.Absent, Self.Present](Self.M.pure(Result[Self.F.Out, Self.E](Err(stored^))))
-        var right: Self.G.Out
-        try:
-            right = self.right^.take()
-        except error:
-            _propagate_error[Self.Error](error^)
+        var right = self.right^.take[Self.Error]()
         return Self._apply(self.function^, arg^._take_ok(), right^)
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert conforms_to(Self.F, Copyable), "map2: repeated branches copy the callback and the right operand"

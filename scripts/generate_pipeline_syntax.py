@@ -41,7 +41,7 @@ CARRIERS = (
     Carrier('Array', 'Array[{element}, N]', '_ArrayFamily[N]', ('N: Int',), frozenset({'map', 'fold'})),
     Carrier('Deque', 'Deque[{element}]', '_DequeFamily'),
     Carrier('LinkedList', 'LinkedList[{element}]', '_LinkedListFamily'),
-    Carrier('Dict', 'Dict[K, {element}, H]', '_DictFamily[K, {element}, H]', ('K: KeyElement & Deinitable', 'H: Hasher')),
+    Carrier('Dict', 'Dict[K, {element}, H]', '_DictFamily[K, {element}, H]', ('K: KeyElement & Deinitable', 'H: Hasher & Defaultable & Deinitable')),
     Carrier('StringDict', 'StringDict[{element}]', '_StringDictFamily[{element}]'),
     Carrier('Optional', 'Optional[{element}]', 'OptionalFamily', capabilities=frozenset({'map', 'filter', 'filter_map', 'fold', 'flat_map', 'traverse', 'combine'})),
     Carrier('Result', 'Result[{element}, Failure]', 'ResultFamily[Failure]', (f'Failure: {MD}',), frozenset({'map', 'flat_map', 'traverse', 'combine'})),

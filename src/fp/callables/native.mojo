@@ -35,12 +35,12 @@ struct _NativeThunkRef[R: Movable & Deinitable, X: Movable & Deinitable, F: Mova
     def call(self) raises Self.Error -> Self.Out:
         comptime if Self.raising:
             comptime Fn = downcast[Self.F, _RaisingThunk[Self.R, Self.X]]
-            comptime assert Fn.R == Self.R and Fn.X == Self.X
+            comptime assert conforms_to(Fn, _RaisingThunk[Self.R, Self.X])
             return _native_raising_thunk[Self.R, Self.X, Fn](rebind[Fn](self.function[]))
         else:
             comptime assert Self.X == Never
             comptime Fn = downcast[Self.F, _Thunk[Self.R]]
-            comptime assert Fn.R == Self.R
+            comptime assert conforms_to(Fn, _Thunk[Self.R])
             return _native_thunk[Self.R, Fn](rebind[Fn](self.function[]))
 
 
@@ -55,11 +55,11 @@ struct _NativeBranchLeft[U: Movable & Deinitable, Y: Movable & Deinitable, F: Mo
     def call(self) raises Self.Y -> Self.U:
         comptime if Self.raising:
             comptime Fn = downcast[Self.F, _RaisingThunk[Self.U, Self.Y]]
-            return rebind[Fn](self.function[])[_U=Self.U, _Y=Self.Y]()
+            return rebind[Fn](self.function[])()
         else:
             comptime assert Self.Y == Never
             comptime Fn = downcast[Self.F, _Thunk[Self.U]]
-            return rebind[Fn](self.function[])[_U=Self.U]()
+            return rebind[Fn](self.function[])()
 
 
 @fieldwise_init
@@ -70,11 +70,11 @@ struct _NativeBranchRight[W: Movable & Deinitable, D: Movable & Deinitable, F: M
     def call(self) raises Self.D -> Self.W:
         comptime if Self.raising:
             comptime Fn = downcast[Self.F, _RaisingThunk[Self.W, Self.D]]
-            return rebind[Fn](self.function[])[_W=Self.W, _D=Self.D]()
+            return rebind[Fn](self.function[])()
         else:
             comptime assert Self.D == Never
             comptime Fn = downcast[Self.F, _Thunk[Self.W]]
-            return rebind[Fn](self.function[])[_W=Self.W]()
+            return rebind[Fn](self.function[])()
 
 
 comptime _Binary[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable] = def(var A, var B) -> R
@@ -99,12 +99,12 @@ def _call_native_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: Mov
 ) raises X -> R:
     comptime if raising:
         comptime Fn = downcast[F, _RaisingBinary[A, B, R, X]]
-        comptime assert Fn.A == A and Fn.B == B and Fn.R == R and Fn.X == X
+        comptime assert conforms_to(Fn, _RaisingBinary[A, B, R, X])
         return _native_binary_raising[A, B, R, X, Fn](rebind[Fn](function), first^, second^)
     else:
         comptime assert X == Never
         comptime Fn = downcast[F, _Binary[A, B, R]]
-        comptime assert Fn.A == A and Fn.B == B and Fn.R == R
+        comptime assert conforms_to(Fn, _Binary[A, B, R])
         return _native_binary[A, B, R, Fn](rebind[Fn](function), first^, second^)
 
 
@@ -152,12 +152,12 @@ def _call_native[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & 
     # borrowed reference view and pipeline stages all reach it.
     comptime if raising:
         comptime Fn = downcast[F, _RaisingUnary[A, R, E]]
-        comptime assert Fn.A == A and Fn.R == R and Fn.E == E, "native unary: incompatible signature"
+        comptime assert conforms_to(Fn, _RaisingUnary[A, R, E]), "native unary: incompatible signature"
         return _native_raising_unary[A, R, E, Fn](rebind[Fn](function), value^)
     else:
         comptime assert E == Never
         comptime Fn = downcast[F, _Unary[A, R]]
-        comptime assert Fn.A == A and Fn.R == R, "native unary: incompatible signature"
+        comptime assert conforms_to(Fn, _Unary[A, R]), "native unary: incompatible signature"
         return _native_unary[A, R, Fn](rebind[Fn](function), value^)
 
 
@@ -242,22 +242,22 @@ def _unary_ref_left[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable
                     F: Movable & Deinitable, raising: Bool](function: F, var value: A) raises X -> R:
     comptime if raising:
         comptime Fn = downcast[F, _RaisingUnary[A, R, X]]
-        return rebind[Fn](function)[_A=A, _R=R, _X=X](value^)
+        return rebind[Fn](function)(value^)
     else:
         comptime assert X == Never
         comptime Fn = downcast[F, _Unary[A, R]]
-        return rebind[Fn](function)[_A=A, _R=R](value^)
+        return rebind[Fn](function)(value^)
 
 
 def _unary_ref_right[Q: Movable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable,
                      F: Movable & Deinitable, raising: Bool](function: F, var value: Q) raises Y -> S:
     comptime if raising:
         comptime Fn = downcast[F, _RaisingUnary[Q, S, Y]]
-        return rebind[Fn](function)[_Q=Q, _S=S, _Y=Y](value^)
+        return rebind[Fn](function)(value^)
     else:
         comptime assert Y == Never
         comptime Fn = downcast[F, _Unary[Q, S]]
-        return rebind[Fn](function)[_Q=Q, _S=S](value^)
+        return rebind[Fn](function)(value^)
 
 
 def as_unary[A: Movable & Deinitable, R: Movable & Deinitable, //,
@@ -325,11 +325,11 @@ struct _NativeBorrowMut[P: AnyType, R: Movable & Deinitable, F: Movable & Deinit
     def invoke_mut(mut self, ref payload: Self.P) raises Self.Failure capturing -> Self.R:
         comptime if Self.factory:
             comptime Fn = downcast[Self.F, _Thunk[Self.R]]
-            comptime assert Fn.R == Self.R
+            comptime assert conforms_to(Fn, _Thunk[Self.R])
             return _call_lazy_thunk[Self.R, Fn](rebind[Fn](self.function))
         else:
             comptime Fn = downcast[Self.F, _Borrowing[Self.P, Self.R]]
-            comptime assert Fn.P == Self.P and Fn.R == Self.R
+            comptime assert conforms_to(Fn, _Borrowing[Self.P, Self.R])
             return _call_lazy_borrow[Self.P, Self.R, Fn](rebind[Fn](self.function), payload)
 
 
@@ -356,12 +356,12 @@ def _call_native_borrow[P: AnyType, R: Movable & Deinitable, E: Movable & Deinit
                         F: Movable & Deinitable, raising: Bool](function: F, ref payload: P) raises E -> R:
     comptime if raising:
         comptime Fn = downcast[F, _RaisingBorrowing[P, R, E]]
-        comptime assert Fn.P == P and Fn.R == R and Fn.E == E, "native borrow: incompatible signature"
+        comptime assert conforms_to(Fn, _RaisingBorrowing[P, R, E]), "native borrow: incompatible signature"
         return _native_raising_borrow[P, R, E, Fn](rebind[Fn](function), payload)
     else:
         comptime assert E == Never
         comptime Fn = downcast[F, _Borrowing[P, R]]
-        comptime assert Fn.P == P and Fn.R == R, "native borrow: incompatible signature"
+        comptime assert conforms_to(Fn, _Borrowing[P, R]), "native borrow: incompatible signature"
         return _native_borrow[P, R, Fn](rebind[Fn](function), payload)
 
 
@@ -377,11 +377,11 @@ def _borrow_ref_call_x[P: AnyType, R: Movable & Deinitable, X: Movable & Deinita
     # Only the native invocation differs; the borrowed receiver is shared.
     comptime if raising:
         comptime Fn = downcast[F, _RaisingBorrowing[P, R, X]]
-        return rebind[Fn](function)[_P=P, _R=R, _X=X](payload)
+        return rebind[Fn](function)(payload)
     else:
         comptime assert X == Never
         comptime Fn = downcast[F, _Borrowing[P, R]]
-        return rebind[Fn](function)[_P=P, _R=R](payload)
+        return rebind[Fn](function)(payload)
 
 
 def _borrow_predicate_call[P: AnyType, S: Movable & Deinitable, X: Movable & Deinitable,
@@ -391,11 +391,11 @@ def _borrow_predicate_call[P: AnyType, S: Movable & Deinitable, X: Movable & Dei
     # receiver dispatch and error propagation remain in _NativeBorrowRef.
     comptime if raising:
         comptime Fn = downcast[F, _RaisingBorrowing[P, S, X]]
-        return rebind[Fn](function)[_P=P, _S=S, _X=X](payload)
+        return rebind[Fn](function)(payload)
     else:
         comptime assert X == Never
         comptime Fn = downcast[F, _Borrowing[P, S]]
-        return rebind[Fn](function)[_P=P, _S=S](payload)
+        return rebind[Fn](function)(payload)
 
 
 def _borrow_factory_call[Q: AnyType, S: Movable & Deinitable, Y: Movable & Deinitable,
@@ -403,11 +403,11 @@ def _borrow_factory_call[Q: AnyType, S: Movable & Deinitable, Y: Movable & Deini
     # The second borrowing callback retains its Q/S/Y admission witness.
     comptime if raising:
         comptime Fn = downcast[F, _RaisingBorrowing[Q, S, Y]]
-        return rebind[Fn](function)[_Q=Q, _S=S, _Y=Y](payload)
+        return rebind[Fn](function)(payload)
     else:
         comptime assert Y == Never
         comptime Fn = downcast[F, _Borrowing[Q, S]]
-        return rebind[Fn](function)[_Q=Q, _S=S](payload)
+        return rebind[Fn](function)(payload)
 
 
 @fieldwise_init

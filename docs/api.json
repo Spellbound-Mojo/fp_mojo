@@ -35207,7 +35207,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -35224,7 +35224,7 @@
        "doc": "",
        "type": "Piped[M.Value]"
       },
-      "signature": "def combine_all[K: KeyElement & Deinitable, H: Hasher, //, M: Monoid](deinit self) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, M.Value, H]",
+      "signature": "def combine_all[K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, M: Monoid](deinit self) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, M.Value, H]",
       "summary": "Combine in order with a monoid; empty input returns its identity."
      },
      {
@@ -35384,7 +35384,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        }
       ],
@@ -35394,7 +35394,7 @@
        "doc": "",
        "type": "Piped[_DictFamily[K, Optional[T], H].MapFiltered[Dict[K, Optional[T], H], _Same[Optional[T]]]]"
       },
-      "signature": "def compact[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //](deinit self) raises _DictFamily[K, Optional[T], H].MapFilterError[Dict[K, Optional[T], H], _Same[Optional[T]]] -> Piped[_DictFamily[K, Optional[T], H].MapFiltered[Dict[K, Optional[T], H], _Same[Optional[T]]]] where Self.Value == Dict[K, Optional[T], H]",
+      "signature": "def compact[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self) raises _DictFamily[K, Optional[T], H].MapFilterError[Dict[K, Optional[T], H], _Same[Optional[T]]] -> Piped[_DictFamily[K, Optional[T], H].MapFiltered[Dict[K, Optional[T], H], _Same[Optional[T]]]] where Self.Value == Dict[K, Optional[T], H]",
       "summary": "Derive compact through filter_map, preserving the family's semantics."
      },
      {
@@ -37314,7 +37314,7 @@
         "description": "",
         "inferred": false,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        }
       ],
@@ -37324,7 +37324,7 @@
        "doc": "",
        "type": "Piped[Dict[K, U, H]]"
       },
-      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher](deinit self, var value: U) -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H]",
+      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H]",
       "summary": "Copy value into every payload position."
      },
      {
@@ -37971,7 +37971,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -37988,7 +37988,7 @@
        "doc": "",
        "type": "Piped[Dict[K, T, H]]"
       },
-      "signature": "def filter[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //, F: def(T) -> Bool](deinit self, ref predicate: F) -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]",
+      "signature": "def filter[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: def(T) -> Bool](deinit self, ref predicate: F) -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]",
       "summary": "Retain accepted Dict payloads immediately, preserving their container."
      },
      {
@@ -38022,7 +38022,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -38046,7 +38046,7 @@
        "doc": "",
        "type": "Piped[Dict[K, T, H]]"
       },
-      "signature": "def filter[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: def(T) raises E -> Bool](deinit self, ref predicate: F) raises E -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]",
+      "signature": "def filter[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> Bool](deinit self, ref predicate: F) raises E -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]",
       "summary": "Retain accepted Dict payloads immediately, preserving their container."
      },
      {
@@ -38080,7 +38080,7 @@
         "description": "",
         "inferred": false,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        }
       ],
@@ -38090,7 +38090,7 @@
        "doc": "",
        "type": "Piped[Dict[K, downcast[C.Payload, Movable & Deinitable], H]]"
       },
-      "signature": "def filter[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher](deinit self, var predicate: C) raises C.Failure -> Piped[Dict[K, downcast[C.Payload, Movable & Deinitable], H]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and C.Result == Bool",
+      "signature": "def filter[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var predicate: C) raises C.Failure -> Piped[Dict[K, downcast[C.Payload, Movable & Deinitable], H]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and C.Result == Bool",
       "summary": "Retain accepted Dict payloads with an owned library predicate."
      },
      {
@@ -39660,7 +39660,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -39677,7 +39677,7 @@
        "doc": "",
        "type": "Piped[_DictFamily[K, A, H].MapFiltered[Dict[K, A, H], _NativeUnaryRef[A, R, Never, F, False, o]]]"
       },
-      "signature": "def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _DictFamily[K, A, H].MapFilterError[Dict[K, A, H], _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[_DictFamily[K, A, H].MapFiltered[Dict[K, A, H], _NativeUnaryRef[A, R, Never, F, False, o]]] where Self.Value == Dict[K, A, H]",
+      "signature": "def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _DictFamily[K, A, H].MapFilterError[Dict[K, A, H], _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[_DictFamily[K, A, H].MapFiltered[Dict[K, A, H], _NativeUnaryRef[A, R, Never, F, False, o]]] where Self.Value == Dict[K, A, H]",
       "summary": "Apply filter_map through the carrier's FunctorFilter capability."
      },
      {
@@ -39725,7 +39725,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -39749,7 +39749,7 @@
        "doc": "",
        "type": "Piped[_DictFamily[K, A, H].MapFiltered[Dict[K, A, H], _NativeUnaryRef[A, R, E, F, True, o]]]"
       },
-      "signature": "def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises _DictFamily[K, A, H].MapFilterError[Dict[K, A, H], _NativeUnaryRef[A, R, E, F, True, o]] -> Piped[_DictFamily[K, A, H].MapFiltered[Dict[K, A, H], _NativeUnaryRef[A, R, E, F, True, o]]] where Self.Value == Dict[K, A, H]",
+      "signature": "def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises _DictFamily[K, A, H].MapFilterError[Dict[K, A, H], _NativeUnaryRef[A, R, E, F, True, o]] -> Piped[_DictFamily[K, A, H].MapFiltered[Dict[K, A, H], _NativeUnaryRef[A, R, E, F, True, o]]] where Self.Value == Dict[K, A, H]",
       "summary": "Apply filter_map through the carrier's FunctorFilter capability."
      },
      {
@@ -39783,7 +39783,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        }
       ],
@@ -39793,7 +39793,7 @@
        "doc": "",
        "type": "Piped[_DictFamily[K, F.Arg, H].MapFiltered[Dict[K, F.Arg, H], F]]"
       },
-      "signature": "def filter_map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //](deinit self, var function: F) raises _DictFamily[K, F.Arg, H].MapFilterError[Dict[K, F.Arg, H], F] -> Piped[_DictFamily[K, F.Arg, H].MapFiltered[Dict[K, F.Arg, H], F]] where Self.Value == Dict[K, F.Arg, H]",
+      "signature": "def filter_map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: F) raises _DictFamily[K, F.Arg, H].MapFilterError[Dict[K, F.Arg, H], F] -> Piped[_DictFamily[K, F.Arg, H].MapFiltered[Dict[K, F.Arg, H], F]] where Self.Value == Dict[K, F.Arg, H]",
       "summary": "Apply filter_map through the carrier's FunctorFilter capability."
      },
      {
@@ -39834,7 +39834,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        }
       ],
@@ -39844,7 +39844,7 @@
        "doc": "",
        "type": "Piped[_DictFamily[K, F._View[o].Arg, H].MapFiltered[Dict[K, F._View[o].Arg, H], F._View[o]]]"
       },
-      "signature": "def filter_map[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //](deinit self, ref[o] function: F) raises _DictFamily[K, F._View[o].Arg, H].MapFilterError[Dict[K, F._View[o].Arg, H], F._View[o]] -> Piped[_DictFamily[K, F._View[o].Arg, H].MapFiltered[Dict[K, F._View[o].Arg, H], F._View[o]]] where Self.Value == Dict[K, F._View[o].Arg, H]",
+      "signature": "def filter_map[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, ref[o] function: F) raises _DictFamily[K, F._View[o].Arg, H].MapFilterError[Dict[K, F._View[o].Arg, H], F._View[o]] -> Piped[_DictFamily[K, F._View[o].Arg, H].MapFiltered[Dict[K, F._View[o].Arg, H], F._View[o]]] where Self.Value == Dict[K, F._View[o].Arg, H]",
       "summary": "Apply filter_map through the carrier's FunctorFilter capability."
      },
      {
@@ -40725,7 +40725,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -40742,7 +40742,7 @@
        "doc": "",
        "type": "Piped[Dict[K, T, H]]"
       },
-      "signature": "def filter_not[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //, F: def(T) -> Bool](deinit self, ref predicate: F) -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]",
+      "signature": "def filter_not[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: def(T) -> Bool](deinit self, ref predicate: F) -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]",
       "summary": "Retain rejected Dict payloads immediately, preserving their container."
      },
      {
@@ -40776,7 +40776,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -40800,7 +40800,7 @@
        "doc": "",
        "type": "Piped[Dict[K, T, H]]"
       },
-      "signature": "def filter_not[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: def(T) raises E -> Bool](deinit self, ref predicate: F) raises E -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]",
+      "signature": "def filter_not[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> Bool](deinit self, ref predicate: F) raises E -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]",
       "summary": "Retain rejected Dict payloads immediately, preserving their container."
      },
      {
@@ -40834,7 +40834,7 @@
         "description": "",
         "inferred": false,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        }
       ],
@@ -40844,7 +40844,7 @@
        "doc": "",
        "type": "Piped[Dict[K, downcast[C.Payload, Movable & Deinitable], H]]"
       },
-      "signature": "def filter_not[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher](deinit self, var predicate: C) raises C.Failure -> Piped[Dict[K, downcast[C.Payload, Movable & Deinitable], H]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and C.Result == Bool",
+      "signature": "def filter_not[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var predicate: C) raises C.Failure -> Piped[Dict[K, downcast[C.Payload, Movable & Deinitable], H]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and C.Result == Bool",
       "summary": "Retain rejected Dict payloads with an owned library predicate."
      },
      {
@@ -42078,7 +42078,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -42095,7 +42095,7 @@
        "doc": "",
        "type": "Piped[R]"
       },
-      "signature": "def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[R] where Self.Value == Dict[K, A, H]",
+      "signature": "def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[R] where Self.Value == Dict[K, A, H]",
       "summary": "Return the first present transformed result, stopping without another pull."
      },
      {
@@ -42143,7 +42143,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -42167,7 +42167,7 @@
        "doc": "",
        "type": "Piped[R]"
       },
-      "signature": "def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises E -> Piped[R] where Self.Value == Dict[K, A, H]",
+      "signature": "def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises E -> Piped[R] where Self.Value == Dict[K, A, H]",
       "summary": "Return the first present transformed result, stopping without another pull."
      },
      {
@@ -42201,7 +42201,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        }
       ],
@@ -42211,7 +42211,7 @@
        "doc": "",
        "type": "Piped[F.Out]"
       },
-      "signature": "def find_map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //](deinit self, var function: F) raises F.Error -> Piped[F.Out] where Self.Value == Dict[K, F.Arg, H]",
+      "signature": "def find_map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[F.Out] where Self.Value == Dict[K, F.Arg, H]",
       "summary": "Return the first present transformed result, stopping without another pull."
      },
      {
@@ -47651,7 +47651,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -47675,7 +47675,7 @@
        "doc": "",
        "type": "Piped[M.Value]"
       },
-      "signature": "def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, A, H]",
+      "signature": "def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, A, H]",
       "summary": "Project and combine in order with a monoid; empty input returns its identity."
      },
      {
@@ -47723,7 +47723,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -47754,7 +47754,7 @@
        "doc": "",
        "type": "Piped[M.Value]"
       },
-      "signature": "def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises _CommonError[E, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, A, H]",
+      "signature": "def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises _CommonError[E, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, A, H]",
       "summary": "Project and combine in order with a monoid; empty input returns its identity."
      },
      {
@@ -47788,7 +47788,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -47805,7 +47805,7 @@
        "doc": "",
        "type": "Piped[M.Value]"
       },
-      "signature": "def fold_map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //, M: Monoid](deinit self, var function: F) raises _CommonError[F.Error, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, F.Arg, H]",
+      "signature": "def fold_map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, M: Monoid](deinit self, var function: F) raises _CommonError[F.Error, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, F.Arg, H]",
       "summary": "Project and combine in order with a monoid; empty input returns its identity."
      },
      {
@@ -52902,7 +52902,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -52919,7 +52919,7 @@
        "doc": "",
        "type": "Piped[Dict[K, U, H]]"
       },
-      "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //, F: def(var T) -> U](deinit self, ref function: F) -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H]",
+      "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: def(var T) -> U](deinit self, ref function: F) -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H]",
       "summary": "Map Dict payloads immediately, preserving the native container."
      },
      {
@@ -52960,7 +52960,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -52984,7 +52984,7 @@
        "doc": "",
        "type": "Piped[Dict[K, U, H]]"
       },
-      "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: def(var T) raises E -> U](deinit self, ref function: F) raises E -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H]",
+      "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: def(var T) raises E -> U](deinit self, ref function: F) raises E -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H]",
       "summary": "Map Dict payloads immediately, preserving the native container."
      },
      {
@@ -53018,7 +53018,7 @@
         "description": "",
         "inferred": false,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        }
       ],
@@ -53028,7 +53028,7 @@
        "doc": "",
        "type": "Piped[Dict[K, F.Out, H]]"
       },
-      "signature": "def map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher](deinit self, var function: F) raises F.Error -> Piped[Dict[K, F.Out, H]] where Self.Value == Dict[K, F.Arg, H]",
+      "signature": "def map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var function: F) raises F.Error -> Piped[Dict[K, F.Out, H]] where Self.Value == Dict[K, F.Arg, H]",
       "summary": "Map Dict payloads with an owned library callback."
      },
      {
@@ -53069,7 +53069,7 @@
         "description": "",
         "inferred": false,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        }
       ],
@@ -53079,7 +53079,7 @@
        "doc": "",
        "type": "Piped[Dict[K, F._View[o].Out, H]]"
       },
-      "signature": "def map[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Dict[K, F._View[o].Out, H]] where Self.Value == Dict[K, F._View[o].Arg, H]",
+      "signature": "def map[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Dict[K, F._View[o].Out, H]] where Self.Value == Dict[K, F._View[o].Arg, H]",
       "summary": "Map Dict payloads with a borrowed callable view."
      },
      {
@@ -59104,7 +59104,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -59121,7 +59121,7 @@
        "doc": "",
        "type": "Piped[Optional[downcast[P, Movable & Deinitable]]]"
       },
-      "signature": "def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable)",
+      "signature": "def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable)",
       "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
      },
      {
@@ -59169,7 +59169,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -59193,7 +59193,7 @@
        "doc": "",
        "type": "Piped[Optional[downcast[P, Movable & Deinitable]]]"
       },
-      "signature": "def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable)",
+      "signature": "def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable)",
       "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
      },
      {
@@ -59227,7 +59227,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        }
       ],
@@ -59237,7 +59237,7 @@
        "doc": "",
        "type": "Piped[Optional[downcast[C.Payload, Movable & Deinitable]]]"
       },
-      "signature": "def max_by[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "signature": "def max_by[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
       "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
      },
      {
@@ -60142,7 +60142,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -60159,7 +60159,7 @@
        "doc": "",
        "type": "Piped[Optional[downcast[P, Movable & Deinitable]]]"
       },
-      "signature": "def min_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable)",
+      "signature": "def min_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable)",
       "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
      },
      {
@@ -60207,7 +60207,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -60231,7 +60231,7 @@
        "doc": "",
        "type": "Piped[Optional[downcast[P, Movable & Deinitable]]]"
       },
-      "signature": "def min_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable)",
+      "signature": "def min_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable)",
       "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
      },
      {
@@ -60265,7 +60265,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        }
       ],
@@ -60275,7 +60275,7 @@
        "doc": "",
        "type": "Piped[Optional[downcast[C.Payload, Movable & Deinitable]]]"
       },
-      "signature": "def min_by[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "signature": "def min_by[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
       "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
      },
      {
@@ -63640,7 +63640,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -63664,7 +63664,7 @@
        "doc": "",
        "type": "Piped[Dict[K, Tuple[downcast[P, Movable & Deinitable], R], H]]"
       },
-      "signature": "def pair_with[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Dict[K, Tuple[downcast[P, Movable & Deinitable], R], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]",
+      "signature": "def pair_with[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Dict[K, Tuple[downcast[P, Movable & Deinitable], R], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]",
       "summary": "Borrow each payload for projection and retain it beside the result."
      },
      {
@@ -63705,7 +63705,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -63736,7 +63736,7 @@
        "doc": "",
        "type": "Piped[Dict[K, Tuple[downcast[P, Movable & Deinitable], R], H]]"
       },
-      "signature": "def pair_with[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Dict[K, Tuple[downcast[P, Movable & Deinitable], R], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]",
+      "signature": "def pair_with[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Dict[K, Tuple[downcast[P, Movable & Deinitable], R], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]",
       "summary": "Borrow each payload for projection and retain it beside the result."
      },
      {
@@ -63777,7 +63777,7 @@
         "description": "",
         "inferred": false,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        }
       ],
@@ -63787,7 +63787,7 @@
        "doc": "",
        "type": "Piped[Dict[K, Tuple[T, C.Result], H]]"
       },
-      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, Tuple[T, C.Result], H]] where Self.Value == Dict[K, T, H] and C.Payload == T",
+      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, Tuple[T, C.Result], H]] where Self.Value == Dict[K, T, H] and C.Payload == T",
       "summary": "Borrow each payload for projection and retain it beside the result."
      },
      {
@@ -72548,7 +72548,7 @@
         "description": "",
         "inferred": false,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        }
       ],
@@ -72558,7 +72558,7 @@
        "doc": "",
        "type": "Piped[Dict[K, T, H]]"
       },
-      "signature": "def replace[T: Copyable & Equatable & Deinitable, K: KeyElement & Deinitable, H: Hasher](deinit self, var old: T, var new: T) -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]",
+      "signature": "def replace[T: Copyable & Equatable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var old: T, var new: T) -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]",
       "summary": "Replace equal payloads, moving unmatched values unchanged."
      },
      {
@@ -73351,7 +73351,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        }
       ],
@@ -73361,7 +73361,7 @@
        "doc": "",
        "type": "Piped[Int]"
       },
-      "signature": "def sum[K: KeyElement & Deinitable, H: Hasher, //](deinit self) raises Never -> Piped[Int] where Self.Value == Dict[K, Int, H]",
+      "signature": "def sum[K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self) raises Never -> Piped[Int] where Self.Value == Dict[K, Int, H]",
       "summary": "Add in order from zero, preserving the numeric type and SIMD lanes."
      },
      {
@@ -73394,7 +73394,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        }
       ],
@@ -73404,7 +73404,7 @@
        "doc": "",
        "type": "Piped[SIMD[dtype, size]]"
       },
-      "signature": "def sum[dtype: DType, size: SIMDLength, K: KeyElement & Deinitable, H: Hasher, //](deinit self) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, SIMD[dtype, size], H]",
+      "signature": "def sum[dtype: DType, size: SIMDLength, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, SIMD[dtype, size], H]",
       "summary": "Add in order from zero, preserving the numeric type and SIMD lanes."
      },
      {
@@ -74862,7 +74862,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -74879,7 +74879,7 @@
        "doc": "",
        "type": "Piped[Int]"
       },
-      "signature": "def sum_by[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[Int] where Self.Value == Dict[K, A, H] and R == Int",
+      "signature": "def sum_by[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[Int] where Self.Value == Dict[K, A, H] and R == Int",
       "summary": "Project and add in one pass from zero, without an intermediate collection."
      },
      {
@@ -74927,7 +74927,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -74951,7 +74951,7 @@
        "doc": "",
        "type": "Piped[Int]"
       },
-      "signature": "def sum_by[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Int] where Self.Value == Dict[K, A, H] and R == Int",
+      "signature": "def sum_by[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Int] where Self.Value == Dict[K, A, H] and R == Int",
       "summary": "Project and add in one pass from zero, without an intermediate collection."
      },
      {
@@ -74985,7 +74985,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        }
       ],
@@ -74995,7 +74995,7 @@
        "doc": "",
        "type": "Piped[Int]"
       },
-      "signature": "def sum_by[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //](deinit self, var function: F) raises F.Error -> Piped[Int] where Self.Value == Dict[K, F.Arg, H] and F.Out == Int",
+      "signature": "def sum_by[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[Int] where Self.Value == Dict[K, F.Arg, H] and F.Out == Int",
       "summary": "Project and add in one pass from zero, without an intermediate collection."
      },
      {
@@ -75057,7 +75057,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -75074,7 +75074,7 @@
        "doc": "",
        "type": "Piped[SIMD[dtype, size]]"
       },
-      "signature": "def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, A, H] and R == SIMD[dtype, size]",
+      "signature": "def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, A, H] and R == SIMD[dtype, size]",
       "summary": "Project and add in one pass from zero, without an intermediate collection."
      },
      {
@@ -75136,7 +75136,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -75160,7 +75160,7 @@
        "doc": "",
        "type": "Piped[SIMD[dtype, size]]"
       },
-      "signature": "def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises E -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, A, H] and R == SIMD[dtype, size]",
+      "signature": "def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises E -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, A, H] and R == SIMD[dtype, size]",
       "summary": "Project and add in one pass from zero, without an intermediate collection."
      },
      {
@@ -75208,7 +75208,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        }
       ],
@@ -75218,7 +75218,7 @@
        "doc": "",
        "type": "Piped[SIMD[dtype, size]]"
       },
-      "signature": "def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //](deinit self, var function: F) raises F.Error -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, F.Arg, H] and F.Out == SIMD[dtype, size]",
+      "signature": "def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, F.Arg, H] and F.Out == SIMD[dtype, size]",
       "summary": "Project and add in one pass from zero, without an intermediate collection."
      },
      {
@@ -76814,7 +76814,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -76838,7 +76838,7 @@
        "doc": "",
        "type": "Piped[Dict[K, downcast[P, Movable & Deinitable], H]]"
       },
-      "signature": "def tap_each[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Dict[K, downcast[P, Movable & Deinitable], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]",
+      "signature": "def tap_each[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Dict[K, downcast[P, Movable & Deinitable], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]",
       "summary": "Borrow each payload for inspection and retain it unchanged."
      },
      {
@@ -76879,7 +76879,7 @@
         "description": "",
         "inferred": true,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        },
        {
@@ -76910,7 +76910,7 @@
        "doc": "",
        "type": "Piped[Dict[K, downcast[P, Movable & Deinitable], H]]"
       },
-      "signature": "def tap_each[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Dict[K, downcast[P, Movable & Deinitable], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]",
+      "signature": "def tap_each[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Dict[K, downcast[P, Movable & Deinitable], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]",
       "summary": "Borrow each payload for inspection and retain it unchanged."
      },
      {
@@ -76951,7 +76951,7 @@
         "description": "",
         "inferred": false,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        }
       ],
@@ -76961,7 +76961,7 @@
        "doc": "",
        "type": "Piped[Dict[K, T, H]]"
       },
-      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H] and C.Payload == T",
+      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H] and C.Payload == T",
       "summary": "Borrow each payload for inspection and retain it unchanged."
      },
      {
@@ -81477,7 +81477,7 @@
         "description": "",
         "inferred": false,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        }
       ],
@@ -81487,7 +81487,7 @@
        "doc": "",
        "type": "Piped[Dict[K, Tuple[U, T], H]]"
       },
-      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher](deinit self, var value: U) -> Piped[Dict[K, Tuple[U, T], H]] where Self.Value == Dict[K, T, H]",
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, Tuple[U, T], H]] where Self.Value == Dict[K, T, H]",
       "summary": "Pair each payload with a copy of value on the left."
      },
      {
@@ -81847,7 +81847,7 @@
         "description": "",
         "inferred": false,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        }
       ],
@@ -81857,7 +81857,7 @@
        "doc": "",
        "type": "Piped[Dict[K, Tuple[T, U], H]]"
       },
-      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher](deinit self, var value: U) -> Piped[Dict[K, Tuple[T, U], H]] where Self.Value == Dict[K, T, H]",
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, Tuple[T, U], H]] where Self.Value == Dict[K, T, H]",
       "summary": "Pair each payload with a copy of value on the right."
      },
      {
@@ -82127,7 +82127,7 @@
         "description": "",
         "inferred": false,
         "name": "H",
-        "type": "Hasher",
+        "type": "Hasher & Defaultable & Deinitable",
         "variadic": false
        }
       ],
@@ -82137,7 +82137,7 @@
        "doc": "",
        "type": "Piped[Dict[K, NoneType, H]]"
       },
-      "signature": "def void[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher](deinit self) -> Piped[Dict[K, NoneType, H]] where Self.Value == Dict[K, T, H]",
+      "signature": "def void[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self) -> Piped[Dict[K, NoneType, H]] where Self.Value == Dict[K, T, H]",
       "summary": "Discard payloads while preserving their container shape."
      },
      {

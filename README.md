@@ -7,9 +7,12 @@ own structs. Pattern matching checks that every constructor is covered at
 compile time. Functions and closures keep their native ownership conventions
 and error types.
 
-The library is verified with Mojo 1.1.0 on Linux x86-64 and macOS arm64.
+The `nightly` checkout pins Mojo 1.2.0. The published FP Mojo 1.0.0 package
+uses Mojo 1.1.0; see [installation](docs/content/start/installation.md).
+Mojo 1.2 compatibility is incomplete: package precompilation passes, but the
+full test suite does not. See the [qualification status](docs/content/architecture/native-boundaries.md#mojo-12-qualification).
 
-![Mojo 1.1.0](https://img.shields.io/badge/Mojo-1.1.0-orange)
+![Mojo 1.2.0](https://img.shields.io/badge/Mojo-1.2.0-orange)
 ![Platforms](https://img.shields.io/badge/platforms-Linux%20x86--64%20%7C%20macOS%20arm64-blue)
 ![License](https://img.shields.io/badge/license-Apache%202.0-green)
 
@@ -322,7 +325,7 @@ walks through creating the environment, saving the program and running it.
 To work from a checkout instead:
 
 ```sh
-git clone https://github.com/Spellbound-Mojo/fp_mojo.git
+git clone --branch nightly https://github.com/Spellbound-Mojo/fp_mojo.git
 cd fp_mojo
 pixi install --locked
 pixi run mojo run -I src docs/examples/quickstart.mojo   # prints 42
@@ -368,11 +371,12 @@ pixi run docs-serve
 
 ## Status
 
-FP Mojo 1.0.0 targets Mojo 1.1. The allocation-free core also cross-compiles for
+The `nightly` checkout targets Mojo 1.2.0; published FP Mojo 1.0.0 targets
+Mojo 1.1. The allocation-free core was also cross-compiled on Mojo 1.1 for
 NVIDIA and AMD GPUs; execution on GPU hardware has not yet been verified. See
 [support and limitations](docs/content/guides/status.md) for supported uses and
 [native boundaries](docs/content/architecture/native-boundaries.md) for the
-Mojo 1.1 constraints that shape the API.
+compiler constraints that shape the API and the Mojo 1.2 migration.
 
 ## Development
 

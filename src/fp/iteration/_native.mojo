@@ -26,10 +26,10 @@ comptime _SameSource[T: Movable, S: Movable & Deinitable]: Bool = _Source[S].Ele
 def _source_pack[*Ss: Movable & Deinitable](var *sources: *Ss) -> Tuple[*_NativeSources[*Ss]]:
     comptime Out = Tuple[*_NativeSources[*Ss]]
     var result = MaybeUninit[Out]()
-    def store[i: Int](var value: sources.Ts[i]) capturing:
+    def store[i: Int](var value: sources.Ts[i]) {ref result}:
         comptime assert Out.Ts[i] == _Source[sources.Ts[i]]
         Pointer(to=result.unsafe_ptr()[][i]).unsafe_write(rebind_var[Out.Ts[i]](_source(value^)))
-    sources^.consume_elements[store]()
+    sources^.consume_elements(store)
     return result^.unsafe_assume_init()
 
 

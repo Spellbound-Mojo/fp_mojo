@@ -121,10 +121,10 @@ Rules that matter:
 6. **Update the documentation** in the same change (see
    [maintaining the docs](documentation.md)).
 
-## Working with Mojo 1.1
+## Working with the pinned compiler
 
-These practices come from building this library on the pinned compiler; the
-limits behind them are recorded in
+These practices were established on Mojo 1.1 and retained for the Mojo 1.2
+migration. The limits and compatibility changes are recorded in
 [native Mojo boundaries](../architecture/native-boundaries.md).
 
 - **Keep the type-level program small.** Associated types should name only a
@@ -177,5 +177,5 @@ limits behind them are recorded in
 - **Test heap contents.** A `String`'s `byte_length()` reads inline metadata and
   can look correct for a dangling buffer; compare contents.
 - **Read the pinned standard library.** Clone
-  `https://github.com/modular/modular` at branch `mojo/v1.1.0` and read
+  `https://github.com/modular/modular` at branch `mojo/v1.2.0` and read
   `Mojo/stdlib/std`; `mojo doc` cannot read the compiled `std.mojoc`.

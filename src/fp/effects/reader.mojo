@@ -12,7 +12,7 @@ from fp.algebra.instances import IdentityFamily
 from fp.callables.protocols import (UnaryContract, BinaryContract, ThunkContract, OnceUnary, MutableUnary,
                                     OnceThunk, MutableBinary, BorrowCallContract, BorrowCallable, BorrowOnceCallable)
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
-from fp.callables._receiver import _borrow_once_as, _binary_repeated_as
+from fp.callables._receiver import _borrow_once_as, _binary_repeated_as, _unary_once_as, _thunk_once_as
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
 from .protocols import Local, Listen, _CarrierOp, _LocalLifting, ReaderAction, _ReaderFamily, _admit_endpoint, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
 from ._adapt import _op_as, _reader_run_as, _map_as, _flat_map_as, _map2_lazy_as
@@ -109,11 +109,7 @@ struct _ReaderContinue[I: AnyType, F: UnaryContract & Movable & Deinitable, R: A
     def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert Self.Action.Family == Self.I, _FAMILY_MISMATCH
         comptime assert _ErrorCompatible[Self.Error, Self.F.Error] and _ErrorCompatible[Self.Error, Self.Action.Error[Self.o]]
-        var action: Self.Action
-        try:
-            action = rebind_var[Self.Action](call_once(self.function^, arg^))
-        except error:
-            _propagate_error[Self.Error](error^)
+        var action = rebind_var[Self.Action](_unary_once_as[Self.Error](self.function^, arg^))
         return _reader_run_as[Self.Error](action^, rebind[Self.Action.Env](self.env[]))
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert Self.Action.Family == Self.I, _FAMILY_MISMATCH
@@ -138,11 +134,7 @@ struct _ReaderRight[I: AnyType, G: ThunkContract & Movable & Deinitable, R: AnyT
     def call_once(deinit self) raises Self.Error -> Self.Out:
         comptime assert Self.Action.Family == Self.I, _FAMILY_MISMATCH
         comptime assert _ErrorCompatible[Self.Error, Self.G.Error] and _ErrorCompatible[Self.Error, Self.Action.Error[Self.o]]
-        var action: Self.Action
-        try:
-            action = rebind_var[Self.Action](call_once(self.right^))
-        except error:
-            _propagate_error[Self.Error](error^)
+        var action = rebind_var[Self.Action](_thunk_once_as[Self.Error](self.right^))
         return _reader_run_as[Self.Error](action^, rebind[Self.Action.Env](self.env[]))
 
 

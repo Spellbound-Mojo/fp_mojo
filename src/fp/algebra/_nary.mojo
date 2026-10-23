@@ -57,10 +57,10 @@ struct _ProductRun[I: Applicative, V: Movable & Deinitable, *Ws: Movable & Deini
     def run[Out: Movable & Deinitable, X: Movable & Deinitable](var first: Self.V, var others: Tuple[*Self.Ws]) raises X -> Out:
         comptime assert Self.Slots.all_conforms_to[Defaultable]()
         var cells = Tuple[*Self.Slots]()
-        def store[index: Int](var value: Self.Ws[index]) capturing:
+        def store[index: Int](var value: Self.Ws[index]) {ref cells}:
             comptime assert Self.Slots[index] == Optional[Self.Ws[index]]
             rebind[Optional[Self.Ws[index]]](cells[index]) = Optional(value^)
-        others^.consume_elements[store]()
+        others^.consume_elements(store)
         var start: Self.I.Mapped[Self.V, _Singleton[Self.I.Element[Self.V]]]
         try:
             start = Self.I.map(_Singleton[Self.I.Element[Self.V]](),first^)

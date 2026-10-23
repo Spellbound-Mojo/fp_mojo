@@ -463,7 +463,7 @@ from zero, and keep SIMD lanes separate. Custom numeric types can use
 `fold_map` or `combine_all` with a Monoid.
 
 Array mapping and terminals use a temporary List to preserve ownership with
-the pinned Mojo 1.1 owning-iterator limitation. This costs O(N) temporary
+the Mojo 1.1 owning-iterator limitation. This costs O(N) temporary
 storage; Array searches buffer the input before searching. Other new
 reductions do not construct an intermediate mapped container. See the
 [architecture chapter](../architecture/functions.md#derived-combinators) for

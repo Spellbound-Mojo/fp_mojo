@@ -177,6 +177,12 @@ def methods(piped=False):
                 else:
                     prelude = f'        def invoke_recovery(var payload: {e}, callback: C) raises {error} capturing -> {t}:\n            return rebind_var[{t}](callback(rebind_var[{cb.payload}](payload^)))\n'
                     body = f'return _transform_result[{t}, {e}, {t}, {e}, {error}, False, True, {e}, {t}, C, invoke_recovery, True](self^, function)'
+            if piped and name in ('map_err', 'or_else') and kind != 'library':
+                # Mojo 1.2 crashes inferring the nested native Result overload.
+                # The shared native view preserves the admitted signature and
+                # lets Result use its existing library-callback boundary.
+                adapter = f'_NativeUnaryRef[{cb.payload}, {cb.result}, {cb.error}, C, {kind == "raising"}, o]'
+                body = f'return Piped(rebind_var[{source}](self.value^).{name}({adapter}(Pointer(to=function))))'
             if mode == 'thunk' and kind != 'library':
                 if piped:
                     effect = '[X=X]' if kind == 'raising' else ''

@@ -71,10 +71,14 @@ struct _ResultRight[F: BinaryContract & Movable & Deinitable, R: ThunkContract &
     def apply(deinit self, var first: Self.F.First) raises Self.Error -> Result[Self.F.Out, Self.S]:
         comptime assert _ErrorCompatible[Self.Error, Self.F.Error] and _ErrorCompatible[Self.Error, Self.R.Error]
         var second = rebind_var[Result[Self.F.Second, Self.S]](_thunk_once_as[Self.Error](self.right^))
+        return Self._combine(self.f^, first^, second^)
+    @staticmethod
+    def _combine(var function: Self.F, var first: Self.F.First, var second: Result[Self.F.Second, Self.S]) raises Self.Error -> Result[Self.F.Out, Self.S]:
+        comptime assert _ErrorCompatible[Self.Error, Self.F.Error]
         try:
             return _transform_result_owned[Self.F.Second, Self.S, Self.F.Out, Self.S, Self.F.Error, True, True,
                 Self.F.Second, Self.F.Out, _ResultLeft[Self.F, Self.S], _result_combine[Self.F, Self.S]](
-                second^, _ResultLeft[Self.F, Self.S](self.f^, first^))
+                second^, _ResultLeft[Self.F, Self.S](function^, first^))
         except error:
             _propagate_error[Self.Error](error^)
 

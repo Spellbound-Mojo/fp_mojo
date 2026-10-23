@@ -245,7 +245,7 @@ private adapters specialize on the payload type inferred at that boundary.
 They are implementation dictionaries, not public element-fixed Functor families.
 No reflection into native storage layouts is used for type inference.
 
-Array mapping buffers through native lists. The pinned Mojo 1.1 owning Array
+Array mapping buffers through native lists. The Mojo 1.1 owning Array
 iterator destroys source elements when moved, so using it would violate
 ownership for non-trivial elements. Native `Array.deinit_with` safely transfers
 inputs to a list; ListFamily maps them; the native Array constructor consumes
@@ -428,7 +428,7 @@ private filter iterator, with a compile-time polarity parameter.
 `FilterNotIterator` names that specialization without adding storage. Native
 lazy callbacks remain owned and invoked through mutable access; eager native
 callbacks remain borrowed in place. A read-only adapter around an owned mutable
-native callback loses capture updates at O3 on pinned Mojo 1.1, so the lazy
+native callback loses capture updates at O3 on Mojo 1.1, so the lazy
 boundary applies the decision after the existing invocation helper. The
 iterator loop, fusion, ownership and cleanup remain shared with filter.
 

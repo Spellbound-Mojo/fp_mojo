@@ -1,8 +1,79 @@
 # Native Mojo boundaries
 
-The library is pinned to Mojo 1.1.0. This page lists the Mojo 1.1 behaviors
-that shape the library's design, the workaround for each, and the compiler change
-that would let the library drop it.
+The `nightly` library is pinned to Mojo 1.2.0 (2016d0cd). The tables below
+record the Mojo 1.1 behaviors that originally shaped the design. They remain
+historical evidence for retained boundaries, not a claim that every defect
+persists in 1.2. New native features do not broaden the library's supported
+API without a separate review.
+
+## Mojo 1.2 compatibility
+
+- `std.hash` replaces `std.hashlib`. Native `Dict` hasher parameters require
+  `Defaultable & Hasher & Deinitable`; dictionary adapters carry those same bounds.
+- Native function traits no longer expose named signature aliases such as
+  `F.A`, `F.R` or `F.E`. Callback adapters check the exact structural function
+  trait and invoke it directly, retaining the public type and origin admission
+  predicates. Forwarding does not inject synthetic function parameters.
+- Tuple and variadic-pack `consume_elements` handlers are runtime closures.
+  Their explicit reference captures retain the destination slots while each
+  source element moves once; this adds no copying requirement.
+- Consuming receivers that partially move fields across `try` boundaries are
+  rejected. Error adaptation uses the existing receiver helpers, or an owned
+  static boundary, so the handler never reuses a partially consumed receiver.
+- Inferring a nested native `Result.map_err` or `or_else` call from a generic
+  `Piped` overload crashes this compiler. Those forwards use the shared native
+  callback view and Result's existing library-callback entry point.
+
+The MAX pin is 26.7.0 for the optional device environment. The released
+community package remains FP Mojo 1.0.0 and requires Mojo 1.1.0; installing
+that release with 1.2 is not supported. Use the nightly source checkout.
+
+## Mojo 1.2 qualification
+
+The environment and lockfile select stable Mojo 1.2.0, but the library's full
+compatibility migration is **incomplete**. These are Linux x86-64 results from
+2026-10-23; neither macOS nor GPU execution was requalified.
+
+| Check | Result |
+|---|---|
+| Locked default environment | Installed; compiler reports `Mojo 1.2.0 (2016d0cd)` |
+| Whole-package precompilation | Passes with `--Werror` |
+| Full package suite at O3 | All four executables fail compilation; none of the 308 checks ran |
+| Compile-failure fixtures at O3 | 487/673 match the declared rejection; 120 compiler crashes, 64 diagnostic mismatches, 2 unexpected acceptances |
+| Runnable examples, source/package at O0/O3 | 118/220 pass; 40 compiler crashes, 60 compile errors, 2 execution failures |
+| Python tooling tests | 35 pass; the GNU `/usr/bin/time` test is skipped because that executable is unavailable |
+| Strict documentation build and generated-overload check | Pass |
+
+Retained local reports are `.cache/mojo12-suite-package-o3-1/report.json`,
+`.cache/mojo12-rejects-package-o3-1/report.json`, and
+`.cache/mojo12-docs-full-1/report.json`. Their source inputs were unchanged during
+each run. Compiler crashes are failures, never successful rejection checks.
+
+Outstanding work includes native overload inference in `attempt`, fluent
+`map2`/`map_n` and error operations; generic callable witnesses and result
+inference; and the remaining example/diagnostic differences.
+`effectful_reductions.mojo` produces the wrong result at O0 through both import
+routes (`all values small` instead of `large value found`); its O3 runs pass.
+This runtime failure must be resolved as well as the compilation failures.
+A native-only
+reproducer in `.cache/mojo12-compatibility/native-keyword-overload.mojo` crashes
+with no FP imports: it combines a zero-argument raising callback overload with
+a homogeneous keyword-pack callback overload, then calls the former. This
+establishes a compiler defect for that shape, not that every library workaround
+is impossible.
+
+Two previously rejected programs compile without being executed by the runner.
+`piped_generic_raising_error.mojo` describes an old inference limitation and
+needs review as a potential native improvement. `terminal_fold_until_result.mojo`
+presents distinct embedded origins for the requested break payload and the
+callback's result; its acceptance is an unresolved contract regression. The
+rejection fixtures and ownership/origin promises have not been relaxed to
+obtain a passing baseline. Further library compatibility work must resolve or
+explicitly review these differences before declaring 1.2 fully supported.
+
+The full O0/source suite, compile-time budget and device checks have not been
+repeated after these failures. Existing performance numbers remain Mojo 1.1
+measurements.
 
 ## Callables and argument packs
 
@@ -121,5 +192,5 @@ On each proposed toolchain:
    Never cast silently between representations.
 
 Mojo 1.2.0.dev2026092305 (eea89a4d) was checked in an isolated environment and
-reproduced the closure-return and pack limitations above. The project remains
-pinned to 1.1.0.
+reproduced the closure-return and pack limitations above. That historical probe
+is separate from the stable 1.2.0 compatibility migration described above.

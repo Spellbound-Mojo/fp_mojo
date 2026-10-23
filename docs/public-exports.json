@@ -949,20 +949,20 @@
             "sha256": "47edfe41bbe3adfc453a397848c7528cdd78023af2570143c9111f6436cf7c7b"
           },
           {
-            "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //, F: def(var T) -> U]( deinit self, ref function: F ) -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H]:",
-            "sha256": "a517787b0fa7582c2fc20ed1aab793c8b22237d79f8a3221815627359404f79e"
+            "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: def(var T) -> U]( deinit self, ref function: F ) -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H]:",
+            "sha256": "038bcf30fd10cd21634c7b8a663aa72b9a9ceecfe57d2735b54d4876af7e695a"
           },
           {
-            "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: def(var T) raises E -> U]( deinit self, ref function: F ) raises E -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H]:",
-            "sha256": "0bcb72b32cdf51e91e6e44c1ebd3805e549cc2bebb796ed26a04b3343a429dab"
+            "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: def(var T) raises E -> U]( deinit self, ref function: F ) raises E -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H]:",
+            "sha256": "3c14fc11aeeaa7ff2eef4d2f522f757e7cd4eb9f97752f4e0d89dd7a45e104fa"
           },
           {
-            "signature": "def map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher]( deinit self, var function: F ) raises F.Error -> Piped[Dict[K, F.Out, H]] where Self.Value == Dict[K, F.Arg, H]:",
-            "sha256": "9528b7d33210aae2e129973e703a5d5d9ae8b59d66c8366085234c41d2a41d22"
+            "signature": "def map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable]( deinit self, var function: F ) raises F.Error -> Piped[Dict[K, F.Out, H]] where Self.Value == Dict[K, F.Arg, H]:",
+            "sha256": "ed61622deda5816e45fa9e311fae9542f530d43a324ab351af2e5a7110f8cb48"
           },
           {
-            "signature": "def map[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher]( deinit self, ref[o] function: F ) raises F._View[o].Error -> Piped[Dict[K, F._View[o].Out, H]] where Self.Value == Dict[K, F._View[o].Arg, H]:",
-            "sha256": "85b13af33234e26ab518eefac6c040ff9ddd8c2fc13ef9f75bc6309ef14fe06b"
+            "signature": "def map[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable]( deinit self, ref[o] function: F ) raises F._View[o].Error -> Piped[Dict[K, F._View[o].Out, H]] where Self.Value == Dict[K, F._View[o].Arg, H]:",
+            "sha256": "09a24eae1923ccbb06c10809b93c6abf8998baec59f8ab4ff9f6f11999f5bd00"
           },
           {
             "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable, //, F: def(var T) -> U]( deinit self, ref function: F ) -> Piped[StringDict[U]] where Self.Value == StringDict[T]:",
@@ -1063,16 +1063,16 @@
             "sha256": "e3fcc4463c265d419de791634a99f5bac551c9d4e4c1f83f5b957db998b8670a"
           },
           {
-            "signature": "def filter[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //, F: def(T) -> Bool]( deinit self, ref predicate: F ) -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]:",
-            "sha256": "256dbdd0407b9ae2c2593aeb35990e13e0f4ffaa715029ec5a9911fe68c4ac1a"
+            "signature": "def filter[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: def(T) -> Bool]( deinit self, ref predicate: F ) -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]:",
+            "sha256": "6c8f63e61027cabd1e7a95246f1c78cb0787bb8bb3dabc343fa990262632882e"
           },
           {
-            "signature": "def filter[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: def(T) raises E -> Bool]( deinit self, ref predicate: F ) raises E -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]:",
-            "sha256": "8742d79824b3a6752fc1b39492f3077d7c8d6a4272018954c9c1ab24d4e3a537"
+            "signature": "def filter[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> Bool]( deinit self, ref predicate: F ) raises E -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]:",
+            "sha256": "55b476a8525e20c2f5090b4c1f08bfd3a040df6e063a03635476011b34a33ba3"
           },
           {
-            "signature": "def filter[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher]( deinit self, var predicate: C ) raises C.Failure -> Piped[Dict[K, downcast[C.Payload, Movable & Deinitable], H]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and C.Result == Bool:",
-            "sha256": "00d2e28751f78693e01a33fc4f7e72fde468fb2a17f5a3a16ef62b2d4d42d191"
+            "signature": "def filter[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable]( deinit self, var predicate: C ) raises C.Failure -> Piped[Dict[K, downcast[C.Payload, Movable & Deinitable], H]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and C.Result == Bool:",
+            "sha256": "17e7c74a927ac599d1bd89fb784b036feaabe05741a3dd16ca2f064c577aaf17"
           },
           {
             "signature": "def filter[T: Movable & Deinitable, //, F: def(T) -> Bool]( deinit self, ref predicate: F ) -> Piped[StringDict[T]] where Self.Value == StringDict[T]:",
@@ -1149,16 +1149,16 @@
             "sha256": "acccaccddb57ff91bd91237ebc7a33667bdfd44575fc36eb2f56302b0df75355"
           },
           {
-            "signature": "def filter_not[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //, F: def(T) -> Bool]( deinit self, ref predicate: F ) -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]:",
-            "sha256": "dd962bc2d4ec558d395211ee8cab5a5f93bc58586881bcbdd53203f55055ad9e"
+            "signature": "def filter_not[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: def(T) -> Bool]( deinit self, ref predicate: F ) -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]:",
+            "sha256": "70054c51917fc53798eb147b3ae0a97332feac798f91b29a731195bc6d85e5df"
           },
           {
-            "signature": "def filter_not[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: def(T) raises E -> Bool]( deinit self, ref predicate: F ) raises E -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]:",
-            "sha256": "b3c269d805c0fdca875baa15839c3c266b4a866cdc6e3064bd50abba2eb8636c"
+            "signature": "def filter_not[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> Bool]( deinit self, ref predicate: F ) raises E -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]:",
+            "sha256": "7cd550735611afc9159b66f364f68a4d7c8d7f29c5e5454c690bc9be30fc5026"
           },
           {
-            "signature": "def filter_not[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher]( deinit self, var predicate: C ) raises C.Failure -> Piped[Dict[K, downcast[C.Payload, Movable & Deinitable], H]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and C.Result == Bool:",
-            "sha256": "c97cf840c7af867e780f6334d5ac65b9ea6d60c981926fd138864ac6fb7b9ca5"
+            "signature": "def filter_not[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable]( deinit self, var predicate: C ) raises C.Failure -> Piped[Dict[K, downcast[C.Payload, Movable & Deinitable], H]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and C.Result == Bool:",
+            "sha256": "168d6558951a6bc3d7bdbb7f61314690ffa01d3dbc52d49df1b6520645e474cf"
           },
           {
             "signature": "def filter_not[T: Movable & Deinitable, //, F: def(T) -> Bool]( deinit self, ref predicate: F ) -> Piped[StringDict[T]] where Self.Value == StringDict[T]:",
@@ -1709,8 +1709,8 @@
             "sha256": "be6875ccef0bc780e65d2d4bc8a75345f1b5f9c4f6a05d4f1eb4df5075e800c0"
           },
           {
-            "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher](deinit self, var value: U) -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H]:",
-            "sha256": "85e95dff288b6a4ee12ede597f7f1816d8acd02c0394cc322756bab257146d3a"
+            "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H]:",
+            "sha256": "97136f56b7345063b2378b0418914c5d52527b4b0caa6918fe2caa85614925a0"
           },
           {
             "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[StringDict[U]] where Self.Value == StringDict[T]:",
@@ -1747,8 +1747,8 @@
             "sha256": "58cb48aedf2cf3145f92bc08c0ff2e182c2e36aaf38291f9683b192fd9d7d22f"
           },
           {
-            "signature": "def replace[T: Copyable & Equatable & Deinitable, K: KeyElement & Deinitable, H: Hasher](deinit self, var old: T, var new: T) -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]:",
-            "sha256": "5c686753f8d4a1db09779b59682c4dbc0e43c59e0e7843cc3ab39327753c0caa"
+            "signature": "def replace[T: Copyable & Equatable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var old: T, var new: T) -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]:",
+            "sha256": "a426f7c44fae48e9a1b5f4be2bcc53b746245d901a00d1e0099a0a3021d553fc"
           },
           {
             "signature": "def replace[T: Copyable & Equatable & Deinitable](deinit self, var old: T, var new: T) -> Piped[StringDict[T]] where Self.Value == StringDict[T]:",
@@ -1785,8 +1785,8 @@
             "sha256": "85ba8b8d5326ff8a77c7df9f6eaa3296c5cdd5f7bc449143f82c8dff72be7585"
           },
           {
-            "signature": "def void[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher](deinit self) -> Piped[Dict[K, NoneType, H]] where Self.Value == Dict[K, T, H]:",
-            "sha256": "2ea35ef7d8c21067288f88ac629d214e475ee90bd32671effc8350765e58b0b9"
+            "signature": "def void[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self) -> Piped[Dict[K, NoneType, H]] where Self.Value == Dict[K, T, H]:",
+            "sha256": "2c4abdfd6cbdea63c91d906614c48c5ca3547dce6520ebc07b7c918c816149ae"
           },
           {
             "signature": "def void[T: Movable & Deinitable](deinit self) -> Piped[StringDict[NoneType]] where Self.Value == StringDict[T]:",
@@ -1823,8 +1823,8 @@
             "sha256": "530c2decce828eb900161e501f28c65640597c9ada2628b1d4b7744929480469"
           },
           {
-            "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher](deinit self, var value: U) -> Piped[Dict[K, Tuple[U, T], H]] where Self.Value == Dict[K, T, H]:",
-            "sha256": "56f41cc1f2f0561748cfb3e0ffc494d3ab5785d21d2ea10fba363ce38519c5b1"
+            "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, Tuple[U, T], H]] where Self.Value == Dict[K, T, H]:",
+            "sha256": "635199b2b8e42df9d651ab105934ddb09bd9764a020ecb5117c22a6532a04399"
           },
           {
             "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[StringDict[Tuple[U, T]]] where Self.Value == StringDict[T]:",
@@ -1861,8 +1861,8 @@
             "sha256": "f5df323c2ddd426fde966bcb6e14251aa731e7edc1e797ab07fa41ca4421542b"
           },
           {
-            "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher](deinit self, var value: U) -> Piped[Dict[K, Tuple[T, U], H]] where Self.Value == Dict[K, T, H]:",
-            "sha256": "c63e2e338f931719be52bd7b40742312992f13c7cdb3a263a12452e2e12479c4"
+            "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, Tuple[T, U], H]] where Self.Value == Dict[K, T, H]:",
+            "sha256": "8a235f68749f023d3eb2d8e64ac841514a8fb53331dc464d4b471a74eea9054c"
           },
           {
             "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[StringDict[Tuple[T, U]]] where Self.Value == StringDict[T]:",
@@ -1939,16 +1939,16 @@
             "sha256": "23f4a7d0de4261256d6e4433cadaf7859eb5d7e1bf6e339d8ac24dab3bdc20e9"
           },
           {
-            "signature": "def pair_with[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Dict[K, Tuple[downcast[P, Movable & Deinitable], R], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]:",
-            "sha256": "ae8227648bb72deb18a9c74ba6c672459c515839e4216bac2ff358b2c0acd725"
+            "signature": "def pair_with[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Dict[K, Tuple[downcast[P, Movable & Deinitable], R], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]:",
+            "sha256": "e1594123e200ed085788ae9c680302eb056cb70ac50e0a51a61e707237971ad9"
           },
           {
-            "signature": "def pair_with[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Dict[K, Tuple[downcast[P, Movable & Deinitable], R], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]:",
-            "sha256": "7a76ec233ae13300b82c7f31a237ddef34354c8cdc190bd09b2d8790c51a3e13"
+            "signature": "def pair_with[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Dict[K, Tuple[downcast[P, Movable & Deinitable], R], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]:",
+            "sha256": "5797502cbd949d1a9407e76d13d88146affc580c2d29e69102b97c1c15a98dfe"
           },
           {
-            "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, Tuple[T, C.Result], H]] where Self.Value == Dict[K, T, H] and C.Payload == T:",
-            "sha256": "a13a517ce6c2dbee2ffc5a79de56dc6de989c674f4a6336d5570736087001cac"
+            "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, Tuple[T, C.Result], H]] where Self.Value == Dict[K, T, H] and C.Payload == T:",
+            "sha256": "32941fe880b082778ebde6a344be8b3cffc4b625b2f5250d93f5b52adfcf17ec"
           },
           {
             "signature": "def pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[StringDict[Tuple[downcast[P, Movable & Deinitable], R]]] where Self.Value == StringDict[downcast[P, Movable & Deinitable]]:",
@@ -2049,16 +2049,16 @@
             "sha256": "6ccbb08133570ebcc94cde8b3650dfcf13d3a0303323ccbda273614ab4c8abd4"
           },
           {
-            "signature": "def tap_each[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Dict[K, downcast[P, Movable & Deinitable], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]:",
-            "sha256": "0d3c5887c84cabaade70b0627fc01c4675e523b00825be3eae72ab4eb70db62a"
+            "signature": "def tap_each[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Dict[K, downcast[P, Movable & Deinitable], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]:",
+            "sha256": "1ece3c6904639dfe951ad921e1cde8d3ca319713748d0b35982823fe77dade14"
           },
           {
-            "signature": "def tap_each[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Dict[K, downcast[P, Movable & Deinitable], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]:",
-            "sha256": "4f859137f18d6d4bb4579773e04c08d0df40673444b9f2abe5f1116538c81d4c"
+            "signature": "def tap_each[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Dict[K, downcast[P, Movable & Deinitable], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]:",
+            "sha256": "148c347aa2b980bec74176f5fb708697ab02be76c5eed6c37d21e4d55d5c463d"
           },
           {
-            "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H] and C.Payload == T:",
-            "sha256": "423f2463889175edb9011e35adc4f5d2601218b5445681d4716dab580bcd9909"
+            "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H] and C.Payload == T:",
+            "sha256": "0f19965b77fc7faabf14a1d0551cc5b7e2fcae002893d73686d9b812512e704a"
           },
           {
             "signature": "def tap_each[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[StringDict[downcast[P, Movable & Deinitable]]] where Self.Value == StringDict[downcast[P, Movable & Deinitable]]:",
@@ -2163,20 +2163,20 @@
             "sha256": "218aabeeb135df7150b9a8744c82d630b560afb7d34d4a15caa41280616c0e9d"
           },
           {
-            "signature": "def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _DictFamily[K, A, H].MapFilterError[Dict[K, A, H], _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[_DictFamily[K, A, H].MapFiltered[Dict[K, A, H], _NativeUnaryRef[A, R, Never, F, False, o]]] where Self.Value == Dict[K, A, H]:",
-            "sha256": "41fca365d30033f7a01dcf237514a9a082143463fb91ba87601e7bf2669b9858"
+            "signature": "def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _DictFamily[K, A, H].MapFilterError[Dict[K, A, H], _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[_DictFamily[K, A, H].MapFiltered[Dict[K, A, H], _NativeUnaryRef[A, R, Never, F, False, o]]] where Self.Value == Dict[K, A, H]:",
+            "sha256": "dc98887f3a7b52ad07c7f46aacad558f876e93fc76a6dc181a490fcabcc65778"
           },
           {
-            "signature": "def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises _DictFamily[K, A, H].MapFilterError[Dict[K, A, H], _NativeUnaryRef[A, R, E, F, True, o]] -> Piped[_DictFamily[K, A, H].MapFiltered[Dict[K, A, H], _NativeUnaryRef[A, R, E, F, True, o]]] where Self.Value == Dict[K, A, H]:",
-            "sha256": "5dbdd8cbc0342bae1618376a8af15a0890d53f5ece16e72dcf5fcb9437fe57a4"
+            "signature": "def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises _DictFamily[K, A, H].MapFilterError[Dict[K, A, H], _NativeUnaryRef[A, R, E, F, True, o]] -> Piped[_DictFamily[K, A, H].MapFiltered[Dict[K, A, H], _NativeUnaryRef[A, R, E, F, True, o]]] where Self.Value == Dict[K, A, H]:",
+            "sha256": "a85673a407b9c8df863d6130633fe6e725b302b61eff9847badb49575f39ebbc"
           },
           {
-            "signature": "def filter_map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //](deinit self, var function: F) raises _DictFamily[K, F.Arg, H].MapFilterError[Dict[K, F.Arg, H], F] -> Piped[_DictFamily[K, F.Arg, H].MapFiltered[Dict[K, F.Arg, H], F]] where Self.Value == Dict[K, F.Arg, H]:",
-            "sha256": "902427fa51adb3285d0284dfcf8d9e68eb05264e9c6e2874e4750fab58479f54"
+            "signature": "def filter_map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: F) raises _DictFamily[K, F.Arg, H].MapFilterError[Dict[K, F.Arg, H], F] -> Piped[_DictFamily[K, F.Arg, H].MapFiltered[Dict[K, F.Arg, H], F]] where Self.Value == Dict[K, F.Arg, H]:",
+            "sha256": "de841cdc87d9fc6cb42e233c225d0d7f888d4df84e80ec40a267bacada599160"
           },
           {
-            "signature": "def filter_map[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //](deinit self, ref[o] function: F) raises _DictFamily[K, F._View[o].Arg, H].MapFilterError[Dict[K, F._View[o].Arg, H], F._View[o]] -> Piped[_DictFamily[K, F._View[o].Arg, H].MapFiltered[Dict[K, F._View[o].Arg, H], F._View[o]]] where Self.Value == Dict[K, F._View[o].Arg, H]:",
-            "sha256": "4cc48b509d7634202a0f995d761f434a8ce0978bd66c1f1356fbe984d2543ccf"
+            "signature": "def filter_map[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, ref[o] function: F) raises _DictFamily[K, F._View[o].Arg, H].MapFilterError[Dict[K, F._View[o].Arg, H], F._View[o]] -> Piped[_DictFamily[K, F._View[o].Arg, H].MapFiltered[Dict[K, F._View[o].Arg, H], F._View[o]]] where Self.Value == Dict[K, F._View[o].Arg, H]:",
+            "sha256": "ab9d7193dd5855e0a1b4179498a384a6743dc7dc2284de3a768e90c9607cd43a"
           },
           {
             "signature": "def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _StringDictFamily[A].MapFilterError[StringDict[A], _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[_StringDictFamily[A].MapFiltered[StringDict[A], _NativeUnaryRef[A, R, Never, F, False, o]]] where Self.Value == StringDict[A]:",
@@ -2361,8 +2361,8 @@
             "sha256": "4154fb90664cab63de697955bb9ad515eac507fb7765302aacc6278e4aa5314c"
           },
           {
-            "signature": "def compact[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //](deinit self) raises _DictFamily[K, Optional[T], H].MapFilterError[Dict[K, Optional[T], H], _Same[Optional[T]]] -> Piped[_DictFamily[K, Optional[T], H].MapFiltered[Dict[K, Optional[T], H], _Same[Optional[T]]]] where Self.Value == Dict[K, Optional[T], H]:",
-            "sha256": "2bae6deff2b5981570d26e4de75fe7e9ffdb761542416f7d5340962b9fa48e14"
+            "signature": "def compact[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self) raises _DictFamily[K, Optional[T], H].MapFilterError[Dict[K, Optional[T], H], _Same[Optional[T]]] -> Piped[_DictFamily[K, Optional[T], H].MapFiltered[Dict[K, Optional[T], H], _Same[Optional[T]]]] where Self.Value == Dict[K, Optional[T], H]:",
+            "sha256": "82137a4e53e334e867863d5edd013709c15da1e9ab818785c61f19b93511fca7"
           },
           {
             "signature": "def compact[T: Movable & Deinitable, //](deinit self) raises _StringDictFamily[Optional[T]].MapFilterError[StringDict[Optional[T]], _Same[Optional[T]]] -> Piped[_StringDictFamily[Optional[T]].MapFiltered[StringDict[Optional[T]], _Same[Optional[T]]]] where Self.Value == StringDict[Optional[T]]:",
@@ -2841,16 +2841,16 @@
             "sha256": "cb66ff1a40f6d404e0b53140bb83238cd09d63343ba5a6cadce51599e3f86830"
           },
           {
-            "signature": "def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[R] where Self.Value == Dict[K, A, H]:",
-            "sha256": "6bde7396fa8967f96c913ca1cf0f3c7cb2afc0dd4fc5fe4a07dfec549da12070"
+            "signature": "def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[R] where Self.Value == Dict[K, A, H]:",
+            "sha256": "7396a76cbf2e50924538ae7ad3ab0ab104d58e83079da8c3ff1edec57d9eb3e4"
           },
           {
-            "signature": "def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises E -> Piped[R] where Self.Value == Dict[K, A, H]:",
-            "sha256": "5ece5e6f435a69e036ab5f4805c1fdfa352cbfec284261c6e2655bf37c6c4881"
+            "signature": "def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises E -> Piped[R] where Self.Value == Dict[K, A, H]:",
+            "sha256": "08232e36a130d93aeecc142b7b5f120af71627fc494eb5a90933b870b89f8580"
           },
           {
-            "signature": "def find_map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //](deinit self, var function: F) raises F.Error -> Piped[F.Out] where Self.Value == Dict[K, F.Arg, H]:",
-            "sha256": "fe80e9692584645e6991f9174d046b9df962c9ee3604e4992012e0c763196b37"
+            "signature": "def find_map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[F.Out] where Self.Value == Dict[K, F.Arg, H]:",
+            "sha256": "879ff2481410d3be4aeb791a33c2fdf049d2d59d3cc3566cd28e40d5985abc0b"
           },
           {
             "signature": "def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[R] where Self.Value == StringDict[A]:",
@@ -2927,16 +2927,16 @@
             "sha256": "777e3895221e1caa6851205ceecd35850abdfa6e6a3b689756075f5d4a914592"
           },
           {
-            "signature": "def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, A, H]:",
-            "sha256": "ec5b6763e8f8b22d82bd654b9aefce00b390fc731208c2e471eb47d41cbcbcca"
+            "signature": "def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, A, H]:",
+            "sha256": "fc59ebb2c725c5a389cb8b2034f99ed5bc5c5f0ad8d045e20456b276e5088858"
           },
           {
-            "signature": "def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises _CommonError[E, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, A, H]:",
-            "sha256": "fe1422026e2c629a839c3e27ff9f710dfc5350aff30203a476f2015c5352b5ef"
+            "signature": "def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises _CommonError[E, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, A, H]:",
+            "sha256": "9b57f133fbb4af9de5e605b9efef7caf2069a15c8ea2595e1fef7099a1905405"
           },
           {
-            "signature": "def fold_map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //, M: Monoid](deinit self, var function: F) raises _CommonError[F.Error, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, F.Arg, H]:",
-            "sha256": "16c2079d8701aa687adfb942c5b481d15f646155703c1b8b78ceb70923b71d4d"
+            "signature": "def fold_map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, M: Monoid](deinit self, var function: F) raises _CommonError[F.Error, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, F.Arg, H]:",
+            "sha256": "c25a80774a59362930284147a8111784743ca375e08a1ba28058db03ced493b2"
           },
           {
             "signature": "def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == StringDict[A]:",
@@ -2981,8 +2981,8 @@
             "sha256": "586e73f0caf42eaabb385e8c65bd1fd39aa4fa1e56f1e694e81ffa725b2e6c31"
           },
           {
-            "signature": "def combine_all[K: KeyElement & Deinitable, H: Hasher, //, M: Monoid](deinit self) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, M.Value, H]:",
-            "sha256": "113409c80db97c3997726b0d03ea13c19889992f81b4917214326f1435c2dcbd"
+            "signature": "def combine_all[K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, M: Monoid](deinit self) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, M.Value, H]:",
+            "sha256": "15b490c73a180d32cb9a94ca212368f3c5394f2f1c0fea84829f58d161eba2e4"
           },
           {
             "signature": "def combine_all[M: Monoid](deinit self) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == StringDict[M.Value]:",
@@ -3043,16 +3043,16 @@
             "sha256": "e9dc9d028c5fe6b0be81223db10184ee5bfe105044355fc24564eb4de3d34fdb"
           },
           {
-            "signature": "def min_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable):",
-            "sha256": "145794188e27a8ea23f35d0e8b44bf04c3742b9839acba480a63fbdf0bb99c25"
+            "signature": "def min_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "9383760aaef5d87924d612a36defddb6144af89a26f454e98be3e67be160f70d"
           },
           {
-            "signature": "def min_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable):",
-            "sha256": "d921baf64cfcf3bff9fde1110f1404c85fe42dc745e079cac0ed5b28be8cd4d4"
+            "signature": "def min_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "4cade38037b84b56955dd29e4ac69aebf6d334807e7695cb428c269e64dc8e1d"
           },
           {
-            "signature": "def min_by[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and conforms_to(C.Result, Comparable & Movable & Deinitable):",
-            "sha256": "2a1555a396b7ebe7cebc8b7e03e11d0ab86cabd77f00402fea2e9d3090c8b5a1"
+            "signature": "def min_by[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and conforms_to(C.Result, Comparable & Movable & Deinitable):",
+            "sha256": "55681b31bfb89aa8952daba21ada580f2790c03ee61a655a2a7c23c759cf3cbc"
           },
           {
             "signature": "def min_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == StringDict[downcast[P, Movable & Deinitable]] and conforms_to(R, Comparable & Movable & Deinitable):",
@@ -3129,16 +3129,16 @@
             "sha256": "ca6551ee459195a6d0c7ac8ede593339fe2dc387b6d5293e716b930da9147649"
           },
           {
-            "signature": "def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable):",
-            "sha256": "86f47db74dce9506ae37f58db60b1cdbf5a5cdc09a95bf11c7f87a8cdfd7d6ab"
+            "signature": "def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "cd94ca0dd17e4f7e18b91fa91d33a971285fba87b6e7ccc36c10f17c1e8c1985"
           },
           {
-            "signature": "def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable):",
-            "sha256": "9b6e9f8b8af781edc346ee9ae2d4e98279ca66946feb4531ae09af4b42de0fb4"
+            "signature": "def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "fa90d91309aca67c0051d4f5b480fcd3acafc151975b7e1dd9649b8fff175ad3"
           },
           {
-            "signature": "def max_by[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and conforms_to(C.Result, Comparable & Movable & Deinitable):",
-            "sha256": "806ef4f49d3fb75467b8ea645bc5e83a975e9ebba87c9f9c151962bbad402af1"
+            "signature": "def max_by[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and conforms_to(C.Result, Comparable & Movable & Deinitable):",
+            "sha256": "bf9ad881ddc1b2226c0eda0fca28a041a24f85f0cb21d0d9f1091545b1406bc8"
           },
           {
             "signature": "def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == StringDict[downcast[P, Movable & Deinitable]] and conforms_to(R, Comparable & Movable & Deinitable):",
@@ -3199,12 +3199,12 @@
             "sha256": "ecb669da072ca1701f579a07bfe90f8a21da665c833c4e86fc562c3db5697260"
           },
           {
-            "signature": "def sum[K: KeyElement & Deinitable, H: Hasher, //](deinit self) raises Never -> Piped[Int] where Self.Value == Dict[K, Int, H]:",
-            "sha256": "10e9bd1c2249d882ec725167a81d96ca30b8063e9ff21ed4332594309632b8f8"
+            "signature": "def sum[K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self) raises Never -> Piped[Int] where Self.Value == Dict[K, Int, H]:",
+            "sha256": "dc75bfba25e41147ba862f033c69a5d80bc766a166c29a0eece4133f2a5551f7"
           },
           {
-            "signature": "def sum[dtype: DType, size: SIMDLength, K: KeyElement & Deinitable, H: Hasher, //](deinit self) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, SIMD[dtype, size], H]:",
-            "sha256": "fb738d646171648fffe61127f38e616ba230aeec92998a43be6f8d16aa3afa50"
+            "signature": "def sum[dtype: DType, size: SIMDLength, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, SIMD[dtype, size], H]:",
+            "sha256": "b4e36345452adad1088002c07f985e8d980bce92e1173d2f3d397651aaf88cbf"
           },
           {
             "signature": "def sum(deinit self) raises Never -> Piped[Int] where Self.Value == StringDict[Int]:",
@@ -3321,28 +3321,28 @@
             "sha256": "bbba3e6e4850b4f8cd0cf8726742964d42db4eddac7bf76816359144e6e7ef59"
           },
           {
-            "signature": "def sum_by[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[Int] where Self.Value == Dict[K, A, H] and R == Int:",
-            "sha256": "f8dd8e39099f9b75c5b2dc090debf9544fa121d2aa7b421a82a5f1a7c307719e"
+            "signature": "def sum_by[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[Int] where Self.Value == Dict[K, A, H] and R == Int:",
+            "sha256": "1856e2a37117c21eefe88212e106491ec2441da845a03ee7e1aa06213e02c098"
           },
           {
-            "signature": "def sum_by[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Int] where Self.Value == Dict[K, A, H] and R == Int:",
-            "sha256": "0bc0ef04e54f4b2bc00d2b16b995c81716ca872289cff72238bc2178fc0f345e"
+            "signature": "def sum_by[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Int] where Self.Value == Dict[K, A, H] and R == Int:",
+            "sha256": "739634997c94be68c106022220be21426190bb32425141b43d60cc16e2186bd1"
           },
           {
-            "signature": "def sum_by[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //](deinit self, var function: F) raises F.Error -> Piped[Int] where Self.Value == Dict[K, F.Arg, H] and F.Out == Int:",
-            "sha256": "dda38ff50f9fa72fbfd0061c543621c5732e230d8dd7eefd021f70008f7d8bb4"
+            "signature": "def sum_by[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[Int] where Self.Value == Dict[K, F.Arg, H] and F.Out == Int:",
+            "sha256": "26eb2af440d37e65101015422a957259de8e1673bfeb09479ba2e0a0a8a268d9"
           },
           {
-            "signature": "def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, A, H] and R == SIMD[dtype, size]:",
-            "sha256": "60ecfef33bfcd14d6d3a847b561ced2b066beffd68844d7b85e362a46dc9d6eb"
+            "signature": "def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, A, H] and R == SIMD[dtype, size]:",
+            "sha256": "e91403b308f7a89559dd3f1095d470f64b9f0d81f7636bbcc7ae5cd23a958900"
           },
           {
-            "signature": "def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises E -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, A, H] and R == SIMD[dtype, size]:",
-            "sha256": "a2ab2c11fe123450a3de3f6e15374d36d4bb21c7177772534a13f1f35d56da4d"
+            "signature": "def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises E -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, A, H] and R == SIMD[dtype, size]:",
+            "sha256": "452ca18ddc77e610b8168c6485686f5f89fcfd57fd3bce749248d77035213a9a"
           },
           {
-            "signature": "def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //](deinit self, var function: F) raises F.Error -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, F.Arg, H] and F.Out == SIMD[dtype, size]:",
-            "sha256": "366a020120affcf46a8dadc1db7d103667c572992378db48bf4a3954267eb958"
+            "signature": "def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, F.Arg, H] and F.Out == SIMD[dtype, size]:",
+            "sha256": "9cfb5eb55a709931a473facb851627e1b1fa5c29165fa6f7b2a3cfe5d955d0ea"
           },
           {
             "signature": "def sum_by[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[Int] where Self.Value == StringDict[A] and R == Int:",

@@ -2,7 +2,7 @@
 from .protocols import Applicative, ApplicativeError, Monad
 from std.builtin.rebind import downcast, rebind_var
 from fp._internal.errors import _ErrorCompatible, _CommonError, _propagate_error, _absurd
-from ._adapt import _flat_map_as, _or_else_as, _map2_lazy_as
+from ._adapt import _fail_as, _flat_map_as, _or_else_as, _map2_lazy_as
 from fp.callables.protocols import UnaryContract, OnceUnary, MutableUnary, BorrowCallContract, Binary, OnceThunk
 from fp.callables._conditional import _guard_owned
 from fp.callables._receiver import _RepeatableBorrow, _MutableBorrowRef, _MutableUnaryRef, _unary_once_as
@@ -162,20 +162,18 @@ struct _ObserveError[I: ApplicativeError, A: Movable & Deinitable, C: BorrowCall
     comptime Out = _ErrorObservation[Self.I, Self.A, Self.C.Result, Self.C.Failure, Self.effect].Out
     comptime Error = _ErrorObservation[Self.I, Self.A, Self.C.Result, Self.C.Failure, Self.effect].Error
     def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
+        var function = self.function^
         comptime if Self.effect:
             comptime assert Self.I._ErrorCarrier[Self.C.Result], "error observation: observer must return the selected family"
             comptime Keep = _EffectRetain[Self.Arg, Self.I, Self.C, False, False, _ObserveFailure[Self.I, Self.A, Self.C.Result]]
             comptime assert _ErrorCompatible[Self.Error, Keep.Error]
             comptime assert Self.Out == Keep.Out
-            return rebind_var[Self.Out](_unary_once_as[Self.Error](Keep(self.function^), arg^))
+            return rebind_var[Self.Out](_unary_once_as[Self.Error](Keep(function^), arg^))
         else:
             comptime assert _ErrorCompatible[Self.Error, Self.C.Failure] and _ErrorCompatible[Self.Error, Self.I.FailError[Self.A]]
-            var original = _unary_once_as[Self.Error](_ObserveOnce[Self.Arg, Self.C, False](self.function^), arg^)
-            try:
-                comptime assert Self.Out == Self.I.Failed[Self.A]
-                return rebind_var[Self.Out](Self.I.fail[Self.A](original^))
-            except raised:
-                _propagate_error[Self.Error](raised^)
+            var original = _unary_once_as[Self.Error](_ObserveOnce[Self.Arg, Self.C, False](function^), arg^)
+            comptime assert Self.Out == Self.I.Failed[Self.A]
+            return rebind_var[Self.Out](_fail_as[Self.Error, Self.I, Self.A](original^))
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert _RepeatableBorrow[Self.C], "error observation: branching requires a repeatable callback"
         var callback = _MutableBorrowRef(Pointer(to=self.function))

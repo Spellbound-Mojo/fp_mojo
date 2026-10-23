@@ -11,7 +11,7 @@ import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parents[2]
-PIN = 'Mojo 1.1.0 (8189361e)'
+PIN = 'Mojo 1.2.0 (2016d0cd)'
 
 
 def _appledouble_files(root):

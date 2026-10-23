@@ -1,6 +1,6 @@
 # API reference
 
-This reference covers FP Mojo's public API on Mojo 1.1.0. Each package page
+This reference covers FP Mojo's public API on Mojo 1.2.0. Each package page
 describes its operations, signatures, ownership rules and errors, with
 declarations generated from the source docstrings. Shared contracts explain
 evaluation order, laziness, costs, and behavior for empty input or uncovered

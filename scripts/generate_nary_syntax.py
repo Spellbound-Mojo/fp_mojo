@@ -73,14 +73,15 @@ struct _NativeNary{n}[{params}, R: {MD}, X: {MD}, F: {MD}, raising: Bool, o: Imm
         if n == 2:
             out.append('        _take_pair(arg^, slot0, slot1)\n')
         else:
-            out.append('        def store[index: Int](var value: Self.Arg.Ts[index]) capturing:\n')
+            captures=', '.join(f'ref slot{i}' for i in range(n))
+            out.append(f'        def store[index: Int](var value: Self.Arg.Ts[index]) {{{captures}}}:\n')
             for i in range(n):
                 if n == 1:
                     out.append('            slot0.unsafe_ptr().unsafe_write(rebind_var[Self.A0](value^))\n')
                 else:
                     branch = f'comptime if index == {i}' if i == 0 else 'else' if i == n-1 else f'elif index == {i}'
                     out.append(f'            {branch}:\n                slot{i}.unsafe_ptr().unsafe_write(rebind_var[Self.A{i}](value^))\n')
-            out.append('        arg^.consume_elements[store]()\n')
+            out.append('        arg^.consume_elements(store)\n')
         out.extend(f'        var a{i} = slot{i}^.unsafe_assume_init()\n' for i in range(n))
         values=', '.join(f'a{i}^' for i in range(n))
         own=', '.join('Self.'+a for a in names)
@@ -92,7 +93,7 @@ struct _NativeNary{n}[{params}, R: {MD}, X: {MD}, F: {MD}, raising: Bool, o: Imm
                 out.append('        comptime if Self.raising:\n' if raising else '        else:\n')
                 sig=f'_RaisingNary{n}[{own}, Self.R, Self.X]' if raising else f'_Nary{n}[{own}, Self.R]'
                 out.append(f'            comptime Fn = downcast[Self.F, {sig}]\n')
-                checks=[f'Fn.A{i} == Self.A{i}' for i in range(n)]+['Fn.R == Self.R', 'Fn.X == Self.X' if raising else 'Self.X == Never']
+                checks=[f'conforms_to(Fn, {sig})'] + ([] if raising else ['Self.X == Never'])
                 out.append('            comptime assert '+' and '.join(checks)+'\n')
                 suffix = '_raising' if raising else ''
                 ep = ', Self.X' if raising else ''

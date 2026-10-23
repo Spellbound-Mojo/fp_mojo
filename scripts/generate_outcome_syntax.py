@@ -111,8 +111,9 @@ def methods():
     def {name}[{', '.join(parameters([left, right]))}](deinit self, {left.argument}, {right.argument}) raises {error} -> Piped[{runner}.Out] where {' and '.join(where)}:
         """{doc}"""
         comptime assert _ErrorCompatible[{error}, {runner}.Error]
+        var value = self^.get()
         try:
-            return Piped({runner}.apply(self.value^, {left.build}, {right.build}))
+            return Piped({runner}.apply(value^, {left.build}, {right.build}))
         except raised:
             _propagate_error[{error}](raised^)
 ''')
@@ -149,8 +150,9 @@ def methods():
     def attempt_tap[{', '.join(parameters([c]))}](deinit self, {c.argument}) raises {error} -> Piped[{runner}.Out] where {' and '.join(where)}:
         """{doc}"""
         comptime assert _ErrorCompatible[{error}, {runner}.Error]
+        var value = self^.get()
         try:
-            return Piped({runner}.apply(self.value^, {c.build}))
+            return Piped({runner}.apply(value^, {c.build}))
         except raised:
             _propagate_error[{error}](raised^)
 ''')

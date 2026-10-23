@@ -87,7 +87,7 @@ Some words have deliberately narrow meanings:
 
 ## Compiler pin
 
-The library is pinned to one exact compiler, Mojo 1.1.0, through
+The library is pinned to one exact compiler, Mojo 1.2.0, through
 Pixi. The supported range grows only after the full verification gates pass on
 a new compiler. Checking a newer compiler for new features or breakage never
 silently changes the compiler used to qualify a release. The upgrade procedure is

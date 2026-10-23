@@ -3,9 +3,13 @@
 Install `fp_mojo` in a Pixi project, or run the library from a source checkout.
 Both routes use the same imports, such as `from fp.functions import pipe`.
 
-FP Mojo is verified with Mojo 1.1.0 on Linux x86-64 and macOS arm64. The steps
-below select that compiler. The development checkout also pins Python 3.14
-through [Pixi](https://pixi.sh).
+The `nightly` development checkout pins Mojo 1.2.0 and Python 3.14 through
+[Pixi](https://pixi.sh). The published FP Mojo 1.0.0 package still requires
+Mojo 1.1.0, with which it was verified on Linux x86-64 and macOS arm64.
+Use the [checkout route](#work-from-a-checkout) for Mojo 1.2; the published
+package cannot yet be installed with that compiler. The nightly 1.2 migration
+is not fully qualified: [current verification failures](../architecture/native-boundaries.md#mojo-12-qualification)
+include compiler crashes and an origin-admission regression.
 
 ## Install the package
 
@@ -77,17 +81,17 @@ Then clone the repository, install the locked environment and run the
 quickstart:
 
 ```sh
-git clone https://github.com/Spellbound-Mojo/fp_mojo.git
+git clone --branch nightly https://github.com/Spellbound-Mojo/fp_mojo.git
 cd fp_mojo
 pixi install --locked
 pixi run mojo --version
 pixi run mojo run -I src docs/examples/quickstart.mojo
 ```
 
-The compiler reports `Mojo 1.1.0 (8189361e)` and the program prints `42`. Use
+The compiler reports `Mojo 1.2.0 (2016d0cd)` and the program prints `42`. Use
 the project environment even if another Mojo is installed on your system.
-Pixi downloads Mojo from `conda.modular.com`; where that host is unreachable, the
-PyPI wheel `mojo==1.1.0` is the same compiler build.
+Pixi downloads Mojo from `conda.modular.com`. The optional `device` environment
+uses MAX 26.7.0, whose compiler dependency matches Mojo 1.2.0.
 
 ## Import from source
 

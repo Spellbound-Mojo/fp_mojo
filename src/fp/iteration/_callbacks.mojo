@@ -42,7 +42,7 @@ def _apply_lazy_unary[T: Movable & Deinitable, U: Movable & Deinitable,
         return rebind_var[U](_unary_repeated_as[Never](rebind[C](function), rebind_var[C.Arg](value^)))
     elif conforms_to(F, _LazyUnary[T, U]):
         comptime Fn = downcast[F, _LazyUnary[T, U]]
-        comptime assert Fn.T == T and Fn.U == U, "map: incompatible native callback signature"
+        comptime assert conforms_to(Fn, _LazyUnary[T, U]), "map: incompatible native callback signature"
         return _call_lazy_unary[T, U, Fn](rebind[Fn](function), value^)
     else:
         comptime assert F == def(var T) thin -> U, "map: non-raising native callback required"
@@ -58,7 +58,7 @@ def _apply_lazy_step[A: Copyable & Deinitable, T: Movable & Deinitable,
             rebind[C](function), rebind_var[C.First](accumulator^), rebind_var[C.Second](value^)))
     elif conforms_to(F, _LazyStep[A, T]):
         comptime Fn = downcast[F, _LazyStep[A, T]]
-        comptime assert Fn.A == A and Fn.T == T, "scan_left: incompatible native callback signature"
+        comptime assert conforms_to(Fn, _LazyStep[A, T]), "scan_left: incompatible native callback signature"
         return _call_lazy_step[A, T, Fn](rebind[Fn](function), accumulator^, value^)
     else:
         comptime assert F == def(var A, var T) thin -> A, "scan_left: non-raising native callback required"
@@ -83,7 +83,7 @@ def _apply_lazy_predicate[T: Movable & Deinitable, F: Movable & Deinitable](
         return _predicate_callable[T, C, Never](value, rebind[C](function))
     elif conforms_to(F, _LazyPredicate[T]):
         comptime Fn = downcast[F, _LazyPredicate[T]]
-        comptime assert Fn.T == T, "filter: incompatible native predicate signature"
+        comptime assert conforms_to(Fn, _LazyPredicate[T]), "filter: incompatible native predicate signature"
         return _call_lazy_predicate[T, Fn](rebind[Fn](function), value)
     else:
         comptime assert F == def(T) thin -> Bool, "filter: non-raising native predicate required"
@@ -98,12 +98,10 @@ def _apply_lazy_optional[T: Movable & Deinitable, U: Movable & Deinitable,
         return rebind_var[Optional[U]](_unary_repeated_as[Never](rebind[C](function), rebind_var[C.Arg](value^)))
     elif conforms_to(F, _LazyOptional[T, U]):
         comptime Fn = downcast[F, _LazyOptional[T, U]]
-        comptime assert Fn.T == T and Fn.U == U, "filter_map: incompatible native callback signature"
-        comptime assert Optional[Fn.U] == Optional[U], "filter_map: incompatible native callback signature"
-        # Invoke with the native associated types: the compiler does not carry
-        # the container equality above through callable-conformance inference.
-        return rebind_var[Optional[U]](_call_lazy_unary[Fn.T, Optional[Fn.U], Fn](
-            rebind[Fn](function), rebind_var[Fn.T](value^)
+        comptime assert conforms_to(Fn, _LazyOptional[T, U]), "filter_map: incompatible native callback signature"
+        # Mojo 1.2 carries the structural callback signature through conformance.
+        return rebind_var[Optional[U]](_call_lazy_unary[T, Optional[U], Fn](
+            rebind[Fn](function), rebind_var[T](value^)
         ))
     else:
         comptime assert F == def(var T) thin -> Optional[U], "filter_map: non-raising native callback required"
@@ -209,7 +207,7 @@ def _apply_lazy_indexed[T: Movable & Deinitable, R: Movable & Deinitable,
         return rebind[def(var Int, var T) thin -> R](function)(index, value^)
     else:
         comptime Fn = downcast[F, _IndexedBinary[T, R]]
-        comptime assert Fn.T == T and Fn.R == R
+        comptime assert conforms_to(Fn, _IndexedBinary[T, R])
         return _call_lazy_indexed[T, R, Fn](rebind[Fn](function), index, value^)
 
 
@@ -238,7 +236,7 @@ def _apply_lazy_pair[A: Movable & Deinitable, B: Movable & Deinitable,
         return _apply_lazy_indexed[B, R](function, rebind_var[Int](first^), second^)
     else:
         comptime Fn = downcast[F, _Binary[A, B, R]]
-        comptime assert Fn.A == A and Fn.B == B and Fn.R == R
+        comptime assert conforms_to(Fn, _Binary[A, B, R])
         return _call_lazy_binary[A, B, R, Fn](rebind[Fn](function), first^, second^)
 
 
@@ -266,7 +264,7 @@ def _apply_lazy_scan[A: Movable & Deinitable, T: Movable & Deinitable,
         return rebind_var[Tuple[A,Y]](_binary_repeated_as[Never](rebind[C](function),rebind_var[C.First](carry^),rebind_var[C.Second](value^)))
     elif conforms_to(F, _LazyScanStep[A,T,Y]):
         comptime Fn = downcast[F, _LazyScanStep[A,T,Y]]
-        comptime assert Fn.A == A and Fn.T == T and Fn.Y == Y, "scan_map: incompatible native callback signature"
+        comptime assert conforms_to(Fn, _LazyScanStep[A,T,Y]), "scan_map: incompatible native callback signature"
         return _call_lazy_scan[A,T,Y,Fn](rebind[Fn](function),carry^,value^)
     else:
         comptime assert F == def(var A,var T) thin -> Tuple[A,Y], "scan_map: non-raising native callback required"

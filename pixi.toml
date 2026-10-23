@@ -6,7 +6,7 @@ channels = ["https://conda.modular.com/max", "conda-forge"]
 platforms = ["osx-arm64", "linux-64"]
 
 [dependencies]
-mojo = "==1.1.0"
+mojo = "==1.2.0"
 python = "3.14.*"
 
 [tasks]
@@ -21,9 +21,9 @@ python = "3.14.*"
 mkdocs = "==1.6.1"
 pygments = "==2.19.2"
 
-# Mojo 1.1 GPU APIs are distributed separately in MAX. Host users do not need it.
+# Mojo GPU APIs are distributed separately in MAX. Host users do not need it.
 [feature.device.dependencies]
-max-core = "==26.6.0"
+max-core = "==26.7.0"
 
 [feature.docs.tasks]
 docs-build = "python -m mkdocs build --strict"

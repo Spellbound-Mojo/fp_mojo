@@ -42,7 +42,7 @@ from fp.algebra.collections import _take_array, _array_terminal, _dict_terminal,
 from std.builtin.variadics import TypeList
 from std.builtin.rebind import rebind_var, downcast
 from std.collections import Array, Deque, LinkedList, StringDict, KeyElement
-from std.hashlib import Hasher
+from std.hash import Hasher
 from fp.data import Result
 from fp.callables.protocols import BorrowCallContract, ThunkContract
 from fp.callables.native import _Thunk, _RaisingThunk
@@ -504,11 +504,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
 
     def map_err[T: Movable & Deinitable, Failure: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: _Unary[A, R]](deinit self, ref[o] function: C) raises Never -> Piped[Result[T, R]] where Self.Value == Result[T, Failure] and A == Failure:
         """Transform the stored error of a Result."""
-        return Piped(rebind_var[Result[T, Failure]](self.value^).map_err(function))
+        return Piped(rebind_var[Result[T, Failure]](self.value^).map_err(_NativeUnaryRef[A, R, Never, C, False, o](Pointer(to=function))))
 
     def map_err[T: Movable & Deinitable, Failure: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingUnary[A, R, X]](deinit self, ref[o] function: C) raises X -> Piped[Result[T, R]] where Self.Value == Result[T, Failure] and A == Failure:
         """Transform the stored error of a Result."""
-        return Piped(rebind_var[Result[T, Failure]](self.value^).map_err[X=X](function))
+        return Piped(rebind_var[Result[T, Failure]](self.value^).map_err(_NativeUnaryRef[A, R, X, C, True, o](Pointer(to=function))))
 
     def or_else[T: Movable & Deinitable, Failure: Movable & Deinitable, C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises C.Error -> Piped[C.Out] where Self.Value == Result[T, Failure] and C.Arg == Failure:
         """Continue a failed Result with the callback Result.
@@ -533,11 +533,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
 
     def or_else[T: Movable & Deinitable, Failure: Movable & Deinitable, A: Movable & Deinitable, U: Movable & Deinitable, o: ImmOrigin, //, C: _Unary[A, Result[T, U]]](deinit self, ref[o] function: C) raises Never -> Piped[Result[T, U]] where Self.Value == Result[T, Failure] and A == Failure:
         """Continue a failed Result with the callback Result."""
-        return Piped(rebind_var[Result[T, Failure]](self.value^).or_else(function))
+        return Piped(rebind_var[Result[T, Failure]](self.value^).or_else(_NativeUnaryRef[A, Result[T, U], Never, C, False, o](Pointer(to=function))))
 
     def or_else[T: Movable & Deinitable, Failure: Movable & Deinitable, A: Movable & Deinitable, U: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingUnary[A, Result[T, U], X]](deinit self, ref[o] function: C) raises X -> Piped[Result[T, U]] where Self.Value == Result[T, Failure] and A == Failure:
         """Continue a failed Result with the callback Result."""
-        return Piped(rebind_var[Result[T, Failure]](self.value^).or_else[X=X](function))
+        return Piped(rebind_var[Result[T, Failure]](self.value^).or_else(_NativeUnaryRef[A, Result[T, U], X, C, True, o](Pointer(to=function))))
 
     def map_both[T: Movable & Deinitable, Failure: Movable & Deinitable, C: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var on_ok: C, var on_err: G) raises _CommonError[C.Error, G.Error] -> Piped[Result[C.Out, G.Out]] where Self.Value == Result[T, Failure] and C.Arg == T and G.Arg == Failure and (C.Error == Never or G.Error == Never or C.Error == G.Error):
         """Transform either payload, preserving its Result constructor.
@@ -1948,72 +1948,81 @@ struct Piped[Value: Movable & Deinitable](Movable):
             Exact callback and family errors; native raises are never recovered.
         """
         comptime assert _ErrorCompatible[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, C, G, False].Error], _Redeem[_ErrorFamily[I], Self.Value, C, G, False].Error]
+        var value = self^.get()
         try:
-            return Piped(_Redeem[_ErrorFamily[I], Self.Value, C, G, False].apply(self.value^, on_ok^, on_err^))
+            return Piped(_Redeem[_ErrorFamily[I], Self.Value, C, G, False].apply(value^, on_ok^, on_err^))
         except raised:
             _propagate_error[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, C, G, False].Error]](raised^)
 
     def redeem[C: UnaryContract & Movable & Deinitable, Q: Movable & Deinitable, q: ImmOrigin, //, I: Applicative, S: Movable & Deinitable, G: _Unary[Q, S], Z: AnyType = _InferError](deinit self, var on_ok: C, ref[q] on_err: G) raises _EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], False].Error] -> Piped[_Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], False].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and C.Arg == I.Element[Self.Value] and Q == _ErrorFamily[I].Failure and (C.Error == Never or Never == Never or C.Error == Never) and C.Out == S:
         """Turn the selected success or stored failure into a successful value."""
         comptime assert _ErrorCompatible[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], False].Error], _Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], False].Error]
+        var value = self^.get()
         try:
-            return Piped(_Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], False].apply(self.value^, on_ok^, _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]](Pointer(to=on_err))))
+            return Piped(_Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], False].apply(value^, on_ok^, _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]](Pointer(to=on_err))))
         except raised:
             _propagate_error[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], False].Error]](raised^)
 
     def redeem[C: UnaryContract & Movable & Deinitable, Q: Movable & Deinitable, q: ImmOrigin, //, I: Applicative, S: Movable & Deinitable, Y: Movable & Deinitable, G: _RaisingUnary[Q, S, Y], Z: AnyType = _InferError](deinit self, var on_ok: C, ref[q] on_err: G) raises _EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], False].Error] -> Piped[_Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], False].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and C.Arg == I.Element[Self.Value] and Q == _ErrorFamily[I].Failure and (C.Error == Never or Y == Never or C.Error == Y) and C.Out == S:
         """Turn the selected success or stored failure into a successful value."""
         comptime assert _ErrorCompatible[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], False].Error], _Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], False].Error]
+        var value = self^.get()
         try:
-            return Piped(_Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], False].apply(self.value^, on_ok^, _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]](Pointer(to=on_err))))
+            return Piped(_Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], False].apply(value^, on_ok^, _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]](Pointer(to=on_err))))
         except raised:
             _propagate_error[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], False].Error]](raised^)
 
     def redeem[A: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, I: Applicative, R: Movable & Deinitable, C: _Unary[A, R], Z: AnyType = _InferError](deinit self, ref[o] on_ok: C, var on_err: G) raises _EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], G, False].Error] -> Piped[_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], G, False].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and A == I.Element[Self.Value] and G.Arg == _ErrorFamily[I].Failure and (Never == Never or G.Error == Never or Never == G.Error) and R == G.Out:
         """Turn the selected success or stored failure into a successful value."""
         comptime assert _ErrorCompatible[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], G, False].Error], _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], G, False].Error]
+        var value = self^.get()
         try:
-            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], G, False].apply(self.value^, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]](Pointer(to=on_ok)), on_err^))
+            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], G, False].apply(value^, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]](Pointer(to=on_ok)), on_err^))
         except raised:
             _propagate_error[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], G, False].Error]](raised^)
 
     def redeem[A: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, q: ImmOrigin, //, I: Applicative, R: Movable & Deinitable, S: Movable & Deinitable, C: _Unary[A, R], G: _Unary[Q, S], Z: AnyType = _InferError](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], False].Error] -> Piped[_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], False].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and A == I.Element[Self.Value] and Q == _ErrorFamily[I].Failure and (Never == Never or Never == Never or Never == Never) and R == S:
         """Turn the selected success or stored failure into a successful value."""
         comptime assert _ErrorCompatible[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], False].Error], _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], False].Error]
+        var value = self^.get()
         try:
-            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], False].apply(self.value^, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]](Pointer(to=on_ok)), _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]](Pointer(to=on_err))))
+            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], False].apply(value^, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]](Pointer(to=on_ok)), _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]](Pointer(to=on_err))))
         except raised:
             _propagate_error[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], False].Error]](raised^)
 
     def redeem[A: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, q: ImmOrigin, //, I: Applicative, R: Movable & Deinitable, S: Movable & Deinitable, C: _Unary[A, R], Y: Movable & Deinitable, G: _RaisingUnary[Q, S, Y], Z: AnyType = _InferError](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], False].Error] -> Piped[_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], False].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and A == I.Element[Self.Value] and Q == _ErrorFamily[I].Failure and (Never == Never or Y == Never or Never == Y) and R == S:
         """Turn the selected success or stored failure into a successful value."""
         comptime assert _ErrorCompatible[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], False].Error], _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], False].Error]
+        var value = self^.get()
         try:
-            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], False].apply(self.value^, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]](Pointer(to=on_ok)), _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]](Pointer(to=on_err))))
+            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], False].apply(value^, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]](Pointer(to=on_ok)), _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]](Pointer(to=on_err))))
         except raised:
             _propagate_error[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], False].Error]](raised^)
 
     def redeem[A: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, I: Applicative, R: Movable & Deinitable, X: Movable & Deinitable, C: _RaisingUnary[A, R, X], Z: AnyType = _InferError](deinit self, ref[o] on_ok: C, var on_err: G) raises _EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], G, False].Error] -> Piped[_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], G, False].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and A == I.Element[Self.Value] and G.Arg == _ErrorFamily[I].Failure and (X == Never or G.Error == Never or X == G.Error) and R == G.Out:
         """Turn the selected success or stored failure into a successful value."""
         comptime assert _ErrorCompatible[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], G, False].Error], _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], G, False].Error]
+        var value = self^.get()
         try:
-            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], G, False].apply(self.value^, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]](Pointer(to=on_ok)), on_err^))
+            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], G, False].apply(value^, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]](Pointer(to=on_ok)), on_err^))
         except raised:
             _propagate_error[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], G, False].Error]](raised^)
 
     def redeem[A: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, q: ImmOrigin, //, I: Applicative, R: Movable & Deinitable, S: Movable & Deinitable, X: Movable & Deinitable, C: _RaisingUnary[A, R, X], G: _Unary[Q, S], Z: AnyType = _InferError](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], False].Error] -> Piped[_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], False].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and A == I.Element[Self.Value] and Q == _ErrorFamily[I].Failure and (X == Never or Never == Never or X == Never) and R == S:
         """Turn the selected success or stored failure into a successful value."""
         comptime assert _ErrorCompatible[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], False].Error], _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], False].Error]
+        var value = self^.get()
         try:
-            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], False].apply(self.value^, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]](Pointer(to=on_ok)), _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]](Pointer(to=on_err))))
+            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], False].apply(value^, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]](Pointer(to=on_ok)), _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]](Pointer(to=on_err))))
         except raised:
             _propagate_error[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], False].Error]](raised^)
 
     def redeem[A: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, q: ImmOrigin, //, I: Applicative, R: Movable & Deinitable, S: Movable & Deinitable, X: Movable & Deinitable, C: _RaisingUnary[A, R, X], Y: Movable & Deinitable, G: _RaisingUnary[Q, S, Y], Z: AnyType = _InferError](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], False].Error] -> Piped[_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], False].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and A == I.Element[Self.Value] and Q == _ErrorFamily[I].Failure and (X == Never or Y == Never or X == Y) and R == S:
         """Turn the selected success or stored failure into a successful value."""
         comptime assert _ErrorCompatible[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], False].Error], _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], False].Error]
+        var value = self^.get()
         try:
-            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], False].apply(self.value^, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]](Pointer(to=on_ok)), _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]](Pointer(to=on_err))))
+            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], False].apply(value^, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]](Pointer(to=on_ok)), _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]](Pointer(to=on_err))))
         except raised:
             _propagate_error[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], False].Error]](raised^)
 
@@ -2043,72 +2052,81 @@ struct Piped[Value: Movable & Deinitable](Movable):
             Exact callback and family errors; native raises are never recovered.
         """
         comptime assert _ErrorCompatible[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, C, G, True].Error], _Redeem[_ErrorFamily[I], Self.Value, C, G, True].Error]
+        var value = self^.get()
         try:
-            return Piped(_Redeem[_ErrorFamily[I], Self.Value, C, G, True].apply(self.value^, on_ok^, on_err^))
+            return Piped(_Redeem[_ErrorFamily[I], Self.Value, C, G, True].apply(value^, on_ok^, on_err^))
         except raised:
             _propagate_error[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, C, G, True].Error]](raised^)
 
     def redeem_with[C: UnaryContract & Movable & Deinitable, Q: Movable & Deinitable, q: ImmOrigin, //, I: Applicative, S: Movable & Deinitable, G: _Unary[Q, S], Z: AnyType = _InferError](deinit self, var on_ok: C, ref[q] on_err: G) raises _EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], True].Error] -> Piped[_Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], True].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and C.Arg == I.Element[Self.Value] and Q == _ErrorFamily[I].Failure and (C.Error == Never or Never == Never or C.Error == Never) and conforms_to(I, Monad) and _ErrorFamily[I]._ErrorCarrier[C.Out] and _ErrorFamily[I]._ErrorCarrier[S] and I.Element[C.Out] == I.Element[S]:
         """Continue the original outcome with its selected handler effect."""
         comptime assert _ErrorCompatible[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], True].Error], _Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], True].Error]
+        var value = self^.get()
         try:
-            return Piped(_Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], True].apply(self.value^, on_ok^, _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]](Pointer(to=on_err))))
+            return Piped(_Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], True].apply(value^, on_ok^, _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]](Pointer(to=on_err))))
         except raised:
             _propagate_error[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], True].Error]](raised^)
 
     def redeem_with[C: UnaryContract & Movable & Deinitable, Q: Movable & Deinitable, q: ImmOrigin, //, I: Applicative, S: Movable & Deinitable, Y: Movable & Deinitable, G: _RaisingUnary[Q, S, Y], Z: AnyType = _InferError](deinit self, var on_ok: C, ref[q] on_err: G) raises _EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], True].Error] -> Piped[_Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], True].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and C.Arg == I.Element[Self.Value] and Q == _ErrorFamily[I].Failure and (C.Error == Never or Y == Never or C.Error == Y) and conforms_to(I, Monad) and _ErrorFamily[I]._ErrorCarrier[C.Out] and _ErrorFamily[I]._ErrorCarrier[S] and I.Element[C.Out] == I.Element[S]:
         """Continue the original outcome with its selected handler effect."""
         comptime assert _ErrorCompatible[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], True].Error], _Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], True].Error]
+        var value = self^.get()
         try:
-            return Piped(_Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], True].apply(self.value^, on_ok^, _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]](Pointer(to=on_err))))
+            return Piped(_Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], True].apply(value^, on_ok^, _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]](Pointer(to=on_err))))
         except raised:
             _propagate_error[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, C, _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], True].Error]](raised^)
 
     def redeem_with[A: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, I: Applicative, R: Movable & Deinitable, C: _Unary[A, R], Z: AnyType = _InferError](deinit self, ref[o] on_ok: C, var on_err: G) raises _EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], G, True].Error] -> Piped[_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], G, True].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and A == I.Element[Self.Value] and G.Arg == _ErrorFamily[I].Failure and (Never == Never or G.Error == Never or Never == G.Error) and conforms_to(I, Monad) and _ErrorFamily[I]._ErrorCarrier[R] and _ErrorFamily[I]._ErrorCarrier[G.Out] and I.Element[R] == I.Element[G.Out]:
         """Continue the original outcome with its selected handler effect."""
         comptime assert _ErrorCompatible[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], G, True].Error], _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], G, True].Error]
+        var value = self^.get()
         try:
-            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], G, True].apply(self.value^, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]](Pointer(to=on_ok)), on_err^))
+            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], G, True].apply(value^, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]](Pointer(to=on_ok)), on_err^))
         except raised:
             _propagate_error[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], G, True].Error]](raised^)
 
     def redeem_with[A: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, q: ImmOrigin, //, I: Applicative, R: Movable & Deinitable, S: Movable & Deinitable, C: _Unary[A, R], G: _Unary[Q, S], Z: AnyType = _InferError](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], True].Error] -> Piped[_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], True].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and A == I.Element[Self.Value] and Q == _ErrorFamily[I].Failure and (Never == Never or Never == Never or Never == Never) and conforms_to(I, Monad) and _ErrorFamily[I]._ErrorCarrier[R] and _ErrorFamily[I]._ErrorCarrier[S] and I.Element[R] == I.Element[S]:
         """Continue the original outcome with its selected handler effect."""
         comptime assert _ErrorCompatible[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], True].Error], _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], True].Error]
+        var value = self^.get()
         try:
-            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], True].apply(self.value^, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]](Pointer(to=on_ok)), _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]](Pointer(to=on_err))))
+            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], True].apply(value^, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]](Pointer(to=on_ok)), _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]](Pointer(to=on_err))))
         except raised:
             _propagate_error[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], True].Error]](raised^)
 
     def redeem_with[A: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, q: ImmOrigin, //, I: Applicative, R: Movable & Deinitable, S: Movable & Deinitable, C: _Unary[A, R], Y: Movable & Deinitable, G: _RaisingUnary[Q, S, Y], Z: AnyType = _InferError](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], True].Error] -> Piped[_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], True].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and A == I.Element[Self.Value] and Q == _ErrorFamily[I].Failure and (Never == Never or Y == Never or Never == Y) and conforms_to(I, Monad) and _ErrorFamily[I]._ErrorCarrier[R] and _ErrorFamily[I]._ErrorCarrier[S] and I.Element[R] == I.Element[S]:
         """Continue the original outcome with its selected handler effect."""
         comptime assert _ErrorCompatible[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], True].Error], _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], True].Error]
+        var value = self^.get()
         try:
-            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], True].apply(self.value^, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]](Pointer(to=on_ok)), _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]](Pointer(to=on_err))))
+            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], True].apply(value^, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]](Pointer(to=on_ok)), _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]](Pointer(to=on_err))))
         except raised:
             _propagate_error[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, Never, C, False, o, True, _unary_ref_left[A, R, Never, C, False]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], True].Error]](raised^)
 
     def redeem_with[A: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, I: Applicative, R: Movable & Deinitable, X: Movable & Deinitable, C: _RaisingUnary[A, R, X], Z: AnyType = _InferError](deinit self, ref[o] on_ok: C, var on_err: G) raises _EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], G, True].Error] -> Piped[_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], G, True].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and A == I.Element[Self.Value] and G.Arg == _ErrorFamily[I].Failure and (X == Never or G.Error == Never or X == G.Error) and conforms_to(I, Monad) and _ErrorFamily[I]._ErrorCarrier[R] and _ErrorFamily[I]._ErrorCarrier[G.Out] and I.Element[R] == I.Element[G.Out]:
         """Continue the original outcome with its selected handler effect."""
         comptime assert _ErrorCompatible[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], G, True].Error], _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], G, True].Error]
+        var value = self^.get()
         try:
-            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], G, True].apply(self.value^, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]](Pointer(to=on_ok)), on_err^))
+            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], G, True].apply(value^, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]](Pointer(to=on_ok)), on_err^))
         except raised:
             _propagate_error[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], G, True].Error]](raised^)
 
     def redeem_with[A: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, q: ImmOrigin, //, I: Applicative, R: Movable & Deinitable, S: Movable & Deinitable, X: Movable & Deinitable, C: _RaisingUnary[A, R, X], G: _Unary[Q, S], Z: AnyType = _InferError](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], True].Error] -> Piped[_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], True].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and A == I.Element[Self.Value] and Q == _ErrorFamily[I].Failure and (X == Never or Never == Never or X == Never) and conforms_to(I, Monad) and _ErrorFamily[I]._ErrorCarrier[R] and _ErrorFamily[I]._ErrorCarrier[S] and I.Element[R] == I.Element[S]:
         """Continue the original outcome with its selected handler effect."""
         comptime assert _ErrorCompatible[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], True].Error], _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], True].Error]
+        var value = self^.get()
         try:
-            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], True].apply(self.value^, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]](Pointer(to=on_ok)), _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]](Pointer(to=on_err))))
+            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], True].apply(value^, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]](Pointer(to=on_ok)), _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]](Pointer(to=on_err))))
         except raised:
             _propagate_error[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Never, G, False, q, True, _unary_ref_right[Q, S, Never, G, False]], True].Error]](raised^)
 
     def redeem_with[A: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, q: ImmOrigin, //, I: Applicative, R: Movable & Deinitable, S: Movable & Deinitable, X: Movable & Deinitable, C: _RaisingUnary[A, R, X], Y: Movable & Deinitable, G: _RaisingUnary[Q, S, Y], Z: AnyType = _InferError](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], True].Error] -> Piped[_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], True].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and A == I.Element[Self.Value] and Q == _ErrorFamily[I].Failure and (X == Never or Y == Never or X == Y) and conforms_to(I, Monad) and _ErrorFamily[I]._ErrorCarrier[R] and _ErrorFamily[I]._ErrorCarrier[S] and I.Element[R] == I.Element[S]:
         """Continue the original outcome with its selected handler effect."""
         comptime assert _ErrorCompatible[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], True].Error], _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], True].Error]
+        var value = self^.get()
         try:
-            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], True].apply(self.value^, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]](Pointer(to=on_ok)), _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]](Pointer(to=on_err))))
+            return Piped(_Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], True].apply(value^, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]](Pointer(to=on_ok)), _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]](Pointer(to=on_err))))
         except raised:
             _propagate_error[_EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, _NativeUnaryRef[A, R, X, C, True, o, True, _unary_ref_left[A, R, X, C, True]], _NativeUnaryRef[Q, S, Y, G, True, q, True, _unary_ref_right[Q, S, Y, G, True]], True].Error]](raised^)
 
@@ -2136,24 +2154,27 @@ struct Piped[Value: Movable & Deinitable](Movable):
             Exact callback and family errors, retaining deferred run boundaries.
         """
         comptime assert _ErrorCompatible[_EntryError[Z, _AttemptTap[_ErrorMonad[I], Self.Value, C].Error], _AttemptTap[_ErrorMonad[I], Self.Value, C].Error]
+        var value = self^.get()
         try:
-            return Piped(_AttemptTap[_ErrorMonad[I], Self.Value, C].apply(self.value^, inspect^))
+            return Piped(_AttemptTap[_ErrorMonad[I], Self.Value, C].apply(value^, inspect^))
         except raised:
             _propagate_error[_EntryError[Z, _AttemptTap[_ErrorMonad[I], Self.Value, C].Error]](raised^)
 
     def attempt_tap[P: AnyType, o: ImmOrigin, //, I: Applicative, R: Movable & Deinitable, C: _Borrowing[P, R], Z: AnyType = _InferError](deinit self, ref[o] inspect: C) raises _EntryError[Z, _AttemptTap[_ErrorMonad[I], Self.Value, _NativeBorrowRef[P, R, Never, C, False, o, True, _borrow_ref_call_x[P, R, Never, C, False]]].Error] -> Piped[_AttemptTap[_ErrorMonad[I], Self.Value, _NativeBorrowRef[P, R, Never, C, False, o, True, _borrow_ref_call_x[P, R, Never, C, False]]].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and conforms_to(I, Monad) and P == Result[I.Element[Self.Value], _ErrorFamily[I].Failure] and _ErrorFamily[I]._ErrorCarrier[R]:
         """Observe the whole selected Result and restore it after observer success."""
         comptime assert _ErrorCompatible[_EntryError[Z, _AttemptTap[_ErrorMonad[I], Self.Value, _NativeBorrowRef[P, R, Never, C, False, o, True, _borrow_ref_call_x[P, R, Never, C, False]]].Error], _AttemptTap[_ErrorMonad[I], Self.Value, _NativeBorrowRef[P, R, Never, C, False, o, True, _borrow_ref_call_x[P, R, Never, C, False]]].Error]
+        var value = self^.get()
         try:
-            return Piped(_AttemptTap[_ErrorMonad[I], Self.Value, _NativeBorrowRef[P, R, Never, C, False, o, True, _borrow_ref_call_x[P, R, Never, C, False]]].apply(self.value^, _NativeBorrowRef[P, R, Never, C, False, o, True, _borrow_ref_call_x[P, R, Never, C, False]](Pointer(to=inspect))))
+            return Piped(_AttemptTap[_ErrorMonad[I], Self.Value, _NativeBorrowRef[P, R, Never, C, False, o, True, _borrow_ref_call_x[P, R, Never, C, False]]].apply(value^, _NativeBorrowRef[P, R, Never, C, False, o, True, _borrow_ref_call_x[P, R, Never, C, False]](Pointer(to=inspect))))
         except raised:
             _propagate_error[_EntryError[Z, _AttemptTap[_ErrorMonad[I], Self.Value, _NativeBorrowRef[P, R, Never, C, False, o, True, _borrow_ref_call_x[P, R, Never, C, False]]].Error]](raised^)
 
     def attempt_tap[P: AnyType, o: ImmOrigin, //, I: Applicative, R: Movable & Deinitable, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X], Z: AnyType = _InferError](deinit self, ref[o] inspect: C) raises _EntryError[Z, _AttemptTap[_ErrorMonad[I], Self.Value, _NativeBorrowRef[P, R, X, C, True, o, True, _borrow_ref_call_x[P, R, X, C, True]]].Error] -> Piped[_AttemptTap[_ErrorMonad[I], Self.Value, _NativeBorrowRef[P, R, X, C, True, o, True, _borrow_ref_call_x[P, R, X, C, True]]].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and conforms_to(I, Monad) and P == Result[I.Element[Self.Value], _ErrorFamily[I].Failure] and _ErrorFamily[I]._ErrorCarrier[R]:
         """Observe the whole selected Result and restore it after observer success."""
         comptime assert _ErrorCompatible[_EntryError[Z, _AttemptTap[_ErrorMonad[I], Self.Value, _NativeBorrowRef[P, R, X, C, True, o, True, _borrow_ref_call_x[P, R, X, C, True]]].Error], _AttemptTap[_ErrorMonad[I], Self.Value, _NativeBorrowRef[P, R, X, C, True, o, True, _borrow_ref_call_x[P, R, X, C, True]]].Error]
+        var value = self^.get()
         try:
-            return Piped(_AttemptTap[_ErrorMonad[I], Self.Value, _NativeBorrowRef[P, R, X, C, True, o, True, _borrow_ref_call_x[P, R, X, C, True]]].apply(self.value^, _NativeBorrowRef[P, R, X, C, True, o, True, _borrow_ref_call_x[P, R, X, C, True]](Pointer(to=inspect))))
+            return Piped(_AttemptTap[_ErrorMonad[I], Self.Value, _NativeBorrowRef[P, R, X, C, True, o, True, _borrow_ref_call_x[P, R, X, C, True]]].apply(value^, _NativeBorrowRef[P, R, X, C, True, o, True, _borrow_ref_call_x[P, R, X, C, True]](Pointer(to=inspect))))
         except raised:
             _propagate_error[_EntryError[Z, _AttemptTap[_ErrorMonad[I], Self.Value, _NativeBorrowRef[P, R, X, C, True, o, True, _borrow_ref_call_x[P, R, X, C, True]]].Error]](raised^)
 
@@ -2841,28 +2862,28 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == LinkedList[F._View[o].Arg]
         return Piped(_family_map[_LinkedListFamily](function._unary_view(), rebind_var[LinkedList[F._View[o].Arg]](self.value^)))
 
-    def map[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //, F: def(var T) -> U](
+    def map[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: def(var T) -> U](
         deinit self, ref function: F
     ) -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H]:
         """Map Dict payloads immediately, preserving the native container."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_family_map[_DictFamily[K, T, H]](function, rebind_var[Dict[K, T, H]](self.value^)))
 
-    def map[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: def(var T) raises E -> U](
+    def map[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: def(var T) raises E -> U](
         deinit self, ref function: F
     ) raises E -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H]:
         """Map Dict payloads immediately, preserving the native container."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_family_map[_DictFamily[K, T, H], X=E](function, rebind_var[Dict[K, T, H]](self.value^)))
 
-    def map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher](
+    def map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](
         deinit self, var function: F
     ) raises F.Error -> Piped[Dict[K, F.Out, H]] where Self.Value == Dict[K, F.Arg, H]:
         """Map Dict payloads with an owned library callback."""
         comptime assert Self.Value == Dict[K, F.Arg, H]
         return Piped(_family_map[_DictFamily[K, F.Arg, H]](function^, rebind_var[Dict[K, F.Arg, H]](self.value^)))
 
-    def map[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher](
+    def map[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](
         deinit self, ref[o] function: F
     ) raises F._View[o].Error -> Piped[Dict[K, F._View[o].Out, H]] where Self.Value == Dict[K, F._View[o].Arg, H]:
         """Map Dict payloads with a borrowed callable view."""
@@ -3016,21 +3037,21 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_family_filter[_LinkedListFamily](predicate^, rebind_var[LinkedList[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
 
-    def filter[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //, F: def(T) -> Bool](
+    def filter[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: def(T) -> Bool](
         deinit self, ref predicate: F
     ) -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]:
         """Retain accepted Dict payloads immediately, preserving their container."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_family_filter[_DictFamily[K, T, H]](predicate, rebind_var[Dict[K, T, H]](self.value^)))
 
-    def filter[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: def(T) raises E -> Bool](
+    def filter[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> Bool](
         deinit self, ref predicate: F
     ) raises E -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]:
         """Retain accepted Dict payloads immediately, preserving their container."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_family_filter[_DictFamily[K, T, H], E=E](predicate, rebind_var[Dict[K, T, H]](self.value^)))
 
-    def filter[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher](
+    def filter[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](
         deinit self, var predicate: C
     ) raises C.Failure -> Piped[Dict[K, downcast[C.Payload, Movable & Deinitable], H]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and C.Result == Bool:
         """Retain accepted Dict payloads with an owned library predicate."""
@@ -3142,21 +3163,21 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_family_filter_not[_LinkedListFamily](predicate^, rebind_var[LinkedList[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
 
-    def filter_not[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //, F: def(T) -> Bool](
+    def filter_not[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: def(T) -> Bool](
         deinit self, ref predicate: F
     ) -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]:
         """Retain rejected Dict payloads immediately, preserving their container."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_family_filter_not[_DictFamily[K, T, H]](predicate, rebind_var[Dict[K, T, H]](self.value^)))
 
-    def filter_not[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: def(T) raises E -> Bool](
+    def filter_not[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> Bool](
         deinit self, ref predicate: F
     ) raises E -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]:
         """Retain rejected Dict payloads immediately, preserving their container."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_family_filter_not[_DictFamily[K, T, H], E=E](predicate, rebind_var[Dict[K, T, H]](self.value^)))
 
-    def filter_not[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher](
+    def filter_not[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](
         deinit self, var predicate: C
     ) raises C.Failure -> Piped[Dict[K, downcast[C.Payload, Movable & Deinitable], H]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and C.Result == Bool:
         """Retain rejected Dict payloads with an owned library predicate."""
@@ -4501,82 +4522,82 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == LinkedList[Optional[T]]
         return Piped(_LinkedListFamily.filter_map(_Same[Optional[T]](), rebind_var[LinkedList[Optional[T]]](self.value^)))
 
-    def fill[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher](deinit self, var value: U) -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H]:
+    def fill[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H]:
         """Copy value into every payload position."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_DictFamily[K, T, H].map(_Fill[T, U](value^), rebind_var[Dict[K, T, H]](self.value^)))
 
-    def replace[T: Copyable & Equatable & Deinitable, K: KeyElement & Deinitable, H: Hasher](deinit self, var old: T, var new: T) -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]:
+    def replace[T: Copyable & Equatable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var old: T, var new: T) -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]:
         """Replace equal payloads, moving unmatched values unchanged."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_DictFamily[K, T, H].map(_Replace[T](old^, new^), rebind_var[Dict[K, T, H]](self.value^)))
 
-    def void[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher](deinit self) -> Piped[Dict[K, NoneType, H]] where Self.Value == Dict[K, T, H]:
+    def void[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self) -> Piped[Dict[K, NoneType, H]] where Self.Value == Dict[K, T, H]:
         """Discard payloads while preserving their container shape."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_DictFamily[K, T, H].map(_Fill[T, NoneType](None), rebind_var[Dict[K, T, H]](self.value^)))
 
-    def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher](deinit self, var value: U) -> Piped[Dict[K, Tuple[U, T], H]] where Self.Value == Dict[K, T, H]:
+    def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, Tuple[U, T], H]] where Self.Value == Dict[K, T, H]:
         """Pair each payload with a copy of value on the left."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_DictFamily[K, T, H].map(_TupleWith[T, U, True](value^), rebind_var[Dict[K, T, H]](self.value^)))
 
-    def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher](deinit self, var value: U) -> Piped[Dict[K, Tuple[T, U], H]] where Self.Value == Dict[K, T, H]:
+    def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, Tuple[T, U], H]] where Self.Value == Dict[K, T, H]:
         """Pair each payload with a copy of value on the right."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_DictFamily[K, T, H].map(_TupleWith[T, U, False](value^), rebind_var[Dict[K, T, H]](self.value^)))
 
-    def pair_with[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Dict[K, Tuple[downcast[P, Movable & Deinitable], R], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]:
+    def pair_with[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Dict[K, Tuple[downcast[P, Movable & Deinitable], R], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]:
         """Borrow each payload for projection and retain it beside the result."""
         comptime assert Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]
         return Piped(_DictFamily[K, downcast[P, Movable & Deinitable], H].map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], True](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), rebind_var[Dict[K, downcast[P, Movable & Deinitable], H]](self.value^)))
 
-    def pair_with[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Dict[K, Tuple[downcast[P, Movable & Deinitable], R], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]:
+    def pair_with[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Dict[K, Tuple[downcast[P, Movable & Deinitable], R], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]:
         """Borrow each payload for projection and retain it beside the result."""
         comptime assert Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]
         return Piped(_DictFamily[K, downcast[P, Movable & Deinitable], H].map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Dict[K, downcast[P, Movable & Deinitable], H]](self.value^)))
 
-    def pair_with[T: Movable & Deinitable, C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, Tuple[T, C.Result], H]] where Self.Value == Dict[K, T, H] and C.Payload == T:
+    def pair_with[T: Movable & Deinitable, C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, Tuple[T, C.Result], H]] where Self.Value == Dict[K, T, H] and C.Payload == T:
         """Borrow each payload for projection and retain it beside the result."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_DictFamily[K, T, H].map(_Observe[T, C, True](function^), rebind_var[Dict[K, T, H]](self.value^)))
 
-    def tap_each[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Dict[K, downcast[P, Movable & Deinitable], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]:
+    def tap_each[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Dict[K, downcast[P, Movable & Deinitable], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]:
         """Borrow each payload for inspection and retain it unchanged."""
         comptime assert Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]
         return Piped(_DictFamily[K, downcast[P, Movable & Deinitable], H].map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], False](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), rebind_var[Dict[K, downcast[P, Movable & Deinitable], H]](self.value^)))
 
-    def tap_each[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Dict[K, downcast[P, Movable & Deinitable], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]:
+    def tap_each[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Dict[K, downcast[P, Movable & Deinitable], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]:
         """Borrow each payload for inspection and retain it unchanged."""
         comptime assert Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]
         return Piped(_DictFamily[K, downcast[P, Movable & Deinitable], H].map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Dict[K, downcast[P, Movable & Deinitable], H]](self.value^)))
 
-    def tap_each[T: Movable & Deinitable, C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H] and C.Payload == T:
+    def tap_each[T: Movable & Deinitable, C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H] and C.Payload == T:
         """Borrow each payload for inspection and retain it unchanged."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_DictFamily[K, T, H].map(_Observe[T, C, False](function^), rebind_var[Dict[K, T, H]](self.value^)))
 
-    def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _DictFamily[K, A, H].MapFilterError[Dict[K, A, H], _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[_DictFamily[K, A, H].MapFiltered[Dict[K, A, H], _NativeUnaryRef[A, R, Never, F, False, o]]] where Self.Value == Dict[K, A, H]:
+    def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _DictFamily[K, A, H].MapFilterError[Dict[K, A, H], _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[_DictFamily[K, A, H].MapFiltered[Dict[K, A, H], _NativeUnaryRef[A, R, Never, F, False, o]]] where Self.Value == Dict[K, A, H]:
         """Apply filter_map through the carrier's FunctorFilter capability."""
         comptime assert Self.Value == Dict[K, A, H]
         return Piped(_DictFamily[K, A, H].filter_map(_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), rebind_var[Dict[K, A, H]](self.value^)))
 
-    def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises _DictFamily[K, A, H].MapFilterError[Dict[K, A, H], _NativeUnaryRef[A, R, E, F, True, o]] -> Piped[_DictFamily[K, A, H].MapFiltered[Dict[K, A, H], _NativeUnaryRef[A, R, E, F, True, o]]] where Self.Value == Dict[K, A, H]:
+    def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises _DictFamily[K, A, H].MapFilterError[Dict[K, A, H], _NativeUnaryRef[A, R, E, F, True, o]] -> Piped[_DictFamily[K, A, H].MapFiltered[Dict[K, A, H], _NativeUnaryRef[A, R, E, F, True, o]]] where Self.Value == Dict[K, A, H]:
         """Apply filter_map through the carrier's FunctorFilter capability."""
         comptime assert Self.Value == Dict[K, A, H]
         return Piped(_DictFamily[K, A, H].filter_map(_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), rebind_var[Dict[K, A, H]](self.value^)))
 
-    def filter_map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //](deinit self, var function: F) raises _DictFamily[K, F.Arg, H].MapFilterError[Dict[K, F.Arg, H], F] -> Piped[_DictFamily[K, F.Arg, H].MapFiltered[Dict[K, F.Arg, H], F]] where Self.Value == Dict[K, F.Arg, H]:
+    def filter_map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: F) raises _DictFamily[K, F.Arg, H].MapFilterError[Dict[K, F.Arg, H], F] -> Piped[_DictFamily[K, F.Arg, H].MapFiltered[Dict[K, F.Arg, H], F]] where Self.Value == Dict[K, F.Arg, H]:
         """Apply filter_map through the carrier's FunctorFilter capability."""
         comptime assert Self.Value == Dict[K, F.Arg, H]
         return Piped(_DictFamily[K, F.Arg, H].filter_map(function^, rebind_var[Dict[K, F.Arg, H]](self.value^)))
 
-    def filter_map[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //](deinit self, ref[o] function: F) raises _DictFamily[K, F._View[o].Arg, H].MapFilterError[Dict[K, F._View[o].Arg, H], F._View[o]] -> Piped[_DictFamily[K, F._View[o].Arg, H].MapFiltered[Dict[K, F._View[o].Arg, H], F._View[o]]] where Self.Value == Dict[K, F._View[o].Arg, H]:
+    def filter_map[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, ref[o] function: F) raises _DictFamily[K, F._View[o].Arg, H].MapFilterError[Dict[K, F._View[o].Arg, H], F._View[o]] -> Piped[_DictFamily[K, F._View[o].Arg, H].MapFiltered[Dict[K, F._View[o].Arg, H], F._View[o]]] where Self.Value == Dict[K, F._View[o].Arg, H]:
         """Apply filter_map through the carrier's FunctorFilter capability."""
         comptime assert Self.Value == Dict[K, F._View[o].Arg, H]
         return Piped(_DictFamily[K, F._View[o].Arg, H].filter_map(function._unary_view(), rebind_var[Dict[K, F._View[o].Arg, H]](self.value^)))
 
-    def compact[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //](deinit self) raises _DictFamily[K, Optional[T], H].MapFilterError[Dict[K, Optional[T], H], _Same[Optional[T]]] -> Piped[_DictFamily[K, Optional[T], H].MapFiltered[Dict[K, Optional[T], H], _Same[Optional[T]]]] where Self.Value == Dict[K, Optional[T], H]:
+    def compact[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self) raises _DictFamily[K, Optional[T], H].MapFilterError[Dict[K, Optional[T], H], _Same[Optional[T]]] -> Piped[_DictFamily[K, Optional[T], H].MapFiltered[Dict[K, Optional[T], H], _Same[Optional[T]]]] where Self.Value == Dict[K, Optional[T], H]:
         """Derive compact through filter_map, preserving the family's semantics."""
         comptime assert Self.Value == Dict[K, Optional[T], H]
         return Piped(_DictFamily[K, Optional[T], H].filter_map(_Same[Optional[T]](), rebind_var[Dict[K, Optional[T], H]](self.value^)))
@@ -5468,107 +5489,107 @@ struct Piped[Value: Movable & Deinitable](Movable):
         return Piped(_run_terminal(_FoldMapRun[F, _SIMDSum[dtype, size], F.Error](function^), rebind_var[LinkedList[F.Arg]](self.value^)))
 
 
-    def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[R] where Self.Value == Dict[K, A, H]:
+    def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[R] where Self.Value == Dict[K, A, H]:
         """Return the first present transformed result, stopping without another pull."""
         comptime assert Self.Value == Dict[K, A, H]
         return Piped(_dict_terminal(_FindMapRun[_NativeUnaryRef[A, R, Never, F, False, o]](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function))), rebind_var[Dict[K, A, H]](self.value^)))
 
-    def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises E -> Piped[R] where Self.Value == Dict[K, A, H]:
+    def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises E -> Piped[R] where Self.Value == Dict[K, A, H]:
         """Return the first present transformed result, stopping without another pull."""
         comptime assert Self.Value == Dict[K, A, H]
         return Piped(_dict_terminal(_FindMapRun[_NativeUnaryRef[A, R, E, F, True, o]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function))), rebind_var[Dict[K, A, H]](self.value^)))
 
-    def find_map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //](deinit self, var function: F) raises F.Error -> Piped[F.Out] where Self.Value == Dict[K, F.Arg, H]:
+    def find_map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[F.Out] where Self.Value == Dict[K, F.Arg, H]:
         """Return the first present transformed result, stopping without another pull."""
         comptime assert Self.Value == Dict[K, F.Arg, H]
         return Piped(_dict_terminal(_FindMapRun[F](function^), rebind_var[Dict[K, F.Arg, H]](self.value^)))
 
-    def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, A, H]:
+    def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, A, H]:
         """Project and combine in order with a monoid; empty input returns its identity."""
         comptime assert Self.Value == Dict[K, A, H]
         return Piped(_dict_terminal(_FoldMapRun[_NativeUnaryRef[A, R, Never, F, False, o], M, _CommonError[Never, M.Error]](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function))), rebind_var[Dict[K, A, H]](self.value^)))
 
-    def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises _CommonError[E, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, A, H]:
+    def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises _CommonError[E, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, A, H]:
         """Project and combine in order with a monoid; empty input returns its identity."""
         comptime assert Self.Value == Dict[K, A, H]
         return Piped(_dict_terminal(_FoldMapRun[_NativeUnaryRef[A, R, E, F, True, o], M, _CommonError[E, M.Error]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function))), rebind_var[Dict[K, A, H]](self.value^)))
 
-    def fold_map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //, M: Monoid](deinit self, var function: F) raises _CommonError[F.Error, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, F.Arg, H]:
+    def fold_map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, M: Monoid](deinit self, var function: F) raises _CommonError[F.Error, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, F.Arg, H]:
         """Project and combine in order with a monoid; empty input returns its identity."""
         comptime assert Self.Value == Dict[K, F.Arg, H]
         return Piped(_dict_terminal(_FoldMapRun[F, M, _CommonError[F.Error, M.Error]](function^), rebind_var[Dict[K, F.Arg, H]](self.value^)))
 
-    def combine_all[K: KeyElement & Deinitable, H: Hasher, //, M: Monoid](deinit self) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, M.Value, H]:
+    def combine_all[K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, M: Monoid](deinit self) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, M.Value, H]:
         """Combine in order with a monoid; empty input returns its identity."""
         comptime assert Self.Value == Dict[K, M.Value, H]
         return Piped(_dict_terminal(_FoldMapRun[_Same[M.Value], M, _CommonError[Never, M.Error]](_Same[M.Value]()), rebind_var[Dict[K, M.Value, H]](self.value^)))
 
-    def min_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable):
+    def min_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable):
         """Return the element with the smallest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]
         return Piped(_dict_terminal(_ExtremumRun[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], True](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), rebind_var[Dict[K, downcast[P, Movable & Deinitable], H]](self.value^)))
 
-    def min_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable):
+    def min_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable):
         """Return the element with the smallest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]
         return Piped(_dict_terminal(_ExtremumRun[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Dict[K, downcast[P, Movable & Deinitable], H]](self.value^)))
 
-    def min_by[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+    def min_by[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and conforms_to(C.Result, Comparable & Movable & Deinitable):
         """Return the element with the smallest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H]
         return Piped(_dict_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, True](function^), rebind_var[Dict[K, downcast[C.Payload, Movable & Deinitable], H]](self.value^)))
 
-    def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable):
+    def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable):
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]
         return Piped(_dict_terminal(_ExtremumRun[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], False](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), rebind_var[Dict[K, downcast[P, Movable & Deinitable], H]](self.value^)))
 
-    def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable):
+    def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable):
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]
         return Piped(_dict_terminal(_ExtremumRun[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Dict[K, downcast[P, Movable & Deinitable], H]](self.value^)))
 
-    def max_by[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+    def max_by[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and conforms_to(C.Result, Comparable & Movable & Deinitable):
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H]
         return Piped(_dict_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, False](function^), rebind_var[Dict[K, downcast[C.Payload, Movable & Deinitable], H]](self.value^)))
 
-    def sum[K: KeyElement & Deinitable, H: Hasher, //](deinit self) raises Never -> Piped[Int] where Self.Value == Dict[K, Int, H]:
+    def sum[K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self) raises Never -> Piped[Int] where Self.Value == Dict[K, Int, H]:
         """Add in order from zero, preserving the numeric type and SIMD lanes."""
         comptime assert Self.Value == Dict[K, Int, H]
         return Piped(_dict_terminal(_FoldMapRun[_Same[Int], _IntSum, Never](_Same[Int]()), rebind_var[Dict[K, Int, H]](self.value^)))
 
-    def sum[dtype: DType, size: SIMDLength, K: KeyElement & Deinitable, H: Hasher, //](deinit self) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, SIMD[dtype, size], H]:
+    def sum[dtype: DType, size: SIMDLength, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, SIMD[dtype, size], H]:
         """Add in order from zero, preserving the numeric type and SIMD lanes."""
         comptime assert Self.Value == Dict[K, SIMD[dtype, size], H]
         return Piped(_dict_terminal(_FoldMapRun[_Same[SIMD[dtype, size]], _SIMDSum[dtype, size], Never](_Same[SIMD[dtype, size]]()), rebind_var[Dict[K, SIMD[dtype, size], H]](self.value^)))
 
-    def sum_by[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[Int] where Self.Value == Dict[K, A, H] and R == Int:
+    def sum_by[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[Int] where Self.Value == Dict[K, A, H] and R == Int:
         """Project and add in one pass from zero, without an intermediate collection."""
         comptime assert Self.Value == Dict[K, A, H]
         return Piped(_dict_terminal(_FoldMapRun[_NativeUnaryRef[A, R, Never, F, False, o], _IntSum, Never](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function))), rebind_var[Dict[K, A, H]](self.value^)))
 
-    def sum_by[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Int] where Self.Value == Dict[K, A, H] and R == Int:
+    def sum_by[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Int] where Self.Value == Dict[K, A, H] and R == Int:
         """Project and add in one pass from zero, without an intermediate collection."""
         comptime assert Self.Value == Dict[K, A, H]
         return Piped(_dict_terminal(_FoldMapRun[_NativeUnaryRef[A, R, E, F, True, o], _IntSum, E](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function))), rebind_var[Dict[K, A, H]](self.value^)))
 
-    def sum_by[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //](deinit self, var function: F) raises F.Error -> Piped[Int] where Self.Value == Dict[K, F.Arg, H] and F.Out == Int:
+    def sum_by[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[Int] where Self.Value == Dict[K, F.Arg, H] and F.Out == Int:
         """Project and add in one pass from zero, without an intermediate collection."""
         comptime assert Self.Value == Dict[K, F.Arg, H]
         return Piped(_dict_terminal(_FoldMapRun[F, _IntSum, F.Error](function^), rebind_var[Dict[K, F.Arg, H]](self.value^)))
 
-    def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, A, H] and R == SIMD[dtype, size]:
+    def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, A, H] and R == SIMD[dtype, size]:
         """Project and add in one pass from zero, without an intermediate collection."""
         comptime assert Self.Value == Dict[K, A, H]
         return Piped(_dict_terminal(_FoldMapRun[_NativeUnaryRef[A, R, Never, F, False, o], _SIMDSum[dtype, size], Never](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function))), rebind_var[Dict[K, A, H]](self.value^)))
 
-    def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises E -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, A, H] and R == SIMD[dtype, size]:
+    def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises E -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, A, H] and R == SIMD[dtype, size]:
         """Project and add in one pass from zero, without an intermediate collection."""
         comptime assert Self.Value == Dict[K, A, H]
         return Piped(_dict_terminal(_FoldMapRun[_NativeUnaryRef[A, R, E, F, True, o], _SIMDSum[dtype, size], E](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function))), rebind_var[Dict[K, A, H]](self.value^)))
 
-    def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher, //](deinit self, var function: F) raises F.Error -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, F.Arg, H] and F.Out == SIMD[dtype, size]:
+    def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, F.Arg, H] and F.Out == SIMD[dtype, size]:
         """Project and add in one pass from zero, without an intermediate collection."""
         comptime assert Self.Value == Dict[K, F.Arg, H]
         return Piped(_dict_terminal(_FoldMapRun[F, _SIMDSum[dtype, size], F.Error](function^), rebind_var[Dict[K, F.Arg, H]](self.value^)))

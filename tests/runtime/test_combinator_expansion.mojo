@@ -1,6 +1,6 @@
 """Shared combinators preserve timing, native carriers, errors and ownership."""
 from std.collections import Array, Deque, LinkedList, StringDict
-from std.hashlib import default_comp_time_hasher
+from std.hash import default_comp_time_hasher
 from std.memory import ArcPointer
 from std.testing import assert_equal, assert_false, assert_true
 from std.builtin.rebind import rebind_var

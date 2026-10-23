@@ -13,12 +13,12 @@ def _take_pair[A: Movable & Deinitable, B: Movable & Deinitable](
 
     Untagged slots keep the split to plain moves. Each caller takes both slots
     with `unsafe_assume_init` immediately afterwards."""
-    def put[index: Int](var value: Tuple[A, B].Ts[index]) capturing:
+    def put[index: Int](var value: Tuple[A, B].Ts[index]) {ref first, ref second}:
         comptime if index == 0:
             first.unsafe_ptr().unsafe_write(rebind_var[A](value^))
         else:
             second.unsafe_ptr().unsafe_write(rebind_var[B](value^))
-    pair^.consume_elements[put]()
+    pair^.consume_elements(put)
 
 
 @fieldwise_init

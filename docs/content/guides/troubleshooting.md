@@ -4,7 +4,7 @@ Start by checking the compiler and the import path, then run a known example
 next to your program:
 
 ```sh
-pixi run mojo --version                                   # Mojo 1.1.0 (8189361e)
+pixi run mojo --version                                   # Mojo 1.2.0 (2016d0cd)
 pixi run mojo run -I src docs/examples/quickstart.mojo    # prints 42
 pixi run mojo run -I src my_program.mojo
 ```

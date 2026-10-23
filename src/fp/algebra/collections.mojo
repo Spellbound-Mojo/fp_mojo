@@ -10,7 +10,7 @@ owners; only construction and insertion differ between containers here.
 from std.builtin.rebind import rebind_var
 from std.collections import Array, Deque, LinkedList, StringDict, KeyElement
 from std.collections.dict import DictEntry
-from std.hashlib import Hasher, default_comp_time_hasher
+from std.hash import Hasher, default_comp_time_hasher
 from std.memory import MaybeUninit
 from fp.callables.products import _take_pair
 from fp.callables.protocols import UnaryContract, Unary, MutableUnary, BorrowCallable
@@ -156,7 +156,7 @@ struct _LinkedListFamily(Functor, Filterable, FunctorFilter):
 
 
 @fieldwise_init
-struct _EntryValues[K: KeyElement & Deinitable, H: Hasher, F: UnaryContract & Movable & Deinitable](MutableUnary):
+struct _EntryValues[K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, F: UnaryContract & Movable & Deinitable](MutableUnary):
     var function: Self.F
     comptime Arg = DictEntry[Self.K, Self.F.Arg, Self.H]
     comptime Out = Tuple[Self.K, Self.F.Out]
@@ -172,7 +172,7 @@ struct _EntryValues[K: KeyElement & Deinitable, H: Hasher, F: UnaryContract & Mo
         return (key^, mapped^)
 
 
-struct _DictInsert[K: KeyElement & Deinitable, T: Movable & Deinitable, H: Hasher](_Accumulate):
+struct _DictInsert[K: KeyElement & Deinitable, T: Movable & Deinitable, H: Hasher & Defaultable & Deinitable](_Accumulate):
     comptime Acc = Dict[Self.K, Self.T, Self.H]
     comptime Item = Tuple[Self.K, Self.T]
     @staticmethod
@@ -192,7 +192,7 @@ struct _DictInsert[K: KeyElement & Deinitable, T: Movable & Deinitable, H: Hashe
         return acc^
 
 
-struct _DictFamily[K: KeyElement & Deinitable, A: Movable & Deinitable, H: Hasher](Functor, Filterable, FunctorFilter):
+struct _DictFamily[K: KeyElement & Deinitable, A: Movable & Deinitable, H: Hasher & Defaultable & Deinitable](Functor, Filterable, FunctorFilter):
     comptime Element[V: Movable & Deinitable] = Self.A
     comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = V
     comptime FilterError[V: Movable & Deinitable, P: BorrowCallable] = P.Failure
@@ -228,7 +228,7 @@ struct _DictFamily[K: KeyElement & Deinitable, A: Movable & Deinitable, H: Hashe
 
 
 def _dict_accumulate[K: KeyElement & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable,
-                     H: Hasher, F: UnaryContract & Movable & Deinitable, S: _Accumulate](
+                     H: Hasher & Defaultable & Deinitable, F: UnaryContract & Movable & Deinitable, S: _Accumulate](
     var f: F, var source: Dict[K, A, H]
 ) raises F.Error -> Dict[K, B, H]:
     comptime assert S.Acc == Dict[K, B, H] and S.Error == Never
@@ -240,7 +240,7 @@ def _dict_accumulate[K: KeyElement & Deinitable, A: Movable & Deinitable, B: Mov
         f^, entries^, rebind_var[S.Acc](result^)))
 
 
-def _take_entry[K: KeyElement & Deinitable, T: Movable & Deinitable, H: Hasher](
+def _take_entry[K: KeyElement & Deinitable, T: Movable & Deinitable, H: Hasher & Defaultable & Deinitable](
     var entry: DictEntry[K, T, H], mut key: MaybeUninit[K], mut value: MaybeUninit[T]
 ):
     def take(var k: K, var v: T) {ref key, ref value}:
@@ -298,7 +298,7 @@ def _take_string_dict[T: Movable & Deinitable](var source: StringDict[T]) -> Dic
 
 
 @fieldwise_init
-struct _FilterValues[K: KeyElement & Deinitable, U: Movable & Deinitable, H: Hasher,
+struct _FilterValues[K: KeyElement & Deinitable, U: Movable & Deinitable, H: Hasher & Defaultable & Deinitable,
                      F: UnaryContract & Movable & Deinitable](MutableUnary):
     var entry: _EntryValues[Self.K, Self.H, Self.F]
     comptime Arg = DictEntry[Self.K, Self.F.Arg, Self.H]
@@ -326,7 +326,7 @@ def _take_array[T: Movable & Deinitable, N: Int](var source: Array[T, N]) -> Lis
 
 
 @fieldwise_init
-struct _EntryPayload[K: KeyElement & Deinitable, T: Movable & Deinitable, H: Hasher](Unary):
+struct _EntryPayload[K: KeyElement & Deinitable, T: Movable & Deinitable, H: Hasher & Defaultable & Deinitable](Unary):
     comptime Arg = DictEntry[Self.K, Self.T, Self.H]
     comptime Out = Self.T
     def call(self, var arg: Self.Arg) -> Self.T:
@@ -338,7 +338,7 @@ struct _EntryPayload[K: KeyElement & Deinitable, T: Movable & Deinitable, H: Has
         return value_slot^.unsafe_assume_init()
 
 
-def _dict_terminal[K: KeyElement & Deinitable, T: Movable & Deinitable, H: Hasher, R: _Terminal](
+def _dict_terminal[K: KeyElement & Deinitable, T: Movable & Deinitable, H: Hasher & Defaultable & Deinitable, R: _Terminal](
     var reduction: R, var source: Dict[K, T, H]
 ) raises R.Error -> R.Out:
     # take_items borrows local storage. Run the terminal before that storage

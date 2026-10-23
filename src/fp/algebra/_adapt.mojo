@@ -39,3 +39,11 @@ def _or_else_as[E: Movable & Deinitable, M: ApplicativeError, V: Movable & Deini
         return M.or_else(handler^, source^)
     except error:
         _propagate_error[E](error^)
+
+
+def _fail_as[E: Movable & Deinitable, M: ApplicativeError, A: Movable & Deinitable](var error: M.Failure
+) raises E -> M.Failed[A] where _ErrorCompatible[E, M.FailError[A]]:
+    try:
+        return M.fail[A](error^)
+    except raised:
+        _propagate_error[E](raised^)

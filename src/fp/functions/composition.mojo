@@ -112,11 +112,10 @@ struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](
                                          Self.Fs.length - 1 - index if Self.reverse else -1]()
         comptime assert Self.Cells.all_conforms_to[Defaultable]()
         self._cells = Tuple[*Self.Cells]()
-        @__parameter
-        def store[index: Int](var function: Self.Fs[index]):
+        def store[index: Int](var function: Self.Fs[index]) {ref self}:
             comptime assert Self.Cells[index] == Optional[Self.Fs[index]]
             self._cells[index] = rebind_var[Self.Cells[index]](Optional(function^))
-        functions^.consume_elements[store]()
+        functions^.consume_elements(store)
 
     # Shared receiver.
     def call(self) raises Self.Error -> Self.Out:
