@@ -122,3 +122,5 @@ from fp.iteration.effectful import fold_effect, any_effect, all_effect
 from .prefixes import TakeWhileIterator, DropWhileIterator, take_while, drop_while
 from .indexed import ZipWithIterator, IndexedMapIterator, zip_with, map_with_index
 from .terminals import first, last, is_empty, count, count_where, contains, for_each, to_non_empty_list, combine_all_optional, collect_fold
+
+from .branching import Unbounded, BoundedFail, BufferCapacityError, BufferLimitExceeded, PartitionBranches, PartitionMapBranches, UnzipBranches, partition, partition_map, unzip

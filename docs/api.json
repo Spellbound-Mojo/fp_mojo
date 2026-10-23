@@ -89710,6 +89710,70 @@
    "provider": "functions/pipeline",
    "summary": ""
   },
+  "iteration.BoundedFail": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "bounded"
+    }
+   ],
+   "description": "",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [],
+   "provider": "iteration/branching",
+   "signature": "struct BoundedFail(_BufferPolicy)",
+   "summary": "Fail both live branches if a sibling queue would exceed capacity.",
+   "traits": [
+    "_BufferPolicy"
+   ]
+  },
+  "iteration.BufferCapacityError": {
+   "aliases": [],
+   "description": "",
+   "fields": [
+    {
+     "description": "The rejected capacity.",
+     "name": "capacity",
+     "type": "Int"
+    }
+   ],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [],
+   "provider": "iteration/branching",
+   "signature": "struct BufferCapacityError(Copyable, Movable)",
+   "summary": "A non-positive bounded buffer capacity, rejected before source binding.",
+   "traits": [
+    "Copyable"
+   ]
+  },
+  "iteration.BufferLimitExceeded": {
+   "aliases": [],
+   "description": "",
+   "fields": [
+    {
+     "description": "The blocked destination: zero for the first branch, one for the second.",
+     "name": "branch",
+     "type": "Int"
+    },
+    {
+     "description": "The configured queue limit.",
+     "name": "capacity",
+     "type": "Int"
+    }
+   ],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [],
+   "provider": "iteration/branching",
+   "signature": "struct BufferLimitExceeded(Copyable, Movable)",
+   "summary": "Terminal shared buffer overflow; payloads already yielded stay yielded.",
+   "traits": [
+    "Copyable"
+   ]
+  },
   "iteration.DropWhileIterator": {
    "aliases": [],
    "description": "",
@@ -94471,6 +94535,302 @@
       "summary": "Apply par_traverse through the carrier's Traversable capability."
      }
     ],
+    "partition": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "name": "predicate",
+        "type": "def(T) thin -> Bool",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The required buffering policy; there is no implicit default.",
+        "name": "buffer",
+        "type": "P",
+        "variadic": false
+       }
+      ],
+      "description": "Construction pulls nothing and each source item is classified once. Branches are move-only.\nUnbounded queues retain every pending value; BoundedFail yields Result elements,\ndiscards all queued values on overflow and gives each live branch one terminal Err.\nClose a branch to release its queue without draining upstream. Access is sequential;\nreentrant or overlapping access aborts before a second mutable state borrow.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The source element type, including origins.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The admitted type parameter.",
+        "inferred": false,
+        "name": "P",
+        "type": "_BufferPolicy",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "PartitionBranches[T, Self.I, def(T) thin -> Bool, P] with the ownership, timing and empty-input behavior described above.",
+       "type": "PartitionBranches[T, Self.I, def(T) thin -> Bool, P]"
+      },
+      "signature": "def partition[T: Movable & Deinitable, P: _BufferPolicy](deinit self, var predicate: def(T) thin -> Bool, *, var buffer: P) -> PartitionBranches[T, Self.I, def(T) thin -> Bool, P] where Self.I.Element == T",
+      "summary": "Lazily split accepted and rejected elements into independent iterators."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "predicate",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "buffer",
+        "type": "P",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "_BufferPolicy",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_LazyPredicate[T]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "PartitionBranches[T, Self.I, F, P]"
+      },
+      "signature": "def partition[T: Movable & Deinitable, P: _BufferPolicy, //, F: _LazyPredicate[T]](deinit self, var predicate: F, *, var buffer: P) -> PartitionBranches[T, Self.I, F, P] where Self.I.Element == T",
+      "summary": "Lazily split accepted and rejected elements into independent iterators."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "buffer",
+        "type": "P",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "P",
+        "type": "_BufferPolicy",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "PartitionBranches[downcast[C.Payload, Movable & Deinitable], Self.I, C, P]"
+      },
+      "signature": "def partition[C: BorrowCallable, P: _BufferPolicy](deinit self, var predicate: C, *, var buffer: P) -> PartitionBranches[downcast[C.Payload, Movable & Deinitable], Self.I, C, P] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never",
+      "summary": "Lazily split accepted and rejected elements into independent iterators."
+     }
+    ],
+    "partition_map": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "name": "function",
+        "type": "def(var T) thin -> U",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The required buffering policy; there is no implicit default.",
+        "name": "buffer",
+        "type": "P",
+        "variadic": false
+       }
+      ],
+      "description": "Construction pulls nothing and each source item is classified once. Branches are move-only.\nUnbounded queues retain every pending value; BoundedFail yields Result elements,\ndiscards all queued values on overflow and gives each live branch one terminal Err.\nClose a branch to release its queue without draining upstream. Access is sequential;\nreentrant or overlapping access aborts before a second mutable state borrow.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The source element type, including origins.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The callback result type, an exact Result for classification.",
+        "inferred": false,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The admitted type parameter.",
+        "inferred": false,
+        "name": "P",
+        "type": "_BufferPolicy",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "PartitionMapBranches[T, U, Self.I, def(var T) thin -> U, P] with the ownership, timing and empty-input behavior described above.",
+       "type": "PartitionMapBranches[T, U, Self.I, def(var T) thin -> U, P]"
+      },
+      "signature": "def partition_map[T: Movable & Deinitable, U: Movable & Deinitable, P: _BufferPolicy](deinit self, var function: def(var T) thin -> U, *, var buffer: P) -> PartitionMapBranches[T, U, Self.I, def(var T) thin -> U, P] where Self.I.Element == T and conforms_to(U, _ResultType)",
+      "summary": "Lazily route Result payloads into independent Ok and Err iterators."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "buffer",
+        "type": "P",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "_BufferPolicy",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_LazyUnary[T, U]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "PartitionMapBranches[T, U, Self.I, F, P]"
+      },
+      "signature": "def partition_map[T: Movable & Deinitable, U: Movable & Deinitable, P: _BufferPolicy, //, F: _LazyUnary[T, U]](deinit self, var function: F, *, var buffer: P) -> PartitionMapBranches[T, U, Self.I, F, P] where Self.I.Element == T and conforms_to(U, _ResultType)",
+      "summary": "Lazily route Result payloads into independent Ok and Err iterators."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "buffer",
+        "type": "P",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "P",
+        "type": "_BufferPolicy",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "PartitionMapBranches[F.Arg, F.Out, Self.I, F, P]"
+      },
+      "signature": "def partition_map[F: UnaryContract & Movable & Deinitable, P: _BufferPolicy](deinit self, var function: F, *, var buffer: P) -> PartitionMapBranches[F.Arg, F.Out, Self.I, F, P] where Self.I.Element == F.Arg and conforms_to(F.Out, _ResultType) and F.Error == Never and RepeatableUnary[F]",
+      "summary": "Lazily route Result payloads into independent Ok and Err iterators."
+     }
+    ],
     "reduce": [
      {
       "args": [
@@ -96545,6 +96905,52 @@
       "summary": "Pair each payload with a copy of value on the right. Evaluation is lazy."
      }
     ],
+    "unzip": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The required buffering policy; there is no implicit default.",
+        "name": "buffer",
+        "type": "P",
+        "variadic": false
+       }
+      ],
+      "description": "Construction pulls nothing and each source item is classified once. Branches are move-only.\nUnbounded queues retain every pending value; BoundedFail yields Result elements,\ndiscards all queued values on overflow and gives each live branch one terminal Err.\nClose a branch to release its queue without draining upstream. Access is sequential;\nreentrant or overlapping access aborts before a second mutable state borrow.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The first callback argument type.",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The second callback argument type.",
+        "inferred": false,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The admitted type parameter.",
+        "inferred": false,
+        "name": "P",
+        "type": "_BufferPolicy",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "UnzipBranches[A, B, Self.I, P] with the ownership, timing and empty-input behavior described above.",
+       "type": "UnzipBranches[A, B, Self.I, P]"
+      },
+      "signature": "def unzip[A: Movable & Deinitable, B: Movable & Deinitable, P: _BufferPolicy](deinit self, *, var buffer: P) -> UnzipBranches[A, B, Self.I, P] where Self.I.Element == Tuple[A, B]",
+      "summary": "Lazily split native tuple fields, checking both queues before publishing either field."
+     }
+    ],
     "void": [
      {
       "args": [],
@@ -96829,6 +97235,95 @@
    "summary": "The type `map` returns, for a generic function's return annotation.",
    "traits": []
   },
+  "iteration.PartitionBranches": {
+   "aliases": [],
+   "description": "",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The source element type.",
+     "inferred": false,
+     "name": "T",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The normalized source iterator.",
+     "inferred": false,
+     "name": "I",
+     "type": "Iterator",
+     "variadic": false
+    },
+    {
+     "description": "The concrete predicate type, retaining its captures and origins.",
+     "inferred": false,
+     "name": "F",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The explicit Unbounded or BoundedFail policy.",
+     "inferred": false,
+     "name": "P",
+     "type": "_BufferPolicy",
+     "variadic": false
+    }
+   ],
+   "provider": "iteration/branching",
+   "signature": "comptime PartitionBranches[T: Movable & Deinitable, I: Iterator, F: Movable & Deinitable, P: _BufferPolicy] = Tuple[_Branch[_BranchItem[T, P], I, _Partition[T, F], P, False], _Branch[_BranchItem[T, P], I, _Partition[T, F], P, True]]",
+   "summary": "Two native move-only iterator handles, accepted first and rejected second.",
+   "traits": []
+  },
+  "iteration.PartitionMapBranches": {
+   "aliases": [],
+   "description": "",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The source element type.",
+     "inferred": false,
+     "name": "T",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The classifier's exact Result type, including both payload origins.",
+     "inferred": false,
+     "name": "U",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The normalized source iterator.",
+     "inferred": false,
+     "name": "I",
+     "type": "Iterator",
+     "variadic": false
+    },
+    {
+     "description": "The concrete classifier type.",
+     "inferred": false,
+     "name": "F",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The explicit Unbounded or BoundedFail policy.",
+     "inferred": false,
+     "name": "P",
+     "type": "_BufferPolicy",
+     "variadic": false
+    }
+   ],
+   "provider": "iteration/branching",
+   "signature": "comptime PartitionMapBranches[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator, F: Movable & Deinitable, P: _BufferPolicy] = Tuple[_Branch[_BranchItem[downcast[U, _ResultType].Value, P], I, _Classify[T, U, F], P, False], _Branch[_BranchItem[downcast[U, _ResultType].Error, P], I, _Classify[T, U, F], P, True]]",
+   "summary": "Two native move-only handles, classified Ok payloads first and Err payloads second.",
+   "traits": []
+  },
   "iteration.ReductionError": {
    "aliases": [],
    "description": "A native `Variant`; check which alternative is active before taking it.",
@@ -96967,6 +97462,66 @@
    "provider": "iteration/prefixes",
    "signature": "comptime TakeWhileIterator[T: Movable & Deinitable, I: Iterator, F: Movable & Deinitable = def(T) thin -> Bool] = _Prefix[T, I, F, True]",
    "summary": "A fused taking prefix with a stored predicate and the source's origins.",
+   "traits": []
+  },
+  "iteration.Unbounded": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "bounded"
+    }
+   ],
+   "description": "",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [],
+   "provider": "iteration/branching",
+   "signature": "struct Unbounded(_BufferPolicy)",
+   "summary": "Retain all queued branch values; backlog can grow without limit.",
+   "traits": [
+    "_BufferPolicy"
+   ]
+  },
+  "iteration.UnzipBranches": {
+   "aliases": [],
+   "description": "",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The first tuple field type.",
+     "inferred": false,
+     "name": "A",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The second tuple field type.",
+     "inferred": false,
+     "name": "B",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The normalized source iterator.",
+     "inferred": false,
+     "name": "I",
+     "type": "Iterator",
+     "variadic": false
+    },
+    {
+     "description": "The explicit Unbounded or BoundedFail policy.",
+     "inferred": false,
+     "name": "P",
+     "type": "_BufferPolicy",
+     "variadic": false
+    }
+   ],
+   "provider": "iteration/branching",
+   "signature": "comptime UnzipBranches[A: Movable & Deinitable, B: Movable & Deinitable, I: Iterator, P: _BufferPolicy] = Tuple[_Branch[_BranchItem[A, P], I, _Unzip[A, B], P, False], _Branch[_BranchItem[B, P], I, _Unzip[A, B], P, True]]",
+   "summary": "Two native move-only handles for the fields of native pairs.",
    "traits": []
   },
   "iteration.ZipWithIterator": {
@@ -102406,6 +102961,398 @@
    "provider": "iteration/derived",
    "summary": ""
   },
+  "iteration.partition": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "name": "predicate",
+       "type": "def(T) thin -> Bool",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The source, consumed at its current position.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The required buffering policy; there is no implicit default.",
+       "name": "buffer",
+       "type": "P",
+       "variadic": false
+      }
+     ],
+     "description": "Construction pulls nothing and each source item is classified once. Branches are move-only.\nUnbounded queues retain every pending value; BoundedFail yields Result elements,\ndiscards all queued values on overflow and gives each live branch one terminal Err.\nClose a branch to release its queue without draining upstream. Access is sequential;\nreentrant or overlapping access aborts before a second mutable state borrow.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The source element type, including origins.",
+       "inferred": false,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The consumed native iterator or owned collection type.",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The admitted type parameter.",
+       "inferred": false,
+       "name": "P",
+       "type": "_BufferPolicy",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "PartitionBranches[T, _Source[V], def(T) thin -> Bool, P] with the ownership, timing and empty-input behavior described above.",
+      "type": "PartitionBranches[T, _Source[V], def(T) thin -> Bool, P]"
+     },
+     "signature": "def partition[T: Movable & Deinitable, V: Movable & Deinitable, P: _BufferPolicy](var predicate: def(T) thin -> Bool, var source: V, *, var buffer: P) -> PartitionBranches[T, _Source[V], def(T) thin -> Bool, P] where _Source[V].Element == T",
+     "summary": "Lazily split accepted and rejected elements into independent iterators."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "predicate",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "buffer",
+       "type": "P",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "_BufferPolicy",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_LazyPredicate[T]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "PartitionBranches[T, _Source[V], F, P]"
+     },
+     "signature": "def partition[T: Movable & Deinitable, V: Movable & Deinitable, P: _BufferPolicy, //, F: _LazyPredicate[T]](var predicate: F, var source: V, *, var buffer: P) -> PartitionBranches[T, _Source[V], F, P] where _Source[V].Element == T",
+     "summary": "Lazily split accepted and rejected elements into independent iterators."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "predicate",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "buffer",
+       "type": "P",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "C",
+       "type": "BorrowCallable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "P",
+       "type": "_BufferPolicy",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "PartitionBranches[downcast[C.Payload, Movable & Deinitable], _Source[V], C, P]"
+     },
+     "signature": "def partition[C: BorrowCallable, V: Movable & Deinitable, P: _BufferPolicy](var predicate: C, var source: V, *, var buffer: P) -> PartitionBranches[downcast[C.Payload, Movable & Deinitable], _Source[V], C, P] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never",
+     "summary": "Lazily split accepted and rejected elements into independent iterators."
+    }
+   ],
+   "provider": "iteration/branching",
+   "summary": ""
+  },
+  "iteration.partition_map": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "name": "function",
+       "type": "def(var T) thin -> U",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The source, consumed at its current position.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The required buffering policy; there is no implicit default.",
+       "name": "buffer",
+       "type": "P",
+       "variadic": false
+      }
+     ],
+     "description": "Construction pulls nothing and each source item is classified once. Branches are move-only.\nUnbounded queues retain every pending value; BoundedFail yields Result elements,\ndiscards all queued values on overflow and gives each live branch one terminal Err.\nClose a branch to release its queue without draining upstream. Access is sequential;\nreentrant or overlapping access aborts before a second mutable state borrow.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The source element type, including origins.",
+       "inferred": false,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type, an exact Result for classification.",
+       "inferred": false,
+       "name": "U",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The consumed native iterator or owned collection type.",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The admitted type parameter.",
+       "inferred": false,
+       "name": "P",
+       "type": "_BufferPolicy",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "PartitionMapBranches[T, U, _Source[V], def(var T) thin -> U, P] with the ownership, timing and empty-input behavior described above.",
+      "type": "PartitionMapBranches[T, U, _Source[V], def(var T) thin -> U, P]"
+     },
+     "signature": "def partition_map[T: Movable & Deinitable, U: Movable & Deinitable, V: Movable & Deinitable, P: _BufferPolicy](var function: def(var T) thin -> U, var source: V, *, var buffer: P) -> PartitionMapBranches[T, U, _Source[V], def(var T) thin -> U, P] where _Source[V].Element == T and conforms_to(U, _ResultType)",
+     "summary": "Lazily route Result payloads into independent Ok and Err iterators."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "buffer",
+       "type": "P",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "U",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "_BufferPolicy",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_LazyUnary[T, U]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "PartitionMapBranches[T, U, _Source[V], F, P]"
+     },
+     "signature": "def partition_map[T: Movable & Deinitable, U: Movable & Deinitable, V: Movable & Deinitable, P: _BufferPolicy, //, F: _LazyUnary[T, U]](var function: F, var source: V, *, var buffer: P) -> PartitionMapBranches[T, U, _Source[V], F, P] where _Source[V].Element == T and conforms_to(U, _ResultType)",
+     "summary": "Lazily route Result payloads into independent Ok and Err iterators."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "buffer",
+       "type": "P",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "P",
+       "type": "_BufferPolicy",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "PartitionMapBranches[F.Arg, F.Out, _Source[V], F, P]"
+     },
+     "signature": "def partition_map[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, P: _BufferPolicy](var function: F, var source: V, *, var buffer: P) -> PartitionMapBranches[F.Arg, F.Out, _Source[V], F, P] where _Source[V].Element == F.Arg and conforms_to(F.Out, _ResultType) and F.Error == Never and RepeatableUnary[F]",
+     "summary": "Lazily route Result payloads into independent Ok and Err iterators."
+    }
+   ],
+   "provider": "iteration/branching",
+   "summary": ""
+  },
   "iteration.reduce": {
    "description": "",
    "kind": "function",
@@ -105141,6 +106088,72 @@
     }
    ],
    "provider": "iteration/derived",
+   "summary": ""
+  },
+  "iteration.unzip": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The source, consumed at its current position.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The required buffering policy; there is no implicit default.",
+       "name": "buffer",
+       "type": "P",
+       "variadic": false
+      }
+     ],
+     "description": "Construction pulls nothing and each source item is classified once. Branches are move-only.\nUnbounded queues retain every pending value; BoundedFail yields Result elements,\ndiscards all queued values on overflow and gives each live branch one terminal Err.\nClose a branch to release its queue without draining upstream. Access is sequential;\nreentrant or overlapping access aborts before a second mutable state borrow.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first callback argument type.",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second callback argument type.",
+       "inferred": false,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The consumed native iterator or owned collection type.",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The admitted type parameter.",
+       "inferred": false,
+       "name": "P",
+       "type": "_BufferPolicy",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "UnzipBranches[A, B, _Source[V], P] with the ownership, timing and empty-input behavior described above.",
+      "type": "UnzipBranches[A, B, _Source[V], P]"
+     },
+     "signature": "def unzip[A: Movable & Deinitable, B: Movable & Deinitable, V: Movable & Deinitable, P: _BufferPolicy](var source: V, *, var buffer: P) -> UnzipBranches[A, B, _Source[V], P] where _Source[V].Element == Tuple[A, B]",
+     "summary": "Lazily split native tuple fields, checking both queues before publishing either field."
+    }
+   ],
+   "provider": "iteration/branching",
    "summary": ""
   },
   "iteration.void": {

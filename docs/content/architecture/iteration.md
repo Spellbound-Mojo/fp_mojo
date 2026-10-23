@@ -234,7 +234,7 @@ callback side effects are not rolled back.
 
 ## Iterator expansion
 
-I1 and I2 are implemented. I3 through I6 describe subsequent slices before or
+I1 through I3 are implemented. I4 through I6 describe subsequent slices before or
 alongside fallible-stream work. The source review compares the pinned
 Mojo 1.1.0 library with Mojo 1.2.0 and Cats' current source. The reviewed Mojo
 1.2.0 iterator modules retain the relevant operations and constraints; this
@@ -287,12 +287,12 @@ coverage and documentation, not another implementation named `get`.
 |---|---|---|
 | I1 (implemented) | Fluent `take`, `drop`, `enumerate`, `zip`, `chain`; compile-time `take_while[predicate]` and `drop_while[predicate]`; derived `zip_with` and `map_with_index` | Native adapters, followed by existing `map` where needed |
 | I2 (implemented) | Captured-predicate `take_while`/`drop_while`; consuming `first`, `last`, `is_empty`, `count`, `count_where`, `contains`, `for_each`; terminal `to_non_empty_list`, `combine_all_optional`, `collect_fold` | Shared prefix state and existing callback bridges; existing terminal accumulation, NonEmptyList constructor and Semigroup |
-| I3 | Lazy `partition`, `partition_map`, `unzip` with required `Unbounded` or `BoundedFail` buffering policy | One shared source owner, branch routing and queue engine; existing Result and tuple extraction |
+| I3 (implemented) | Lazy `partition`, `partition_map`, `unzip` with required `Unbounded` or `BoundedFail` buffering policy | One shared source owner, branch routing and queue engine; existing Result and tuple extraction |
 | I4 | `align`, `align_with`, `pad_zip` | One two-source alignment iterator producing the existing Ior carrier |
 | I5 | Lazy `scan_map` with separate carry and output | Shared carry/output transition with existing scan mechanisms, below control and algebra |
 | I6 | `find_effect`, `find_map_effect`, `sequence_filter`, `fold_map_effect` | Existing algebra traversal, retention and dependent-fold mechanisms |
 
-I3 is the next implementation slice. I1 through I4 form the first
+I4 is the next implementation slice. I1 through I4 form the first
 iterator expansion milestone. I5 and I6 are follow-up candidates; they need not
 all become prerequisites for fallible streams.
 
@@ -372,8 +372,7 @@ exhaustion. No intermediate collection is built.
 
 ### Lazy branching with explicit buffering
 
-I3 returns independently consumed iterator branches. Proposed shapes, with
-policy names still part of the design rather than exported APIs, are:
+I3 returns a native tuple of independently consumed, move-only iterator handles:
 
 ```text
 source.partition(predicate, buffer=Unbounded())
@@ -473,6 +472,17 @@ release that access before yielding, and handle reentrant access explicitly.
 The initial contract is synchronous, sequential consumption; concurrent pulling
 and callback reentry are not supported. Verify this boundary before publishing
 independently movable handles rather than relying on unchecked aliasing.
+
+The implementation uses native `ArcPointer` for ownership and `Deque` for FIFO
+storage. A private atomic gate guards every mutable broker access. Overlapping
+or reentrant pull/close aborts before a second payload borrow; it never blocks
+waiting for a consumer on the same thread. The move-only lease releases the
+gate on return or StopIteration unwinding, and native origins keep payload
+borrows within the lease lifetime. This is a misuse check, not a promise of
+concurrent iteration. `close()` is idempotent; a closed handle remains exhausted.
+Its small shared allocation stays alive until both handles are destroyed, while
+the source and callback are released on exhaustion, failure or the last close.
+`BoundedFail` rejects non-positive capacity with typed `BufferCapacityError`.
 
 Routing, queue admission, failure and close behavior have one implementation
 shared by partition, partition_map and unzip. Reuse `_source` and the existing

@@ -4115,6 +4115,40 @@
             "sha256": "28b891206b4a8bc7b227dd39f763f164d900b945b60a7c15222c6539d5a4432d"
           }
         ],
+        "partition": [
+          {
+            "signature": "def partition[T: Movable & Deinitable, P: _BufferPolicy](deinit self, var predicate: def(T) thin -> Bool, *, var buffer: P) -> PartitionBranches[T, Self.I, def(T) thin -> Bool, P] where Self.I.Element == T:",
+            "sha256": "158ffc00ae9eb48e7d4ebc7a536d89f803eac90785836e840a488eaf2d139293"
+          },
+          {
+            "signature": "def partition[T: Movable & Deinitable, P: _BufferPolicy, //, F: _LazyPredicate[T]](deinit self, var predicate: F, *, var buffer: P) -> PartitionBranches[T, Self.I, F, P] where Self.I.Element == T:",
+            "sha256": "8b338348125f3be028f5bb0c9afc2f0bacfa160a54e441bddfeb9e84d40aefce"
+          },
+          {
+            "signature": "def partition[C: BorrowCallable, P: _BufferPolicy](deinit self, var predicate: C, *, var buffer: P) -> PartitionBranches[downcast[C.Payload, Movable & Deinitable], Self.I, C, P] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never:",
+            "sha256": "be13660cb459099e23d2722800e83b4a7217ab114fde431b791ea0ae6f7cdf66"
+          }
+        ],
+        "partition_map": [
+          {
+            "signature": "def partition_map[T: Movable & Deinitable, U: Movable & Deinitable, P: _BufferPolicy](deinit self, var function: def(var T) thin -> U, *, var buffer: P) -> PartitionMapBranches[T, U, Self.I, def(var T) thin -> U, P] where Self.I.Element == T and conforms_to(U, _ResultType):",
+            "sha256": "17d4254ef5dabfbfa5bf5ae90574ec803ce45a4fe8d1838c3f833c0d0724605b"
+          },
+          {
+            "signature": "def partition_map[T: Movable & Deinitable, U: Movable & Deinitable, P: _BufferPolicy, //, F: _LazyUnary[T, U]](deinit self, var function: F, *, var buffer: P) -> PartitionMapBranches[T, U, Self.I, F, P] where Self.I.Element == T and conforms_to(U, _ResultType):",
+            "sha256": "d8b8b1af7545c7ad5be4e4582d4e5c9dea0314a533470f70d0a75f29e93ac208"
+          },
+          {
+            "signature": "def partition_map[F: UnaryContract & Movable & Deinitable, P: _BufferPolicy](deinit self, var function: F, *, var buffer: P) -> PartitionMapBranches[F.Arg, F.Out, Self.I, F, P] where Self.I.Element == F.Arg and conforms_to(F.Out, _ResultType) and F.Error == Never and RepeatableUnary[F]:",
+            "sha256": "006771ca1f156e6344e096a0efedd148bc6fc01367cfd806e62ccc9eac26a27a"
+          }
+        ],
+        "unzip": [
+          {
+            "signature": "def unzip[A: Movable & Deinitable, B: Movable & Deinitable, P: _BufferPolicy](deinit self, *, var buffer: P) -> UnzipBranches[A, B, Self.I, P] where Self.I.Element == Tuple[A, B]:",
+            "sha256": "927de000e28845e09491b05062aaffcd9c9d2fc55bae04d1ace57c2400689ee7"
+          }
+        ],
         "map": [
           {
             "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable]( deinit self, function: def(var T) thin -> U ) -> Iter[MapIterator[T, U, Self.I]] where Self.I.Element == T:",
@@ -4731,6 +4765,55 @@
         "comptime IndexedMapIterator[T: Movable & Deinitable, R: Movable & Deinitable, I: Iterator, F: Movable & Deinitable = def(var Int, var T) thin -> R] = _Map[Tuple[Int, T], R, _Enumerate[I], F, _apply_lazy_pair[Int, T, R, F, True]]"
       ],
       "provider": "iteration/indexed"
+    },
+    "iteration.Unbounded": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct Unbounded(_BufferPolicy):"
+      ],
+      "provider": "iteration/branching"
+    },
+    "iteration.BufferCapacityError": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct BufferCapacityError(Copyable, Movable):"
+      ],
+      "provider": "iteration/branching"
+    },
+    "iteration.BoundedFail": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct BoundedFail(_BufferPolicy):"
+      ],
+      "provider": "iteration/branching"
+    },
+    "iteration.BufferLimitExceeded": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct BufferLimitExceeded(Copyable, Movable):"
+      ],
+      "provider": "iteration/branching"
+    },
+    "iteration.PartitionBranches": {
+      "kind": "type or alias",
+      "declarations": [
+        "comptime PartitionBranches[T: Movable & Deinitable, I: Iterator, F: Movable & Deinitable, P: _BufferPolicy] = Tuple[_Branch[_BranchItem[T, P], I, _Partition[T, F], P, False], _Branch[_BranchItem[T, P], I, _Partition[T, F], P, True]]"
+      ],
+      "provider": "iteration/branching"
+    },
+    "iteration.PartitionMapBranches": {
+      "kind": "type or alias",
+      "declarations": [
+        "comptime PartitionMapBranches[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator, F: Movable & Deinitable, P: _BufferPolicy] = Tuple[_Branch[_BranchItem[downcast[U, _ResultType].Value, P], I, _Classify[T, U, F], P, False], _Branch[_BranchItem[downcast[U, _ResultType].Error, P], I, _Classify[T, U, F], P, True]]"
+      ],
+      "provider": "iteration/branching"
+    },
+    "iteration.UnzipBranches": {
+      "kind": "type or alias",
+      "declarations": [
+        "comptime UnzipBranches[A: Movable & Deinitable, B: Movable & Deinitable, I: Iterator, P: _BufferPolicy] = Tuple[_Branch[_BranchItem[A, P], I, _Unzip[A, B], P, False], _Branch[_BranchItem[B, P], I, _Unzip[A, B], P, True]]"
+      ],
+      "provider": "iteration/branching"
     },
     "control.ScanLengthError": {
       "kind": "type or alias",
@@ -7934,6 +8017,52 @@
         }
       ],
       "provider": "iteration/terminals"
+    },
+    "iteration.partition": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def partition[T: Movable & Deinitable, V: Movable & Deinitable, P: _BufferPolicy](var predicate: def(T) thin -> Bool, var source: V, *, var buffer: P) -> PartitionBranches[T, _Source[V], def(T) thin -> Bool, P] where _Source[V].Element == T:",
+          "sha256": "124357f9a6506e405f3a4fa89274a8061d0e0353195afe69d9882d5f680ef5f0"
+        },
+        {
+          "signature": "def partition[T: Movable & Deinitable, V: Movable & Deinitable, P: _BufferPolicy, //, F: _LazyPredicate[T]](var predicate: F, var source: V, *, var buffer: P) -> PartitionBranches[T, _Source[V], F, P] where _Source[V].Element == T:",
+          "sha256": "faa0635afac914140002295b0ce7994ffa9172e56b52bafdbdf96aa2b4070602"
+        },
+        {
+          "signature": "def partition[C: BorrowCallable, V: Movable & Deinitable, P: _BufferPolicy](var predicate: C, var source: V, *, var buffer: P) -> PartitionBranches[downcast[C.Payload, Movable & Deinitable], _Source[V], C, P] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never:",
+          "sha256": "f45e0e1acaa6f8c4eb563d050df0006e8beafc9b2073e246ed5567da3a2e131a"
+        }
+      ],
+      "provider": "iteration/branching"
+    },
+    "iteration.partition_map": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def partition_map[T: Movable & Deinitable, U: Movable & Deinitable, V: Movable & Deinitable, P: _BufferPolicy](var function: def(var T) thin -> U, var source: V, *, var buffer: P) -> PartitionMapBranches[T, U, _Source[V], def(var T) thin -> U, P] where _Source[V].Element == T and conforms_to(U, _ResultType):",
+          "sha256": "b45417f72613b9a4478cfcc7be5ef8d8478205387c58af1832ec9ec99dff7974"
+        },
+        {
+          "signature": "def partition_map[T: Movable & Deinitable, U: Movable & Deinitable, V: Movable & Deinitable, P: _BufferPolicy, //, F: _LazyUnary[T, U]](var function: F, var source: V, *, var buffer: P) -> PartitionMapBranches[T, U, _Source[V], F, P] where _Source[V].Element == T and conforms_to(U, _ResultType):",
+          "sha256": "72118b6308d1a0ac86056ab6ef69db21a223b5b5182935a2afc0c88271903b1f"
+        },
+        {
+          "signature": "def partition_map[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, P: _BufferPolicy](var function: F, var source: V, *, var buffer: P) -> PartitionMapBranches[F.Arg, F.Out, _Source[V], F, P] where _Source[V].Element == F.Arg and conforms_to(F.Out, _ResultType) and F.Error == Never and RepeatableUnary[F]:",
+          "sha256": "5b0a6289e47a0d9f65422f841158eae7d02ab39d10f64c1d14db06b05536618e"
+        }
+      ],
+      "provider": "iteration/branching"
+    },
+    "iteration.unzip": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def unzip[A: Movable & Deinitable, B: Movable & Deinitable, V: Movable & Deinitable, P: _BufferPolicy](var source: V, *, var buffer: P) -> UnzipBranches[A, B, _Source[V], P] where _Source[V].Element == Tuple[A, B]:",
+          "sha256": "81f924896dd3424648118c167f0f6d02bf7d8f875a00f1600a6bcd722d3f585f"
+        }
+      ],
+      "provider": "iteration/branching"
     },
     "control.while_loop": {
       "kind": "function",

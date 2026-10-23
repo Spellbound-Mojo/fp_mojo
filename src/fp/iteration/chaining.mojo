@@ -6,7 +6,9 @@ from std.itertools.itertools import _TakeIterator, _DropIterator, _TakeWhileIter
 from fp.iteration._native import _OwnedSource, _NativeSources, _NativeTail, _SameSource, _native_zip, _native_chain
 from fp.iteration.indexed import ZipWithIterator, IndexedMapIterator, zip_with as _zip_with, map_with_index as _map_with_index
 from fp.iteration.prefixes import TakeWhileIterator, DropWhileIterator, take_while as _take_while, drop_while as _drop_while
-from fp.iteration._callbacks import _LazyPredicate, _IndexedBinary
+from fp.iteration._callbacks import _LazyPredicate, _IndexedBinary, _LazyUnary
+from fp.iteration.branching import _BufferPolicy, PartitionBranches, PartitionMapBranches, UnzipBranches, partition as _partition, partition_map as _partition_map, unzip as _unzip
+from fp.callables.invoke import RepeatableUnary
 from fp.iteration.terminals import first as _first, last as _last, is_empty as _is_empty, count as _count, contains as _contains, to_non_empty_list as _to_non_empty_list, combine_all_optional as _combine_all_optional, _count_where, _for_each, _collect_fold
 from fp.data.non_empty_list import NonEmptyList
 from fp.algebra.validation import ValidationFamily, _ListErrors
@@ -562,6 +564,93 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Map to Optional monoid values, skip absence and combine present values in order.
         """
         return _collect_fold[M=M, E=_CommonError[F.Error, M.Error]](function^, self._iterator^)
+
+    def partition[T: Movable & Deinitable, P: _BufferPolicy](deinit self, var predicate: def(T) thin -> Bool, *, var buffer: P) -> PartitionBranches[T, Self.I, def(T) thin -> Bool, P] where Self.I.Element == T:
+        """Lazily split accepted and rejected elements into independent iterators.
+
+        Construction pulls nothing and each source item is classified once. Branches are move-only.
+        Unbounded queues retain every pending value; BoundedFail yields Result elements,
+        discards all queued values on overflow and gives each live branch one terminal Err.
+        Close a branch to release its queue without draining upstream. Access is sequential;
+        reentrant or overlapping access aborts before a second mutable state borrow.
+
+        Parameters:
+            T: The source element type, including origins.
+            P: The admitted type parameter.
+
+        Args:
+            predicate: The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.
+            buffer: The required buffering policy; there is no implicit default.
+
+        Returns:
+            PartitionBranches[T, Self.I, def(T) thin -> Bool, P] with the ownership, timing and empty-input behavior described above.
+        """
+        return _partition[T=T](predicate, self._iterator^, buffer=buffer^)
+
+    def partition[T: Movable & Deinitable, P: _BufferPolicy, //, F: _LazyPredicate[T]](deinit self, var predicate: F, *, var buffer: P) -> PartitionBranches[T, Self.I, F, P] where Self.I.Element == T:
+        """Lazily split accepted and rejected elements into independent iterators.
+        """
+        return _partition[T=T](predicate^, self._iterator^, buffer=buffer^)
+
+    def partition[C: BorrowCallable, P: _BufferPolicy](deinit self, var predicate: C, *, var buffer: P) -> PartitionBranches[downcast[C.Payload, Movable & Deinitable], Self.I, C, P] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never:
+        """Lazily split accepted and rejected elements into independent iterators.
+        """
+        return _partition(predicate^, self._iterator^, buffer=buffer^)
+
+    def partition_map[T: Movable & Deinitable, U: Movable & Deinitable, P: _BufferPolicy](deinit self, var function: def(var T) thin -> U, *, var buffer: P) -> PartitionMapBranches[T, U, Self.I, def(var T) thin -> U, P] where Self.I.Element == T and conforms_to(U, _ResultType):
+        """Lazily route Result payloads into independent Ok and Err iterators.
+
+        Construction pulls nothing and each source item is classified once. Branches are move-only.
+        Unbounded queues retain every pending value; BoundedFail yields Result elements,
+        discards all queued values on overflow and gives each live branch one terminal Err.
+        Close a branch to release its queue without draining upstream. Access is sequential;
+        reentrant or overlapping access aborts before a second mutable state borrow.
+
+        Parameters:
+            T: The source element type, including origins.
+            U: The callback result type, an exact Result for classification.
+            P: The admitted type parameter.
+
+        Args:
+            function: The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.
+            buffer: The required buffering policy; there is no implicit default.
+
+        Returns:
+            PartitionMapBranches[T, U, Self.I, def(var T) thin -> U, P] with the ownership, timing and empty-input behavior described above.
+        """
+        return _partition_map[T=T, U=U](function, self._iterator^, buffer=buffer^)
+
+    def partition_map[T: Movable & Deinitable, U: Movable & Deinitable, P: _BufferPolicy, //, F: _LazyUnary[T, U]](deinit self, var function: F, *, var buffer: P) -> PartitionMapBranches[T, U, Self.I, F, P] where Self.I.Element == T and conforms_to(U, _ResultType):
+        """Lazily route Result payloads into independent Ok and Err iterators.
+        """
+        return _partition_map[T=T, U=U](function^, self._iterator^, buffer=buffer^)
+
+    def partition_map[F: UnaryContract & Movable & Deinitable, P: _BufferPolicy](deinit self, var function: F, *, var buffer: P) -> PartitionMapBranches[F.Arg, F.Out, Self.I, F, P] where Self.I.Element == F.Arg and conforms_to(F.Out, _ResultType) and F.Error == Never and RepeatableUnary[F]:
+        """Lazily route Result payloads into independent Ok and Err iterators.
+        """
+        return _partition_map(function^, self._iterator^, buffer=buffer^)
+
+    def unzip[A: Movable & Deinitable, B: Movable & Deinitable, P: _BufferPolicy](deinit self, *, var buffer: P) -> UnzipBranches[A, B, Self.I, P] where Self.I.Element == Tuple[A, B]:
+        """Lazily split native tuple fields, checking both queues before publishing either field.
+
+        Construction pulls nothing and each source item is classified once. Branches are move-only.
+        Unbounded queues retain every pending value; BoundedFail yields Result elements,
+        discards all queued values on overflow and gives each live branch one terminal Err.
+        Close a branch to release its queue without draining upstream. Access is sequential;
+        reentrant or overlapping access aborts before a second mutable state borrow.
+
+        Parameters:
+            A: The first callback argument type.
+            B: The second callback argument type.
+            P: The admitted type parameter.
+
+        Args:
+            buffer: The required buffering policy; there is no implicit default.
+
+        Returns:
+            UnzipBranches[A, B, Self.I, P] with the ownership, timing and empty-input behavior described above.
+        """
+        return _unzip[A, B](self._iterator^, buffer=buffer^)
     # --- end iterator expansion syntax ---
 
     # Native thin functions and closures keep their own admission signatures,

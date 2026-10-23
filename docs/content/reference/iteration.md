@@ -48,3 +48,28 @@ with `scalar` it returns `6`, and over an empty list it returns the initial
 vector, equal to the hand-written loop; no lanes are reduced. Over three words,
 `append_word` builds the `Document` `"native functional composition"` with a
 word count of 3, the same as the loop in `main`.
+
+## Lazy branches
+
+<!-- example: docs/examples/iteration_branching.mojo -->
+
+`partition(predicate, source, buffer=...)`, `partition_map(classify, source,
+buffer=...)` and `unzip(source, buffer=...)` return native tuples of two
+move-only iterators. The same methods are available on `Iter`. The policy is
+required: `Unbounded()` yields raw values; `BoundedFail(n)` yields
+`Result[Value, BufferLimitExceeded]`. Its constructor raises
+`BufferCapacityError` for non-positive capacity. Construction never pulls.
+
+`partition` borrows each candidate and routes accepted values first.
+`partition_map` consumes candidates into `Result[A,B]` and routes Ok/Err
+payloads respectively. `unzip` splits native pairs. Each source item is
+processed once, in demand order; both outputs of an overflowing pair are
+rejected together. Overflow discards all backlog and releases upstream,
+then gives each live branch one terminal error before permanent exhaustion.
+
+Use `next(branches[0])` and `next(branches[1])` to interleave consumption.
+Calling `.close()` or dropping a handle releases its backlog and stops buffering
+for it. The remaining branch continues; dropping or closing both releases the
+source and captures without further pulls. Handles retain all source and capture
+origins. Access is synchronous and sequential; reentrant or overlapping access
+aborts before another mutable borrow. See the [full contract](../architecture/iteration.md#lazy-branching-with-explicit-buffering).

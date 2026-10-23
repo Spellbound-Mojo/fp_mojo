@@ -142,4 +142,48 @@ def terminals(mode):
             out+=emit(name,params,args,result,cond,body,summary,'This is a consuming terminal. Native callbacks are borrowed in place;\nlibrary callbacks are consumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.',error,ind,docs=kind=='pure')
     return out
 
-def methods():return native_methods()+indexed('iter')+prefixes('iter')+terminals('iter')
+def methods():return native_methods()+indexed('iter')+prefixes('iter')+terminals('iter')+branching('iter')
+
+
+PARAMS.update({'U':'The callback result type, an exact Result for classification.'})
+ARGS['buffer']='The required buffering policy; there is no implicit default.'
+
+def branching(mode):
+    out=''; ind='' if mode=='free' else '    '
+    it='_Source[V]' if mode=='free' else 'Self.I'
+    src='source^' if mode=='free' else 'self._iterator^'
+    detail='Construction pulls nothing and each source item is classified once. Branches are move-only.\nUnbounded queues retain every pending value; BoundedFail yields Result elements,\ndiscards all queued values on overflow and gives each live branch one terminal Err.\nClose a branch to release its queue without draining upstream. Access is sequential;\nreentrant or overlapping access aborts before a second mutable state borrow.'
+    for name in ['partition','partition_map']:
+        ispart=name=='partition'
+        for kind in ['thin','native','library']:
+            params=([f'T: {MD}']+([] if ispart else [f'U: {MD}'])) if kind!='library' else (['C: BorrowCallable'] if ispart else [f'F: UnaryContract & {MD}'])
+            if mode=='free':params+=[f'V: {MD}']
+            params+=['P: _BufferPolicy']
+            t='T' if kind!='library' else f'downcast[C.Payload, {MD}]' if ispart else 'F.Arg'
+            u='U' if kind!='library' else 'F.Out'
+            cb=('def(T) thin -> Bool' if ispart else 'def(var T) thin -> U') if kind=='thin' else ('C' if kind=='library' and ispart else 'F')
+            if kind=='native':params+=['//', 'F: _LazyPredicate[T]' if ispart else 'F: _LazyUnary[T, U]']
+            condition=f'{it}.Element == {t}'
+            if ispart and kind=='library':condition+=' and C.Result == Bool and C.Failure == Never'
+            if not ispart:condition+=f' and conforms_to({u}, _ResultType)'
+            if not ispart and kind=='library':condition+=' and F.Error == Never and RepeatableUnary[F]'
+            result=f'PartitionBranches[{t}, {it}, {cb}, P]' if ispart else f'PartitionMapBranches[{t}, {u}, {it}, {cb}, P]'
+            args=['var '+('predicate' if ispart else 'function')+': '+cb]
+            if mode=='free':args+=['var source: V']
+            else:args.insert(0,'deinit self')
+            args+=['*','var buffer: P']
+            value=('predicate' if ispart else 'function')+('' if kind=='thin' else '^')
+            if mode=='free':
+                route=f'_Partition[{t}, {cb}]({value})' if ispart else f'_Classify[{t}, {u}, {cb}]({value})'
+                a=t if ispart else f'downcast[{u}, _ResultType].Value'
+                b=t if ispart else f'downcast[{u}, _ResultType].Error'
+                body=f'return _branches[{a}, {b}](_source({src}), {route}, buffer^)'
+            else:
+                forward='[T=T'+('' if ispart else ', U=U')+']' if kind!='library' else ''
+                body=f'return _{name}{forward}({value}, {src}, buffer=buffer^)'
+            out+=emit(name,params,args,result,condition,body,'Lazily split accepted and rejected elements into independent iterators.' if ispart else 'Lazily route Result payloads into independent Ok and Err iterators.',detail,indent=ind,docs=kind=='thin')
+    params=[f'A: {MD}',f'B: {MD}']+([f'V: {MD}'] if mode=='free' else [])+['P: _BufferPolicy']
+    args=(['var source: V'] if mode=='free' else ['deinit self'])+['*','var buffer: P']
+    body=f'return _branches[A, B](_source({src}), _Unzip[A, B](), buffer^)' if mode=='free' else f'return _unzip[A, B]({src}, buffer=buffer^)'
+    out+=emit('unzip',params,args,f'UnzipBranches[A, B, {it}, P]',f'{it}.Element == Tuple[A, B]',body,'Lazily split native tuple fields, checking both queues before publishing either field.',detail,indent=ind)
+    return out
