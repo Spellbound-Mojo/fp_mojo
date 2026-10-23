@@ -1,4 +1,5 @@
 """Accumulating Result composition respects associativity and pure identity."""
+from fp.functions import piped
 from fp.data import Result,Ok,Err
 from std.testing import assert_equal
 
@@ -21,9 +22,9 @@ def main() raises:
         var a=pvl_value(Bool(mask&1),1)
         var b=pvl_value(Bool(mask&2),2)
         var c=pvl_value(Bool(mask&4),3)
-        var left=a.copy().par_map_n((b.copy(),),pvl_add).par_map_n((c.copy(),),pvl_add)
-        var right=a.copy().par_map_n((b.copy().par_map_n((c^,),pvl_add),),pvl_add)
+        var left=piped(a.copy()).par_map_n((b.copy(),),pvl_add).par_map_n((c.copy(),),pvl_add).get()
+        var right=piped(a.copy()).par_map_n((piped(b.copy()).par_map_n((c^,),pvl_add).get(),),pvl_add).get()
         pvl_equal(left^,right^)
-        pvl_equal(a.copy().par_map_n(Tuple(),pvl_identity),a.copy())
-        pvl_equal(a.copy().par_map_n((PVLawResult(Ok(0)),),pvl_add),a^)
+        pvl_equal(piped(a.copy()).par_map_n(Tuple(),pvl_identity).get(),a.copy())
+        pvl_equal(piped(a.copy()).par_map_n((PVLawResult(Ok(0)),),pvl_add).get(),a^)
     print('parallel validation laws: ok')

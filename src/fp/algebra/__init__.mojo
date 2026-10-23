@@ -62,3 +62,5 @@ from .monoids import StringMonoid, ListMonoid
 from .conditional import if_effect
 
 from .validation import ValidationFamily
+
+from .non_empty import NonEmptyListFamily, NonEmptyListSemigroup

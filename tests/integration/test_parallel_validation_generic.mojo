@@ -11,7 +11,7 @@ def pvg_native[A:Movable & Deinitable,B:Movable & Deinitable,R:Movable & Deinita
                E:Movable & Deinitable,X:Movable & Deinitable,
                F:def(var A,var B) raises X -> R](var left:Result[A,List[E]],var right:Result[B,List[E]],ref function:F
 ) raises X -> Result[R,List[E]]:
-    return left^.par_map_n[A=A,B=B,R=R,X=X]((right^,),function)
+    return piped(left^).par_map_n[A=A,B=B,R=R,X=X]((right^,),function).get()
 
 
 def pvg_piped[A:Movable & Deinitable,B:Movable & Deinitable,R:Movable & Deinitable,
@@ -37,7 +37,7 @@ struct PVGKeep[o:ImmOrigin](Unary, Copyable, Defaultable):
 def pvg_product[A:Movable & Deinitable,B:Movable & Deinitable,E:Movable & Deinitable](
     var left:Result[A,List[E]],var right:Result[B,List[E]]
 ) -> Result[Tuple[A,B],List[E]]:
-    return left^.par_product_n((right^,))
+    return piped(left^).par_product_n((right^,)).get()
 
 
 def pvg_product_policy[A:Movable & Deinitable,B:Movable & Deinitable,//,S:Semigroup](
@@ -67,13 +67,13 @@ def pvg_origins(values:List[Int]) raises:
     assert_equal(combined._ok().value[1],8)
     var piped_result=pvg_piped(Result[View,List[String]](Ok(view)),Result[Int,List[String]](Ok(1)),keep)
     assert_equal(piped_result._ok().value[0],7)
-    var owned=Result[View,List[String]](Ok(view)).par_map_n((Result[Int,List[String]](Ok(2)),),PVGKeep[origin_of(values)]())
+    var owned=piped(Result[View,List[String]](Ok(view))).par_map_n((Result[Int,List[String]](Ok(2)),),PVGKeep[origin_of(values)]()).get()
     assert_equal(owned._ok().value[1],8)
     # Error origins also survive list concatenation, without copying payloads.
     var first:List[View]=[view]
     var second:List[View]=[view]
     def add(a:Int,b:Int)->Int: return a+b
-    var failures=Result[Int,List[View]](Err(first^)).par_map_n((Result[Int,List[View]](Err(second^)),),add)
+    var failures=piped(Result[Int,List[View]](Err(first^))).par_map_n((Result[Int,List[View]](Err(second^)),),add).get()
     comptime assert type_of(failures)==Result[Int,List[View]]
     assert_equal(failures._err().value[1][0],7)
     var product = pvg_product(Result[View,List[String]](Ok(view)),Result[Int,List[String]](Ok(2)))

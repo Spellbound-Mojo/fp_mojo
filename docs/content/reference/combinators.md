@@ -345,8 +345,8 @@ forwards a generic raising callback. `flat_traverse` requires the callback's
 successful payload to belong to the same source family; Result's stored error
 type, including its origins, must agree at both levels.
 For fluent binary callbacks, the native parameter names are `A`, `B`, `R` and
-`X`: a generic Result wrapper can supply `.map2[X=X](other^, combine)`, and a
-Piped wrapper can also supply `A=A, B=B, R=R` as evidence for its native shape.
+`X`: a generic Piped wrapper can supply
+`.map2[A=A, B=B, R=R, X=X](other^, combine)` as evidence for its native shape.
 
 Use `iterated(source)` for a range, borrowed iterator or custom iterator.
 Its elements follow native iteration: iterating a dictionary yields keys.
@@ -475,7 +475,7 @@ the shared implementations and the
 Use `.map_n((second, third), combine)` to combine three effectful values without
 an intermediate lambda. The receiver supplies the first argument to `combine`.
 `.product_n((second, third))` produces a flat `Tuple[A, B, C]` in the same
-family. Both are available directly on Result and through Piped. Piped infers
+family. Both are available through Piped, which infers
 List, Optional and Result; `.map_n[Family]` and `.product_n[Family]` select
 another Applicative.
 
@@ -506,7 +506,7 @@ Use `map2` for binary combination when the extra tuple pass is unnecessary.
 
 Use `functions.ap(values)` when the callback is itself inside an effect.
 Piped infers List, Optional and Result, or accepts `.ap[Family](values)` for
-another Applicative. Result also has `.ap(values)` directly. The receiver
+another Applicative. Wrap a Result with `piped(result^)`. The receiver
 contains library unary callbacks; promote a native function or closure with
 `as_unary` before storing it. Unlike a callback passed to `map2`, this callback
 is an owned payload of its carrier.
@@ -614,8 +614,8 @@ immediately and keep their exact type.
 
 | Method | Available on | Successful result |
 |---|---|---|
-| `.par_map_n((second, third), construct)` | Result and Piped holding Result | The constructor's output |
-| `.par_product_n((second, third))` | Result and Piped holding Result | A flat tuple, receiver first |
+| `.par_map_n((second, third), construct)` | Piped holding Result | The constructor's output |
+| `.par_product_n((second, third))` | Piped holding Result | A flat tuple, receiver first |
 | `.par_traverse(validate)` | Piped holding List, Optional or Result; Iter | Transformed payloads in source shape; List for Iter |
 | `.par_sequence()` | Piped holding List, Optional or Result; Iter | Unwrapped payloads in source shape; List for Iter |
 

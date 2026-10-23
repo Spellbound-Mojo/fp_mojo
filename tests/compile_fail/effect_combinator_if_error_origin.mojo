@@ -1,3 +1,4 @@
+from fp.functions import piped
 # error: constraint
 from fp.data import Result, Ok
 from fp.callables import OnceThunk
@@ -12,8 +13,8 @@ struct EFBadBranchError[o: ImmOrigin](OnceThunk):
 
 def mismatch(left: List[Int], right: List[Int]):
     try:
-        _ = Result[Bool, String](Ok(True)).if_effect[X=Span[Int, origin_of(right)]](
-            EFBadBranchError(Span(left)), EFBadBranchError(Span(left)))
+        _ = piped(Result[Bool, String](Ok(True))).if_effect[X=Span[Int, origin_of(right)]](
+            EFBadBranchError(Span(left)), EFBadBranchError(Span(left))).get()
     except: pass
 
 def main(): mismatch([1], [2])

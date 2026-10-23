@@ -3,8 +3,8 @@ from std.builtin.rebind import downcast, rebind_var
 from .protocols import Semigroup, ApplicativeError, _Accumulate
 from .instances import ResultFamily, _ListElement
 from .monoids import ListMonoid
-from ._result_accumulation import _AccumulatingErrors, _result_loop
-from fp.data._result import Result, _ResultType, _result_map2
+from ._result_accumulation import _result_map2, _AccumulatingErrors, _result_loop
+from fp.data._result import Result, _ResultType
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract
 from fp._internal.errors import _CommonError
 

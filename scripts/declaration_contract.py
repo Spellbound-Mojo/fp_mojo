@@ -36,7 +36,7 @@ def declaration_sites(root=ROOT):
             # That continuation does not end the owner scope.
             # A name that is a keyword, such as `match`, is declared in backticks.
             match = re.match(r'(    )?def `?(\w+)`?', line)
-            if not match or (match[2].startswith('_') and not (module in ('result', 'data') and owner == 'Result' and match[2] == '__init__')):
+            if not match or (match[2].startswith('_') and not (module in ('result', 'data') and owner in ('Result', 'NonEmptyList') and match[2] in ('__init__', '__len__', '__iter__'))):
                 continue
             if match[1] and (not owner or owner.startswith('_')):
                 continue

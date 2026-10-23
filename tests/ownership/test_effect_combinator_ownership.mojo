@@ -61,11 +61,11 @@ def main() raises:
     assert_equal(empty.text,"initial"); assert_equal(drops[],10)
     _ = empty^
     assert_equal(drops[],11)
-    var selected = Result[Bool,String](Ok(True)).if_effect(EFOnceFactory(EFOwner("yes",drops)),EFOnceFactory(EFOwner("no",drops))).raise_on_err()
+    var selected = piped(Result[Bool,String](Ok(True))).if_effect(EFOnceFactory(EFOwner("yes",drops)),EFOnceFactory(EFOwner("no",drops))).get().raise_on_err()
     assert_equal(selected.text,"yes"); assert_equal(drops[],12)
     _ = selected^
     assert_equal(drops[],13)
-    var skipped = Result[Bool,String](Err(String("skip"))).if_effect(EFOnceFactory(EFOwner("yes",drops)),EFOnceFactory(EFOwner("no",drops)))
+    var skipped = piped(Result[Bool,String](Err(String("skip")))).if_effect(EFOnceFactory(EFOwner("yes",drops)),EFOnceFactory(EFOwner("no",drops))).get()
     assert_true(skipped.is_err()); assert_equal(drops[],15)
     var seen = List[EFOwner]()
     seen.append(EFOwner("keep",drops)); seen.append(EFOwner("unvisited",drops))
@@ -81,7 +81,7 @@ def main() raises:
     var capture = EFOwner("native",drops)
     def native() {ref capture} -> Result[String,String]: return Ok(capture.text.copy())
     def unused() -> Result[String,String]: return Ok(String("unused"))
-    var text = Result[Bool,String](Ok(True)).if_effect(native,unused).raise_on_err()
+    var text = piped(Result[Bool,String](Ok(True))).if_effect(native,unused).get().raise_on_err()
     assert_equal(text,"native"); assert_equal(capture.text,"native")
     _ = capture^
     assert_equal(drops[],22)

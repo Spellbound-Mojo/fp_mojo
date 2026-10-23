@@ -184,3 +184,37 @@ out of an `Ok`, `Err`, `Break` or `Continue`. The consuming folds hold each
 handler in its own parameter and call only the selected one; the other is
 destroyed with the frame. These are plain branches on the stored case, with no
 handler objects or context descriptors.
+
+## Non-empty storage stays below algebra
+
+`data.non_empty_list.NonEmptyList` owns only the non-empty invariant and native
+List storage. Public construction either supplies a first element or checks an
+existing List. The checked constructor is the single validation point;
+`from_list` translates its empty-input error into None. No mutable List view,
+empty constructor or removal method can invalidate the invariant. Internal
+underscore fields are outside the supported API, as with Result storage.
+
+Singleton construction has its own overload: a default empty tail would carry
+T's origins and introduce a false alias for mutable borrowed elements. The
+checked List constructor uses the keyword `values` so a List may also be the
+sole element of a nested NonEmptyList without overload ambiguity.
+
+`first` preserves the native List element origin. Buffer transfer and consuming
+iteration are constant time; constructing from a head and tail and concatenation
+move elements in linear time. Copying is conditional on element Copyable.
+
+The upper `algebra.non_empty` module supplies the family and Semigroup. Mapping
+and traversal reuse ListFamily and the target Applicative's existing collection
+kernel, then restore the proven non-empty shape in each successful branch.
+Third-party targets must obey the Traversable shape laws. Filtering deliberately
+returns List. No validation policy or callback loop is added to the carrier.
+
+### Migration from the first nightly fluent API
+
+Use `piped(value^).map2(other^, combine).get()` in place of direct Result
+`map2`; the same move applies to `product`, `ap`, `map_n`, `product_n`,
+`par_map_n`, `par_product_n` and `if_effect`. Core Result transformations,
+including outcome observation and recovery, remain consuming Result methods.
+These adapters use callable kernels below algebra; Result imports no algebra
+module. Generic native `map2` forwarders may need
+`A=A, B=B, R=R, X=X` to make the Piped carrier shape explicit.

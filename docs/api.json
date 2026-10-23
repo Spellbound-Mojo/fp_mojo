@@ -1890,6 +1890,315 @@
     "Semigroup"
    ]
   },
+  "algebra.NonEmptyListFamily": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Element"
+    },
+    {
+     "description": "",
+     "name": "Mapped"
+    },
+    {
+     "description": "",
+     "name": "MapError"
+    },
+    {
+     "description": "",
+     "name": "Filtered"
+    },
+    {
+     "description": "",
+     "name": "FilterError"
+    },
+    {
+     "description": "",
+     "name": "MapFiltered"
+    },
+    {
+     "description": "",
+     "name": "MapFilterError"
+    },
+    {
+     "description": "",
+     "name": "Traversed"
+    },
+    {
+     "description": "",
+     "name": "TraverseError"
+    }
+   ],
+   "description": "Name this family explicitly in algebra operations or fluent pipelines.\nListFamily owns callback invocation and traversal. Map preserves length;\nevery successful traversal preserves the non-empty source shape. The target\nApplicative retains its failure, branching, evaluation and error policies.\nThis family does not introduce a second collection loop.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "filter": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The predicate, consumed; each element is borrowed once.",
+        "name": "predicate",
+        "type": "P",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The source, consumed.",
+        "name": "value",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "P.Failure",
+      "parameters": [
+       {
+        "description": "The exact NonEmptyList carrier type.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "A repeatable borrowing Bool predicate.",
+        "inferred": false,
+        "name": "P",
+        "type": "BorrowCallable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The predicate's exact native error.",
+      "returns": {
+       "doc": "Accepted original values in order, possibly none.",
+       "type": "Self.Filtered[V, P]"
+      },
+      "signature": "def filter[V: Movable & Deinitable, P: BorrowCallable](var predicate: P, var value: V) raises P.Failure -> Self.Filtered[V, P]",
+      "summary": "Retain accepted elements in a possibly empty native List."
+     }
+    ],
+    "filter_map": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, consumed and called in source order.",
+        "name": "f",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The source, consumed.",
+        "name": "value",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F.Error",
+      "parameters": [
+       {
+        "description": "The exact NonEmptyList carrier type.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "A repeatable callback returning Optional values.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The callback's exact native error.",
+      "returns": {
+       "doc": "Present transformed values in order; the List may be empty.",
+       "type": "Self.MapFiltered[V, F]"
+      },
+      "signature": "def filter_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) raises F.Error -> Self.MapFiltered[V, F]",
+      "summary": "Transform elements and retain present Optional results in a List."
+     }
+    ],
+    "map": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, consumed.",
+        "name": "f",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The non-empty source, consumed.",
+        "name": "value",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F.Error",
+      "parameters": [
+       {
+        "description": "The exact NonEmptyList carrier type.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "A repeatable callback retaining native types and errors.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback error; owned inputs and partial outputs are destroyed.",
+      "returns": {
+       "doc": "A non-empty list of transformed values in source order.",
+       "type": "Self.Mapped[V, F]"
+      },
+      "signature": "def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) raises F.Error -> Self.Mapped[V, F]",
+      "summary": "Consume and map each element once, left to right, preserving length."
+     }
+    ],
+    "traverse": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, consumed; G determines whether failure stops calls.",
+        "name": "f",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The non-empty source, consumed in order.",
+        "name": "source",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.TraverseError[G, V, F]",
+      "parameters": [
+       {
+        "description": "The target Applicative, with its existing evaluation and failure policy.",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       },
+       {
+        "description": "The exact NonEmptyList source type.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "A repeatable callback returning a G carrier.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact compatible callback and target errors; native errors stay raised.",
+      "returns": {
+       "doc": "G's carrier of NonEmptyList values, or G's failure or absent branches.",
+       "type": "Self.Traversed[G, V, F]"
+      },
+      "signature": "def traverse[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var source: V) raises Self.TraverseError[G, V, F] -> Self.Traversed[G, V, F]",
+      "summary": "Traverse through G's collection kernel and restore each successful shape."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "algebra/non_empty",
+   "signature": "struct NonEmptyListFamily(Traversable, Filterable, FunctorFilter)",
+   "summary": "Non-empty mapping and traversal; filtering returns an ordinary List.",
+   "traits": [
+    "Filterable",
+    "Functor",
+    "FunctorFilter",
+    "Traversable"
+   ]
+  },
+  "algebra.NonEmptyListSemigroup": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Value"
+    },
+    {
+     "description": "",
+     "name": "Error"
+    }
+   ],
+   "description": "There is no empty identity, so this is a Semigroup rather than a Monoid.\nIt can be supplied directly to ValidationFamily and piped par_* methods.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "combine": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The first non-empty list, consumed.",
+        "name": "left",
+        "type": "Self.Value",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The second non-empty list, consumed.",
+        "name": "right",
+        "type": "Self.Value",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "All left elements followed by all right elements; no element copies.",
+       "type": "Self.Value"
+      },
+      "signature": "def combine(var left: Self.Value, var right: Self.Value) -> Self.Value",
+      "summary": "Concatenate through ListMonoid, preserving non-emptiness."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The element or accumulated error type, including its origins.",
+     "inferred": false,
+     "name": "T",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/non_empty",
+   "signature": "struct NonEmptyListSemigroup[T: Movable & Deinitable](Semigroup)",
+   "summary": "Ordered concatenation of non-empty lists, moving every element.",
+   "traits": [
+    "Semigroup"
+   ]
+  },
   "algebra.OptionalFamily": {
    "aliases": [
     {
@@ -15398,6 +15707,190 @@
     "Copyable"
    ]
   },
+  "data.NonEmptyList": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "IteratorOwnedType"
+    }
+   ],
+   "description": "Construct from a first value and an optional tail, or use `from_list` to\ncheck an existing List. The latter and `into_list` transfer the existing\nbuffer without copying elements. There is no empty constructor or removal\noperation; filter through NonEmptyListFamily returns a possibly empty List.\nCopying requires Copyable elements. Consuming iteration uses List's own\niterator, including destruction of an unvisited suffix.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "__init__": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The sole element, moved in, including any mutable borrowed origin.",
+        "name": "first",
+        "type": "Self.T",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": null,
+      "signature": "def __init__(out self, var first: Self.T)",
+      "summary": "Construct a singleton without creating a second origin-bearing input."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The first element, moved in.",
+        "name": "first",
+        "type": "Self.T",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The remaining elements, consumed in order.",
+        "name": "rest",
+        "type": "List[Self.T]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": null,
+      "signature": "def __init__(out self, var first: Self.T, var rest: List[Self.T])",
+      "summary": "Construct a first element followed by the supplied tail."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The source List, consumed even when empty.",
+        "name": "values",
+        "type": "List[Self.T]",
+        "variadic": false
+       }
+      ],
+      "description": "The keyword values distinguishes checking a List from storing one as\nthe sole payload of a NonEmptyList[List[T]].",
+      "error": "Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "Error if the List is empty. Use from_list for an Optional instead.",
+      "returns": null,
+      "signature": "def __init__(out self, *, var values: List[Self.T]) raises",
+      "summary": "Check and consume a native List, retaining its allocation."
+     }
+    ],
+    "__iter__": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An iterator moving each element once, in order.",
+       "type": "Self.IteratorOwnedType"
+      },
+      "signature": "def __iter__(var self) -> Self.IteratorOwnedType",
+      "summary": "Consume the collection into its native List iterator."
+     }
+    ],
+    "__len__": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The native List length.",
+       "type": "Int"
+      },
+      "signature": "def __len__(self) -> Int",
+      "summary": "Return the number of elements, always at least one."
+     }
+    ],
+    "first": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A reference to the first element; no payload is copied.",
+       "type": "ref[self._values[0]] Self.T"
+      },
+      "signature": "def first(ref self) -> ref[self._values[0]] Self.T",
+      "summary": "Borrow the guaranteed first element with the native List origin."
+     }
+    ],
+    "from_list": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The source List; its elements and buffer are moved.",
+        "name": "values",
+        "type": "List[Self.T]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A present NonEmptyList, or None for an empty List.",
+       "type": "Optional[Self]"
+      },
+      "signature": "def from_list(var values: List[Self.T]) -> Optional[Self]",
+      "summary": "Check whether a consumed List contains a first element."
+     }
+    ],
+    "into_list": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The native List, with the same order and element origins.",
+       "type": "List[Self.T]"
+      },
+      "signature": "def into_list(deinit self) -> List[Self.T]",
+      "summary": "Transfer the buffer into an ordinary List in constant time."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The element type, including any borrowed origins.",
+     "inferred": false,
+     "name": "T",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "data/non_empty_list",
+   "signature": "struct NonEmptyList[T: Movable & Deinitable](Movable, Copyable where conforms_to(T, Copyable), IterableOwned, Sized)",
+   "summary": "A native List whose supported constructors require at least one element.",
+   "traits": [
+    "Copyable",
+    "IterableOwned",
+    "Sized"
+   ]
+  },
   "data.Ok": {
    "aliases": [],
    "description": "It stays distinct from `Err[T]` even when the two payload types are equal.",
@@ -15500,38 +15993,6 @@
       "returns": null,
       "signature": "def __init__(out self, var error: Err[Self.E])",
       "summary": "An `Err` converts to a Result wherever the Result type is known."
-     }
-    ],
-    "ap": [
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "The already evaluated carrier of callback arguments, consumed.",
-        "name": "values",
-        "type": "W",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "downcast[Self.T, UnaryContract & Movable & Deinitable].Error",
-      "parameters": [
-       {
-        "description": "The second carrier type, including its origins.",
-        "inferred": false,
-        "name": "W",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       }
-      ],
-      "raises": true,
-      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
-      "returns": {
-       "doc": "The carrier of callback results. List applies each callback to each value in function-major order; Optional and Result invoke at most once.",
-       "type": "Result[downcast[Self.T, UnaryContract & Movable & Deinitable].Out, Self.E]"
-      },
-      "signature": "def ap[W: Movable & Deinitable](deinit self, var values: W) raises downcast[Self.T, UnaryContract & Movable & Deinitable].Error -> Result[downcast[Self.T, UnaryContract & Movable & Deinitable].Out, Self.E] where conforms_to(Self.T, UnaryContract) and W == Result[downcast[Self.T, UnaryContract & Movable & Deinitable].Arg, Self.E]",
-      "summary": "Apply the callbacks in this carrier to an already evaluated carrier of arguments."
      }
     ],
     "attempt_tap": [
@@ -17814,677 +18275,6 @@
       "summary": "On success, call a zero-argument factory and return its Result."
      }
     ],
-    "if_effect": [
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "The branch factory, consumed; invoked only for its selected Bool outcome.",
-        "name": "on_true",
-        "type": "L",
-        "variadic": false
-       },
-       {
-        "convention": "var",
-        "description": "The branch factory, consumed; invoked only for its selected Bool outcome.",
-        "name": "on_false",
-        "type": "R",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]]",
-      "parameters": [
-       {
-        "description": "The true-branch factory, retaining its native error and receiver mode.",
-        "inferred": true,
-        "name": "L",
-        "type": "ThunkContract & Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "The false-branch factory, retaining its native error and receiver mode.",
-        "inferred": true,
-        "name": "R",
-        "type": "ThunkContract & Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "The exact construction error for generic forwarding; checked without converting errors.",
-        "inferred": false,
-        "name": "X",
-        "type": "AnyType",
-        "variadic": false
-       }
-      ],
-      "raises": true,
-      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
-      "returns": {
-       "doc": "The selected branch effect; absence or failure in the condition skips both factories.",
-       "type": "ResultFamily[Self.E].Bound[Result[Self.T, Self.E], _IfEffect[ResultFamily[Self.E], L, R]]"
-      },
-      "signature": "def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] -> ResultFamily[Self.E].Bound[Result[Self.T, Self.E], _IfEffect[ResultFamily[Self.E], L, R]] where Self.T == Bool and ResultFamily[Self.E].Element[L.Out] == ResultFamily[Self.E].Element[R.Out] and _ErrorCompatible[_EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]], ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] and _ResultCarrierCompatible[ResultFamily[Self.E], Result[Self.T, Self.E]] and _ResultCarrierCompatible[ResultFamily[Self.E], L.Out] and _ResultCarrierCompatible[ResultFamily[Self.E], R.Out]",
-      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "on_true",
-        "type": "L",
-        "variadic": false
-       },
-       {
-        "convention": "ref[q]",
-        "description": "",
-        "name": "on_false",
-        "type": "R",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[L.Out, W], L.Error]]]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "L",
-        "type": "ThunkContract & Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "W",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "q",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "R",
-        "type": "_Thunk[W]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "X",
-        "type": "AnyType",
-        "variadic": false
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Bound[Result[Self.T, Self.E], _IfEffect[ResultFamily[Self.E], L, _NativeBranchRight[W, Never, R, False, q]]]"
-      },
-      "signature": "def if_effect[L: ThunkContract & Movable & Deinitable, W: Movable & Deinitable, q: ImmOrigin, //, R: _Thunk[W], X: AnyType = _InferError](deinit self, var on_true: L, ref[q] on_false: R) raises _EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[L.Out, W], L.Error]]] -> ResultFamily[Self.E].Bound[Result[Self.T, Self.E], _IfEffect[ResultFamily[Self.E], L, _NativeBranchRight[W, Never, R, False, q]]] where Self.T == Bool and ResultFamily[Self.E].Element[L.Out] == ResultFamily[Self.E].Element[W] and _ErrorCompatible[_EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[L.Out, W], L.Error]]], ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[L.Out, W], L.Error]]] and _ResultCarrierCompatible[ResultFamily[Self.E], Result[Self.T, Self.E]] and _ResultCarrierCompatible[ResultFamily[Self.E], L.Out] and _ResultCarrierCompatible[ResultFamily[Self.E], W]",
-      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "on_true",
-        "type": "L",
-        "variadic": false
-       },
-       {
-        "convention": "ref[q]",
-        "description": "",
-        "name": "on_false",
-        "type": "R",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[L.Out, W], _CommonError[L.Error, D]]]]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "L",
-        "type": "ThunkContract & Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "W",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "q",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "D",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "R",
-        "type": "_RaisingThunk[W, D]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "X",
-        "type": "AnyType",
-        "variadic": false
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Bound[Result[Self.T, Self.E], _IfEffect[ResultFamily[Self.E], L, _NativeBranchRight[W, D, R, True, q]]]"
-      },
-      "signature": "def if_effect[L: ThunkContract & Movable & Deinitable, W: Movable & Deinitable, q: ImmOrigin, //, D: Movable & Deinitable, R: _RaisingThunk[W, D], X: AnyType = _InferError](deinit self, var on_true: L, ref[q] on_false: R) raises _EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> ResultFamily[Self.E].Bound[Result[Self.T, Self.E], _IfEffect[ResultFamily[Self.E], L, _NativeBranchRight[W, D, R, True, q]]] where Self.T == Bool and ResultFamily[Self.E].Element[L.Out] == ResultFamily[Self.E].Element[W] and _ErrorCompatible[_EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[L.Out, W], _CommonError[L.Error, D]]]], ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _ResultCarrierCompatible[ResultFamily[Self.E], Result[Self.T, Self.E]] and _ResultCarrierCompatible[ResultFamily[Self.E], L.Out] and _ResultCarrierCompatible[ResultFamily[Self.E], W]",
-      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
-     },
-     {
-      "args": [
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "on_true",
-        "type": "L",
-        "variadic": false
-       },
-       {
-        "convention": "var",
-        "description": "",
-        "name": "on_false",
-        "type": "R",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, R.Out], R.Error]]]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "U",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "ThunkContract & Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "L",
-        "type": "_Thunk[U]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "X",
-        "type": "AnyType",
-        "variadic": false
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Bound[Result[Self.T, Self.E], _IfEffect[ResultFamily[Self.E], _NativeBranchLeft[U, Never, L, False, o], R]]"
-      },
-      "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, R: ThunkContract & Movable & Deinitable, //, L: _Thunk[U], X: AnyType = _InferError](deinit self, ref[o] on_true: L, var on_false: R) raises _EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, R.Out], R.Error]]] -> ResultFamily[Self.E].Bound[Result[Self.T, Self.E], _IfEffect[ResultFamily[Self.E], _NativeBranchLeft[U, Never, L, False, o], R]] where Self.T == Bool and ResultFamily[Self.E].Element[U] == ResultFamily[Self.E].Element[R.Out] and _ErrorCompatible[_EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, R.Out], R.Error]]], ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, R.Out], R.Error]]] and _ResultCarrierCompatible[ResultFamily[Self.E], Result[Self.T, Self.E]] and _ResultCarrierCompatible[ResultFamily[Self.E], U] and _ResultCarrierCompatible[ResultFamily[Self.E], R.Out]",
-      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
-     },
-     {
-      "args": [
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "on_true",
-        "type": "L",
-        "variadic": false
-       },
-       {
-        "convention": "ref[q]",
-        "description": "",
-        "name": "on_false",
-        "type": "R",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, W], Never]]]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "U",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "W",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "q",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "L",
-        "type": "_Thunk[U]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "R",
-        "type": "_Thunk[W]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "X",
-        "type": "AnyType",
-        "variadic": false
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Bound[Result[Self.T, Self.E], _IfEffect[ResultFamily[Self.E], _NativeBranchLeft[U, Never, L, False, o], _NativeBranchRight[W, Never, R, False, q]]]"
-      },
-      "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, //, L: _Thunk[U], R: _Thunk[W], X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, W], Never]]] -> ResultFamily[Self.E].Bound[Result[Self.T, Self.E], _IfEffect[ResultFamily[Self.E], _NativeBranchLeft[U, Never, L, False, o], _NativeBranchRight[W, Never, R, False, q]]] where Self.T == Bool and ResultFamily[Self.E].Element[U] == ResultFamily[Self.E].Element[W] and _ErrorCompatible[_EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, W], Never]]], ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, W], Never]]] and _ResultCarrierCompatible[ResultFamily[Self.E], Result[Self.T, Self.E]] and _ResultCarrierCompatible[ResultFamily[Self.E], U] and _ResultCarrierCompatible[ResultFamily[Self.E], W]",
-      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
-     },
-     {
-      "args": [
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "on_true",
-        "type": "L",
-        "variadic": false
-       },
-       {
-        "convention": "ref[q]",
-        "description": "",
-        "name": "on_false",
-        "type": "R",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, W], D]]]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "U",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "W",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "q",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "L",
-        "type": "_Thunk[U]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "D",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "R",
-        "type": "_RaisingThunk[W, D]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "X",
-        "type": "AnyType",
-        "variadic": false
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Bound[Result[Self.T, Self.E], _IfEffect[ResultFamily[Self.E], _NativeBranchLeft[U, Never, L, False, o], _NativeBranchRight[W, D, R, True, q]]]"
-      },
-      "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, //, L: _Thunk[U], D: Movable & Deinitable, R: _RaisingThunk[W, D], X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, W], D]]] -> ResultFamily[Self.E].Bound[Result[Self.T, Self.E], _IfEffect[ResultFamily[Self.E], _NativeBranchLeft[U, Never, L, False, o], _NativeBranchRight[W, D, R, True, q]]] where Self.T == Bool and ResultFamily[Self.E].Element[U] == ResultFamily[Self.E].Element[W] and _ErrorCompatible[_EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, W], D]]], ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, W], D]]] and _ResultCarrierCompatible[ResultFamily[Self.E], Result[Self.T, Self.E]] and _ResultCarrierCompatible[ResultFamily[Self.E], U] and _ResultCarrierCompatible[ResultFamily[Self.E], W]",
-      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
-     },
-     {
-      "args": [
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "on_true",
-        "type": "L",
-        "variadic": false
-       },
-       {
-        "convention": "var",
-        "description": "",
-        "name": "on_false",
-        "type": "R",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, R.Out], _CommonError[Y, R.Error]]]]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "U",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "ThunkContract & Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Y",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "L",
-        "type": "_RaisingThunk[U, Y]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "X",
-        "type": "AnyType",
-        "variadic": false
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Bound[Result[Self.T, Self.E], _IfEffect[ResultFamily[Self.E], _NativeBranchLeft[U, Y, L, True, o], R]]"
-      },
-      "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, R: ThunkContract & Movable & Deinitable, //, Y: Movable & Deinitable, L: _RaisingThunk[U, Y], X: AnyType = _InferError](deinit self, ref[o] on_true: L, var on_false: R) raises _EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> ResultFamily[Self.E].Bound[Result[Self.T, Self.E], _IfEffect[ResultFamily[Self.E], _NativeBranchLeft[U, Y, L, True, o], R]] where Self.T == Bool and ResultFamily[Self.E].Element[U] == ResultFamily[Self.E].Element[R.Out] and _ErrorCompatible[_EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, R.Out], _CommonError[Y, R.Error]]]], ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _ResultCarrierCompatible[ResultFamily[Self.E], Result[Self.T, Self.E]] and _ResultCarrierCompatible[ResultFamily[Self.E], U] and _ResultCarrierCompatible[ResultFamily[Self.E], R.Out]",
-      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
-     },
-     {
-      "args": [
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "on_true",
-        "type": "L",
-        "variadic": false
-       },
-       {
-        "convention": "ref[q]",
-        "description": "",
-        "name": "on_false",
-        "type": "R",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, W], Y]]]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "U",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "W",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "q",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Y",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "L",
-        "type": "_RaisingThunk[U, Y]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "R",
-        "type": "_Thunk[W]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "X",
-        "type": "AnyType",
-        "variadic": false
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Bound[Result[Self.T, Self.E], _IfEffect[ResultFamily[Self.E], _NativeBranchLeft[U, Y, L, True, o], _NativeBranchRight[W, Never, R, False, q]]]"
-      },
-      "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, L: _RaisingThunk[U, Y], R: _Thunk[W], X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, W], Y]]] -> ResultFamily[Self.E].Bound[Result[Self.T, Self.E], _IfEffect[ResultFamily[Self.E], _NativeBranchLeft[U, Y, L, True, o], _NativeBranchRight[W, Never, R, False, q]]] where Self.T == Bool and ResultFamily[Self.E].Element[U] == ResultFamily[Self.E].Element[W] and _ErrorCompatible[_EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, W], Y]]], ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, W], Y]]] and _ResultCarrierCompatible[ResultFamily[Self.E], Result[Self.T, Self.E]] and _ResultCarrierCompatible[ResultFamily[Self.E], U] and _ResultCarrierCompatible[ResultFamily[Self.E], W]",
-      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
-     },
-     {
-      "args": [
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "on_true",
-        "type": "L",
-        "variadic": false
-       },
-       {
-        "convention": "ref[q]",
-        "description": "",
-        "name": "on_false",
-        "type": "R",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, W], _CommonError[Y, D]]]]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "U",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "W",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "q",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Y",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "L",
-        "type": "_RaisingThunk[U, Y]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "D",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "R",
-        "type": "_RaisingThunk[W, D]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "X",
-        "type": "AnyType",
-        "variadic": false
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Bound[Result[Self.T, Self.E], _IfEffect[ResultFamily[Self.E], _NativeBranchLeft[U, Y, L, True, o], _NativeBranchRight[W, D, R, True, q]]]"
-      },
-      "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, L: _RaisingThunk[U, Y], D: Movable & Deinitable, R: _RaisingThunk[W, D], X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, W], _CommonError[Y, D]]]] -> ResultFamily[Self.E].Bound[Result[Self.T, Self.E], _IfEffect[ResultFamily[Self.E], _NativeBranchLeft[U, Y, L, True, o], _NativeBranchRight[W, D, R, True, q]]] where Self.T == Bool and ResultFamily[Self.E].Element[U] == ResultFamily[Self.E].Element[W] and _ErrorCompatible[_EntryError[X, ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, W], _CommonError[Y, D]]]], ResultFamily[Self.E].BindError[Result[Self.T, Self.E], _ErrorProbe[Bool, ResultFamily[Self.E]._Joined[U, W], _CommonError[Y, D]]]] and _ResultCarrierCompatible[ResultFamily[Self.E], Result[Self.T, Self.E]] and _ResultCarrierCompatible[ResultFamily[Self.E], U] and _ResultCarrierCompatible[ResultFamily[Self.E], W]",
-      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
-     }
-    ],
     "is_err": [
      {
       "args": [],
@@ -18665,189 +18455,6 @@
       },
       "signature": "def map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) raises F.Error -> Result[F.Out, Self.E] where F.Arg == Self.T",
       "summary": "Transform the success value with a library unary callback."
-     }
-    ],
-    "map2": [
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "The already evaluated second carrier, consumed. Constructing it is not deferred by this call.",
-        "name": "other",
-        "type": "W",
-        "variadic": false
-       },
-       {
-        "convention": "var",
-        "description": "The callback, consumed; calls follow the operation's evaluation order.",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "F.Error",
-      "parameters": [
-       {
-        "description": "The callback type, retaining its receiver, captures and error contract.",
-        "inferred": true,
-        "name": "F",
-        "type": "BinaryContract & Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "The second carrier type, including its origins.",
-        "inferred": true,
-        "name": "W",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       }
-      ],
-      "raises": true,
-      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
-      "returns": {
-       "doc": "The combined carrier; Result keeps the first stored error, Optional requires both values, and List produces a Cartesian product in left-major order.",
-       "type": "Result[F.Out, Self.E]"
-      },
-      "signature": "def map2[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable, //](deinit self, var other: W, var function: F) raises F.Error -> Result[F.Out, Self.E] where Self.T == F.First and W == Result[F.Second, Self.E]",
-      "summary": "Combine two already evaluated carriers, following their Applicative semantics."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "other",
-        "type": "Result[B, Self.E]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "Never",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "B",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_Binary[A, B, R]",
-        "variadic": false
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "Result[R, Self.E]"
-      },
-      "signature": "def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Binary[A, B, R]](deinit self, var other: Result[B, Self.E], ref[o] function: F) raises Never -> Result[R, Self.E] where Self.T == A",
-      "summary": "Combine two already evaluated carriers, following their Applicative semantics."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "other",
-        "type": "Result[B, Self.E]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "X",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "B",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "X",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_RaisingBinary[A, B, R, X]",
-        "variadic": false
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "Result[R, Self.E]"
-      },
-      "signature": "def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X]](deinit self, var other: Result[B, Self.E], ref[o] function: F) raises X -> Result[R, Self.E] where Self.T == A",
-      "summary": "Combine two already evaluated carriers, following their Applicative semantics."
      }
     ],
     "map_both": [
@@ -19569,1540 +19176,6 @@
       },
       "signature": "def map_err[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) raises F.Error -> Result[Self.T, F.Out] where F.Arg == Self.E",
       "summary": "Transform the error with a library unary callback."
-     }
-    ],
-    "map_n": [
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "The already evaluated additional operands, consumed.",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "var",
-        "description": "The callback, consumed; native callbacks are borrowed.",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "Native callbacks take one argument per operand, from one to eight.\nLibrary Unary callbacks consume the whole tuple in their receiver mode.",
-      "error": "F.Error",
-      "parameters": [
-       {
-        "description": "The tuple callback, retaining its exact argument, result and error.",
-        "inferred": false,
-        "name": "F",
-        "type": "UnaryContract & Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "The exact additional carrier types, including origins.",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "The exact callback or family construction error, without conversion.",
-      "returns": {
-       "doc": "The family of callback results; absence or failure skips the callback.\nList materializes the Cartesian tuples before mapping them in order.",
-       "type": "ResultFamily[Self.E].Pure[F.Out]"
-      },
-      "signature": "def map_n[F: UnaryContract & Movable & Deinitable, *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], var function: F) raises F.Error -> ResultFamily[Self.E].Pure[F.Out] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and F.Arg == _ProductRun[ResultFamily[Self.E], Self, *Ws].Payload",
-      "summary": "Combine operands, then map a callback over each flat tuple of payloads."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "Never",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_Unary[A, R]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Pure[R]"
-      },
-      "signature": "def map_n[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises Never -> ResultFamily[Self.E].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Ws.length == 0 and ResultFamily[Self.E].Element[Self] == A",
-      "summary": "Combine 1 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "X",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "X",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_RaisingUnary[A, R, X]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Pure[R]"
-      },
-      "signature": "def map_n[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, F: _RaisingUnary[A, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises X -> ResultFamily[Self.E].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Ws.length == 0 and ResultFamily[Self.E].Element[Self] == A",
-      "summary": "Combine 1 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "Never",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "B",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_Binary[A, B, R]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Pure[R]"
-      },
-      "signature": "def map_n[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Binary[A, B, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises Never -> ResultFamily[Self.E].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Ws.length == 1 and ResultFamily[Self.E].Element[Self] == A and ResultFamily[Self.E].Element[Ws[0]] == B",
-      "summary": "Combine 2 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "X",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "B",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "X",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_RaisingBinary[A, B, R, X]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Pure[R]"
-      },
-      "signature": "def map_n[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises X -> ResultFamily[Self.E].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Ws.length == 1 and ResultFamily[Self.E].Element[Self] == A and ResultFamily[Self.E].Element[Ws[0]] == B",
-      "summary": "Combine 2 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "Never",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_Nary3[A0, A1, A2, R]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Pure[R]"
-      },
-      "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Nary3[A0, A1, A2, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises Never -> ResultFamily[Self.E].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Ws.length == 2 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2",
-      "summary": "Combine 3 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "X",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "X",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_RaisingNary3[A0, A1, A2, R, X]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Pure[R]"
-      },
-      "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, F: _RaisingNary3[A0, A1, A2, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises X -> ResultFamily[Self.E].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Ws.length == 2 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2",
-      "summary": "Combine 3 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "Never",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A3",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_Nary4[A0, A1, A2, A3, R]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Pure[R]"
-      },
-      "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Nary4[A0, A1, A2, A3, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises Never -> ResultFamily[Self.E].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Ws.length == 3 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and ResultFamily[Self.E].Element[Ws[2]] == A3",
-      "summary": "Combine 4 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "X",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A3",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "X",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_RaisingNary4[A0, A1, A2, A3, R, X]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Pure[R]"
-      },
-      "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, F: _RaisingNary4[A0, A1, A2, A3, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises X -> ResultFamily[Self.E].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Ws.length == 3 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and ResultFamily[Self.E].Element[Ws[2]] == A3",
-      "summary": "Combine 4 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "Never",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A3",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A4",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_Nary5[A0, A1, A2, A3, A4, R]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Pure[R]"
-      },
-      "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Nary5[A0, A1, A2, A3, A4, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises Never -> ResultFamily[Self.E].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Ws.length == 4 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and ResultFamily[Self.E].Element[Ws[2]] == A3 and ResultFamily[Self.E].Element[Ws[3]] == A4",
-      "summary": "Combine 5 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "X",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A3",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A4",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "X",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_RaisingNary5[A0, A1, A2, A3, A4, R, X]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Pure[R]"
-      },
-      "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, F: _RaisingNary5[A0, A1, A2, A3, A4, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises X -> ResultFamily[Self.E].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Ws.length == 4 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and ResultFamily[Self.E].Element[Ws[2]] == A3 and ResultFamily[Self.E].Element[Ws[3]] == A4",
-      "summary": "Combine 5 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "Never",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A3",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A4",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A5",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_Nary6[A0, A1, A2, A3, A4, A5, R]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Pure[R]"
-      },
-      "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Nary6[A0, A1, A2, A3, A4, A5, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises Never -> ResultFamily[Self.E].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Ws.length == 5 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and ResultFamily[Self.E].Element[Ws[2]] == A3 and ResultFamily[Self.E].Element[Ws[3]] == A4 and ResultFamily[Self.E].Element[Ws[4]] == A5",
-      "summary": "Combine 6 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "X",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A3",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A4",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A5",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "X",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_RaisingNary6[A0, A1, A2, A3, A4, A5, R, X]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Pure[R]"
-      },
-      "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, F: _RaisingNary6[A0, A1, A2, A3, A4, A5, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises X -> ResultFamily[Self.E].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Ws.length == 5 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and ResultFamily[Self.E].Element[Ws[2]] == A3 and ResultFamily[Self.E].Element[Ws[3]] == A4 and ResultFamily[Self.E].Element[Ws[4]] == A5",
-      "summary": "Combine 6 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "Never",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A3",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A4",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A5",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A6",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_Nary7[A0, A1, A2, A3, A4, A5, A6, R]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Pure[R]"
-      },
-      "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Nary7[A0, A1, A2, A3, A4, A5, A6, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises Never -> ResultFamily[Self.E].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Ws.length == 6 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and ResultFamily[Self.E].Element[Ws[2]] == A3 and ResultFamily[Self.E].Element[Ws[3]] == A4 and ResultFamily[Self.E].Element[Ws[4]] == A5 and ResultFamily[Self.E].Element[Ws[5]] == A6",
-      "summary": "Combine 7 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "X",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A3",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A4",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A5",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A6",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "X",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_RaisingNary7[A0, A1, A2, A3, A4, A5, A6, R, X]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Pure[R]"
-      },
-      "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, F: _RaisingNary7[A0, A1, A2, A3, A4, A5, A6, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises X -> ResultFamily[Self.E].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Ws.length == 6 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and ResultFamily[Self.E].Element[Ws[2]] == A3 and ResultFamily[Self.E].Element[Ws[3]] == A4 and ResultFamily[Self.E].Element[Ws[4]] == A5 and ResultFamily[Self.E].Element[Ws[5]] == A6",
-      "summary": "Combine 7 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "Never",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A3",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A4",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A5",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A6",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A7",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_Nary8[A0, A1, A2, A3, A4, A5, A6, A7, R]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Pure[R]"
-      },
-      "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Nary8[A0, A1, A2, A3, A4, A5, A6, A7, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises Never -> ResultFamily[Self.E].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Ws.length == 7 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and ResultFamily[Self.E].Element[Ws[2]] == A3 and ResultFamily[Self.E].Element[Ws[3]] == A4 and ResultFamily[Self.E].Element[Ws[4]] == A5 and ResultFamily[Self.E].Element[Ws[5]] == A6 and ResultFamily[Self.E].Element[Ws[6]] == A7",
-      "summary": "Combine 8 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "X",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A3",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A4",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A5",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A6",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A7",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "X",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_RaisingNary8[A0, A1, A2, A3, A4, A5, A6, A7, R, X]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ResultFamily[Self.E].Pure[R]"
-      },
-      "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, F: _RaisingNary8[A0, A1, A2, A3, A4, A5, A6, A7, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises X -> ResultFamily[Self.E].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Ws.length == 7 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and ResultFamily[Self.E].Element[Ws[2]] == A3 and ResultFamily[Self.E].Element[Ws[3]] == A4 and ResultFamily[Self.E].Element[Ws[4]] == A5 and ResultFamily[Self.E].Element[Ws[5]] == A6 and ResultFamily[Self.E].Element[Ws[6]] == A7",
-      "summary": "Combine 8 operands and call the native callback with separate arguments."
      }
     ],
     "or_else": [
@@ -21908,1836 +19981,6 @@
       },
       "signature": "def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X], Y: Movable & Deinitable, G: _RaisingUnary[Q, S, Y]](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[X, Y] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Result[Self.T, Self.E]",
       "summary": "Continue a matching stored error with a Result."
-     }
-    ],
-    "par_map_n": [
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "The already evaluated additional operands, consumed.",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "var",
-        "description": "The callback, consumed; native callbacks are borrowed.",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "Native callbacks take one argument per operand, from one to eight.\nLibrary Unary callbacks consume the whole tuple in their receiver mode.",
-      "error": "(_CommonError[S.Error, F.Error] if Ws.length > 0 else F.Error)",
-      "parameters": [
-       {
-        "description": "The tuple callback, retaining its exact argument, result and error.",
-        "inferred": true,
-        "name": "F",
-        "type": "UnaryContract & Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "The error Semigroup; inferred list errors concatenate by default.",
-        "inferred": false,
-        "name": "S",
-        "type": "Semigroup",
-        "variadic": false
-       },
-       {
-        "description": "The exact additional carrier types, including origins.",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "The exact callback or family construction error, without conversion.",
-      "returns": {
-       "doc": "A Result of the callback output, or all stored errors combined in\nreceiver-first order. The callback runs once only if every input is Ok.",
-       "type": "ValidationFamily[S].Pure[F.Out]"
-      },
-      "signature": "def par_map_n[F: UnaryContract & Movable & Deinitable, //, S: Semigroup, *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], var function: F) raises (_CommonError[S.Error, F.Error] if Ws.length > 0 else F.Error) -> ValidationFamily[S].Pure[F.Out] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Self.E == S.Value and (_ErrorCompatible[_CommonError[S.Error, F.Error], F.Error] if Ws.length > 0 else True) and F.Arg == _ProductRun[ResultFamily[Self.E], Self, *Ws].Payload",
-      "summary": "Combine independent Results, accumulating their stored errors in order."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "The already evaluated additional operands, consumed.",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "var",
-        "description": "The callback, consumed; native callbacks are borrowed.",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "Native callbacks take one argument per operand, from one to eight.\nLibrary Unary callbacks consume the whole tuple in their receiver mode.",
-      "error": "(_CommonError[_ListErrors[Self].Error, F.Error] if Ws.length > 0 else F.Error)",
-      "parameters": [
-       {
-        "description": "The tuple callback, retaining its exact argument, result and error.",
-        "inferred": false,
-        "name": "F",
-        "type": "UnaryContract & Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "The exact additional carrier types, including origins.",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "The exact callback or family construction error, without conversion.",
-      "returns": {
-       "doc": "A Result of the callback output, or all stored errors combined in\nreceiver-first order. The callback runs once only if every input is Ok.",
-       "type": "ValidationFamily[_ListErrors[Self]].Pure[F.Out]"
-      },
-      "signature": "def par_map_n[F: UnaryContract & Movable & Deinitable, *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], var function: F) raises (_CommonError[_ListErrors[Self].Error, F.Error] if Ws.length > 0 else F.Error) -> ValidationFamily[_ListErrors[Self]].Pure[F.Out] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Self.E == _ListErrors[Self].Value and (_ErrorCompatible[_CommonError[_ListErrors[Self].Error, F.Error], F.Error] if Ws.length > 0 else True) and F.Arg == _ProductRun[ResultFamily[Self.E], Self, *Ws].Payload",
-      "summary": "Combine independent Results, accumulating their stored errors in order."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "Never",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "F",
-        "type": "_Unary[A, R]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "S",
-        "type": "Semigroup",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ValidationFamily[S].Pure[R]"
-      },
-      "signature": "def par_map_n[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Unary[A, R], //, S: Semigroup = _ListErrors[Self], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises Never -> ValidationFamily[S].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Self.E == S.Value and Ws.length == 0 and ResultFamily[Self.E].Element[Self] == A",
-      "summary": "Combine 1 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "X",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "X",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "F",
-        "type": "_RaisingUnary[A, R, X]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "S",
-        "type": "Semigroup",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ValidationFamily[S].Pure[R]"
-      },
-      "signature": "def par_map_n[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingUnary[A, R, X], //, S: Semigroup = _ListErrors[Self], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises X -> ValidationFamily[S].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Self.E == S.Value and Ws.length == 0 and ResultFamily[Self.E].Element[Self] == A",
-      "summary": "Combine 1 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_CommonError[S.Error, Never]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "B",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "F",
-        "type": "_Binary[A, B, R]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "S",
-        "type": "Semigroup",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ValidationFamily[S].Pure[R]"
-      },
-      "signature": "def par_map_n[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Binary[A, B, R], //, S: Semigroup = _ListErrors[Self], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, Never] -> ValidationFamily[S].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Self.E == S.Value and Ws.length == 1 and ResultFamily[Self.E].Element[Self] == A and ResultFamily[Self.E].Element[Ws[0]] == B and _ErrorCompatible[_CommonError[S.Error, Never], Never]",
-      "summary": "Combine 2 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_CommonError[S.Error, X]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "B",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "X",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "F",
-        "type": "_RaisingBinary[A, B, R, X]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "S",
-        "type": "Semigroup",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ValidationFamily[S].Pure[R]"
-      },
-      "signature": "def par_map_n[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X], //, S: Semigroup = _ListErrors[Self], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, X] -> ValidationFamily[S].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Self.E == S.Value and Ws.length == 1 and ResultFamily[Self.E].Element[Self] == A and ResultFamily[Self.E].Element[Ws[0]] == B and _ErrorCompatible[_CommonError[S.Error, X], X]",
-      "summary": "Combine 2 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_CommonError[S.Error, Never]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "F",
-        "type": "_Nary3[A0, A1, A2, R]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "S",
-        "type": "Semigroup",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ValidationFamily[S].Pure[R]"
-      },
-      "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Nary3[A0, A1, A2, R], //, S: Semigroup = _ListErrors[Self], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, Never] -> ValidationFamily[S].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Self.E == S.Value and Ws.length == 2 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and _ErrorCompatible[_CommonError[S.Error, Never], Never]",
-      "summary": "Combine 3 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_CommonError[S.Error, X]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "X",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "F",
-        "type": "_RaisingNary3[A0, A1, A2, R, X]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "S",
-        "type": "Semigroup",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ValidationFamily[S].Pure[R]"
-      },
-      "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingNary3[A0, A1, A2, R, X], //, S: Semigroup = _ListErrors[Self], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, X] -> ValidationFamily[S].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Self.E == S.Value and Ws.length == 2 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and _ErrorCompatible[_CommonError[S.Error, X], X]",
-      "summary": "Combine 3 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_CommonError[S.Error, Never]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A3",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "F",
-        "type": "_Nary4[A0, A1, A2, A3, R]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "S",
-        "type": "Semigroup",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ValidationFamily[S].Pure[R]"
-      },
-      "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Nary4[A0, A1, A2, A3, R], //, S: Semigroup = _ListErrors[Self], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, Never] -> ValidationFamily[S].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Self.E == S.Value and Ws.length == 3 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and ResultFamily[Self.E].Element[Ws[2]] == A3 and _ErrorCompatible[_CommonError[S.Error, Never], Never]",
-      "summary": "Combine 4 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_CommonError[S.Error, X]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A3",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "X",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "F",
-        "type": "_RaisingNary4[A0, A1, A2, A3, R, X]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "S",
-        "type": "Semigroup",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ValidationFamily[S].Pure[R]"
-      },
-      "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingNary4[A0, A1, A2, A3, R, X], //, S: Semigroup = _ListErrors[Self], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, X] -> ValidationFamily[S].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Self.E == S.Value and Ws.length == 3 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and ResultFamily[Self.E].Element[Ws[2]] == A3 and _ErrorCompatible[_CommonError[S.Error, X], X]",
-      "summary": "Combine 4 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_CommonError[S.Error, Never]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A3",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A4",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "F",
-        "type": "_Nary5[A0, A1, A2, A3, A4, R]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "S",
-        "type": "Semigroup",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ValidationFamily[S].Pure[R]"
-      },
-      "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Nary5[A0, A1, A2, A3, A4, R], //, S: Semigroup = _ListErrors[Self], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, Never] -> ValidationFamily[S].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Self.E == S.Value and Ws.length == 4 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and ResultFamily[Self.E].Element[Ws[2]] == A3 and ResultFamily[Self.E].Element[Ws[3]] == A4 and _ErrorCompatible[_CommonError[S.Error, Never], Never]",
-      "summary": "Combine 5 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_CommonError[S.Error, X]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A3",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A4",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "X",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "F",
-        "type": "_RaisingNary5[A0, A1, A2, A3, A4, R, X]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "S",
-        "type": "Semigroup",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ValidationFamily[S].Pure[R]"
-      },
-      "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingNary5[A0, A1, A2, A3, A4, R, X], //, S: Semigroup = _ListErrors[Self], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, X] -> ValidationFamily[S].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Self.E == S.Value and Ws.length == 4 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and ResultFamily[Self.E].Element[Ws[2]] == A3 and ResultFamily[Self.E].Element[Ws[3]] == A4 and _ErrorCompatible[_CommonError[S.Error, X], X]",
-      "summary": "Combine 5 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_CommonError[S.Error, Never]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A3",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A4",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A5",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "F",
-        "type": "_Nary6[A0, A1, A2, A3, A4, A5, R]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "S",
-        "type": "Semigroup",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ValidationFamily[S].Pure[R]"
-      },
-      "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Nary6[A0, A1, A2, A3, A4, A5, R], //, S: Semigroup = _ListErrors[Self], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, Never] -> ValidationFamily[S].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Self.E == S.Value and Ws.length == 5 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and ResultFamily[Self.E].Element[Ws[2]] == A3 and ResultFamily[Self.E].Element[Ws[3]] == A4 and ResultFamily[Self.E].Element[Ws[4]] == A5 and _ErrorCompatible[_CommonError[S.Error, Never], Never]",
-      "summary": "Combine 6 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_CommonError[S.Error, X]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A3",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A4",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A5",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "X",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "F",
-        "type": "_RaisingNary6[A0, A1, A2, A3, A4, A5, R, X]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "S",
-        "type": "Semigroup",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ValidationFamily[S].Pure[R]"
-      },
-      "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingNary6[A0, A1, A2, A3, A4, A5, R, X], //, S: Semigroup = _ListErrors[Self], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, X] -> ValidationFamily[S].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Self.E == S.Value and Ws.length == 5 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and ResultFamily[Self.E].Element[Ws[2]] == A3 and ResultFamily[Self.E].Element[Ws[3]] == A4 and ResultFamily[Self.E].Element[Ws[4]] == A5 and _ErrorCompatible[_CommonError[S.Error, X], X]",
-      "summary": "Combine 6 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_CommonError[S.Error, Never]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A3",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A4",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A5",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A6",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "F",
-        "type": "_Nary7[A0, A1, A2, A3, A4, A5, A6, R]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "S",
-        "type": "Semigroup",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ValidationFamily[S].Pure[R]"
-      },
-      "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Nary7[A0, A1, A2, A3, A4, A5, A6, R], //, S: Semigroup = _ListErrors[Self], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, Never] -> ValidationFamily[S].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Self.E == S.Value and Ws.length == 6 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and ResultFamily[Self.E].Element[Ws[2]] == A3 and ResultFamily[Self.E].Element[Ws[3]] == A4 and ResultFamily[Self.E].Element[Ws[4]] == A5 and ResultFamily[Self.E].Element[Ws[5]] == A6 and _ErrorCompatible[_CommonError[S.Error, Never], Never]",
-      "summary": "Combine 7 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_CommonError[S.Error, X]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A3",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A4",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A5",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A6",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "X",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "F",
-        "type": "_RaisingNary7[A0, A1, A2, A3, A4, A5, A6, R, X]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "S",
-        "type": "Semigroup",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ValidationFamily[S].Pure[R]"
-      },
-      "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingNary7[A0, A1, A2, A3, A4, A5, A6, R, X], //, S: Semigroup = _ListErrors[Self], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, X] -> ValidationFamily[S].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Self.E == S.Value and Ws.length == 6 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and ResultFamily[Self.E].Element[Ws[2]] == A3 and ResultFamily[Self.E].Element[Ws[3]] == A4 and ResultFamily[Self.E].Element[Ws[4]] == A5 and ResultFamily[Self.E].Element[Ws[5]] == A6 and _ErrorCompatible[_CommonError[S.Error, X], X]",
-      "summary": "Combine 7 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_CommonError[S.Error, Never]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A3",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A4",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A5",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A6",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A7",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "F",
-        "type": "_Nary8[A0, A1, A2, A3, A4, A5, A6, A7, R]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "S",
-        "type": "Semigroup",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ValidationFamily[S].Pure[R]"
-      },
-      "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Nary8[A0, A1, A2, A3, A4, A5, A6, A7, R], //, S: Semigroup = _ListErrors[Self], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, Never] -> ValidationFamily[S].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Self.E == S.Value and Ws.length == 7 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and ResultFamily[Self.E].Element[Ws[2]] == A3 and ResultFamily[Self.E].Element[Ws[3]] == A4 and ResultFamily[Self.E].Element[Ws[4]] == A5 and ResultFamily[Self.E].Element[Ws[5]] == A6 and ResultFamily[Self.E].Element[Ws[6]] == A7 and _ErrorCompatible[_CommonError[S.Error, Never], Never]",
-      "summary": "Combine 8 operands and call the native callback with separate arguments."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       },
-       {
-        "convention": "ref[o]",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "_CommonError[S.Error, X]",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A0",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A1",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A2",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A3",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A4",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A5",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A6",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A7",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "o",
-        "type": "ImmOrigin",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "X",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "F",
-        "type": "_RaisingNary8[A0, A1, A2, A3, A4, A5, A6, A7, R, X]",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "S",
-        "type": "Semigroup",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "ValidationFamily[S].Pure[R]"
-      },
-      "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingNary8[A0, A1, A2, A3, A4, A5, A6, A7, R, X], //, S: Semigroup = _ListErrors[Self], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, X] -> ValidationFamily[S].Pure[R] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Self.E == S.Value and Ws.length == 7 and ResultFamily[Self.E].Element[Self] == A0 and ResultFamily[Self.E].Element[Ws[0]] == A1 and ResultFamily[Self.E].Element[Ws[1]] == A2 and ResultFamily[Self.E].Element[Ws[2]] == A3 and ResultFamily[Self.E].Element[Ws[3]] == A4 and ResultFamily[Self.E].Element[Ws[4]] == A5 and ResultFamily[Self.E].Element[Ws[5]] == A6 and ResultFamily[Self.E].Element[Ws[6]] == A7 and _ErrorCompatible[_CommonError[S.Error, X], X]",
-      "summary": "Combine 8 operands and call the native callback with separate arguments."
-     }
-    ],
-    "par_product_n": [
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "The tuple of already evaluated additional operands, consumed.",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "(S.Error if Ws.length > 0 else Never)",
-      "parameters": [
-       {
-        "description": "The error Semigroup; inferred list errors concatenate by default.",
-        "inferred": false,
-        "name": "S",
-        "type": "Semigroup",
-        "variadic": false
-       },
-       {
-        "description": "The exact additional carrier types, including origins.",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "The exact error-combination error; Never with no additional\noperands. Stored Result errors remain data.",
-      "returns": {
-       "doc": "A Result of a flat tuple in receiver-first order, or accumulated\nstored errors. No additional operands produces a one-element tuple.",
-       "type": "ValidationFamily[S].Pure[_ProductRun[ValidationFamily[S], Self, *Ws].Payload]"
-      },
-      "signature": "def par_product_n[S: Semigroup, *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws]) raises (S.Error if Ws.length > 0 else Never) -> ValidationFamily[S].Pure[_ProductRun[ValidationFamily[S], Self, *Ws].Payload] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Self.E == S.Value",
-      "summary": "Combine the receiver and additional operands into flat tuples."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "The tuple of already evaluated additional operands, consumed.",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "(_ListErrors[Self].Error if Ws.length > 0 else Never)",
-      "parameters": [
-       {
-        "description": "The exact additional carrier types, including origins.",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "The exact error-combination error; Never with no additional\noperands. Stored Result errors remain data.",
-      "returns": {
-       "doc": "A Result of a flat tuple in receiver-first order, or accumulated\nstored errors. No additional operands produces a one-element tuple.",
-       "type": "ValidationFamily[_ListErrors[Self]].Pure[_ProductRun[ValidationFamily[_ListErrors[Self]], Self, *Ws].Payload]"
-      },
-      "signature": "def par_product_n[*Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws]) raises (_ListErrors[Self].Error if Ws.length > 0 else Never) -> ValidationFamily[_ListErrors[Self]].Pure[_ProductRun[ValidationFamily[_ListErrors[Self]], Self, *Ws].Payload] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs and Self.E == _ListErrors[Self].Value",
-      "summary": "Combine the receiver and additional operands into flat tuples."
-     }
-    ],
-    "product": [
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "The already evaluated second carrier, consumed. Constructing it is not deferred by this call.",
-        "name": "other",
-        "type": "Result[U, Self.E]",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "",
-      "parameters": [
-       {
-        "description": "The constant or result payload type; repeated constants must be Copyable.",
-        "inferred": false,
-        "name": "U",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       }
-      ],
-      "raises": false,
-      "raises_doc": "",
-      "returns": {
-       "doc": "The carrier of pairs. List copies elements for its Cartesian product; Result and Optional move their payloads without copying.",
-       "type": "Result[Tuple[Self.T, U], Self.E]"
-      },
-      "signature": "def product[U: Movable & Deinitable](deinit self, var other: Result[U, Self.E]) -> Result[Tuple[Self.T, U], Self.E]",
-      "summary": "Combine two already evaluated carriers into pairs, following their Applicative semantics."
-     }
-    ],
-    "product_n": [
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "The tuple of already evaluated additional operands, consumed.",
-        "name": "others",
-        "type": "Tuple[*Ws]",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "Never",
-      "parameters": [
-       {
-        "description": "The exact additional carrier types, including origins.",
-        "inferred": false,
-        "name": "Ws",
-        "type": "Movable & Deinitable",
-        "variadic": true
-       }
-      ],
-      "raises": true,
-      "raises_doc": "The exact family construction error; stored Result errors remain data.",
-      "returns": {
-       "doc": "The family of flat tuples in receiver-first order. No additional\noperands produces one-element tuples. List uses Cartesian ordering.",
-       "type": "ResultFamily[Self.E].Pure[_ProductRun[ResultFamily[Self.E], Self, *Ws].Payload]"
-      },
-      "signature": "def product_n[*Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws]) raises Never -> ResultFamily[Self.E].Pure[_ProductRun[ResultFamily[Self.E], Self, *Ws].Payload] where _ProductRun[ResultFamily[Self.E], Self, *Ws].NativeInputs",
-      "summary": "Combine the receiver and additional operands into flat tuples."
      }
     ],
     "raise_on_err": [

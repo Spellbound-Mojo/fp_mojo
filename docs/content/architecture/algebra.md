@@ -230,7 +230,7 @@ share the same pairing implementation, with no additional family primitive.
 This gives List its per-branch copies and lets Optional, Result, Reader and
 State move single-use originals. The family's receiver selection preserves
 short circuits, transformer behavior and deferred timing. Result's direct
-methods share `_EffectRetain`; its error and whole-outcome observers then use
+methods share `callables._retention._Retain` with `_EffectRetain`; its error and whole-outcome observers then use
 the existing Result transformation to restore the appropriate constructor.
 
 Iter uses the same continuations through a private `_IteratorMap` Functor.
@@ -262,8 +262,9 @@ application primitive. The shared value
 thunk in `callables._transforms` supplies an already evaluated right operand;
 `map2_lazy` remains responsible for deferred operand construction.
 
-Result's combination primitive lives beside its owned transform
-primitive in `data._result`; `ResultFamily.map2_lazy` delegates to it. Native
+Result's combination and stored-error policies live in
+`algebra._result_accumulation`; `ResultFamily.map2_lazy` and ValidationFamily
+delegate to them. They use the owned transform primitive in `data._result`. Native
 binary callbacks are borrowed through `callables.native`, while library
 callbacks use the existing once/repeated receiver dispatch. Signature adapters
 are generated separately for native carriers and explicit families because
@@ -295,7 +296,7 @@ so it needs `Monad`, rather than independent Applicative accumulation.
 `any_effect` and `all_effect` use the same fold with a Bool accumulator and a
 borrowing predicate. Their live policy stops each branch at its decisive Bool.
 
-`algebra._monadic._bind_loop` owns source advancement, the live-branch probe
+`algebra.protocols._bind_loop` owns source advancement, the live-branch probe
 and dependent binding. The default `Monad._fold` delegates to this driver.
 It maps a probe over the accumulator carrier before pulling another element;
 failure or absence therefore ends the loop without another pull. After one

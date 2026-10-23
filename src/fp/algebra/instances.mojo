@@ -8,12 +8,12 @@ from std.iter import IterableOwned
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, Unary, BorrowCallable
 from fp.callables.invoke import RepeatableUnary, RepeatableBinary, call_once, call_repeated
 from fp.callables._receiver import _unary_once_as, _binary_once_as, _binary_repeated_as, _thunk_once_as
-from fp.data._result import Result, Ok, Err, _ResultType, _transform_result_owned, _result_map2
+from fp.data._result import Result, Ok, Err, _ResultType, _transform_result_owned
 from fp.iteration._advance import _next_optional
 from fp.iteration._terminal import _append
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
 from fp.callables._receiver import _unary_repeated_as
-from ._result_accumulation import _result_loop, _FirstError
+from ._result_accumulation import _result_map2, _result_loop, _FirstError
 from .filtering import _Select, _Keep
 from .protocols import (Applicative, ApplicativeError, Monad, Traversable, Filterable, FunctorFilter, _Lifting, _Accumulate, _Present, _Item, _iterator,
                         _next_item, _start_as, _combine_as, _map_accumulate, _Append)

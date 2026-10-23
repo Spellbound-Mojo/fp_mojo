@@ -66,7 +66,7 @@ def pvo_conveniences() raises:
     var success = ArcPointer(0)
     var errors = ArcPointer(0)
     comptime R = Result[PVOwned,List[PVOwned]]
-    var product = R(Ok(PVOwned(1,success))).par_product_n((R(Ok(PVOwned(2,success))),))
+    var product = piped(R(Ok(PVOwned(1,success)))).par_product_n((R(Ok(PVOwned(2,success))),)).get()
     assert_equal(product._ok().value[1].id,2)
     assert_equal(success[],0)
     _ = product^
@@ -103,7 +103,7 @@ def pvo_conveniences() raises:
     second.append(PVOwned(2,errors))
     var code = 0
     try:
-        _ = R(Err(first^)).par_product_n[PVOwnedMerge]((R(Err(second^)),R(Ok(PVOwned(9,success)))))
+        _ = piped(R(Err(first^))).par_product_n[PVOwnedMerge]((R(Err(second^)),R(Ok(PVOwned(9,success))))).get()
     except error:
         comptime assert type_of(error) == PVOwned
         code = error.id
@@ -137,7 +137,7 @@ def main() raises:
     pvo_traverse(success,errors,owners)
     assert_equal(errors[],2)
     comptime R=Result[PVOwned,List[PVOwned]]
-    var joined=R(Ok(PVOwned(1,success))).par_map_n((R(Ok(PVOwned(2,success))),),PVOwnedConstructor(PVOwned(3,owners)))
+    var joined=piped(R(Ok(PVOwned(1,success)))).par_map_n((R(Ok(PVOwned(2,success))),),PVOwnedConstructor(PVOwned(3,owners))).get()
     assert_equal(joined._ok().value,6)
     assert_equal(success[],5)
     assert_equal(owners[],2)
@@ -151,7 +151,7 @@ def main() raises:
     assert_equal(errors[],3)
     var code=0
     try:
-        _=R(Ok(PVOwned(2,success))).par_map_n((R(Ok(PVOwned(3,success))),),pvo_failure)
+        _=piped(R(Ok(PVOwned(2,success)))).par_map_n((R(Ok(PVOwned(3,success))),),pvo_failure).get()
     except error:
         comptime assert type_of(error)==PVOwned
         code=error.id
@@ -179,7 +179,7 @@ def main() raises:
     var right=List[PVOwned]()
     right.append(PVOwned(2,errors))
     try:
-        _=R(Err(left^)).par_map_n[PVOwnedMerge]((R(Err(right^)),R(Ok(PVOwned(3,success)))),pvo_three)
+        _=piped(R(Err(left^))).par_map_n[PVOwnedMerge]((R(Err(right^)),R(Ok(PVOwned(3,success)))),pvo_three).get()
     except error:
         comptime assert type_of(error)==PVOwned
         code=error.id

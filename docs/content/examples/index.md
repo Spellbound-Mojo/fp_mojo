@@ -89,3 +89,6 @@ compile them through source and precompiled package imports at O0 and O3 with
 |---|---|---|
 | `config_parser.mojo` | Parsing configuration lazily, collecting Results and validating with a fold that stops early | [Application tutorial](../tutorial/application.md#parse-and-validate-configuration) |
 | `job_router.mojo` | Routing a queue of commands with guarded, raising clauses, a context and `attempt` | [Application tutorial](../tutorial/application.md#route-commands-with-guarded-clauses) |
+
+The [non-empty validation example](../reference/data.md#non-empty-collections-and-validation)
+uses NonEmptyList for both accumulated errors and successful traversal shapes.

@@ -46,7 +46,7 @@ def efg_origins(anchor: List[Int]) raises:
     var result = fold_effect[OptionalFamily](last,Span(anchor),values^)
     assert_equal(result.take()[1],12)
     def choose_view() {ref anchor} -> Result[View,String]: return Ok(Span(anchor))
-    var chosen = Result[Bool,String](Ok(True)).if_effect(choose_view,choose_view).raise_on_err()
+    var chosen = piped(Result[Bool,String](Ok(True))).if_effect(choose_view,choose_view).get().raise_on_err()
     assert_equal(chosen[0],11)
 
 

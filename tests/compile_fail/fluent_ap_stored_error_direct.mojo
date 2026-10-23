@@ -7,5 +7,5 @@ def mismatch(left: List[Int],right: List[Int]):
     var function = as_unary(increment)
     var source = Result[type_of(function),Span[Int,origin_of(left)]](Ok(function^))
     var values = Result[Int,Span[Int,origin_of(right)]](Ok(1))
-    _ = source^.ap(values^)
+    _ = piped(source^).ap(values^).get()
 def main(): mismatch([1],[2])

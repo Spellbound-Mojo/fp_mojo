@@ -6,7 +6,7 @@ from fp.callables.protocols import (UnaryContract, Unary, MutableUnary, OnceUnar
 from ._stages import (_Plan, _Arity, _StageIn, _Classify, _SharedCapability, _MutableCapability,
     _OnceCapability, _Once, _check_stage, _stage_shared, _stage_mutable, _stage_once,
     _first_thunk_shared, _first_thunk_mut, _first_binary_shared, _first_binary_mut)
-from .pipeline import _PipelineRunner, _pipe_at
+from ._pipeline import _PipelineRunner, _pipe_at
 from fp.callables.native import _Thin0F, _Thin1F, _Thin2F
 
 from fp.callables.products import _OptionalCell as _Cell

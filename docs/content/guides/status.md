@@ -22,7 +22,7 @@ errors remain part of every operation's contract.
 
 | Pass | Scope | Status |
 |---|---|---|
-| 1 | Fluent `map2` and `product` on Piped and Result | Implemented |
+| 1 | Fluent `map2` and `product` on Piped, including Result carriers | Implemented |
 | 2 | `traverse_void` and `traverse_tap` for container and iterator pipelines | Implemented for the [documented source families](../reference/combinators.md#containers-and-capabilities) |
 | 3 | Selective recovery (`recover_if`, `or_else_if`), effectful error observation (`flat_tap_err`) | Implemented on Result and Piped |
 | 4 | `map_both`, `redeem`, `redeem_with`, whole-outcome observation (`attempt_tap`) | Implemented on Result and Piped |
@@ -40,6 +40,13 @@ errors remain part of every operation's contract.
 | 16 | Shared error observation (`tap_err`, `flat_tap_err`) | Implemented through ApplicativeError |
 | 17 | Shared success validation (`ensure`) | Implemented through Monad and ApplicativeError |
 | 18 | Shared outcome composition (`redeem`, `redeem_with`, `attempt_tap`) | Implemented with a fixed stored-error type |
+
+The acyclic layering contract is enforced by tooling. Algebra conveniences on
+Result now use `piped(result^)`; see the [migration](../architecture/data.md#migration-from-the-first-nightly-fluent-api).
+NonEmptyList, its concatenation Semigroup and its shape-preserving family are
+implemented; see [non-empty validation](../reference/data.md#non-empty-collections-and-validation).
+Success-with-warnings, public MTL capabilities, fallible stream transformations
+and composable Resource scopes remain subsequent slices.
 
 The approved combinator proposal is complete for the documented capability
 families. Shared operations derive from family primitives; no operation requires
@@ -87,11 +94,11 @@ that can represent absence. No additional per-container primitive is needed.
 Pass 6 uses one dependent fold driver for iterable sources and eager Monad
 targets; Reader and State defer it until `run`. Effectful predicates stop on
 the first decisive Bool in each branch. `if_effect` binds an effectful Bool
-to one of two factories and also chains directly on `Result[Bool, E]`.
+to one of two factories; use `piped(result^)` for a Result condition.
 Native raised errors stay separate from stored failures.
 
 Pass 7 adds `ap`, `map_n((second, third), combine)` and
-`product_n((second, third))` to Piped and Result. The receiver is the first
+`product_n((second, third))` to Piped, including Result carriers. The receiver is the first
 operand and products are flat tuples. All three share the existing Applicative
 primitives. Native callbacks take one to eight arguments; tuple-taking library
 callbacks and products are variadic for inferred List, Optional and Result.
@@ -109,7 +116,7 @@ Native raises still stop immediately, and ordinary Result composition keeps
 its short circuit behavior. Result combination and native accumulation share
 their existing execution owners.
 
-Pass 10 adds `par_product_n((second, third))` on Result and Piped holding
+Pass 10 adds `par_product_n((second, third))` on Piped holding
 Result, and `par_sequence()` on the same Piped and Iter sources as
 `par_traverse`. Products are variadic flat tuples; sequencing preserves source
 shape, stored error types and native origins. Both accept an explicit error

@@ -26,7 +26,7 @@ write `fp.match(...)`.
 | `fp.iteration` | Lazy adapters, scans, folds, reductions and predicate terminals over native iterators and owned collections | `adapters`, `folds`, `_terminal`, `_advance`, `_callbacks` |
 | `fp.control` | Functional `while_loop`, `fori_loop` and carry/output `scan` | `loops`, `scan`, `_loops` |
 | `fp.adt` | Algebraic and inductive data types: shared `Node`s and `Choice`s stored in place (`Data`, `Cases`, `Node`, `Choice`) | `data` |
-| `fp.data` | `Result`, `ControlFlow` and native-error bridges | `_result`, `result`, `control` |
+| `fp.data` | `Result`, `ControlFlow`, `NonEmptyList` and native-error bridges | `_result`, `result`, `control`, `non_empty_list` |
 | `fp.algebra` | Functor, Filterable, Applicative, Monad, Traversable and Monoid interfaces with native instances | `protocols`, `operations`, `filtering`, `instances`, `collections`, `_derived`, `monoids` |
 | `fp.effects` | Reader, State and Writer computations and the OptionalT, ResultT, ReaderT, StateT and WriterT transformers | `protocols`, `reader`, `state`, `writer`, `layers`, `operations`, `_adapt` |
 | `fp.matching` | `match` over data values, `Optional` and tuples, `rewrite` over `Node` values, `when` guards and `Next` | `matcher`, `clauses`, `_engine`, `_inline` |
@@ -51,7 +51,8 @@ Layer  Modules                         Builds on
        fp.adt (Data, Node, Choice)     Mojo
   2    fp.callables                    _internal
   3    functions (composition, etc.)   callables
-       fp.data (Result, ControlFlow)   callables, adt
+       fp.data (Result, ControlFlow)   callables, adt, composition
+       data.non_empty_list             std.List, std.iter
        fp.matching                     adt, _internal
   4    fp.iteration                    callables, data.control
        iteration.chaining              iteration adapters and folds
@@ -66,6 +67,12 @@ Layer  Modules                         Builds on
 Dependencies are tracked by module. For example, the Result carrier
 (`data._result`) sits below algebra, while the public `data.result` module
 implements `collect_results` by delegating to algebra's collection kernel.
+Algebra conveniences (`map2`, `product`, `ap`, `map_n`, `product_n`,
+`par_map_n`, `par_product_n`, `if_effect`) belong to `piped(result)`.
+Result itself retains native branch transformations, folds and error bridges.
+The dependency checks in `tests/tooling/test_module_layers.py` verify both the
+whole import DAG and the transitive leaf boundaries.
+
 The following rules keep the dependency graph acyclic:
 
 - `adt.data` depends only on Mojo itself. `Result` and `ControlFlow` build on
@@ -92,6 +99,10 @@ Higher packages compose that implementation and add only their own behavior.
 | Fixed-arity callback invocation mode | `Unary`/`Binary`/`Thunk` with `call_once` and `call_repeated`; error-adapting helpers in `callables._receiver` | Algebra instances, deferred effects, traversal, iteration and control callbacks, Result transformations, compositions |
 | Sequential consuming terminal loop | `iteration._terminal` with `data.ControlFlow` and `iteration._advance` | Folds, reductions, `collect_list`, `find`, `any`, `all` |
 | Iteration sources (an iterator as it is, or a consumed owned collection) | `iteration._advance` (`_Source`, `_source`) | Every public iteration entry point, and `flatten` for inner values |
+| Shared pipeline execution | `functions._pipeline` (`_PipelineRunner`, `_pipe_at`) | Composition and immediate pipelines; composition never imports pipeline integration |
+| Borrowing and retaining an owned payload | `callables._retention._Retain` with a finishing callback | Result adapters and `algebra._sequencing._EffectRetain` |
+| Result combination and error policies | `algebra._result_accumulation` | ResultFamily and ValidationFamily |
+| Non-empty shape | `data.non_empty_list` over native List storage | `algebra.non_empty` mapping, traversal, filtering and concatenation |
 | Native functions as library values | `callables.native` (`NativeUnary` through `as_unary`, `_NativeUnaryRef`, `_ThinFunction`, `_NativeBorrow`, one native call in `_call_native`) | Pipelines and compositions, algebra and effect callbacks, Result methods |
 | Eager payload traversal and accumulation | `algebra.protocols._map_accumulate` and `_Accumulate` | Identity traversal, List mapping, native collection adapters |
 | Native container mapping | Existing algebra instances and `algebra.collections` | `Piped.map`; explicit families retain their own semantics |

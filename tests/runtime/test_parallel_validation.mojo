@@ -98,27 +98,27 @@ struct PVSingle(OnceUnary, Defaultable):
 
 def pv_nary() raises:
     var calls = ArcPointer(0)
-    var result = pv_validate(1).par_map_n((pv_validate(2),pv_validate(3)), PVConstructor(calls))
+    var result = piped(pv_validate(1)).par_map_n((pv_validate(2),pv_validate(3)), PVConstructor(calls)).get()
     comptime assert type_of(result) == PVResult
     assert_equal(result._ok().value, 123)
     assert_equal(calls[], 1)
-    var invalid = pv_validate(-1).par_map_n((pv_validate(2),pv_validate(-3)), PVConstructor(calls))
+    var invalid = piped(pv_validate(-1)).par_map_n((pv_validate(2),pv_validate(-3)), PVConstructor(calls)).get()
     assert_equal(invalid._err().value, [String('-1'),String('-3')])
     assert_equal(calls[], 1)
-    assert_equal(pv_validate(1).par_map_n((pv_validate(2),pv_validate(3)), pv_three)._ok().value, 123)
-    assert_equal(pv_validate(1).par_map_n(Tuple(),pv_one)._ok().value, 2)
-    assert_equal(pv_validate(-1).par_map_n((pv_validate(-2),),pv_add)._err().value, [String('-1'),String('-2')])
-    assert_equal(pv_validate(-1).par_map_n((pv_validate(2),),pv_add)._err().value, [String('-1')])
-    assert_equal(pv_validate(1).par_map_n((pv_validate(-2),),pv_add)._err().value, [String('-2')])
+    assert_equal(piped(pv_validate(1)).par_map_n((pv_validate(2),pv_validate(3)), pv_three).get()._ok().value, 123)
+    assert_equal(piped(pv_validate(1)).par_map_n(Tuple(),pv_one).get()._ok().value, 2)
+    assert_equal(piped(pv_validate(-1)).par_map_n((pv_validate(-2),),pv_add).get()._err().value, [String('-1'),String('-2')])
+    assert_equal(piped(pv_validate(-1)).par_map_n((pv_validate(2),),pv_add).get()._err().value, [String('-1')])
+    assert_equal(piped(pv_validate(1)).par_map_n((pv_validate(-2),),pv_add).get()._err().value, [String('-2')])
     assert_equal(piped(pv_validate(-1)).par_map_n((pv_validate(-2),pv_validate(-3)),pv_three).get()._err().value,
                  [String('-1'),String('-2'),String('-3')])
     # The empty error list is a stored failure, not the neutral success.
-    var empty_error = PVResult(Err(List[String]())).par_map_n((pv_validate(2),),pv_add)
+    var empty_error = piped(PVResult(Err(List[String]()))).par_map_n((pv_validate(2),),pv_add).get()
     assert_true(empty_error.is_err())
     assert_equal(len(empty_error._err().value), 0)
     # Explicit policy preserves scalar errors; no list conversion is implicit.
     comptime R = Result[Int,String]
-    var joined = R(Err(String('a'))).par_map_n[PVJoin]((R(Ok(2)),R(Err(String('b')))),pv_three)
+    var joined = piped(R(Err(String('a')))).par_map_n[PVJoin]((R(Ok(2)),R(Err(String('b')))),pv_three).get()
     comptime assert type_of(joined) == R
     assert_equal(joined._err().value, 'ab')
     assert_equal(piped(R(Err(String('a')))).par_map_n[PVJoin]((R(Err(String('b'))),),pv_add).get()._err().value,'ab')
@@ -129,15 +129,15 @@ def pv_nary() raises:
                  combine[PVJoin](String('a'),combine[PVJoin](String('b'),String('c'))))
     var code = 0
     try:
-        _ = R(Err(String('a'))).par_map_n[PVFailJoin]((R(Err(String('bc'))),),pv_add)
+        _ = piped(R(Err(String('a')))).par_map_n[PVFailJoin]((R(Err(String('bc'))),),pv_add).get()
     except error:
         comptime assert type_of(error) == PVNativeFailure
         code = error.code
     assert_equal(code, 3)
-    assert_equal(pv_validate(1).par_map_n((pv_validate(2),pv_validate(3),pv_validate(4),pv_validate(5),pv_validate(6),pv_validate(7),pv_validate(8),pv_validate(9)),PVNine())._ok().value,10)
-    assert_equal(R(Ok(4)).par_map_n[PVFailJoin](Tuple(),PVSingle())._ok().value,4)
+    assert_equal(piped(pv_validate(1)).par_map_n((pv_validate(2),pv_validate(3),pv_validate(4),pv_validate(5),pv_validate(6),pv_validate(7),pv_validate(8),pv_validate(9)),PVNine()).get()._ok().value,10)
+    assert_equal(piped(R(Ok(4))).par_map_n[PVFailJoin](Tuple(),PVSingle()).get()._ok().value,4)
     # No combine happens for one operand, so the native effect remains Never.
-    assert_equal(R(Ok(4)).par_map_n[PVFailJoin](Tuple(),pv_one)._ok().value,5)
+    assert_equal(piped(R(Ok(4))).par_map_n[PVFailJoin](Tuple(),pv_one).get()._ok().value,5)
 
 
 def pv_traversal() raises:
@@ -202,38 +202,38 @@ def pv_traversal() raises:
 
 def pv_products() raises:
     comptime Text = Result[String,List[String]]
-    var product = pv_validate(1).par_product_n((Text(Ok(String('two'))),pv_validate(3)))
+    var product = piped(pv_validate(1)).par_product_n((Text(Ok(String('two'))),pv_validate(3))).get()
     comptime assert type_of(product) == Result[Tuple[Int,String,Int],List[String]]
     assert_equal(product._ok().value[0],1)
     assert_equal(product._ok().value[1],'two')
     assert_equal(product._ok().value[2],3)
     var eager = piped(pv_validate(4)).par_product_n((Text(Ok(String('five'))),)).get()
     assert_equal(eager._ok().value[1],'five')
-    var errors = pv_validate(-1).par_product_n((pv_validate(2),pv_validate(-3)))
+    var errors = piped(pv_validate(-1)).par_product_n((pv_validate(2),pv_validate(-3))).get()
     assert_equal(errors._err().value,[String('-1'),String('-3')])
     assert_equal(piped(pv_validate(-1)).par_product_n((pv_validate(-2),)).get()._err().value,
                  [String('-1'),String('-2')])
-    var empty_error = PVResult(Err(List[String]())).par_product_n((pv_validate(1),))
+    var empty_error = piped(PVResult(Err(List[String]()))).par_product_n((pv_validate(1),)).get()
     assert_true(empty_error.is_err())
     assert_equal(len(empty_error._err().value),0)
     comptime R = Result[Int,String]
-    var joined = R(Err(String('a'))).par_product_n[PVJoin]((R(Ok(1)),R(Err(String('b')))))
+    var joined = piped(R(Err(String('a')))).par_product_n[PVJoin]((R(Ok(1)),R(Err(String('b'))))).get()
     assert_equal(joined._err().value,'ab')
     assert_equal(piped(R(Err(String('a')))).par_product_n[PVJoin]((R(Err(String('b'))),)).get()._err().value,'ab')
     # Products have no native callback arity boundary, including explicit policies.
-    var nine = pv_validate(1).par_product_n((pv_validate(2),pv_validate(3),pv_validate(4),pv_validate(5),pv_validate(6),pv_validate(7),pv_validate(8),pv_validate(9)))
+    var nine = piped(pv_validate(1)).par_product_n((pv_validate(2),pv_validate(3),pv_validate(4),pv_validate(5),pv_validate(6),pv_validate(7),pv_validate(8),pv_validate(9))).get()
     assert_equal(nine._ok().value[8],9)
-    var custom_nine = R(Ok(1)).par_product_n[PVJoin]((R(Ok(2)),R(Ok(3)),R(Ok(4)),R(Ok(5)),R(Ok(6)),R(Ok(7)),R(Ok(8)),R(Ok(9))))
+    var custom_nine = piped(R(Ok(1))).par_product_n[PVJoin]((R(Ok(2)),R(Ok(3)),R(Ok(4)),R(Ok(5)),R(Ok(6)),R(Ok(7)),R(Ok(8)),R(Ok(9)))).get()
     assert_equal(custom_nine._ok().value[8],9)
     # No combination is possible with no additional operands: exact Never effect.
-    var single = R(Ok(4)).par_product_n[PVFailJoin](Tuple())
+    var single = piped(R(Ok(4))).par_product_n[PVFailJoin](Tuple()).get()
     comptime assert type_of(single) == Result[Tuple[Int],String]
     assert_equal(single._ok().value[0],4)
     assert_equal(piped(R(Err(String('a')))).par_product_n[PVFailJoin](Tuple()).get()._err().value,'a')
-    assert_equal(pv_validate(5).par_product_n(Tuple())._ok().value[0],5)
+    assert_equal(piped(pv_validate(5)).par_product_n(Tuple()).get()._ok().value[0],5)
     var code = 0
     try:
-        _ = R(Err(String('a'))).par_product_n[PVFailJoin]((R(Err(String('bc'))),))
+        _ = piped(R(Err(String('a')))).par_product_n[PVFailJoin]((R(Err(String('bc'))),)).get()
     except error:
         comptime assert type_of(error) == PVNativeFailure
         code = error.code

@@ -26,3 +26,5 @@ from ._result import (
 )
 
 from .result import collect_results
+
+from .non_empty_list import NonEmptyList

@@ -155,15 +155,15 @@ def ef_stops() raises:
 
 def ef_conditions() raises:
     assert_equal(piped(Result[Bool,String](Ok(True))).if_effect(ef_yes,ef_no).get().raise_on_err(),11)
-    assert_equal(Result[Bool,String](Ok(False)).if_effect(ef_yes,ef_no).raise_on_err(),22)
+    assert_equal(piped(Result[Bool,String](Ok(False))).if_effect(ef_yes,ef_no).get().raise_on_err(),22)
     assert_equal(if_effect[ResultFamily[String]](ef_yes,ef_no,Result[Bool,String](Ok(True))).raise_on_err(),11)
     var calls = ArcPointer(0)
     def selected() {calls} -> Result[Int,String]:
         calls[] += 1
         return Ok(4)
-    assert_true(Result[Bool,String](Err(String("condition"))).if_effect(selected,selected).is_err())
+    assert_true(piped(Result[Bool,String](Err(String("condition")))).if_effect(selected,selected).get().is_err())
     assert_equal(calls[],0)
-    assert_equal(Result[Bool,String](Ok(True)).if_effect(selected,ef_no).raise_on_err(),4)
+    assert_equal(piped(Result[Bool,String](Ok(True))).if_effect(selected,ef_no).get().raise_on_err(),4)
     assert_equal(calls[],1)
     var choices: List[Bool] = [True,False,True]
     assert_equal(piped(choices^).if_effect(EFFactory(0),EFFactory(10)).get(),[1,11,2])

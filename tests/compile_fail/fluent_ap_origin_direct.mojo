@@ -8,5 +8,5 @@ struct APView[o: ImmOrigin](Unary):
     comptime Out = Int
     def call(self, var arg: Self.Arg) -> Int: return arg[0]
 def mismatch(left: List[Int],right: List[Int]):
-    _ = Result[APView[origin_of(left)],String](Ok(APView[origin_of(left)]())).ap(Result[Span[Int,origin_of(right)],String](Ok(Span(right))))
+    _ = piped(Result[APView[origin_of(left)],String](Ok(APView[origin_of(left)]()))).ap(Result[Span[Int,origin_of(right)],String](Ok(Span(right)))).get()
 def main(): mismatch([1],[2])

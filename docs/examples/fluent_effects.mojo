@@ -18,7 +18,7 @@ def check(value: Int) -> Result[Int, String]:
 
 
 def main() raises:
-    var combined = Result[Int, String](Ok(3)).map2(Result[Int, String](Ok(4)), add)
+    var combined = piped(Result[Int, String](Ok(3))).map2(Result[Int, String](Ok(4)), add).get()
     print("combined:", combined^.raise_on_err())
     var paired = piped(Result[Int, String](Ok(3))).product(Result[Int, String](Ok(4))).get()
     var pair = paired^.raise_on_err()
@@ -27,8 +27,8 @@ def main() raises:
     var amount = applied.take()
     assert_equal(amount, 18)
     print("applied:", amount)
-    var three = Result[Int, String](Ok(3)).map_n(
-        (Result[Int, String](Ok(4)), Result[Int, String](Ok(5))), add_three)
+    var three = piped(Result[Int, String](Ok(3))).map_n(
+        (Result[Int, String](Ok(4)), Result[Int, String](Ok(5))), add_three).get()
     print("combined three:", three^.raise_on_err())
     var tupled = piped(Optional(3)).product_n((Optional(4), Optional(5))).get()
     print("flat tuple:", tupled.value())

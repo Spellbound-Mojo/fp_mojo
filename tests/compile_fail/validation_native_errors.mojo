@@ -1,3 +1,4 @@
+from fp.functions import piped
 # error: constraint
 from fp.data import Result,Err
 from fp.algebra import Semigroup
@@ -9,4 +10,4 @@ struct Merge(Semigroup):
         raise left^
 def add(a:Int,b:Int) raises Int -> Int:return a+b
 def main() raises Int:
-    _=Result[Int,String](Err(String('a'))).par_map_n[Merge]((Result[Int,String](Err(String('b'))),),add)
+    _=piped(Result[Int,String](Err(String('a')))).par_map_n[Merge]((Result[Int,String](Err(String('b'))),),add).get()

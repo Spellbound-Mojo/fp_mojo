@@ -148,10 +148,10 @@ def methods(piped=False):
                 handler_value = cbs[1].build if selective else f'{handler}({cbs[1].build})'
                 payload = e if selective else t
                 body = f'return _conditional_result[{t}, {e}, {cb.type}, {handler}, {payload}, {cbs[1].result}, {cbs[1].error}, {error}, {not selective}, {name != "or_else_if"}, {selective}, _call_transform[{payload}, {handler}]](self^, {cb.build}, {handler_value})'
-            elif name in ('tap_err', 'flat_tap_err'):
-                observer = f'_ObserveError[ResultFamily[{e}], {t}, {cb.type}, {name == "flat_tap_err"}]'
-                prelude += f'        comptime assert _ErrorCompatible[{error}, {observer}.Error]\n'
-                body = f'return _or_else_as[{error}, ResultFamily[{e}]]({observer}({builds}), self^)'
+            elif name == 'tap_err':
+                body = f'return self^.map_err(_ObserveOnce[{e}, {cb.type}, False]({builds}))'
+            elif name == 'flat_tap_err':
+                body = f'return self^.or_else(_ResultRetain[{t}, {e}, {cb.type}, False, False, True]({builds}))'
             elif name == 'attempt_tap':
                 body = f'return _ResultRetain[{t}, {e}, {cb.type}, False, True]({builds}).call_once(self^)'
             elif name == 'recover':
@@ -201,12 +201,6 @@ def methods(piped=False):
             where = ' where '+' and '.join(conditions) if conditions else ''
             out.append(f'\n    def {name}[{", ".join(params)}](deinit self, {", ".join(c.argument for c in cbs)}) raises {error} -> {result}{where}:\n        """{doc}"""\n{prelude}        {body}\n')
     out.append(outcome_methods(piped))
-    if not piped:
-        from generate_applicative_syntax import methods as combine_methods
-        out.append(combine_methods(result=True))
-        from generate_nary_syntax import methods as nary_methods
-        out.append(nary_methods(result=True))
-        out.append(nary_methods(result=True, parallel=True))
     return ''.join(out)+'\n'
 
 

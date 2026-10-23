@@ -54,7 +54,7 @@ class SuiteContractTests(unittest.TestCase):
         modules = [r for r in inventory(root=self.root) if r['shard'] == 'integration']
         text = driver_source('integration', modules, self.root)
         self.assertIn('import hello\nimport bench_x\n', text)
-        self.assertIn(f'print("{MARK} begin 0 docs/examples/hello.mojo", flush=True)\n        clock = perf_counter_ns()\n        hello.main()', text)
+        self.assertIn(f'print("{MARK} begin 0 docs/examples/hello.mojo", flush=True)\n        var clock = perf_counter_ns()\n        hello.main()', text)
         self.assertNotIn('try:', text)  # neither main raises
         raising = driver_source('runtime-1', inventory('alpha', self.root)[:1], self.root)
         self.assertIn(f'        except error:\n            print("{MARK} fail 0", error, flush=True)', raising)

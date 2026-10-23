@@ -57,6 +57,7 @@ from fp.callables.protocols import UnaryContract
 from fp.callables.protocols import Unary, Binary, BorrowCallable
 from fp.callables.native import _Thin1F, _LazyUnary
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
+from ._pipeline import _PipelineRunner, _pipe_at
 from .composition import Composition
 from ._stages import _Plan, _check_stage, _stage_shared
 from fp.iteration.folds import fold_left as _fold_left
@@ -6409,17 +6410,6 @@ def piped[T: Movable & Deinitable](var value: T) -> Piped[T]:
     return Piped[T](value^)
 
 
-trait _PipelineRunner:
-    # Native environment packs are forwarded, never assembled or copied.
-    # Concrete runners prove their own environment types before projection.
-    @staticmethod
-    def apply[index: Int, R: Movable & Deinitable, E: Movable & Deinitable,
-              A: Movable & Deinitable, *Environment: Movable & Deinitable](
-        var value: A, *environment: *Environment
-    ) raises E -> R:
-        ...
-
-
 struct _ImmediateRunner(_PipelineRunner):
     @staticmethod
     def apply[index: Int, R: Movable & Deinitable, E: Movable & Deinitable,
@@ -6429,19 +6419,6 @@ struct _ImmediateRunner(_PipelineRunner):
         comptime assert _check_stage[index, Environment[index], A, R, E]()
         return _stage_shared[R, E](environment[index], value^)
 
-
-def _pipe_at[index: Int, Results: TypeList[Trait=Movable & Deinitable, ...],
-             E: Movable & Deinitable, D: _PipelineRunner,
-             A: Movable & Deinitable, *Environment: Movable & Deinitable](
-    var value: A, *environment: *Environment
-) raises E -> Results[Results.length - 1]:
-    """Apply stage `index` and every later stage, left to right."""
-    var result = D.apply[index, Results[index], E](value^, *environment)
-    comptime if index + 1 == Results.length:
-        comptime assert Results[index] == Results[Results.length - 1]
-        return rebind_var[Results[Results.length - 1]](result^)
-    else:
-        return _pipe_at[index + 1, Results, E, D](result^, *environment)
 
 
 def pipe[A: Movable & Deinitable, //,

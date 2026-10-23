@@ -9,7 +9,7 @@ def fcg_combine[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & D
                 E: Movable & Deinitable, X: Movable & Deinitable,
                 F: def(var A, var B) raises X -> R](var left: Result[A, E], var right: Result[B, E], ref function: F
 ) raises X -> Result[R, E]:
-    return left^.map2[X=X](right^, function)
+    return piped(left^).map2[A=A, B=B, R=R, X=X](right^, function).get()
 
 
 def fcg_piped[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable,
@@ -25,7 +25,7 @@ def fcg_add(a: Int, b: Int) raises String -> Int: return a + b
 def fcg_apply[F: UnaryContract & Movable & Deinitable, E: Movable & Deinitable](
     var function: Result[F, E], var values: Result[F.Arg, E]
 ) raises F.Error -> Result[F.Out, E]:
-    return function^.ap(values^)
+    return piped(function^).ap(values^).get()
 
 
 def fcg_apply_piped[F: UnaryContract & Movable & Deinitable, E: Movable & Deinitable](
@@ -46,7 +46,7 @@ struct FCGView[o: ImmOrigin](Unary):
 
 def fcg_views(values: List[Int]) raises:
     var view = Span(values)
-    var result = Result[type_of(view), String](Ok(view)).product(Result[Int, String](Ok(3)))
+    var result = piped(Result[type_of(view), String](Ok(view))).product(Result[Int, String](Ok(3))).get()
     var pair = result^.raise_on_err()
     comptime assert type_of(pair) == Tuple[type_of(view), Int]
     assert_equal(pair[0][0] + pair[1], 10)
@@ -61,7 +61,7 @@ def fcg_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & 
               F: def(var A0, var A1, var A2) raises X -> R](
     var first: Result[A0,E], var others: Tuple[Result[A1,E],Result[A2,E]], ref function: F
 ) raises X -> Result[R,E]:
-    return first^.map_n[A0=A0,A1=A1,A2=A2,R=R,X=X](others^,function)
+    return piped(first^).map_n[A0=A0,A1=A1,A2=A2,R=R,X=X](others^,function).get()
 
 
 def fcg_map_n_piped[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable,
@@ -83,7 +83,7 @@ struct FCGTupleView[o: ImmOrigin](Unary):
 
 
 def fcg_library_view[o: ImmOrigin](var first:Result[Span[Int,o],String],var second:Result[Int,String]) -> Result[Span[Int,o],String]:
-    return first^.map_n((second^,),FCGTupleView[o]())
+    return piped(first^).map_n((second^,),FCGTupleView[o]()).get()
 
 
 def fcg_nary_views(values: List[Int]) raises:

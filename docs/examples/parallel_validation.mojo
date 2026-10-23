@@ -32,9 +32,9 @@ def show_errors(var errors: List[String]) -> String:
 
 
 def main():
-    var valid = positive(2).par_map_n((positive(3), positive(4)), total)
+    var valid = piped(positive(2)).par_map_n((positive(3), positive(4)), total).get()
     print(valid^.fold_owned(show_total, show_errors))
-    var invalid = positive(-2).par_map_n((positive(3), positive(-4)), total)
+    var invalid = piped(positive(-2)).par_map_n((positive(3), positive(-4)), total).get()
     print(invalid^.fold_owned(show_total, show_errors))
 
     var check = kleisli[ResultFamily[List[String]]](positive).map(squared)
@@ -43,7 +43,7 @@ def main():
     var collected = iterated(range(1, 4)).par_traverse(check)
     print(collected^.fold_owned(show_values, show_errors))
 
-    var pair = positive(2).par_product_n((positive(3),))
+    var pair = piped(positive(2)).par_product_n((positive(3),)).get()
     print("pair:", pair._ok().value[0], pair._ok().value[1])
     var checks: List[Checked] = [positive(2), positive(-3), positive(-4)]
     var sequenced = piped(checks^).par_sequence().get()

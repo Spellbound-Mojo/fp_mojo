@@ -86,16 +86,16 @@ def fc_application() raises:
     assert_false(piped(Optional(FCApply(3))).ap(Optional[Int]()).get())
     assert_equal(piped(FCApply(2)).ap[IdentityFamily](6).get(), 12)
     assert_equal(piped(Cell(FCApply(2))).ap[CellFamily](Cell(6)).get().take(), 12)
-    assert_equal(Result[FCApply, String](Ok(FCApply(3))).ap(Result[Int, String](Ok(5))).raise_on_err(), 15)
+    assert_equal(piped(Result[FCApply, String](Ok(FCApply(3)))).ap(Result[Int, String](Ok(5))).get().raise_on_err(), 15)
     var first = piped(Result[FCApply, String](Err(String("first")))).ap(Result[Int, String](Err(String("second")))).get()
     assert_equal(first^.fold_owned(fc_string_int, fc_identity), "first")
-    var second = Result[FCApply, String](Ok(FCApply(3))).ap(Result[Int, String](Err(String("second"))))
+    var second = piped(Result[FCApply, String](Ok(FCApply(3)))).ap(Result[Int, String](Err(String("second")))).get()
     assert_equal(second^.fold_owned(fc_string_int, fc_identity), "second")
     var drops = ArcPointer(0)
-    var owned = Result[FCMoveApply, String](Ok(FCMoveApply(FCOwner(3, drops)))).ap(Result[FCOwner, String](Ok(FCOwner(4, drops))))
+    var owned = piped(Result[FCMoveApply, String](Ok(FCMoveApply(FCOwner(3, drops))))).ap(Result[FCOwner, String](Ok(FCOwner(4, drops)))).get()
     assert_equal(owned^.raise_on_err(), 7)
     assert_equal(drops[], 2)
-    var skipped = Result[FCMoveApply, String](Ok(FCMoveApply(FCOwner(3, drops)))).ap(Result[FCOwner, String](Err(String("skip"))))
+    var skipped = piped(Result[FCMoveApply, String](Ok(FCMoveApply(FCOwner(3, drops))))).ap(Result[FCOwner, String](Err(String("skip")))).get()
     assert_equal(skipped^.fold_owned(fc_string_int, fc_identity), "skip")
     assert_equal(drops[], 3)
     var absent = piped(Optional[FCMoveApply]()).ap(Optional(FCOwner(4, drops))).get()
@@ -170,7 +170,7 @@ def fc_nary() raises:
     assert_equal(large.value(),(1,2,3,4,5,6,7,8,9,10))
     var large_map = piped(Optional(1)).map_n((Optional(2),Optional(3),Optional(4),Optional(5),Optional(6),Optional(7),Optional(8),Optional(9),Optional(10)),FCLargeTuple()).get()
     assert_equal(large_map.value(),11)
-    var mixed = Result[Int,String](Ok(1)).product_n((Result[String,String](Ok(String("text"))),Result[Bool,String](Ok(True))))
+    var mixed = piped(Result[Int,String](Ok(1))).product_n((Result[String,String](Ok(String("text"))),Result[Bool,String](Ok(True)))).get()
     assert_equal(mixed^.raise_on_err(),(1,String("text"),True))
     var a:List[Int]=[1,2]
     var b:List[Int]=[3,4]
@@ -185,13 +185,13 @@ def fc_nary() raises:
         calls[] += 1
         return a+b+c
     assert_false(piped(Optional(1)).map_n((Optional[Int](),Optional(3)),count).get())
-    var failed = Result[Int,String](Err(String("first"))).map_n((Result[Int,String](Err(String("second"))),Result[Int,String](Ok(3))),count)
+    var failed = piped(Result[Int,String](Err(String("first")))).map_n((Result[Int,String](Err(String("second"))),Result[Int,String](Ok(3))),count).get()
     assert_equal(failed^.fold_owned(fc_string_int,fc_identity),"first")
     var second = piped(Result[Int,String](Ok(1))).map_n((Result[Int,String](Err(String("second"))),Result[Int,String](Err(String("third")))),count).get()
     assert_equal(second^.fold_owned(fc_string_int,fc_identity),"second")
     assert_equal(calls[],0)
     var drops = ArcPointer(0)
-    var moved = Result[FCOwner,String](Ok(FCOwner(1,drops))).map_n((Result[FCOwner,String](Ok(FCOwner(2,drops))),Result[FCOwner,String](Ok(FCOwner(3,drops)))),fc_three_move)
+    var moved = piped(Result[FCOwner,String](Ok(FCOwner(1,drops)))).map_n((Result[FCOwner,String](Ok(FCOwner(2,drops))),Result[FCOwner,String](Ok(FCOwner(3,drops)))),fc_three_move).get()
     assert_equal(moved^.raise_on_err(),6)
     assert_equal(drops[],3)
     var skipped = piped(Optional(FCOwner(1,drops))).map_n((Optional[FCOwner](),Optional(FCOwner(3,drops))),fc_three_move).get()
@@ -205,10 +205,10 @@ def fc_nary() raises:
         error_code = error.code
     assert_equal(error_code,6)
     assert_equal(drops[],8)
-    var once = Result[Int,String](Ok(1)).map_n((Result[Int,String](Ok(2)),Result[Int,String](Ok(3))),FCTupleOnce(FCOwner(4,drops)))
+    var once = piped(Result[Int,String](Ok(1))).map_n((Result[Int,String](Ok(2)),Result[Int,String](Ok(3))),FCTupleOnce(FCOwner(4,drops))).get()
     assert_equal(once^.raise_on_err(),10)
     assert_equal(drops[],9)
-    var not_called = Result[Int,String](Err(String("skip"))).map_n((Result[Int,String](Ok(2)),Result[Int,String](Ok(3))),FCTupleOnce(FCOwner(4,drops)))
+    var not_called = piped(Result[Int,String](Err(String("skip")))).map_n((Result[Int,String](Ok(2)),Result[Int,String](Ok(3))),FCTupleOnce(FCOwner(4,drops))).get()
     assert_equal(not_called^.fold_owned(fc_string_int,fc_identity),"skip")
     assert_equal(drops[],10)
     assert_equal(piped(1).map_n[IdentityFamily]((2,3),fc_three).get(),123)
@@ -246,9 +246,9 @@ def main() raises:
     assert_equal(piped(2).product[IdentityFamily](4).get(), (2, 4))
     assert_equal(piped(Cell(2)).map2[CellFamily](Cell(4), fc_add).get().take(), 6)
     assert_equal(piped(Cell(2)).product[CellFamily](Cell(4)).get().take(), (2, 4))
-    var direct = Result[Int, String](Ok(3)).map2(Result[String, String](Ok(String("x"))), fc_text)
+    var direct = piped(Result[Int, String](Ok(3))).map2(Result[String, String](Ok(String("x"))), fc_text).get()
     assert_equal(direct^.raise_on_err(), "3x")
-    var pair = Result[Int, String](Ok(3)).product(Result[Int, String](Ok(4)))
+    var pair = piped(Result[Int, String](Ok(3))).product(Result[Int, String](Ok(4))).get()
     assert_equal(pair^.raise_on_err(), (3, 4))
     var fluent = piped(Result[Int, String](Ok(4))).map2(Result[Int, String](Ok(5)), fc_add).get()
     assert_equal(fluent^.raise_on_err(), 9)
@@ -256,9 +256,9 @@ def main() raises:
     def counted(a: Int, b: Int) {calls} -> Int:
         calls[] += 1
         return a + b
-    var first = Result[Int, String](Err(String("first"))).map2(Result[Int, String](Err(String("second"))), counted)
+    var first = piped(Result[Int, String](Err(String("first")))).map2(Result[Int, String](Err(String("second"))), counted).get()
     assert_equal(first^.fold_owned(fc_string_int, fc_identity), "first")
-    var second = Result[Int, String](Ok(1)).map2(Result[Int, String](Err(String("second"))), counted)
+    var second = piped(Result[Int, String](Ok(1))).map2(Result[Int, String](Err(String("second"))), counted).get()
     assert_equal(second^.fold_owned(fc_string_int, fc_identity), "second")
     assert_equal(calls[], 0)
     var code = 0
@@ -268,7 +268,7 @@ def main() raises:
         code = error.code
     assert_equal(code, 3)
     var drops = ArcPointer(0)
-    var moved = Result[FCOwner, String](Ok(FCOwner(3, drops))).product(Result[FCOwner, String](Ok(FCOwner(4, drops))))
+    var moved = piped(Result[FCOwner, String](Ok(FCOwner(3, drops)))).product(Result[FCOwner, String](Ok(FCOwner(4, drops)))).get()
     var owners = moved^.raise_on_err()
     assert_equal(drops[], 0)
     assert_equal(owners[0].code + owners[1].code, 7)
@@ -280,12 +280,12 @@ def main() raises:
     var owned = FCOwner(7, drops)
     def captured(a: Int, b: Int) {var owned^} -> Int:
         return owned.code + a + b
-    var observed = Result[Int, String](Ok(1)).map2(Result[Int, String](Ok(2)), captured)
+    var observed = piped(Result[Int, String](Ok(1))).map2(Result[Int, String](Ok(2)), captured).get()
     assert_equal(observed^.raise_on_err(), 10)
     assert_equal(drops[], 4)
     _ = captured^
     assert_equal(drops[], 5)
-    var once = Result[Int, String](Ok(1)).map2(Result[Int, String](Ok(2)), FCOnceCombiner(calls))
+    var once = piped(Result[Int, String](Ok(1))).map2(Result[Int, String](Ok(2)), FCOnceCombiner(calls)).get()
     assert_equal(once^.raise_on_err(), 3)
     assert_equal(calls[], 1)
 

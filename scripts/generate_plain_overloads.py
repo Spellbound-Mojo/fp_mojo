@@ -345,7 +345,7 @@ def main():
         expected = expected_of(path)
         if name == 'iteration/chaining.mojo':
             expected = splice_source(expected, sequencing_syntax.methods(iteration=True), sequencing_syntax.START, sequencing_syntax.END, sequencing_syntax.HEADER)
-        effect_mode = {'functions/pipeline.mojo': 'piped', 'iteration/chaining.mojo': 'iter', 'data/_result.mojo': 'result', 'iteration/effectful.mojo': 'free', 'algebra/conditional.mojo': 'conditional'}.get(name)
+        effect_mode = {'functions/pipeline.mojo': 'piped', 'iteration/chaining.mojo': 'iter', 'iteration/effectful.mojo': 'free', 'algebra/conditional.mojo': 'conditional'}.get(name)
         if effect_mode:
             indent = '' if effect_mode in ('free', 'conditional') else '    '
             expected = splice_source(expected, effect_syntax.methods(effect_mode), indent+effect_syntax.START, indent+effect_syntax.END, indent+effect_syntax.HEADER)

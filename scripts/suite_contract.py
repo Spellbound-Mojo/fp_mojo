@@ -85,14 +85,13 @@ def driver_source(shard, modules, root=ROOT):
              'from std.sys import argv', 'from std.time import perf_counter_ns']
     lines += [f'import {Path(m["path"]).stem}' for m in modules]
     lines += ['', '', 'def main() raises:', '    var arguments = argv()',
-              '    var start = atol(arguments[2]) if len(arguments) == 3 and arguments[1] == "--from" else 0',
-              '    var clock = perf_counter_ns()']
+              '    var start = atol(arguments[2]) if len(arguments) == 3 and arguments[1] == "--from" else 0']
     for index, module in enumerate(modules):
         stem = Path(module['path']).stem
         passed = f'print("{MARK} pass {index}", perf_counter_ns() - clock, flush=True)'
         lines += [f'    if start <= {index}:',
                   f'        print("{MARK} begin {index} {module["path"]}", flush=True)',
-                  '        clock = perf_counter_ns()']
+                  '        var clock = perf_counter_ns()']
         if re.search(r'^def main\(\) raises\b', (root / module['path']).read_text(), re.M):
             lines += ['        try:', f'            {stem}.main()', f'            {passed}',
                       '        except error:', f'            print("{MARK} fail {index}", error, flush=True)']

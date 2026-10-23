@@ -135,6 +135,9 @@
     },
     "docs/examples/traversal_composition.mojo": {
       "stdout": "kept: [10, 2, 20, 30]\nselected: [20]\nsequenced: [1, 10, 2, 20]\neffects succeeded: True\n"
+    },
+    "docs/examples/non_empty_validation.mojo": {
+      "stdout": "errors: 2\n-1 must be positive\n-2 must be positive\nfirst: 2 count: 3\n"
     }
   }
 }
