@@ -5,6 +5,7 @@ from ._advance import _Source
 
 from std.builtin.rebind import downcast, rebind_var
 from std.memory import MaybeUninit
+from fp.algebra._accumulation import _Combine, _FirstPresent
 from fp.algebra.protocols import Monoid, _Accumulate, _map_accumulate, _start_as
 from fp.algebra.instances import _ListElement
 from fp.callables.protocols import UnaryContract, BorrowCallable
@@ -54,41 +55,12 @@ def _run_terminal[R: _Terminal, V: Movable & Deinitable](var reduction: R, var s
     return reduction^.run(source^)
 
 
-struct _Combine[M: Monoid](_Accumulate):
-    comptime Acc = Self.M.Value
-    comptime Item = Self.M.Value
-    comptime Error = Self.M.Error
-    @staticmethod
-    def start() raises Self.Error -> Self.Acc:
-        return Self.M.empty()
-    @staticmethod
-    def live(ref acc: Self.Acc) -> Bool:
-        return True
-    @staticmethod
-    def combine(var acc: Self.Acc, var item: Self.Item) raises Self.Error -> Self.Acc:
-        return Self.M.combine(acc^, item^)
-
-
 def _fold_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, M: Monoid,
               E: Movable & Deinitable = _CommonError[F.Error, M.Error]](
     var function: F, var source: V
 ) raises E -> M.Value:
     comptime assert _ErrorCompatible[E, M.Error] and _ErrorCompatible[E, F.Error]
     return _map_accumulate[V, F, _Combine[M], E](function^, source^, _start_as[E, _Combine[M]]())
-
-
-struct _FirstPresent[T: Movable & Deinitable](_Accumulate):
-    comptime Acc = Optional[Self.T]
-    comptime Item = Self.Acc
-    @staticmethod
-    def start() -> Self.Acc:
-        return None
-    @staticmethod
-    def live(ref acc: Self.Acc) -> Bool:
-        return not acc
-    @staticmethod
-    def combine(var acc: Self.Acc, var item: Self.Item) -> Self.Acc:
-        return item^
 
 
 def _find_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](

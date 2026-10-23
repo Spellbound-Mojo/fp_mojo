@@ -109,3 +109,37 @@ initial snapshot. Use `fp.control.scan` for eager finite scans that return the
 final carry and collected outputs. Its native errors and scheduling are unchanged.
 Generic native wrappers preserve `A`, `T`, `Y` and forward them explicitly;
 `ScanMapIterator[A,T,Y,I,F]` names the concrete lazy iterator, including origins.
+
+## Effectful search and reduction
+
+<!-- example: docs/examples/iteration_effect_search.mojo -->
+
+| Operation | Callback or input | Result |
+|---|---|---|
+| `find_effect[G](predicate, source)` | Borrowed element → `G[Bool]` | `G[Optional[element]]` |
+| `find_map_effect[G](function, source)` | Owned element → `G[Optional[B]]` | `G[Optional[B]]` |
+| `fold_map_effect[G, M](function, source)` | Owned element → `G[M.Value]` | `G[M.Value]` |
+| `sequence_filter[G](source)` | Elements already contain `G[Optional[B]]` | Effect containing present values |
+
+The first three are consuming Monad terminals, also available on `Iter` and
+`Piped`. Searches stop each live branch at its first match. Empty input and a
+successful search with no match lift `None`; an absent or failed outer effect
+still represents effect failure. List branches retain their first match while
+other branches continue. Existing family copying requirements still apply:
+branching searches cannot retain move-only values when the family must copy.
+
+`fold_map_effect` combines values in source order with the explicit Monoid.
+It constructs `M.empty()` before binding the source, even for Reader or State.
+Callbacks and combinations run according to the selected family's timing;
+Reader and State defer them until `run`. Empty input lifts the identity.
+Stored failures stop the relevant effect; native callback, monoid and family
+errors propagate unchanged and must share an admitted native error type.
+Generic native wrappers can name exact errors with `E=` and `X=` and must
+forward the payload and family admission constraints.
+
+`sequence_filter` is identity `traverse_filter`, with the same Applicative and
+source-shape support. Free and `Iter` forms collect present values into a List
+inside the effect; `Piped` follows the source family's traversal shape. It is a
+terminal traversal, so it consumes the successful input rather than returning
+a lazy filtered iterator. All four preserve current iterator position, native
+ownership and borrowed origins.

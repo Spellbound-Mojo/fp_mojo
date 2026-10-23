@@ -9600,6 +9600,237 @@
    "provider": "iteration/adapters",
    "summary": ""
   },
+  "combinators.find_effect": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The callback, consumed; calls follow the operation's evaluation order.",
+       "name": "function",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The source, consumed with its native origins; iterator sources are not restarted.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _EffectFold[G, V, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error]",
+     "parameters": [
+      {
+       "description": "The borrowing library callback type.",
+       "inferred": true,
+       "name": "C",
+       "type": "BorrowCallable",
+       "variadic": false
+      },
+      {
+       "description": "The consumed source or carrier type.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The target Monad family; it determines dependent sequencing and failure.",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "The exact construction error for generic forwarding; checked without converting errors.",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+     "returns": {
+      "doc": "The target effect of Optional, stopping each live branch at its first accepted original element; empty input lifts None.",
+      "type": "_EffectFold[G, V, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Out"
+     },
+     "signature": "def find_effect[C: BorrowCallable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var function: C, var source: V) raises _EntryError[X, _EffectFold[G, V, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error] -> _EffectFold[G, V, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Out where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and G.Element[C.Result] == Bool and _CarrierCompatible[G, C.Result] and RepeatableUnary[_EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error], C.Failure] or _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error], _EffectFold[G, V, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error])",
+     "summary": "Find the first original element selected by an effectful borrowing predicate in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Borrowing[P, R]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Out"
+     },
+     "signature": "def find_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error] -> _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Out where _Source[V].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _CarrierCompatible[G, R] and RepeatableUnary[_EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error], Never] or _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error], _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error])",
+     "summary": "Find the first original element selected by an effectful borrowing predicate in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingBorrowing[P, R, E]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Out"
+     },
+     "signature": "def find_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error] -> _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Out where _Source[V].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _CarrierCompatible[G, R] and RepeatableUnary[_EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error], E] or _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error], _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error])",
+     "summary": "Find the first original element selected by an effectful borrowing predicate in each live branch."
+    }
+   ],
+   "provider": "iteration/effectful",
+   "summary": ""
+  },
   "combinators.find_map": {
    "description": "",
    "kind": "function",
@@ -9787,6 +10018,237 @@
     }
    ],
    "provider": "iteration/reductions",
+   "summary": ""
+  },
+  "combinators.find_map_effect": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The callback, consumed; calls follow the operation's evaluation order.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The source, consumed with its native origins; iterator sources are not restarted.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error]",
+     "parameters": [
+      {
+       "description": "The callback type, retaining its receiver, captures and error contract.",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The consumed source or carrier type.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The target Monad family; it determines dependent sequencing and failure.",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "The exact construction error for generic forwarding; checked without converting errors.",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+     "returns": {
+      "doc": "The target effect of the first present Optional in each live branch; empty input lifts None and target failure stays in the effect.",
+      "type": "_EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Out"
+     },
+     "signature": "def find_map_effect[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error] -> _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Out where _Source[V].Element == F.Arg and G.Element[F.Out] == Optional[_ListElement[G.Element[F.Out]]] and _CarrierCompatible[G, F.Out] and RepeatableUnary[F] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error], F.Error] or _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error], _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Unary[A, R]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out"
+     },
+     "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, F: _Unary[A, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error] -> _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out where _Source[V].Element == A and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, Never, F, False, o]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], Never] or _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingUnary[A, R, E]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out"
+     },
+     "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error] -> _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out where _Source[V].Element == A and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, E, F, True, o]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], E] or _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    }
+   ],
+   "provider": "iteration/effectful",
    "summary": ""
   },
   "combinators.flat_map": {
@@ -11006,6 +11468,258 @@
     }
    ],
    "provider": "iteration/reductions",
+   "summary": ""
+  },
+  "combinators.fold_map_effect": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The callback, consumed; calls follow the operation's evaluation order.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The source, consumed with its native origins; iterator sources are not restarted.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]]",
+     "parameters": [
+      {
+       "description": "The callback type, retaining its receiver, captures and error contract.",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The consumed source or carrier type.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The target Monad family; it determines dependent sequencing and failure.",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "The Monoid providing the result type, identity and ordered combination.",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "The exact construction error for generic forwarding; checked without converting errors.",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+     "returns": {
+      "doc": "The target effect of ordered monoid combination. Identity is constructed before source binding, including for deferred targets; callbacks and combinations follow the target timing.",
+      "type": "_EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Out"
+     },
+     "signature": "def fold_map_effect[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](var function: F, var source: V) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]] -> _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Out where _Source[V].Element == F.Arg and G.Element[F.Out] == M.Value and _CarrierCompatible[G, F.Out] and RepeatableUnary[F] and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], F.Error] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, F.Out, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[F.Error, M.Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Unary[A, R]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Out"
+     },
+     "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, M: Monoid, F: _Unary[A, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]] -> _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Out where _Source[V].Element == A and G.Element[R] == M.Value and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, Never, F, False, o]] and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], Never] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingUnary[A, R, E]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Out"
+     },
+     "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]] -> _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Out where _Source[V].Element == A and G.Element[R] == M.Value and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, E, F, True, o]] and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], E] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[E, M.Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    }
+   ],
+   "provider": "iteration/effectful",
    "summary": ""
   },
   "combinators.if_effect": {
@@ -12680,6 +13394,58 @@
      },
      "signature": "def sequence[V: Movable & Deinitable, //, G: Applicative](var source: V) raises G.CollectError[V, Identity[downcast[_Source[V].Element, Movable & Deinitable]]] -> G.Collected[V, Identity[downcast[_Source[V].Element, Movable & Deinitable]]]",
      "summary": "Consume effects into one effect containing a List, stopping according to G."
+    }
+   ],
+   "provider": "iteration/derived",
+   "summary": ""
+  },
+  "combinators.sequence_filter": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The source, consumed with its native origins; iterator sources are not restarted.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]], G.MapError[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]]]]]]]",
+     "parameters": [
+      {
+       "description": "The consumed source or carrier type.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The target Applicative family; it determines effect sequencing and failure.",
+       "inferred": false,
+       "name": "G",
+       "type": "Applicative",
+       "variadic": false
+      },
+      {
+       "description": "The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+     "returns": {
+      "doc": "The target effect containing present Optional payloads in source shape, using identity traverse_filter; effect failure remains distinct from discarded absence.",
+      "type": "G.Mapped[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]]]]]"
+     },
+     "signature": "def sequence_filter[V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](var source: V) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]], G.MapError[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]]]]]]] -> G.Mapped[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]]]]] where _Source[V].Element == downcast[_Source[V].Element, Movable & Deinitable] and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]], G.MapError[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]]]]]]], Never] and G.Element[_Same[downcast[_Source[V].Element, Movable & Deinitable]].Out] == Optional[_ListElement[G.Element[_Same[downcast[_Source[V].Element, Movable & Deinitable]].Out]]] and _CarrierCompatible[G, _Same[downcast[_Source[V].Element, Movable & Deinitable]].Out]",
+     "summary": "Traverse effects and retain present Optional payloads inside the effect."
     }
    ],
    "provider": "iteration/derived",
@@ -40304,6 +41070,391 @@
       "summary": "Retain rejected Optional payloads with an owned library predicate."
      }
     ],
+    "find_effect": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, consumed; calls follow the operation's evaluation order.",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error]",
+      "parameters": [
+       {
+        "description": "The borrowing library callback type.",
+        "inferred": true,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       },
+       {
+        "description": "The target Monad family; it determines dependent sequencing and failure.",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "The exact construction error for generic forwarding; checked without converting errors.",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+      "returns": {
+       "doc": "The target effect of Optional, stopping each live branch at its first accepted original element; empty input lifts None.",
+       "type": "Piped[_EffectFold[G, Self.Value, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Out]"
+      },
+      "signature": "def find_effect[C: BorrowCallable, //, G: Monad, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, _EffectFold[G, Self.Value, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error] -> Piped[_EffectFold[G, Self.Value, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Out] where _Source[Self.Value].Element == downcast[C.Payload, Movable & Deinitable] and G.Element[C.Result] == Bool and _CarrierCompatible[G, C.Result] and RepeatableUnary[_EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error], C.Failure] or _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error], _EffectFold[G, Self.Value, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error])",
+      "summary": "Find the first original element selected by an effectful borrowing predicate in each live branch."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Borrowing[P, R]",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[_EffectFold[G, Self.Value, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Out]"
+      },
+      "signature": "def find_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, Self.Value, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error] -> Piped[_EffectFold[G, Self.Value, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Out] where _Source[Self.Value].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _CarrierCompatible[G, R] and RepeatableUnary[_EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error], Never] or _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error], _EffectFold[G, Self.Value, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error])",
+      "summary": "Find the first original element selected by an effectful borrowing predicate in each live branch."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingBorrowing[P, R, E]",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[_EffectFold[G, Self.Value, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Out]"
+      },
+      "signature": "def find_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, Self.Value, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error] -> Piped[_EffectFold[G, Self.Value, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Out] where _Source[Self.Value].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _CarrierCompatible[G, R] and RepeatableUnary[_EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error], E] or _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error], _EffectFold[G, Self.Value, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error])",
+      "summary": "Find the first original element selected by an effectful borrowing predicate in each live branch."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, consumed; calls follow the operation's evaluation order.",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _EffectFold[G, List[downcast[C.Payload, Movable & Deinitable]], _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error]",
+      "parameters": [
+       {
+        "description": "The borrowing library callback type.",
+        "inferred": true,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       },
+       {
+        "description": "The native array length; the source moves through temporary List storage.",
+        "inferred": true,
+        "name": "N",
+        "type": "Int",
+        "variadic": false
+       },
+       {
+        "description": "The target Monad family; it determines dependent sequencing and failure.",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "The exact construction error for generic forwarding; checked without converting errors.",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+      "returns": {
+       "doc": "The target effect of Optional, stopping each live branch at its first accepted original element; empty input lifts None.",
+       "type": "Piped[_EffectFold[G, List[downcast[C.Payload, Movable & Deinitable]], _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Out]"
+      },
+      "signature": "def find_effect[C: BorrowCallable, N: Int, //, G: Monad, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, _EffectFold[G, List[downcast[C.Payload, Movable & Deinitable]], _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error] -> Piped[_EffectFold[G, List[downcast[C.Payload, Movable & Deinitable]], _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Out] where Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N] and G.Element[C.Result] == Bool and _CarrierCompatible[G, C.Result] and RepeatableUnary[_EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, List[downcast[C.Payload, Movable & Deinitable]], _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error], C.Failure] or _ErrorCompatible[_EntryError[X, _EffectFold[G, List[downcast[C.Payload, Movable & Deinitable]], _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error], _EffectFold[G, List[downcast[C.Payload, Movable & Deinitable]], _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error])",
+      "summary": "Find the first original element selected by an effectful borrowing predicate in each live branch."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _EffectFold[G, List[downcast[P, Movable & Deinitable]], _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "N",
+        "type": "Int",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Borrowing[P, R]",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[_EffectFold[G, List[downcast[P, Movable & Deinitable]], _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Out]"
+      },
+      "signature": "def find_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, List[downcast[P, Movable & Deinitable]], _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error] -> Piped[_EffectFold[G, List[downcast[P, Movable & Deinitable]], _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and G.Element[R] == Bool and _CarrierCompatible[G, R] and RepeatableUnary[_EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, List[downcast[P, Movable & Deinitable]], _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error], Never] or _ErrorCompatible[_EntryError[X, _EffectFold[G, List[downcast[P, Movable & Deinitable]], _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error], _EffectFold[G, List[downcast[P, Movable & Deinitable]], _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error])",
+      "summary": "Find the first original element selected by an effectful borrowing predicate in each live branch."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _EffectFold[G, List[downcast[P, Movable & Deinitable]], _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "N",
+        "type": "Int",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingBorrowing[P, R, E]",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[_EffectFold[G, List[downcast[P, Movable & Deinitable]], _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Out]"
+      },
+      "signature": "def find_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, List[downcast[P, Movable & Deinitable]], _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error] -> Piped[_EffectFold[G, List[downcast[P, Movable & Deinitable]], _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and G.Element[R] == Bool and _CarrierCompatible[G, R] and RepeatableUnary[_EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, List[downcast[P, Movable & Deinitable]], _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error], E] or _ErrorCompatible[_EntryError[X, _EffectFold[G, List[downcast[P, Movable & Deinitable]], _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error], _EffectFold[G, List[downcast[P, Movable & Deinitable]], _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error])",
+      "summary": "Find the first original element selected by an effectful borrowing predicate in each live branch."
+     }
+    ],
     "find_map": [
      {
       "args": [
@@ -41340,6 +42491,391 @@
       },
       "signature": "def find_map[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[F.Out] where Self.Value == Optional[F.Arg]",
       "summary": "Return the first present transformed result, stopping without another pull."
+     }
+    ],
+    "find_map_effect": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, consumed; calls follow the operation's evaluation order.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error]",
+      "parameters": [
+       {
+        "description": "The callback type, retaining its receiver, captures and error contract.",
+        "inferred": true,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The target Monad family; it determines dependent sequencing and failure.",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "The exact construction error for generic forwarding; checked without converting errors.",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+      "returns": {
+       "doc": "The target effect of the first present Optional in each live branch; empty input lifts None and target failure stays in the effect.",
+       "type": "Piped[_EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Out]"
+      },
+      "signature": "def find_map_effect[F: UnaryContract & Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error] -> Piped[_EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Out] where _Source[Self.Value].Element == F.Arg and G.Element[F.Out] == Optional[_ListElement[G.Element[F.Out]]] and _CarrierCompatible[G, F.Out] and RepeatableUnary[F] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error], F.Error] or _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error], _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error])",
+      "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Unary[A, R]",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[_EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out]"
+      },
+      "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: _Unary[A, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error] -> Piped[_EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out] where _Source[Self.Value].Element == A and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, Never, F, False, o]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], Never] or _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error])",
+      "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingUnary[A, R, E]",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[_EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out]"
+      },
+      "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error] -> Piped[_EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out] where _Source[Self.Value].Element == A and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, E, F, True, o]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], E] or _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error])",
+      "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, consumed; calls follow the operation's evaluation order.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _EffectFold[G, List[F.Arg], _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error]",
+      "parameters": [
+       {
+        "description": "The callback type, retaining its receiver, captures and error contract.",
+        "inferred": true,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The native array length; the source moves through temporary List storage.",
+        "inferred": true,
+        "name": "N",
+        "type": "Int",
+        "variadic": false
+       },
+       {
+        "description": "The target Monad family; it determines dependent sequencing and failure.",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "The exact construction error for generic forwarding; checked without converting errors.",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+      "returns": {
+       "doc": "The target effect of the first present Optional in each live branch; empty input lifts None and target failure stays in the effect.",
+       "type": "Piped[_EffectFold[G, List[F.Arg], _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Out]"
+      },
+      "signature": "def find_map_effect[F: UnaryContract & Movable & Deinitable, N: Int, //, G: Monad, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _EffectFold[G, List[F.Arg], _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error] -> Piped[_EffectFold[G, List[F.Arg], _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Out] where Self.Value == Array[F.Arg, N] and G.Element[F.Out] == Optional[_ListElement[G.Element[F.Out]]] and _CarrierCompatible[G, F.Out] and RepeatableUnary[F] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, List[F.Arg], _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error], F.Error] or _ErrorCompatible[_EntryError[X, _EffectFold[G, List[F.Arg], _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error], _EffectFold[G, List[F.Arg], _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error])",
+      "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "N",
+        "type": "Int",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Unary[A, R]",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[_EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out]"
+      },
+      "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, F: _Unary[A, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error] -> Piped[_EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out] where Self.Value == Array[A, N] and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, Never, F, False, o]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], Never] or _ErrorCompatible[_EntryError[X, _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error])",
+      "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "N",
+        "type": "Int",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingUnary[A, R, E]",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[_EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out]"
+      },
+      "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error] -> Piped[_EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out] where Self.Value == Array[A, N] and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, E, F, True, o]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], E] or _ErrorCompatible[_EntryError[X, _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error])",
+      "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
      }
     ],
     "flat_map": [
@@ -46591,6 +48127,433 @@
       },
       "signature": "def fold_map[F: UnaryContract & Movable & Deinitable, //, M: Monoid](deinit self, var function: F) raises _CommonError[F.Error, M.Error] -> Piped[M.Value] where Self.Value == Optional[F.Arg]",
       "summary": "Project and combine in order with a monoid; empty input returns its identity."
+     }
+    ],
+    "fold_map_effect": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, consumed; calls follow the operation's evaluation order.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]]",
+      "parameters": [
+       {
+        "description": "The callback type, retaining its receiver, captures and error contract.",
+        "inferred": true,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The target Monad family; it determines dependent sequencing and failure.",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "The Monoid providing the result type, identity and ordered combination.",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       },
+       {
+        "description": "The exact construction error for generic forwarding; checked without converting errors.",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+      "returns": {
+       "doc": "The target effect of ordered monoid combination. Identity is constructed before source binding, including for deferred targets; callbacks and combinations follow the target timing.",
+       "type": "Piped[_EffectFold[G, Self.Value, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Out]"
+      },
+      "signature": "def fold_map_effect[F: UnaryContract & Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]] -> Piped[_EffectFold[G, Self.Value, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Out] where _Source[Self.Value].Element == F.Arg and G.Element[F.Out] == M.Value and _CarrierCompatible[G, F.Out] and RepeatableUnary[F] and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], F.Error] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, F.Out, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[F.Error, M.Error], M.Error]",
+      "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Unary[A, R]",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[_EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Out]"
+      },
+      "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, M: Monoid, F: _Unary[A, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]] -> Piped[_EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Out] where _Source[Self.Value].Element == A and G.Element[R] == M.Value and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, Never, F, False, o]] and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], Never] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error]",
+      "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingUnary[A, R, E]",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[_EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Out]"
+      },
+      "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]] -> Piped[_EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Out] where _Source[Self.Value].Element == A and G.Element[R] == M.Value and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, E, F, True, o]] and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], E] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[E, M.Error], M.Error]",
+      "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, consumed; calls follow the operation's evaluation order.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[F.Arg], _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]]",
+      "parameters": [
+       {
+        "description": "The callback type, retaining its receiver, captures and error contract.",
+        "inferred": true,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The native array length; the source moves through temporary List storage.",
+        "inferred": true,
+        "name": "N",
+        "type": "Int",
+        "variadic": false
+       },
+       {
+        "description": "The target Monad family; it determines dependent sequencing and failure.",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "The Monoid providing the result type, identity and ordered combination.",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       },
+       {
+        "description": "The exact construction error for generic forwarding; checked without converting errors.",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+      "returns": {
+       "doc": "The target effect of ordered monoid combination. Identity is constructed before source binding, including for deferred targets; callbacks and combinations follow the target timing.",
+       "type": "Piped[_EffectFold[G, List[F.Arg], _FoldMappedStep[G, M, F], _AllLive[M.Value]].Out]"
+      },
+      "signature": "def fold_map_effect[F: UnaryContract & Movable & Deinitable, N: Int, //, G: Monad, M: Monoid, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, List[F.Arg], _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]] -> Piped[_EffectFold[G, List[F.Arg], _FoldMappedStep[G, M, F], _AllLive[M.Value]].Out] where Self.Value == Array[F.Arg, N] and G.Element[F.Out] == M.Value and _CarrierCompatible[G, F.Out] and RepeatableUnary[F] and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[F.Arg], _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], F.Error] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[F.Arg], _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, List[F.Arg], _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[F.Arg], _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, F.Out, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[F.Error, M.Error], M.Error]",
+      "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "N",
+        "type": "Int",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Unary[A, R]",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[_EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Out]"
+      },
+      "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, M: Monoid, F: _Unary[A, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]] -> Piped[_EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Out] where Self.Value == Array[A, N] and G.Element[R] == M.Value and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, Never, F, False, o]] and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], Never] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error]",
+      "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "N",
+        "type": "Int",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingUnary[A, R, E]",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[_EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Out]"
+      },
+      "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]] -> Piped[_EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Out] where Self.Value == Array[A, N] and G.Element[R] == M.Value and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, E, F, True, o]] and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], E] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[E, M.Error], M.Error]",
+      "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
      }
     ],
     "followed_by": [
@@ -70842,6 +72805,116 @@
       "summary": "Derive sequence through traverse, preserving the family's semantics."
      }
     ],
+    "sequence_filter": [
+     {
+      "args": [],
+      "description": "",
+      "error": "_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _Same[S.Element[Self.Value]]], G.MapError[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]]]]]]]",
+      "parameters": [
+       {
+        "description": "The Traversable source family, preserving its native shape and origins.",
+        "inferred": false,
+        "name": "S",
+        "type": "Traversable & FunctorFilter",
+        "variadic": false
+       },
+       {
+        "description": "The target Applicative family; it determines effect sequencing and failure.",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       },
+       {
+        "description": "The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+      "returns": {
+       "doc": "The target effect containing present Optional payloads in source shape, using identity traverse_filter; effect failure remains distinct from discarded absence.",
+       "type": "Piped[G.Mapped[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]]]]]]"
+      },
+      "signature": "def sequence_filter[S: Traversable & FunctorFilter, G: Applicative, X: AnyType = _InferError](deinit self) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _Same[S.Element[Self.Value]]], G.MapError[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]]]]]] where S.Element[Self.Value] == S.Element[Self.Value] and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _Same[S.Element[Self.Value]]], G.MapError[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]]]]]]], Never] and G.Element[_Same[S.Element[Self.Value]].Out] == Optional[_ListElement[G.Element[_Same[S.Element[Self.Value]].Out]]] and _CarrierCompatible[G, _Same[S.Element[Self.Value]].Out]",
+      "summary": "Traverse effects and retain present Optional payloads inside the effect."
+     },
+     {
+      "args": [],
+      "description": "",
+      "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, List[T], _Same[T]], G.MapError[ListFamily.Traversed[G, List[T], _Same[T]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[T], _Same[T]]]]]]]",
+      "parameters": [
+       {
+        "description": "The element type, including its native origins.",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The target Applicative family; it determines effect sequencing and failure.",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       },
+       {
+        "description": "The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+      "returns": {
+       "doc": "The target effect containing present Optional payloads in source shape, using identity traverse_filter; effect failure remains distinct from discarded absence.",
+       "type": "Piped[G.Mapped[ListFamily.Traversed[G, List[T], _Same[T]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[T], _Same[T]]]]]]"
+      },
+      "signature": "def sequence_filter[T: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[T], _Same[T]], G.MapError[ListFamily.Traversed[G, List[T], _Same[T]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[T], _Same[T]]]]]]] -> Piped[G.Mapped[ListFamily.Traversed[G, List[T], _Same[T]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[T], _Same[T]]]]]] where Self.Value == List[T] and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, List[T], _Same[T]], G.MapError[ListFamily.Traversed[G, List[T], _Same[T]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[T], _Same[T]]]]]]], Never] and G.Element[_Same[T].Out] == Optional[_ListElement[G.Element[_Same[T].Out]]] and _CarrierCompatible[G, _Same[T].Out]",
+      "summary": "Traverse effects and retain present Optional payloads inside the effect."
+     },
+     {
+      "args": [],
+      "description": "",
+      "error": "_EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[T], _Same[T]], G.MapError[OptionalFamily.Traversed[G, Optional[T], _Same[T]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[T], _Same[T]]]]]]]",
+      "parameters": [
+       {
+        "description": "The element type, including its native origins.",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The target Applicative family; it determines effect sequencing and failure.",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       },
+       {
+        "description": "The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+      "returns": {
+       "doc": "The target effect containing present Optional payloads in source shape, using identity traverse_filter; effect failure remains distinct from discarded absence.",
+       "type": "Piped[G.Mapped[OptionalFamily.Traversed[G, Optional[T], _Same[T]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[T], _Same[T]]]]]]"
+      },
+      "signature": "def sequence_filter[T: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self) raises _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[T], _Same[T]], G.MapError[OptionalFamily.Traversed[G, Optional[T], _Same[T]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[T], _Same[T]]]]]]] -> Piped[G.Mapped[OptionalFamily.Traversed[G, Optional[T], _Same[T]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[T], _Same[T]]]]]] where Self.Value == Optional[T] and _ErrorCompatible[_EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[T], _Same[T]], G.MapError[OptionalFamily.Traversed[G, Optional[T], _Same[T]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[T], _Same[T]]]]]]], Never] and G.Element[_Same[T].Out] == Optional[_ListElement[G.Element[_Same[T].Out]]] and _CarrierCompatible[G, _Same[T].Out]",
+      "summary": "Traverse effects and retain present Optional payloads inside the effect."
+     }
+    ],
     "sequence_void": [
      {
       "args": [],
@@ -92345,6 +94418,189 @@
       "summary": "Find with a library borrowing predicate."
      }
     ],
+    "find_effect": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, consumed; calls follow the operation's evaluation order.",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _EffectFold[G, Self.I, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error]",
+      "parameters": [
+       {
+        "description": "The borrowing library callback type.",
+        "inferred": true,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       },
+       {
+        "description": "The target Monad family; it determines dependent sequencing and failure.",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "The exact construction error for generic forwarding; checked without converting errors.",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+      "returns": {
+       "doc": "The target effect of Optional, stopping each live branch at its first accepted original element; empty input lifts None.",
+       "type": "_EffectFold[G, Self.I, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Out"
+      },
+      "signature": "def find_effect[C: BorrowCallable, //, G: Monad, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, _EffectFold[G, Self.I, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error] -> _EffectFold[G, Self.I, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Out where _Source[Self.I].Element == downcast[C.Payload, Movable & Deinitable] and G.Element[C.Result] == Bool and _CarrierCompatible[G, C.Result] and RepeatableUnary[_EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error], C.Failure] or _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error], _EffectFold[G, Self.I, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error])",
+      "summary": "Find the first original element selected by an effectful borrowing predicate in each live branch."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _EffectFold[G, Self.I, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Borrowing[P, R]",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_EffectFold[G, Self.I, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Out"
+      },
+      "signature": "def find_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, Self.I, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error] -> _EffectFold[G, Self.I, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Out where _Source[Self.I].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _CarrierCompatible[G, R] and RepeatableUnary[_EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error], Never] or _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error], _EffectFold[G, Self.I, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error])",
+      "summary": "Find the first original element selected by an effectful borrowing predicate in each live branch."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _EffectFold[G, Self.I, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingBorrowing[P, R, E]",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_EffectFold[G, Self.I, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Out"
+      },
+      "signature": "def find_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, Self.I, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error] -> _EffectFold[G, Self.I, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Out where _Source[Self.I].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _CarrierCompatible[G, R] and RepeatableUnary[_EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error], E] or _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error], _EffectFold[G, Self.I, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error])",
+      "summary": "Find the first original element selected by an effectful borrowing predicate in each live branch."
+     }
+    ],
     "find_map": [
      {
       "args": [
@@ -92484,6 +94740,189 @@
       },
       "signature": "def find_map[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> F.Out where Self.I.Element == F.Arg",
       "summary": "Return the first present transformed result, stopping without another pull."
+     }
+    ],
+    "find_map_effect": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, consumed; calls follow the operation's evaluation order.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error]",
+      "parameters": [
+       {
+        "description": "The callback type, retaining its receiver, captures and error contract.",
+        "inferred": true,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The target Monad family; it determines dependent sequencing and failure.",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "The exact construction error for generic forwarding; checked without converting errors.",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+      "returns": {
+       "doc": "The target effect of the first present Optional in each live branch; empty input lifts None and target failure stays in the effect.",
+       "type": "_EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Out"
+      },
+      "signature": "def find_map_effect[F: UnaryContract & Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error] -> _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Out where _Source[Self.I].Element == F.Arg and G.Element[F.Out] == Optional[_ListElement[G.Element[F.Out]]] and _CarrierCompatible[G, F.Out] and RepeatableUnary[F] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error], F.Error] or _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error], _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error])",
+      "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Unary[A, R]",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out"
+      },
+      "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: _Unary[A, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error] -> _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out where _Source[Self.I].Element == A and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, Never, F, False, o]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], Never] or _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error])",
+      "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingUnary[A, R, E]",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out"
+      },
+      "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error] -> _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out where _Source[Self.I].Element == A and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, E, F, True, o]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], E] or _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error])",
+      "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
      }
     ],
     "first": [
@@ -93575,6 +96014,210 @@
       },
       "signature": "def fold_map[F: UnaryContract & Movable & Deinitable, //, M: Monoid](deinit self, var function: F) raises _CommonError[F.Error, M.Error] -> M.Value where Self.I.Element == F.Arg",
       "summary": "Project and combine in order with a monoid; empty input returns its identity."
+     }
+    ],
+    "fold_map_effect": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, consumed; calls follow the operation's evaluation order.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]]",
+      "parameters": [
+       {
+        "description": "The callback type, retaining its receiver, captures and error contract.",
+        "inferred": true,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The target Monad family; it determines dependent sequencing and failure.",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "The Monoid providing the result type, identity and ordered combination.",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       },
+       {
+        "description": "The exact construction error for generic forwarding; checked without converting errors.",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+      "returns": {
+       "doc": "The target effect of ordered monoid combination. Identity is constructed before source binding, including for deferred targets; callbacks and combinations follow the target timing.",
+       "type": "_EffectFold[G, Self.I, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Out"
+      },
+      "signature": "def fold_map_effect[F: UnaryContract & Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]] -> _EffectFold[G, Self.I, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Out where _Source[Self.I].Element == F.Arg and G.Element[F.Out] == M.Value and _CarrierCompatible[G, F.Out] and RepeatableUnary[F] and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], F.Error] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, F.Out, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[F.Error, M.Error], M.Error]",
+      "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Unary[A, R]",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Out"
+      },
+      "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, M: Monoid, F: _Unary[A, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]] -> _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Out where _Source[Self.I].Element == A and G.Element[R] == M.Value and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, Never, F, False, o]] and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], Never] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error]",
+      "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingUnary[A, R, E]",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Out"
+      },
+      "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]] -> _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Out where _Source[Self.I].Element == A and G.Element[R] == M.Value and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, E, F, True, o]] and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], E] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[E, M.Error], M.Error]",
+      "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
      }
     ],
     "fold_until": [
@@ -95966,6 +98609,37 @@
       },
       "signature": "def sequence[G: Applicative](deinit self) raises G.CollectError[Self.I, _Same[downcast[Self.I.Element, Movable & Deinitable]]] -> G.Collected[Self.I, _Same[downcast[Self.I.Element, Movable & Deinitable]]]",
       "summary": "Consume effects into one effect containing a List, stopping according to G."
+     }
+    ],
+    "sequence_filter": [
+     {
+      "args": [],
+      "description": "",
+      "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, _Same[downcast[_Source[Self.I].Element, Movable & Deinitable]]], G.MapError[ListFamily.Traversed[G, Self.I, _Same[downcast[_Source[Self.I].Element, Movable & Deinitable]]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, _Same[downcast[_Source[Self.I].Element, Movable & Deinitable]]]]]]]]",
+      "parameters": [
+       {
+        "description": "The target Applicative family; it determines effect sequencing and failure.",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       },
+       {
+        "description": "The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+      "returns": {
+       "doc": "The target effect containing present Optional payloads in source shape, using identity traverse_filter; effect failure remains distinct from discarded absence.",
+       "type": "G.Mapped[ListFamily.Traversed[G, Self.I, _Same[downcast[_Source[Self.I].Element, Movable & Deinitable]]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, _Same[downcast[_Source[Self.I].Element, Movable & Deinitable]]]]]]"
+      },
+      "signature": "def sequence_filter[G: Applicative, X: AnyType = _InferError](deinit self) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, _Same[downcast[_Source[Self.I].Element, Movable & Deinitable]]], G.MapError[ListFamily.Traversed[G, Self.I, _Same[downcast[_Source[Self.I].Element, Movable & Deinitable]]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, _Same[downcast[_Source[Self.I].Element, Movable & Deinitable]]]]]]]] -> G.Mapped[ListFamily.Traversed[G, Self.I, _Same[downcast[_Source[Self.I].Element, Movable & Deinitable]]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, _Same[downcast[_Source[Self.I].Element, Movable & Deinitable]]]]]] where _Source[Self.I].Element == downcast[_Source[Self.I].Element, Movable & Deinitable] and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, _Same[downcast[_Source[Self.I].Element, Movable & Deinitable]]], G.MapError[ListFamily.Traversed[G, Self.I, _Same[downcast[_Source[Self.I].Element, Movable & Deinitable]]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, _Same[downcast[_Source[Self.I].Element, Movable & Deinitable]]]]]]]], Never] and G.Element[_Same[downcast[_Source[Self.I].Element, Movable & Deinitable]].Out] == Optional[_ListElement[G.Element[_Same[downcast[_Source[Self.I].Element, Movable & Deinitable]].Out]]] and _CarrierCompatible[G, _Same[downcast[_Source[Self.I].Element, Movable & Deinitable]].Out]",
+      "summary": "Traverse effects and retain present Optional payloads inside the effect."
      }
     ],
     "sequence_void": [
@@ -101053,6 +103727,237 @@
    "provider": "iteration/adapters",
    "summary": ""
   },
+  "iteration.find_effect": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The callback, consumed; calls follow the operation's evaluation order.",
+       "name": "function",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The source, consumed with its native origins; iterator sources are not restarted.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _EffectFold[G, V, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error]",
+     "parameters": [
+      {
+       "description": "The borrowing library callback type.",
+       "inferred": true,
+       "name": "C",
+       "type": "BorrowCallable",
+       "variadic": false
+      },
+      {
+       "description": "The consumed source or carrier type.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The target Monad family; it determines dependent sequencing and failure.",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "The exact construction error for generic forwarding; checked without converting errors.",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+     "returns": {
+      "doc": "The target effect of Optional, stopping each live branch at its first accepted original element; empty input lifts None.",
+      "type": "_EffectFold[G, V, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Out"
+     },
+     "signature": "def find_effect[C: BorrowCallable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var function: C, var source: V) raises _EntryError[X, _EffectFold[G, V, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error] -> _EffectFold[G, V, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Out where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and G.Element[C.Result] == Bool and _CarrierCompatible[G, C.Result] and RepeatableUnary[_EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error], C.Failure] or _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error], _EffectFold[G, V, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]]].Error])",
+     "summary": "Find the first original element selected by an effectful borrowing predicate in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Borrowing[P, R]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Out"
+     },
+     "signature": "def find_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error] -> _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Out where _Source[V].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _CarrierCompatible[G, R] and RepeatableUnary[_EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error], Never] or _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error], _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error])",
+     "summary": "Find the first original element selected by an effectful borrowing predicate in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingBorrowing[P, R, E]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Out"
+     },
+     "signature": "def find_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error] -> _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Out where _Source[V].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _CarrierCompatible[G, R] and RepeatableUnary[_EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error], E] or _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error], _EffectFold[G, V, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]]].Error])",
+     "summary": "Find the first original element selected by an effectful borrowing predicate in each live branch."
+    }
+   ],
+   "provider": "iteration/effectful",
+   "summary": ""
+  },
   "iteration.find_map": {
    "description": "",
    "kind": "function",
@@ -101240,6 +104145,237 @@
     }
    ],
    "provider": "iteration/reductions",
+   "summary": ""
+  },
+  "iteration.find_map_effect": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The callback, consumed; calls follow the operation's evaluation order.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The source, consumed with its native origins; iterator sources are not restarted.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error]",
+     "parameters": [
+      {
+       "description": "The callback type, retaining its receiver, captures and error contract.",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The consumed source or carrier type.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The target Monad family; it determines dependent sequencing and failure.",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "The exact construction error for generic forwarding; checked without converting errors.",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+     "returns": {
+      "doc": "The target effect of the first present Optional in each live branch; empty input lifts None and target failure stays in the effect.",
+      "type": "_EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Out"
+     },
+     "signature": "def find_map_effect[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error] -> _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Out where _Source[V].Element == F.Arg and G.Element[F.Out] == Optional[_ListElement[G.Element[F.Out]]] and _CarrierCompatible[G, F.Out] and RepeatableUnary[F] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error], F.Error] or _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error], _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Unary[A, R]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out"
+     },
+     "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, F: _Unary[A, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error] -> _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out where _Source[V].Element == A and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, Never, F, False, o]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], Never] or _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingUnary[A, R, E]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out"
+     },
+     "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error] -> _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out where _Source[V].Element == A and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, E, F, True, o]] and (_ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], E] or _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    }
+   ],
+   "provider": "iteration/effectful",
    "summary": ""
   },
   "iteration.first": {
@@ -102497,6 +105633,258 @@
     }
    ],
    "provider": "iteration/reductions",
+   "summary": ""
+  },
+  "iteration.fold_map_effect": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The callback, consumed; calls follow the operation's evaluation order.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The source, consumed with its native origins; iterator sources are not restarted.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]]",
+     "parameters": [
+      {
+       "description": "The callback type, retaining its receiver, captures and error contract.",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The consumed source or carrier type.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The target Monad family; it determines dependent sequencing and failure.",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "The Monoid providing the result type, identity and ordered combination.",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "The exact construction error for generic forwarding; checked without converting errors.",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+     "returns": {
+      "doc": "The target effect of ordered monoid combination. Identity is constructed before source binding, including for deferred targets; callbacks and combinations follow the target timing.",
+      "type": "_EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Out"
+     },
+     "signature": "def fold_map_effect[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](var function: F, var source: V) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]] -> _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Out where _Source[V].Element == F.Arg and G.Element[F.Out] == M.Value and _CarrierCompatible[G, F.Out] and RepeatableUnary[F] and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], F.Error] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, F.Out, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[F.Error, M.Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Unary[A, R]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Out"
+     },
+     "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, M: Monoid, F: _Unary[A, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]] -> _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Out where _Source[V].Element == A and G.Element[R] == M.Value and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, Never, F, False, o]] and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], Never] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingUnary[A, R, E]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Out"
+     },
+     "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]] -> _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Out where _Source[V].Element == A and G.Element[R] == M.Value and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, E, F, True, o]] and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], E] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[E, M.Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    }
+   ],
+   "provider": "iteration/effectful",
    "summary": ""
   },
   "iteration.fold_until": {
@@ -105395,6 +108783,58 @@
      },
      "signature": "def sequence[V: Movable & Deinitable, //, G: Applicative](var source: V) raises G.CollectError[V, Identity[downcast[_Source[V].Element, Movable & Deinitable]]] -> G.Collected[V, Identity[downcast[_Source[V].Element, Movable & Deinitable]]]",
      "summary": "Consume effects into one effect containing a List, stopping according to G."
+    }
+   ],
+   "provider": "iteration/derived",
+   "summary": ""
+  },
+  "iteration.sequence_filter": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The source, consumed with its native origins; iterator sources are not restarted.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]], G.MapError[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]]]]]]]",
+     "parameters": [
+      {
+       "description": "The consumed source or carrier type.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The target Applicative family; it determines effect sequencing and failure.",
+       "inferred": false,
+       "name": "G",
+       "type": "Applicative",
+       "variadic": false
+      },
+      {
+       "description": "The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+     "returns": {
+      "doc": "The target effect containing present Optional payloads in source shape, using identity traverse_filter; effect failure remains distinct from discarded absence.",
+      "type": "G.Mapped[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]]]]]"
+     },
+     "signature": "def sequence_filter[V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](var source: V) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]], G.MapError[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]]]]]]] -> G.Mapped[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]]]]] where _Source[V].Element == downcast[_Source[V].Element, Movable & Deinitable] and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]], G.MapError[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]]]]]]], Never] and G.Element[_Same[downcast[_Source[V].Element, Movable & Deinitable]].Out] == Optional[_ListElement[G.Element[_Same[downcast[_Source[V].Element, Movable & Deinitable]].Out]]] and _CarrierCompatible[G, _Same[downcast[_Source[V].Element, Movable & Deinitable]].Out]",
+     "summary": "Traverse effects and retain present Optional payloads inside the effect."
     }
    ],
    "provider": "iteration/derived",

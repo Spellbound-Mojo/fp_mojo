@@ -104,6 +104,7 @@ Higher packages compose that implementation and add only their own behavior.
 | Result combination and error policies | `algebra._result_accumulation` | ResultFamily and ValidationFamily |
 | Non-empty shape | `data.non_empty_list` over native List storage | `algebra.non_empty` mapping, traversal, filtering and concatenation |
 | Native functions as library values | `callables.native` (`NativeUnary` through `as_unary`, `_NativeUnaryRef`, `_ThinFunction`, `_NativeBorrow`, one native call in `_call_native`) | Pipelines and compositions, algebra and effect callbacks, Result methods |
+| First-present and monoid accumulation policies | `algebra._accumulation` (`_FirstPresent`, `_Combine`) | Pure reductions, effectful searches and `fold_map_effect` |
 | Eager payload traversal and accumulation | `algebra.protocols._map_accumulate` and `_Accumulate` | Identity traversal, List mapping, native collection adapters |
 | Native container mapping | Existing algebra instances and `algebra.collections` | `Piped.map`; explicit families retain their own semantics |
 | Result transformations | `data._result` (`_transform_result_owned` and the four methods) | `ResultFamily.map` and `flat_map`, generic Result code |

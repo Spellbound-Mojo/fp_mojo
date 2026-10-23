@@ -114,10 +114,10 @@ from .folds import (
     reduce_optional,
 )
 from .chaining import Iter, iterated
-from .derived import fill, replace, void, tuple_left, tuple_right, pair_with, tap_each, compact, traverse, sequence, traverse_void, traverse_tap, sequence_void, flat_traverse, flat_sequence, traverse_filter, filter_effect
+from .derived import fill, replace, void, tuple_left, tuple_right, pair_with, tap_each, compact, traverse, sequence, traverse_void, traverse_tap, sequence_void, flat_traverse, flat_sequence, traverse_filter, filter_effect, sequence_filter
 from .reductions import find_map, fold_map, combine_all, sum, sum_by, min_by, max_by
 
-from fp.iteration.effectful import fold_effect, any_effect, all_effect
+from fp.iteration.effectful import fold_effect, any_effect, all_effect, find_effect, find_map_effect, fold_map_effect
 
 from .prefixes import TakeWhileIterator, DropWhileIterator, take_while, drop_while
 from .indexed import ZipWithIterator, IndexedMapIterator, zip_with, map_with_index

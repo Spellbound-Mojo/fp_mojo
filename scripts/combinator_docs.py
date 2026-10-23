@@ -2,7 +2,7 @@
 import re
 from api_docs import parse_signature
 
-NAMES = frozenset({'ap', 'fold_effect', 'any_effect', 'all_effect', 'if_effect', 'fill', 'replace', 'void', 'tuple_left', 'tuple_right', 'pair_with',
+NAMES = frozenset({'ap', 'fold_effect', 'any_effect', 'all_effect', 'if_effect', 'find_effect', 'find_map_effect', 'fold_map_effect', 'sequence_filter', 'fill', 'replace', 'void', 'tuple_left', 'tuple_right', 'pair_with',
                    'tap_each', 'tap', 'filter_map', 'compact', 'find_map', 'fold_map',
                    'combine_all', 'sum', 'sum_by', 'min_by', 'max_by', 'flat_map',
                    'flatten', 'traverse', 'sequence', 'map2', 'product', 'traverse_void', 'traverse_tap', 'sequence_void', 'flat_traverse', 'flat_sequence', 'traverse_filter', 'filter_effect', 'par_traverse', 'par_sequence'})
@@ -36,6 +36,11 @@ PARAMETERS = {
     'Failure': 'The error payload type retained by Result.',
 }
 RETURNS = {
+    'sequence_filter': 'The target effect containing present Optional payloads in source shape, using identity traverse_filter; effect failure remains distinct from discarded absence.',
+    'find_effect': 'The target effect of Optional, stopping each live branch at its first accepted original element; empty input lifts None.',
+    'find_map_effect': 'The target effect of the first present Optional in each live branch; empty input lifts None and target failure stays in the effect.',
+    'fold_map_effect': 'The target effect of ordered monoid combination. Identity is constructed before source binding, including for deferred targets; callbacks and combinations follow the target timing.',
+
     'par_sequence': 'A Result containing unwrapped payloads in source shape (List for Iter), or stored errors accumulated in source order. An empty source succeeds; a source Result error stays inside the target Result.',
     'par_traverse': 'A Result containing the transformed source shape (List for Iter), or stored errors accumulated in source order. Every finite input is visited unless a native error is raised.',
     'ap': 'The carrier of callback results. List applies each callback to each value in function-major order; Optional and Result invoke at most once.',
@@ -122,7 +127,7 @@ def document_first_methods(source, names=NAMES):
                                    'The native source type: an iterator at its current position or an owned iterable.')
                 if name in {'par_traverse', 'par_sequence'} and p['name'] == 'S':
                     description = 'The error Semigroup; defaults to concatenation of list-valued stored errors.'
-                if name in {'fold_effect', 'any_effect', 'all_effect', 'if_effect'}:
+                if name in {'fold_effect', 'any_effect', 'all_effect', 'if_effect', 'find_effect', 'find_map_effect', 'fold_map_effect'}:
                     if p['name'] == 'G':
                         description = 'The target Monad family; it determines dependent sequencing and failure.'
                     elif p['name'] == 'X':

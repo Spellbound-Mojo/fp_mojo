@@ -234,8 +234,7 @@ callback side effects are not rolled back.
 
 ## Iterator expansion
 
-I1 through I5 are implemented. I6 describes the remaining slice before or
-alongside fallible-stream work. The source review compares the pinned
+I1 through I6 are implemented. These additions precede fallible-stream work. The source review compares the pinned
 Mojo 1.1.0 library with Mojo 1.2.0 and Cats' current source. The reviewed Mojo
 1.2.0 iterator modules retain the relevant operations and constraints; this
 expansion does not require a compiler upgrade.
@@ -290,10 +289,10 @@ coverage and documentation, not another implementation named `get`.
 | I3 (implemented) | Lazy `partition`, `partition_map`, `unzip` with required `Unbounded` or `BoundedFail` buffering policy | One shared source owner, branch routing and queue engine; existing Result and tuple extraction |
 | I4 (implemented) | `align`, `align_with`, `pad_zip` | One two-source alignment iterator producing the existing Ior carrier |
 | I5 (implemented) | Lazy `scan_map` with separate carry and output | Shared carry/output transition with existing scan mechanisms, below control and algebra |
-| I6 | `find_effect`, `find_map_effect`, `sequence_filter`, `fold_map_effect` | Existing algebra traversal, retention and dependent-fold mechanisms |
+| I6 (implemented) | `find_effect`, `find_map_effect`, `sequence_filter`, `fold_map_effect` | Existing algebra traversal, retention and dependent-fold mechanisms |
 
-I6 is the next implementation slice. I1 through I4 complete the first
-iterator expansion milestone. The remaining effectful terminals reuse existing family mechanisms.
+All six passes are complete. The effectful terminals reuse existing family
+mechanisms; fallible streams remain a separate contract.
 
 ### Native adapter forwarding
 
@@ -538,7 +537,7 @@ and non-inlined step boundary. `scan_left` keeps exactly one copy per yielded
 snapshot. An eager iterator `map_accumulate` returning
 `(final_state, List[output])` remains a separate candidate.
 
-For I6, `sequence_filter` is identity `traverse_filter`. `find_effect` and
+`sequence_filter` is identity `traverse_filter`. `find_effect` and
 `find_map_effect` use the dependent-fold continuation policy and stop on the
 first selected success in each admitted branch. Retaining an original value
 for `find_effect` uses the existing retention mechanism and its branch-copy
@@ -547,6 +546,23 @@ inside the selected Monad; callback, monoid and deferred error admission must
 be checked together. These terminal conveniences keep the current family
 restrictions, deferred timing and distinction between stored and raised errors.
 They do not introduce a fallible `Iterator.__next__`.
+
+`_FirstPresent` and `_Combine` now live in `algebra._accumulation`, shared with
+pure reductions. `_SearchStep` only invokes the callback; the existing family
+fold controls which branches remain live, when to pull, and how to bind.
+`_FoldMappedStep` maps the existing `_BindFirst[_AccumulatePair[_Combine[M]]]`
+over each produced effect. This moves the accumulator for single-use families
+and requires copying only when the family repeats branches.
+
+The monoid identity is constructed before source binding, including for Reader
+and State. Callback invocation and combination follow the family's fold timing.
+A fallible identity therefore raises at construction; a deferred combination
+raises when run. Callback, monoid and family native errors must admit one exact
+native type where they share a boundary. Stored errors stay inside the carrier.
+Generic native forwarding can provide `E=` and `X=` as exact error evidence;
+the admission signature accepts the callback error or the family's construction
+error, and the shared invocation boundaries check the actual raised type.
+Borrowed errors and stored-error origins remain part of those comparisons.
 
 ### Candidates requiring separate storage contracts
 

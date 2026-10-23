@@ -10,7 +10,7 @@ from fp.algebra._traversal import _Discard
 from fp._internal.errors import _CommonError, _ErrorCompatible
 from ._advance import _Source, _source
 from .adapters import collect_list, any as _any
-from .reductions import _Combine
+from fp.algebra._accumulation import _Combine
 
 
 struct _Count[T: Movable & Deinitable](_Accumulate):

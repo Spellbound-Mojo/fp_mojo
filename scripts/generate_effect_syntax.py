@@ -117,8 +117,69 @@ def conditional(mode, family=None):
 def methods(mode):
     if mode == 'result': return conditional(mode)
     if mode == 'conditional': return conditional('free')
-    out = folds(mode)
+    out = folds(mode) + searches(mode)
     if mode == 'piped':
-        out += folds(mode, True) + conditional(mode)
+        out += folds(mode, True) + searches(mode, True) + conditional(mode)
         for family in ('List', 'Optional', 'Result'): out += conditional(mode, family)
     return out
+
+
+def searches(mode, array=False):
+    out=[]
+    for name in ('find_effect','find_map_effect','fold_map_effect'):
+        borrowing=name=='find_effect'; folding=name=='fold_map_effect'
+        for kind in ('library','pure','raising'):
+            native=kind!='library'; error='E' if kind=='raising' else 'Never'
+            if native:
+                params=['P: AnyType' if borrowing else f'A: {MD}',f'R: {MD}','o: ImmOrigin']
+                elem=f'downcast[P, {MD}]' if borrowing else 'A'
+                cb=f'_NativeBorrowRef[P, R, {error}, F, {kind=="raising"}, o]' if borrowing else f'_NativeUnaryRef[A, R, {error}, F, {kind=="raising"}, o]'
+                build=f'{cb}(Pointer(to=function))';arg='ref[o] function: F';effect='R';fe=error
+            else:
+                params=['C: BorrowCallable'] if borrowing else [f'F: UnaryContract & {MD}']
+                elem=f'downcast[C.Payload, {MD}]' if borrowing else 'F.Arg'
+                cb='C' if borrowing else 'F';build='function^';arg=f'var function: {cb}'
+                effect='C.Result' if borrowing else 'F.Out';fe='C.Failure' if borrowing else 'F.Error'
+            if mode=='free':params+=[f'V: {MD}']
+            if array:params+=['N: Int']
+            params+=['//','G: Monad']+(['M: Monoid'] if folding else [])
+            if kind=='raising':params+=[f'E: {MD}']
+            if native:
+                bound=(f'_RaisingBorrowing[P, R, E]' if kind=='raising' else '_Borrowing[P, R]') if borrowing else ('_RaisingUnary[A, R, E]' if kind=='raising' else '_Unary[A, R]')
+                params+=['F: '+bound]
+            params+=['X: AnyType = _InferError']
+            source='V' if mode=='free' else 'Self.I' if mode=='iter' else 'Self.Value'
+            value='source^' if mode=='free' else 'self._iterator^' if mode=='iter' else 'self.value^'
+            condition=f'_Source[{source}].Element == {elem}'
+            if array:
+                condition=f'Self.Value == Array[{elem}, N]';source=f'List[{elem}]'
+                value=f'_take_array(rebind_var[Array[{elem}, N]]({value}))'
+            selected=elem if borrowing else f'_ListElement[G.Element[{effect}]]'
+            callback=f'_EffectRetain[{elem}, G, {cb}, True]' if borrowing else cb
+            callback_value=f'{callback}({build})' if borrowing else build
+            step=f'_FoldMappedStep[G, M, {cb}]' if folding else f'_SearchStep[{selected}, {callback}]'
+            policy='_AllLive[M.Value]' if folding else f'_FirstPresent[{selected}]'
+            plan=f'_EffectFold[G, {source}, {step}, {policy}]'
+            actual=f'_CommonError[M.Error, {plan}.Error]' if folding else f'{plan}.Error'
+            raised=f'_EntryError[X, {actual}]'
+            condition+=f' and G.Element[{effect}] == '+('M.Value' if folding else 'Bool' if borrowing else f'Optional[{selected}]')
+            condition+=f' and _CarrierCompatible[G, {effect}] and RepeatableUnary[{callback}]'
+            # Generic forwarding can prove the native callback error directly;
+            # deferred families instead admit their construction error. The
+            # shared fold boundary checks every actual family error.
+            condition+=f' and (_ErrorCompatible[{raised}, {fe}] or _ErrorCompatible[{raised}, {actual}])'
+            if folding: condition+=f' and _ErrorCompatible[{raised}, M.Error]'
+            if folding:
+                combine='_BindFirst[_AccumulatePair[_Combine[M]]]'
+                condition+=f' and _MapCompatible[G, {effect}, {combine}] and _ErrorCompatible[_CommonError[{fe}, M.Error], M.Error]'
+                call=f'_fold_map_effect[G, M, {source}, {cb}, {raised}]({build}, {value})'
+            else:
+                call=f'_fold_effect[G, {source}, {step}, {policy}, {raised}]({step}({callback_value}), Optional[{selected}](), {value})'
+            result=f'{plan}.Out'
+            args=[arg]+(['var source: V'] if mode=='free' else [])
+            if mode!='free':args.insert(0,'deinit self')
+            if mode=='piped':result=f'Piped[{result}]';call=f'Piped({call})'
+            ind='' if mode=='free' else '    '
+            summary={'find_effect':'Find the first original element selected by an effectful borrowing predicate in each live branch.','find_map_effect':'Find the first present Optional produced inside the selected Monad in each live branch.','fold_map_effect':'Map each element into the selected Monad and combine its values in order with an explicit Monoid.'}[name]
+            out.append(f'\n{ind}def {name}[{", ".join(params)}]({", ".join(args)}) raises {raised} -> {result} where {condition}:\n{ind}    """{summary}"""\n{ind}    return {call}\n')
+    return document_first_methods(''.join(out))

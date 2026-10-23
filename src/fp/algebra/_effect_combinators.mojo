@@ -1,11 +1,13 @@
 """Policies and continuations for effectful reductions and conditional bind."""
 from std.builtin.rebind import downcast, rebind_var
-from fp.callables.protocols import BinaryContract, Binary, ThunkContract, OnceThunk, OnceUnary, MutableUnary, BorrowCallable
-from fp.callables.invoke import call_repeated, invoke_borrowed, RepeatableThunk
-from fp.callables._receiver import _thunk_once_as
+from fp.callables.protocols import BinaryContract, Binary, ThunkContract, OnceThunk, OnceUnary, MutableUnary, BorrowCallable, UnaryContract, MutableBinary
+from fp.callables.invoke import call_repeated, invoke_borrowed, RepeatableThunk, RepeatableUnary
+from fp.callables._receiver import _thunk_once_as, _unary_repeated_as
 from fp.functions.composition import Identity
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from .protocols import Monad, _LiveAccumulator
+from .protocols import Monad, _LiveAccumulator, Monoid, _AccumulatePair, _BindFirst, _start_as
+from ._accumulation import _Combine
+from ._admission import _MapCompatible
 
 
 struct _AllLive[A: Movable & Deinitable](_LiveAccumulator):
@@ -95,3 +97,53 @@ def _if_effect[G: Monad, V: Movable & Deinitable, L: ThunkContract & Movable & D
     except error:
         comptime assert _ErrorCompatible[E, type_of(error)]
         _propagate_error[E](error^)
+
+
+@fieldwise_init
+struct _SearchStep[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](MutableBinary):
+    var function: Self.F
+    comptime First = Optional[Self.A]
+    comptime Second = Self.F.Arg
+    comptime Out = Self.F.Out
+    comptime Error = Self.F.Error
+    def call_mut(mut self, var first: Self.First, var item: Self.Second) raises Self.Error -> Self.Out:
+        # The dependent fold calls only live (absent) accumulators. Successful
+        # branches are retained by that driver without evaluating this step.
+        comptime assert RepeatableUnary[Self.F]
+        return _unary_repeated_as[Self.Error](self.function, item^)
+
+
+@fieldwise_init
+struct _FoldMappedStep[G: Monad, M: Monoid, F: UnaryContract & Movable & Deinitable](MutableBinary):
+    var function: Self.F
+    comptime First = Self.M.Value
+    comptime Second = Self.F.Arg
+    comptime Combine = _BindFirst[_AccumulatePair[_Combine[Self.M]]]
+    comptime Out = Self.G.Mapped[Self.F.Out, Self.Combine]
+    comptime Error = _CommonError[Self.F.Error, Self.G.MapError[Self.F.Out, Self.Combine]]
+    def call_mut(mut self, var first: Self.First, var item: Self.Second) raises Self.Error -> Self.Out:
+        comptime assert RepeatableUnary[Self.F]
+        comptime assert Self.G.Element[Self.F.Out] == Self.M.Value
+        comptime assert _MapCompatible[Self.G, Self.F.Out, Self.Combine]
+        comptime assert _ErrorCompatible[Self.Error, Self.F.Error] and _ErrorCompatible[Self.Error, Self.G.MapError[Self.F.Out, Self.Combine]], "fold_map_effect: incompatible native errors"
+        var produced = _unary_repeated_as[Self.Error](self.function, item^)
+        # The canonical owned partial copies the accumulator only when the
+        # selected family requires repeated branches; single-use maps move it.
+        var combine = Self.Combine(_AccumulatePair[_Combine[Self.M]](), first^)
+        try:
+            return Self.G.map(combine^, produced^)
+        except error:
+            comptime assert _ErrorCompatible[Self.Error, type_of(error)]
+            _propagate_error[Self.Error](error^)
+
+
+def _fold_map_effect[G: Monad, M: Monoid, V: Movable & Deinitable,
+                     F: UnaryContract & Movable & Deinitable, E: Movable & Deinitable](
+    var function: F, var source: V
+) raises E -> _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Out:
+    comptime assert _ErrorCompatible[E, M.Error]
+    # Identity construction precedes source binding, even for a deferred G.
+    # Mapping and combination follow the selected family's existing timing.
+    var initial = _start_as[E, _Combine[M]]()
+    return _fold_effect[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value], E](
+        _FoldMappedStep[G, M, F](function^), initial^, source^)
