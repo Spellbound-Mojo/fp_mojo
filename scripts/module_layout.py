@@ -26,6 +26,7 @@ SOURCE_MODULES = (
     ('iteration', 'iteration/terminals'),
     ('iteration', 'iteration/branching'),
     ('iteration', 'iteration/alignment'),
+    ('iteration', 'iteration/scans'),
     ('control', 'control/loops'),
     ('control', 'control/scan'),
     *(( 'algebra', 'algebra/' + name) for name in ('protocols', 'operations', 'filtering', 'conditional', 'errors', 'instances', '_derived', 'monoids', 'validation', 'non_empty', 'ior')),

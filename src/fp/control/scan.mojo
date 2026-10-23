@@ -2,8 +2,7 @@
 from std.iter import Iterator
 from std.utils import Variant
 from std.builtin.rebind import rebind_var
-from std.memory import MaybeUninit
-from fp.callables.products import _take_pair
+from fp.callables._scan import _Carry
 from fp.callables.protocols import Binary
 from fp.iteration._terminal import _collect_list
 from fp._internal.errors import _propagate_error
@@ -98,7 +97,7 @@ def _scan_raising[A: Movable & Deinitable, X: Movable & Deinitable,
 
 @fieldwise_init
 struct _ScanState[A: Movable & Deinitable, Y: Movable & Deinitable](Movable):
-    var carry: Optional[Self.A]
+    var carry: _Carry[Self.A]
     var outputs: List[Self.Y]
 
     def into_result(deinit self) -> Tuple[Self.A, List[Self.Y]]:
@@ -118,13 +117,7 @@ def _scan_step[A: Movable & Deinitable, X: Movable & Deinitable,
 ) raises E capturing -> _ScanState[A, Y]:
     var value = _scan_item[X, no_input](context[1][])
     var pair = apply(state.carry.take(), value^, context[0][])
-    # Native tuples have a consuming pack boundary rather than movable indexed
-    # references; split the pair into untagged slots.
-    var carry = MaybeUninit[A]()
-    var output = MaybeUninit[Y]()
-    _take_pair(pair^, carry, output)
-    state.outputs.append(output^.unsafe_assume_init())
-    state.carry = Optional(carry^.unsafe_assume_init())
+    state.outputs.append(state.carry.replace(pair^))
     return state^
 
 
@@ -145,7 +138,7 @@ def _scan[A: Movable & Deinitable, X: Movable & Deinitable,
         result = _indexed[_ScanState[A, Y], C, E,
             _scan_step[A, X, Y, F, E, origin_of(function), origin_of(xs), no_input, apply],
             unroll, static_length >= 0, 0, static_length](
-            0, count, (Pointer(to=function), Pointer(to=xs)), _ScanState[A, Y](Optional(initial^), List[Y]()))
+            0, count, (Pointer(to=function), Pointer(to=xs)), _ScanState[A, Y](_Carry(initial^), List[Y]()))
     except error:
         comptime if E == Never:
             _propagate_error[ScanError[E]](error^)

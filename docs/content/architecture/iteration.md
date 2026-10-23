@@ -234,7 +234,7 @@ callback side effects are not rolled back.
 
 ## Iterator expansion
 
-I1 through I4 are implemented. I5 and I6 describe subsequent slices before or
+I1 through I5 are implemented. I6 describes the remaining slice before or
 alongside fallible-stream work. The source review compares the pinned
 Mojo 1.1.0 library with Mojo 1.2.0 and Cats' current source. The reviewed Mojo
 1.2.0 iterator modules retain the relevant operations and constraints; this
@@ -289,12 +289,11 @@ coverage and documentation, not another implementation named `get`.
 | I2 (implemented) | Captured-predicate `take_while`/`drop_while`; consuming `first`, `last`, `is_empty`, `count`, `count_where`, `contains`, `for_each`; terminal `to_non_empty_list`, `combine_all_optional`, `collect_fold` | Shared prefix state and existing callback bridges; existing terminal accumulation, NonEmptyList constructor and Semigroup |
 | I3 (implemented) | Lazy `partition`, `partition_map`, `unzip` with required `Unbounded` or `BoundedFail` buffering policy | One shared source owner, branch routing and queue engine; existing Result and tuple extraction |
 | I4 (implemented) | `align`, `align_with`, `pad_zip` | One two-source alignment iterator producing the existing Ior carrier |
-| I5 | Lazy `scan_map` with separate carry and output | Shared carry/output transition with existing scan mechanisms, below control and algebra |
+| I5 (implemented) | Lazy `scan_map` with separate carry and output | Shared carry/output transition with existing scan mechanisms, below control and algebra |
 | I6 | `find_effect`, `find_map_effect`, `sequence_filter`, `fold_map_effect` | Existing algebra traversal, retention and dependent-fold mechanisms |
 
-I5 is the next implementation slice. I1 through I4 complete the first
-iterator expansion milestone. I5 and I6 are follow-up candidates; they need not
-all become prerequisites for fallible streams.
+I6 is the next implementation slice. I1 through I4 complete the first
+iterator expansion milestone. The remaining effectful terminals reuse existing family mechanisms.
 
 ### Native adapter forwarding
 
@@ -517,19 +516,27 @@ copy or factory contract is useful enough to add.
 ### State and effect follow-ups
 
 Cats' `mapAccumulate` returns the final state and a complete output collection.
-The lazy proposal is deliberately named `scan_map`: a non-raising step consumes
+The lazy operation is named `scan_map`: a non-raising step consumes
 `(state, element)` and returns `(new_state, output)`, yielding exactly one output
 per input, with no initial output and no accumulator-copy requirement. State
 remains owned by the iterator and is destroyed on abandonment. It does not
 promise access to a final state from an unfinished or consumed chain.
 
-The existing `scan_left` owns snapshot scheduling, and `fp.control.scan` already
-owns an eager carry/output operation. Share suitable transition and pair-split
-mechanics below their consumers; iteration must not import control or effects.
-Preserve `scan_left`'s initial snapshot timing and copying requirements, and
-control scan's length, error and scheduling contracts. An eager iterator
-`map_accumulate` returning `(final_state, List[output])` remains a separate
-candidate, not an alias for the lazy operation.
+`scan_left` and `scan_map` share `_ScanDriver`, with a compile-time initial
+snapshot policy and a callback invocation policy. The snapshot policy turns
+`scan_left`'s updated accumulator into `(carry, copy)`; its initial output still
+precedes the first pull. Both use `callables._scan._Carry` to move a carry into
+the callback and install the returned pair using `_take_pair`. The same carry
+owner serves `fp.control.scan`, below both iteration and control. An empty
+Optional slot represents the interval where the callback owns the carry, so
+native error unwinding never destroys a moved value twice.
+
+Native callback bridges remain signature-specific: lazy scans own and mutably
+call their captures, while control scan borrows its native callback. Control
+scan keeps its existing length validation, reversal, unrolling, error wrapping
+and non-inlined step boundary. `scan_left` keeps exactly one copy per yielded
+snapshot. An eager iterator `map_accumulate` returning
+`(final_state, List[output])` remains a separate candidate.
 
 For I6, `sequence_filter` is identity `traverse_filter`. `find_effect` and
 `find_map_effect` use the dependent-fold continuation policy and stop on the

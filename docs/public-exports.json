@@ -4175,6 +4175,20 @@
             "sha256": "3cd57fb4f63438c764f2c661ee19c14eb415474fb7bafc2dd76bee1ace76bd92"
           }
         ],
+        "scan_map": [
+          {
+            "signature": "def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable](deinit self, var function: def(var A, var T) thin -> Tuple[A, Y], var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, def(var A, var T) thin -> Tuple[A, Y]]] where Self.I.Element == T:",
+            "sha256": "cd56ae95ad7b67399ae240d06cd587b739edbc4221b701547c4907316bf4efdf"
+          },
+          {
+            "signature": "def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, //, F: _LazyScanStep[A, T, Y]](deinit self, var function: F, var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, F]] where Self.I.Element == T:",
+            "sha256": "0811b8c4bc22b69b2997eeb712dcd243b0f07e438163b349c3d30b0633690715"
+          },
+          {
+            "signature": "def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](deinit self, var function: F, var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, F]] where Self.I.Element == T and F.First == A and F.Second == T and F.Out == Tuple[A, Y] and F.Error == Never and RepeatableBinary[F]:",
+            "sha256": "797096a88d1d25800307acd34f28fe87ece495b6857270caf447b6c367bde601"
+          }
+        ],
         "map": [
           {
             "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable]( deinit self, function: def(var T) thin -> U ) -> Iter[MapIterator[T, U, Self.I]] where Self.I.Element == T:",
@@ -4861,6 +4875,13 @@
         "comptime PadZipIterator[A: Movable & Deinitable, B: Movable & Deinitable, I: Iterator, J: Iterator] = _Map[Ior[A,B],Tuple[Optional[A],Optional[B]],_Align[A,B,I,J],_Pad[A,B]]"
       ],
       "provider": "iteration/alignment"
+    },
+    "iteration.ScanMapIterator": {
+      "kind": "type or alias",
+      "declarations": [
+        "comptime ScanMapIterator[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, I: Iterator, F: Movable & Deinitable = def(var A,var T) thin -> Tuple[A,Y]] = _ScanDriver[A,T,Y,I,F,False,_apply_lazy_scan[A,T,Y,F]]"
+      ],
+      "provider": "iteration/scans"
     },
     "control.ScanLengthError": {
       "kind": "type or alias",
@@ -8148,6 +8169,24 @@
         }
       ],
       "provider": "iteration/alignment"
+    },
+    "iteration.scan_map": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable](var function: def(var A, var T) thin -> Tuple[A, Y], var initial: A, var source: V) -> ScanMapIterator[A, T, Y, _Source[V], def(var A, var T) thin -> Tuple[A, Y]] where _Source[V].Element == T:",
+          "sha256": "f6b98ddc7f9800282626ddedabdb9ae2e7b9d494cb3aa149753d25e88bcd3a4c"
+        },
+        {
+          "signature": "def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, //, F: _LazyScanStep[A, T, Y]](var function: F, var initial: A, var source: V) -> ScanMapIterator[A, T, Y, _Source[V], F] where _Source[V].Element == T:",
+          "sha256": "1c09956afd57fe17670153c5a34ae22d5d0f1bf74e43e98623b697ea973bd3e6"
+        },
+        {
+          "signature": "def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, V: Movable & Deinitable](var function: F, var initial: A, var source: V) -> ScanMapIterator[A, T, Y, _Source[V], F] where _Source[V].Element == T and F.First == A and F.Second == T and F.Out == Tuple[A, Y] and F.Error == Never and RepeatableBinary[F]:",
+          "sha256": "d6a4a7e238f29e262283f976c4540fa47cafe6732b673c37ff3a58da7b9e5d88"
+        }
+      ],
+      "provider": "iteration/scans"
     },
     "control.while_loop": {
       "kind": "function",

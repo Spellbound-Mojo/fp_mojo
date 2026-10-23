@@ -240,3 +240,41 @@ def _apply_lazy_pair[A: Movable & Deinitable, B: Movable & Deinitable,
         comptime Fn = downcast[F, _Binary[A, B, R]]
         comptime assert Fn.A == A and Fn.B == B and Fn.R == R
         return _call_lazy_binary[A, B, R, Fn](rebind[Fn](function), first^, second^)
+
+
+comptime _LazyScanStep[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable] = def(var A, var T) -> Tuple[A,Y]
+
+
+def _call_lazy_scan[A: Movable & Deinitable, T: Movable & Deinitable,
+                    Y: Movable & Deinitable, F: _LazyScanStep[A,T,Y]](
+    mut function: F, var carry: A, var value: T
+) -> Tuple[A,Y]:
+    # Keep the structural pair in the native signature. This mutable receiver
+    # preserves owned capture updates; eager control.scan borrows its callback.
+    return function(carry^, value^)
+
+
+def _apply_lazy_scan[A: Movable & Deinitable, T: Movable & Deinitable,
+                     Y: Movable & Deinitable, F: Movable & Deinitable](
+    mut function: F, var carry: A, var value: T
+) -> Tuple[A,Y]:
+    from fp.callables.protocols import BinaryContract
+    from fp.callables.invoke import RepeatableBinary
+    comptime if conforms_to(F, BinaryContract):
+        comptime C = downcast[F, BinaryContract & Movable & Deinitable]
+        comptime assert RepeatableBinary[C] and C.Error == Never and C.First == A and C.Second == T and C.Out == Tuple[A,Y], "scan_map: exact non-raising repeatable binary callable required"
+        return rebind_var[Tuple[A,Y]](_binary_repeated_as[Never](rebind[C](function),rebind_var[C.First](carry^),rebind_var[C.Second](value^)))
+    elif conforms_to(F, _LazyScanStep[A,T,Y]):
+        comptime Fn = downcast[F, _LazyScanStep[A,T,Y]]
+        comptime assert Fn.A == A and Fn.T == T and Fn.Y == Y, "scan_map: incompatible native callback signature"
+        return _call_lazy_scan[A,T,Y,Fn](rebind[Fn](function),carry^,value^)
+    else:
+        comptime assert F == def(var A,var T) thin -> Tuple[A,Y], "scan_map: non-raising native callback required"
+        return rebind[def(var A,var T) thin -> Tuple[A,Y]](function)(carry^,value^)
+
+
+def _snapshot_step[A: Copyable & Deinitable, T: Movable & Deinitable,
+                   F: Movable & Deinitable](mut function: F, var carry: A, var value: T) -> Tuple[A,A]:
+    var updated = _apply_lazy_step[A,T](function,carry^,value^)
+    var snapshot = updated.copy()
+    return (updated^, snapshot^)

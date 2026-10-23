@@ -159,6 +159,9 @@
     },
     "docs/examples/iteration_alignment.mojo": {
       "stdout": "[both=0,10, left=1]\n[both=0,10, right=11, right=12]\npresent: True True\npresent: True False\n"
+    },
+    "docs/examples/iteration_scan_map.mojo": {
+      "stdout": "before consuming: 0\n[total=1, total=3, total=6]\nsteps: 3\nempty: []\nsteps after empty: 3\n"
     }
   }
 }

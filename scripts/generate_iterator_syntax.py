@@ -142,10 +142,12 @@ def terminals(mode):
             out+=emit(name,params,args,result,cond,body,summary,'This is a consuming terminal. Native callbacks are borrowed in place;\nlibrary callbacks are consumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.',error,ind,docs=kind=='pure')
     return out
 
-def methods():return native_methods()+indexed('iter')+prefixes('iter')+terminals('iter')+branching('iter')+alignment('iter')
+def methods():return native_methods()+indexed('iter')+prefixes('iter')+terminals('iter')+branching('iter')+alignment('iter')+scans('iter')
 
 
 PARAMS.update({'U':'The callback result type, including origins.'})
+PARAMS['Y']='The independent scan output type, including origins.'
+ARGS['initial']='The initial carry, consumed; scan_map does not yield it.'
 ARGS['buffer']='The required buffering policy; there is no implicit default.'
 
 def branching(mode):
@@ -221,4 +223,26 @@ def alignment(mode):
                 result=f'Iter[{result}]';body=f'return Iter({call})'
             summary={'align':'Align positions to Ior until both sources end, without truncating either side.','pad_zip':'Align positions to pairs of Optional fields, never yielding two absent fields.','align_with':'Map each owned Ior from alignment through a non-raising callback.'}[name]
             out+=emit(name,params,args,result,cond,body,summary,detail,indent=ind,docs=kind!='native' and kind!='library')
+    return out
+
+
+def scans(mode):
+    out=''; ind='' if mode=='free' else '    '
+    it='_Source[V]' if mode=='free' else 'Self.I';src='source^' if mode=='free' else 'self._iterator^'
+    for kind in ['thin','native','library']:
+        params=[f'A: {MD}',f'T: {MD}',f'Y: {MD}']
+        if kind=='library':params+=[f'F: BinaryContract & {MD}']
+        if mode=='free':params+=[f'V: {MD}']
+        if kind=='native':params+=['//','F: _LazyScanStep[A, T, Y]']
+        cb='def(var A, var T) thin -> Tuple[A, Y]' if kind=='thin' else 'F'
+        condition=f'{it}.Element == T'
+        if kind=='library':condition+=' and F.First == A and F.Second == T and F.Out == Tuple[A, Y] and F.Error == Never and RepeatableBinary[F]'
+        args=['var function: '+cb,'var initial: A']+(['var source: V'] if mode=='free' else [])
+        result=f'ScanMapIterator[A, T, Y, {it}, {cb}]'
+        val='function'+('' if kind=='thin' else '^')
+        if mode=='free':body=f'return {result}({val}, initial^, _source({src}), False, False)'
+        else:
+            args.insert(0,'deinit self');result=f'Iter[{result}]'
+            body=f'return Iter(_scan_map[A=A, T=T, Y=Y]({val}, initial^, {src}))'
+        out+=emit('scan_map',params,args,result,condition,body,'Lazily consume (carry, input) into (new carry, output), yielding one output per input.','Construction pulls nothing and there is no initial output. The carry need not be Copyable.\nEach non-raising step moves both arguments; output and carry may have different types.\nExhaustion is fused. Abandonment releases carry, callback and source; final carry is not exposed.',indent=ind,docs=kind=='thin')
     return out

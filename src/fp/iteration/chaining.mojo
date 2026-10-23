@@ -1,6 +1,8 @@
 """Consuming method chains over native iterators."""
 from .alignment import AlignIterator, AlignWithIterator, PadZipIterator, align as _align, align_with as _align_with, pad_zip as _pad_zip
 from fp.data.ior import Ior
+from .scans import ScanMapIterator, scan_map as _scan_map
+from ._callbacks import _LazyScanStep
 from std.builtin.variadics import TypeList
 from std.iter import _Enumerate, _ZipIterator, _ChainedIterator, enumerate as _std_enumerate
 from std.itertools import take as _std_take, drop as _std_drop, take_while as _std_take_while, drop_while as _std_drop_while
@@ -726,6 +728,37 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Map each owned Ior from alignment through a non-raising callback.
         """
         return Iter(_align_with[A=A, B=B](function^, self._iterator^, other^))
+
+    def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable](deinit self, var function: def(var A, var T) thin -> Tuple[A, Y], var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, def(var A, var T) thin -> Tuple[A, Y]]] where Self.I.Element == T:
+        """Lazily consume (carry, input) into (new carry, output), yielding one output per input.
+
+        Construction pulls nothing and there is no initial output. The carry need not be Copyable.
+        Each non-raising step moves both arguments; output and carry may have different types.
+        Exhaustion is fused. Abandonment releases carry, callback and source; final carry is not exposed.
+
+        Parameters:
+            A: The first callback argument type.
+            T: The source element type, including origins.
+            Y: The independent scan output type, including origins.
+
+        Args:
+            function: The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.
+            initial: The initial carry, consumed; scan_map does not yield it.
+
+        Returns:
+            Iter[ScanMapIterator[A, T, Y, Self.I, def(var A, var T) thin -> Tuple[A, Y]]] with the ownership, timing and empty-input behavior described above.
+        """
+        return Iter(_scan_map[A=A, T=T, Y=Y](function, initial^, self._iterator^))
+
+    def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, //, F: _LazyScanStep[A, T, Y]](deinit self, var function: F, var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, F]] where Self.I.Element == T:
+        """Lazily consume (carry, input) into (new carry, output), yielding one output per input.
+        """
+        return Iter(_scan_map[A=A, T=T, Y=Y](function^, initial^, self._iterator^))
+
+    def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](deinit self, var function: F, var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, F]] where Self.I.Element == T and F.First == A and F.Second == T and F.Out == Tuple[A, Y] and F.Error == Never and RepeatableBinary[F]:
+        """Lazily consume (carry, input) into (new carry, output), yielding one output per input.
+        """
+        return Iter(_scan_map[A=A, T=T, Y=Y](function^, initial^, self._iterator^))
     # --- end iterator expansion syntax ---
 
     # Native thin functions and closures keep their own admission signatures,

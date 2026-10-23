@@ -126,3 +126,5 @@ from .terminals import first, last, is_empty, count, count_where, contains, for_
 from .branching import Unbounded, BoundedFail, BufferCapacityError, BufferLimitExceeded, PartitionBranches, PartitionMapBranches, UnzipBranches, partition, partition_map, unzip
 
 from .alignment import AlignIterator, AlignWithIterator, PadZipIterator, align, align_with, pad_zip
+
+from .scans import ScanMapIterator, scan_map

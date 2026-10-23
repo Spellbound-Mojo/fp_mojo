@@ -95775,6 +95775,175 @@
       "summary": "Lazily yield accumulator snapshots with a library `Binary` step."
      }
     ],
+    "scan_map": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "name": "function",
+        "type": "def(var A, var T) thin -> Tuple[A, Y]",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The initial carry, consumed; scan_map does not yield it.",
+        "name": "initial",
+        "type": "A",
+        "variadic": false
+       }
+      ],
+      "description": "Construction pulls nothing and there is no initial output. The carry need not be Copyable.\nEach non-raising step moves both arguments; output and carry may have different types.\nExhaustion is fused. Abandonment releases carry, callback and source; final carry is not exposed.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The first callback argument type.",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The source element type, including origins.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The independent scan output type, including origins.",
+        "inferred": false,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Iter[ScanMapIterator[A, T, Y, Self.I, def(var A, var T) thin -> Tuple[A, Y]]] with the ownership, timing and empty-input behavior described above.",
+       "type": "Iter[ScanMapIterator[A, T, Y, Self.I, def(var A, var T) thin -> Tuple[A, Y]]]"
+      },
+      "signature": "def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable](deinit self, var function: def(var A, var T) thin -> Tuple[A, Y], var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, def(var A, var T) thin -> Tuple[A, Y]]] where Self.I.Element == T",
+      "summary": "Lazily consume (carry, input) into (new carry, output), yielding one output per input."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "initial",
+        "type": "A",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_LazyScanStep[A, T, Y]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[ScanMapIterator[A, T, Y, Self.I, F]]"
+      },
+      "signature": "def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, //, F: _LazyScanStep[A, T, Y]](deinit self, var function: F, var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, F]] where Self.I.Element == T",
+      "summary": "Lazily consume (carry, input) into (new carry, output), yielding one output per input."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "initial",
+        "type": "A",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "BinaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[ScanMapIterator[A, T, Y, Self.I, F]]"
+      },
+      "signature": "def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](deinit self, var function: F, var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, F]] where Self.I.Element == T and F.First == A and F.Second == T and F.Out == Tuple[A, Y] and F.Error == Never and RepeatableBinary[F]",
+      "summary": "Lazily consume (carry, input) into (new carry, output), yielding one output per input."
+     }
+    ],
     "sequence": [
      {
       "args": [],
@@ -97854,6 +98023,54 @@
    "provider": "iteration/adapters",
    "signature": "comptime ScanIterator[A: Copyable & Deinitable, T: Movable & Deinitable, I: Iterator, F: Movable & Deinitable = def(var A, var T) thin -> A] = _Scan[A, T, I, F]",
    "summary": "The type `scan_left` returns, for a generic function's return annotation.",
+   "traits": []
+  },
+  "iteration.ScanMapIterator": {
+   "aliases": [],
+   "description": "",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The carry type; copying is not required.",
+     "inferred": false,
+     "name": "A",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The source element type, including origins.",
+     "inferred": false,
+     "name": "T",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The output type, independent of the carry type.",
+     "inferred": false,
+     "name": "Y",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The normalized native iterator type.",
+     "inferred": false,
+     "name": "I",
+     "type": "Iterator",
+     "variadic": false
+    },
+    {
+     "description": "The concrete non-raising step type, retaining captures and origins.",
+     "inferred": false,
+     "name": "F",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "iteration/scans",
+   "signature": "comptime ScanMapIterator[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, I: Iterator, F: Movable & Deinitable = def(var A,var T) thin -> Tuple[A,Y]] = _ScanDriver[A,T,Y,I,F,False,_apply_lazy_scan[A,T,Y,F]]",
+   "summary": "A lazy scan with separate owned carry and output; one output per input.",
    "traits": []
   },
   "iteration.TakeWhileIterator": {
@@ -104919,6 +105136,223 @@
     }
    ],
    "provider": "iteration/adapters",
+   "summary": ""
+  },
+  "iteration.scan_map": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "name": "function",
+       "type": "def(var A, var T) thin -> Tuple[A, Y]",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The initial carry, consumed; scan_map does not yield it.",
+       "name": "initial",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The source, consumed at its current position.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "Construction pulls nothing and there is no initial output. The carry need not be Copyable.\nEach non-raising step moves both arguments; output and carry may have different types.\nExhaustion is fused. Abandonment releases carry, callback and source; final carry is not exposed.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first callback argument type.",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The source element type, including origins.",
+       "inferred": false,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The independent scan output type, including origins.",
+       "inferred": false,
+       "name": "Y",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The consumed native iterator or owned collection type.",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "ScanMapIterator[A, T, Y, _Source[V], def(var A, var T) thin -> Tuple[A, Y]] with the ownership, timing and empty-input behavior described above.",
+      "type": "ScanMapIterator[A, T, Y, _Source[V], def(var A, var T) thin -> Tuple[A, Y]]"
+     },
+     "signature": "def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable](var function: def(var A, var T) thin -> Tuple[A, Y], var initial: A, var source: V) -> ScanMapIterator[A, T, Y, _Source[V], def(var A, var T) thin -> Tuple[A, Y]] where _Source[V].Element == T",
+     "summary": "Lazily consume (carry, input) into (new carry, output), yielding one output per input."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "initial",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "Y",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_LazyScanStep[A, T, Y]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "ScanMapIterator[A, T, Y, _Source[V], F]"
+     },
+     "signature": "def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, //, F: _LazyScanStep[A, T, Y]](var function: F, var initial: A, var source: V) -> ScanMapIterator[A, T, Y, _Source[V], F] where _Source[V].Element == T",
+     "summary": "Lazily consume (carry, input) into (new carry, output), yielding one output per input."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "initial",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "Y",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "BinaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "ScanMapIterator[A, T, Y, _Source[V], F]"
+     },
+     "signature": "def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, V: Movable & Deinitable](var function: F, var initial: A, var source: V) -> ScanMapIterator[A, T, Y, _Source[V], F] where _Source[V].Element == T and F.First == A and F.Second == T and F.Out == Tuple[A, Y] and F.Error == Never and RepeatableBinary[F]",
+     "summary": "Lazily consume (carry, input) into (new carry, output), yielding one output per input."
+    }
+   ],
+   "provider": "iteration/scans",
    "summary": ""
   },
   "iteration.sequence": {

@@ -111,6 +111,7 @@ Higher packages compose that implementation and add only their own behavior.
 | Runtime-sized owned traversal | `algebra.protocols._loop` with an accumulation policy (`_Accumulate`) | `collect`; one loop per family; OptionalT, ResultT and WriterT wrap the policy and delegate to their base |
 | Choice between two carriers of one family | `Monad._Joined`, `_join_left`, `_join_right` | OptionalT/ResultT bind and map2 steps, Writer, Reader and State choices |
 | Lazy right operand, produced once | `algebra.protocols._Lazy` | State, OptionalT and ResultT map2 steps |
+| Owned scan carry replacement | `callables._scan` (`_Carry`) | `scan_left`, `scan_map`, `control.scan` |
 | Owned pair split | `callables.products` (`_take_pair`) | State and Writer steps, `scan` |
 
 Borrowed and owned results stay separate because Mojo gives them different

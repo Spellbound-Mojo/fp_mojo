@@ -7,6 +7,8 @@ Standard `chain`, `zip`, `take` and the like stay in `std.iter` and
 """
 
 from fp.callables._views import _UnaryViewable
+from fp.callables._scan import _Carry
+from ._callbacks import _snapshot_step
 from fp.callables._predicates import _filter_decision
 from std.iter import Iterator, IterableOwned, iter
 from std.builtin.rebind import downcast, rebind_var
@@ -296,29 +298,43 @@ def flat_map[T: Movable & Deinitable, U: Movable & Deinitable, I: Movable & Dein
     return flatten(mapped^)
 
 
-@fieldwise_init
-struct _Scan[A: Copyable & Deinitable, T: Movable & Deinitable,
-             I: Iterator, F: Movable & Deinitable = def(var A, var T) thin -> A](Iterator, IterableOwned):
-    comptime Element = Self.A
+struct _ScanDriver[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable,
+                   I: Iterator, F: Movable & Deinitable, initial_snapshot: Bool,
+                   apply: def(mut F, var A, var T) thin -> Tuple[A,Y]](Iterator, IterableOwned):
+    comptime Element = Self.Y
     comptime IteratorOwnedType = Self
     var function: Self.F
-    var accumulator: Self.A
+    var carry: _Carry[Self.A]
     var source: Self.I
     var started: Bool
     var done: Bool
+
+    def __init__(out self, var function: Self.F, var initial: Self.A, var source: Self.I,
+                 started: Bool, done: Bool):
+        self.function = function^
+        self.carry = _Carry(initial^)
+        self.source = source^
+        self.started = started
+        self.done = done
 
     def __iter__(var self) -> Self:
         return self^
 
     def __next__(mut self) raises StopIteration -> Self.Element:
-        comptime assert Self.I.Element == Self.T, "scan_left: source element type must match T"
+        comptime assert Self.I.Element == Self.T, "scan_left: source element type must match T" if Self.initial_snapshot else "scan_map: source element type must match T"
         if self.done: raise StopIteration()
-        if not self.started:
-            self.started = True
-            return self.accumulator.copy()
+        comptime if Self.initial_snapshot:
+            comptime assert conforms_to(Self.A, Copyable) and Self.Y == Self.A
+            if not self.started:
+                self.started = True
+                return rebind_var[Self.Y](self.carry.snapshot())
         var item = _next_fused(self.source, self.done)
-        self.accumulator = _apply_lazy_step[Self.A, Self.T](self.function, self.accumulator^, rebind_var[Self.T](item^))
-        return self.accumulator.copy()
+        var pair = Self.apply(self.function, self.carry.take(), rebind_var[Self.T](item^))
+        return self.carry.replace(pair^)
+
+
+comptime _Scan[A: Copyable & Deinitable, T: Movable & Deinitable, I: Iterator,
+               F: Movable & Deinitable = def(var A, var T) thin -> A] = _ScanDriver[A,T,A,I,F,True,_snapshot_step[A,T,F]]
 
 
 def scan_left[A: Copyable & Deinitable, T: Movable & Deinitable, I: Movable & Deinitable](

@@ -92,3 +92,20 @@ move-only and retain their native origins. `align_with` callbacks cannot raise.
 `AlignIterator.bounds()` combines the remaining bounds by taking their maximum;
 an unknown upper bound on either live side leaves the combined upper bound
 unknown. The mapped forms retain the existing map adapter's conservative bounds.
+
+## Separate carry and output
+
+<!-- example: docs/examples/iteration_scan_map.mojo -->
+
+`scan_map(step, initial, source)` and `.scan_map(step, initial)` consume a step
+`(var A, var T) -> Tuple[A,Y]`. The carry `A` and output `Y` are independent;
+neither needs to be Copyable. Every pull consumes one source item and invokes
+the non-raising step once. Empty input yields nothing, and exhaustion is fused.
+The carry stays owned by the iterator until it is destroyed, including early
+abandonment through `take`; no final-carry extraction is promised.
+
+Use `scan_left` when each accumulator snapshot is an output, including the
+initial snapshot. Use `fp.control.scan` for eager finite scans that return the
+final carry and collected outputs. Its native errors and scheduling are unchanged.
+Generic native wrappers preserve `A`, `T`, `Y` and forward them explicitly;
+`ScanMapIterator[A,T,Y,I,F]` names the concrete lazy iterator, including origins.
