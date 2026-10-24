@@ -23,6 +23,52 @@ API without a separate review.
 - Inferring a nested native `Result.map_err` or `or_else` call from a generic
   `Piped` overload crashes this compiler. Those forwards use the shared native
   callback view and Result's existing library-callback entry point.
+- Direct generic callback fields can lose their native function witnesses.
+  `NativeUnary` and the private lazy adapters use the existing inline optional
+  cell, without allocating or copying captures. `NativeUnary.function` becomes
+  `function()` for borrowing and `into_function()` for consuming extraction.
+- A consumed scalar forwarded through the generic borrowing bridge can arrive
+  as zero at O0. Mandatory inlining of `invoke_borrowed` preserves the payload
+  reference and fixes the effectful reduction example through both import routes.
+- An unconstrained variadic pipeline overload outranks the fixed thin-function
+  overloads. Inferred library-stage packs now carry their existing callable
+  requirements in the signature, allowing plain functions to reach the fixed
+  overloads. Explicit-result and explicit-error forwarding remain available.
+- Native callback signatures referring directly to `Self` aliases can fail
+  plain-function conversion. `Piped.then`, Result folds and transformations infer callback input
+  types independently and require equality with the stored payload in `where`
+  clauses. These Result operations use the shared native invocation bridges.
+- Explicit `raises Never` callbacks require a literal `Never` signature during
+  native dispatch. An implicit no-value return is `type_of(None)`, distinct from
+  `NoneType`; discarded Result observers dispatch through its literal signature
+  inside the shared borrowing bridge, preserving the existing overload set.
+- Native `map_n` and `par_map_n` overloads use fixed tuple signatures for one
+  through eight operands. Mojo 1.2 can crash before checking a variadic pack's
+  length, including when both forms are available. These boundaries delegate
+  to the existing product runner. Ordinary calls stay the same; explicit extra
+  carrier type packs become inferred or individually named carrier types.
+  Library callable overloads retain their variadic packs. Inferred `map2` overloads
+  infer the second carrier independently, then constrain its exact payload.
+- Generic `Piped.then` now infers a native callback's exact error without an
+  explicit hint. The former rejection fixture is replaced by a positive
+  propagation test and a rejection test for an incompatible enclosing error.
+- Native Result `flat_tap_err` and `attempt_tap` infer the complete callback
+  result before checking its stored error and embedded origins in `where`.
+  The existing positional `C`/`X` bindings and named `U` binding remain available.
+- Native Result outcome handlers infer their result types independently, then
+  require equality in `where`. `redeem_with` and Piped's native `or_else` infer
+  the complete returned Result before checking its payloads. This avoids
+  conflicts with explicit family bindings while preserving positional callback
+  and error bindings, and named `U`/`V` bindings.
+- Native family `map` and `flat_map` entries are always inlined. Otherwise,
+  captured callbacks forwarded through generic functions can receive invalid
+  capture storage at O0 when the entry builds a borrowed reference adapter.
+  Invocation and family execution still use the existing shared drivers.
+- Native callbacks that mutate owned captures must be marked `@always_inline`
+  on Mojo 1.2, including stored borrowing predicates. Without it, a native-only
+  reproducer records `[1, 1, 1]` instead of `[1, 2, 3]` at O3. An explicit mutable
+  library callable is an alternative. Annotated iterator callbacks retain the
+  state-update and destruction checks at O0 and O3.
 
 The MAX pin is 26.7.0 for the optional device environment. The released
 community package remains FP Mojo 1.0.0 and requires Mojo 1.1.0; installing
@@ -31,49 +77,69 @@ that release with 1.2 is not supported. Use the nightly source checkout.
 ## Mojo 1.2 qualification
 
 The environment and lockfile select stable Mojo 1.2.0, but the library's full
-compatibility migration is **incomplete**. These are Linux x86-64 results from
-2026-10-23; neither macOS nor GPU execution was requalified.
+compatibility migration is **incomplete**. These are Linux x86-64 checkpoints
+from 2026-10-24; neither macOS nor GPU execution was requalified.
 
 | Check | Result |
 |---|---|
-| Locked default environment | Installed; compiler reports `Mojo 1.2.0 (2016d0cd)` |
+| Locked default environment | Compiler reports `Mojo 1.2.0 (2016d0cd)` |
 | Whole-package precompilation | Passes with `--Werror` |
-| Full package suite at O3 | All four executables fail compilation; none of the 308 checks ran |
-| Compile-failure fixtures at O3 | 487/673 match the declared rejection; 120 compiler crashes, 64 diagnostic mismatches, 2 unexpected acceptances |
-| Runnable examples, source/package at O0/O3 | 118/220 pass; 40 compiler crashes, 60 compile errors, 2 execution failures |
-| Python tooling tests | 35 pass; the GNU `/usr/bin/time` test is skipped because that executable is unavailable |
+| Standalone test modules, source at O0/O3 | 232/257 at each level; the same 23 compiler crashes and 2 compilation errors remain at each level; all compiled tests run successfully |
+| Compile-failure fixtures at O3 | 560/673 at the broad checkpoint; 24 additional fixtures subsequently match their declared rejection in the focused run below |
+| Runnable examples, source/package at O0/O3 | 188/220 at the broad checkpoint; the four regressed generic-pipeline runs subsequently pass |
+| Python tooling tests | 36/36 pass, including GNU time resource accounting |
 | Strict documentation build and generated-overload check | Pass |
 
-Retained local reports are `.cache/mojo12-suite-package-o3-1/report.json`,
-`.cache/mojo12-rejects-package-o3-1/report.json`, and
-`.cache/mojo12-docs-full-1/report.json`. Their source inputs were unchanged during
-each run. Compiler crashes are failures, never successful rejection checks.
+The current source report is `.cache/mojo12-source-o0-o3-4/report.json`:
+464/514 test runs pass, with 12 more passing modules at O3 and no regressions
+against `.cache/mojo12-fix-individual-o3-3/report.json`. The broad rejection and
+example checkpoints are `.cache/mojo12-fix-rejects-6/report.json` and
+`.cache/mojo12-fix-docs-5/report.json`. Inputs were unchanged during each run.
+The rejection checkpoint contains 107 compiler crashes, 5 diagnostic mismatches
+and 1 unexpected acceptance before the focused fixes below. Compiler crashes
+are failures, never successful rejection checks.
 
-Outstanding work includes native overload inference in `attempt`, fluent
-`map2`/`map_n` and error operations; generic callable witnesses and result
-inference; and the remaining example/diagnostic differences.
-`effectful_reductions.mojo` produces the wrong result at O0 through both import
-routes (`all values small` instead of `large value found`); its O3 runs pass.
-This runtime failure must be resolved as well as the compilation failures.
-A native-only
-reproducer in `.cache/mojo12-compatibility/native-keyword-overload.mojo` crashes
-with no FP imports: it combines a zero-argument raising callback overload with
-a homogeneous keyword-pack callback overload, then calls the former. This
-establishes a compiler defect for that shape, not that every library workaround
-is impossible.
+The broad runs exposed a regression in explicit `raises Never` thin function
+pointers stored by `as_unary`. Literal `Never` dispatch fixes the four affected
+test modules at O0/O3 and the generic-pipeline example through both import
+routes. The focused reports are `.cache/mojo12-thin-never-matrix/report.json`
+(26/28 pass; the remaining two runs reach the existing `attempt` blocker) and
+`.cache/mojo12-thin-never-docs/report.json` (4/4 pass).
 
-Two previously rejected programs compile without being executed by the runner.
-`piped_generic_raising_error.mojo` describes an old inference limitation and
-needs review as a potential native improvement. `terminal_fold_until_result.mojo`
-presents distinct embedded origins for the requested break payload and the
-callback's result; its acceptance is an unresolved contract regression. The
-rejection fixtures and ownership/origin promises have not been relaxed to
-obtain a passing baseline. Further library compatibility work must resolve or
-explicitly review these differences before declaring 1.2 fully supported.
+The native entry fix passes 48 source/package checks at O0/O3 in
+`.cache/mojo12-native-entry-matrix/report.json`. The Result and fluent outcome
+fixes pass 152 source/package checks at O0/O3 in
+`.cache/mojo12-positional-outcome-matrix/report.json`, including explicit
+positional error and callback bindings. Its focused rejection companion,
+`.cache/mojo12-positional-outcome-rejects/report.json`, passes 69/80: 24 more
+declared rejections than the broad checkpoint, with no previously passing
+fixture regressing. Six compiler crashes and five incidental error-context
+diagnostics remain failures. Each report records unchanged inputs during its
+run. The affected examples also pass all 12 source/package checks at O0/O3 in
+`.cache/mojo12-positional-outcome-docs/report.json` and
+`.cache/mojo12-native-entry-docs/report.json`. These focused checks do not
+replace complete package, rejection and example reruns.
 
-The full O0/source suite, compile-time budget and device checks have not been
-repeated after these failures. Existing performance numbers remain Mojo 1.1
-measurements.
+The earlier 2026-10-23 baseline had 487/673 declared rejections and 118/220
+example runs passing. All four grouped package executables failed compilation;
+standalone modules are being used to isolate failures. The O0 scalar-forwarding
+runtime failure in `effectful_reductions.mojo` has since been corrected.
+
+Outstanding work includes `attempt` overload inference, remaining fluent error
+and outcome overload conflicts, `scan_map` result inference, stored callbacks
+with implicit void returns, generic native witnesses, and rejection fixtures.
+Result-specific `Piped` combinators retain their existing positional type
+bindings. Compatibility fixes must preserve those bindings.
+
+The old `Piped.then` rejection has been replaced with positive exact-error
+propagation coverage and a rejection for an incompatible enclosing error type.
+`terminal_fold_until_result.mojo` still compiles despite distinct embedded
+origins for the requested break payload and callback result. This remains an
+unresolved contract regression. Ownership, origins and error guarantees must
+not be relaxed to obtain a passing baseline.
+
+The grouped package suite, compile-time budget and device checks have not been
+requalified. Existing performance numbers remain Mojo 1.1 measurements.
 
 ## Callables and argument packs
 
@@ -121,6 +187,10 @@ measurements.
 | A member alias reached through a chain of generic structs (a type computed from a list of sixteen clause types) takes compile time exponential in the chain's length when it appears in a signature. | Generated signatures spell such types flat over their parameters (`_Result<n>`, `_Error<n>`), and the engine takes them as explicit parameters. |
 
 ## Known compiler defects
+
+For Mojo 1.2, the owned-capture workaround above also applies to stored borrowed
+predicates; mutable access to the closure alone does not preserve those writes.
+The following details record the earlier Mojo 1.1 qualification.
 
 Mojo 1.1 can lose writes to an owned mutable closure capture at O3 when a
 native callback consumes and returns non-trivial values. A direct binary call

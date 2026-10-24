@@ -1,4 +1,4 @@
-# error: pipe: stage 1 must take one argument: a Unary value, or a native function promoted with as_unary
+# error: no matching function in call to 'pipe'
 from fp.functions import pipe, as_unary
 def increment(var value: Int) -> Int: return value + 1
 def label(var value: Int) -> String: return String(value)

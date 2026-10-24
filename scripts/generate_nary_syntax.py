@@ -111,6 +111,26 @@ def validation_overloads(method, value):
     return [explicit, re.sub(r'\bS\b', f'_ListErrors[{value}]', inferred)]
 
 
+def fixed_native_tuple(method, count):
+    """Expose the already admitted arity before native callback inference.
+
+    Mojo 1.2 can crash when arity is available only in a pack-length constraint.
+    Fixed tuple boundaries delegate to the same canonical n-ary runner.
+    Keeping the native pack overload alongside them still causes ambiguity.
+    """
+    names = [f'W{i}' for i in range(count)]
+    method = method.replace(f', *Ws: {MD}', '')
+    if names:
+        parameters = ', '.join(f'{name}: {MD}' for name in names)
+        method = method.replace(', //,', f', {parameters}, //,', 1)
+    method = method.replace('Tuple[*Ws]', f'Tuple[{", ".join(names)}]')
+    method = method.replace(', *Ws', ', ' + ', '.join(names) if names else '')
+    for i, name in enumerate(names):
+        method = method.replace(f'Ws[{i}]', name)
+    method = method.replace(f'Ws.length < {MAX} and ', '')
+    return method.replace(f'Ws.length == {count} and ', '')
+
+
 def methods(*, result=False, explicit=False, parallel=False):
     value = 'Self' if result else 'Self.Value'
     family = 'I' if explicit else 'ResultFamily[Self.E]' if result else '_InferredApplicative[Self.Value]'
@@ -216,11 +236,12 @@ def methods(*, result=False, explicit=False, parallel=False):
             cond += ''.join(f' and {admission_family}.Element[Ws[{i-1}]] == {names[i]}' for i in range(1,n))
             if parallel and n > 1: cond += f' and _ErrorCompatible[{raised}, {error}]'
             call=f'_map_n_as[{family}, {product}, {output}, {raised}]({cb}(Pointer(to=function)), {source}, others^)'
-            out.append(f'''
+            method = f'''
     def {name}[{', '.join(params)}](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises {raised} -> {wrap(output)} where {cond}:
         """Combine {n} operands and call the native callback with separate arguments."""
         return {ret(call)}
-''')
+'''
+            out.append(fixed_native_tuple(method, n - 1))
     rendered = ''.join(out)
     if parallel:
         rendered = rendered.replace('            The family of flat tuples in receiver-first order. No additional\n            operands produces one-element tuples. List uses Cartesian ordering.',

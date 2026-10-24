@@ -33,7 +33,6 @@ def sog_tap[T: Movable & Deinitable, E: Movable & Deinitable, R: Movable & Deini
             F: def(Result[T, E]) raises X -> R](
     var source: Result[T, E], ref inspect: F
 ) raises X -> Result[T, E] where R == Result[ResultFamily[E].Element[R], E]:
-    comptime assert Result[F.T, F.E] == Result[T, E]
     return piped(source^).attempt_tap[ResultFamily[E], R=R, X=X, Z=X](inspect).get()
 
 

@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import platform
 import re
+import shutil
 import signal
 import subprocess
 import tempfile
@@ -103,7 +104,10 @@ def timed_argv(argv):
     system = platform.system()
     if system not in ('Darwin', 'Linux'):
         raise RuntimeError('Resource accounting requires Linux or macOS')
-    return ['/usr/bin/time', '-l' if system == 'Darwin' else '-v', *map(str, argv)]
+    executable = '/usr/bin/time' if Path('/usr/bin/time').is_file() else shutil.which('time')
+    if executable is None:
+        raise RuntimeError('Resource accounting requires the native time executable (GNU time on Linux)')
+    return [executable, '-l' if system == 'Darwin' else '-v', *map(str, argv)]
 
 
 def _linux_tree_rss(pid):

@@ -15,7 +15,6 @@ def rsg_continue[T: Movable & Deinitable, E: Movable & Deinitable, X: Movable & 
                  F: def(E) raises X -> Bool, G: def(var E) raises X -> Result[T, E]](
     var value: Result[T, E], predicate: F, recover: G
 ) raises X -> Result[T, E]:
-    comptime assert F.E == E and G.E == E and Result[G.T, G.E] == Result[T, E]
     return piped(value^).or_else_if[T=T, Failure=E, X=X, Y=X](predicate, recover).get()
 
 

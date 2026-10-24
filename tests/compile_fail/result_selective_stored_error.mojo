@@ -1,4 +1,4 @@
-# error: constraint
+# error: no matching method in call to 'or_else_if'
 from fp.data import Result, Err
 from fp.functions import piped
 def predicate(error: String) -> Bool: return True

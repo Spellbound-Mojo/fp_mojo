@@ -230,6 +230,10 @@ struct _ErrorProbe[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable 
     comptime Error = Self.E
 
 
+# Keep the native signature at the call site while borrowing its closure. On
+# Mojo 1.2 an out-of-line entry can give the reference adapter invalid capture
+# storage at O0 after generic forwarding. The family still owns execution.
+@always_inline
 def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //,
         I: Functor, F: _Unary[A, R]](ref[o] f: F, var value: V
 ) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _MapCompatible[I, V, _ErrorProbe[A, R, Never]]:
@@ -237,6 +241,7 @@ def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitabl
     return _map_native[V, A, R, Never, I, F, False, o](f, value^)
 
 
+@always_inline
 def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //,
         I: Functor, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] f: F, var value: V
 ) raises _EntryError[X, I.MapError[V, _ErrorProbe[A, R, E]]] -> I.Mapped[V, _NativeUnaryRef[A, R, E, F, True, o]] where (
@@ -263,6 +268,7 @@ def _map_native[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & D
         _propagate_error[Raised](error^)
 
 
+@always_inline
 def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //,
              I: Monad, F: _Unary[A, R]](ref[o] f: F, var value: V
 ) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _BindCompatible[I, V, _ErrorProbe[A, R, Never]]:
@@ -277,6 +283,7 @@ def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Dein
         _propagate_error[Raised](error^)
 
 
+@always_inline
 def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //,
              I: Monad, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] f: F, var value: V
 ) raises _EntryError[X, I.BindError[V, _ErrorProbe[A, R, E]]] -> I.Bound[V, _NativeUnaryRef[A, R, E, F, True, o]] where (

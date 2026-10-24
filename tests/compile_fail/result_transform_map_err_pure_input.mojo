@@ -1,4 +1,4 @@
-# error: invalid call to 'map_err_pure2': lacking evidence to prove correctness
+# error: invalid call to 'map_err_pure2': value passed to 'callback' cannot be converted
 from fp.data import Result, Ok, Err
 
 def identity[T: Movable & Deinitable](var value: T) -> T: return value^

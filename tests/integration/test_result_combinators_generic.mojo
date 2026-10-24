@@ -61,5 +61,5 @@ def main() raises:
         var recovered = rcg_recover(observed^, rcg_restore)
         code = String(pair^.raise_on_err()[0]) + later^.raise_on_err() + String(recovered^.raise_on_err())
     except error:
-        code = "unexpected: " + error^
+        code = "unexpected: " + error
     assert_equal(code, "7factory2")

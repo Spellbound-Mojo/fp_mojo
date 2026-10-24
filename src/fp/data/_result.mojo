@@ -11,7 +11,7 @@ from fp.adt.data import Cases, Data, Value, _ChoiceType
 from std.builtin.rebind import rebind_var, downcast
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
 from fp.callables.protocols import BorrowCallContract, ThunkContract
-from fp.callables.native import (_Unary, _RaisingUnary, _Borrowing, _RaisingBorrowing,
+from fp.callables.native import (_call_native, _call_native_borrow, _Unary, _RaisingUnary, _Borrowing, _RaisingBorrowing,
                                  _NativeBorrowRef, _Thunk, _RaisingThunk)
 from fp.callables._receiver import _borrow_once_as, _thunk_once_as, _unary_once_as
 from fp.callables._transforms import _IgnoreInput, _BorrowedUnary
@@ -183,10 +183,10 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
     # Folds borrow the Result, or consume it with `fold_owned`, and call the
     # callback for its case with the payload. Native callbacks are borrowed;
     # library callbacks are borrowed or, in the `_once` forms, consumed.
-    def fold[R: Movable & Deinitable, //,
-             F: def(Self.T) -> R, G: def(Self.E) -> R](
+    def fold[R: Movable & Deinitable, P: AnyType, Q: AnyType, //,
+             F: def(P) -> R, G: def(Q) -> R](
         self, on_ok: F, on_err: G
-    ) -> R:
+    ) -> R where P == Self.T and Q == Self.E:
         """Call `on_ok` with the value or `on_err` with the error, borrowed, and return its result.
 
         Exactly one callback runs. The two callbacks return the same type; when
@@ -194,6 +194,8 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
 
         Parameters:
             R: The result type of both callbacks.
+            P: The success callback input type, equal to the stored value type.
+            Q: The error callback input type, equal to the stored error type.
             F: The success callback's type: a plain function or a closure.
             G: The error callback's type: a plain function or a closure.
 
@@ -205,17 +207,19 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             The result of the callback that ran.
         """
         if self.is_ok():
-            return on_ok(self._ok().value)
-        return on_err(self._err().value)
+            return _call_native_borrow[P, R, Never, F, False](on_ok, rebind[P](self._ok().value))
+        return _call_native_borrow[Q, R, Never, G, False](on_err, rebind[Q](self._err().value))
 
-    def fold_owned[R: Movable & Deinitable, //,
-                   F: def(var Self.T) -> R, G: def(var Self.E) -> R](
+    def fold_owned[R: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, //,
+                   F: def(var A) -> R, G: def(var B) -> R](
         deinit self, on_ok: F, on_err: G
-    ) -> R:
+    ) -> R where A == Self.T and B == Self.E:
         """Consume the Result and move its value or error into the matching callback.
 
         Parameters:
             R: The result type of both callbacks.
+            A: The success callback input type, equal to the stored value type.
+            B: The error callback input type, equal to the stored error type.
             F: The success callback's type: a plain function or a closure.
             G: The error callback's type: a plain function or a closure.
 
@@ -227,94 +231,94 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             The result of the callback that ran.
         """
         def invoke_ok(var payload: Self.T, function: F) raises Never capturing -> R:
-            return function(payload^)
+            return _call_native[A, R, Never, F, False](function, rebind_var[A](payload^))
         def invoke_err(var payload: Self.E, function: G) raises Never capturing -> R:
-            return function(payload^)
+            return _call_native[B, R, Never, G, False](function, rebind_var[B](payload^))
         return _fold_result_owned[Self.T, Self.E, R, Never, Never, Never,
             Pointer[F, origin_of(on_ok)], Pointer[G, origin_of(on_err)],
             _borrowed_transform[Self.T, R, Never, F, origin_of(on_ok), invoke_ok],
             _borrowed_transform[Self.E, R, Never, G, origin_of(on_err), invoke_err]](
                 self^, Pointer(to=on_ok), Pointer(to=on_err))
 
-    def fold[R: Movable & Deinitable, X: Movable & Deinitable, //,
-             F: def(Self.T) raises X -> R,
-             G: def(Self.E) -> R](
+    def fold[R: Movable & Deinitable, P: AnyType, Q: AnyType, X: Movable & Deinitable, //,
+             F: def(P) raises X -> R,
+             G: def(Q) -> R](
         self, on_ok: F, on_err: G
-    ) raises X -> R:
+    ) raises X -> R where P == Self.T and Q == Self.E:
         """Fold with a raising success callback."""
         if self.is_ok():
-            return on_ok(self._ok().value)
-        return on_err(self._err().value)
+            return _call_native_borrow[P, R, X, F, True](on_ok, rebind[P](self._ok().value))
+        return _call_native_borrow[Q, R, Never, G, False](on_err, rebind[Q](self._err().value))
 
-    def fold[R: Movable & Deinitable, X: Movable & Deinitable, //,
-             F: def(Self.T) -> R,
-             G: def(Self.E) raises X -> R](
+    def fold[R: Movable & Deinitable, P: AnyType, Q: AnyType, X: Movable & Deinitable, //,
+             F: def(P) -> R,
+             G: def(Q) raises X -> R](
         self, on_ok: F, on_err: G
-    ) raises X -> R:
+    ) raises X -> R where P == Self.T and Q == Self.E:
         """Fold with a raising error callback."""
         if self.is_ok():
-            return on_ok(self._ok().value)
-        return on_err(self._err().value)
+            return _call_native_borrow[P, R, Never, F, False](on_ok, rebind[P](self._ok().value))
+        return _call_native_borrow[Q, R, X, G, True](on_err, rebind[Q](self._err().value))
 
-    def fold[R: Movable & Deinitable, X: Movable & Deinitable, Y: Movable & Deinitable, //,
-             F: def(Self.T) raises X -> R,
-             G: def(Self.E) raises Y -> R](
+    def fold[R: Movable & Deinitable, P: AnyType, Q: AnyType, X: Movable & Deinitable, Y: Movable & Deinitable, //,
+             F: def(P) raises X -> R,
+             G: def(Q) raises Y -> R](
         self, on_ok: F, on_err: G
-    ) raises _ResultFailure[X, Y] -> R where X == Never or Y == Never or X == Y:
+    ) raises _ResultFailure[X, Y] -> R where P == Self.T and Q == Self.E and (X == Never or Y == Never or X == Y):
         """Fold with two raising callbacks, which raise one error type."""
         comptime assert _ErrorCompatible[_ResultFailure[X, Y], X] and _ErrorCompatible[_ResultFailure[X, Y], Y]
         if self.is_ok():
             try:
-                return on_ok(self._ok().value)
+                return _call_native_borrow[P, R, X, F, True](on_ok, rebind[P](self._ok().value))
             except error:
                 _propagate_error[_ResultFailure[X, Y]](error^)
         try:
-            return on_err(self._err().value)
+            return _call_native_borrow[Q, R, Y, G, True](on_err, rebind[Q](self._err().value))
         except error:
             _propagate_error[_ResultFailure[X, Y]](error^)
 
-    def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, //,
-             F: def(var Self.T) raises X -> R,
-             G: def(var Self.E) -> R](
+    def fold_owned[R: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, X: Movable & Deinitable, //,
+             F: def(var A) raises X -> R,
+             G: def(var B) -> R](
         deinit self, on_ok: F, on_err: G
-    ) raises X -> R:
+    ) raises X -> R where A == Self.T and B == Self.E:
         """Consuming fold with a raising success callback."""
         def invoke_ok(var payload: Self.T, function: F) raises X capturing -> R:
-            return function(payload^)
+            return _call_native[A, R, X, F, True](function, rebind_var[A](payload^))
         def invoke_err(var payload: Self.E, function: G) raises Never capturing -> R:
-            return function(payload^)
+            return _call_native[B, R, Never, G, False](function, rebind_var[B](payload^))
         return _fold_result_owned[Self.T, Self.E, R, X, X, Never,
             Pointer[F, origin_of(on_ok)], Pointer[G, origin_of(on_err)],
             _borrowed_transform[Self.T, R, X, F, origin_of(on_ok), invoke_ok],
             _borrowed_transform[Self.E, R, Never, G, origin_of(on_err), invoke_err]](
                 self^, Pointer(to=on_ok), Pointer(to=on_err))
 
-    def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, //,
-             F: def(var Self.T) -> R,
-             G: def(var Self.E) raises X -> R](
+    def fold_owned[R: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, X: Movable & Deinitable, //,
+             F: def(var A) -> R,
+             G: def(var B) raises X -> R](
         deinit self, on_ok: F, on_err: G
-    ) raises X -> R:
+    ) raises X -> R where A == Self.T and B == Self.E:
         """Consuming fold with a raising error callback."""
         def invoke_ok(var payload: Self.T, function: F) raises Never capturing -> R:
-            return function(payload^)
+            return _call_native[A, R, Never, F, False](function, rebind_var[A](payload^))
         def invoke_err(var payload: Self.E, function: G) raises X capturing -> R:
-            return function(payload^)
+            return _call_native[B, R, X, G, True](function, rebind_var[B](payload^))
         return _fold_result_owned[Self.T, Self.E, R, X, Never, X,
             Pointer[F, origin_of(on_ok)], Pointer[G, origin_of(on_err)],
             _borrowed_transform[Self.T, R, Never, F, origin_of(on_ok), invoke_ok],
             _borrowed_transform[Self.E, R, X, G, origin_of(on_err), invoke_err]](
                 self^, Pointer(to=on_ok), Pointer(to=on_err))
 
-    def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, Y: Movable & Deinitable, //,
-             F: def(var Self.T) raises X -> R,
-             G: def(var Self.E) raises Y -> R](
+    def fold_owned[R: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, X: Movable & Deinitable, Y: Movable & Deinitable, //,
+             F: def(var A) raises X -> R,
+             G: def(var B) raises Y -> R](
         deinit self, on_ok: F, on_err: G
-    ) raises _ResultFailure[X, Y] -> R where X == Never or Y == Never or X == Y:
+    ) raises _ResultFailure[X, Y] -> R where A == Self.T and B == Self.E and (X == Never or Y == Never or X == Y):
         """Consuming fold with two raising callbacks, which raise one error type."""
         def invoke_ok(var payload: Self.T, function: F) raises X capturing -> R:
-            return function(payload^)
+            return _call_native[A, R, X, F, True](function, rebind_var[A](payload^))
         def invoke_err(var payload: Self.E, function: G) raises Y capturing -> R:
-            return function(payload^)
+            return _call_native[B, R, Y, G, True](function, rebind_var[B](payload^))
         return _fold_result_owned[Self.T, Self.E, R, _ResultFailure[X, Y], X, Y,
             Pointer[F, origin_of(on_ok)], Pointer[G, origin_of(on_err)],
             _borrowed_transform[Self.T, R, X, F, origin_of(on_ok), invoke_ok],
@@ -397,13 +401,14 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
     # Transformations consume the Result. Native callbacks are borrowed and
     # library Unary callbacks move in; each is called at most once, and both
     # enter the shared owned transformation below the struct.
-    def map[U: Movable & Deinitable, //, F: def(var Self.T) -> U](deinit self, function: F) -> Result[U, Self.E]:
+    def map[U: Movable & Deinitable, A: Movable & Deinitable, //, F: def(var A) -> U](deinit self, function: F) -> Result[U, Self.E] where A == Self.T:
         """Transform the success value; an error passes through and `function` does not run.
 
         `map` keeps a returned `Result` as nested data; `flat_map` sequences.
 
         Parameters:
             U: The new success type.
+            A: The callback input type, including origins.
             F: The callback's type: a plain function or a closure.
 
         Args:
@@ -413,15 +418,15 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             `Ok(function(value))`, or the original `Err`.
         """
         def apply(var payload: Self.T, callback: F) raises Never capturing -> U:
-            return callback(payload^)
+            return _call_native[A, U, Never, F, False](callback, rebind_var[A](payload^))
         return _transform_result[Self.T, Self.E, U, Self.E, Never, True, True, Self.T, U, F, apply](self^, function)
 
-    def map[U: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var Self.T) raises X -> U](
+    def map[U: Movable & Deinitable, A: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var A) raises X -> U](
         deinit self, function: F
-    ) raises X -> Result[U, Self.E]:
+    ) raises X -> Result[U, Self.E] where A == Self.T:
         """Raising form of `map`; the callback's error type is kept."""
         def apply(var payload: Self.T, callback: F) raises X capturing -> U:
-            return callback(payload^)
+            return _call_native[A, U, X, F, True](callback, rebind_var[A](payload^))
         return _transform_result[Self.T, Self.E, U, Self.E, X, True, True, Self.T, U, F, apply](self^, function)
 
     def map[F: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: F
@@ -434,9 +439,9 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """Transform the success value with a library unary callback."""
         return _result_transform[Self.T, Self.E, F.Out, Self.E, F, True, True](function^, self^)
 
-    def flat_map[U: Movable & Deinitable, //, F: def(var Self.T) -> Result[U, Self.E]](
+    def flat_map[U: Movable & Deinitable, A: Movable & Deinitable, //, F: def(var A) -> Result[U, Self.E]](
         deinit self, function: F
-    ) -> Result[U, Self.E]:
+    ) -> Result[U, Self.E] where A == Self.T:
         """Continue with the Result the callback returns; an error passes through.
 
         The callback's stored error type must be exactly `E`; combine different
@@ -444,6 +449,7 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
 
         Parameters:
             U: The new success type.
+            A: The callback input type, including origins.
             F: The callback's type: a plain function or a closure returning `Result[U, E]`.
 
         Args:
@@ -453,16 +459,16 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             `function(value)`, or the original `Err`.
         """
         def apply(var payload: Self.T, callback: F) raises Never capturing -> Result[U, Self.E]:
-            return callback(payload^)
+            return _call_native[A, Result[U, Self.E], Never, F, False](callback, rebind_var[A](payload^))
         return _transform_result[Self.T, Self.E, U, Self.E, Never, True, False, Self.T, Result[U, Self.E], F, apply](
             self^, function)
 
-    def flat_map[U: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var Self.T) raises X -> Result[U, Self.E]](
+    def flat_map[U: Movable & Deinitable, A: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var A) raises X -> Result[U, Self.E]](
         deinit self, function: F
-    ) raises X -> Result[U, Self.E]:
+    ) raises X -> Result[U, Self.E] where A == Self.T:
         """Raising form of `flat_map`; the callback's error type is kept."""
         def apply(var payload: Self.T, callback: F) raises X capturing -> Result[U, Self.E]:
-            return callback(payload^)
+            return _call_native[A, Result[U, Self.E], X, F, True](callback, rebind_var[A](payload^))
         return _transform_result[Self.T, Self.E, U, Self.E, X, True, False, Self.T, Result[U, Self.E], F, apply](
             self^, function)
 
@@ -478,11 +484,12 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         comptime assert F.Out == Result[U, Self.E], "flat_map: callback must return a Result with the same error type"
         return rebind_var[F.Out](_result_transform[Self.T, Self.E, U, Self.E, F, True, False](function^, self^))
 
-    def map_err[U: Movable & Deinitable, //, F: def(var Self.E) -> U](deinit self, function: F) -> Result[Self.T, U]:
+    def map_err[U: Movable & Deinitable, A: Movable & Deinitable, //, F: def(var A) -> U](deinit self, function: F) -> Result[Self.T, U] where A == Self.E:
         """Transform the stored error; a success passes through and `function` does not run.
 
         Parameters:
             U: The new error type.
+            A: The callback input type, including origins.
             F: The callback's type: a plain function or a closure.
 
         Args:
@@ -492,15 +499,15 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             `Err(function(error))`, or the original `Ok`.
         """
         def apply(var payload: Self.E, callback: F) raises Never capturing -> U:
-            return callback(payload^)
+            return _call_native[A, U, Never, F, False](callback, rebind_var[A](payload^))
         return _transform_result[Self.T, Self.E, Self.T, U, Never, False, True, Self.E, U, F, apply](self^, function)
 
-    def map_err[U: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var Self.E) raises X -> U](
+    def map_err[U: Movable & Deinitable, A: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var A) raises X -> U](
         deinit self, function: F
-    ) raises X -> Result[Self.T, U]:
+    ) raises X -> Result[Self.T, U] where A == Self.E:
         """Raising form of `map_err`; the callback's error type is kept."""
         def apply(var payload: Self.E, callback: F) raises X capturing -> U:
-            return callback(payload^)
+            return _call_native[A, U, X, F, True](callback, rebind_var[A](payload^))
         return _transform_result[Self.T, Self.E, Self.T, U, X, False, True, Self.E, U, F, apply](self^, function)
 
     def map_err[F: UnaryContract & Movable & Deinitable](deinit self, var function: F
@@ -508,15 +515,16 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """Transform the error with a library unary callback."""
         return _result_transform[Self.T, Self.E, Self.T, F.Out, F, False, True](function^, self^)
 
-    def or_else[U: Movable & Deinitable, //, F: def(var Self.E) -> Result[Self.T, U]](
+    def or_else[U: Movable & Deinitable, A: Movable & Deinitable, //, F: def(var A) -> Result[Self.T, U]](
         deinit self, function: F
-    ) -> Result[Self.T, U]:
+    ) -> Result[Self.T, U] where A == Self.E:
         """Recover from the stored error with the Result the callback returns; a success passes through.
 
         The callback's success type must be exactly `T`.
 
         Parameters:
             U: The new error type.
+            A: The callback input type, including origins.
             F: The callback's type: a plain function or a closure returning `Result[T, U]`.
 
         Args:
@@ -526,16 +534,16 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             `function(error)`, or the original `Ok`.
         """
         def apply(var payload: Self.E, callback: F) raises Never capturing -> Result[Self.T, U]:
-            return callback(payload^)
+            return _call_native[A, Result[Self.T, U], Never, F, False](callback, rebind_var[A](payload^))
         return _transform_result[Self.T, Self.E, Self.T, U, Never, False, False, Self.E, Result[Self.T, U], F, apply](
             self^, function)
 
-    def or_else[U: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var Self.E) raises X -> Result[Self.T, U]](
+    def or_else[U: Movable & Deinitable, A: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var A) raises X -> Result[Self.T, U]](
         deinit self, function: F
-    ) raises X -> Result[Self.T, U]:
+    ) raises X -> Result[Self.T, U] where A == Self.E:
         """Raising form of `or_else`; the callback's error type is kept."""
         def apply(var payload: Self.E, callback: F) raises X capturing -> Result[Self.T, U]:
-            return callback(payload^)
+            return _call_native[A, Result[Self.T, U], X, F, True](callback, rebind_var[A](payload^))
         return _transform_result[Self.T, Self.E, Self.T, U, X, False, False, Self.E, Result[Self.T, U], F, apply](
             self^, function)
 
@@ -806,13 +814,13 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
     def tap_err[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: _Borrowing[P, R]](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where P == Self.E:
         """Inspect a borrowed stored error and retain the Result."""
         def invoke_0(function: C, payload: P) raises Never capturing -> R:
-            return function(payload)
+            return _call_native_borrow[P, R, Never, C, False](function, payload)
         return self^.tap_err(_NativeBorrowRef[P, R, Never, C, False, o, True, invoke_0](Pointer(to=function)))
 
     def tap_err[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where P == Self.E:
         """Inspect a borrowed stored error and retain the Result."""
         def invoke_0(function: C, payload: P) raises X capturing -> R:
-            return function(payload)
+            return _call_native_borrow[P, R, X, C, True](function, payload)
         return self^.tap_err(_NativeBorrowRef[P, R, X, C, True, o, True, invoke_0](Pointer(to=function)))
 
     def recover_if[C: BorrowCallContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var predicate: C, var function: G) raises _CommonError[C.Failure, G.Error] -> Result[Self.T, Self.E] where C.Payload == Self.E and C.Result == Bool and G.Arg == Self.E and G.Out == Self.T:
@@ -988,17 +996,17 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """
         return self^.or_else(_ResultRetain[Self.T, Self.E, C, False, False, True](function^))
 
-    def flat_tap_err[U: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.E) -> Result[U, Self.E]](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E]:
+    def flat_tap_err[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.E) -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E] and U == downcast[R, _ResultType].Value:
         """Sequence a borrowed error projection and retain the original error on success."""
-        def invoke_0(function: C, payload: Self.E) raises Never capturing -> Result[U, Self.E]:
+        def invoke_0(function: C, payload: Self.E) raises Never capturing -> R:
             return function(payload)
-        return self^.flat_tap_err(_NativeBorrowRef[Self.E, Result[U, Self.E], Never, C, False, o, True, invoke_0](Pointer(to=function)))
+        return self^.flat_tap_err(_NativeBorrowRef[Self.E, R, Never, C, False, o, True, invoke_0](Pointer(to=function)))
 
-    def flat_tap_err[U: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(Self.E) raises X -> Result[U, Self.E]](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E]:
+    def flat_tap_err[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(Self.E) raises X -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E] and U == downcast[R, _ResultType].Value:
         """Sequence a borrowed error projection and retain the original error on success."""
-        def invoke_0(function: C, payload: Self.E) raises X capturing -> Result[U, Self.E]:
+        def invoke_0(function: C, payload: Self.E) raises X capturing -> R:
             return function(payload)
-        return self^.flat_tap_err(_NativeBorrowRef[Self.E, Result[U, Self.E], X, C, True, o, True, invoke_0](Pointer(to=function)))
+        return self^.flat_tap_err(_NativeBorrowRef[Self.E, R, X, C, True, o, True, invoke_0](Pointer(to=function)))
 
     def attempt_tap[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Result[Self.T, Self.E] where C.Payload == Result[Self.T, Self.E] and C.Result == Result[downcast[C.Result, _ResultType].Value, Self.E]:
         """Sequence an observer of the whole Result and retain its outcome on observer success.
@@ -1019,17 +1027,17 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """
         return _ResultRetain[Self.T, Self.E, C, False, True](function^).call_once(self^)
 
-    def attempt_tap[U: Movable & Deinitable, o: ImmOrigin, //, C: def(Result[Self.T, Self.E]) -> Result[U, Self.E]](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E]:
+    def attempt_tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Result[Self.T, Self.E]) -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E] and U == downcast[R, _ResultType].Value:
         """Sequence an observer of the whole Result and retain its outcome on observer success."""
-        def invoke_0(function: C, payload: Result[Self.T, Self.E]) raises Never capturing -> Result[U, Self.E]:
+        def invoke_0(function: C, payload: Result[Self.T, Self.E]) raises Never capturing -> R:
             return function(payload)
-        return self^.attempt_tap(_NativeBorrowRef[Result[Self.T, Self.E], Result[U, Self.E], Never, C, False, o, True, invoke_0](Pointer(to=function)))
+        return self^.attempt_tap(_NativeBorrowRef[Result[Self.T, Self.E], R, Never, C, False, o, True, invoke_0](Pointer(to=function)))
 
-    def attempt_tap[U: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(Result[Self.T, Self.E]) raises X -> Result[U, Self.E]](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E]:
+    def attempt_tap[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(Result[Self.T, Self.E]) raises X -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E] and U == downcast[R, _ResultType].Value:
         """Sequence an observer of the whole Result and retain its outcome on observer success."""
-        def invoke_0(function: C, payload: Result[Self.T, Self.E]) raises X capturing -> Result[U, Self.E]:
+        def invoke_0(function: C, payload: Result[Self.T, Self.E]) raises X capturing -> R:
             return function(payload)
-        return self^.attempt_tap(_NativeBorrowRef[Result[Self.T, Self.E], Result[U, Self.E], X, C, True, o, True, invoke_0](Pointer(to=function)))
+        return self^.attempt_tap(_NativeBorrowRef[Result[Self.T, Self.E], R, X, C, True, o, True, invoke_0](Pointer(to=function)))
 
     def map_both[C: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var on_ok: C, var on_err: G) raises _CommonError[C.Error, G.Error] -> Result[C.Out, G.Out] where C.Arg == Self.T and G.Arg == Self.E and (C.Error == Never or G.Error == Never or C.Error == G.Error):
         """Transform either payload, preserving its Result constructor.
@@ -1147,21 +1155,21 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             return context[](rebind_var[Self.T](payload^))
         return _result_both[Self.T, Self.E, R, Self.E, R, G.Out, Never, G.Error, G.Error, Pointer[C, o], G, True, True, invoke_on_ok, _call_transform[Self.E, G]](self^, Pointer(to=on_ok), on_err^)
 
-    def redeem[R: Movable & Deinitable, o: ImmOrigin, q: ImmOrigin, //, C: def(var Self.T) -> R, G: def(var Self.E) -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Never -> Result[R, Self.E]:
+    def redeem[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var Self.T) -> R, G: def(var Self.E) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Never -> Result[R, Self.E] where R == S:
         """Turn either branch into a success with a common value type."""
         def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
             return context[](rebind_var[Self.T](payload^))
-        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> R:
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> S:
             return context[](rebind_var[Self.E](payload^))
-        return _result_both[Self.T, Self.E, R, Self.E, R, R, Never, Never, Never, Pointer[C, o], Pointer[G, q], True, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err))
+        return _result_both[Self.T, Self.E, R, Self.E, R, S, Never, Never, Never, Pointer[C, o], Pointer[G, q], True, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err))
 
-    def redeem[R: Movable & Deinitable, o: ImmOrigin, q: ImmOrigin, //, C: def(var Self.T) -> R, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Y -> Result[R, Self.E]:
+    def redeem[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var Self.T) -> R, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Y -> Result[R, Self.E] where R == S:
         """Turn either branch into a success with a common value type."""
         def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
             return context[](rebind_var[Self.T](payload^))
-        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> R:
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
             return context[](rebind_var[Self.E](payload^))
-        return _result_both[Self.T, Self.E, R, Self.E, R, R, Never, Y, Y, Pointer[C, o], Pointer[G, q], True, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err))
+        return _result_both[Self.T, Self.E, R, Self.E, R, S, Never, Y, Y, Pointer[C, o], Pointer[G, q], True, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err))
 
     def redeem[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[X, G.Error] -> Result[R, Self.E] where G.Arg == Self.E and R == G.Out and (X == Never or G.Error == Never or X == G.Error):
         """Turn either branch into a success with a common value type."""
@@ -1169,21 +1177,21 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             return context[](rebind_var[Self.T](payload^))
         return _result_both[Self.T, Self.E, R, Self.E, R, G.Out, X, G.Error, _CommonError[X, G.Error], Pointer[C, o], G, True, True, invoke_on_ok, _call_transform[Self.E, G]](self^, Pointer(to=on_ok), on_err^)
 
-    def redeem[R: Movable & Deinitable, o: ImmOrigin, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, G: def(var Self.E) -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises X -> Result[R, Self.E]:
+    def redeem[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, G: def(var Self.E) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises X -> Result[R, Self.E] where R == S:
         """Turn either branch into a success with a common value type."""
         def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> R:
             return context[](rebind_var[Self.T](payload^))
-        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> R:
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> S:
             return context[](rebind_var[Self.E](payload^))
-        return _result_both[Self.T, Self.E, R, Self.E, R, R, X, Never, X, Pointer[C, o], Pointer[G, q], True, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err))
+        return _result_both[Self.T, Self.E, R, Self.E, R, S, X, Never, X, Pointer[C, o], Pointer[G, q], True, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err))
 
-    def redeem[R: Movable & Deinitable, o: ImmOrigin, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[X, Y] -> Result[R, Self.E] where (X == Never or Y == Never or X == Y):
+    def redeem[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[X, Y] -> Result[R, Self.E] where R == S and (X == Never or Y == Never or X == Y):
         """Turn either branch into a success with a common value type."""
         def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> R:
             return context[](rebind_var[Self.T](payload^))
-        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> R:
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
             return context[](rebind_var[Self.E](payload^))
-        return _result_both[Self.T, Self.E, R, Self.E, R, R, X, Y, _CommonError[X, Y], Pointer[C, o], Pointer[G, q], True, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err))
+        return _result_both[Self.T, Self.E, R, Self.E, R, S, X, Y, _CommonError[X, Y], Pointer[C, o], Pointer[G, q], True, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err))
 
     def redeem_with[C: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var on_ok: C, var on_err: G) raises _CommonError[C.Error, G.Error] -> C.Out where C.Arg == Self.T and G.Arg == Self.E and C.Out == G.Out and (C.Error == Never or G.Error == Never or C.Error == G.Error):
         """Continue either branch with the selected handler Result.
@@ -1218,49 +1226,49 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             return context[](rebind_var[Self.E](payload^))
         return rebind_var[C.Out](_result_both[Self.T, Self.E, downcast[C.Out, _ResultType].Value, downcast[C.Out, _ResultType].Error, C.Out, S, C.Error, Y, _CommonError[C.Error, Y], C, Pointer[G, q], False, True, _call_transform[Self.T, C], invoke_on_err](self^, on_ok^, Pointer(to=on_err)))
 
-    def redeem_with[o: ImmOrigin, U: Movable & Deinitable, V: Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //, C: def(var Self.T) -> Result[U, V]](deinit self, ref[o] on_ok: C, var on_err: G) raises G.Error -> Result[U, V] where G.Arg == Self.E and Result[U, V] == G.Out:
+    def redeem_with[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(var Self.T) -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, var on_err: G) raises G.Error -> R where R == Result[U, V] and G.Arg == Self.E and R == G.Out:
         """Continue either branch with the selected handler Result."""
-        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> Result[U, V]:
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
             return context[](rebind_var[Self.T](payload^))
-        return rebind_var[Result[U, V]](_result_both[Self.T, Self.E, downcast[Result[U, V], _ResultType].Value, downcast[Result[U, V], _ResultType].Error, Result[U, V], G.Out, Never, G.Error, G.Error, Pointer[C, o], G, False, True, invoke_on_ok, _call_transform[Self.E, G]](self^, Pointer(to=on_ok), on_err^))
+        return rebind_var[R](_result_both[Self.T, Self.E, downcast[R, _ResultType].Value, downcast[R, _ResultType].Error, R, G.Out, Never, G.Error, G.Error, Pointer[C, o], G, False, True, invoke_on_ok, _call_transform[Self.E, G]](self^, Pointer(to=on_ok), on_err^))
 
-    def redeem_with[o: ImmOrigin, U: Movable & Deinitable, V: Movable & Deinitable, q: ImmOrigin, //, C: def(var Self.T) -> Result[U, V], G: def(var Self.E) -> Result[U, V]](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Never -> Result[U, V]:
+    def redeem_with[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var Self.T) -> R, G: def(var Self.E) -> S, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Never -> R where R == Result[U, V] and R == S:
         """Continue either branch with the selected handler Result."""
-        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> Result[U, V]:
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
             return context[](rebind_var[Self.T](payload^))
-        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> Result[U, V]:
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> S:
             return context[](rebind_var[Self.E](payload^))
-        return rebind_var[Result[U, V]](_result_both[Self.T, Self.E, downcast[Result[U, V], _ResultType].Value, downcast[Result[U, V], _ResultType].Error, Result[U, V], Result[U, V], Never, Never, Never, Pointer[C, o], Pointer[G, q], False, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err)))
+        return rebind_var[R](_result_both[Self.T, Self.E, downcast[R, _ResultType].Value, downcast[R, _ResultType].Error, R, S, Never, Never, Never, Pointer[C, o], Pointer[G, q], False, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err)))
 
-    def redeem_with[o: ImmOrigin, U: Movable & Deinitable, V: Movable & Deinitable, q: ImmOrigin, //, C: def(var Self.T) -> Result[U, V], Y: Movable & Deinitable, G: def(var Self.E) raises Y -> Result[U, V]](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Y -> Result[U, V]:
+    def redeem_with[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var Self.T) -> R, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Y -> R where R == Result[U, V] and R == S:
         """Continue either branch with the selected handler Result."""
-        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> Result[U, V]:
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
             return context[](rebind_var[Self.T](payload^))
-        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> Result[U, V]:
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
             return context[](rebind_var[Self.E](payload^))
-        return rebind_var[Result[U, V]](_result_both[Self.T, Self.E, downcast[Result[U, V], _ResultType].Value, downcast[Result[U, V], _ResultType].Error, Result[U, V], Result[U, V], Never, Y, Y, Pointer[C, o], Pointer[G, q], False, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err)))
+        return rebind_var[R](_result_both[Self.T, Self.E, downcast[R, _ResultType].Value, downcast[R, _ResultType].Error, R, S, Never, Y, Y, Pointer[C, o], Pointer[G, q], False, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err)))
 
-    def redeem_with[o: ImmOrigin, U: Movable & Deinitable, V: Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> Result[U, V]](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[X, G.Error] -> Result[U, V] where G.Arg == Self.E and Result[U, V] == G.Out and (X == Never or G.Error == Never or X == G.Error):
+    def redeem_with[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[X, G.Error] -> R where R == Result[U, V] and G.Arg == Self.E and R == G.Out and (X == Never or G.Error == Never or X == G.Error):
         """Continue either branch with the selected handler Result."""
-        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> Result[U, V]:
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> R:
             return context[](rebind_var[Self.T](payload^))
-        return rebind_var[Result[U, V]](_result_both[Self.T, Self.E, downcast[Result[U, V], _ResultType].Value, downcast[Result[U, V], _ResultType].Error, Result[U, V], G.Out, X, G.Error, _CommonError[X, G.Error], Pointer[C, o], G, False, True, invoke_on_ok, _call_transform[Self.E, G]](self^, Pointer(to=on_ok), on_err^))
+        return rebind_var[R](_result_both[Self.T, Self.E, downcast[R, _ResultType].Value, downcast[R, _ResultType].Error, R, G.Out, X, G.Error, _CommonError[X, G.Error], Pointer[C, o], G, False, True, invoke_on_ok, _call_transform[Self.E, G]](self^, Pointer(to=on_ok), on_err^))
 
-    def redeem_with[o: ImmOrigin, U: Movable & Deinitable, V: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> Result[U, V], G: def(var Self.E) -> Result[U, V]](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises X -> Result[U, V]:
+    def redeem_with[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, G: def(var Self.E) -> S, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises X -> R where R == Result[U, V] and R == S:
         """Continue either branch with the selected handler Result."""
-        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> Result[U, V]:
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> R:
             return context[](rebind_var[Self.T](payload^))
-        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> Result[U, V]:
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> S:
             return context[](rebind_var[Self.E](payload^))
-        return rebind_var[Result[U, V]](_result_both[Self.T, Self.E, downcast[Result[U, V], _ResultType].Value, downcast[Result[U, V], _ResultType].Error, Result[U, V], Result[U, V], X, Never, X, Pointer[C, o], Pointer[G, q], False, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err)))
+        return rebind_var[R](_result_both[Self.T, Self.E, downcast[R, _ResultType].Value, downcast[R, _ResultType].Error, R, S, X, Never, X, Pointer[C, o], Pointer[G, q], False, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err)))
 
-    def redeem_with[o: ImmOrigin, U: Movable & Deinitable, V: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> Result[U, V], Y: Movable & Deinitable, G: def(var Self.E) raises Y -> Result[U, V]](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[X, Y] -> Result[U, V] where (X == Never or Y == Never or X == Y):
+    def redeem_with[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[X, Y] -> R where R == Result[U, V] and R == S and (X == Never or Y == Never or X == Y):
         """Continue either branch with the selected handler Result."""
-        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> Result[U, V]:
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> R:
             return context[](rebind_var[Self.T](payload^))
-        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> Result[U, V]:
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
             return context[](rebind_var[Self.E](payload^))
-        return rebind_var[Result[U, V]](_result_both[Self.T, Self.E, downcast[Result[U, V], _ResultType].Value, downcast[Result[U, V], _ResultType].Error, Result[U, V], Result[U, V], X, Y, _CommonError[X, Y], Pointer[C, o], Pointer[G, q], False, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err)))
+        return rebind_var[R](_result_both[Self.T, Self.E, downcast[R, _ResultType].Value, downcast[R, _ResultType].Error, R, S, X, Y, _CommonError[X, Y], Pointer[C, o], Pointer[G, q], False, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err)))
 
     # --- end Result combinators ---
 

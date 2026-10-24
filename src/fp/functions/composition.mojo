@@ -283,7 +283,7 @@ def flow[F: Movable & Deinitable](var function: F) -> F:
     return function^
 
 
-def flow[*Fs: Movable & Deinitable](var *functions: *Fs) -> Composition[False, _Arity[Fs[0]], *Fs] where Fs.length >= 2:
+def flow[*Fs: Movable & Deinitable](var *functions: *Fs) -> Composition[False, _Arity[Fs[0]], *Fs] where Fs.length >= 2 and _AllOnce[Fs]:
     """Compose stages left to right; nothing runs until the result is called.
 
     `flow(f, g, h)(x)` is `h(g(f(x)))`. Two to eight plain functions are accepted
@@ -319,7 +319,7 @@ def compose[F: Movable & Deinitable](var function: F) -> F:
     return flow(function^)
 
 
-def compose[*Fs: Movable & Deinitable](var *functions: *Fs) -> Composition[True, _Arity[Fs[Fs.length - 1]], *Fs] where Fs.length >= 2:
+def compose[*Fs: Movable & Deinitable](var *functions: *Fs) -> Composition[True, _Arity[Fs[Fs.length - 1]], *Fs] where Fs.length >= 2 and _AllOnce[Fs]:
     """Compose stages right to left; nothing runs until the result is called.
 
     `compose(h, g, f)(x)` is `h(g(f(x)))`: the last argument runs first and may

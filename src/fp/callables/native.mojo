@@ -11,6 +11,7 @@ from std.builtin.rebind import downcast, rebind, rebind_var
 from std.builtin.variadics import TypeList
 from .protocols import Thunk, Unary, Binary, BorrowCallable
 from ._receiver import _MutableBorrow
+from .products import _OptionalCell
 
 
 comptime _Thunk[R: Movable & Deinitable] = def() -> R
@@ -97,7 +98,10 @@ def _call_native_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: Mov
                         X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](
     function: F, var first: A, var second: B
 ) raises X -> R:
-    comptime if raising:
+    comptime if raising and X == Never:
+        comptime Fn = downcast[F, def(var A, var B) raises Never -> R]
+        return rebind[Fn](function)(first^, second^)
+    elif raising:
         comptime Fn = downcast[F, _RaisingBinary[A, B, R, X]]
         comptime assert conforms_to(Fn, _RaisingBinary[A, B, R, X])
         return _native_binary_raising[A, B, R, X, Fn](rebind[Fn](function), first^, second^)
@@ -150,7 +154,19 @@ def _call_native[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & 
                  F: Movable & Deinitable, raising: Bool](function: F, var value: A) raises E -> R:
     # The one native-def call for owned unary callbacks: NativeUnary, the
     # borrowed reference view and pipeline stages all reach it.
-    comptime if raising:
+    comptime if not raising and F == def(var A) thin -> R:
+        comptime assert E == Never
+        return rebind[def(var A) thin -> R](function)(value^)
+    elif raising and E == Never and F == def(var A) raises Never thin -> R:
+        return rebind[def(var A) raises Never thin -> R](function)(value^)
+    elif raising and F == def(var A) raises E thin -> R:
+        return rebind[def(var A) raises E thin -> R](function)(value^)
+    elif raising and E == Never:
+        # On Mojo 1.2 the explicit Never witness must retain its literal error
+        # spelling through dispatch; rebuilding it with a generic E loses it.
+        comptime Fn = downcast[F, def(var A) raises Never -> R]
+        return rebind[Fn](function)(value^)
+    elif raising:
         comptime Fn = downcast[F, _RaisingUnary[A, R, E]]
         comptime assert conforms_to(Fn, _RaisingUnary[A, R, E]), "native unary: incompatible signature"
         return _native_raising_unary[A, R, E, Fn](rebind[Fn](function), value^)
@@ -168,8 +184,8 @@ struct NativeUnary[A: Movable & Deinitable, R: Movable & Deinitable,
                                   ImplicitlyCopyable where conforms_to(F, ImplicitlyCopyable)):
     """A native function or closure stored as a `Unary` value, made by `as_unary`.
 
-    It is `Copyable` when the stored function is. At O3 a call through it
-    compiles to the same instructions as a direct call.
+    It is `Copyable` when the stored function is. The Mojo 1.1 O3 measurements
+    matched direct calls; that performance result is not yet requalified for 1.2.
 
     Parameters:
         A: The argument type.
@@ -178,11 +194,38 @@ struct NativeUnary[A: Movable & Deinitable, R: Movable & Deinitable,
         F: The stored function's type.
         raising: Whether the stored function raises.
     """
-    var function: Self.F
-    """The stored function or closure."""
+    # Mojo 1.2 loses native function witnesses in direct generic fields. The
+    # existing inline cell preserves the exact F, captures and conditional copy
+    # behavior. It is always occupied until into_function consumes it.
+    var _function: _OptionalCell[Self.F]
     comptime Arg = Self.A
     comptime Out = Self.R
     comptime Error = Self.E
+
+    def __init__(out self, var function: Self.F):
+        """Move a native function or closure into the callable.
+
+        Args:
+            function: The native callable, consumed without copying or calling it.
+        """
+        self._function = Optional(function^)
+
+    def function(ref self) -> ref[self._function._value] Self.F:
+        """Borrow the stored native function with the receiver's mutability.
+
+        Returns:
+            A reference to the exact native callable, retaining its captures.
+        """
+        return self._function.value()
+
+    def into_function(deinit self) -> Self.F:
+        """Move the stored function out, consuming the callable.
+
+        Returns:
+            The original native callable, moved out without copying or calling it.
+        """
+        return self._function.take()
+
     def call(self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         """Call the stored function.
 
@@ -195,7 +238,7 @@ struct NativeUnary[A: Movable & Deinitable, R: Movable & Deinitable,
         Raises:
             The function's error, unchanged; nothing when it does not raise.
         """
-        return _call_native[Self.A, Self.R, Self.E, Self.F, Self.raising](self.function, arg^)
+        return _call_native[Self.A, Self.R, Self.E, Self.F, Self.raising](self._function.value(), arg^)
 
     def __call__(self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         """Call the stored function directly, as `call` does.
@@ -290,6 +333,22 @@ def as_unary[A: Movable & Deinitable, R: Movable & Deinitable,
     return NativeUnary[A, R, E, F, True](function^)
 
 
+# Preserve plain-function copyability without inflating a thin pointer to a
+# closure trait whose marker conformances can be lost on Mojo 1.2.
+def as_unary[A: Movable & Deinitable, R: Movable & Deinitable, //](
+    function: def(var A) thin -> R
+) -> NativeUnary[A, R, Never, def(var A) thin -> R, False]:
+    """Store a plain function, preserving its native copyability."""
+    return NativeUnary[A, R, Never, def(var A) thin -> R, False](function)
+
+
+def as_unary[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](
+    function: def(var A) raises E thin -> R
+) -> NativeUnary[A, R, E, def(var A) raises E thin -> R, True]:
+    """Store a raising plain function with its error and copyability intact."""
+    return NativeUnary[A, R, E, def(var A) raises E thin -> R, True](function)
+
+
 # Preserve the P: AnyType / R admission spelling when recovering native
 # borrowing conformance, just as owned callbacks preserve A/R above.
 comptime _Borrowing[P: AnyType, R: Movable & Deinitable] = def(P) -> R
@@ -318,7 +377,10 @@ struct _NativeBorrowMut[P: AnyType, R: Movable & Deinitable, F: Movable & Deinit
 ):
     # Lazy pipelines own native captures and invoke them with mutable access.
     # The shared retention adapter still owns borrowing and payload disposal.
-    var function: Self.F
+    var _function: _OptionalCell[Self.F]
+
+    def __init__(out self, var function: Self.F):
+        self._function = Optional(function^)
     comptime Payload = Self.P
     comptime Result = Self.R
     comptime Failure = Never
@@ -326,11 +388,11 @@ struct _NativeBorrowMut[P: AnyType, R: Movable & Deinitable, F: Movable & Deinit
         comptime if Self.factory:
             comptime Fn = downcast[Self.F, _Thunk[Self.R]]
             comptime assert conforms_to(Fn, _Thunk[Self.R])
-            return _call_lazy_thunk[Self.R, Fn](rebind[Fn](self.function))
+            return _call_lazy_thunk[Self.R, Fn](rebind[Fn](self._function.value()))
         else:
             comptime Fn = downcast[Self.F, _Borrowing[Self.P, Self.R]]
             comptime assert conforms_to(Fn, _Borrowing[Self.P, Self.R])
-            return _call_lazy_borrow[Self.P, Self.R, Fn](rebind[Fn](self.function), payload)
+            return _call_lazy_borrow[Self.P, Self.R, Fn](rebind[Fn](self._function.value()), payload)
 
 
 def _native_raising_borrow[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable,
@@ -346,15 +408,36 @@ struct _NativeBorrow[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitabl
     comptime Payload = Self.P
     comptime Result = Self.R
     comptime Failure = Self.E
-    var function: Self.F
+    var _function: _OptionalCell[Self.F]
+
+    def __init__(out self, var function: Self.F):
+        self._function = Optional(function^)
 
     def invoke(self, ref payload: Self.P) raises Self.E capturing -> Self.R:
-        return _call_native_borrow[Self.P, Self.R, Self.E, Self.F, Self.raising](self.function, payload)
+        return _call_native_borrow[Self.P, Self.R, Self.E, Self.F, Self.raising](self._function.value(), payload)
 
 
 def _call_native_borrow[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable,
                         F: Movable & Deinitable, raising: Bool](function: F, ref payload: P) raises E -> R:
-    comptime if raising:
+    comptime if R == type_of(None):
+        # A native no-value return is distinct from the value type NoneType on
+        # Mojo 1.2. Retain its literal signature, including explicit Never.
+        comptime if raising:
+            comptime if E == Never:
+                comptime Fn = downcast[F, def(P) raises Never]
+                rebind[Fn](function)(payload)
+            else:
+                comptime Fn = downcast[F, def(P) raises E]
+                rebind[Fn](function)(payload)
+        else:
+            comptime assert E == Never
+            comptime Fn = downcast[F, def(P)]
+            rebind[Fn](function)(payload)
+        return rebind_var[R](None)
+    elif raising and E == Never:
+        comptime Fn = downcast[F, def(P) raises Never -> R]
+        return rebind[Fn](function)(payload)
+    elif raising:
         comptime Fn = downcast[F, _RaisingBorrowing[P, R, E]]
         comptime assert conforms_to(Fn, _RaisingBorrowing[P, R, E]), "native borrow: incompatible signature"
         return _native_raising_borrow[P, R, E, Fn](rebind[Fn](function), payload)

@@ -50,7 +50,8 @@ class HostSupportTests(unittest.TestCase):
                              Path(name)/'time.log', timed=True)
             self.assertEqual(result['stdout'], 'ok\n')
             self.assertGreater(result['peak_rss_bytes'], 0)
-            self.assertEqual(result['command'][:2], ['/usr/bin/time', '-v'])
+            self.assertEqual(Path(result['command'][0]).name, 'time')
+            self.assertEqual(result['command'][1], '-v')
 
 
 

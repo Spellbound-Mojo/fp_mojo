@@ -5,7 +5,7 @@ from std.memory import ArcPointer, MaybeUninit
 from std.os import abort
 from std.builtin.rebind import downcast, rebind_var
 from fp._internal.exclusive import _ExclusiveCell, _exclusive
-from fp.callables.products import _take_pair
+from fp.callables.products import _take_pair, _OptionalCell
 from fp.callables.protocols import BorrowCallable, UnaryContract
 from fp.callables.invoke import RepeatableUnary
 from fp.data._result import Result, Ok, Err, _ResultType
@@ -77,9 +77,13 @@ struct _Partition[T: Movable & Deinitable, F: Movable & Deinitable](_Router):
     comptime Input = Self.T
     comptime First = Self.T
     comptime Second = Self.T
-    var function: Self.F
+    var _function: _OptionalCell[Self.F]
+
+    def __init__(out self, var function: Self.F):
+        self._function = Optional(function^)
+
     def route(mut self, var value: Self.T) -> _Routed[Self.T, Self.T]:
-        if _apply_lazy_predicate[Self.T](self.function, value):
+        if _apply_lazy_predicate[Self.T, Self.F](self._function.value(), value):
             return _Routed(Optional(value^), Optional[Self.T]())
         return _Routed(Optional[Self.T](), Optional(value^))
 
@@ -89,10 +93,14 @@ struct _Classify[T: Movable & Deinitable, U: Movable & Deinitable, F: Movable & 
     comptime Input = Self.T
     comptime First = downcast[Self.U, _ResultType].Value
     comptime Second = downcast[Self.U, _ResultType].Error
-    var function: Self.F
+    var _function: _OptionalCell[Self.F]
+
+    def __init__(out self, var function: Self.F):
+        self._function = Optional(function^)
+
     def route(mut self, var value: Self.T) -> _Routed[Self.First, Self.Second]:
         comptime assert Self.U == Result[Self.First, Self.Second]
-        var result = rebind_var[Result[Self.First, Self.Second]](_apply_lazy_unary[Self.T, Self.U](self.function, value^))
+        var result = rebind_var[Result[Self.First, Self.Second]](_apply_lazy_unary[Self.T, Self.U, Self.F](self._function.value(), value^))
         if result.is_ok():
             return _Routed(Optional(result^._take_ok()), Optional[Self.Second]())
         return _Routed(Optional[Self.First](), Optional(result^._take_err()))

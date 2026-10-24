@@ -25,6 +25,11 @@ their native exhaustion behavior. `.enumerate(start=0)` and
 `.zip_with(other, function)`; its free counterpart is
 `zip_with(function, source, other)`.
 
+On Mojo 1.2, native callbacks that mutate owned captures require
+`@always_inline`; this includes stored prefix predicates. Alternatively, use a
+library callable with an explicit mutable receiver. See
+[native boundaries](../architecture/native-boundaries.md#mojo-12-compatibility).
+
 `first`, `last`, `is_empty`, `count`, `count_where`, `contains` and `for_each`
 consume their source. `first`, `is_empty` and a matching `contains` stop early
 and destroy the remaining owned source. `count` visits every element.

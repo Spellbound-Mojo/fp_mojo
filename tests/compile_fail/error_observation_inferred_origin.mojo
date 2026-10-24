@@ -1,4 +1,4 @@
-# error: no matching method
+# error: invalid call to 'flat_tap_err': lacking evidence to prove correctness
 from fp.data import Result, Err
 from fp.functions import piped
 

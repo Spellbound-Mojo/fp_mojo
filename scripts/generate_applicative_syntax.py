@@ -10,7 +10,10 @@ def methods(carrier=None, result=False):
         native=kind!='library'
         params=([f'A: {MD}',f'B: {MD}',f'R: {MD}','o: ImmOrigin'] if native else [f'F: BinaryContract & {MD}'])
         a,b,r=('A','B','R') if native else ('F.First','F.Second','F.Out')
-        if not native and (carrier or result): params += [f'W: {MD}']
+        # Infer the carrier independently of the native signature on Mojo 1.2;
+        # its exact payload and origins remain an admission constraint below.
+        independent_carrier = carrier or (result and not native)
+        if independent_carrier: params += [f'W: {MD}']
         if carrier: params+=list(carrier.parameters)
         if not carrier and not result: params += [f'W: {MD}']
         params += ['//']
@@ -36,7 +39,7 @@ def methods(carrier=None, result=False):
             value=f'rebind_var[{left}](self.value^)' if carrier else 'self.value^'
             body=f'return Piped(_map2_as[{family}, X={raised}]({build}, {value}, other^))'
             output=f'Piped[{output}]'
-        if not native and (carrier or result):
+        if independent_carrier:
             condition += f' and W == {right}'
             body = body.replace('other^', f'rebind_var[{right}](other^)')
             right = 'W'

@@ -2,6 +2,7 @@
 from std.iter import Iterator, IterableOwned
 from std.builtin.rebind import downcast, rebind_var
 from fp.callables.protocols import BorrowCallable
+from fp.callables.products import _OptionalCell
 from ._advance import _Source, _source, _next_fused
 from ._callbacks import _LazyPredicate, _apply_lazy_predicate
 
@@ -11,10 +12,16 @@ struct _Prefix[T: Movable & Deinitable, I: Iterator, F: Movable & Deinitable,
                taking: Bool](Iterator, IterableOwned):
     comptime Element = Self.T
     comptime IteratorOwnedType = Self
-    var function: Self.F
+    var _function: _OptionalCell[Self.F]
     var source: Self.I
     var prefix: Bool
     var done: Bool
+    def __init__(out self, var function: Self.F, var source: Self.I, prefix: Bool, done: Bool):
+        self._function = Optional(function^)
+        self.source = source^
+        self.prefix = prefix
+        self.done = done
+
     def __iter__(var self) -> Self:
         return self^
     def __next__(mut self) raises StopIteration -> Self.T:
@@ -24,7 +31,7 @@ struct _Prefix[T: Movable & Deinitable, I: Iterator, F: Movable & Deinitable,
             var value = rebind_var[Self.T](item^)
             if not self.prefix:
                 return value^
-            var accepted = _apply_lazy_predicate[Self.T](self.function, value)
+            var accepted = _apply_lazy_predicate[Self.T, Self.F](self._function.value(), value)
             comptime if Self.taking:
                 if accepted:
                     return value^

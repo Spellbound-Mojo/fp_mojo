@@ -165,6 +165,10 @@ move-only output and owned mutable captures, even on direct calls. Mark such
 callbacks `@always_inline` on Mojo 1.1, or put mutable state in a library
 callable. Iterator ownership tests cover the annotated native form at O0/O3;
 see [known compiler defects](native-boundaries.md#known-compiler-defects).
+On Mojo 1.2, mark every native callback that mutates an owned capture
+`@always_inline`, including borrowing predicates. Mutable access alone does not
+avoid the stored-predicate failure. Explicit mutable library callable storage
+remains an alternative.
 
 Accepted callbacks are plain functions, capturing closures (move them in with
 `callback^` when they own non-trivial state) and, for the owned-argument

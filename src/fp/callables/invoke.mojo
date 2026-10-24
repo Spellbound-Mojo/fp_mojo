@@ -21,6 +21,11 @@ Parameters:
 """
 
 
+# Mojo 1.2 mislowers the out-of-line ref argument when a consumed scalar is
+# forwarded through this generic boundary at O0. Inline the bridge so the
+# handler receives the original payload reference; keep admission and errors
+# here for every borrowing consumer.
+@always_inline
 def invoke_borrowed[E: Movable & Deinitable, H: BorrowCallable, T: AnyType](
     ref payload: T, handler: H
 ) raises E -> H.Result where BorrowCallCompatible[E, H, T]:

@@ -4,14 +4,14 @@ from std.memory import ArcPointer
 
 @fieldwise_init
 struct Inner[Produced: Movable & Deinitable, F: def() -> Produced](Movable):
-    var function: Self.F
+    var function: Optional[Self.F]
 
 @fieldwise_init
 struct Outer[T: Movable & Deinitable](Movable):
     var value: Self.T
 
-def make[Produced: Movable & Deinitable, F: def() -> Produced](var function: F) -> Outer[Inner[Produced, F]] where F.Produced == Produced:
-    var inner = Inner[Produced, F](function^)
+def make[Produced: Movable & Deinitable, F: def() -> Produced](var function: F) -> Outer[Inner[Produced, F]]:
+    var inner = Inner[Produced, F](Optional(function^))
     return Outer[Inner[Produced, F]](inner^)
 
 @fieldwise_init
@@ -25,7 +25,7 @@ def run(destroyed: ArcPointer[Int]) -> Int:
     def native() {var resource^} -> Int:
         return resource.destroyed[] + 42
     var wrapped = make(native^)
-    return wrapped.value.function()
+    return wrapped.value.function.value()()
 
 def main() raises:
     var destroyed = ArcPointer(0)

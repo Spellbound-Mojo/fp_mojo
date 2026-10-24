@@ -85,7 +85,7 @@ def effects() raises:
     assert_equal(trace[], "ab")
     trace[] = ""
     var failed = Result[Int, String](Err(String("domain")))
-    _ = map[ResultFamily[type_of(failed).Error]](a, failed^)
+    _ = map[ResultFamily[type_of(failed).Error]](a^, failed^)
     assert_equal(trace[], "")
 
 def main() raises:

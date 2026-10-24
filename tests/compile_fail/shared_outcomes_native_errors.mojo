@@ -1,4 +1,4 @@
-# error: constraint
+# error: no matching method in call to 'redeem'
 from fp.algebra import ResultFamily
 from fp.functions import piped
 from fp.data import Result, Ok

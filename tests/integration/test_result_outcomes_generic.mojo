@@ -16,7 +16,8 @@ def rog_redeem[T: Movable & Deinitable, E: Movable & Deinitable, U: Movable & De
                X: Movable & Deinitable, F: def(var T) raises X -> U, G: def(var E) -> U](
     var source: Result[T, E], on_ok: F, on_err: G
 ) raises X -> Result[U, E]:
-    return piped(source^).redeem[T=T, Failure=E, X=X](on_ok, on_err).get()
+    # Preserve positional error and callback bindings through generic layers.
+    return piped(source^).redeem[X, F, G](on_ok, on_err).get()
 
 
 def rog_redeem_right[T: Movable & Deinitable, E: Movable & Deinitable, U: Movable & Deinitable,
@@ -31,7 +32,7 @@ def rog_with[T: Movable & Deinitable, E: Movable & Deinitable, U: Movable & Dein
              F: def(var T) raises X -> Result[U, V], G: def(var E) raises X -> Result[U, V]](
     var source: Result[T, E], on_ok: F, on_err: G
 ) raises X -> Result[U, V]:
-    return piped(source^).redeem_with[T=T, Failure=E, U=U, V=V, X=X, Y=X](on_ok, on_err).get()
+    return piped(source^).redeem_with[X, F, X, G, U=U, V=V](on_ok, on_err).get()
 
 
 def rog_tap[T: Movable & Deinitable, E: Movable & Deinitable, U: Movable & Deinitable,

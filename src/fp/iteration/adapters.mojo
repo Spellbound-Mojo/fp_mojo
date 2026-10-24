@@ -6,6 +6,7 @@ Standard `chain`, `zip`, `take` and the like stay in `std.iter` and
 `std.itertools`.
 """
 
+from fp.callables.products import _OptionalCell
 from fp.callables._views import _UnaryViewable
 from fp.callables._scan import _Carry
 from ._callbacks import _snapshot_step
@@ -20,15 +21,23 @@ from fp.callables.protocols import BorrowCallable
 from fp.iteration._callbacks import _predicate_callable
 
 
+# Inline optional cells preserve native callback witnesses on Mojo 1.2. Each
+# adapter initializes its cell once and borrows it mutably for every pull;
+# ordinary native destruction still releases captures exactly once.
 @fieldwise_init
 struct _Map[T: Movable & Deinitable, U: Movable & Deinitable,
             I: Iterator, F: Movable & Deinitable = def(var T) thin -> U,
             apply: def(mut F, var T) thin -> U = _apply_lazy_unary[T, U, F]](Iterator, IterableOwned):
     comptime Element = Self.U
     comptime IteratorOwnedType = Self
-    var function: Self.F
+    var _function: _OptionalCell[Self.F]
     var source: Self.I
     var done: Bool
+
+    def __init__(out self, var function: Self.F, var source: Self.I, done: Bool):
+        self._function = Optional(function^)
+        self.source = source^
+        self.done = done
 
     def __iter__(var self) -> Self:
         return self^
@@ -37,7 +46,7 @@ struct _Map[T: Movable & Deinitable, U: Movable & Deinitable,
         comptime assert Self.I.Element == Self.T, "map: source element type must match T"
         var item = _next_fused(self.source, self.done)
         var value = rebind_var[Self.T](item^)
-        return Self.apply(self.function, value^)
+        return Self.apply(self._function.value(), value^)
 
 def map[T: Movable & Deinitable, U: Movable & Deinitable, I: Movable & Deinitable, //](
     function: def(var T) thin -> U, var source: I
@@ -75,9 +84,14 @@ struct _Filter[T: Movable & Deinitable, I: Iterator,
                F: Movable & Deinitable = def(T) thin -> Bool, inverted: Bool = False](Iterator, IterableOwned):
     comptime Element = Self.T
     comptime IteratorOwnedType = Self
-    var function: Self.F
+    var _function: _OptionalCell[Self.F]
     var source: Self.I
     var done: Bool
+
+    def __init__(out self, var function: Self.F, var source: Self.I, done: Bool):
+        self._function = Optional(function^)
+        self.source = source^
+        self.done = done
 
     def __iter__(var self) -> Self:
         return self^
@@ -90,7 +104,7 @@ struct _Filter[T: Movable & Deinitable, I: Iterator,
             # Share the decision with eager filtering without wrapping an owned
             # native callback in a read-only BorrowCallable. Lazy invocation must
             # retain mutable access to captures (including at O3 on Mojo 1.1).
-            if _filter_decision[Self.inverted](_apply_lazy_predicate[Self.T](self.function, value)):
+            if _filter_decision[Self.inverted](_apply_lazy_predicate[Self.T, Self.F](self._function.value(), value)):
                 return value^
 
 def filter[T: Movable & Deinitable, I: Movable & Deinitable, //](
@@ -167,9 +181,14 @@ struct _FilterMap[T: Movable & Deinitable, U: Movable & Deinitable,
                   I: Iterator, F: Movable & Deinitable = def(var T) thin -> Optional[U]](Iterator, IterableOwned):
     comptime Element = Self.U
     comptime IteratorOwnedType = Self
-    var function: Self.F
+    var _function: _OptionalCell[Self.F]
     var source: Self.I
     var done: Bool
+
+    def __init__(out self, var function: Self.F, var source: Self.I, done: Bool):
+        self._function = Optional(function^)
+        self.source = source^
+        self.done = done
 
     def __iter__(var self) -> Self:
         return self^
@@ -179,7 +198,7 @@ struct _FilterMap[T: Movable & Deinitable, U: Movable & Deinitable,
         while True:
             var item = _next_fused(self.source, self.done)
             var value = rebind_var[Self.T](item^)
-            var result = _apply_lazy_optional[Self.T, Self.U](self.function, value^)
+            var result = _apply_lazy_optional[Self.T, Self.U, Self.F](self._function.value(), value^)
             if result: return result.take()
 
 def filter_map[T: Movable & Deinitable, U: Movable & Deinitable, I: Movable & Deinitable, //](
@@ -303,7 +322,7 @@ struct _ScanDriver[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable 
                    apply: def(mut F, var A, var T) thin -> Tuple[A,Y]](Iterator, IterableOwned):
     comptime Element = Self.Y
     comptime IteratorOwnedType = Self
-    var function: Self.F
+    var _function: _OptionalCell[Self.F]
     var carry: _Carry[Self.A]
     var source: Self.I
     var started: Bool
@@ -311,7 +330,7 @@ struct _ScanDriver[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable 
 
     def __init__(out self, var function: Self.F, var initial: Self.A, var source: Self.I,
                  started: Bool, done: Bool):
-        self.function = function^
+        self._function = Optional(function^)
         self.carry = _Carry(initial^)
         self.source = source^
         self.started = started
@@ -329,7 +348,7 @@ struct _ScanDriver[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable 
                 self.started = True
                 return rebind_var[Self.Y](self.carry.snapshot())
         var item = _next_fused(self.source, self.done)
-        var pair = Self.apply(self.function, self.carry.take(), rebind_var[Self.T](item^))
+        var pair = Self.apply(self._function.value(), self.carry.take(), rebind_var[Self.T](item^))
         return self.carry.replace(pair^)
 
 

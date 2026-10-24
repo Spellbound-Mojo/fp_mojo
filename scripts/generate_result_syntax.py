@@ -75,20 +75,20 @@ def methods(piped=False):
             t, e = ('T', 'Failure') if piped else ('Self.T', 'Self.E')
             cb = callback(mode, kind, 'predicate' if conditional else 'function')
             if piped and name == 'or_else' and kind != 'library':
-                cb.parameters = [p.replace('R: ', 'U: ') for p in cb.parameters]
-                cb.explicit = [p.replace('A, R', 'A, Result[T, U]') for p in cb.explicit]
-                cb.result = 'Result[T, U]'
+                cb.explicit.append(f'U: {MD} = downcast[R, _ResultType].Error')
             inferred_recovery = piped and name == 'recover' and kind != 'library'
             if inferred_recovery:
                 t, e = cb.result, cb.payload
             source = f'Result[{t}, {e}]'
             if name in ('attempt_tap', 'flat_tap_err') and kind != 'library':
-                # Both the observed outcome and the observer effect retain E.
-                # Spell that structural relationship in the native signature.
-                cb.parameters = [f'U: {MD}', 'o: ImmOrigin']
-                cb.payload, cb.result = (source if name == 'attempt_tap' else e), f'Result[U, {e}]'
+                # Infer the whole native result on Mojo 1.2, then check the
+                # stored error and its origins at admission. Keep U available
+                # by name, without changing the existing C/X positions.
+                cb.parameters = [f'R: {MD}', 'o: ImmOrigin']
+                cb.payload, cb.result = (source if name == 'attempt_tap' else e), 'R'
                 raises = f' raises {cb.error}' if kind == 'raising' else ''
                 cb.explicit[-1] = f'C: def({cb.payload}){raises} -> {cb.result}'
+                cb.explicit.append(f'U: {MD} = downcast[R, _ResultType].Value')
                 cb.type = f'_NativeBorrowRef[{cb.payload}, {cb.result}, {cb.error}, C, {kind == "raising"}, o]'
                 cb.build = f'{cb.type}(Pointer(to=function))'
             cbs = [cb]
@@ -101,13 +101,17 @@ def methods(piped=False):
             conditions = ([f'Self.Value == {source}'] if piped else [])
             if mode != 'thunk' and not (name in ('attempt_tap', 'flat_tap_err') and kind != 'library'):
                 conditions.append(f'{cb.payload} == '+(source if name == 'attempt_tap' else e if name in ('recover', 'map_err', 'or_else', 'tap_err', 'flat_tap_err', 'recover_if', 'or_else_if') else t))
+            if piped and name == 'or_else' and kind != 'library':
+                conditions.append('R == Result[T, U]')
             if name == 'recover': conditions.append(f'{cb.result} == {t}')
-            if name == 'flat_tap_err' and kind == 'library':
+            if name == 'flat_tap_err':
                 conditions.append(f'{cb.result} == Result[downcast[{cb.result}, _ResultType].Value, {e}]')
-            if name == 'attempt_tap' and kind == 'library':
+            if name == 'attempt_tap':
                 # Origins must be checked at admission: a late body assertion
                 # cannot distinguish all embedded origins on Mojo 1.1.
                 conditions.append(f'{cb.result} == Result[downcast[{cb.result}, _ResultType].Value, {e}]')
+            if name in ('flat_tap_err', 'attempt_tap') and kind != 'library':
+                conditions.append('U == downcast[R, _ResultType].Value')
             if conditional:
                 expected = (t if name == 'recover_if' else source) if selective else e
                 conditions += [f'{cb.result} == Bool', f'{cbs[1].payload} == '+(e if selective else t), f'{cbs[1].result} == {expected}']
@@ -126,7 +130,9 @@ def methods(piped=False):
                 if k == 'library' or c.mode != 'borrow': continue
                 native_type = 'C' if index == 0 else 'G'
                 invoke = f'invoke_{index}'
-                prelude += f'        def {invoke}(function: {native_type}, payload: {c.payload}) raises {c.error} capturing -> {c.result}:\n            return function(payload)\n'
+                call = (f'_call_native_borrow[{c.payload}, {c.result}, {c.error}, {native_type}, {k == "raising"}](function, payload)'
+                        if name == 'tap_err' else 'function(payload)')
+                prelude += f'        def {invoke}(function: {native_type}, payload: {c.payload}) raises {c.error} capturing -> {c.result}:\n            return {call}\n'
                 admitted = c.type[:-1]+', True, '+invoke+']'
                 c.build = c.build.replace(c.type, admitted)
                 c.type = admitted
@@ -226,13 +232,10 @@ def outcome_methods(piped=False):
         for first, second in product(('library', 'pure', 'raising'), repeat=2):
             ok = callback('owned', first, 'on_ok')
             err = callback('owned', second, 'on_err', second=True)
-            if name == 'redeem_with' and first != 'library':
-                # Keep Result structural at a generic native boundary, as in
-                # flat_map/or_else; a nominal result hidden behind R loses its
-                # component type evidence on Mojo 1.1.
-                ok.parameters = [p for p in ok.parameters if not p.startswith('R:')]
-                ok.parameters += [f'U: {MD}', f'V: {MD}']
-                ok.result = 'Result[U, V]'
+            # Infer native results independently before constraining equality.
+            # Unifying them inside the native signature crashes Mojo 1.2 when
+            # a positional family binding considers these Result overloads.
+            # U/V remain available by name; C/X/G/Y retain their positions.
             # The source already fixes both input types. Spelling them directly
             # avoids Mojo 1.1 unifying distinct embedded origins while inferring
             # two independently renamed native signatures.
@@ -240,18 +243,19 @@ def outcome_methods(piped=False):
                 if k == 'library': continue
                 c.parameters = [p for p in c.parameters if not p.startswith(arg_parameter+':')]
                 c.payload = payload
-                if c is err and name != 'map_both' and first != 'library':
-                    c.parameters = [p for p in c.parameters if not p.startswith('S:')]
-                    c.result = ok.result
                 raises = f' raises {c.error}' if k == 'raising' else ''
                 c.explicit[-1] = f'{f}: def(var {payload}){raises} -> {c.result}'
             params = ([f'T: {MD}', f'Failure: {MD}'] if piped else []) + ok.parameters + err.parameters
             explicit = ok.explicit + err.explicit
+            if name == 'redeem_with' and first != 'library':
+                explicit += [f'U: {MD} = downcast[R, _ResultType].Value', f'V: {MD} = downcast[R, _ResultType].Error']
             if explicit: params += ['//', *explicit]
             where = ([f'Self.Value == {source}'] if piped else [])
+            if name == 'redeem_with' and first != 'library':
+                where.append('R == Result[U, V]')
             if first == 'library': where.append(f'{ok.payload} == {t}')
             if second == 'library': where.append(f'{err.payload} == {e}')
-            if name != 'map_both' and (first == 'library' or second == 'library'): where.append(f'{ok.result} == {err.result}')
+            if name != 'map_both': where.append(f'{ok.result} == {err.result}')
             if first != 'pure' and second != 'pure':
                 where.append(f'({ok.error} == Never or {err.error} == Never or {ok.error} == {err.error})')
             error = err.error if first == 'pure' else ok.error if second == 'pure' else f'_CommonError[{ok.error}, {err.error}]'

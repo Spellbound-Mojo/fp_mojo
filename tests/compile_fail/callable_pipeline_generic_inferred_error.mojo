@@ -1,5 +1,4 @@
-# error: cannot call function that may raise
-# error: in context that supports an error type of 'E'
+# error: invalid call to 'pipe': lacking evidence to prove correctness
 from fp.functions import as_unary, pipe
 from std.builtin.rebind import rebind_var
 

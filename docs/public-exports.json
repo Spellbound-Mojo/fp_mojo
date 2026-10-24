@@ -240,6 +240,18 @@
         "struct NativeUnary[A: Movable & Deinitable, R: Movable & Deinitable,"
       ],
       "methods": {
+        "function": [
+          {
+            "signature": "def function(ref self) -> ref[self._function._value] Self.F:",
+            "sha256": "d1c160031933531b372446bb13cd04509ea0e9b6f2254cffc123448673689921"
+          }
+        ],
+        "into_function": [
+          {
+            "signature": "def into_function(deinit self) -> Self.F:",
+            "sha256": "65c3ea9a910699f34c3c6b595b685291a194b615c6bd7878a941a640252c4fd0"
+          }
+        ],
         "call": [
           {
             "signature": "def call(self, var arg: Self.Arg) raises Self.Error -> Self.Out:",
@@ -563,12 +575,12 @@
             "sha256": "89627875dd74500d37f9c71c9b4fa321404182aa575f96bc046edb09e0689236"
           },
           {
-            "signature": "def flat_tap_err[T: Movable & Deinitable, Failure: Movable & Deinitable, U: Movable & Deinitable, o: ImmOrigin, //, C: def(Failure) -> Result[U, Failure]](deinit self, ref[o] function: C) raises Never -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure]:",
-            "sha256": "890d41f2da9fb2aaa901b38502f8bef0c6972de0595292a7ba133332b99577e8"
+            "signature": "def flat_tap_err[T: Movable & Deinitable, Failure: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(Failure) -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value](deinit self, ref[o] function: C) raises Never -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and R == Result[downcast[R, _ResultType].Value, Failure] and U == downcast[R, _ResultType].Value:",
+            "sha256": "20fa649f2a2ac9e2386346ace48cadb07e4d3a25fcd37804d77825a388182c09"
           },
           {
-            "signature": "def flat_tap_err[T: Movable & Deinitable, Failure: Movable & Deinitable, U: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(Failure) raises X -> Result[U, Failure]](deinit self, ref[o] function: C) raises X -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure]:",
-            "sha256": "5a296949edb446af9e9e727f4125aa11cda22db26bcee9afb8b5cafbd0d624b6"
+            "signature": "def flat_tap_err[T: Movable & Deinitable, Failure: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(Failure) raises X -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value](deinit self, ref[o] function: C) raises X -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and R == Result[downcast[R, _ResultType].Value, Failure] and U == downcast[R, _ResultType].Value:",
+            "sha256": "b6bfd7478e742a6dc29420878c1f440a7f655e71c5196139c007646ccd90469e"
           },
           {
             "signature": "def flat_tap_err[C: BorrowCallContract & Movable & Deinitable, //, I: Applicative, Z: AnyType = _InferError](deinit self, var inspect: C) raises _EntryError[Z, _ErrorFamily[I].HandleError[Self.Value, _ErrorProbe[_ErrorFamily[I].Failure, _ErrorObservation[_ErrorFamily[I], I.Element[Self.Value], C.Result, C.Failure, True].Out, _ErrorObservation[_ErrorFamily[I], I.Element[Self.Value], C.Result, C.Failure, True].Error]]] -> Piped[_ErrorFamily[I].Handled[Self.Value, _ObserveError[_ErrorFamily[I], I.Element[Self.Value], C, True]]] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and C.Payload == _ErrorFamily[I].Failure and _ErrorFamily[I]._ErrorCarrier[C.Result]:",
@@ -589,12 +601,12 @@
             "sha256": "7e7696aec4be493dfaef9c0a60ef9e2fe23c40c6b8efe96a60ff73fb3653ae9c"
           },
           {
-            "signature": "def attempt_tap[T: Movable & Deinitable, Failure: Movable & Deinitable, U: Movable & Deinitable, o: ImmOrigin, //, C: def(Result[T, Failure]) -> Result[U, Failure]](deinit self, ref[o] function: C) raises Never -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure]:",
-            "sha256": "2f0762b60450cf1d39bb7be3c963345bc0a0e934fccaca6092afa4da78ce6cb8"
+            "signature": "def attempt_tap[T: Movable & Deinitable, Failure: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(Result[T, Failure]) -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value](deinit self, ref[o] function: C) raises Never -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and R == Result[downcast[R, _ResultType].Value, Failure] and U == downcast[R, _ResultType].Value:",
+            "sha256": "caa8d019469ff33b78ed43b914ea949c02ea96ae2777e3c6f1e94f6364c7282f"
           },
           {
-            "signature": "def attempt_tap[T: Movable & Deinitable, Failure: Movable & Deinitable, U: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(Result[T, Failure]) raises X -> Result[U, Failure]](deinit self, ref[o] function: C) raises X -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure]:",
-            "sha256": "2a86eac03a86d4b27eed68d9fc0924406ffb3c78d63560a636ceb8196b7e4c51"
+            "signature": "def attempt_tap[T: Movable & Deinitable, Failure: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(Result[T, Failure]) raises X -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value](deinit self, ref[o] function: C) raises X -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and R == Result[downcast[R, _ResultType].Value, Failure] and U == downcast[R, _ResultType].Value:",
+            "sha256": "cd2d420648b5b918cf9750da332f2db7d954af9291ec03e8c4755a04599e77d2"
           },
           {
             "signature": "def attempt_tap[C: BorrowCallContract & Movable & Deinitable, //, I: Applicative, Z: AnyType = _InferError](deinit self, var inspect: C) raises _EntryError[Z, _AttemptTap[_ErrorMonad[I], Self.Value, C].Error] -> Piped[_AttemptTap[_ErrorMonad[I], Self.Value, C].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and conforms_to(I, Monad) and C.Payload == Result[I.Element[Self.Value], _ErrorFamily[I].Failure] and _ErrorFamily[I]._ErrorCarrier[C.Result]:",
@@ -629,12 +641,12 @@
             "sha256": "6f03658adb0d8dc3216f386f890cef17a79258a3717cb49a9ca87d8aab5be2b1"
           },
           {
-            "signature": "def or_else[T: Movable & Deinitable, Failure: Movable & Deinitable, A: Movable & Deinitable, U: Movable & Deinitable, o: ImmOrigin, //, C: _Unary[A, Result[T, U]]](deinit self, ref[o] function: C) raises Never -> Piped[Result[T, U]] where Self.Value == Result[T, Failure] and A == Failure:",
-            "sha256": "63c78f734cbbeb41fb38876ba1dd1222b6c934ec5cb935680d0122bce43c95a6"
+            "signature": "def or_else[T: Movable & Deinitable, Failure: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: _Unary[A, R], U: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] function: C) raises Never -> Piped[R] where Self.Value == Result[T, Failure] and A == Failure and R == Result[T, U]:",
+            "sha256": "b88d064a339c52b094d18cf4a9f39fcd7f79712181d42adc9d39197e12457534"
           },
           {
-            "signature": "def or_else[T: Movable & Deinitable, Failure: Movable & Deinitable, A: Movable & Deinitable, U: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingUnary[A, Result[T, U], X]](deinit self, ref[o] function: C) raises X -> Piped[Result[T, U]] where Self.Value == Result[T, Failure] and A == Failure:",
-            "sha256": "c6a79524f287f1b0dce856f584acd7f16825bd6496c2ff7b3353c4bfe7e8a750"
+            "signature": "def or_else[T: Movable & Deinitable, Failure: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingUnary[A, R, X], U: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] function: C) raises X -> Piped[R] where Self.Value == Result[T, Failure] and A == Failure and R == Result[T, U]:",
+            "sha256": "54a0a6b6d5d9bbaa599e59e325c14fc0929117ed5cdef37bd618c9b7cbabd43a"
           },
           {
             "signature": "def or_else[F: UnaryContract & Movable & Deinitable, //, I: Applicative](deinit self, var handler: F) raises _ErrorFamily[I].HandleError[Self.Value, F] -> Piped[_ErrorFamily[I].Handled[Self.Value, F]] where conforms_to(I, ApplicativeError) and F.Arg == _ErrorFamily[I].Failure and _ErrorFamily[I]._ErrorCarrier[Self.Value] and _ErrorFamily[I]._ErrorCarrier[F.Out] and I.Element[Self.Value] == I.Element[F.Out]:",
@@ -709,24 +721,24 @@
             "sha256": "fada313f37751c36acb7a300031024b7c7d0e3244d8b7eeddab097924803c03c"
           },
           {
-            "signature": "def redeem[T: Movable & Deinitable, Failure: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, q: ImmOrigin, //, C: def(var T) -> R, G: def(var Failure) -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Never -> Piped[Result[R, Failure]] where Self.Value == Result[T, Failure]:",
-            "sha256": "a9506f931fbdcfa563f5144ce146a7c45494bea98e7dd9c64b524fe2ac22cb96"
+            "signature": "def redeem[T: Movable & Deinitable, Failure: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var T) -> R, G: def(var Failure) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Never -> Piped[Result[R, Failure]] where Self.Value == Result[T, Failure] and R == S:",
+            "sha256": "1d3262f315e0357344e88b62858c585d7f01aa9271f35e3544633f70fb90dbd7"
           },
           {
-            "signature": "def redeem[T: Movable & Deinitable, Failure: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, q: ImmOrigin, //, C: def(var T) -> R, Y: Movable & Deinitable, G: def(var Failure) raises Y -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Y -> Piped[Result[R, Failure]] where Self.Value == Result[T, Failure]:",
-            "sha256": "abcee7730b166710530e33579af6ea75b5b54e0c5251f129051ef4a19dc10598"
+            "signature": "def redeem[T: Movable & Deinitable, Failure: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var T) -> R, Y: Movable & Deinitable, G: def(var Failure) raises Y -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Y -> Piped[Result[R, Failure]] where Self.Value == Result[T, Failure] and R == S:",
+            "sha256": "922b2b0c121275812c2f5a4d2e11a0577340032fd2eebde22e41e791031647df"
           },
           {
             "signature": "def redeem[T: Movable & Deinitable, Failure: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, X: Movable & Deinitable, C: def(var T) raises X -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[X, G.Error] -> Piped[Result[R, Failure]] where Self.Value == Result[T, Failure] and G.Arg == Failure and R == G.Out and (X == Never or G.Error == Never or X == G.Error):",
             "sha256": "ee54d9075c9f69234772079bf9c13afb2ae1184a69c2d5f91ed3a6abd493a5a5"
           },
           {
-            "signature": "def redeem[T: Movable & Deinitable, Failure: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var T) raises X -> R, G: def(var Failure) -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises X -> Piped[Result[R, Failure]] where Self.Value == Result[T, Failure]:",
-            "sha256": "3200f59bcd7684a9a664d8ed200290ad6a97de81bd91eda8084e3adf754ac842"
+            "signature": "def redeem[T: Movable & Deinitable, Failure: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var T) raises X -> R, G: def(var Failure) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises X -> Piped[Result[R, Failure]] where Self.Value == Result[T, Failure] and R == S:",
+            "sha256": "76dc8da18ff72aa36a1f8e963bfaefd6f70c08ce0bfaebdf58edeb7e1dadae7c"
           },
           {
-            "signature": "def redeem[T: Movable & Deinitable, Failure: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var T) raises X -> R, Y: Movable & Deinitable, G: def(var Failure) raises Y -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[X, Y] -> Piped[Result[R, Failure]] where Self.Value == Result[T, Failure] and (X == Never or Y == Never or X == Y):",
-            "sha256": "e382f74848ea4e825e4b1dc5f36c54965e5346347bb633ec3a4396597f967eb4"
+            "signature": "def redeem[T: Movable & Deinitable, Failure: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var T) raises X -> R, Y: Movable & Deinitable, G: def(var Failure) raises Y -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[X, Y] -> Piped[Result[R, Failure]] where Self.Value == Result[T, Failure] and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "f694dbdd328f1e14db9c4742530b99d7f54370443c35be0514b2ace1afe4336f"
           },
           {
             "signature": "def redeem[C: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //, I: Applicative, Z: AnyType = _InferError](deinit self, var on_ok: C, var on_err: G) raises _EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, C, G, False].Error] -> Piped[_Redeem[_ErrorFamily[I], Self.Value, C, G, False].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and C.Arg == I.Element[Self.Value] and G.Arg == _ErrorFamily[I].Failure and (C.Error == Never or G.Error == Never or C.Error == G.Error) and C.Out == G.Out:",
@@ -779,28 +791,28 @@
             "sha256": "1f5ebb37a0c116e32d2f9c402a2d23067ab2d1d05555eba46e47f6e15ee10eff"
           },
           {
-            "signature": "def redeem_with[T: Movable & Deinitable, Failure: Movable & Deinitable, o: ImmOrigin, U: Movable & Deinitable, V: Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //, C: def(var T) -> Result[U, V]](deinit self, ref[o] on_ok: C, var on_err: G) raises G.Error -> Piped[Result[U, V]] where Self.Value == Result[T, Failure] and G.Arg == Failure and Result[U, V] == G.Out:",
-            "sha256": "56d1e33316d2ca4c2c0f95660fe5e4ec3fffe2956baea7513b62a0f7e69846d7"
+            "signature": "def redeem_with[T: Movable & Deinitable, Failure: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(var T) -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, var on_err: G) raises G.Error -> Piped[R] where Self.Value == Result[T, Failure] and R == Result[U, V] and G.Arg == Failure and R == G.Out:",
+            "sha256": "0bc054b25d68644764cb782a2b42519453e0710068ed7ae0c32191790001f0ef"
           },
           {
-            "signature": "def redeem_with[T: Movable & Deinitable, Failure: Movable & Deinitable, o: ImmOrigin, U: Movable & Deinitable, V: Movable & Deinitable, q: ImmOrigin, //, C: def(var T) -> Result[U, V], G: def(var Failure) -> Result[U, V]](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Never -> Piped[Result[U, V]] where Self.Value == Result[T, Failure]:",
-            "sha256": "5bc79cbdfb2456e9e77da525fd073e1c09647b87129dc0e67174f6f731f01f60"
+            "signature": "def redeem_with[T: Movable & Deinitable, Failure: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var T) -> R, G: def(var Failure) -> S, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Never -> Piped[R] where Self.Value == Result[T, Failure] and R == Result[U, V] and R == S:",
+            "sha256": "0dd3fab1ec9d55f2148ee66d3baad46f25107bb25cd777e0b2bbeabca8d811fa"
           },
           {
-            "signature": "def redeem_with[T: Movable & Deinitable, Failure: Movable & Deinitable, o: ImmOrigin, U: Movable & Deinitable, V: Movable & Deinitable, q: ImmOrigin, //, C: def(var T) -> Result[U, V], Y: Movable & Deinitable, G: def(var Failure) raises Y -> Result[U, V]](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Y -> Piped[Result[U, V]] where Self.Value == Result[T, Failure]:",
-            "sha256": "522d54bd70c909205bc9f5de23f1dc28db5d21c50c4d52cdcb01bcd5b6249ec2"
+            "signature": "def redeem_with[T: Movable & Deinitable, Failure: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var T) -> R, Y: Movable & Deinitable, G: def(var Failure) raises Y -> S, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Y -> Piped[R] where Self.Value == Result[T, Failure] and R == Result[U, V] and R == S:",
+            "sha256": "3c166d0064eaabb75d703e80b22617d66c21d424f84924f091733824220d9e64"
           },
           {
-            "signature": "def redeem_with[T: Movable & Deinitable, Failure: Movable & Deinitable, o: ImmOrigin, U: Movable & Deinitable, V: Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //, X: Movable & Deinitable, C: def(var T) raises X -> Result[U, V]](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[X, G.Error] -> Piped[Result[U, V]] where Self.Value == Result[T, Failure] and G.Arg == Failure and Result[U, V] == G.Out and (X == Never or G.Error == Never or X == G.Error):",
-            "sha256": "cca6826f62cad2557548b78ac1d68cc1fb143661330a04e6d9d7df8875f8456d"
+            "signature": "def redeem_with[T: Movable & Deinitable, Failure: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, X: Movable & Deinitable, C: def(var T) raises X -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[X, G.Error] -> Piped[R] where Self.Value == Result[T, Failure] and R == Result[U, V] and G.Arg == Failure and R == G.Out and (X == Never or G.Error == Never or X == G.Error):",
+            "sha256": "d72bd63d1d350a3443465ee8de03cf33e7a145b64ef451332190e7cf87d2eeef"
           },
           {
-            "signature": "def redeem_with[T: Movable & Deinitable, Failure: Movable & Deinitable, o: ImmOrigin, U: Movable & Deinitable, V: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var T) raises X -> Result[U, V], G: def(var Failure) -> Result[U, V]](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises X -> Piped[Result[U, V]] where Self.Value == Result[T, Failure]:",
-            "sha256": "72ed1ddacd0fc7e98d50fcdb575e94cf4e72f2742531f23a05df761dc8839f36"
+            "signature": "def redeem_with[T: Movable & Deinitable, Failure: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var T) raises X -> R, G: def(var Failure) -> S, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises X -> Piped[R] where Self.Value == Result[T, Failure] and R == Result[U, V] and R == S:",
+            "sha256": "b041cc08626b88382ae46a9d1ef307daad6ec46126c0b71e8527192c18dcc91a"
           },
           {
-            "signature": "def redeem_with[T: Movable & Deinitable, Failure: Movable & Deinitable, o: ImmOrigin, U: Movable & Deinitable, V: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var T) raises X -> Result[U, V], Y: Movable & Deinitable, G: def(var Failure) raises Y -> Result[U, V]](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[X, Y] -> Piped[Result[U, V]] where Self.Value == Result[T, Failure] and (X == Never or Y == Never or X == Y):",
-            "sha256": "4c7e00a3592c256790143a1b025739325d97ecd80d623c382dd074e69c5fb8ac"
+            "signature": "def redeem_with[T: Movable & Deinitable, Failure: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var T) raises X -> R, Y: Movable & Deinitable, G: def(var Failure) raises Y -> S, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[X, Y] -> Piped[R] where Self.Value == Result[T, Failure] and R == Result[U, V] and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "36d4067ab8e7c5ca2a570d7c71355b8ab75beab80a95039511edf6f00bb6417c"
           },
           {
             "signature": "def redeem_with[C: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //, I: Applicative, Z: AnyType = _InferError](deinit self, var on_ok: C, var on_err: G) raises _EntryError[Z, _Redeem[_ErrorFamily[I], Self.Value, C, G, True].Error] -> Piped[_Redeem[_ErrorFamily[I], Self.Value, C, G, True].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and C.Arg == I.Element[Self.Value] and G.Arg == _ErrorFamily[I].Failure and (C.Error == Never or G.Error == Never or C.Error == G.Error) and conforms_to(I, Monad) and _ErrorFamily[I]._ErrorCarrier[C.Out] and _ErrorFamily[I]._ErrorCarrier[G.Out] and I.Element[C.Out] == I.Element[G.Out]:",
@@ -855,12 +867,12 @@
         ],
         "then": [
           {
-            "signature": "def then[R: Movable & Deinitable, //, F: def(var Self.Value) -> R](deinit self, function: F) -> Piped[R]:",
-            "sha256": "1b73522c94635aacfa939c3a58c9c2a0fd96cd0904c7e4b2b555f80d01211d5b"
+            "signature": "def then[R: Movable & Deinitable, A: Movable & Deinitable, //, F: def(var A) -> R](deinit self, function: F) -> Piped[R] where A == Self.Value:",
+            "sha256": "9e1624945b1a73f640b8c59824fbc5d2ae5b85db089c005a8ff5b1207717bedc"
           },
           {
-            "signature": "def then[R: Movable & Deinitable, //, E: AnyType, F: def(var Self.Value) raises E -> R]( deinit self, function: F ) raises E -> Piped[R]:",
-            "sha256": "d7975e6fed3d2ec9e9c66da956c695f6266c7c6652e41a617783ccf6bf949ba9"
+            "signature": "def then[R: Movable & Deinitable, A: Movable & Deinitable, //, E: AnyType, F: def(var A) raises E -> R]( deinit self, function: F ) raises E -> Piped[R] where A == Self.Value:",
+            "sha256": "131c28e236559e444e8959842de860864a64d23c1c88a79d1feb691d3fb86cef"
           },
           {
             "signature": "def then[F: Unary](deinit self, function: F) raises F.Error -> Piped[F.Out] where F.Arg == Self.Value:",
@@ -2427,36 +2439,36 @@
             "sha256": "5ab65b7333a511d86ce4e0b7fdefeddfd79fc08b68f221d1db218a590cc753ab"
           },
           {
-            "signature": "def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Binary[A, B, R]](deinit self, var other: List[B], ref[o] function: F) raises Never -> Piped[List[R]] where Self.Value == List[A]:",
-            "sha256": "846ed2957e4f3bf6b1eca4521d6ec3eeff096de6a92c1b12b4446c56179e4046"
+            "signature": "def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, F: _Binary[A, B, R]](deinit self, var other: W, ref[o] function: F) raises Never -> Piped[List[R]] where Self.Value == List[A] and W == List[B]:",
+            "sha256": "1c4351bcff172a67e7154897dec3c9bc36cf6d22b3e7d84b303ee767c576c27a"
           },
           {
-            "signature": "def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X]](deinit self, var other: List[B], ref[o] function: F) raises X -> Piped[List[R]] where Self.Value == List[A]:",
-            "sha256": "d4f5076c457ab3815a6baf48a34d04a09c9526504ad53feb0f416db44908962a"
+            "signature": "def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X]](deinit self, var other: W, ref[o] function: F) raises X -> Piped[List[R]] where Self.Value == List[A] and W == List[B]:",
+            "sha256": "ab16697af9213ab9f0123f761893e762afc424d4dd0790793381025a3e56748f"
           },
           {
             "signature": "def map2[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable, //](deinit self, var other: W, var function: F) raises F.Error -> Piped[Optional[F.Out]] where Self.Value == Optional[F.First] and W == Optional[F.Second]:",
             "sha256": "bc1ea800efcf30de7c9feee721d522b90ae0a474b5c92230f24f9b96ef67ebad"
           },
           {
-            "signature": "def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Binary[A, B, R]](deinit self, var other: Optional[B], ref[o] function: F) raises Never -> Piped[Optional[R]] where Self.Value == Optional[A]:",
-            "sha256": "6d6b699731c4af9f9673a640c4c70b670a1b5bf89f5d53158ca2bad8a7f45f5e"
+            "signature": "def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, F: _Binary[A, B, R]](deinit self, var other: W, ref[o] function: F) raises Never -> Piped[Optional[R]] where Self.Value == Optional[A] and W == Optional[B]:",
+            "sha256": "27421c913973356a1cd1386aeb705954aaf8882ae4f0bd526f7faa5f09e7f35d"
           },
           {
-            "signature": "def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X]](deinit self, var other: Optional[B], ref[o] function: F) raises X -> Piped[Optional[R]] where Self.Value == Optional[A]:",
-            "sha256": "927ee4bd1b3c6d4263f78f4d5aa36384e070f335a2d22cc01a5c8b84614ce470"
+            "signature": "def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X]](deinit self, var other: W, ref[o] function: F) raises X -> Piped[Optional[R]] where Self.Value == Optional[A] and W == Optional[B]:",
+            "sha256": "6a73b875eec31d5e88333d5b3b62d43210ed7b19bdd60984d47fc35232450067"
           },
           {
             "signature": "def map2[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable, Failure: Movable & Deinitable, //](deinit self, var other: W, var function: F) raises F.Error -> Piped[Result[F.Out, Failure]] where Self.Value == Result[F.First, Failure] and W == Result[F.Second, Failure]:",
             "sha256": "bc2baae3f20e9d60077d4ead20e4d646a464b5745d668664e86088d8ffffcb5d"
           },
           {
-            "signature": "def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, Failure: Movable & Deinitable, //, F: _Binary[A, B, R]](deinit self, var other: Result[B, Failure], ref[o] function: F) raises Never -> Piped[Result[R, Failure]] where Self.Value == Result[A, Failure]:",
-            "sha256": "24f62205dc483140c6aa3ccde382277e37983886ebd03b51c2b17402da8cdbcb"
+            "signature": "def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, Failure: Movable & Deinitable, //, F: _Binary[A, B, R]](deinit self, var other: W, ref[o] function: F) raises Never -> Piped[Result[R, Failure]] where Self.Value == Result[A, Failure] and W == Result[B, Failure]:",
+            "sha256": "ae043a0c9108da294e922569e48f2290b8594324ae63ad3406a813cde63c0197"
           },
           {
-            "signature": "def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, Failure: Movable & Deinitable, //, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X]](deinit self, var other: Result[B, Failure], ref[o] function: F) raises X -> Piped[Result[R, Failure]] where Self.Value == Result[A, Failure]:",
-            "sha256": "6c58f70092dce0df598a85b8d30491f354cefbc0bd125653da8b7b0a3dc25ee8"
+            "signature": "def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, Failure: Movable & Deinitable, //, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X]](deinit self, var other: W, ref[o] function: F) raises X -> Piped[Result[R, Failure]] where Self.Value == Result[A, Failure] and W == Result[B, Failure]:",
+            "sha256": "6ed12a4c6ad28a4d259eb086d78ebcb21324a03eb42956585727fe3ddee38e8c"
           }
         ],
         "product": [
@@ -2511,136 +2523,136 @@
             "sha256": "82f87d36e02266aef4c9e27e500cbb4bae426e3204813c824bac38e41073a662"
           },
           {
-            "signature": "def map_n[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Applicative, F: _Unary[A, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary1[A, R, Never, F, False, o], *Ws].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary1[A, R, Never, F, False, o], *Ws].Out] where Ws.length < 8 and Ws.length == 0 and I.Element[Self.Value] == A:",
-            "sha256": "5672a5678012ca62b1dabf31adacddf257d373a55dd2078137879b5d5af0ec0a"
+            "signature": "def map_n[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Applicative, F: _Unary[A, R]](deinit self, var others: Tuple[], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary1[A, R, Never, F, False, o]].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary1[A, R, Never, F, False, o]].Out] where I.Element[Self.Value] == A:",
+            "sha256": "144acc559530e23411ee08e125b6a99d899926f5b3344b233ef6515341049412"
           },
           {
-            "signature": "def map_n[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Applicative, X: Movable & Deinitable, F: _RaisingUnary[A, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary1[A, R, X, F, True, o], *Ws].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary1[A, R, X, F, True, o], *Ws].Out] where Ws.length < 8 and Ws.length == 0 and I.Element[Self.Value] == A:",
-            "sha256": "b29d355bfcd77621a2a80aa389d15812f268e9aadd8de489aef866b309fcc897"
+            "signature": "def map_n[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Applicative, X: Movable & Deinitable, F: _RaisingUnary[A, R, X]](deinit self, var others: Tuple[], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary1[A, R, X, F, True, o]].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary1[A, R, X, F, True, o]].Out] where I.Element[Self.Value] == A:",
+            "sha256": "8c3bebe0cbde506e82e4203e40e5719e91a0f325a49ea71febccf0b297ff2e85"
           },
           {
-            "signature": "def map_n[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Applicative, F: _Binary[A, B, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary2[A, B, R, Never, F, False, o], *Ws].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary2[A, B, R, Never, F, False, o], *Ws].Out] where Ws.length < 8 and Ws.length == 1 and I.Element[Self.Value] == A and I.Element[Ws[0]] == B:",
-            "sha256": "613926199aaedea7f0c4001b76f4770f189d2c8480f675af41bc1deca671020e"
+            "signature": "def map_n[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, //, I: Applicative, F: _Binary[A, B, R]](deinit self, var others: Tuple[W0], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary2[A, B, R, Never, F, False, o], W0].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary2[A, B, R, Never, F, False, o], W0].Out] where I.Element[Self.Value] == A and I.Element[W0] == B:",
+            "sha256": "75ee1dcbc70f2f40ee4dcef911e9e687be1e55bc83fbc7942bbb91ef61d3e0e4"
           },
           {
-            "signature": "def map_n[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Applicative, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary2[A, B, R, X, F, True, o], *Ws].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary2[A, B, R, X, F, True, o], *Ws].Out] where Ws.length < 8 and Ws.length == 1 and I.Element[Self.Value] == A and I.Element[Ws[0]] == B:",
-            "sha256": "97ca84fda644abcf472f64ce0080216663eb28192caf076e8026539a149b302c"
+            "signature": "def map_n[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, //, I: Applicative, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X]](deinit self, var others: Tuple[W0], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary2[A, B, R, X, F, True, o], W0].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary2[A, B, R, X, F, True, o], W0].Out] where I.Element[Self.Value] == A and I.Element[W0] == B:",
+            "sha256": "01ccd4f951c5689e5c3aa8c1ebe73b0c03b4ad74d1d4d49a03e1b38176551b04"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Applicative, F: _Nary3[A0, A1, A2, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary3[A0, A1, A2, R, Never, F, False, o], *Ws].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary3[A0, A1, A2, R, Never, F, False, o], *Ws].Out] where Ws.length < 8 and Ws.length == 2 and I.Element[Self.Value] == A0 and I.Element[Ws[0]] == A1 and I.Element[Ws[1]] == A2:",
-            "sha256": "e3d1c2eca6824f8d37b974cc11d439592b610b095564f9aecc86dd585328f902"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, //, I: Applicative, F: _Nary3[A0, A1, A2, R]](deinit self, var others: Tuple[W0, W1], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary3[A0, A1, A2, R, Never, F, False, o], W0, W1].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary3[A0, A1, A2, R, Never, F, False, o], W0, W1].Out] where I.Element[Self.Value] == A0 and I.Element[W0] == A1 and I.Element[W1] == A2:",
+            "sha256": "c5b5424e949287e218f757f46915519de05ffdfc2403b42c2411586637ce8012"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Applicative, X: Movable & Deinitable, F: _RaisingNary3[A0, A1, A2, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary3[A0, A1, A2, R, X, F, True, o], *Ws].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary3[A0, A1, A2, R, X, F, True, o], *Ws].Out] where Ws.length < 8 and Ws.length == 2 and I.Element[Self.Value] == A0 and I.Element[Ws[0]] == A1 and I.Element[Ws[1]] == A2:",
-            "sha256": "2179408ae2d8eef466e90664097ee746f9825b32b5c763d3f1bd355332162c53"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, //, I: Applicative, X: Movable & Deinitable, F: _RaisingNary3[A0, A1, A2, R, X]](deinit self, var others: Tuple[W0, W1], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary3[A0, A1, A2, R, X, F, True, o], W0, W1].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary3[A0, A1, A2, R, X, F, True, o], W0, W1].Out] where I.Element[Self.Value] == A0 and I.Element[W0] == A1 and I.Element[W1] == A2:",
+            "sha256": "cd1084db6b151f9e875f7708536c17ef9f2a1cc2ff4caf66235fbf3f1d4c81ef"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Applicative, F: _Nary4[A0, A1, A2, A3, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary4[A0, A1, A2, A3, R, Never, F, False, o], *Ws].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary4[A0, A1, A2, A3, R, Never, F, False, o], *Ws].Out] where Ws.length < 8 and Ws.length == 3 and I.Element[Self.Value] == A0 and I.Element[Ws[0]] == A1 and I.Element[Ws[1]] == A2 and I.Element[Ws[2]] == A3:",
-            "sha256": "9f21ec8bd4a3c37b83f323a529bd3e7e22d9b416d27d28d1160594d6df2bec13"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, //, I: Applicative, F: _Nary4[A0, A1, A2, A3, R]](deinit self, var others: Tuple[W0, W1, W2], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary4[A0, A1, A2, A3, R, Never, F, False, o], W0, W1, W2].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary4[A0, A1, A2, A3, R, Never, F, False, o], W0, W1, W2].Out] where I.Element[Self.Value] == A0 and I.Element[W0] == A1 and I.Element[W1] == A2 and I.Element[W2] == A3:",
+            "sha256": "abc9ed8719e47acd32fafd6a44d7628545d05e5ad2f1edcff39c699596f83f61"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Applicative, X: Movable & Deinitable, F: _RaisingNary4[A0, A1, A2, A3, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary4[A0, A1, A2, A3, R, X, F, True, o], *Ws].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary4[A0, A1, A2, A3, R, X, F, True, o], *Ws].Out] where Ws.length < 8 and Ws.length == 3 and I.Element[Self.Value] == A0 and I.Element[Ws[0]] == A1 and I.Element[Ws[1]] == A2 and I.Element[Ws[2]] == A3:",
-            "sha256": "7026875e35f8cd621be1e1b34f3bae0f85ef06b38977168c1a3125bc3ced5a8f"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, //, I: Applicative, X: Movable & Deinitable, F: _RaisingNary4[A0, A1, A2, A3, R, X]](deinit self, var others: Tuple[W0, W1, W2], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary4[A0, A1, A2, A3, R, X, F, True, o], W0, W1, W2].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary4[A0, A1, A2, A3, R, X, F, True, o], W0, W1, W2].Out] where I.Element[Self.Value] == A0 and I.Element[W0] == A1 and I.Element[W1] == A2 and I.Element[W2] == A3:",
+            "sha256": "7b6e7baa09358600303f62f80899e297ffb2f25747305cfb574867124abfbe63"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Applicative, F: _Nary5[A0, A1, A2, A3, A4, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary5[A0, A1, A2, A3, A4, R, Never, F, False, o], *Ws].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary5[A0, A1, A2, A3, A4, R, Never, F, False, o], *Ws].Out] where Ws.length < 8 and Ws.length == 4 and I.Element[Self.Value] == A0 and I.Element[Ws[0]] == A1 and I.Element[Ws[1]] == A2 and I.Element[Ws[2]] == A3 and I.Element[Ws[3]] == A4:",
-            "sha256": "69b921265c0bd19245be3a5b62160cae158d6c1611522d9fc91a2f2f1c166673"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, //, I: Applicative, F: _Nary5[A0, A1, A2, A3, A4, R]](deinit self, var others: Tuple[W0, W1, W2, W3], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary5[A0, A1, A2, A3, A4, R, Never, F, False, o], W0, W1, W2, W3].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary5[A0, A1, A2, A3, A4, R, Never, F, False, o], W0, W1, W2, W3].Out] where I.Element[Self.Value] == A0 and I.Element[W0] == A1 and I.Element[W1] == A2 and I.Element[W2] == A3 and I.Element[W3] == A4:",
+            "sha256": "8dd6a2d7b5b678a140070a7508a7119e97601f3123488b4a3378fe6cc5ae24f5"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Applicative, X: Movable & Deinitable, F: _RaisingNary5[A0, A1, A2, A3, A4, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary5[A0, A1, A2, A3, A4, R, X, F, True, o], *Ws].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary5[A0, A1, A2, A3, A4, R, X, F, True, o], *Ws].Out] where Ws.length < 8 and Ws.length == 4 and I.Element[Self.Value] == A0 and I.Element[Ws[0]] == A1 and I.Element[Ws[1]] == A2 and I.Element[Ws[2]] == A3 and I.Element[Ws[3]] == A4:",
-            "sha256": "b021123780be7c81f578546634a0836259a80fe0be891aaeb986f8ae958d830a"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, //, I: Applicative, X: Movable & Deinitable, F: _RaisingNary5[A0, A1, A2, A3, A4, R, X]](deinit self, var others: Tuple[W0, W1, W2, W3], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary5[A0, A1, A2, A3, A4, R, X, F, True, o], W0, W1, W2, W3].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary5[A0, A1, A2, A3, A4, R, X, F, True, o], W0, W1, W2, W3].Out] where I.Element[Self.Value] == A0 and I.Element[W0] == A1 and I.Element[W1] == A2 and I.Element[W2] == A3 and I.Element[W3] == A4:",
+            "sha256": "95703edebf7e60274ba57a804e631916366f6d667381030c072ae7b0e953728b"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Applicative, F: _Nary6[A0, A1, A2, A3, A4, A5, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary6[A0, A1, A2, A3, A4, A5, R, Never, F, False, o], *Ws].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary6[A0, A1, A2, A3, A4, A5, R, Never, F, False, o], *Ws].Out] where Ws.length < 8 and Ws.length == 5 and I.Element[Self.Value] == A0 and I.Element[Ws[0]] == A1 and I.Element[Ws[1]] == A2 and I.Element[Ws[2]] == A3 and I.Element[Ws[3]] == A4 and I.Element[Ws[4]] == A5:",
-            "sha256": "70d0e0164a0cc653d464d3170ac6e7741e9d9adc57a40f398ecfb2f57022175a"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, //, I: Applicative, F: _Nary6[A0, A1, A2, A3, A4, A5, R]](deinit self, var others: Tuple[W0, W1, W2, W3, W4], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary6[A0, A1, A2, A3, A4, A5, R, Never, F, False, o], W0, W1, W2, W3, W4].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary6[A0, A1, A2, A3, A4, A5, R, Never, F, False, o], W0, W1, W2, W3, W4].Out] where I.Element[Self.Value] == A0 and I.Element[W0] == A1 and I.Element[W1] == A2 and I.Element[W2] == A3 and I.Element[W3] == A4 and I.Element[W4] == A5:",
+            "sha256": "6783223a1b17e104ef05aa736a911846b55ff57b87356e952bd695497345d8cf"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Applicative, X: Movable & Deinitable, F: _RaisingNary6[A0, A1, A2, A3, A4, A5, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary6[A0, A1, A2, A3, A4, A5, R, X, F, True, o], *Ws].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary6[A0, A1, A2, A3, A4, A5, R, X, F, True, o], *Ws].Out] where Ws.length < 8 and Ws.length == 5 and I.Element[Self.Value] == A0 and I.Element[Ws[0]] == A1 and I.Element[Ws[1]] == A2 and I.Element[Ws[2]] == A3 and I.Element[Ws[3]] == A4 and I.Element[Ws[4]] == A5:",
-            "sha256": "4cc21f5d1ec53ba43fc8b7ef1035e13e847632d836467fd2e6d6592e5d7e0b96"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, //, I: Applicative, X: Movable & Deinitable, F: _RaisingNary6[A0, A1, A2, A3, A4, A5, R, X]](deinit self, var others: Tuple[W0, W1, W2, W3, W4], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary6[A0, A1, A2, A3, A4, A5, R, X, F, True, o], W0, W1, W2, W3, W4].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary6[A0, A1, A2, A3, A4, A5, R, X, F, True, o], W0, W1, W2, W3, W4].Out] where I.Element[Self.Value] == A0 and I.Element[W0] == A1 and I.Element[W1] == A2 and I.Element[W2] == A3 and I.Element[W3] == A4 and I.Element[W4] == A5:",
+            "sha256": "a2d472d0e8f610931a0eb2d84f4c5f64750352581b238034778306233dba02c1"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Applicative, F: _Nary7[A0, A1, A2, A3, A4, A5, A6, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary7[A0, A1, A2, A3, A4, A5, A6, R, Never, F, False, o], *Ws].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary7[A0, A1, A2, A3, A4, A5, A6, R, Never, F, False, o], *Ws].Out] where Ws.length < 8 and Ws.length == 6 and I.Element[Self.Value] == A0 and I.Element[Ws[0]] == A1 and I.Element[Ws[1]] == A2 and I.Element[Ws[2]] == A3 and I.Element[Ws[3]] == A4 and I.Element[Ws[4]] == A5 and I.Element[Ws[5]] == A6:",
-            "sha256": "29eb0b54cff04b2d6ae8622f074baaab6f63bb38e0756843914e438ed59c0dc4"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, W5: Movable & Deinitable, //, I: Applicative, F: _Nary7[A0, A1, A2, A3, A4, A5, A6, R]](deinit self, var others: Tuple[W0, W1, W2, W3, W4, W5], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary7[A0, A1, A2, A3, A4, A5, A6, R, Never, F, False, o], W0, W1, W2, W3, W4, W5].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary7[A0, A1, A2, A3, A4, A5, A6, R, Never, F, False, o], W0, W1, W2, W3, W4, W5].Out] where I.Element[Self.Value] == A0 and I.Element[W0] == A1 and I.Element[W1] == A2 and I.Element[W2] == A3 and I.Element[W3] == A4 and I.Element[W4] == A5 and I.Element[W5] == A6:",
+            "sha256": "d88c8fd4d531a6b148732cfa4521e4d8fcf9a9bc0ffe002d075d8f8213a68c47"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Applicative, X: Movable & Deinitable, F: _RaisingNary7[A0, A1, A2, A3, A4, A5, A6, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary7[A0, A1, A2, A3, A4, A5, A6, R, X, F, True, o], *Ws].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary7[A0, A1, A2, A3, A4, A5, A6, R, X, F, True, o], *Ws].Out] where Ws.length < 8 and Ws.length == 6 and I.Element[Self.Value] == A0 and I.Element[Ws[0]] == A1 and I.Element[Ws[1]] == A2 and I.Element[Ws[2]] == A3 and I.Element[Ws[3]] == A4 and I.Element[Ws[4]] == A5 and I.Element[Ws[5]] == A6:",
-            "sha256": "4d37d8eab4d6d85e616d2250385cff509b8cf63be6e72db646da90edfbb3dbef"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, W5: Movable & Deinitable, //, I: Applicative, X: Movable & Deinitable, F: _RaisingNary7[A0, A1, A2, A3, A4, A5, A6, R, X]](deinit self, var others: Tuple[W0, W1, W2, W3, W4, W5], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary7[A0, A1, A2, A3, A4, A5, A6, R, X, F, True, o], W0, W1, W2, W3, W4, W5].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary7[A0, A1, A2, A3, A4, A5, A6, R, X, F, True, o], W0, W1, W2, W3, W4, W5].Out] where I.Element[Self.Value] == A0 and I.Element[W0] == A1 and I.Element[W1] == A2 and I.Element[W2] == A3 and I.Element[W3] == A4 and I.Element[W4] == A5 and I.Element[W5] == A6:",
+            "sha256": "5a22942b9dc37242c06071203a62deb3c0b0aa746e40b943aa6450f047fb4036"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Applicative, F: _Nary8[A0, A1, A2, A3, A4, A5, A6, A7, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary8[A0, A1, A2, A3, A4, A5, A6, A7, R, Never, F, False, o], *Ws].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary8[A0, A1, A2, A3, A4, A5, A6, A7, R, Never, F, False, o], *Ws].Out] where Ws.length < 8 and Ws.length == 7 and I.Element[Self.Value] == A0 and I.Element[Ws[0]] == A1 and I.Element[Ws[1]] == A2 and I.Element[Ws[2]] == A3 and I.Element[Ws[3]] == A4 and I.Element[Ws[4]] == A5 and I.Element[Ws[5]] == A6 and I.Element[Ws[6]] == A7:",
-            "sha256": "e3383b50da078c3d6cbd257617f9ba96f9cce97044d0c40a9edecabeecce3fc7"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, W5: Movable & Deinitable, W6: Movable & Deinitable, //, I: Applicative, F: _Nary8[A0, A1, A2, A3, A4, A5, A6, A7, R]](deinit self, var others: Tuple[W0, W1, W2, W3, W4, W5, W6], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary8[A0, A1, A2, A3, A4, A5, A6, A7, R, Never, F, False, o], W0, W1, W2, W3, W4, W5, W6].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary8[A0, A1, A2, A3, A4, A5, A6, A7, R, Never, F, False, o], W0, W1, W2, W3, W4, W5, W6].Out] where I.Element[Self.Value] == A0 and I.Element[W0] == A1 and I.Element[W1] == A2 and I.Element[W2] == A3 and I.Element[W3] == A4 and I.Element[W4] == A5 and I.Element[W5] == A6 and I.Element[W6] == A7:",
+            "sha256": "164a57f2acd10b51da49142ca25a187279a12399c41ef551e529f601416bd1da"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Applicative, X: Movable & Deinitable, F: _RaisingNary8[A0, A1, A2, A3, A4, A5, A6, A7, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary8[A0, A1, A2, A3, A4, A5, A6, A7, R, X, F, True, o], *Ws].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary8[A0, A1, A2, A3, A4, A5, A6, A7, R, X, F, True, o], *Ws].Out] where Ws.length < 8 and Ws.length == 7 and I.Element[Self.Value] == A0 and I.Element[Ws[0]] == A1 and I.Element[Ws[1]] == A2 and I.Element[Ws[2]] == A3 and I.Element[Ws[3]] == A4 and I.Element[Ws[4]] == A5 and I.Element[Ws[5]] == A6 and I.Element[Ws[6]] == A7:",
-            "sha256": "036dab6ec8a79b4c2453e95ce278af7dcb6a0c784bf18943f6a7793f0f8a08b7"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, W5: Movable & Deinitable, W6: Movable & Deinitable, //, I: Applicative, X: Movable & Deinitable, F: _RaisingNary8[A0, A1, A2, A3, A4, A5, A6, A7, R, X]](deinit self, var others: Tuple[W0, W1, W2, W3, W4, W5, W6], ref[o] function: F) raises _MapNTypes[I, Self.Value, _NativeNary8[A0, A1, A2, A3, A4, A5, A6, A7, R, X, F, True, o], W0, W1, W2, W3, W4, W5, W6].Error -> Piped[_MapNTypes[I, Self.Value, _NativeNary8[A0, A1, A2, A3, A4, A5, A6, A7, R, X, F, True, o], W0, W1, W2, W3, W4, W5, W6].Out] where I.Element[Self.Value] == A0 and I.Element[W0] == A1 and I.Element[W1] == A2 and I.Element[W2] == A3 and I.Element[W3] == A4 and I.Element[W4] == A5 and I.Element[W5] == A6 and I.Element[W6] == A7:",
+            "sha256": "d9e18b5c34d1062c26ef7b1a564160eca76b9ca00a4d5b8088e5fc6c7e512e50"
           },
           {
             "signature": "def map_n[F: UnaryContract & Movable & Deinitable, *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], var function: F) raises F.Error -> Piped[_InferredApplicative[Self.Value].Pure[F.Out]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, *Ws].NativeInputs and F.Arg == _ProductRun[_InferredApplicative[Self.Value], Self.Value, *Ws].Payload:",
             "sha256": "2253fd6adc26c00c15fccc05cad7a41d904781a48db2fde2cc995fd29b0b2f64"
           },
           {
-            "signature": "def map_n[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises Never -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, *Ws].NativeInputs and Ws.length == 0 and _InferredApplicative[Self.Value].Element[Self.Value] == A:",
-            "sha256": "83f513c4cd8f92b7117a8331dcfcf8e7a8bace7d13cfb926208847d8106e2cb8"
+            "signature": "def map_n[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, var others: Tuple[], ref[o] function: F) raises Never -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value].NativeInputs and _InferredApplicative[Self.Value].Element[Self.Value] == A:",
+            "sha256": "0674cb3d3a7e200d4d7743e8e686d56e7a590c8dc434a4335534177a6c3e780a"
           },
           {
-            "signature": "def map_n[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, F: _RaisingUnary[A, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises X -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, *Ws].NativeInputs and Ws.length == 0 and _InferredApplicative[Self.Value].Element[Self.Value] == A:",
-            "sha256": "ce15cd586798e84acc8f7bcc4af50d37afdecc9e7ae7093f6dc5c6fc8b3a19a5"
+            "signature": "def map_n[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, F: _RaisingUnary[A, R, X]](deinit self, var others: Tuple[], ref[o] function: F) raises X -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value].NativeInputs and _InferredApplicative[Self.Value].Element[Self.Value] == A:",
+            "sha256": "3cc6b56acd833fd5e421cdd32c3fd1b6c7a396383fdc3d166845143602e813e4"
           },
           {
-            "signature": "def map_n[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Binary[A, B, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises Never -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, *Ws].NativeInputs and Ws.length == 1 and _InferredApplicative[Self.Value].Element[Self.Value] == A and _InferredApplicative[Self.Value].Element[Ws[0]] == B:",
-            "sha256": "e15811030deb62c041a7bdd7cee7bc00548becb9dcea378fcf4bad3354b33194"
+            "signature": "def map_n[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, //, F: _Binary[A, B, R]](deinit self, var others: Tuple[W0], ref[o] function: F) raises Never -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, W0].NativeInputs and _InferredApplicative[Self.Value].Element[Self.Value] == A and _InferredApplicative[Self.Value].Element[W0] == B:",
+            "sha256": "faa7859cbe4d124fae4a306bc79c45aa81193aecc945cd0cf9a38525aad7cc5a"
           },
           {
-            "signature": "def map_n[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises X -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, *Ws].NativeInputs and Ws.length == 1 and _InferredApplicative[Self.Value].Element[Self.Value] == A and _InferredApplicative[Self.Value].Element[Ws[0]] == B:",
-            "sha256": "93a2d2fc147a855f522b843d8c807fe6d0321ba6fdebfdb3dd4c1aacf1316b20"
+            "signature": "def map_n[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, //, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X]](deinit self, var others: Tuple[W0], ref[o] function: F) raises X -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, W0].NativeInputs and _InferredApplicative[Self.Value].Element[Self.Value] == A and _InferredApplicative[Self.Value].Element[W0] == B:",
+            "sha256": "200c1ee87c37fa8b52853a586203f79f357c7bec396e208b06d075c239048a12"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Nary3[A0, A1, A2, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises Never -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, *Ws].NativeInputs and Ws.length == 2 and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[Ws[0]] == A1 and _InferredApplicative[Self.Value].Element[Ws[1]] == A2:",
-            "sha256": "95fd69ebed6e6178245d13451e0da9d2b380c2382e01ad48c7593c2956a0d9e8"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, //, F: _Nary3[A0, A1, A2, R]](deinit self, var others: Tuple[W0, W1], ref[o] function: F) raises Never -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, W0, W1].NativeInputs and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[W0] == A1 and _InferredApplicative[Self.Value].Element[W1] == A2:",
+            "sha256": "508acbc32d15c5ccc04a5d8a9d0e7c0b05c6a608d29373423a26e5279fe282ad"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, F: _RaisingNary3[A0, A1, A2, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises X -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, *Ws].NativeInputs and Ws.length == 2 and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[Ws[0]] == A1 and _InferredApplicative[Self.Value].Element[Ws[1]] == A2:",
-            "sha256": "0f1c290fb0afd82e0caf588c7a82121d0dafb5af52a20f975cc5a306cd519d30"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, //, X: Movable & Deinitable, F: _RaisingNary3[A0, A1, A2, R, X]](deinit self, var others: Tuple[W0, W1], ref[o] function: F) raises X -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, W0, W1].NativeInputs and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[W0] == A1 and _InferredApplicative[Self.Value].Element[W1] == A2:",
+            "sha256": "f14b80e5a06bc09df2962b83083c06244e9636db8d07126982ced08141a8504f"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Nary4[A0, A1, A2, A3, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises Never -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, *Ws].NativeInputs and Ws.length == 3 and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[Ws[0]] == A1 and _InferredApplicative[Self.Value].Element[Ws[1]] == A2 and _InferredApplicative[Self.Value].Element[Ws[2]] == A3:",
-            "sha256": "001e63e2a358bbe218669294dfdd8d5186555d774aa1493de74b0963e6a7e41e"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, //, F: _Nary4[A0, A1, A2, A3, R]](deinit self, var others: Tuple[W0, W1, W2], ref[o] function: F) raises Never -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, W0, W1, W2].NativeInputs and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[W0] == A1 and _InferredApplicative[Self.Value].Element[W1] == A2 and _InferredApplicative[Self.Value].Element[W2] == A3:",
+            "sha256": "0b53c0c8212c8bc1b235556c0c6d935d9d302d03de67027185e0c84b48a511dd"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, F: _RaisingNary4[A0, A1, A2, A3, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises X -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, *Ws].NativeInputs and Ws.length == 3 and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[Ws[0]] == A1 and _InferredApplicative[Self.Value].Element[Ws[1]] == A2 and _InferredApplicative[Self.Value].Element[Ws[2]] == A3:",
-            "sha256": "ec1103879062bb3b9a8ec2721d116ca47092dd40313ac01dfa8eecb509ebd90d"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, //, X: Movable & Deinitable, F: _RaisingNary4[A0, A1, A2, A3, R, X]](deinit self, var others: Tuple[W0, W1, W2], ref[o] function: F) raises X -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, W0, W1, W2].NativeInputs and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[W0] == A1 and _InferredApplicative[Self.Value].Element[W1] == A2 and _InferredApplicative[Self.Value].Element[W2] == A3:",
+            "sha256": "4743c359564cbf40abd0610797f2522ff73e2ae2d811086f29c87307847bec84"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Nary5[A0, A1, A2, A3, A4, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises Never -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, *Ws].NativeInputs and Ws.length == 4 and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[Ws[0]] == A1 and _InferredApplicative[Self.Value].Element[Ws[1]] == A2 and _InferredApplicative[Self.Value].Element[Ws[2]] == A3 and _InferredApplicative[Self.Value].Element[Ws[3]] == A4:",
-            "sha256": "de44e02c2db08d7d5644f12dd3d21bb499ffe129a3342b766b12066f81416db6"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, //, F: _Nary5[A0, A1, A2, A3, A4, R]](deinit self, var others: Tuple[W0, W1, W2, W3], ref[o] function: F) raises Never -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, W0, W1, W2, W3].NativeInputs and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[W0] == A1 and _InferredApplicative[Self.Value].Element[W1] == A2 and _InferredApplicative[Self.Value].Element[W2] == A3 and _InferredApplicative[Self.Value].Element[W3] == A4:",
+            "sha256": "3daef165b9f1867b37c049c976353998bd3243e1b3459d48cf2a11f62e6d52fa"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, F: _RaisingNary5[A0, A1, A2, A3, A4, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises X -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, *Ws].NativeInputs and Ws.length == 4 and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[Ws[0]] == A1 and _InferredApplicative[Self.Value].Element[Ws[1]] == A2 and _InferredApplicative[Self.Value].Element[Ws[2]] == A3 and _InferredApplicative[Self.Value].Element[Ws[3]] == A4:",
-            "sha256": "49986360daf5515569f20f0f75d14d523c9f3441c8472f4779dbfd4b99202fcb"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, //, X: Movable & Deinitable, F: _RaisingNary5[A0, A1, A2, A3, A4, R, X]](deinit self, var others: Tuple[W0, W1, W2, W3], ref[o] function: F) raises X -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, W0, W1, W2, W3].NativeInputs and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[W0] == A1 and _InferredApplicative[Self.Value].Element[W1] == A2 and _InferredApplicative[Self.Value].Element[W2] == A3 and _InferredApplicative[Self.Value].Element[W3] == A4:",
+            "sha256": "13f25ab60a33018ff24c9822f581bd72dfc4b360b5b5f126651bdb9f1573aa88"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Nary6[A0, A1, A2, A3, A4, A5, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises Never -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, *Ws].NativeInputs and Ws.length == 5 and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[Ws[0]] == A1 and _InferredApplicative[Self.Value].Element[Ws[1]] == A2 and _InferredApplicative[Self.Value].Element[Ws[2]] == A3 and _InferredApplicative[Self.Value].Element[Ws[3]] == A4 and _InferredApplicative[Self.Value].Element[Ws[4]] == A5:",
-            "sha256": "e6dd7fffc0b9af37255c1cb25105f6553408d6b41c0a818ad1e4b54288f44180"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, //, F: _Nary6[A0, A1, A2, A3, A4, A5, R]](deinit self, var others: Tuple[W0, W1, W2, W3, W4], ref[o] function: F) raises Never -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, W0, W1, W2, W3, W4].NativeInputs and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[W0] == A1 and _InferredApplicative[Self.Value].Element[W1] == A2 and _InferredApplicative[Self.Value].Element[W2] == A3 and _InferredApplicative[Self.Value].Element[W3] == A4 and _InferredApplicative[Self.Value].Element[W4] == A5:",
+            "sha256": "e4a5ea00081a26d2c6ad7eb9a2b72eccc74d643f61a6a3e72cd48984ed582151"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, F: _RaisingNary6[A0, A1, A2, A3, A4, A5, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises X -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, *Ws].NativeInputs and Ws.length == 5 and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[Ws[0]] == A1 and _InferredApplicative[Self.Value].Element[Ws[1]] == A2 and _InferredApplicative[Self.Value].Element[Ws[2]] == A3 and _InferredApplicative[Self.Value].Element[Ws[3]] == A4 and _InferredApplicative[Self.Value].Element[Ws[4]] == A5:",
-            "sha256": "618953ac68beac1b34e489839f9b2c7870ad22590199eab0eafb1dcac8dd3ec1"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, //, X: Movable & Deinitable, F: _RaisingNary6[A0, A1, A2, A3, A4, A5, R, X]](deinit self, var others: Tuple[W0, W1, W2, W3, W4], ref[o] function: F) raises X -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, W0, W1, W2, W3, W4].NativeInputs and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[W0] == A1 and _InferredApplicative[Self.Value].Element[W1] == A2 and _InferredApplicative[Self.Value].Element[W2] == A3 and _InferredApplicative[Self.Value].Element[W3] == A4 and _InferredApplicative[Self.Value].Element[W4] == A5:",
+            "sha256": "6a9be44ebe23708e61a208fa0c7594a853746721c2dc09938247723f70b8ecd8"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Nary7[A0, A1, A2, A3, A4, A5, A6, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises Never -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, *Ws].NativeInputs and Ws.length == 6 and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[Ws[0]] == A1 and _InferredApplicative[Self.Value].Element[Ws[1]] == A2 and _InferredApplicative[Self.Value].Element[Ws[2]] == A3 and _InferredApplicative[Self.Value].Element[Ws[3]] == A4 and _InferredApplicative[Self.Value].Element[Ws[4]] == A5 and _InferredApplicative[Self.Value].Element[Ws[5]] == A6:",
-            "sha256": "8ee4648971807141c0203ab2245a596bd5c195659df86e04b8d5ef8e9d4dab1c"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, W5: Movable & Deinitable, //, F: _Nary7[A0, A1, A2, A3, A4, A5, A6, R]](deinit self, var others: Tuple[W0, W1, W2, W3, W4, W5], ref[o] function: F) raises Never -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, W0, W1, W2, W3, W4, W5].NativeInputs and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[W0] == A1 and _InferredApplicative[Self.Value].Element[W1] == A2 and _InferredApplicative[Self.Value].Element[W2] == A3 and _InferredApplicative[Self.Value].Element[W3] == A4 and _InferredApplicative[Self.Value].Element[W4] == A5 and _InferredApplicative[Self.Value].Element[W5] == A6:",
+            "sha256": "fc697853e9e4d08ea8bd7dba72577e17c52dd205e8f16b2f49a9005044164f82"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, F: _RaisingNary7[A0, A1, A2, A3, A4, A5, A6, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises X -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, *Ws].NativeInputs and Ws.length == 6 and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[Ws[0]] == A1 and _InferredApplicative[Self.Value].Element[Ws[1]] == A2 and _InferredApplicative[Self.Value].Element[Ws[2]] == A3 and _InferredApplicative[Self.Value].Element[Ws[3]] == A4 and _InferredApplicative[Self.Value].Element[Ws[4]] == A5 and _InferredApplicative[Self.Value].Element[Ws[5]] == A6:",
-            "sha256": "491b0a53ff191853973332c11a511b15ea06f73368cb7add9a47bdacdd880135"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, W5: Movable & Deinitable, //, X: Movable & Deinitable, F: _RaisingNary7[A0, A1, A2, A3, A4, A5, A6, R, X]](deinit self, var others: Tuple[W0, W1, W2, W3, W4, W5], ref[o] function: F) raises X -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, W0, W1, W2, W3, W4, W5].NativeInputs and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[W0] == A1 and _InferredApplicative[Self.Value].Element[W1] == A2 and _InferredApplicative[Self.Value].Element[W2] == A3 and _InferredApplicative[Self.Value].Element[W3] == A4 and _InferredApplicative[Self.Value].Element[W4] == A5 and _InferredApplicative[Self.Value].Element[W5] == A6:",
+            "sha256": "fc2695a1b80245ec75ae996e2923d52911a376d7e11f09c1a8644839cf63742d"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Nary8[A0, A1, A2, A3, A4, A5, A6, A7, R], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises Never -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, *Ws].NativeInputs and Ws.length == 7 and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[Ws[0]] == A1 and _InferredApplicative[Self.Value].Element[Ws[1]] == A2 and _InferredApplicative[Self.Value].Element[Ws[2]] == A3 and _InferredApplicative[Self.Value].Element[Ws[3]] == A4 and _InferredApplicative[Self.Value].Element[Ws[4]] == A5 and _InferredApplicative[Self.Value].Element[Ws[5]] == A6 and _InferredApplicative[Self.Value].Element[Ws[6]] == A7:",
-            "sha256": "8d7fb121a775ebf1089de518d62ce434b8d50645ce82dff60a926f737cec9e7c"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, W5: Movable & Deinitable, W6: Movable & Deinitable, //, F: _Nary8[A0, A1, A2, A3, A4, A5, A6, A7, R]](deinit self, var others: Tuple[W0, W1, W2, W3, W4, W5, W6], ref[o] function: F) raises Never -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, W0, W1, W2, W3, W4, W5, W6].NativeInputs and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[W0] == A1 and _InferredApplicative[Self.Value].Element[W1] == A2 and _InferredApplicative[Self.Value].Element[W2] == A3 and _InferredApplicative[Self.Value].Element[W3] == A4 and _InferredApplicative[Self.Value].Element[W4] == A5 and _InferredApplicative[Self.Value].Element[W5] == A6 and _InferredApplicative[Self.Value].Element[W6] == A7:",
+            "sha256": "58665117e637fc8b659bb8d072ef133888c1a72aab4ebe37dff7adc6baf31dfa"
           },
           {
-            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, F: _RaisingNary8[A0, A1, A2, A3, A4, A5, A6, A7, R, X], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises X -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, *Ws].NativeInputs and Ws.length == 7 and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[Ws[0]] == A1 and _InferredApplicative[Self.Value].Element[Ws[1]] == A2 and _InferredApplicative[Self.Value].Element[Ws[2]] == A3 and _InferredApplicative[Self.Value].Element[Ws[3]] == A4 and _InferredApplicative[Self.Value].Element[Ws[4]] == A5 and _InferredApplicative[Self.Value].Element[Ws[5]] == A6 and _InferredApplicative[Self.Value].Element[Ws[6]] == A7:",
-            "sha256": "65d11ad9920a28ff3a44dab9fe3177ab139ff0d129a5b3046b80a9ba44005850"
+            "signature": "def map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, W5: Movable & Deinitable, W6: Movable & Deinitable, //, X: Movable & Deinitable, F: _RaisingNary8[A0, A1, A2, A3, A4, A5, A6, A7, R, X]](deinit self, var others: Tuple[W0, W1, W2, W3, W4, W5, W6], ref[o] function: F) raises X -> Piped[_InferredApplicative[Self.Value].Pure[R]] where Self.Value == _InferredApplicative[Self.Value].Pure[_InferredApplicative[Self.Value].Element[Self.Value]] and _ProductRun[_InferredApplicative[Self.Value], Self.Value, W0, W1, W2, W3, W4, W5, W6].NativeInputs and _InferredApplicative[Self.Value].Element[Self.Value] == A0 and _InferredApplicative[Self.Value].Element[W0] == A1 and _InferredApplicative[Self.Value].Element[W1] == A2 and _InferredApplicative[Self.Value].Element[W2] == A3 and _InferredApplicative[Self.Value].Element[W3] == A4 and _InferredApplicative[Self.Value].Element[W4] == A5 and _InferredApplicative[Self.Value].Element[W5] == A6 and _InferredApplicative[Self.Value].Element[W6] == A7:",
+            "sha256": "87a9a6a1d8cef8ca67024ebbf90f9677faff8de891c624db3cf108559af2f3cc"
           }
         ],
         "par_product_n": [
@@ -2663,68 +2675,68 @@
             "sha256": "856eb3ea8cbd9ab32112504506f7692a592565e5f23baddb919476c333f01c9e"
           },
           {
-            "signature": "def par_map_n[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Unary[A, R], //, S: Semigroup = _ListErrors[Self.Value], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises Never -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, *Ws].NativeInputs and Ws.length == 0 and ValidationFamily[S].Element[Self.Value] == A:",
-            "sha256": "531c43d9e56f95316536e9285951e30cde130c4f5d6fc59c7f95d5d8ffd2b09c"
+            "signature": "def par_map_n[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Unary[A, R], //, S: Semigroup = _ListErrors[Self.Value]](deinit self, var others: Tuple[], ref[o] function: F) raises Never -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value].NativeInputs and ValidationFamily[S].Element[Self.Value] == A:",
+            "sha256": "0f7b2b102536c641e03040c216c4f85193c6b665093c4df21db57b390a32cb5f"
           },
           {
-            "signature": "def par_map_n[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingUnary[A, R, X], //, S: Semigroup = _ListErrors[Self.Value], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises X -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, *Ws].NativeInputs and Ws.length == 0 and ValidationFamily[S].Element[Self.Value] == A:",
-            "sha256": "22f19e048a182a52cca12e24f29ad773c48192570d4a36876b687f5396744125"
+            "signature": "def par_map_n[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingUnary[A, R, X], //, S: Semigroup = _ListErrors[Self.Value]](deinit self, var others: Tuple[], ref[o] function: F) raises X -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value].NativeInputs and ValidationFamily[S].Element[Self.Value] == A:",
+            "sha256": "d8a708a0ee28aec5d2bf7be9c008db08500bd2cff0d2c159df6528f9aafebb47"
           },
           {
-            "signature": "def par_map_n[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Binary[A, B, R], //, S: Semigroup = _ListErrors[Self.Value], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, Never] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, *Ws].NativeInputs and Ws.length == 1 and ValidationFamily[S].Element[Self.Value] == A and ValidationFamily[S].Element[Ws[0]] == B and _ErrorCompatible[_CommonError[S.Error, Never], Never]:",
-            "sha256": "ad0f492cab845be0c10fbdbd37c3a41365396b7862bc5a792196860195410f47"
+            "signature": "def par_map_n[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Binary[A, B, R], W0: Movable & Deinitable, //, S: Semigroup = _ListErrors[Self.Value]](deinit self, var others: Tuple[W0], ref[o] function: F) raises _CommonError[S.Error, Never] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, W0].NativeInputs and ValidationFamily[S].Element[Self.Value] == A and ValidationFamily[S].Element[W0] == B and _ErrorCompatible[_CommonError[S.Error, Never], Never]:",
+            "sha256": "8fd915e70e09c4bf4e9e43ff5323d0c23da4d580b0883c11d6b3713228152754"
           },
           {
-            "signature": "def par_map_n[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X], //, S: Semigroup = _ListErrors[Self.Value], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, X] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, *Ws].NativeInputs and Ws.length == 1 and ValidationFamily[S].Element[Self.Value] == A and ValidationFamily[S].Element[Ws[0]] == B and _ErrorCompatible[_CommonError[S.Error, X], X]:",
-            "sha256": "f4f72292597911c6b5512f45287e5be77a8255ba6c7c262ef3847b935eaf725f"
+            "signature": "def par_map_n[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X], W0: Movable & Deinitable, //, S: Semigroup = _ListErrors[Self.Value]](deinit self, var others: Tuple[W0], ref[o] function: F) raises _CommonError[S.Error, X] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, W0].NativeInputs and ValidationFamily[S].Element[Self.Value] == A and ValidationFamily[S].Element[W0] == B and _ErrorCompatible[_CommonError[S.Error, X], X]:",
+            "sha256": "c33557ad90f609611627cedc27266afb73bdaaff227c6e151da5a0d282248bbf"
           },
           {
-            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Nary3[A0, A1, A2, R], //, S: Semigroup = _ListErrors[Self.Value], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, Never] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, *Ws].NativeInputs and Ws.length == 2 and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[Ws[0]] == A1 and ValidationFamily[S].Element[Ws[1]] == A2 and _ErrorCompatible[_CommonError[S.Error, Never], Never]:",
-            "sha256": "7cfb9de571d6e1256bc6a706d51697b9802657e9affd101a39169822f6b870dd"
+            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Nary3[A0, A1, A2, R], W0: Movable & Deinitable, W1: Movable & Deinitable, //, S: Semigroup = _ListErrors[Self.Value]](deinit self, var others: Tuple[W0, W1], ref[o] function: F) raises _CommonError[S.Error, Never] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, W0, W1].NativeInputs and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[W0] == A1 and ValidationFamily[S].Element[W1] == A2 and _ErrorCompatible[_CommonError[S.Error, Never], Never]:",
+            "sha256": "c01d446eabbddbc4b6e06ffcd34fe691c361ae327f3adf2ef9983b3d93978c9e"
           },
           {
-            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingNary3[A0, A1, A2, R, X], //, S: Semigroup = _ListErrors[Self.Value], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, X] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, *Ws].NativeInputs and Ws.length == 2 and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[Ws[0]] == A1 and ValidationFamily[S].Element[Ws[1]] == A2 and _ErrorCompatible[_CommonError[S.Error, X], X]:",
-            "sha256": "b2fe3cd7113ce3994a61426c694e1e75d6e2501cdb15217b4c6b2109953d7bd3"
+            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingNary3[A0, A1, A2, R, X], W0: Movable & Deinitable, W1: Movable & Deinitable, //, S: Semigroup = _ListErrors[Self.Value]](deinit self, var others: Tuple[W0, W1], ref[o] function: F) raises _CommonError[S.Error, X] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, W0, W1].NativeInputs and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[W0] == A1 and ValidationFamily[S].Element[W1] == A2 and _ErrorCompatible[_CommonError[S.Error, X], X]:",
+            "sha256": "59151dc0ca2fb98bc551406fa08a6663e71461cf35c1b8df51d7b49136183919"
           },
           {
-            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Nary4[A0, A1, A2, A3, R], //, S: Semigroup = _ListErrors[Self.Value], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, Never] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, *Ws].NativeInputs and Ws.length == 3 and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[Ws[0]] == A1 and ValidationFamily[S].Element[Ws[1]] == A2 and ValidationFamily[S].Element[Ws[2]] == A3 and _ErrorCompatible[_CommonError[S.Error, Never], Never]:",
-            "sha256": "46b43bc1831c2e73ebcd6b99aa728c09f0a8593e8ed4f2a40b3f3bef5194c3c1"
+            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Nary4[A0, A1, A2, A3, R], W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, //, S: Semigroup = _ListErrors[Self.Value]](deinit self, var others: Tuple[W0, W1, W2], ref[o] function: F) raises _CommonError[S.Error, Never] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, W0, W1, W2].NativeInputs and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[W0] == A1 and ValidationFamily[S].Element[W1] == A2 and ValidationFamily[S].Element[W2] == A3 and _ErrorCompatible[_CommonError[S.Error, Never], Never]:",
+            "sha256": "7103e514802b135965685d6478bb32e9221451f8239e360ba5cff9b5f5a44035"
           },
           {
-            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingNary4[A0, A1, A2, A3, R, X], //, S: Semigroup = _ListErrors[Self.Value], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, X] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, *Ws].NativeInputs and Ws.length == 3 and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[Ws[0]] == A1 and ValidationFamily[S].Element[Ws[1]] == A2 and ValidationFamily[S].Element[Ws[2]] == A3 and _ErrorCompatible[_CommonError[S.Error, X], X]:",
-            "sha256": "0b9602884b99a40064fd06cb79d9e24fb32375a94d6b7c84fd95e05164f78a8a"
+            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingNary4[A0, A1, A2, A3, R, X], W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, //, S: Semigroup = _ListErrors[Self.Value]](deinit self, var others: Tuple[W0, W1, W2], ref[o] function: F) raises _CommonError[S.Error, X] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, W0, W1, W2].NativeInputs and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[W0] == A1 and ValidationFamily[S].Element[W1] == A2 and ValidationFamily[S].Element[W2] == A3 and _ErrorCompatible[_CommonError[S.Error, X], X]:",
+            "sha256": "c202d0fc60b52030ada6d449627918a6d0887ee840ceaccd58bc38460eacdf25"
           },
           {
-            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Nary5[A0, A1, A2, A3, A4, R], //, S: Semigroup = _ListErrors[Self.Value], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, Never] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, *Ws].NativeInputs and Ws.length == 4 and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[Ws[0]] == A1 and ValidationFamily[S].Element[Ws[1]] == A2 and ValidationFamily[S].Element[Ws[2]] == A3 and ValidationFamily[S].Element[Ws[3]] == A4 and _ErrorCompatible[_CommonError[S.Error, Never], Never]:",
-            "sha256": "4cfe1547483f593914a04a72da7a003d38af9b31c58fa7e167ced305ca1aa3d6"
+            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Nary5[A0, A1, A2, A3, A4, R], W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, //, S: Semigroup = _ListErrors[Self.Value]](deinit self, var others: Tuple[W0, W1, W2, W3], ref[o] function: F) raises _CommonError[S.Error, Never] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, W0, W1, W2, W3].NativeInputs and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[W0] == A1 and ValidationFamily[S].Element[W1] == A2 and ValidationFamily[S].Element[W2] == A3 and ValidationFamily[S].Element[W3] == A4 and _ErrorCompatible[_CommonError[S.Error, Never], Never]:",
+            "sha256": "8e0da85e17f39a659a36c307664ef27a37e96434c70205e173f0c473614376ff"
           },
           {
-            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingNary5[A0, A1, A2, A3, A4, R, X], //, S: Semigroup = _ListErrors[Self.Value], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, X] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, *Ws].NativeInputs and Ws.length == 4 and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[Ws[0]] == A1 and ValidationFamily[S].Element[Ws[1]] == A2 and ValidationFamily[S].Element[Ws[2]] == A3 and ValidationFamily[S].Element[Ws[3]] == A4 and _ErrorCompatible[_CommonError[S.Error, X], X]:",
-            "sha256": "a899cd6e86a58c004e24c2b44ab4dcad056b00277be8a78f62090e07291b2592"
+            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingNary5[A0, A1, A2, A3, A4, R, X], W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, //, S: Semigroup = _ListErrors[Self.Value]](deinit self, var others: Tuple[W0, W1, W2, W3], ref[o] function: F) raises _CommonError[S.Error, X] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, W0, W1, W2, W3].NativeInputs and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[W0] == A1 and ValidationFamily[S].Element[W1] == A2 and ValidationFamily[S].Element[W2] == A3 and ValidationFamily[S].Element[W3] == A4 and _ErrorCompatible[_CommonError[S.Error, X], X]:",
+            "sha256": "d9b6e8748123f136493dbcbf57808f75b07026b59d47f60dd5194630c5721009"
           },
           {
-            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Nary6[A0, A1, A2, A3, A4, A5, R], //, S: Semigroup = _ListErrors[Self.Value], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, Never] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, *Ws].NativeInputs and Ws.length == 5 and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[Ws[0]] == A1 and ValidationFamily[S].Element[Ws[1]] == A2 and ValidationFamily[S].Element[Ws[2]] == A3 and ValidationFamily[S].Element[Ws[3]] == A4 and ValidationFamily[S].Element[Ws[4]] == A5 and _ErrorCompatible[_CommonError[S.Error, Never], Never]:",
-            "sha256": "aeff67bd7a0201f311ebe533d5b39c6ffffef0c9fb58f7abb97abfd14cd22acd"
+            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Nary6[A0, A1, A2, A3, A4, A5, R], W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, //, S: Semigroup = _ListErrors[Self.Value]](deinit self, var others: Tuple[W0, W1, W2, W3, W4], ref[o] function: F) raises _CommonError[S.Error, Never] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, W0, W1, W2, W3, W4].NativeInputs and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[W0] == A1 and ValidationFamily[S].Element[W1] == A2 and ValidationFamily[S].Element[W2] == A3 and ValidationFamily[S].Element[W3] == A4 and ValidationFamily[S].Element[W4] == A5 and _ErrorCompatible[_CommonError[S.Error, Never], Never]:",
+            "sha256": "74b78cc42f1598aea89354744733d28842f0b00eee9b6b43699348f5dcefd465"
           },
           {
-            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingNary6[A0, A1, A2, A3, A4, A5, R, X], //, S: Semigroup = _ListErrors[Self.Value], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, X] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, *Ws].NativeInputs and Ws.length == 5 and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[Ws[0]] == A1 and ValidationFamily[S].Element[Ws[1]] == A2 and ValidationFamily[S].Element[Ws[2]] == A3 and ValidationFamily[S].Element[Ws[3]] == A4 and ValidationFamily[S].Element[Ws[4]] == A5 and _ErrorCompatible[_CommonError[S.Error, X], X]:",
-            "sha256": "64a60f0ecd3c1338ba5365dcdfb8f66f418e097753dc1aae90a9cd3df0cb4069"
+            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingNary6[A0, A1, A2, A3, A4, A5, R, X], W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, //, S: Semigroup = _ListErrors[Self.Value]](deinit self, var others: Tuple[W0, W1, W2, W3, W4], ref[o] function: F) raises _CommonError[S.Error, X] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, W0, W1, W2, W3, W4].NativeInputs and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[W0] == A1 and ValidationFamily[S].Element[W1] == A2 and ValidationFamily[S].Element[W2] == A3 and ValidationFamily[S].Element[W3] == A4 and ValidationFamily[S].Element[W4] == A5 and _ErrorCompatible[_CommonError[S.Error, X], X]:",
+            "sha256": "b5f37a418463ba6ab7796ea50034996731443ce381120c0e2d9031ee3fdfa562"
           },
           {
-            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Nary7[A0, A1, A2, A3, A4, A5, A6, R], //, S: Semigroup = _ListErrors[Self.Value], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, Never] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, *Ws].NativeInputs and Ws.length == 6 and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[Ws[0]] == A1 and ValidationFamily[S].Element[Ws[1]] == A2 and ValidationFamily[S].Element[Ws[2]] == A3 and ValidationFamily[S].Element[Ws[3]] == A4 and ValidationFamily[S].Element[Ws[4]] == A5 and ValidationFamily[S].Element[Ws[5]] == A6 and _ErrorCompatible[_CommonError[S.Error, Never], Never]:",
-            "sha256": "f3fff53410d376c83ec36a6b8ab695c423f44a767dccc3c94e144fa9761cfc34"
+            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Nary7[A0, A1, A2, A3, A4, A5, A6, R], W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, W5: Movable & Deinitable, //, S: Semigroup = _ListErrors[Self.Value]](deinit self, var others: Tuple[W0, W1, W2, W3, W4, W5], ref[o] function: F) raises _CommonError[S.Error, Never] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, W0, W1, W2, W3, W4, W5].NativeInputs and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[W0] == A1 and ValidationFamily[S].Element[W1] == A2 and ValidationFamily[S].Element[W2] == A3 and ValidationFamily[S].Element[W3] == A4 and ValidationFamily[S].Element[W4] == A5 and ValidationFamily[S].Element[W5] == A6 and _ErrorCompatible[_CommonError[S.Error, Never], Never]:",
+            "sha256": "b68caccc23d762c99bce865e22b5c8a5ddf27441a818eb586ccd4fc21a6a0622"
           },
           {
-            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingNary7[A0, A1, A2, A3, A4, A5, A6, R, X], //, S: Semigroup = _ListErrors[Self.Value], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, X] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, *Ws].NativeInputs and Ws.length == 6 and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[Ws[0]] == A1 and ValidationFamily[S].Element[Ws[1]] == A2 and ValidationFamily[S].Element[Ws[2]] == A3 and ValidationFamily[S].Element[Ws[3]] == A4 and ValidationFamily[S].Element[Ws[4]] == A5 and ValidationFamily[S].Element[Ws[5]] == A6 and _ErrorCompatible[_CommonError[S.Error, X], X]:",
-            "sha256": "af4e63a364a5357b30d0da5d4ddb84a28964bebd0f5e697a38fac056f81760a0"
+            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingNary7[A0, A1, A2, A3, A4, A5, A6, R, X], W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, W5: Movable & Deinitable, //, S: Semigroup = _ListErrors[Self.Value]](deinit self, var others: Tuple[W0, W1, W2, W3, W4, W5], ref[o] function: F) raises _CommonError[S.Error, X] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, W0, W1, W2, W3, W4, W5].NativeInputs and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[W0] == A1 and ValidationFamily[S].Element[W1] == A2 and ValidationFamily[S].Element[W2] == A3 and ValidationFamily[S].Element[W3] == A4 and ValidationFamily[S].Element[W4] == A5 and ValidationFamily[S].Element[W5] == A6 and _ErrorCompatible[_CommonError[S.Error, X], X]:",
+            "sha256": "56ca6b9af87a89e8684214346e8e142ab2f2d3d35d1fe5a6232e781ff03a9984"
           },
           {
-            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Nary8[A0, A1, A2, A3, A4, A5, A6, A7, R], //, S: Semigroup = _ListErrors[Self.Value], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, Never] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, *Ws].NativeInputs and Ws.length == 7 and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[Ws[0]] == A1 and ValidationFamily[S].Element[Ws[1]] == A2 and ValidationFamily[S].Element[Ws[2]] == A3 and ValidationFamily[S].Element[Ws[3]] == A4 and ValidationFamily[S].Element[Ws[4]] == A5 and ValidationFamily[S].Element[Ws[5]] == A6 and ValidationFamily[S].Element[Ws[6]] == A7 and _ErrorCompatible[_CommonError[S.Error, Never], Never]:",
-            "sha256": "cd7ab51d35a5f2cc01063bc1b34bd1ef47e6c73985d620c8fb02757462cdebed"
+            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Nary8[A0, A1, A2, A3, A4, A5, A6, A7, R], W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, W5: Movable & Deinitable, W6: Movable & Deinitable, //, S: Semigroup = _ListErrors[Self.Value]](deinit self, var others: Tuple[W0, W1, W2, W3, W4, W5, W6], ref[o] function: F) raises _CommonError[S.Error, Never] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, W0, W1, W2, W3, W4, W5, W6].NativeInputs and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[W0] == A1 and ValidationFamily[S].Element[W1] == A2 and ValidationFamily[S].Element[W2] == A3 and ValidationFamily[S].Element[W3] == A4 and ValidationFamily[S].Element[W4] == A5 and ValidationFamily[S].Element[W5] == A6 and ValidationFamily[S].Element[W6] == A7 and _ErrorCompatible[_CommonError[S.Error, Never], Never]:",
+            "sha256": "588403180f42c5f25d7710180955945d51e68b318eb9219378b16160685de775"
           },
           {
-            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingNary8[A0, A1, A2, A3, A4, A5, A6, A7, R, X], //, S: Semigroup = _ListErrors[Self.Value], *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], ref[o] function: F) raises _CommonError[S.Error, X] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, *Ws].NativeInputs and Ws.length == 7 and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[Ws[0]] == A1 and ValidationFamily[S].Element[Ws[1]] == A2 and ValidationFamily[S].Element[Ws[2]] == A3 and ValidationFamily[S].Element[Ws[3]] == A4 and ValidationFamily[S].Element[Ws[4]] == A5 and ValidationFamily[S].Element[Ws[5]] == A6 and ValidationFamily[S].Element[Ws[6]] == A7 and _ErrorCompatible[_CommonError[S.Error, X], X]:",
-            "sha256": "6124ad9e079777582422b57c973e81136b277980bb238a34fbc6b7eeb7b6b2d9"
+            "signature": "def par_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, F: _RaisingNary8[A0, A1, A2, A3, A4, A5, A6, A7, R, X], W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, W5: Movable & Deinitable, W6: Movable & Deinitable, //, S: Semigroup = _ListErrors[Self.Value]](deinit self, var others: Tuple[W0, W1, W2, W3, W4, W5, W6], ref[o] function: F) raises _CommonError[S.Error, X] -> Piped[ValidationFamily[S].Pure[R]] where Self.Value == ValidationFamily[S].Pure[ValidationFamily[S].Element[Self.Value]] and _ProductRun[ValidationFamily[S], Self.Value, W0, W1, W2, W3, W4, W5, W6].NativeInputs and ValidationFamily[S].Element[Self.Value] == A0 and ValidationFamily[S].Element[W0] == A1 and ValidationFamily[S].Element[W1] == A2 and ValidationFamily[S].Element[W2] == A3 and ValidationFamily[S].Element[W3] == A4 and ValidationFamily[S].Element[W4] == A5 and ValidationFamily[S].Element[W5] == A6 and ValidationFamily[S].Element[W6] == A7 and _ErrorCompatible[_CommonError[S.Error, X], X]:",
+            "sha256": "73df070e59a72465d6867f25346e02e4c8bb5f375ee468aeb6711d4e6352170f"
           }
         ],
         "par_traverse": [
@@ -6159,20 +6171,20 @@
         ],
         "fold": [
           {
-            "signature": "def fold[R: Movable & Deinitable, //, F: def(Self.T) -> R, G: def(Self.E) -> R]( self, on_ok: F, on_err: G ) -> R:",
-            "sha256": "0dcbd4e98a870125e8c5a83a18794568008462b7dfdf675a72c20a7f1d0063bb"
+            "signature": "def fold[R: Movable & Deinitable, P: AnyType, Q: AnyType, //, F: def(P) -> R, G: def(Q) -> R]( self, on_ok: F, on_err: G ) -> R where P == Self.T and Q == Self.E:",
+            "sha256": "cd776a40bd80c28b6545a3d46fd4de44063445f65ce8538d808623d792999f3f"
           },
           {
-            "signature": "def fold[R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(Self.T) raises X -> R, G: def(Self.E) -> R]( self, on_ok: F, on_err: G ) raises X -> R:",
-            "sha256": "fcdb5add9504ab000e5eb44a2c2e999790ed6f6cbae98ac6d55906d3ac5e0f90"
+            "signature": "def fold[R: Movable & Deinitable, P: AnyType, Q: AnyType, X: Movable & Deinitable, //, F: def(P) raises X -> R, G: def(Q) -> R]( self, on_ok: F, on_err: G ) raises X -> R where P == Self.T and Q == Self.E:",
+            "sha256": "0588e79b55c9e61295aff22a701917553545a1118bee8e8fc98ae5be4950c000"
           },
           {
-            "signature": "def fold[R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(Self.T) -> R, G: def(Self.E) raises X -> R]( self, on_ok: F, on_err: G ) raises X -> R:",
-            "sha256": "bdbd4c0b016e4946a4e0450c4d2b1481e95375b651629ea3bb9d148bff0eed2a"
+            "signature": "def fold[R: Movable & Deinitable, P: AnyType, Q: AnyType, X: Movable & Deinitable, //, F: def(P) -> R, G: def(Q) raises X -> R]( self, on_ok: F, on_err: G ) raises X -> R where P == Self.T and Q == Self.E:",
+            "sha256": "d8b82045a2d40b687feb0f07a599038c47464e8b79b7df446797432ee987fbf9"
           },
           {
-            "signature": "def fold[R: Movable & Deinitable, X: Movable & Deinitable, Y: Movable & Deinitable, //, F: def(Self.T) raises X -> R, G: def(Self.E) raises Y -> R]( self, on_ok: F, on_err: G ) raises _ResultFailure[X, Y] -> R where X == Never or Y == Never or X == Y:",
-            "sha256": "92d9df5caf7a96ebbb76e85be64684113c4f6327c24f705c446f722ac697afae"
+            "signature": "def fold[R: Movable & Deinitable, P: AnyType, Q: AnyType, X: Movable & Deinitable, Y: Movable & Deinitable, //, F: def(P) raises X -> R, G: def(Q) raises Y -> R]( self, on_ok: F, on_err: G ) raises _ResultFailure[X, Y] -> R where P == Self.T and Q == Self.E and (X == Never or Y == Never or X == Y):",
+            "sha256": "124353cb5519e62963195a2b03b19932bbec0657b7b382fb34d073ec5b037c36"
           },
           {
             "signature": "def fold[F: BorrowCallable, G: BorrowCallable](self, on_ok: F, on_err: G ) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure):",
@@ -6181,20 +6193,20 @@
         ],
         "fold_owned": [
           {
-            "signature": "def fold_owned[R: Movable & Deinitable, //, F: def(var Self.T) -> R, G: def(var Self.E) -> R]( deinit self, on_ok: F, on_err: G ) -> R:",
-            "sha256": "d66a5ec17d4d421d8199077cf9b0c72eeebafed3c8dcbf88d19722fdb3fc22bc"
+            "signature": "def fold_owned[R: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, //, F: def(var A) -> R, G: def(var B) -> R]( deinit self, on_ok: F, on_err: G ) -> R where A == Self.T and B == Self.E:",
+            "sha256": "4d4ba10704c21648fbd5b1d6190ed6f1c434b07358b97e0b54499e584e5d8e01"
           },
           {
-            "signature": "def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var Self.T) raises X -> R, G: def(var Self.E) -> R]( deinit self, on_ok: F, on_err: G ) raises X -> R:",
-            "sha256": "1431b71eaf4158caaaf19dcfe7a6d215e771f6bc7d8efd98d89c6538a2d45aa2"
+            "signature": "def fold_owned[R: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A) raises X -> R, G: def(var B) -> R]( deinit self, on_ok: F, on_err: G ) raises X -> R where A == Self.T and B == Self.E:",
+            "sha256": "d276793aba25ba776feb1682376c45be73c7853102cd4d9b561b8a375924dea7"
           },
           {
-            "signature": "def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var Self.T) -> R, G: def(var Self.E) raises X -> R]( deinit self, on_ok: F, on_err: G ) raises X -> R:",
-            "sha256": "286b56d375b36464ae26565afc80f4cfa9bd5cb7b100428c583aebec255fead5"
+            "signature": "def fold_owned[R: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A) -> R, G: def(var B) raises X -> R]( deinit self, on_ok: F, on_err: G ) raises X -> R where A == Self.T and B == Self.E:",
+            "sha256": "172f52bc8f9763aa4db0c69cb04ddaf54b9dac70c1dbcdde592bda2b4ebe3bef"
           },
           {
-            "signature": "def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, Y: Movable & Deinitable, //, F: def(var Self.T) raises X -> R, G: def(var Self.E) raises Y -> R]( deinit self, on_ok: F, on_err: G ) raises _ResultFailure[X, Y] -> R where X == Never or Y == Never or X == Y:",
-            "sha256": "ae0ddc134a90bd452276a87a157b0671ec0346b8d47b60ec81ea12fdd5d5b6ad"
+            "signature": "def fold_owned[R: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, X: Movable & Deinitable, Y: Movable & Deinitable, //, F: def(var A) raises X -> R, G: def(var B) raises Y -> R]( deinit self, on_ok: F, on_err: G ) raises _ResultFailure[X, Y] -> R where A == Self.T and B == Self.E and (X == Never or Y == Never or X == Y):",
+            "sha256": "8c331eab8df86c736308d735d66043d64b9c111cebbadec7985937feff76239d"
           },
           {
             "signature": "def fold_owned[F: Unary, G: Unary](deinit self, on_ok: F, on_err: G ) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error):",
@@ -6215,12 +6227,12 @@
         ],
         "map": [
           {
-            "signature": "def map[U: Movable & Deinitable, //, F: def(var Self.T) -> U](deinit self, function: F) -> Result[U, Self.E]:",
-            "sha256": "fc181ffdf22ebd83de3d3c996257f8dd7cf24f9ef7b00b25e30008ff31da29b2"
+            "signature": "def map[U: Movable & Deinitable, A: Movable & Deinitable, //, F: def(var A) -> U](deinit self, function: F) -> Result[U, Self.E] where A == Self.T:",
+            "sha256": "e766c87e166bf76b244883aebbd54f8e245f3121c53b0fc13e8f831ed28c86e9"
           },
           {
-            "signature": "def map[U: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var Self.T) raises X -> U]( deinit self, function: F ) raises X -> Result[U, Self.E]:",
-            "sha256": "e9e8167dfb34f0a98d5c3e960375f5d5518849c6bb1afe04b6951860d44f1613"
+            "signature": "def map[U: Movable & Deinitable, A: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var A) raises X -> U]( deinit self, function: F ) raises X -> Result[U, Self.E] where A == Self.T:",
+            "sha256": "0a8ade9b74304d83c5b30b400f8294c577ce691d6ce2c691c47b5ed18b6d5f0d"
           },
           {
             "signature": "def map[F: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: F ) raises F._View[o].Error -> Result[F._View[o].Out, Self.E] where F._View[o].Arg == Self.T:",
@@ -6233,12 +6245,12 @@
         ],
         "flat_map": [
           {
-            "signature": "def flat_map[U: Movable & Deinitable, //, F: def(var Self.T) -> Result[U, Self.E]]( deinit self, function: F ) -> Result[U, Self.E]:",
-            "sha256": "d40364e7a6d1d8c9c45ec5649843136589ff585a60da5ef2f64ff214f4226c95"
+            "signature": "def flat_map[U: Movable & Deinitable, A: Movable & Deinitable, //, F: def(var A) -> Result[U, Self.E]]( deinit self, function: F ) -> Result[U, Self.E] where A == Self.T:",
+            "sha256": "80d9989f8c1079b9a2b90b692a97f7f60034bff048cb564e3d872ac80126340d"
           },
           {
-            "signature": "def flat_map[U: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var Self.T) raises X -> Result[U, Self.E]]( deinit self, function: F ) raises X -> Result[U, Self.E]:",
-            "sha256": "d021a340b9a76192a32d175cfc6900b031cfc8584933d73c8c872da975953028"
+            "signature": "def flat_map[U: Movable & Deinitable, A: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var A) raises X -> Result[U, Self.E]]( deinit self, function: F ) raises X -> Result[U, Self.E] where A == Self.T:",
+            "sha256": "9483488f2b4cb276ddcbb2caa4b511311d44141c877a56cfadf2c396a8ac551f"
           },
           {
             "signature": "def flat_map[F: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: F ) raises F._View[o].Error -> F._View[o].Out where F._View[o].Arg == Self.T and F._View[o].Out == Result[downcast[F._View[o].Out, _ResultType].Value, Self.E]:",
@@ -6251,12 +6263,12 @@
         ],
         "map_err": [
           {
-            "signature": "def map_err[U: Movable & Deinitable, //, F: def(var Self.E) -> U](deinit self, function: F) -> Result[Self.T, U]:",
-            "sha256": "e2a9b34bad0f2b0da19d16a25bb52559eafbc121c83607f439a5d2be4426ecb5"
+            "signature": "def map_err[U: Movable & Deinitable, A: Movable & Deinitable, //, F: def(var A) -> U](deinit self, function: F) -> Result[Self.T, U] where A == Self.E:",
+            "sha256": "50d348146f6b3e0bfde632e29a3f1a2327502a4f1c9be419e09117979e298fda"
           },
           {
-            "signature": "def map_err[U: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var Self.E) raises X -> U]( deinit self, function: F ) raises X -> Result[Self.T, U]:",
-            "sha256": "f1f221a251cc3daaaf14eef74f7c9414561c6bebc4ebb0dc1093e937fdc8bccf"
+            "signature": "def map_err[U: Movable & Deinitable, A: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var A) raises X -> U]( deinit self, function: F ) raises X -> Result[Self.T, U] where A == Self.E:",
+            "sha256": "182fcc6b5ab57b55e6d94839a1dcdb6c70797cab5565a2fbe838bb2601889311"
           },
           {
             "signature": "def map_err[F: UnaryContract & Movable & Deinitable](deinit self, var function: F ) raises F.Error -> Result[Self.T, F.Out] where F.Arg == Self.E:",
@@ -6265,12 +6277,12 @@
         ],
         "or_else": [
           {
-            "signature": "def or_else[U: Movable & Deinitable, //, F: def(var Self.E) -> Result[Self.T, U]]( deinit self, function: F ) -> Result[Self.T, U]:",
-            "sha256": "2144be247df87b5ec534ee98de3a0ca200d2fc40e5e4be33e6362dcbc49c0914"
+            "signature": "def or_else[U: Movable & Deinitable, A: Movable & Deinitable, //, F: def(var A) -> Result[Self.T, U]]( deinit self, function: F ) -> Result[Self.T, U] where A == Self.E:",
+            "sha256": "75ff75a9f084a34237c0e5db4699b65de84687d4ef6a04b3b0b8cca9ea0ef380"
           },
           {
-            "signature": "def or_else[U: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var Self.E) raises X -> Result[Self.T, U]]( deinit self, function: F ) raises X -> Result[Self.T, U]:",
-            "sha256": "16c2c99d8dc2fca291e91796492829f30a77cf068b1b5edd91c5ca3e875839a4"
+            "signature": "def or_else[U: Movable & Deinitable, A: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var A) raises X -> Result[Self.T, U]]( deinit self, function: F ) raises X -> Result[Self.T, U] where A == Self.E:",
+            "sha256": "949f4435d10135b91db2feae0f5994a26cb7b345214f527a062ddd9a58747637"
           },
           {
             "signature": "def or_else[F: UnaryContract & Movable & Deinitable](deinit self, var function: F ) raises F.Error -> F.Out where F.Arg == Self.E:",
@@ -6481,12 +6493,12 @@
             "sha256": "134ff9e5d28ccd4144a863f8b8c41b002d62ec4b03da196677fbd1b43e7d4669"
           },
           {
-            "signature": "def flat_tap_err[U: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.E) -> Result[U, Self.E]](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E]:",
-            "sha256": "b0a2b2386597f7f9071619dcb3b07c8067851c584d4fa7831b4ee9ac6cd7cfea"
+            "signature": "def flat_tap_err[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.E) -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E] and U == downcast[R, _ResultType].Value:",
+            "sha256": "07536aefaf2a01346114f267a702a507a9daf2dea0f18bea5c9f0b2c3026f776"
           },
           {
-            "signature": "def flat_tap_err[U: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(Self.E) raises X -> Result[U, Self.E]](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E]:",
-            "sha256": "a52854e68a3ef1dd1343b765a45337b6da86a8569e12eecbc276a8ebcb88c5db"
+            "signature": "def flat_tap_err[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(Self.E) raises X -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E] and U == downcast[R, _ResultType].Value:",
+            "sha256": "9b4b4bfac7e1c135825a1b611bdab99964165bf491c2353c4ac7c5727991133b"
           }
         ],
         "attempt_tap": [
@@ -6495,12 +6507,12 @@
             "sha256": "b665901043ab0591c71d986fc65a33b079e8573b754b928288e4e771449eef5b"
           },
           {
-            "signature": "def attempt_tap[U: Movable & Deinitable, o: ImmOrigin, //, C: def(Result[Self.T, Self.E]) -> Result[U, Self.E]](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E]:",
-            "sha256": "a73c73f28fa54f3df11887ab82c24942f086967d952503c20a4282001820bbcc"
+            "signature": "def attempt_tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Result[Self.T, Self.E]) -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E] and U == downcast[R, _ResultType].Value:",
+            "sha256": "516da913dea3949d4c83820b8e1b43f3b3256d2ce5b22cad5c463ffda07718b3"
           },
           {
-            "signature": "def attempt_tap[U: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(Result[Self.T, Self.E]) raises X -> Result[U, Self.E]](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E]:",
-            "sha256": "b693c03cf7f4f8512b9e0da19da3f807f6a4a4d1db20e72f80ffcf12bb7104a6"
+            "signature": "def attempt_tap[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(Result[Self.T, Self.E]) raises X -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E] and U == downcast[R, _ResultType].Value:",
+            "sha256": "efad771446e8c7c4dcd5c8b9b4c058b4f85aa972602d664b0a20ad575da0f6a9"
           }
         ],
         "map_both": [
@@ -6559,24 +6571,24 @@
             "sha256": "8533fa0fa82c9d6e5d74993536049ca6c5e6728d894392b4ac2f2d5756edf376"
           },
           {
-            "signature": "def redeem[R: Movable & Deinitable, o: ImmOrigin, q: ImmOrigin, //, C: def(var Self.T) -> R, G: def(var Self.E) -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Never -> Result[R, Self.E]:",
-            "sha256": "92fc96078a760b191a6ec88a970b02991c7fe13455ea78288975d625305270d0"
+            "signature": "def redeem[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var Self.T) -> R, G: def(var Self.E) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Never -> Result[R, Self.E] where R == S:",
+            "sha256": "9df89aea1e01c1f86a930da1bdb5c0341d074f0eae3333a35fe7aa561c4bffee"
           },
           {
-            "signature": "def redeem[R: Movable & Deinitable, o: ImmOrigin, q: ImmOrigin, //, C: def(var Self.T) -> R, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Y -> Result[R, Self.E]:",
-            "sha256": "21ec0e9585c65d68984f21ceeeb40e381f7d2539799843708044c1ac8d03efbf"
+            "signature": "def redeem[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var Self.T) -> R, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Y -> Result[R, Self.E] where R == S:",
+            "sha256": "327f3ddb8f77aac23c78bc7d66bb4a5008de69db3d18750c4b627a2954caf25f"
           },
           {
             "signature": "def redeem[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[X, G.Error] -> Result[R, Self.E] where G.Arg == Self.E and R == G.Out and (X == Never or G.Error == Never or X == G.Error):",
             "sha256": "13ed2ce575e967f1f2c53095ad88a8649454b21ad035383d2ab3495e1b98f195"
           },
           {
-            "signature": "def redeem[R: Movable & Deinitable, o: ImmOrigin, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, G: def(var Self.E) -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises X -> Result[R, Self.E]:",
-            "sha256": "2d33fefc2e396fb2811278f75c6ebebbe167c8b9fad7b73e0db0dde3a844fcc7"
+            "signature": "def redeem[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, G: def(var Self.E) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises X -> Result[R, Self.E] where R == S:",
+            "sha256": "d237f66db177d0185442fb82432d4b6b985a9b3bd1a4ef9576203bd94ba4a1dc"
           },
           {
-            "signature": "def redeem[R: Movable & Deinitable, o: ImmOrigin, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[X, Y] -> Result[R, Self.E] where (X == Never or Y == Never or X == Y):",
-            "sha256": "e7878b640f6575612f0f0db9e52ed0ee2544a273ee19633afc425fe5def8b7b4"
+            "signature": "def redeem[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[X, Y] -> Result[R, Self.E] where R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "2b45635f38533a83c14903ea4254c2e1334a12e168949c678db2805fd2a09c1f"
           }
         ],
         "redeem_with": [
@@ -6593,28 +6605,28 @@
             "sha256": "9992d89bed83a30ee33dee0acc73160af51ab788d3af253b4b686d7a3e342d57"
           },
           {
-            "signature": "def redeem_with[o: ImmOrigin, U: Movable & Deinitable, V: Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //, C: def(var Self.T) -> Result[U, V]](deinit self, ref[o] on_ok: C, var on_err: G) raises G.Error -> Result[U, V] where G.Arg == Self.E and Result[U, V] == G.Out:",
-            "sha256": "4edb5ab53f0003c701ae470e0917c35f4908e147edc57cdbf4c515abcf966bc7"
+            "signature": "def redeem_with[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(var Self.T) -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, var on_err: G) raises G.Error -> R where R == Result[U, V] and G.Arg == Self.E and R == G.Out:",
+            "sha256": "4963fcceb073cc70d0a513955a660208f0a6aa05ca0839f196ba52384c8ef225"
           },
           {
-            "signature": "def redeem_with[o: ImmOrigin, U: Movable & Deinitable, V: Movable & Deinitable, q: ImmOrigin, //, C: def(var Self.T) -> Result[U, V], G: def(var Self.E) -> Result[U, V]](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Never -> Result[U, V]:",
-            "sha256": "cd8cb3653c0927ab0103818a6ff5cf1e9782d8f2252993ea97de8228c971b589"
+            "signature": "def redeem_with[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var Self.T) -> R, G: def(var Self.E) -> S, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Never -> R where R == Result[U, V] and R == S:",
+            "sha256": "818592db74f978dbebfac2646d2e5b8da0c125e8101408c262ee519df80c09de"
           },
           {
-            "signature": "def redeem_with[o: ImmOrigin, U: Movable & Deinitable, V: Movable & Deinitable, q: ImmOrigin, //, C: def(var Self.T) -> Result[U, V], Y: Movable & Deinitable, G: def(var Self.E) raises Y -> Result[U, V]](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Y -> Result[U, V]:",
-            "sha256": "6b7dd19e952a16adf57448fe1f790610ad8277900e9ba044ff5658eafca8df9e"
+            "signature": "def redeem_with[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var Self.T) -> R, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Y -> R where R == Result[U, V] and R == S:",
+            "sha256": "b0f0a60aea986fa97cba3c161fa11287a02da40aaec8041f2a2b84204e12f302"
           },
           {
-            "signature": "def redeem_with[o: ImmOrigin, U: Movable & Deinitable, V: Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> Result[U, V]](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[X, G.Error] -> Result[U, V] where G.Arg == Self.E and Result[U, V] == G.Out and (X == Never or G.Error == Never or X == G.Error):",
-            "sha256": "450db564b9d8c9f0fd14d2e0b142b4ddfff0900b5bbf4baefeb501789802ec44"
+            "signature": "def redeem_with[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[X, G.Error] -> R where R == Result[U, V] and G.Arg == Self.E and R == G.Out and (X == Never or G.Error == Never or X == G.Error):",
+            "sha256": "a38a0e57f6d769cbd1e40cc06d40595157c92f877fd9df4b2efb97abdea46367"
           },
           {
-            "signature": "def redeem_with[o: ImmOrigin, U: Movable & Deinitable, V: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> Result[U, V], G: def(var Self.E) -> Result[U, V]](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises X -> Result[U, V]:",
-            "sha256": "9012253f63a6ffb8238d590e63e10d2ef74daf0087f039166ae9d69c13b04f0c"
+            "signature": "def redeem_with[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, G: def(var Self.E) -> S, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises X -> R where R == Result[U, V] and R == S:",
+            "sha256": "f30b34468cc90e36a94b4c8b3d4994da57615aaab3c93be3f960caaca8e5fb39"
           },
           {
-            "signature": "def redeem_with[o: ImmOrigin, U: Movable & Deinitable, V: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> Result[U, V], Y: Movable & Deinitable, G: def(var Self.E) raises Y -> Result[U, V]](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[X, Y] -> Result[U, V] where (X == Never or Y == Never or X == Y):",
-            "sha256": "4be2a86efad30d9820ad80104e17ff20a5764797083cf1036b6b91853d1cc933"
+            "signature": "def redeem_with[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[X, Y] -> R where R == Result[U, V] and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "858036413606f88dc533c0c34a8c70cf0cd796d2f213e1c451aec7bb9cf01a97"
           }
         ]
       },
@@ -6972,6 +6984,14 @@
         {
           "signature": "def as_unary[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, F: _RaisingUnary[A, R, E]](var function: F) -> NativeUnary[A, R, E, F, True]:",
           "sha256": "bd078770e8b7dd40a1f4f3591fe2914fdb61708d095cd97ddec9b32daa2a9808"
+        },
+        {
+          "signature": "def as_unary[A: Movable & Deinitable, R: Movable & Deinitable, //]( function: def(var A) thin -> R ) -> NativeUnary[A, R, Never, def(var A) thin -> R, False]:",
+          "sha256": "aeafcdc057dbba16595efd94230358503767f853c7ca64097a802f1212cd2d36"
+        },
+        {
+          "signature": "def as_unary[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //]( function: def(var A) raises E thin -> R ) -> NativeUnary[A, R, E, def(var A) raises E thin -> R, True]:",
+          "sha256": "71785bf67dd8330cea897f3d759b53d3b7c2a89836a3efb3bd95d6c55002eaad"
         }
       ],
       "provider": "callables/native"
@@ -7014,8 +7034,8 @@
           "sha256": "0ce0ba592ff8ff4a0843e808d6407d23af29f4648e8c0c28df849fa9f9f161a4"
         },
         {
-          "signature": "def pipe[A: Movable & Deinitable, //, *Fs: Movable & Deinitable]( var value: A, *functions: *Fs ) raises _Plan[*Fs].Failure -> _PipelineResult[A, _Plan[*Fs].Results] where Fs.length >= 2:",
-          "sha256": "aec4adb877d73b44d0ebb889382abf6cc1d76b23056b48ad0f77ab3f64abda8e"
+          "signature": "def pipe[A: Movable & Deinitable, //, *Fs: Movable & Deinitable]( var value: A, *functions: *Fs ) raises _Plan[*Fs].Failure -> _PipelineResult[A, _Plan[*Fs].Results] where Fs.length >= 2 and Fs.all_conforms_to[Unary]():",
+          "sha256": "5358022a7ff20ad856c48f24f6311d5911e792393e3d97042642c1cb0634e827"
         },
         {
           "signature": "def pipe[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, P1: Movable & Deinitable, E0: Movable & Deinitable, E1: Movable & Deinitable, //]( var value: A0, f0: def(var A0) raises E0 thin -> A1, f1: def(var P1) raises E1 thin -> A2 ) raises _CommonError[E0, E1] -> A2:",
@@ -7070,8 +7090,8 @@
           "sha256": "227114197e8b27c37d00dd0c3964fce8c8e0b134c367c20df0d61014188b53fa"
         },
         {
-          "signature": "def flow[*Fs: Movable & Deinitable](var *functions: *Fs) -> Composition[False, _Arity[Fs[0]], *Fs] where Fs.length >= 2:",
-          "sha256": "525b8dc1b7433caa929d7f9a3859dc660772b929f8b0c6c68b460de7f66bbc7c"
+          "signature": "def flow[*Fs: Movable & Deinitable](var *functions: *Fs) -> Composition[False, _Arity[Fs[0]], *Fs] where Fs.length >= 2 and _AllOnce[Fs]:",
+          "sha256": "00a1c08c86e97fc8a475b382e58cb51d900a633146e03803e0ff992361e33b03"
         },
         {
           "signature": "def flow[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, P1: Movable & Deinitable, E0: Movable & Deinitable, E1: Movable & Deinitable, //]( f0: def(var A0) raises E0 thin -> A1, f1: def(var P1) raises E1 thin -> A2 ) -> Composition[False, 1, _Thin1F[A0, A1, E0], _Thin1F[P1, A2, E1]]:",
@@ -7172,8 +7192,8 @@
           "sha256": "724e30b4246abe59c67abb22ca70e813762677bdbb6ad1a930ad8d35ea511ce4"
         },
         {
-          "signature": "def compose[*Fs: Movable & Deinitable](var *functions: *Fs) -> Composition[True, _Arity[Fs[Fs.length - 1]], *Fs] where Fs.length >= 2:",
-          "sha256": "c60b3f37d20bac135a7fd6dc2946edf63347cf0fdc48e610269ec7eef70538d3"
+          "signature": "def compose[*Fs: Movable & Deinitable](var *functions: *Fs) -> Composition[True, _Arity[Fs[Fs.length - 1]], *Fs] where Fs.length >= 2 and _AllOnce[Fs]:",
+          "sha256": "e5bc379056dd433cc93fb198a5408caefc3c5e5386aeecd77edfaf424fab4e45"
         },
         {
           "signature": "def compose[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, P1: Movable & Deinitable, E0: Movable & Deinitable, E1: Movable & Deinitable, //]( f1: def(var P1) raises E1 thin -> A2, f0: def(var A0) raises E0 thin -> A1 ) -> Composition[True, 1, _Thin1F[P1, A2, E1], _Thin1F[A0, A1, E0]]:",
@@ -10166,6 +10186,14 @@
         {
           "signature": "def as_unary[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, F: _RaisingUnary[A, R, E]](var function: F) -> NativeUnary[A, R, E, F, True]:",
           "sha256": "bd078770e8b7dd40a1f4f3591fe2914fdb61708d095cd97ddec9b32daa2a9808"
+        },
+        {
+          "signature": "def as_unary[A: Movable & Deinitable, R: Movable & Deinitable, //]( function: def(var A) thin -> R ) -> NativeUnary[A, R, Never, def(var A) thin -> R, False]:",
+          "sha256": "aeafcdc057dbba16595efd94230358503767f853c7ca64097a802f1212cd2d36"
+        },
+        {
+          "signature": "def as_unary[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //]( function: def(var A) raises E thin -> R ) -> NativeUnary[A, R, E, def(var A) raises E thin -> R, True]:",
+          "sha256": "71785bf67dd8330cea897f3d759b53d3b7c2a89836a3efb3bd95d6c55002eaad"
         }
       ],
       "provider": "callables/native"

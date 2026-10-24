@@ -32,6 +32,9 @@ def drop_prefix() raises:
     var states = ArcPointer(0)
     var trace = ArcPointer(List[Int]())
     var state = I12OwnedToken(0, states)
+    # Mojo 1.2 also loses owned capture writes in stored borrowing predicates
+    # at O3. The callback annotation preserves the existing state/cleanup checks.
+    @always_inline
     def predicate(value: I12OwnedToken) {var state^, trace} -> Bool:
         state.value += 1
         trace[].append(state.value)

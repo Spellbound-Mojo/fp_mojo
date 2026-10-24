@@ -10,7 +10,8 @@ scope and the ownership of shared mechanisms.
 Set up the environment as in [installation](../start/installation.md). The
 tooling scripts call `pixi` and `mojo` from `PATH`, so make sure
 `$HOME/.pixi/bin` is on it. The compile-time measurement and its tooling test use
-GNU `time` (`/usr/bin/time`); on Debian or Ubuntu install it with
+GNU `time` (`/usr/bin/time`, or `time` on `PATH` when that path is absent);
+on Debian or Ubuntu install it with
 `apt-get install time`.
 
 Mojo shares one compile cache per environment under

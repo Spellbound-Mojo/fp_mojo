@@ -1,4 +1,4 @@
-# error: invalid call to 'all': lacking evidence to prove correctness
+# error: no matching function in call to 'all'
 from fp.iteration import fold_left, reduce, reduce_optional, fold_until
 from fp.iteration import find, any, all
 from fp.data import ControlFlow, Continue

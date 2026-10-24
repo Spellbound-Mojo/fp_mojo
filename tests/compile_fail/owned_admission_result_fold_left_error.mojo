@@ -1,4 +1,4 @@
-# error: invalid call to 'fold': lacking evidence to prove correctness
+# error: no matching method in call to 'fold'
 from fp.data import Result, Ok, Err
 from std.builtin.rebind import rebind_var
 from std.os import abort

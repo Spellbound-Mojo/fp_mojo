@@ -62,8 +62,8 @@ A type implements only the modes it supports. Two free functions choose the mode
 `as_unary(f)` moves a native function or closure into a `NativeUnary`, a `Unary`. `Partial`
 implements `Thunk`, `Unary` or `Binary` when zero, one or two arguments remain;
 `Composition` has the arity of its first-applied stage; `Flipped` is a `Binary`.
-At O3 a call through any of these compiles to the same instructions as calling
-the function directly.
+The Mojo 1.1 O3 measurements matched direct function calls. That performance
+result has not been requalified for Mojo 1.2.
 
 The types live on the callable, so an algebra instance, an effect or a
 composition computes its result type from the callback's `Out` alias without any
@@ -72,6 +72,18 @@ programs take minutes to compile (see
 [algebra and effects](algebra.md#why-the-core-is-shaped-this-way)).
 
 ## Native functions and closures
+
+On the Mojo 1.2 nightly branch, `NativeUnary` stores its callback in the same
+inline optional cell used by composition. Direct generic fields lose native
+function witnesses on this compiler. The cell remains occupied until the
+wrapper is consumed; construction and calls neither allocate nor copy captures.
+Conditional copyability and the callback's embedded origins are retained.
+
+The public `function` field is now a borrowing `function()` method. Use
+`wrapped.function()` to access the native callback and
+`wrapped^.into_function()` to extract it. `as_unary`, direct construction,
+`call` and `__call__` keep their existing calling forms. Lazy iterator adapters
+use the same storage representation and retain mutable access between pulls.
 
 Mojo 1.1 records a native function's signature only when the value passes
 through a parameter of that exact function type (`F: def(A) -> R`); a plain
