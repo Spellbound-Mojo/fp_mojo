@@ -705,12 +705,19 @@ Applicative laws use the same assumptions; diagnostics need not be commutative.
 The laws compare observable values and ordered diagnostics, not destruction
 traces or native effects.
 
+### Family admission and generic forwarding
+
 Checked algebra entry points and generated fluent methods evaluate family
 admission in their `where` clauses. `Functor.MapCompatible[V, F]`,
 `Monad.BindCompatible[V, F]`, and `Applicative.CombineCompatible[V, F, R]` /
 `CollectCompatible[V, F]` default to True. Ior overrides them to check diagnostic
-origins, callback-result types, and compatible native errors. Mapping and
-binding also require `I.Element[V] == F.Arg` at the call boundary.
+origins, callback-result types, and compatible native errors. Result overrides
+them to require its exact stored error type and origins. Mapping checks the
+source carrier; combination checks both carriers and both callback payloads;
+collection checks every produced carrier. Validation delegates these checks to
+ResultFamily with the policy's error type, so accumulation and sequential
+combination share one carrier contract. Mapping and binding also require
+`I.Element[V] == F.Arg` at the call boundary.
 
 Generic forwarding signatures must now carry the corresponding predicates.
 For example, a wrapper around `map[I](f^, value^)` returning `I.Mapped[V, F]`
@@ -719,6 +726,13 @@ needs `where I.Element[V] == F.Arg and I.MapCompatible[V, F]`; a wrapper around
 input equality with `I.BindCompatible[V, F]`. The generic integration test
 exercises these public contracts through source and precompiled imports.
 Concrete families that use the defaults keep their existing behavior.
+
+Result's carrier evidence remains exact nominal equality,
+`V == Result[ResultFamily[E].Element[V], E]`. Generic outcome forwarders can
+already provide that proof. Adding a separate `conforms_to(V, _ResultType)`
+premise would require redundant evidence that Mojo 1.2 cannot always derive
+from the equality during overload selection. Bind retains its existing guard
+for a callback result that may be a different kind of carrier.
 
 The shared carrier compatibility predicate also uses mapping admission, so
 higher operations keep the same diagnostic origin. Like other dictionary

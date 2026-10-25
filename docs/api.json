@@ -3214,6 +3214,18 @@
      "name": "Failure"
     },
     {
+     "description": "Require the selected Result error type and its origins before mapping.",
+     "name": "MapCompatible"
+    },
+    {
+     "description": "Require both Results and both callback inputs to match the selected family.",
+     "name": "CombineCompatible"
+    },
+    {
+     "description": "Require each produced Result to retain the selected stored error and origins.",
+     "name": "CollectCompatible"
+    },
+    {
      "description": "",
      "name": "Failed"
     },
@@ -3282,24 +3294,12 @@
      "name": "LiftError"
     },
     {
-     "description": "Admission for combination, including family-specific carrier and error origins.",
-     "name": "CombineCompatible"
-    },
-    {
-     "description": "Admission for collection into this family; generic traversal forwards this predicate.",
-     "name": "CollectCompatible"
-    },
-    {
      "description": "The carrier `collect` returns: this family's carrier of a `List`.",
      "name": "Collected"
     },
     {
      "description": "The error `collect` raises.",
      "name": "CollectError"
-    },
-    {
-     "description": "Additional admission for map; generic forwarders preserve this in their where clause.",
-     "name": "MapCompatible"
     }
    ],
    "description": "Its operations are the `Result` methods. A native error a callback raises\npropagates as a native error; it never becomes the stored `Err`.",
@@ -3888,6 +3888,18 @@
      "name": "Failure"
     },
     {
+     "description": "Use the Result family's exact stored-error and origin admission for mapping.",
+     "name": "MapCompatible"
+    },
+    {
+     "description": "Use the Result family's carrier and payload admission before combining errors.",
+     "name": "CombineCompatible"
+    },
+    {
+     "description": "Use the Result family's admission for each produced validation result.",
+     "name": "CollectCompatible"
+    },
+    {
      "description": "",
      "name": "Failed"
     },
@@ -3924,24 +3936,12 @@
      "name": "CombineError"
     },
     {
-     "description": "Admission for combination, including family-specific carrier and error origins.",
-     "name": "CombineCompatible"
-    },
-    {
-     "description": "Admission for collection into this family; generic traversal forwards this predicate.",
-     "name": "CollectCompatible"
-    },
-    {
      "description": "The carrier `collect` returns: this family's carrier of a `List`.",
      "name": "Collected"
     },
     {
      "description": "The error `collect` raises.",
      "name": "CollectError"
-    },
-    {
-     "description": "Additional admission for map; generic forwarders preserve this in their where clause.",
-     "name": "MapCompatible"
     }
    ],
    "description": "Both failed operands combine their stored errors with S. Native raises\nstill stop immediately. This is an alternative Applicative, not a Monad;\nResult's own dependent flat_map continues to use its usual short circuit.\nNo threads are started and no runtime wrapper or error conversion is added.",

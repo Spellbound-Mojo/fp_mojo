@@ -485,3 +485,28 @@ Remaining legacy operations should follow this same admission rule and retain
 their existing execution owners as migration continues. This extension does
 not establish complete API parity or eliminate the documented compiler issues
 in legacy entry points.
+
+## Shared Result carrier admission
+
+Selecting a family must preserve its stored error type and borrowed origins.
+On Mojo 1.2, a body-only equality assertion can run after origins have been
+erased: a mismatched `pipeline[ResultFamily[E]](value).map(callback)` compiled
+even when the value's stored error borrowed a different owner. The invalid
+control was compiled without execution.
+
+ResultFamily now supplies `MapCompatible`, `CombineCompatible` and
+`CollectCompatible` using its existing exact carrier predicate. Bind composes
+the same checks. ValidationFamily delegates to ResultFamily, retaining its own
+accumulation and native error semantics. Existing checked free functions and
+fluent methods already forward these predicates in their signatures, so the
+fix reaches them without new wrappers, runtime checks or extra user annotations.
+Static dictionary primitives continue to assume admitted types, as described
+in [algebra admission](algebra.md#family-admission-and-generic-forwarding).
+
+Generic forwarding retains the original carrier-equality proof form. The
+`context_family_contract` fixtures pair valid generic calls and borrowed
+results with rejections for wrong carrier types, stored error types, nested
+error origins and callback input origins. They cover free functions, Piped,
+Pipeline, traversal, sequence and lazy right operands. Run the boundary gate
+with `--filter context_family_contract` to check source and package imports at
+both optimization levels.

@@ -429,7 +429,21 @@ struct ResultFamily[E: Movable & Deinitable](Monad, ApplicativeError, Traversabl
     """
     comptime Error = Self.E
     comptime Failure = Self.E
+    # Keep exact nominal equality as the proof generic forwarders provide.
+    # A separate conforms_to premise is redundant and Mojo 1.2 cannot always
+    # derive it from that equality before selecting a generic overload.
     comptime _ErrorCarrier[V: Movable & Deinitable] = V == Result[Self.Element[V], Self.E]
+    # These signature predicates are the Result family's single admission
+    # contract. Body assertions run after origins may have been erased.
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self._ErrorCarrier[V]
+    """Require the selected Result error type and its origins before mapping."""
+    comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = (
+        Self._ErrorCarrier[V] and Self._ErrorCarrier[R.Out] and
+        Self.Element[V] == F.First and Self.Element[R.Out] == F.Second
+    )
+    """Require both Results and both callback inputs to match the selected family."""
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self._ErrorCarrier[F.Out]
+    """Require each produced Result to retain the selected stored error and origins."""
     comptime Failed[A: Movable & Deinitable] = Result[A, Self.E]
     comptime FailError[A: Movable & Deinitable] = Never
     comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Result[Self.Element[V], Self.E]
@@ -441,7 +455,7 @@ struct ResultFamily[E: Movable & Deinitable](Monad, ApplicativeError, Traversabl
     comptime Combined[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = Result[F.Out, Self.E]
     comptime CombineError[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = _CommonError[F.Error, R.Error]
     comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = (
-        (V == Result[F.Arg, Self.E] and F.Out == Result[downcast[F.Out, _ResultType].Value, Self.E])
+        (Self.MapCompatible[V, F] and Self.CollectCompatible[V, F] and Self.Element[V] == F.Arg)
         if conforms_to(F.Out, _ResultType) else False
     )
     """Require the callback to return a Result with the same stored error and origins."""

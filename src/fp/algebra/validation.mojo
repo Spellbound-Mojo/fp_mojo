@@ -30,6 +30,13 @@ struct ValidationFamily[S: Semigroup](ApplicativeError):
     comptime Element[V: Movable & Deinitable] = ResultFamily[Self.S.Value].Element[V]
     comptime Failure = Self.S.Value
     comptime _ErrorCarrier[V: Movable & Deinitable] = ResultFamily[Self.S.Value]._ErrorCarrier[V]
+    # Validation changes error accumulation, not the native Result carrier.
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = ResultFamily[Self.S.Value].MapCompatible[V, F]
+    """Use the Result family's exact stored-error and origin admission for mapping."""
+    comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = ResultFamily[Self.S.Value].CombineCompatible[V, F, R]
+    """Use the Result family's carrier and payload admission before combining errors."""
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = ResultFamily[Self.S.Value].CollectCompatible[V, F]
+    """Use the Result family's admission for each produced validation result."""
     comptime Failed[A: Movable & Deinitable] = ResultFamily[Self.S.Value].Failed[A]
     comptime FailError[A: Movable & Deinitable] = Never
     comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = ResultFamily[Self.S.Value].Handled[V, H]
