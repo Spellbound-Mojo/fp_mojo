@@ -35,7 +35,7 @@ def keywords(mut value: Token, /, var **options: Int) raises Failure -> Int:
     return value.value
 
 def forward(mut value: Token, /, var **options: Int) -> Result[Int, Failure]:
-    return attempt_kwargs(keywords, value, **options^)
+    return attempt_kwargs[mutable=True](keywords, value, **options^)
 
 def scalar_left(mut first: Int, second: Int) -> Int:
     first += second
@@ -64,7 +64,7 @@ def main() raises:
             var observed = 0
             var nested: Optional[Nested] = None
             if library:
-                var captured: Result[Nested, Failure] = attempt(stateful, value, Bool(fail))
+                var captured: Result[Nested, Failure] = attempt[mut_owned=True](stateful, value, Bool(fail))
                 try: nested = Optional(raise_on_err(captured^))
                 except error: observed = error.code
             else:
@@ -101,13 +101,13 @@ def main() raises:
         var second = 3
         var text = String("abc")
         if library:
-            assert_equal(raise_on_err(attempt(scalar_left, first, second)), 5)
+            assert_equal(raise_on_err(attempt[mut_owned=True](scalar_left, first, second)), 5)
             var scalar_result: Int
-            try: scalar_result = raise_on_err(attempt_kwargs(scalar_right, first, second, extra=1))
+            try: scalar_result = raise_on_err(attempt_kwargs[owned_mut=True](scalar_right, first, second, extra=1))
             except error: raise Error("unexpected typed failure")
             assert_equal(scalar_result, 9)
-            assert_equal(raise_on_err(attempt(scalar_both, first, second)), 26)
-            assert_equal(raise_on_err(attempt_kwargs(heterogeneous, value, text, more=2)), 19)
+            assert_equal(raise_on_err(attempt[mut_mut=True](scalar_both, first, second)), 26)
+            assert_equal(raise_on_err(attempt_kwargs[mut_read=True](heterogeneous, value, text, more=2)), 19)
         else:
             assert_equal(scalar_left(first, second), 5)
             var scalar_result: Int
@@ -126,9 +126,9 @@ def main() raises:
         def no_value(mut current: Int, /, var **values: Int):
             current += len(values)
         if library:
-            var stopped: Result[Int, StopIteration] = attempt(stop, first)
+            var stopped: Result[Int, StopIteration] = attempt[mutable=True](stop, first)
             assert_equal(stopped.is_err(), True)
-            var empty = attempt_kwargs(no_value, first, a=1, b=2)
+            var empty = attempt_kwargs[mutable=True](no_value, first, a=1, b=2)
             assert_equal(empty.is_ok(), True)
         else:
             try: _ = stop(first)
@@ -150,7 +150,7 @@ def main() raises:
             var code = 0
             var observed = -1
             if library:
-                var captured = attempt_kwargs(select, current, selected=Item(7, drops), unused=Item(11, drops))
+                var captured = attempt_kwargs[mutable=True](select, current, selected=Item(7, drops), unused=Item(11, drops))
                 try:
                     var chosen = raise_on_err(captured^)
                     observed = chosen.value

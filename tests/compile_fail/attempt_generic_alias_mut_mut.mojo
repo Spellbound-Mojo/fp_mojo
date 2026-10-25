@@ -5,12 +5,12 @@ from std.testing import assert_equal
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, mut B) -> R](
     function: F, mut first: A, mut second: B
 ) -> Result[R, Never]:
-    return attempt(function, first, second)
+    return attempt[mut_mut=True](function, first, second)
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, mut B) raises X -> R](
     function: F, mut first: A, mut second: B
 ) -> Result[R, X]:
-    return attempt(function, first, second)
+    return attempt[mut_mut=True](function, first, second)
 
 def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, mut B) -> R](
     function: F, mut first: A, mut second: B

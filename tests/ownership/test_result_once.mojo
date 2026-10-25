@@ -1,4 +1,5 @@
 """Consuming Result callbacks: selection, native failures and owner cleanup."""
+from fp.algebra.protocols import Monad
 from fp.algebra import map, flat_map, ResultFamily
 from std.builtin.rebind import rebind_var
 from std.memory import ArcPointer
@@ -134,11 +135,10 @@ def forward_error[F: OnceUnary, T: Movable & Deinitable, E: Movable & Deinitable
     return subject^.map_err(function^)
 
 
-def forward_then[U: Movable & Deinitable, F: OnceUnary, T: Movable & Deinitable, E: Movable & Deinitable](
+def forward_then[U: Movable & Deinitable, F: OnceUnary, T: Movable & Deinitable, E: Movable & Deinitable, I: Monad = ResultFamily[E]](
     var subject: Result[T,E], var function: F
-) raises F.Error -> Result[U,E] where F.Arg == T and F.Out == Result[U,E]:
-    # The where equality admits rebind; native conversion does not use it.
-    return rebind_var[Result[U,E]](flat_map[ResultFamily[E]](function^, subject^))
+) raises I.BindError[Result[T,E], F] -> I.Bound[Result[T,E], F] where I.Element[Result[T,E]] == F.Arg and F.Out == Result[U,E] and I.BindCompatible[Result[T,E], F]:
+    return flat_map[I](function^, subject^)
 
 
 def forward_else[U: Movable & Deinitable, F: OnceUnary, T: Movable & Deinitable, E: Movable & Deinitable](

@@ -1,3 +1,6 @@
+# Mojo 1.2: bind C before checking the invalid native signature.
+# Removing this hint reproduces a compiler crash; see native-boundaries.md.
+# error: value passed to 'C' cannot be converted
 # error: cannot be converted
 from fp.algebra import ResultFamily, OptionalFamily, ListFamily, fail
 from fp.effects import ReaderT, ResultT, run
@@ -7,4 +10,4 @@ from fp.data import Result, Ok, Err
 def wrong(var error: String) -> Bool: return True
 def restore(var error: String) -> Int: return 0
 def main():
-    _ = piped(fail[ResultFamily[String], Int](String("bad"))).recover_if[ResultFamily[String]](wrong, restore).get()
+    _ = piped(fail[ResultFamily[String], Int](String("bad"))).recover_if[ResultFamily[String], C=type_of(wrong)](wrong, restore).get()

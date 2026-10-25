@@ -735,7 +735,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """
         return Iter(_align_with[A=A, B=B](function^, self._iterator^, other^))
 
-    def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable](deinit self, var function: def(var A, var T) thin -> Tuple[A, Y], var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, def(var A, var T) thin -> Tuple[A, Y]]] where Self.I.Element == T:
+    def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, R: Movable & Deinitable](deinit self, var function: def(var A, var T) thin -> R, var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, def(var A, var T) thin -> R]] where Self.I.Element == T and R == Tuple[A, Y]:
         """Lazily consume (carry, input) into (new carry, output), yielding one output per input.
 
         Construction pulls nothing and there is no initial output. The carry need not be Copyable.
@@ -746,17 +746,18 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
             A: The first callback argument type.
             T: The source element type, including origins.
             Y: The independent scan output type, including origins.
+            R: The callback result type.
 
         Args:
             function: The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.
             initial: The initial carry, consumed; scan_map does not yield it.
 
         Returns:
-            Iter[ScanMapIterator[A, T, Y, Self.I, def(var A, var T) thin -> Tuple[A, Y]]] with the ownership, timing and empty-input behavior described above.
+            Iter[ScanMapIterator[A, T, Y, Self.I, def(var A, var T) thin -> R]] with the ownership, timing and empty-input behavior described above.
         """
         return Iter(_scan_map[A=A, T=T, Y=Y](function, initial^, self._iterator^))
 
-    def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, //, F: _LazyScanStep[A, T, Y]](deinit self, var function: F, var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, F]] where Self.I.Element == T:
+    def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, var T) -> R](deinit self, var function: F, var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, F]] where Self.I.Element == T and R == Tuple[A, Y]:
         """Lazily consume (carry, input) into (new carry, output), yielding one output per input.
         """
         return Iter(_scan_map[A=A, T=T, Y=Y](function^, initial^, self._iterator^))
@@ -2095,6 +2096,12 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Find with a raising predicate, propagating its exact error."""
         return _find[E=E](predicate, self._iterator^)
 
+    def find[T: Movable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, predicate: def(T) raises E thin -> Bool
+    ) raises E -> Optional[T] where Self.I.Element == T:
+        """Preserve a plain raising predicate, including explicitly bound Never."""
+        return _find[E=E](predicate, self._iterator^)
+
     def find[C: BorrowCallable](deinit self, predicate: C
     ) raises C.Failure -> Optional[Self.I.Element] where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool:
         """Find with a library borrowing predicate."""
@@ -2128,6 +2135,12 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Test any element with a raising predicate, preserving its error."""
         return _any[E=E](predicate, self._iterator^)
 
+    def any[T: Movable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, predicate: def(T) raises E thin -> Bool
+    ) raises E -> Bool where Self.I.Element == T:
+        """Preserve a plain raising predicate, including explicitly bound Never."""
+        return _any[E=E](predicate, self._iterator^)
+
     def any[C: BorrowCallable](deinit self, predicate: C
     ) raises C.Failure -> Bool where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool:
         """Test any element with a library borrowing predicate."""
@@ -2159,6 +2172,12 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         deinit self, predicate: F
     ) raises E -> Bool where Self.I.Element == T:
         """Test every element with a raising predicate, preserving its error."""
+        return _all[E=E](predicate, self._iterator^)
+
+    def all[T: Movable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, predicate: def(T) raises E thin -> Bool
+    ) raises E -> Bool where Self.I.Element == T:
+        """Preserve a plain raising predicate, including explicitly bound Never."""
         return _all[E=E](predicate, self._iterator^)
 
     def all[C: BorrowCallable](deinit self, predicate: C

@@ -1,0 +1,150 @@
+[
+  {
+    "source": "clients/ordinary.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/raising.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/captured.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/filter_pure_mut.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/filter_pure_arity.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/map_pure_mut.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/map_pure_arity.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/capture_pure_mut.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/capture_pure_arity.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/filter_raising_mut.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/filter_raising_arity.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/map_raising_mut.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/map_raising_arity.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/capture_raising_mut.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/capture_raising_arity.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/never_and_void.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/owned_captures.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/ownership.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/generic_forwarding.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/library_callables.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/native_binding.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/origins.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/family_and_deferred.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/filter_wrong_error.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/filter_wrong_input.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/filter_wrong_result.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/map_wrong_error.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/map_wrong_input.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/capture_wrong_error.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/filter_owned.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/filter_owned_raising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/native_consumed_capture.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/owned_nontrivial_captures.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/repeated_once.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/capture_wrong_origin.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/map_wrong_origin.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/deferred_callback_move.mojo",
+    "kind": "rejection"
+  }
+]

@@ -24,14 +24,14 @@ def exercise_0_0(pure: Bool, library: Bool, negative: Bool) raises -> String:
     var caught = False
     if pure:
         if library:
-            var result = attempt(success)
+            var result = attempt[zero=True](success)
             var typed: Result[String, Never] = result^
             output = raise_on_err(typed^)
         else:
             output = success()
     else:
         if library:
-            var result = attempt(fallible)
+            var result = attempt[zero=True](fallible)
             var typed: Result[String, Failure] = result^
             try: output = raise_on_err(typed^)
             except error:
@@ -60,14 +60,14 @@ def exercise_1_0(pure: Bool, library: Bool, negative: Bool) raises -> String:
     var left = Token(7)
     if pure:
         if library:
-            var result = attempt(success, left)
+            var result = attempt[read=True](success, left)
             var typed: Result[String, Never] = result^
             output = raise_on_err(typed^)
         else:
             output = success(left)
     else:
         if library:
-            var result = attempt(fallible, left)
+            var result = attempt[read=True](fallible, left)
             var typed: Result[String, Failure] = result^
             try: output = raise_on_err(typed^)
             except error:
@@ -97,14 +97,14 @@ def exercise_1_1(pure: Bool, library: Bool, negative: Bool) raises -> String:
     var left = Token(7)
     if pure:
         if library:
-            var result = attempt(consuming(success), left^)
+            var result = attempt[owned=True](success, left^)
             var typed: Result[String, Never] = result^
             output = raise_on_err(typed^)
         else:
             output = success(left^)
     else:
         if library:
-            var result = attempt(consuming(fallible), left^)
+            var result = attempt[owned=True](fallible, left^)
             var typed: Result[String, Failure] = result^
             try: output = raise_on_err(typed^)
             except error:
@@ -134,14 +134,14 @@ def exercise_2_0(pure: Bool, library: Bool, negative: Bool) raises -> String:
     var right = String("x")
     if pure:
         if library:
-            var result = attempt(success, left, right)
+            var result = attempt[read_read=True](success, left, right)
             var typed: Result[String, Never] = result^
             output = raise_on_err(typed^)
         else:
             output = success(left, right)
     else:
         if library:
-            var result = attempt(fallible, left, right)
+            var result = attempt[read_read=True](fallible, left, right)
             var typed: Result[String, Failure] = result^
             try: output = raise_on_err(typed^)
             except error:
@@ -173,14 +173,14 @@ def exercise_2_1(pure: Bool, library: Bool, negative: Bool) raises -> String:
     var right = String("x")
     if pure:
         if library:
-            var result = attempt(success, left^, right)
+            var result = attempt[owned_read=True](success, left^, right)
             var typed: Result[String, Never] = result^
             output = raise_on_err(typed^)
         else:
             output = success(left^, right)
     else:
         if library:
-            var result = attempt(fallible, left^, right)
+            var result = attempt[owned_read=True](fallible, left^, right)
             var typed: Result[String, Failure] = result^
             try: output = raise_on_err(typed^)
             except error:
@@ -211,14 +211,14 @@ def exercise_2_2(pure: Bool, library: Bool, negative: Bool) raises -> String:
     var right = String("x")
     if pure:
         if library:
-            var result = attempt(success, left, right^)
+            var result = attempt[read_owned=True](success, left, right^)
             var typed: Result[String, Never] = result^
             output = raise_on_err(typed^)
         else:
             output = success(left, right^)
     else:
         if library:
-            var result = attempt(fallible, left, right^)
+            var result = attempt[read_owned=True](fallible, left, right^)
             var typed: Result[String, Failure] = result^
             try: output = raise_on_err(typed^)
             except error:
@@ -249,14 +249,14 @@ def exercise_2_3(pure: Bool, library: Bool, negative: Bool) raises -> String:
     var right = String("x")
     if pure:
         if library:
-            var result = attempt(success, left^, right^)
+            var result = attempt[owned_owned=True](success, left^, right^)
             var typed: Result[String, Never] = result^
             output = raise_on_err(typed^)
         else:
             output = success(left^, right^)
     else:
         if library:
-            var result = attempt(fallible, left^, right^)
+            var result = attempt[owned_owned=True](fallible, left^, right^)
             var typed: Result[String, Failure] = result^
             try: output = raise_on_err(typed^)
             except error:

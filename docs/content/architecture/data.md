@@ -133,6 +133,13 @@ callbacks accept only one common native error type or a non-raising callback
 alongside it. Retained values cannot borrow from a callback's temporary storage,
 and two callbacks with conflicting mutable captures remain invalid native calls.
 
+Native Result transformations and folds infer callback result types separately
+from the requested output type, then require exact equality including origins.
+Both fold branches must match the requested result. Invocation uses each
+callback's actual signature, and the existing branch and transformation drivers
+still own execution. This avoids Mojo 1.2 inference crashes for incompatible
+output origins while preserving positional callback/error bindings.
+
 ### Bridges between raised and stored failures
 
 | Bridge | Behavior |
@@ -149,14 +156,22 @@ a native keyword pack `var **kwargs: K` (homogeneous values or a `StringDict[K]`
 expansion), with zero to two positional prefixes. Mutations a target made
 before failing remain visible. The error type must be stated or inferred
 exactly; neither bridge catches process termination or unrelated failures.
-On Mojo 1.2, `mutating`, `consuming`, `mut_owned` and `mut_owned_kwargs`
-select the supported argument conventions before the bridge performs native
-inference. They borrow the callback and preserve native moves, mutations,
-origins and exact errors. The private views live in `callables.native`;
-`consuming` reuses the existing native unary view. Result capture stays in
-`_attempt_core`. See [adapter call forms](../reference/data.md#select-a-native-argument-convention)
-and the [Mojo 1.2 qualification](native-boundaries.md#convention-adapters) for
-coverage and remaining failures.
+On Mojo 1.2, optional named convention selectors such as `owned_mut=True`
+exclude incompatible native overload families before operand inference. They
+cover every supported positional convention; keyword-pack selectors describe
+only the positional prefix. Selection adds no runtime branch and preserves
+callback borrowing, moves, mutations, origins and exact errors. Existing
+positional type bindings stay unchanged, and selectors must be `True`.
+
+The borrowed `mutating`, `consuming`, `mut_owned` and `mut_owned_kwargs`
+adapters remain supported. Their private views live in `callables.native`;
+`consuming` reuses the existing native unary view. Selected owned and mutable
+calls reuse those native invocation boundaries, preserving literal no-value
+and explicit `Never` signatures. See the
+[call forms](../reference/data.md#select-a-native-argument-convention) and
+[Mojo 1.2 qualification](native-boundaries.md#promoted-selector-qualification)
+for coverage and the explicit callback-type hint needed to diagnose an
+incompatible selector normally.
 
 `collect_results` sequences Results and stops at the first `Err`; it does not
 accumulate validation errors. Empty input gives `Ok` of an empty list.

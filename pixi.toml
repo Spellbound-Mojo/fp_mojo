@@ -15,6 +15,7 @@ compile-fail = "python scripts/compile_fail.py"
 build = "python scripts/build.py"
 measure-compilation = "python scripts/measure_compilation.py"
 docs-test = "python scripts/verify_docs_examples.py"
+boundaries-test = "python scripts/verify_boundaries.py"
 
 [feature.docs.dependencies]
 python = "3.14.*"

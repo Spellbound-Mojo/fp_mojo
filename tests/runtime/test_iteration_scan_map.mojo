@@ -71,7 +71,7 @@ def i5_scalar(var carry: Int,var item: Int)->Tuple[Int,Int]:
     return (carry+item,carry+item)
 
 
-def i5_generic[A: Movable & Deinitable,T: Movable & Deinitable,Y: Movable & Deinitable,I:Iterator,//,F:def(var A,var T)->Tuple[A,Y]](var function:F,var initial:A,var source:I)->ScanMapIterator[A,T,Y,I,F] where I.Element==T:
+def i5_generic[A: Movable & Deinitable,T: Movable & Deinitable,Y: Movable & Deinitable,R: Movable & Deinitable,I:Iterator,//,F:def(var A,var T)->R](var function:F,var initial:A,var source:I)->ScanMapIterator[A,T,Y,I,F] where I.Element==T and R==Tuple[A,Y]:
     return scan_map[A=A,T=T,Y=Y](function^,initial^,source^)
 
 
@@ -184,7 +184,7 @@ def i5_borrow[o:ImmOrigin](ref[o] anchor: Int) raises:
 
 
 def i5_thin[A:Movable & Deinitable,T:Movable & Deinitable,Y:Movable & Deinitable,I:Iterator](function:def(var A,var T) thin -> Tuple[A,Y],var initial:A,var source:I)->ScanMapIterator[A,T,Y,I] where I.Element==T:
-    return scan_map[A=A,T=T,Y=Y](function,initial^,source^)
+    return scan_map[A,T,Y,I](function,initial^,source^)
 
 
 def i5_pointer[o:ImmOrigin](var carry:Pointer[Int,o],var item:Int)->Tuple[Pointer[Int,o],Pointer[Int,o]]:

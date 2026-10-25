@@ -76,6 +76,131 @@ that release with 1.2 is not supported. Use the nightly source checkout.
 
 ## Mojo 1.2 qualification
 
+The isolated [boundary experiment](mojo12-redesign.md) tests selecting the
+family and native error type before callback inference. Its new invalid-call
+clients need no explicit callback type hints; its results do not change the
+production qualification or limitations below.
+
+### Rejection diagnostics
+
+The 22 remaining convention and arity fixtures now bind the callback's existing
+native type parameter explicitly. The invalid callbacks and their original
+expected diagnostics are retained. Each fixture additionally requires a
+`value passed to 'F' cannot be converted` diagnostic (or `C` / `G`, as applicable),
+so an unrelated overload or parameter-name error cannot satisfy the test.
+Compiler crashes and timeouts still fail; negative clients are never executed.
+
+This is a diagnostic workaround in the tests, **not a transparent fix for the
+compiler's invalid-call inference**. Removing the explicit callback type from
+these fixtures reproduces the Mojo 1.2 crash. The library's public API and valid
+inferred calls are unchanged. As with an incompatible `attempt` selector, an
+explicit type lets the compiler reject the bad signature during parameter
+binding, before runtime-operand inference:
+
+| Existing parameter | Boundaries covered by these fixtures |
+|---|---|
+| `F=type_of(callback)` | `mutating`, `as_unary`, Piped `pair_with`, `map_n`, `filter`, `filter_not`, `filter_effect`, `traverse_tap`, and Iterated `all_effect` |
+| `C=type_of(callback)` | Result and Piped projection, recovery and observer callbacks |
+| `G=type_of(factory)` | Piped `ensure` error factory |
+
+`tests/integration/test_native_rejection_bindings.mojo` supplies valid
+counterparts with the same explicit bindings, checking mutable input updates,
+retained owned payloads, tuple handling, effectful traversal and Result branches.
+The targeted matrix also compiles and runs a minimally corrected counterpart
+for each of the 22 negative clients. All 180 checks pass through source and
+fresh package imports at O0/O3 with `--Werror`, with unchanged inputs and clean
+audits (`.cache/mojo12-rejection-binding/qualification/report.json`).
+
+The updated checkout also passes these complete gates on Mojo 1.2.0 (2016d0cd),
+Linux x86-64, with `--Werror`:
+
+| Check | Result | Report under `.cache/mojo12-rejection-binding/` |
+|---|---|---|
+| All rejection fixtures, fresh package at O3 | 712/712 pass; zero crashes, unexpected acceptances, executions or audit failures | `compile-fail/report.json` |
+| Full positive suite, the same package at O3 | 332/332 programs pass; zero audit failures | `suite/report.json` |
+| All 57 documentation examples, source/package at O0/O3 | 228/228 checks pass | `docs-examples/report.json` |
+
+All three reports have unchanged inputs. The rejection result qualifies the
+explicitly bound fixtures; it does not qualify the original unhinted invalid
+calls. The source snapshots and failing reports from before this workaround
+remain in `.cache/mojo12-rejection-binding/original/` and
+`.cache/mojo12-remaining/compile-fail/report.json`. The fixture comments identify
+the binding to remove when checking whether a future compiler fixes inference.
+
+The observer and inference results below record the preceding checkpoint;
+its 22 failing rejection fixtures are the ones updated here.
+
+### Observer storage and exact callback inference
+
+The October 25 compatibility pass preserves the admitted borrowing signature in
+lazy observer storage, using the existing inline optional cell. This keeps its
+native destruction witness when the callback returns an origin-bound value.
+Lazy calls retain mutable access to owned captures. No-value calls recover the
+literal native signature, including the register-argument form; eager calls
+reuse the existing register dispatcher. The regression exercises pointer
+identity, repeated pulls, abandonment before the first pull, capture mutation
+and exactly-once destruction.
+
+Native Result `map_err`, `or_else`, `fold` and `fold_owned`, terminal folds and
+predicates, lazy `scan_left` and `filter_map`, native loop results and Piped
+filter results now infer callback types before checking exact equality with the
+requested types. Invocation uses the actual native signature. The shared fold
+bridges adapt only types whose equality is established by the public constraint;
+origins, ownership, evaluation order, cleanup and exact errors remain unchanged.
+Existing positional callback/error bindings and named requested result types
+are retained. Generic user forwarders may need the same separation to diagnose
+invalid calls: infer the actual result as `R`, then require
+`R == Optional[U]`, for example.
+
+Three combined rejection fixtures were split so the compiler checks each bad
+call independently. Seven fixtures now expect the constraint diagnostic that
+replaces their former inference crash. Five positional-family fixtures retain
+their original call and check Mojo 1.2's ambient-error diagnostic; five companion
+fixtures bind `I=` and check the intended family constraint. A positional family
+type can also bind the native error parameter of a Result-specific overload.
+This diagnostic ambiguity does not require changing valid positional calls or
+restricting the set of native error types.
+
+Full compatibility remains incomplete. Some invalid argument conventions and
+callback arities still crash during overload inference. An incompatible
+`attempt` selector still needs `F=type_of(callback)` for a normal diagnostic;
+the supported convention selectors and four adapters are unchanged. Compiler
+crashes remain failing tests, and rejection clients are never executed.
+
+Targeted qualification on Mojo 1.2.0 (2016d0cd), Linux x86-64, passes with
+`--Werror` through source and package imports at O0/O3:
+
+| Coverage | Result | Report |
+|---|---|---|
+| Callback inference, origins, ownership, lazy observers and positional bindings | 432/432 checks pass | `.cache/mojo12-remaining/qualification-v3/report.json` |
+| Positional and named-family rejection diagnostics | 40/40 checks pass | `.cache/mojo12-remaining/family-qualification-v2/report.json` |
+
+Both reports have unchanged inputs and clean per-case audits. The promoted
+library also passes the following complete gates:
+
+| Check | Result | Report under `.cache/mojo12-remaining/` |
+|---|---|---|
+| Positive suite, fresh package at O3 with `--Werror` | 331/331 programs pass; zero audit failures | `suite/report.json` |
+| Rejection suite, the same package at O3 with `--Werror` | 690/712 pass; 22 compiler crashes | `compile-fail/report.json` |
+| All 57 documentation examples, source/package at O0/O3 | 228/228 pass | `docs-examples/report.json` |
+| Source and precompiled package builds | Both precompile and run the native core client successfully | `build-source/report.json`, `build-precompiled/report.json` |
+| Python tooling | 36/36 tests pass | `tooling-v2.log` |
+
+The rejection failures fell from 58 to 22, with no newly failing fixture.
+All 22 are compiler crashes: 19 involve wrong native argument conventions and
+three involve callback arity or tuple unpacking. No negative client was
+unexpectedly accepted or executed. The rejection audit reports two entries per
+crash; there are no unrelated audit failures or input changes. The remaining
+fixture inventory is `.cache/mojo12-remaining/remaining-rejection-failures.json`.
+The separate unhinted-selector reproducer still crashes against the promoted
+package (`selector-without-hint/report.json`); the explicit-`F` diagnostic
+fixtures pass in the rejection suite.
+
+### Earlier qualification checkpoints
+
+The following checkpoints record earlier stages of the migration. Their
+remaining-failure counts are superseded by the results above.
+
 The environment and lockfile select stable Mojo 1.2.0, but the library's full
 compatibility migration is **incomplete**. These are Linux x86-64 checkpoints
 from 2026-10-24; neither macOS nor GPU execution was requalified.
@@ -90,7 +215,7 @@ from 2026-10-24; neither macOS nor GPU execution was requalified.
 | Python tooling tests | 36/36 pass, including GNU time resource accounting |
 | Strict documentation build and generated-overload check | Pass |
 
-The current source report is `.cache/mojo12-source-o0-o3-4/report.json`:
+The earlier source report is `.cache/mojo12-source-o0-o3-4/report.json`:
 464/514 test runs pass, with 12 more passing modules at O3 and no regressions
 against `.cache/mojo12-fix-individual-o3-3/report.json`. The broad rejection and
 example checkpoints are `.cache/mojo12-fix-rejects-6/report.json` and
@@ -348,6 +473,178 @@ adapter can still crash the compiler inside the factory. Runtime performance
 has not been requalified. The adapter mechanism is a library workaround for
 the pinned compiler, not a change to its overload rules.
 
+### Compile-time convention selectors
+
+`attempt` and `attempt_kwargs` support an optional named compile-time selector,
+for example `attempt[owned_mut=True](function, first^, second)`. Only the
+owned/mutable native overload pair declares that parameter name. In the tested
+calls, unrelated families are excluded before incompatible native-signature
+inference can crash. The selector is appended after existing parameters, so
+the positional `F` binding is preserved. The selector must be `True`; a signature
+constraint rejects `False`. Existing adapters remain supported. Selection does
+not change callback borrowing, argument ownership, origins, evaluation order or
+the exact result/error types. The following experiments established the design
+before its promotion into the library.
+
+The library-independent pilot passes correct read, mutable and owned selectors
+at O0/O3, including a generic consuming forwarder and a captured read callback.
+The same consuming forwarder crashes without a selector. Supplying `E=Never`
+also fixes that small reproducer; this does not establish error hints as a
+general replacement for convention selection. Unknown selector names receive
+normal diagnostics, but selecting an incompatible existing convention still
+crashes the compiler.
+
+Adding selectors to copies of the twelve remaining `attempt` modules restores
+seven at O0. Adding selectors at their overloaded `capture` and `forward`
+boundaries restores two more. A library hint cannot repair inference that
+already fails in the caller's own overload set. These copies also replace the
+four existing adapters with direct selected calls, exercising the proposed
+alternative without changing the original test sources.
+
+Selection exposes separate no-value and explicit `Never` invocation failures.
+A second prototype routes owned unary calls through `_call_native` and mutable
+unary calls through `_NativeMutatingRef.invoke`. A private mutable/keyword view
+uses the same literal-signature handling as the existing mixed keyword view.
+These six overload-body adjustments restore two further modules. They are
+invocation changes in addition to the selector experiment, not evidence that
+selector parameters alone resolve all eleven modules.
+
+The final `.cache/mojo12-attempt-selectors/qualification-v2/report.json`
+precompiles the prototype package with `--Werror` and records:
+
+| Scope | Source/package at O0/O3 |
+|---|---|
+| Twelve affected modules, with selectors and invocation adjustments | 44/48 runs pass; eleven modules pass in every combination |
+| Ten unchanged controls, including adapters and inferred/positional bindings | 40/40 runs pass |
+| Selected calls with external result/error origins and positional `F` bindings | 4/4 runs pass |
+| Seven rejection clients | 24/28 checks pass; selecting the wrong convention crashes in all four combinations |
+
+All inputs stayed unchanged during qualification, and every passing case has
+a clean audit. Rejections cover use-after-move, mutable aliasing, captured
+aliasing, read-only inputs, incompatible error origins and unknown selector
+names. No rejection client is unexpectedly accepted or executed.
+
+The remaining positive failure at this checkpoint was
+`integration/test_attempt_forwarding.mojo`: a captured no-value callback with
+a default-convention `Int` argument loses its native closure witness. Separate
+O0 probes reproduce this through the existing `consuming` adapter as well as
+the selected call. Explicit `var Int` callbacks pass, with either an omitted
+result annotation or `-> None`. Direct admission through a literal no-value
+signature also passes; forwarding from the generic `-> R` signature does not.
+This narrows the remaining investigation to retaining native signature evidence
+and does not justify changing the callback's public convention.
+
+Scalar default arguments use the native owned signature family, and overloaded
+user forwarders may need their own selectors. The promoted signatures validate
+the Boolean value, unlike the original prototype. Neither these selectors nor
+their focused qualification resolves the separate lazy observer failure or
+establishes complete library compatibility.
+
+### No-value register arguments and selector diagnostics
+
+The shared owned unary dispatcher now preserves the register convention when
+recovering a native no-value signature. A default `Int`, `Float64` or `Bool`
+argument is passed in a register, whereas rebuilding `def(A)` with only a
+generic `Movable` bound describes an argument passed in memory. The latter
+signature can lose the callback's native closure witness on Mojo 1.2.
+
+For a `TrivialRegisterPassable` argument, the dispatcher retains that bound
+when checking and invoking the callback's literal no-value signature. Pure,
+typed-error and explicit `Never` paths share `_call_native_register_void`.
+The existing memory convention remains available for callbacks that use it.
+No public signature, callback convention, ownership rule or result/error type
+changes. In particular, a native no-value result remains distinct from
+`NoneType`. Both this fix and the selector API are in the library.
+
+`ownership/test_native_register_void.mojo` covers two generic forwarding
+layers, reusable borrowed adapters, stored move-only captures, destruction
+counts, default scalar arguments, mutation before an error, exact inferred
+errors, thin functions, `NoneType` and explicit `Never` through `pipe`.
+
+The promoted dispatcher passes all forty focused checks against the actual
+library: seven positive modules and three ownership/origin rejection fixtures,
+each through source and package imports at O0/O3 with `--Werror`. Package
+precompilation succeeds, inputs remain unchanged during the run, and all audits
+are clean. The report is
+`.cache/mojo12-attempt-followup/canonical-qualification/report.json`.
+
+The updated selector prototype was qualified with `--Werror` at O0/O3 through
+source and package imports in
+`.cache/mojo12-attempt-followup/qualification/report.json`:
+
+| Scope | Result |
+|---|---|
+| All twelve affected modules | 48/48 runs pass |
+| Fifteen existing controls | 60/60 runs pass |
+| Register-argument and origin/positional-binding regressions | 8/8 runs pass |
+| Seventeen rejection clients | 64/68 checks pass; the four failures remain wrong-convention compiler crashes without an explicit callback type |
+
+Inputs remained unchanged and passing cases have clean audits. No rejection
+was unexpectedly accepted or executed. These historical results include the
+prototype's previous selectors and invocation changes, not just the register
+fix. Those selector and invocation
+changes are now promoted together; permanent tests retain all twelve affected
+modules, positional bindings, origins and the diagnostic workaround.
+
+There is a tested diagnostic workaround for an incompatible selector:
+`attempt[mutable=True, F=type_of(function)](function, value)`. Supplying `F`
+explicitly moves its validation into parameter binding, before runtime-operand
+inference; the pinned compiler's
+[inference order](https://github.com/modular/modular/blob/mojo/v1.2.0/Mojo/lib/MojoParser/ParamInf.cpp#L1858)
+explains the distinction. All forty checks of ten explicit-type rejection
+clients pass, covering pure, typed-error, `Never`, captured, binary, keyword,
+no-value and generic callbacks. Valid calls can continue to infer `F`.
+
+This does not make a wrong selector without the hint diagnose normally. Late
+constraints, deferred signature parameters, extra literal no-value overloads,
+trait composition and equality-based admission either still crash or reject
+valid calls in the isolated probes. Scalar-specific public overloads were also
+discarded. The library has no proven transparent guard for this compiler bug;
+the original rejection remains a failing check. Compiler and standard-library
+changes are outside the project scope, and the separate lazy observer failure
+has not been resolved by this work.
+
+### Promoted selector qualification
+
+The selectors and six native invocation adjustments are now implemented in
+the library. All 52 native signatures retain their existing parameters and
+positional bindings, with a distinct optional selector appended at the end.
+The new signature constraints reject `False`. The twelve affected modules
+now call the supported selectors; their assertions and expected values are
+unchanged. Existing adapters remain covered by unchanged control modules.
+
+Mojo 1.2.0 (2016d0cd), Linux x86-64, with `--Werror`:
+
+| Scope | Result | Report under `.cache/mojo12-attempt-promotion/` |
+|---|---|---|
+| Twelve affected modules, fifteen controls, two ownership/origin regressions and twenty rejection fixtures, source/package at O0/O3 | 196/196 checks pass | `qualification/report.json` |
+| Seventeen older rejection fixtures migrated to selectors without changing expected diagnostics, source/package at O0/O3 | 68/68 checks pass | `rejection-qualification/report.json` |
+| All 57 documentation examples, source/package at O0/O3 | 228/228 checks pass with their reviewed output | `docs-examples/report.json` |
+| Full positive suite at O3, excluding diagnostic benchmarks | 328/329 programs pass when combined with the focused checks and separate verification of the blocked batch | `suite/report.json`, `blocked-batch/report.json` |
+
+The full suite's runtime-1 batch cannot build because
+`test_combinator_expansion.mojo` still loses its lazy observer destruction
+witness. Twelve other programs in that batch pass in the focused matrix;
+the remaining 47 pass in separate package builds. The other three batches
+pass all 269 checked programs. Inputs stayed unchanged during each run, and
+every passing case has a clean audit. Strict documentation and API checks pass.
+
+The initial full rejection gate passes 629/704 fixtures. All 75 failures also
+reproduce against the library before selector promotion, with the same
+classification: 70 compiler crashes and five diagnostic mismatches
+(`baseline-rejections/report.json`). Seventeen of those fixtures now select
+their native convention and pass all four rechecks. Combining those results
+leaves 58 existing failures: the known incompatible-adapter crash and 57
+fixtures outside `attempt`. The original full rejection report remains failed;
+these failures are not counted as successful rejections. No invalid client
+was accepted or executed.
+
+An incompatible selector without an explicit `F` hint also still crashes in
+the promoted package; `known-compiler-issue/report.json` retains that failure.
+The explicit-`F` workaround is covered by permanent rejection fixtures. This
+promotion restores the twelve positive modules without claiming complete
+Mojo 1.2 compatibility.
+
 ### Origin checks and one-stage pipelines
 
 The `fold_until` origin discrepancy was a real admission defect. A stronger
@@ -376,14 +673,14 @@ contract. Other error channels retain their existing dispatch. Regression
 coverage includes generic forwarding, reusable move-only captures, owned
 arguments, destruction counts and native no-value returns.
 
-The next migration pass also updates 45 calls in nine existing test modules to
-the four approved `attempt` adapters. Those modules still contain other
+That migration pass also updated 45 calls in nine existing test modules to
+the four approved `attempt` adapters. Those modules still contained other
 conventions, including one-prefix keyword callbacks and additional binary
-combinations, so migration of these calls alone does not qualify whole modules.
+combinations, so migration of those calls alone did not qualify whole modules.
 An exploratory invalid `Continue`-payload origin case also still crashes during
 inference; it is not counted as a successful rejection. The stored no-value
-`as_unary` limitation and the generic terminal predicate conversion failure
-remain separate from the one-stage pipeline fix.
+`as_unary` limitation and generic terminal predicate conversion failure were
+separate from the one-stage pipeline fix; the next pass below addresses them.
 
 The focused report `.cache/mojo12-followups/qualification-v2/report.json`
 precompiles the whole package with `--Werror`. All 24 selected positive modules
@@ -400,6 +697,66 @@ were removed to obtain these results. Inputs stayed unchanged during the run,
 and every passing case has a clean audit. Documentation, API metadata and all
 36 tooling tests pass. This remains focused verification rather than a new
 full-library baseline.
+
+### Scan admission and remaining native callback boundaries
+
+Native `scan` and `scan_map` now infer the entire callback result as `R`, then
+constrain `R == Tuple[A, Y]` in the public signature. This avoids the Mojo 1.2
+crash while inferring the tuple pack inside a native return type. The eager
+bridges retain that same admitted `R` and rebind only under the equality
+constraint. Explicit `raises Never` steps use the canonical native binary
+dispatcher, preserving its literal error signature. The existing carry transition, scheduler, iterator driver and
+cleanup paths are unchanged. Native inferred calls, `scan`'s positional
+unroll/length bindings, `scan_map`'s positional type bindings and library
+`Binary` calls remain available. Generic forwarding helpers that admitted
+`F: def(var A, var X) -> Tuple[A, Y]` need the same whole-result spelling and
+may need to pass `Y=Y` when forwarding the still-symbolic result.
+
+Stored native callbacks with no return value now have literal thin admission
+in `as_unary`, and the canonical unary dispatcher preserves their no-value
+thin signatures. This is distinct from a callback explicitly returning
+`NoneType`. Both remain supported, as do pure callbacks, typed errors and
+explicit `raises Never`. Tests exercise copied plain callbacks, moved inputs,
+repeated calls, borrowed and moved-out access, and move-only captures with
+exact destruction counts.
+
+`find`, `any` and `all`, including their fluent forms, now preserve plain
+raising predicates as thin functions. This avoids Mojo 1.2's failing
+thin-to-closure conversion when the caller explicitly binds `E=Never`.
+A small thin invocation bridge feeds the existing terminal drivers. The
+generic closure overloads and their positional `F` binding remain available.
+User-written generic forwarding layers that admit plain functions also need
+a thin overload if they explicitly bind `Never`; changing only the library
+cannot repair a conversion that fails before reaching it. Integration tests
+exercise two such layers, and separate tests retain captured predicates.
+
+The separate lazy observer problem involving a callback that borrows an owner
+and returns a span into it remains unresolved. Storage-only experiments did
+not preserve both invocation and destruction witnesses and were not promoted.
+The remaining `attempt` modules were subsequently restored by the convention
+selectors above; the existing four adapters remain in place.
+
+Verification for that earlier checkpoint:
+
+- `.cache/mojo12-rest/source-matrix/report.json` passes 256/269 test modules at
+  both O0 and O3. The same 13 modules fail at both levels: twelve `attempt`
+  modules still encounter unsupported native convention combinations, and
+  `test_combinator_expansion` encounters the lazy observer destruction witness.
+  This checkpoint preceded the final explicit-`Never` scan dispatch change.
+- `.cache/mojo12-rest/qualification/report.json` precompiles the package with
+  `--Werror` and passes 54 positive package runs, 68 source/package rejection
+  checks and 16 example runs, all at O0/O3.
+- After adding the explicit-`Never` scan fix and its ownership test,
+  `.cache/mojo12-rest/final-followup/report.json` precompiles the final package
+  and passes all 32 positive runs, 24 rejection checks and four example runs
+  across source/package and O0/O3. The scan tests include distinct external
+  origins, incompatible carry/output origins, positional bindings, native
+  generic forwarding, moves and destruction counts.
+
+Every report records unchanged inputs, and every passing case has a clean
+audit. Documentation, generated API/export metadata and all 36 tooling tests
+pass. This is still partial Mojo 1.2 qualification: the remaining modules and
+other previously recorded rejection crashes are not counted as successes.
 
 ## Callables and argument packs
 

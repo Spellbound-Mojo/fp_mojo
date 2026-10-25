@@ -11,7 +11,7 @@ def target(mut value: Token, /, var **values: Int) -> Int:
     return value.value
 
 def owner(value: Token):
-    _ = attempt_kwargs(target, value, one=7)
+    _ = attempt_kwargs[mutable=True](target, value, one=7)
 
 def main():
     owner(Token(3))

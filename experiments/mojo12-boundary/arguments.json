@@ -1,0 +1,138 @@
+[
+  {
+    "source": "clients/arguments_bad_mut_owned_kwargs_arity_nonraising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/arguments_bad_mut_owned_kwargs_arity_raising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/arguments_bad_mut_owned_kwargs_convention_nonraising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/arguments_bad_mut_owned_kwargs_convention_raising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/arguments_bad_mut_owned_kwargs_error.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/arguments_captures.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/arguments_dictionary.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/arguments_effects.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/arguments_empty.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/arguments_empty_bad_mut_owned_kwargs_arity_nonraising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/arguments_empty_bad_mut_owned_kwargs_arity_raising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/arguments_empty_bad_mut_owned_kwargs_convention_nonraising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/arguments_empty_bad_mut_owned_kwargs_convention_raising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/arguments_empty_bad_mut_owned_kwargs_error.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/arguments_empty_never_void.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/arguments_generic.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/arguments_literal.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/arguments_never_void.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/arguments_order.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/arguments_origins.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/arguments_ownership.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/arguments_positive.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/arguments_reject_alias_capture.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/arguments_reject_alias_owned.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/arguments_reject_argument_type.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/arguments_reject_consumed.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/arguments_reject_empty_untyped.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/arguments_reject_immutable.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/arguments_reject_input_consumed.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/arguments_reject_keyword_type.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/arguments_reject_origin.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/arguments_reject_state_lifetime.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/arguments_stored.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/arguments_reject_empty_bad.mojo",
+    "kind": "rejection"
+  }
+]

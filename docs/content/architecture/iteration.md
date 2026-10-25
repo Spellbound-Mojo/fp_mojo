@@ -226,6 +226,20 @@ has established equality. This rejects a callback returning a view from a
 different origin, including local storage, without changing iteration or
 cleanup semantics.
 
+Native terminal folds now infer both callback inputs and its result independently
+of the requested accumulator and element types, then require exact equality.
+Result origins therefore reach a constraint diagnostic instead of being forced
+during overload inference. The existing shared invocation bridges adapt only
+equal types; native errors, element moves and cleanup stay unchanged.
+
+Lazy observers store the recovered borrowing signature in the existing optional
+cell to retain its destruction witness, including callbacks that return borrowed
+views. Their native invocation still has mutable access to owned captures, with
+literal no-value signatures handled separately from generic value results.
+
+Plain raising search predicates keep their thin representation, including
+explicit `Never`; thin and closure entry points share terminal execution.
+
 ## Errors
 
 Non-raising and raising callbacks have separate overloads, and a raising terminal
@@ -551,6 +565,11 @@ and non-inlined step boundary. `scan_left` keeps exactly one copy per yielded
 snapshot. An eager iterator `map_accumulate` returning
 `(final_state, List[output])` remains a separate candidate.
 
+Native scan admission on Mojo 1.2 infers the entire step result before checking
+`R == Tuple[A, Y]`. Eager native invocation preserves `R` until the checked
+transition into the shared carry/output driver. This keeps distinct external
+origins visible and avoids tuple-pack inference inside a native signature.
+
 `sequence_filter` is identity `traverse_filter`. `find_effect` and
 `find_map_effect` use the dependent-fold continuation policy and stop on the
 first selected success in each admitted branch. Retaining an original value
@@ -634,6 +653,7 @@ inventory, API documentation and maintained examples for each implemented pass.
 [mojo-itertools]: https://github.com/modular/modular/blob/c6fa49f712fe15c99d0461ad2baaf2a15cbc58ce/Mojo/stdlib/std/itertools/itertools.mojo
 [mojo-next-iter]: https://github.com/modular/modular/blob/527d069ee11a41ac5320af1f9402db0a66b2b868/Mojo/stdlib/std/iter/__init__.mojo
 [mojo-next-itertools]: https://github.com/modular/modular/blob/527d069ee11a41ac5320af1f9402db0a66b2b868/Mojo/stdlib/std/itertools/itertools.mojo
+
 [cats-foldable]: https://github.com/typelevel/cats/blob/813f1bc8e357991caa587149f1a0ff97cd292d08/core/src/main/scala/cats/Foldable.scala
 [cats-functor]: https://github.com/typelevel/cats/blob/813f1bc8e357991caa587149f1a0ff97cd292d08/core/src/main/scala/cats/Functor.scala
 [cats-traverse]: https://github.com/typelevel/cats/blob/813f1bc8e357991caa587149f1a0ff97cd292d08/core/src/main/scala/cats/Traverse.scala

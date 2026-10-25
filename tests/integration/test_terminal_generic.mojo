@@ -100,6 +100,24 @@ def all_error1[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //
 def all_error2[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(T) raises E -> Bool](f: F, var source: I) raises E -> Bool where I.Element == T:
     return all_error1[E=E](f, source^)
 
+def find_error1[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //](f: def(T) raises E thin -> Bool, var source: I) raises E -> Optional[T] where I.Element == T:
+    return find[E=E](f, source^)
+
+def find_error2[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //](f: def(T) raises E thin -> Bool, var source: I) raises E -> Optional[T] where I.Element == T:
+    return find_error1[E=E](f, source^)
+
+def any_error1[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //](f: def(T) raises E thin -> Bool, var source: I) raises E -> Bool where I.Element == T:
+    return any[E=E](f, source^)
+
+def any_error2[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //](f: def(T) raises E thin -> Bool, var source: I) raises E -> Bool where I.Element == T:
+    return any_error1[E=E](f, source^)
+
+def all_error1[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //](f: def(T) raises E thin -> Bool, var source: I) raises E -> Bool where I.Element == T:
+    return all[E=E](f, source^)
+
+def all_error2[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //](f: def(T) raises E thin -> Bool, var source: I) raises E -> Bool where I.Element == T:
+    return all_error1[E=E](f, source^)
+
 @fieldwise_init
 struct Fault(Movable):
     var code: Int

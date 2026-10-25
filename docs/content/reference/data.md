@@ -1,9 +1,9 @@
 # fp.data
 
 `fp.data` provides `NonEmptyList` and three sum types: `Result` for success or failure,
-`Ior` for values with optional diagnostics, and `ControlFlow` for continuing or stopping a fold. Use `attempt` and `raise_on_err`
-to convert between stored failures and native exceptions; use `attempt_kwargs`
-for callbacks that declare a native keyword pack, including an empty pack. The
+`Ior` for values with optional diagnostics, and `ControlFlow` for continuing or stopping a fold. Use `Capture[E]` and `raise_on_err`
+to convert between native exceptions and stored failures. Bind operands with
+`args`, `borrow`, `mutable`, `take` and `kwargs` before `run(callback)`. The
 [results tutorial](../tutorial/results.md) introduces these operations with a
 complete program.
 
@@ -11,9 +11,43 @@ complete program.
 
 ## Select a native argument convention
 
+This section documents the retained compatibility entry points. Prefer
+`Capture` for new code; its argument-first boundary also checks incompatible
+callbacks without explicit callback-type bindings. See the
+[ownership and error contract](../tutorial/results.md#bind-arguments-before-the-callback).
+
 Mojo 1.2 can fail while selecting between native read, mutable and owned
-callback overloads. Import these borrowed adapters from `fp.data` to select the
-convention before passing the callback to `attempt` or `attempt_kwargs`:
+callback overloads. An optional named compile-time selector chooses the
+callback's argument convention before inference:
+
+| Callback positional arguments | Selector |
+|---|---|
+| None | `zero=True` |
+| One read-only resource | `read=True` |
+| One `var` argument, or a default scalar such as `Int` | `owned=True` |
+| One `mut` argument | `mutable=True` |
+| Two arguments | Combine `read`, `owned` or `mut` in order: `read_read=True`, `read_owned=True`, `read_mut=True`, `owned_read=True`, `owned_owned=True`, `owned_mut=True`, `mut_read=True`, `mut_owned=True` or `mut_mut=True` |
+
+For `attempt_kwargs`, the selector describes only the positional prefix; the
+keyword values are always owned. Selectors must be `True`. Omit the selector
+when ordinary inference works; existing positional type bindings are preserved.
+
+<!-- example: docs/examples/attempt_selectors.mojo -->
+
+The callback remains borrowed and reusable. Selection does not copy arguments
+or captures, erase result/error types, or change when mutation becomes visible.
+The example retains the updated balance even when `debit` raises.
+
+Choose the selector matching the callback. For a normal diagnostic on an
+incompatible selector, also supply `F=type_of(f)`, for example
+`attempt[mutable=True, F=type_of(f)](f, value)`. Without that hint, Mojo 1.2
+can crash before rejecting the call. Inside a generic forwarder, the same hint
+is `F=F`. An overloaded generic forwarder may need
+the same convention selection at its own call boundary; a selector inside its
+body cannot resolve inference at the caller. See the
+[compiler details](../architecture/native-boundaries.md#compile-time-convention-selectors).
+
+The four borrowed adapters remain supported and can be saved for repeated calls:
 
 | Callback arguments | Call |
 |---|---|
@@ -32,8 +66,8 @@ captures still require the documented `@always_inline` workaround on Mojo 1.2.
 
 Choose the adapter matching the callback's convention. An incompatible factory
 call can still crash Mojo 1.2 during inference instead of reporting a type
-error. These four forms do not cover every two-argument combination; see the
-[compatibility qualification](../architecture/native-boundaries.md#convention-adapters).
+error. These four forms cover a subset of the conventions supported by selectors;
+see the [compatibility qualification](../architecture/native-boundaries.md#convention-adapters).
 
 ## Consume handlers in a transformation and a fold
 

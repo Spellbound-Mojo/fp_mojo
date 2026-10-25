@@ -85,6 +85,50 @@ struct per operation (see [algebra](algebra.md#why-the-core-is-shaped-this-way))
 A client using `partial` builds cold in about 3 seconds from source or from the
 precompiled package.
 
+### Mojo 1.2 boundary prototype
+
+The isolated [boundary prototype](mojo12-redesign.md) was compared with the
+current `nightly` API on October 25, 2026 using Mojo 1.2.0 (2016d0cd), Linux
+x86-64 and an AMD EPYC 9V74 host. The container had a four-CPU quota and 16 GiB
+of memory. Builds ran serially, at O3 with one compiler thread, `--Werror` and
+a separate empty Mojo cache per build. No other qualification builds ran
+during measurement.
+
+Each API compiled and executed three equivalent programs three times. The
+order alternated by round: current/prototype, prototype/current,
+current/prototype. These source-import measurements include compilation and
+linking; package-import build cost and large programs were not measured.
+
+| Client | Current median seconds (range) | Prototype median seconds (range) | Median peak RSS, current / prototype |
+|---|---|---|---|
+| Ordinary chain and capture | 5.11 (4.96–5.59) | 4.64 (4.50–4.85) | 250.1 / 255.9 MiB |
+| Typed errors | 4.98 (4.97–5.02) | 4.54 (4.45–4.90) | 240.7 / 245.3 MiB |
+| Generic forwarding | 4.61 (4.53–4.80) | 4.33 (4.17–4.43) | 242.1 / 228.7 MiB |
+
+All 18 builds and executions passed, with clean audits and unchanged inputs.
+These small samples show no compilation-time increase for these clients; they
+do not establish a general speedup or a runtime performance claim.
+
+The programs are under `experiments/mojo12-boundary/baseline/` and `clients/`.
+Reports are `.cache/mojo12-architecture/measure-{baseline,prototype}-{1,2,3}/report.json`.
+After creating the prototype overlay, reproduce one pair of rounds with the
+canonical measurement tool, using fresh output paths:
+
+```sh
+pixi run measure-compilation \
+  experiments/mojo12-boundary/baseline/ordinary.mojo \
+  experiments/mojo12-boundary/baseline/raising.mojo \
+  experiments/mojo12-boundary/baseline/generic_forwarding.mojo \
+  --include src --level 3 --threads 1 \
+  --output .cache/mojo12-architecture/measure-baseline-1
+pixi run measure-compilation \
+  experiments/mojo12-boundary/clients/ordinary.mojo \
+  experiments/mojo12-boundary/clients/raising.mojo \
+  experiments/mojo12-boundary/clients/generic_forwarding.mojo \
+  --include .cache/mojo12-architecture/review/library --level 3 --threads 1 \
+  --output .cache/mojo12-architecture/measure-prototype-1
+```
+
 ## SIMD
 
 One algorithm serves scalar, SIMD and non-numeric operations: `fold_left` over

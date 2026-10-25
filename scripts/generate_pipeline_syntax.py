@@ -91,15 +91,15 @@ def filter_methods(carrier, name, description):
     out = []
     source, family = carrier.value('T'), carrier.instance('T')
     for raising in (False, True):
-        parameters = [f'T: {MD}', *carrier.parameters, '//']
+        parameters = [f'T: {MD}', f'R: {MD}', *carrier.parameters, '//']
         effect = ' raises E' if raising else ''
         if raising:
             parameters.append(f'E: {MD}')
-        parameters.append(f'F: def(T){effect} -> Bool')
+        parameters.append(f'F: def(T){effect} -> R')
         operation = f'_family_{name}[{family}' + (', E=E]' if raising else ']')
         out.append(forward(name, parameters, 'ref predicate: F', source, source,
                            operation, 'predicate', f'{description} {carrier.name} payloads immediately, preserving their container.',
-                           'E' if raising else ''))
+                           'E' if raising else '', f'R == Bool and Self.Value == {source}'))
     element = f'downcast[C.Payload, {MD}]'
     source, family = carrier.value(element), carrier.instance(element)
     condition = f'conforms_to(C.Payload, {MD}) and Self.Value == {source} and C.Result == Bool'

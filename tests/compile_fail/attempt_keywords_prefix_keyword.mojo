@@ -5,4 +5,4 @@ def target(first: Int, /, var **values: Int) -> Int:
     return len(values)
 
 def main():
-    _ = attempt_kwargs(target, first=3, one=7)
+    _ = attempt_kwargs[owned=True](target, first=3, one=7)

@@ -15,6 +15,34 @@ result in the chain. `.get()` extracts the stored value. See
 `Piped` names its payload parameter `Value`: explicit `Piped[T=Int]` and
 `Piped[Int].T` become `Piped[Value=Int]` and `Piped[Int].Value`.
 
+## Select family and native errors before callbacks
+
+`pipeline(values)` starts a `Pipeline` for List, Optional or Result.
+`pipeline[Family](value)` selects another Functor explicitly, including a
+deferred family. Call `raising[E]()` once to select native callback errors.
+`map`, `filter`, `flat_map` and `filter_map` use the selected family's
+capabilities. Result combinators use their existing branch and ownership rules.
+The result of `map_err` or `map_both` selects the new Result error family.
+
+<!-- example: docs/examples/selected_pipeline.mojo -->
+
+`raising[E]()` selects native callback admission. It does not change stored
+errors, catch exceptions, or restrict the errors declared by library callables.
+Pure and Never callbacks retain Never. Custom families retain their own
+execution errors and deferred callback lifetimes. `get()` only extracts the
+carrier. `Pipeline` currently exposes these family operations and Result
+combinators; existing `Piped` remains the broader fluent API, including `then`,
+folding, traversal and n-ary combinations.
+
+A generic bind wrapper retains a family parameter (`I: Monad`, optionally
+`I: Monad = ResultFamily[E]`) and forwards `I.BindCompatible[V, F]`,
+`I.Element[V]`, `I.Bound[V, F]` and `I.BindError[V, F]`. This lets Mojo check
+the full carrier and its origins when the family is selected. Naming a concrete
+`ResultFamily[E]` in a generic constraint can inspect the callback too early;
+an output equality alone does not supply the projection proof. This applies to
+generic algebra bind wrappers too. Ordinary calls need no extra arguments;
+a default family also preserves a wrapper's existing call syntax.
+
 <!-- api: functions -->
 
 ## Chain ten stages with piped

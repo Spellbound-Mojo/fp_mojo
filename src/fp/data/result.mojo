@@ -35,3 +35,5 @@ def collect_results[T: Movable & Deinitable, E: Movable & Deinitable,
     # Result's collection is the traversal loop with the identity callback.
     var collected = ResultFamily[E].collect(Identity[Result[T, E]](), source^)
     return rebind_var[Result[List[T], E]](collected^)
+
+from ._capture import Capture

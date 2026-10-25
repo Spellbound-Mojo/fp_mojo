@@ -11,6 +11,7 @@ CALLABLE_ENTRIES = frozenset()
 SOURCE_MODULES = (
     *(( 'callables', 'callables/' + name) for name in ('protocols', 'invoke', 'native')),
     ('functions', 'functions/pipeline'),
+    ('functions', 'functions/context'),
     ('functions', 'functions/composition'),
     ('functions', 'functions/kleisli'),
     ('functions', 'functions/flipped'),
@@ -32,6 +33,7 @@ SOURCE_MODULES = (
     *(( 'algebra', 'algebra/' + name) for name in ('protocols', 'operations', 'filtering', 'conditional', 'errors', 'instances', '_derived', 'monoids', 'validation', 'non_empty', 'ior')),
     *(( 'effects', 'effects/' + name) for name in ('protocols', 'reader', 'state', 'writer', 'layers', 'operations', 'capabilities')),
     ('data', 'data/_result'),
+    ('data', 'data/_capture'),
     ('data', 'data/result'),
     ('data', 'data/non_empty_list'),
     ('data', 'data/control'),

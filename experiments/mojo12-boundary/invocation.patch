@@ -1,0 +1,52 @@
+--- a/fp/callables/native.mojo
++++ b/fp/callables/native.mojo
+@@ -777,7 +777,23 @@
+                         F: Movable & Deinitable, raising: Bool, o: ImmOrigin](ImplicitlyCopyable):
+     var function: Pointer[Self.F, Self.o]
+     def invoke(self, mut first: Self.A, var second: Self.B) raises Self.E -> Self.R:
+-        comptime if Self.R == type_of(None):
++        # Keep thin function pointers and literal Never/no-value ABIs native.
++        comptime if Self.R == type_of(None) and Self.raising and Self.E == Never and Self.F == def(mut Self.A, var Self.B) raises Never thin:
++            _ = rebind[def(mut Self.A, var Self.B) raises Never thin](self.function[])(first, second^)
++            return rebind_var[Self.R](None)
++        elif Self.R == type_of(None) and Self.raising and Self.F == def(mut Self.A, var Self.B) raises Self.E thin:
++            _ = rebind[def(mut Self.A, var Self.B) raises Self.E thin](self.function[])(first, second^)
++            return rebind_var[Self.R](None)
++        elif Self.R == type_of(None) and not Self.raising and Self.F == def(mut Self.A, var Self.B) thin:
++            _ = rebind[def(mut Self.A, var Self.B) thin](self.function[])(first, second^)
++            return rebind_var[Self.R](None)
++        elif Self.raising and Self.E == Never and Self.F == def(mut Self.A, var Self.B) raises Never thin -> Self.R:
++            return rebind[def(mut Self.A, var Self.B) raises Never thin -> Self.R](self.function[])(first, second^)
++        elif Self.raising and Self.F == def(mut Self.A, var Self.B) raises Self.E thin -> Self.R:
++            return rebind[def(mut Self.A, var Self.B) raises Self.E thin -> Self.R](self.function[])(first, second^)
++        elif not Self.raising and Self.F == def(mut Self.A, var Self.B) thin -> Self.R:
++            return rebind[def(mut Self.A, var Self.B) thin -> Self.R](self.function[])(first, second^)
++        elif Self.R == type_of(None):
+             comptime if Self.raising:
+                 comptime if Self.E == Never:
+                     comptime Fn = downcast[Self.F, def(mut Self.A, var Self.B) raises Never]
+@@ -808,7 +824,23 @@
+                           F: Movable & Deinitable, raising: Bool, o: ImmOrigin](ImplicitlyCopyable):
+     var function: Pointer[Self.F, Self.o]
+     def invoke(self, mut first: Self.A, var second: Self.B, /, var **values: Self.K) raises Self.E -> Self.R:
+-        comptime if Self.R == type_of(None):
++        # Keep thin function pointers and literal Never/no-value ABIs native.
++        comptime if Self.R == type_of(None) and Self.raising and Self.E == Never and Self.F == def(mut Self.A, var Self.B, /, var **kwargs: Self.K) raises Never thin:
++            _ = rebind[def(mut Self.A, var Self.B, /, var **kwargs: Self.K) raises Never thin](self.function[])(first, second^, **values^)
++            return rebind_var[Self.R](None)
++        elif Self.R == type_of(None) and Self.raising and Self.F == def(mut Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E thin:
++            _ = rebind[def(mut Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E thin](self.function[])(first, second^, **values^)
++            return rebind_var[Self.R](None)
++        elif Self.R == type_of(None) and not Self.raising and Self.F == def(mut Self.A, var Self.B, /, var **kwargs: Self.K) thin:
++            _ = rebind[def(mut Self.A, var Self.B, /, var **kwargs: Self.K) thin](self.function[])(first, second^, **values^)
++            return rebind_var[Self.R](None)
++        elif Self.raising and Self.E == Never and Self.F == def(mut Self.A, var Self.B, /, var **kwargs: Self.K) raises Never thin -> Self.R:
++            return rebind[def(mut Self.A, var Self.B, /, var **kwargs: Self.K) raises Never thin -> Self.R](self.function[])(first, second^, **values^)
++        elif Self.raising and Self.F == def(mut Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Self.R:
++            return rebind[def(mut Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Self.R](self.function[])(first, second^, **values^)
++        elif not Self.raising and Self.F == def(mut Self.A, var Self.B, /, var **kwargs: Self.K) thin -> Self.R:
++            return rebind[def(mut Self.A, var Self.B, /, var **kwargs: Self.K) thin -> Self.R](self.function[])(first, second^, **values^)
++        elif Self.R == type_of(None):
+             comptime if Self.raising:
+                 comptime if Self.E == Never:
+                     comptime Fn = downcast[Self.F, def(mut Self.A, var Self.B, /, var **kwargs: Self.K) raises Never]

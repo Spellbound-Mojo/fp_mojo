@@ -49,7 +49,7 @@ def exercise_0_0_0(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed = -1
         if library:
-            var result = attempt_kwargs(target, first=keyword_a^, function=keyword_b^, values=keyword_c^)
+            var result = attempt_kwargs[zero=True](target, first=keyword_a^, function=keyword_b^, values=keyword_c^)
             try:
                 var output = raise_on_err(result^)
                 observed = output.value
@@ -83,7 +83,7 @@ def exercise_0_0_1(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed: Int
         if library:
-            var result = attempt_kwargs(target, first=keyword_a^, function=keyword_b^, values=keyword_c^)
+            var result = attempt_kwargs[zero=True](target, first=keyword_a^, function=keyword_b^, values=keyword_c^)
             var output = raise_on_err(result^)
             observed = output.value
         else:
@@ -111,7 +111,7 @@ def exercise_1_0_0(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed = -1
         if library:
-            var result = attempt_kwargs(target, left, first=keyword_a^, function=keyword_b^, values=keyword_c^)
+            var result = attempt_kwargs[read=True](target, left, first=keyword_a^, function=keyword_b^, values=keyword_c^)
             try:
                 var output = raise_on_err(result^)
                 observed = output.value
@@ -147,7 +147,7 @@ def exercise_1_0_1(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed: Int
         if library:
-            var result = attempt_kwargs(target, left, first=keyword_a^, function=keyword_b^, values=keyword_c^)
+            var result = attempt_kwargs[read=True](target, left, first=keyword_a^, function=keyword_b^, values=keyword_c^)
             var output = raise_on_err(result^)
             observed = output.value
         else:
@@ -176,7 +176,7 @@ def exercise_1_1_0(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed = -1
         if library:
-            var result = attempt_kwargs(target, left^, first=keyword_a^, function=keyword_b^, values=keyword_c^)
+            var result = attempt_kwargs[owned=True](target, left^, first=keyword_a^, function=keyword_b^, values=keyword_c^)
             try:
                 var output = raise_on_err(result^)
                 observed = output.value
@@ -211,7 +211,7 @@ def exercise_1_1_1(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed: Int
         if library:
-            var result = attempt_kwargs(target, left^, first=keyword_a^, function=keyword_b^, values=keyword_c^)
+            var result = attempt_kwargs[owned=True](target, left^, first=keyword_a^, function=keyword_b^, values=keyword_c^)
             var output = raise_on_err(result^)
             observed = output.value
         else:
@@ -240,7 +240,7 @@ def exercise_2_0_0(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed = -1
         if library:
-            var result = attempt_kwargs(target, left, right, first=keyword_a^, function=keyword_b^, values=keyword_c^)
+            var result = attempt_kwargs[read_read=True](target, left, right, first=keyword_a^, function=keyword_b^, values=keyword_c^)
             try:
                 var output = raise_on_err(result^)
                 observed = output.value
@@ -278,7 +278,7 @@ def exercise_2_0_1(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed: Int
         if library:
-            var result = attempt_kwargs(target, left, right, first=keyword_a^, function=keyword_b^, values=keyword_c^)
+            var result = attempt_kwargs[read_read=True](target, left, right, first=keyword_a^, function=keyword_b^, values=keyword_c^)
             var output = raise_on_err(result^)
             observed = output.value
         else:
@@ -309,7 +309,7 @@ def exercise_2_1_0(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed = -1
         if library:
-            var result = attempt_kwargs(target, left^, right, first=keyword_a^, function=keyword_b^, values=keyword_c^)
+            var result = attempt_kwargs[owned_read=True](target, left^, right, first=keyword_a^, function=keyword_b^, values=keyword_c^)
             try:
                 var output = raise_on_err(result^)
                 observed = output.value
@@ -346,7 +346,7 @@ def exercise_2_1_1(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed: Int
         if library:
-            var result = attempt_kwargs(target, left^, right, first=keyword_a^, function=keyword_b^, values=keyword_c^)
+            var result = attempt_kwargs[owned_read=True](target, left^, right, first=keyword_a^, function=keyword_b^, values=keyword_c^)
             var output = raise_on_err(result^)
             observed = output.value
         else:
@@ -376,7 +376,7 @@ def exercise_2_2_0(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed = -1
         if library:
-            var result = attempt_kwargs(target, left, right^, first=keyword_a^, function=keyword_b^, values=keyword_c^)
+            var result = attempt_kwargs[read_owned=True](target, left, right^, first=keyword_a^, function=keyword_b^, values=keyword_c^)
             try:
                 var output = raise_on_err(result^)
                 observed = output.value
@@ -413,7 +413,7 @@ def exercise_2_2_1(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed: Int
         if library:
-            var result = attempt_kwargs(target, left, right^, first=keyword_a^, function=keyword_b^, values=keyword_c^)
+            var result = attempt_kwargs[read_owned=True](target, left, right^, first=keyword_a^, function=keyword_b^, values=keyword_c^)
             var output = raise_on_err(result^)
             observed = output.value
         else:
@@ -443,7 +443,7 @@ def exercise_2_3_0(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed = -1
         if library:
-            var result = attempt_kwargs(target, left^, right^, first=keyword_a^, function=keyword_b^, values=keyword_c^)
+            var result = attempt_kwargs[owned_owned=True](target, left^, right^, first=keyword_a^, function=keyword_b^, values=keyword_c^)
             try:
                 var output = raise_on_err(result^)
                 observed = output.value
@@ -479,7 +479,7 @@ def exercise_2_3_1(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed: Int
         if library:
-            var result = attempt_kwargs(target, left^, right^, first=keyword_a^, function=keyword_b^, values=keyword_c^)
+            var result = attempt_kwargs[owned_owned=True](target, left^, right^, first=keyword_a^, function=keyword_b^, values=keyword_c^)
             var output = raise_on_err(result^)
             observed = output.value
         else:

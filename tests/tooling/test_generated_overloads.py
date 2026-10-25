@@ -4,6 +4,8 @@ import sys
 import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]/'scripts'))
 from fp_tools.runtime import ROOT
+import generate_capture as capture
+import generate_context as context
 import generate_plain_overloads as generator
 import generate_pipeline_syntax as syntax
 import generate_combinator_syntax as combinators
@@ -14,6 +16,12 @@ import generate_sequencing_syntax as sequencing
 
 
 class GeneratedOverloadTests(unittest.TestCase):
+    def test_selected_context_matches_the_generator(self):
+        self.assertEqual(context.OUTPUT.read_text(), context.source())
+
+    def test_capture_signatures_match_the_generator(self):
+        self.assertEqual(capture.OUTPUT.read_text(), capture.source())
+
     def test_sources_match_the_generator(self):
         folder = ROOT/'src/fp/functions'
         for name, render in (('pipeline.mojo', generator.pipeline_source),
@@ -43,7 +51,7 @@ class GeneratedOverloadTests(unittest.TestCase):
         self.assertIn('Piped[Example[U, N]]', mapped)
         self.assertIn('_family_map[ExampleFamily[N], X=E]', mapped)
         self.assertIn('_family_filter_not[ExampleFamily[N], E=E]', filtered)
-        self.assertIn('where Self.Value == Example[T, N]', filtered)
+        self.assertIn('where R == Bool and Self.Value == Example[T, N]', filtered)
         self.assertIn('C.Failure', filtered)
         self.assertIn('_Fill[T, U]', syntax.transform_methods(carrier))
         self.assertIn('ExampleFamily[N].filter_map', syntax.algebra_methods(carrier))

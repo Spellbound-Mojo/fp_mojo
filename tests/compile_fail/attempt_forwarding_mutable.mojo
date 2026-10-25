@@ -11,7 +11,7 @@ def target(mut value: Token) -> Int:
     return value.value
 
 def owner(value: Token):
-    _ = attempt(target, value)
+    _ = attempt[mutable=True](target, value)
 
 def main():
     owner(Token(3))

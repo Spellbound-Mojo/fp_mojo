@@ -1,0 +1,98 @@
+[
+  {
+    "source": "clients/invocation_keyword_binding_bad_mut_owned_kwargs_arity_nonraising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/invocation_keyword_binding_bad_mut_owned_kwargs_arity_raising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/invocation_keyword_binding_bad_mut_owned_kwargs_convention_nonraising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/invocation_keyword_binding_bad_mut_owned_kwargs_convention_raising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/invocation_keyword_binding_bad_mut_owned_kwargs_error.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/invocation_keyword_binding_keyword_never_void.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/invocation_keyword_positive.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/invocation_state_counter.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/invocation_state_effects.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/invocation_state_origins.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/invocation_state_generic.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/invocation_state_ownership.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/invocation_keyword_borrowed_captures.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/invocation_keyword_never_captured.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/invocation_reject_convention.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/invocation_reject_arity.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/invocation_reject_error.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/invocation_reject_captured.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/invocation_reject_argument.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/invocation_reject_consumed.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/invocation_reject_borrowed_move.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/invocation_reject_origin.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/invocation_reject_lifetime.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/invocation_state_views.mojo",
+    "kind": "positive"
+  }
+]

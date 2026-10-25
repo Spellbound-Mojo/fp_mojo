@@ -108,58 +108,72 @@ def _apply_lazy_optional[T: Movable & Deinitable, U: Movable & Deinitable,
 
 
 def _binary_plain[A: Movable & Deinitable, T: Movable & Deinitable,
-                  R: Movable & Deinitable, F: def(var A, var T) -> R](
-    var accumulator: A, var value: T, function: F
-) capturing -> R:
-    return function(accumulator^, value^)
+                  R: Movable & Deinitable, F: def(var A, var T) -> R, InputA: Movable & Deinitable = A,
+                    InputT: Movable & Deinitable = T, Output: Movable & Deinitable = R](
+    var accumulator: InputA, var value: InputT, function: F
+) capturing -> Output where InputA == A and InputT == T and Output == R:
+    return rebind_var[Output](function(rebind_var[A](accumulator^), rebind_var[T](value^)))
 
 
 def _binary_raising[A: Movable & Deinitable, T: Movable & Deinitable,
                     R: Movable & Deinitable, E: AnyType,
-                    F: def(var A, var T) raises E -> R](
-    var accumulator: A, var value: T, function: F
-) raises E capturing -> R:
+                    F: def(var A, var T) raises E -> R, InputA: Movable & Deinitable = A,
+                    InputT: Movable & Deinitable = T, Output: Movable & Deinitable = R](
+    var accumulator: InputA, var value: InputT, function: F
+) raises E capturing -> Output where InputA == A and InputT == T and Output == R:
     comptime if E == Never:
-        return _call_native_binary[A, T, R, Never, F, True](function, accumulator^, value^)
+        return rebind_var[Output](_call_native_binary[A, T, R, Never, F, True](function, rebind_var[A](accumulator^), rebind_var[T](value^)))
     else:
-        return function(accumulator^, value^)
+        return rebind_var[Output](function(rebind_var[A](accumulator^), rebind_var[T](value^)))
 
 
-def _predicate_plain[T: Movable & Deinitable, F: def(T) -> Bool](
+def _predicate_plain[T: Movable & Deinitable, R: Movable & Deinitable, F: def(T) -> R](
     value: T, function: F
-) capturing -> Bool:
-    return function(value)
+) capturing -> Bool where R == Bool:
+    return rebind_var[Bool](function(value))
 
 
 def _predicate_raising[T: Movable & Deinitable, E: AnyType,
-                       F: def(T) raises E -> Bool](
+                       R: Movable & Deinitable, F: def(T) raises E -> R](
     value: T, function: F
-) raises E capturing -> Bool:
+) raises E capturing -> Bool where R == Bool:
     comptime if E == Never:
-        return _call_native_borrow[T, Bool, Never, F, True](function, value)
+        return rebind_var[Bool](_call_native_borrow[T, R, Never, F, True](function, value))
     else:
-        return function(value)
+        return rebind_var[Bool](function(value))
+
+
+def _predicate_thin[T: Movable & Deinitable, E: Movable & Deinitable](
+    value: T, function: def(T) raises E thin -> Bool
+) raises E capturing -> Bool:
+    # Keep plain functions thin: inflating a read predicate with an explicitly
+    # bound Never error loses its closure witness on Mojo 1.2.
+    return function(value)
 
 
 def _control_plain[A: Movable & Deinitable, B: Movable & Deinitable,
                    T: Movable & Deinitable,
-                   F: def(var A, var T) -> ControlFlow[B, A]](
-    var accumulator: A, var value: T, function: F
-) capturing -> ControlFlow[B, A]:
+                   R: Movable & Deinitable, F: def(var A, var T) -> ControlFlow[B, R],
+                     InputA: Movable & Deinitable = A, InputT: Movable & Deinitable = T,
+                     OutputA: Movable & Deinitable = R, OutputB: Movable & Deinitable = B](
+    var accumulator: InputA, var value: InputT, function: F
+) capturing -> ControlFlow[OutputB, OutputA] where InputA == A and InputT == T and OutputA == R and OutputB == B:
     # Keep the structural result in the signature: the compiler pin cannot
     # prove its equality through a bridge with an independent result type.
-    return function(accumulator^, value^)
+    return rebind_var[ControlFlow[OutputB, OutputA]](function(rebind_var[A](accumulator^), rebind_var[T](value^)))
 
 
 def _control_raising[A: Movable & Deinitable, B: Movable & Deinitable,
                      T: Movable & Deinitable, E: AnyType,
-                     F: def(var A, var T) raises E -> ControlFlow[B, A]](
-    var accumulator: A, var value: T, function: F
-) raises E capturing -> ControlFlow[B, A]:
+                     R: Movable & Deinitable, F: def(var A, var T) raises E -> ControlFlow[B, R],
+                     InputA: Movable & Deinitable = A, InputT: Movable & Deinitable = T,
+                     OutputA: Movable & Deinitable = R, OutputB: Movable & Deinitable = B](
+    var accumulator: InputA, var value: InputT, function: F
+) raises E capturing -> ControlFlow[OutputB, OutputA] where InputA == A and InputT == T and OutputA == R and OutputB == B:
     comptime if E == Never:
-        return _call_native_binary[A, T, ControlFlow[B, A], Never, F, True](function, accumulator^, value^)
+        return rebind_var[ControlFlow[OutputB, OutputA]](_call_native_binary[A, T, ControlFlow[B, R], Never, F, True](function, rebind_var[A](accumulator^), rebind_var[T](value^)))
     else:
-        return function(accumulator^, value^)
+        return rebind_var[ControlFlow[OutputB, OutputA]](function(rebind_var[A](accumulator^), rebind_var[T](value^)))
 
 
 # Terminal bridges for shared-receiver fixed-arity callables, such as partials.

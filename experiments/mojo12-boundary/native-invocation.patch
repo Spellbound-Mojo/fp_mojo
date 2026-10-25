@@ -1,0 +1,81 @@
+--- a/fp/callables/native.mojo
++++ b/fp/callables/native.mojo
+@@ -19,11 +19,39 @@
+ 
+ 
+ def _native_thunk[R: Movable & Deinitable, F: _Thunk[R]](function: F) -> R:
+-    return function()
++    return _call_native_thunk[R, Never, F, False](function)
+ 
+ 
+ def _native_raising_thunk[R: Movable & Deinitable, X: Movable & Deinitable, F: _RaisingThunk[R, X]](function: F) raises X -> R:
+-    return function()
++    return _call_native_thunk[R, X, F, True](function)
++
++
++def _call_native_thunk[R: Movable & Deinitable, E: Movable & Deinitable,
++                       F: Movable & Deinitable, raising: Bool](function: F) raises E -> R:
++    # Keep native no-value and Never signatures literal at their invocation.
++    # Adapters retain the exact F; this boundary never copies or erases captures.
++    comptime if R == type_of(None):
++        comptime if not raising:
++            comptime assert E == Never
++            comptime Fn = downcast[F, def()]
++            _ = rebind[Fn](function)()
++        elif E == Never:
++            comptime Fn = downcast[F, def() raises Never]
++            _ = rebind[Fn](function)()
++        else:
++            comptime Fn = downcast[F, def() raises E]
++            _ = rebind[Fn](function)()
++        return rebind_var[R](None)
++    elif raising and E == Never:
++        comptime Fn = downcast[F, def() raises Never -> R]
++        return rebind[Fn](function)()
++    elif raising:
++        comptime Fn = downcast[F, def() raises E -> R]
++        return rebind[Fn](function)()
++    else:
++        comptime assert E == Never
++        comptime Fn = downcast[F, def() -> R]
++        return rebind[Fn](function)()
+ 
+ 
+ @fieldwise_init
+@@ -523,7 +551,9 @@
+ 
+ def _call_native_borrow[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable,
+                         F: Movable & Deinitable, raising: Bool](function: F, ref payload: P) raises E -> R:
+-    comptime if R == type_of(None):
++    comptime if raising and E == Never and F == def(P) raises Never thin -> R:
++        return rebind[def(P) raises Never thin -> R](function)(payload)
++    elif R == type_of(None):
+         comptime if conforms_to(P, TrivialRegisterPassable):
+             comptime Arg = downcast[P, TrivialRegisterPassable]
+             comptime if raising and E == Never:
+--- a/fp/data/_result.mojo
++++ b/fp/data/_result.mojo
+@@ -1,4 +1,5 @@
+ """Typed result values stored in place: a native Variant of `Ok` and `Err`."""
++from fp.callables.native import _call_native_thunk
+ from fp.callables._conditional import _guard_owned
+ from fp.callables._views import _UnaryViewable
+ from fp.callables._retention import _Retain
+@@ -2081,7 +2082,7 @@
+ 
+ def _attempt_native[R: Movable & Deinitable, E: Movable & Deinitable,
+                     F: def() raises E -> R](function: F) raises E capturing -> R:
+-    return function()
++    return _call_native_thunk[R, E, F, True](function)
+ 
+ 
+ # Pure and raising native traits cannot be substituted through an enclosing
+@@ -2089,7 +2090,7 @@
+ def _attempt_native_pure[R: Movable & Deinitable, F: def() -> R](
+     function: F
+ ) raises Never capturing -> R:
+-    return function()
++    return _call_native_thunk[R, Never, F, False](function)
+ 
+ 
+ 

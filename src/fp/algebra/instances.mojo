@@ -432,6 +432,11 @@ struct ResultFamily[E: Movable & Deinitable](Monad, ApplicativeError, Traversabl
     comptime Pure[A: Movable & Deinitable] = Result[A, Self.E]
     comptime Combined[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = Result[F.Out, Self.E]
     comptime CombineError[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = _CommonError[F.Error, R.Error]
+    comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = (
+        (V == Result[F.Arg, Self.E] and F.Out == Result[downcast[F.Out, _ResultType].Value, Self.E])
+        if conforms_to(F.Out, _ResultType) else False
+    )
+    """Require the callback to return a Result with the same stored error and origins."""
     comptime Bound[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Out
     comptime BindError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
     comptime Traversed[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = G.Mapped[F.Out, _OkOf[G.Element[F.Out], Self.E]]

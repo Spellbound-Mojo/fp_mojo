@@ -1,5 +1,5 @@
 """A generic transaction helper preserves state and returns the exact error."""
-from fp.data import Result, attempt_kwargs, mut_owned_kwargs, raise_on_err
+from fp.data import Capture, Result, raise_on_err
 from std.testing import assert_equal
 
 def transaction[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable,
@@ -7,7 +7,7 @@ def transaction[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & D
                 F: def(mut A, var B, /, var **kwargs: Int) raises X -> R](
     function: F, mut state: A, var payment: B, /, var **options: Int
 ) -> Result[R, X]:
-    return attempt_kwargs(mut_owned_kwargs(function), state, payment^, **options^)
+    return Capture[X].mutable(state).take(payment^).kwargs(**options^).run(function)
 
 def submit[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable,
            X: Movable & Deinitable, //,

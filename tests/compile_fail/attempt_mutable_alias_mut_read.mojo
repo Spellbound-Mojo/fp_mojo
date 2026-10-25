@@ -10,4 +10,4 @@ def target(mut first: Token, second: Token) -> Int:
 
 def main():
     var value = Token(3)
-    _ = attempt(target, value, value)
+    _ = attempt[mut_read=True](target, value, value)

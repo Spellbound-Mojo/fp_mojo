@@ -4,6 +4,7 @@ from .protocols import UnaryContract, Unary, MutableUnary, OnceUnary, BorrowCall
 from .invoke import invoke_borrowed, call_once, call_repeated, RepeatableThunk
 from ._receiver import _borrow_once_as, _borrow_repeated_as, _RepeatableBorrow, _MutableBorrow
 from .native import _Borrowing, _call_lazy_borrow
+from .products import _OptionalCell
 
 
 @fieldwise_init
@@ -176,11 +177,16 @@ struct _Observe[T: Movable & Deinitable, C: BorrowCallable, paired: Bool](Unary)
 @fieldwise_init
 struct _ObserveNative[P: AnyType, R: Movable & Deinitable,
                       F: Movable & Deinitable, paired: Bool](MutableUnary):
-    var function: Self.F
+    # Retain the admitted native signature in storage: a plain F field loses
+    # its destruction witness when the callback returns an origin-bound value.
+    comptime Native = downcast[Self.F, _Borrowing[Self.P, Self.R]]
+    var function: _OptionalCell[Self.Native]
+    def __init__(out self, var function: Self.F):
+        self.function = Optional(rebind_var[Self.Native](function^))
     comptime Arg = downcast[Self.P, Movable & Deinitable]
     comptime Out = Tuple[downcast[Self.P, Movable & Deinitable], Self.R] if Self.paired else downcast[Self.P, Movable & Deinitable]
     def call_mut(mut self, var arg: downcast[Self.P, Movable & Deinitable]) -> Self.Out:
         comptime Fn = downcast[Self.F, _Borrowing[Self.P, Self.R]]
         comptime assert conforms_to(Fn, _Borrowing[Self.P, Self.R])
-        var result = _call_lazy_borrow[Self.P, Self.R, Fn](rebind[Fn](self.function), arg)
+        var result = _call_lazy_borrow[Self.P, Self.R, Fn](rebind[Fn](self.function.value()), arg)
         return _observed[downcast[Self.P, Movable & Deinitable], Self.R, Self.paired](arg^, result^)

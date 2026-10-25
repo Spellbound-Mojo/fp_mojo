@@ -10,7 +10,7 @@ compiler constraints behind these choices.
 | Item | Status |
 |---|---|
 | Compiler | Mojo 1.2.0 (2016d0cd), pinned through Pixi for `nightly`; published FP Mojo 1.0.0 requires Mojo 1.1.0 |
-| Linux x86-64 | Mojo 1.2 environment installed; full qualification fails ([details](../architecture/native-boundaries.md#mojo-12-qualification)). Last complete verification used Mojo 1.1.0. |
+| Linux x86-64 | All 332 checked programs and 712 rejection fixtures pass. Twenty-two rejection fixtures require explicit callback types for normal diagnostics; those invalid calls still crash the compiler without the hints ([details](../architecture/native-boundaries.md#rejection-diagnostics)). The lazy-observer failure is fixed. |
 | macOS arm64 | Locked environment available; last runtime verification was on Mojo 1.1.0 |
 
 ## Combinator roadmap
@@ -208,7 +208,9 @@ The source references are Cats' [Apply](https://github.com/typelevel/cats/blob/m
 | Pipeline stages | `pipe`, `flow` and `compose` take two to eight plain functions directly. A closure is promoted with `as_unary`, and then every native function in that chain is promoted too. `piped(value).then(f)...get()` chains any number of plain functions, closures and library values. |
 | `action` endpoints | `action` takes library endpoints (`BorrowCallable` for Reader, `Unary` for State): a plain function with read parameters would match both native forms. |
 | Algebra and effect callbacks | `map`, `flat_map`, `traverse`, `modify`, `censor` and `local` take native functions or closures. Free `map2`, `map2_lazy` and `ap` take library values; fluent `map2` accepts native functions and closures too. |
-| `attempt` call shapes | Zero to two positional arguments; callbacks with homogeneous native keyword packs use `attempt_kwargs`, including empty packs. Other call shapes use a closure. On Mojo 1.2, `mutating`, `consuming`, `mut_owned` and `mut_owned_kwargs` select four supported native conventions. Other combinations and incompatible adapter diagnostics remain incomplete; see the [qualification](../architecture/native-boundaries.md#convention-adapters). |
+| Capture | `Capture[E]` binds zero to two positional operands with explicit ownership and optional native keyword packs before callback admission. `Capture.stateful` owns explicit mutable state for repeated plain-function calls. Tested invalid calls diagnose without callback-type bindings. |
+| Selected pipeline | `pipeline(value).raising[E]()` selects native errors once for family operations and Result combinators. Existing Piped covers the broader fluent surface. |
+| Legacy `attempt` call shapes | Zero to two positional arguments; callbacks with homogeneous native keyword packs use `attempt_kwargs`, including empty packs. Other call shapes use a closure. On Mojo 1.2, optional named convention selectors cover all supported positional combinations; `mutating`, `consuming`, `mut_owned` and `mut_owned_kwargs` remain supported. An incompatible selector needs an explicit `F` hint to diagnose normally; incompatible adapter diagnostics remain incomplete. See the [reference](../reference/data.md#select-a-native-argument-convention). |
 | Named or defaulted parameters | Pass a native function with named or defaulted parameters to library functions through a closure that spells the call. |
 | Closures with owned mutable state | They can lose updates at O3 on Mojo 1.1 when called through a read borrow. Use an explicit mutable borrowed context instead. |
 | Closures with embedded origins | Some closures that combine embedded origins with captured state fail to compile on Mojo 1.1; pass borrowed views as arguments instead. |

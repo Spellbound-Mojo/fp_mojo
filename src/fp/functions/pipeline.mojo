@@ -2979,16 +2979,16 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Result[F._View[o].Arg, Failure]
         return Piped(_family_map[ResultFamily[Failure]](function._unary_view(), rebind_var[Result[F._View[o].Arg, Failure]](self.value^)))
 
-    def filter[T: Movable & Deinitable, //, F: def(T) -> Bool](
+    def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, F: def(T) -> R](
         deinit self, ref predicate: F
-    ) -> Piped[List[T]] where Self.Value == List[T]:
+    ) -> Piped[List[T]] where R == Bool and Self.Value == List[T]:
         """Retain accepted List payloads immediately, preserving their container."""
         comptime assert Self.Value == List[T]
         return Piped(_family_filter[ListFamily](predicate, rebind_var[List[T]](self.value^)))
 
-    def filter[T: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> Bool](
+    def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R](
         deinit self, ref predicate: F
-    ) raises E -> Piped[List[T]] where Self.Value == List[T]:
+    ) raises E -> Piped[List[T]] where R == Bool and Self.Value == List[T]:
         """Retain accepted List payloads immediately, preserving their container."""
         comptime assert Self.Value == List[T]
         return Piped(_family_filter[ListFamily, E=E](predicate, rebind_var[List[T]](self.value^)))
@@ -3000,16 +3000,16 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == List[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_family_filter[ListFamily](predicate^, rebind_var[List[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
 
-    def filter[T: Movable & Deinitable, //, F: def(T) -> Bool](
+    def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, F: def(T) -> R](
         deinit self, ref predicate: F
-    ) -> Piped[Deque[T]] where Self.Value == Deque[T]:
+    ) -> Piped[Deque[T]] where R == Bool and Self.Value == Deque[T]:
         """Retain accepted Deque payloads immediately, preserving their container."""
         comptime assert Self.Value == Deque[T]
         return Piped(_family_filter[_DequeFamily](predicate, rebind_var[Deque[T]](self.value^)))
 
-    def filter[T: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> Bool](
+    def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R](
         deinit self, ref predicate: F
-    ) raises E -> Piped[Deque[T]] where Self.Value == Deque[T]:
+    ) raises E -> Piped[Deque[T]] where R == Bool and Self.Value == Deque[T]:
         """Retain accepted Deque payloads immediately, preserving their container."""
         comptime assert Self.Value == Deque[T]
         return Piped(_family_filter[_DequeFamily, E=E](predicate, rebind_var[Deque[T]](self.value^)))
@@ -3021,16 +3021,16 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_family_filter[_DequeFamily](predicate^, rebind_var[Deque[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
 
-    def filter[T: Movable & Deinitable, //, F: def(T) -> Bool](
+    def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, F: def(T) -> R](
         deinit self, ref predicate: F
-    ) -> Piped[LinkedList[T]] where Self.Value == LinkedList[T]:
+    ) -> Piped[LinkedList[T]] where R == Bool and Self.Value == LinkedList[T]:
         """Retain accepted LinkedList payloads immediately, preserving their container."""
         comptime assert Self.Value == LinkedList[T]
         return Piped(_family_filter[_LinkedListFamily](predicate, rebind_var[LinkedList[T]](self.value^)))
 
-    def filter[T: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> Bool](
+    def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R](
         deinit self, ref predicate: F
-    ) raises E -> Piped[LinkedList[T]] where Self.Value == LinkedList[T]:
+    ) raises E -> Piped[LinkedList[T]] where R == Bool and Self.Value == LinkedList[T]:
         """Retain accepted LinkedList payloads immediately, preserving their container."""
         comptime assert Self.Value == LinkedList[T]
         return Piped(_family_filter[_LinkedListFamily, E=E](predicate, rebind_var[LinkedList[T]](self.value^)))
@@ -3042,16 +3042,16 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_family_filter[_LinkedListFamily](predicate^, rebind_var[LinkedList[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
 
-    def filter[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: def(T) -> Bool](
+    def filter[T: Movable & Deinitable, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: def(T) -> R](
         deinit self, ref predicate: F
-    ) -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]:
+    ) -> Piped[Dict[K, T, H]] where R == Bool and Self.Value == Dict[K, T, H]:
         """Retain accepted Dict payloads immediately, preserving their container."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_family_filter[_DictFamily[K, T, H]](predicate, rebind_var[Dict[K, T, H]](self.value^)))
 
-    def filter[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> Bool](
+    def filter[T: Movable & Deinitable, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R](
         deinit self, ref predicate: F
-    ) raises E -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]:
+    ) raises E -> Piped[Dict[K, T, H]] where R == Bool and Self.Value == Dict[K, T, H]:
         """Retain accepted Dict payloads immediately, preserving their container."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_family_filter[_DictFamily[K, T, H], E=E](predicate, rebind_var[Dict[K, T, H]](self.value^)))
@@ -3063,16 +3063,16 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H]
         return Piped(_family_filter[_DictFamily[K, downcast[C.Payload, Movable & Deinitable], H]](predicate^, rebind_var[Dict[K, downcast[C.Payload, Movable & Deinitable], H]](self.value^)))
 
-    def filter[T: Movable & Deinitable, //, F: def(T) -> Bool](
+    def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, F: def(T) -> R](
         deinit self, ref predicate: F
-    ) -> Piped[StringDict[T]] where Self.Value == StringDict[T]:
+    ) -> Piped[StringDict[T]] where R == Bool and Self.Value == StringDict[T]:
         """Retain accepted StringDict payloads immediately, preserving their container."""
         comptime assert Self.Value == StringDict[T]
         return Piped(_family_filter[_StringDictFamily[T]](predicate, rebind_var[StringDict[T]](self.value^)))
 
-    def filter[T: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> Bool](
+    def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R](
         deinit self, ref predicate: F
-    ) raises E -> Piped[StringDict[T]] where Self.Value == StringDict[T]:
+    ) raises E -> Piped[StringDict[T]] where R == Bool and Self.Value == StringDict[T]:
         """Retain accepted StringDict payloads immediately, preserving their container."""
         comptime assert Self.Value == StringDict[T]
         return Piped(_family_filter[_StringDictFamily[T], E=E](predicate, rebind_var[StringDict[T]](self.value^)))
@@ -3084,16 +3084,16 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_family_filter[_StringDictFamily[downcast[C.Payload, Movable & Deinitable]]](predicate^, rebind_var[StringDict[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
 
-    def filter[T: Movable & Deinitable, //, F: def(T) -> Bool](
+    def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, F: def(T) -> R](
         deinit self, ref predicate: F
-    ) -> Piped[Optional[T]] where Self.Value == Optional[T]:
+    ) -> Piped[Optional[T]] where R == Bool and Self.Value == Optional[T]:
         """Retain accepted Optional payloads immediately, preserving their container."""
         comptime assert Self.Value == Optional[T]
         return Piped(_family_filter[OptionalFamily](predicate, rebind_var[Optional[T]](self.value^)))
 
-    def filter[T: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> Bool](
+    def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R](
         deinit self, ref predicate: F
-    ) raises E -> Piped[Optional[T]] where Self.Value == Optional[T]:
+    ) raises E -> Piped[Optional[T]] where R == Bool and Self.Value == Optional[T]:
         """Retain accepted Optional payloads immediately, preserving their container."""
         comptime assert Self.Value == Optional[T]
         return Piped(_family_filter[OptionalFamily, E=E](predicate, rebind_var[Optional[T]](self.value^)))
@@ -3105,16 +3105,16 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_family_filter[OptionalFamily](predicate^, rebind_var[Optional[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
 
-    def filter_not[T: Movable & Deinitable, //, F: def(T) -> Bool](
+    def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, F: def(T) -> R](
         deinit self, ref predicate: F
-    ) -> Piped[List[T]] where Self.Value == List[T]:
+    ) -> Piped[List[T]] where R == Bool and Self.Value == List[T]:
         """Retain rejected List payloads immediately, preserving their container."""
         comptime assert Self.Value == List[T]
         return Piped(_family_filter_not[ListFamily](predicate, rebind_var[List[T]](self.value^)))
 
-    def filter_not[T: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> Bool](
+    def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R](
         deinit self, ref predicate: F
-    ) raises E -> Piped[List[T]] where Self.Value == List[T]:
+    ) raises E -> Piped[List[T]] where R == Bool and Self.Value == List[T]:
         """Retain rejected List payloads immediately, preserving their container."""
         comptime assert Self.Value == List[T]
         return Piped(_family_filter_not[ListFamily, E=E](predicate, rebind_var[List[T]](self.value^)))
@@ -3126,16 +3126,16 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == List[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_family_filter_not[ListFamily](predicate^, rebind_var[List[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
 
-    def filter_not[T: Movable & Deinitable, //, F: def(T) -> Bool](
+    def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, F: def(T) -> R](
         deinit self, ref predicate: F
-    ) -> Piped[Deque[T]] where Self.Value == Deque[T]:
+    ) -> Piped[Deque[T]] where R == Bool and Self.Value == Deque[T]:
         """Retain rejected Deque payloads immediately, preserving their container."""
         comptime assert Self.Value == Deque[T]
         return Piped(_family_filter_not[_DequeFamily](predicate, rebind_var[Deque[T]](self.value^)))
 
-    def filter_not[T: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> Bool](
+    def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R](
         deinit self, ref predicate: F
-    ) raises E -> Piped[Deque[T]] where Self.Value == Deque[T]:
+    ) raises E -> Piped[Deque[T]] where R == Bool and Self.Value == Deque[T]:
         """Retain rejected Deque payloads immediately, preserving their container."""
         comptime assert Self.Value == Deque[T]
         return Piped(_family_filter_not[_DequeFamily, E=E](predicate, rebind_var[Deque[T]](self.value^)))
@@ -3147,16 +3147,16 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_family_filter_not[_DequeFamily](predicate^, rebind_var[Deque[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
 
-    def filter_not[T: Movable & Deinitable, //, F: def(T) -> Bool](
+    def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, F: def(T) -> R](
         deinit self, ref predicate: F
-    ) -> Piped[LinkedList[T]] where Self.Value == LinkedList[T]:
+    ) -> Piped[LinkedList[T]] where R == Bool and Self.Value == LinkedList[T]:
         """Retain rejected LinkedList payloads immediately, preserving their container."""
         comptime assert Self.Value == LinkedList[T]
         return Piped(_family_filter_not[_LinkedListFamily](predicate, rebind_var[LinkedList[T]](self.value^)))
 
-    def filter_not[T: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> Bool](
+    def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R](
         deinit self, ref predicate: F
-    ) raises E -> Piped[LinkedList[T]] where Self.Value == LinkedList[T]:
+    ) raises E -> Piped[LinkedList[T]] where R == Bool and Self.Value == LinkedList[T]:
         """Retain rejected LinkedList payloads immediately, preserving their container."""
         comptime assert Self.Value == LinkedList[T]
         return Piped(_family_filter_not[_LinkedListFamily, E=E](predicate, rebind_var[LinkedList[T]](self.value^)))
@@ -3168,16 +3168,16 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_family_filter_not[_LinkedListFamily](predicate^, rebind_var[LinkedList[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
 
-    def filter_not[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: def(T) -> Bool](
+    def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: def(T) -> R](
         deinit self, ref predicate: F
-    ) -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]:
+    ) -> Piped[Dict[K, T, H]] where R == Bool and Self.Value == Dict[K, T, H]:
         """Retain rejected Dict payloads immediately, preserving their container."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_family_filter_not[_DictFamily[K, T, H]](predicate, rebind_var[Dict[K, T, H]](self.value^)))
 
-    def filter_not[T: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> Bool](
+    def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R](
         deinit self, ref predicate: F
-    ) raises E -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H]:
+    ) raises E -> Piped[Dict[K, T, H]] where R == Bool and Self.Value == Dict[K, T, H]:
         """Retain rejected Dict payloads immediately, preserving their container."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_family_filter_not[_DictFamily[K, T, H], E=E](predicate, rebind_var[Dict[K, T, H]](self.value^)))
@@ -3189,16 +3189,16 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H]
         return Piped(_family_filter_not[_DictFamily[K, downcast[C.Payload, Movable & Deinitable], H]](predicate^, rebind_var[Dict[K, downcast[C.Payload, Movable & Deinitable], H]](self.value^)))
 
-    def filter_not[T: Movable & Deinitable, //, F: def(T) -> Bool](
+    def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, F: def(T) -> R](
         deinit self, ref predicate: F
-    ) -> Piped[StringDict[T]] where Self.Value == StringDict[T]:
+    ) -> Piped[StringDict[T]] where R == Bool and Self.Value == StringDict[T]:
         """Retain rejected StringDict payloads immediately, preserving their container."""
         comptime assert Self.Value == StringDict[T]
         return Piped(_family_filter_not[_StringDictFamily[T]](predicate, rebind_var[StringDict[T]](self.value^)))
 
-    def filter_not[T: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> Bool](
+    def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R](
         deinit self, ref predicate: F
-    ) raises E -> Piped[StringDict[T]] where Self.Value == StringDict[T]:
+    ) raises E -> Piped[StringDict[T]] where R == Bool and Self.Value == StringDict[T]:
         """Retain rejected StringDict payloads immediately, preserving their container."""
         comptime assert Self.Value == StringDict[T]
         return Piped(_family_filter_not[_StringDictFamily[T], E=E](predicate, rebind_var[StringDict[T]](self.value^)))
@@ -3210,16 +3210,16 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_family_filter_not[_StringDictFamily[downcast[C.Payload, Movable & Deinitable]]](predicate^, rebind_var[StringDict[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
 
-    def filter_not[T: Movable & Deinitable, //, F: def(T) -> Bool](
+    def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, F: def(T) -> R](
         deinit self, ref predicate: F
-    ) -> Piped[Optional[T]] where Self.Value == Optional[T]:
+    ) -> Piped[Optional[T]] where R == Bool and Self.Value == Optional[T]:
         """Retain rejected Optional payloads immediately, preserving their container."""
         comptime assert Self.Value == Optional[T]
         return Piped(_family_filter_not[OptionalFamily](predicate, rebind_var[Optional[T]](self.value^)))
 
-    def filter_not[T: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> Bool](
+    def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R](
         deinit self, ref predicate: F
-    ) raises E -> Piped[Optional[T]] where Self.Value == Optional[T]:
+    ) raises E -> Piped[Optional[T]] where R == Bool and Self.Value == Optional[T]:
         """Retain rejected Optional payloads immediately, preserving their container."""
         comptime assert Self.Value == Optional[T]
         return Piped(_family_filter_not[OptionalFamily, E=E](predicate, rebind_var[Optional[T]](self.value^)))

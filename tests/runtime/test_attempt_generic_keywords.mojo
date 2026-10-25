@@ -11,265 +11,265 @@ struct Input(Movable):
 struct Failure(Movable):
     var code: Int
 
-def capture[K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var **kwargs: K) -> R](
+def capture[K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var **kwargs: K) -> R, zero: Bool = True](
     function: F, /, var **values: K
 ) -> Result[R, Never]:
-    return attempt_kwargs(function, **values^)
+    return attempt_kwargs[zero=True](function, **values^)
 
-def capture[K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var **kwargs: K) raises X -> R](
+def capture[K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var **kwargs: K) raises X -> R, zero: Bool = True](
     function: F, /, var **values: K
 ) -> Result[R, X]:
-    return attempt_kwargs(function, **values^)
+    return attempt_kwargs[zero=True](function, **values^)
 
-def forward[K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var **kwargs: K) -> R](
+def forward[K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var **kwargs: K) -> R, zero: Bool = True](
     function: F, /, var **values: K
 ) -> Result[R, Never]:
-    return capture(function, **values^)
+    return capture[zero=True](function, **values^)
 
-def forward[K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var **kwargs: K) raises X -> R](
+def forward[K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var **kwargs: K) raises X -> R, zero: Bool = True](
     function: F, /, var **values: K
 ) -> Result[R, X]:
-    return capture(function, **values^)
+    return capture[zero=True](function, **values^)
 
-def capture[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, /, var **kwargs: K) -> R](
+def capture[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, /, var **kwargs: K) -> R, read: Bool = True](
     function: F, first: A, /, var **values: K
 ) -> Result[R, Never] where not conforms_to(A, TrivialRegisterPassable):
-    return attempt_kwargs(function, first, **values^)
+    return attempt_kwargs[read=True](function, first, **values^)
 
-def capture[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, /, var **kwargs: K) raises X -> R](
+def capture[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, /, var **kwargs: K) raises X -> R, read: Bool = True](
     function: F, first: A, /, var **values: K
 ) -> Result[R, X] where not conforms_to(A, TrivialRegisterPassable):
-    return attempt_kwargs(function, first, **values^)
+    return attempt_kwargs[read=True](function, first, **values^)
 
-def forward[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, /, var **kwargs: K) -> R](
+def forward[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, /, var **kwargs: K) -> R, read: Bool = True](
     function: F, first: A, /, var **values: K
 ) -> Result[R, Never] where not conforms_to(A, TrivialRegisterPassable):
-    return capture(function, first, **values^)
+    return capture[read=True](function, first, **values^)
 
-def forward[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, /, var **kwargs: K) raises X -> R](
+def forward[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, /, var **kwargs: K) raises X -> R, read: Bool = True](
     function: F, first: A, /, var **values: K
 ) -> Result[R, X] where not conforms_to(A, TrivialRegisterPassable):
-    return capture(function, first, **values^)
+    return capture[read=True](function, first, **values^)
 
-def capture[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) -> R](
+def capture[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) -> R, owned: Bool = True](
     function: F, var first: A, /, var **values: K
 ) -> Result[R, Never]:
-    return attempt_kwargs(function, first^, **values^)
+    return attempt_kwargs[owned=True](function, first^, **values^)
 
-def capture[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) raises X -> R](
+def capture[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) raises X -> R, owned: Bool = True](
     function: F, var first: A, /, var **values: K
 ) -> Result[R, X]:
-    return attempt_kwargs(function, first^, **values^)
+    return attempt_kwargs[owned=True](function, first^, **values^)
 
-def forward[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) -> R](
+def forward[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) -> R, owned: Bool = True](
     function: F, var first: A, /, var **values: K
 ) -> Result[R, Never]:
-    return capture(function, first^, **values^)
+    return capture[owned=True](function, first^, **values^)
 
-def forward[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) raises X -> R](
+def forward[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) raises X -> R, owned: Bool = True](
     function: F, var first: A, /, var **values: K
 ) -> Result[R, X]:
-    return capture(function, first^, **values^)
+    return capture[owned=True](function, first^, **values^)
 
-def capture[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, /, var **kwargs: K) -> R](
+def capture[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, /, var **kwargs: K) -> R, mutable: Bool = True](
     function: F, mut first: A, /, var **values: K
 ) -> Result[R, Never]:
-    return attempt_kwargs(function, first, **values^)
+    return attempt_kwargs[mutable=True](function, first, **values^)
 
-def capture[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, /, var **kwargs: K) raises X -> R](
+def capture[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, /, var **kwargs: K) raises X -> R, mutable: Bool = True](
     function: F, mut first: A, /, var **values: K
 ) -> Result[R, X]:
-    return attempt_kwargs(function, first, **values^)
+    return attempt_kwargs[mutable=True](function, first, **values^)
 
-def forward[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, /, var **kwargs: K) -> R](
+def forward[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, /, var **kwargs: K) -> R, mutable: Bool = True](
     function: F, mut first: A, /, var **values: K
 ) -> Result[R, Never]:
-    return capture(function, first, **values^)
+    return capture[mutable=True](function, first, **values^)
 
-def forward[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, /, var **kwargs: K) raises X -> R](
+def forward[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, /, var **kwargs: K) raises X -> R, mutable: Bool = True](
     function: F, mut first: A, /, var **values: K
 ) -> Result[R, X]:
-    return capture(function, first, **values^)
+    return capture[mutable=True](function, first, **values^)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, B, /, var **kwargs: K) -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, B, /, var **kwargs: K) -> R, read_read: Bool = True](
     function: F, first: A, second: B, /, var **values: K
 ) -> Result[R, Never] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable):
-    return attempt_kwargs(function, first, second, **values^)
+    return attempt_kwargs[read_read=True](function, first, second, **values^)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, B, /, var **kwargs: K) raises X -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, B, /, var **kwargs: K) raises X -> R, read_read: Bool = True](
     function: F, first: A, second: B, /, var **values: K
 ) -> Result[R, X] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable):
-    return attempt_kwargs(function, first, second, **values^)
+    return attempt_kwargs[read_read=True](function, first, second, **values^)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, B, /, var **kwargs: K) -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, B, /, var **kwargs: K) -> R, read_read: Bool = True](
     function: F, first: A, second: B, /, var **values: K
 ) -> Result[R, Never] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable):
-    return capture(function, first, second, **values^)
+    return capture[read_read=True](function, first, second, **values^)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, B, /, var **kwargs: K) raises X -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, B, /, var **kwargs: K) raises X -> R, read_read: Bool = True](
     function: F, first: A, second: B, /, var **values: K
 ) -> Result[R, X] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable):
-    return capture(function, first, second, **values^)
+    return capture[read_read=True](function, first, second, **values^)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, var B, /, var **kwargs: K) -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, var B, /, var **kwargs: K) -> R, read_owned: Bool = True](
     function: F, first: A, var second: B, /, var **values: K
 ) -> Result[R, Never] where not conforms_to(A, TrivialRegisterPassable):
-    return attempt_kwargs(function, first, second^, **values^)
+    return attempt_kwargs[read_owned=True](function, first, second^, **values^)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, var B, /, var **kwargs: K) raises X -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, var B, /, var **kwargs: K) raises X -> R, read_owned: Bool = True](
     function: F, first: A, var second: B, /, var **values: K
 ) -> Result[R, X] where not conforms_to(A, TrivialRegisterPassable):
-    return attempt_kwargs(function, first, second^, **values^)
+    return attempt_kwargs[read_owned=True](function, first, second^, **values^)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, var B, /, var **kwargs: K) -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, var B, /, var **kwargs: K) -> R, read_owned: Bool = True](
     function: F, first: A, var second: B, /, var **values: K
 ) -> Result[R, Never] where not conforms_to(A, TrivialRegisterPassable):
-    return capture(function, first, second^, **values^)
+    return capture[read_owned=True](function, first, second^, **values^)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, var B, /, var **kwargs: K) raises X -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, var B, /, var **kwargs: K) raises X -> R, read_owned: Bool = True](
     function: F, first: A, var second: B, /, var **values: K
 ) -> Result[R, X] where not conforms_to(A, TrivialRegisterPassable):
-    return capture(function, first, second^, **values^)
+    return capture[read_owned=True](function, first, second^, **values^)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, mut B, /, var **kwargs: K) -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, mut B, /, var **kwargs: K) -> R, read_mut: Bool = True](
     function: F, first: A, mut second: B, /, var **values: K
 ) -> Result[R, Never] where not conforms_to(A, TrivialRegisterPassable):
-    return attempt_kwargs(function, first, second, **values^)
+    return attempt_kwargs[read_mut=True](function, first, second, **values^)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, mut B, /, var **kwargs: K) raises X -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, mut B, /, var **kwargs: K) raises X -> R, read_mut: Bool = True](
     function: F, first: A, mut second: B, /, var **values: K
 ) -> Result[R, X] where not conforms_to(A, TrivialRegisterPassable):
-    return attempt_kwargs(function, first, second, **values^)
+    return attempt_kwargs[read_mut=True](function, first, second, **values^)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, mut B, /, var **kwargs: K) -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, mut B, /, var **kwargs: K) -> R, read_mut: Bool = True](
     function: F, first: A, mut second: B, /, var **values: K
 ) -> Result[R, Never] where not conforms_to(A, TrivialRegisterPassable):
-    return capture(function, first, second, **values^)
+    return capture[read_mut=True](function, first, second, **values^)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, mut B, /, var **kwargs: K) raises X -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, mut B, /, var **kwargs: K) raises X -> R, read_mut: Bool = True](
     function: F, first: A, mut second: B, /, var **values: K
 ) -> Result[R, X] where not conforms_to(A, TrivialRegisterPassable):
-    return capture(function, first, second, **values^)
+    return capture[read_mut=True](function, first, second, **values^)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, B, /, var **kwargs: K) -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, B, /, var **kwargs: K) -> R, owned_read: Bool = True](
     function: F, var first: A, second: B, /, var **values: K
 ) -> Result[R, Never] where not conforms_to(B, TrivialRegisterPassable):
-    return attempt_kwargs(function, first^, second, **values^)
+    return attempt_kwargs[owned_read=True](function, first^, second, **values^)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, B, /, var **kwargs: K) raises X -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, B, /, var **kwargs: K) raises X -> R, owned_read: Bool = True](
     function: F, var first: A, second: B, /, var **values: K
 ) -> Result[R, X] where not conforms_to(B, TrivialRegisterPassable):
-    return attempt_kwargs(function, first^, second, **values^)
+    return attempt_kwargs[owned_read=True](function, first^, second, **values^)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, B, /, var **kwargs: K) -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, B, /, var **kwargs: K) -> R, owned_read: Bool = True](
     function: F, var first: A, second: B, /, var **values: K
 ) -> Result[R, Never] where not conforms_to(B, TrivialRegisterPassable):
-    return capture(function, first^, second, **values^)
+    return capture[owned_read=True](function, first^, second, **values^)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, B, /, var **kwargs: K) raises X -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, B, /, var **kwargs: K) raises X -> R, owned_read: Bool = True](
     function: F, var first: A, second: B, /, var **values: K
 ) -> Result[R, X] where not conforms_to(B, TrivialRegisterPassable):
-    return capture(function, first^, second, **values^)
+    return capture[owned_read=True](function, first^, second, **values^)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, var B, /, var **kwargs: K) -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, var B, /, var **kwargs: K) -> R, owned_owned: Bool = True](
     function: F, var first: A, var second: B, /, var **values: K
 ) -> Result[R, Never]:
-    return attempt_kwargs(function, first^, second^, **values^)
+    return attempt_kwargs[owned_owned=True](function, first^, second^, **values^)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, var B, /, var **kwargs: K) raises X -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, var B, /, var **kwargs: K) raises X -> R, owned_owned: Bool = True](
     function: F, var first: A, var second: B, /, var **values: K
 ) -> Result[R, X]:
-    return attempt_kwargs(function, first^, second^, **values^)
+    return attempt_kwargs[owned_owned=True](function, first^, second^, **values^)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, var B, /, var **kwargs: K) -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, var B, /, var **kwargs: K) -> R, owned_owned: Bool = True](
     function: F, var first: A, var second: B, /, var **values: K
 ) -> Result[R, Never]:
-    return capture(function, first^, second^, **values^)
+    return capture[owned_owned=True](function, first^, second^, **values^)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, var B, /, var **kwargs: K) raises X -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, var B, /, var **kwargs: K) raises X -> R, owned_owned: Bool = True](
     function: F, var first: A, var second: B, /, var **values: K
 ) -> Result[R, X]:
-    return capture(function, first^, second^, **values^)
+    return capture[owned_owned=True](function, first^, second^, **values^)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, mut B, /, var **kwargs: K) -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, mut B, /, var **kwargs: K) -> R, owned_mut: Bool = True](
     function: F, var first: A, mut second: B, /, var **values: K
 ) -> Result[R, Never]:
-    return attempt_kwargs(function, first^, second, **values^)
+    return attempt_kwargs[owned_mut=True](function, first^, second, **values^)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, mut B, /, var **kwargs: K) raises X -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, mut B, /, var **kwargs: K) raises X -> R, owned_mut: Bool = True](
     function: F, var first: A, mut second: B, /, var **values: K
 ) -> Result[R, X]:
-    return attempt_kwargs(function, first^, second, **values^)
+    return attempt_kwargs[owned_mut=True](function, first^, second, **values^)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, mut B, /, var **kwargs: K) -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, mut B, /, var **kwargs: K) -> R, owned_mut: Bool = True](
     function: F, var first: A, mut second: B, /, var **values: K
 ) -> Result[R, Never]:
-    return capture(function, first^, second, **values^)
+    return capture[owned_mut=True](function, first^, second, **values^)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, mut B, /, var **kwargs: K) raises X -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, mut B, /, var **kwargs: K) raises X -> R, owned_mut: Bool = True](
     function: F, var first: A, mut second: B, /, var **values: K
 ) -> Result[R, X]:
-    return capture(function, first^, second, **values^)
+    return capture[owned_mut=True](function, first^, second, **values^)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) -> R, mut_read: Bool = True](
     function: F, mut first: A, second: B, /, var **values: K
 ) -> Result[R, Never] where not conforms_to(B, TrivialRegisterPassable):
-    return attempt_kwargs(function, first, second, **values^)
+    return attempt_kwargs[mut_read=True](function, first, second, **values^)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) raises X -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) raises X -> R, mut_read: Bool = True](
     function: F, mut first: A, second: B, /, var **values: K
 ) -> Result[R, X] where not conforms_to(B, TrivialRegisterPassable):
-    return attempt_kwargs(function, first, second, **values^)
+    return attempt_kwargs[mut_read=True](function, first, second, **values^)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) -> R, mut_read: Bool = True](
     function: F, mut first: A, second: B, /, var **values: K
 ) -> Result[R, Never] where not conforms_to(B, TrivialRegisterPassable):
-    return capture(function, first, second, **values^)
+    return capture[mut_read=True](function, first, second, **values^)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) raises X -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) raises X -> R, mut_read: Bool = True](
     function: F, mut first: A, second: B, /, var **values: K
 ) -> Result[R, X] where not conforms_to(B, TrivialRegisterPassable):
-    return capture(function, first, second, **values^)
+    return capture[mut_read=True](function, first, second, **values^)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) -> R, mut_owned: Bool = True](
     function: F, mut first: A, var second: B, /, var **values: K
 ) -> Result[R, Never]:
-    return attempt_kwargs(mut_owned_kwargs(function), first, second^, **values^)
+    return attempt_kwargs[mut_owned=True](function, first, second^, **values^)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) raises X -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) raises X -> R, mut_owned: Bool = True](
     function: F, mut first: A, var second: B, /, var **values: K
 ) -> Result[R, X]:
-    return attempt_kwargs(mut_owned_kwargs(function), first, second^, **values^)
+    return attempt_kwargs[mut_owned=True](function, first, second^, **values^)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) -> R, mut_owned: Bool = True](
     function: F, mut first: A, var second: B, /, var **values: K
 ) -> Result[R, Never]:
-    return capture(function, first, second^, **values^)
+    return capture[mut_owned=True](function, first, second^, **values^)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) raises X -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) raises X -> R, mut_owned: Bool = True](
     function: F, mut first: A, var second: B, /, var **values: K
 ) -> Result[R, X]:
-    return capture(function, first, second^, **values^)
+    return capture[mut_owned=True](function, first, second^, **values^)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, mut B, /, var **kwargs: K) -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, mut B, /, var **kwargs: K) -> R, mut_mut: Bool = True](
     function: F, mut first: A, mut second: B, /, var **values: K
 ) -> Result[R, Never]:
-    return attempt_kwargs(function, first, second, **values^)
+    return attempt_kwargs[mut_mut=True](function, first, second, **values^)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, mut B, /, var **kwargs: K) raises X -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, mut B, /, var **kwargs: K) raises X -> R, mut_mut: Bool = True](
     function: F, mut first: A, mut second: B, /, var **values: K
 ) -> Result[R, X]:
-    return attempt_kwargs(function, first, second, **values^)
+    return attempt_kwargs[mut_mut=True](function, first, second, **values^)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, mut B, /, var **kwargs: K) -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, mut B, /, var **kwargs: K) -> R, mut_mut: Bool = True](
     function: F, mut first: A, mut second: B, /, var **values: K
 ) -> Result[R, Never]:
-    return capture(function, first, second, **values^)
+    return capture[mut_mut=True](function, first, second, **values^)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, mut B, /, var **kwargs: K) raises X -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, mut B, /, var **kwargs: K) raises X -> R, mut_mut: Bool = True](
     function: F, mut first: A, mut second: B, /, var **values: K
 ) -> Result[R, X]:
-    return capture(function, first, second, **values^)
+    return capture[mut_mut=True](function, first, second, **values^)
 
 def check_0(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
     var calls = 0
@@ -290,20 +290,20 @@ def check_0(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         if pure:
             if count == 0:
                 if library:
-                    var result: Result[String, Never] = forward(success)
+                    var result: Result[String, Never] = forward[zero=True](success)
                     observed = raise_on_err(result^)
                 else:
                     observed = success()
             else:
                 if library:
-                    var result: Result[String, Never] = forward(success, function=3, first=5)
+                    var result: Result[String, Never] = forward[zero=True](success, function=3, first=5)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(function=3, first=5)
         else:
             if count == 0:
                 if library:
-                    var result: Result[String, Failure] = forward(failure)
+                    var result: Result[String, Failure] = forward[zero=True](failure)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -311,7 +311,7 @@ def check_0(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
                     except error: error_code = error.code
             else:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, function=3, first=5)
+                    var result: Result[String, Failure] = forward[zero=True](failure, function=3, first=5)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -342,20 +342,20 @@ def check_1(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         if pure:
             if count == 0:
                 if library:
-                    var result: Result[String, Never] = forward(success, first)
+                    var result: Result[String, Never] = forward[read=True](success, first)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first)
             else:
                 if library:
-                    var result: Result[String, Never] = forward(success, first, function=3, first=5)
+                    var result: Result[String, Never] = forward[read=True](success, first, function=3, first=5)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first, function=3, first=5)
         else:
             if count == 0:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first)
+                    var result: Result[String, Failure] = forward[read=True](failure, first)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -363,7 +363,7 @@ def check_1(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
                     except error: error_code = error.code
             else:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first, function=3, first=5)
+                    var result: Result[String, Failure] = forward[read=True](failure, first, function=3, first=5)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -395,20 +395,20 @@ def check_2(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         if pure:
             if count == 0:
                 if library:
-                    var result: Result[String, Never] = forward(success, first^)
+                    var result: Result[String, Never] = forward[owned=True](success, first^)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first^)
             else:
                 if library:
-                    var result: Result[String, Never] = forward(success, first^, function=3, first=5)
+                    var result: Result[String, Never] = forward[owned=True](success, first^, function=3, first=5)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first^, function=3, first=5)
         else:
             if count == 0:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first^)
+                    var result: Result[String, Failure] = forward[owned=True](failure, first^)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -416,7 +416,7 @@ def check_2(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
                     except error: error_code = error.code
             else:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first^, function=3, first=5)
+                    var result: Result[String, Failure] = forward[owned=True](failure, first^, function=3, first=5)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -449,20 +449,20 @@ def check_3(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         if pure:
             if count == 0:
                 if library:
-                    var result: Result[String, Never] = forward(success, first)
+                    var result: Result[String, Never] = forward[mutable=True](success, first)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first)
             else:
                 if library:
-                    var result: Result[String, Never] = forward(success, first, function=3, first=5)
+                    var result: Result[String, Never] = forward[mutable=True](success, first, function=3, first=5)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first, function=3, first=5)
         else:
             if count == 0:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first)
+                    var result: Result[String, Failure] = forward[mutable=True](failure, first)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -470,7 +470,7 @@ def check_3(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
                     except error: error_code = error.code
             else:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first, function=3, first=5)
+                    var result: Result[String, Failure] = forward[mutable=True](failure, first, function=3, first=5)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -503,20 +503,20 @@ def check_4(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         if pure:
             if count == 0:
                 if library:
-                    var result: Result[String, Never] = forward(success, first, second)
+                    var result: Result[String, Never] = forward[read_read=True](success, first, second)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first, second)
             else:
                 if library:
-                    var result: Result[String, Never] = forward(success, first, second, function=3, first=5)
+                    var result: Result[String, Never] = forward[read_read=True](success, first, second, function=3, first=5)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first, second, function=3, first=5)
         else:
             if count == 0:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first, second)
+                    var result: Result[String, Failure] = forward[read_read=True](failure, first, second)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -524,7 +524,7 @@ def check_4(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
                     except error: error_code = error.code
             else:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first, second, function=3, first=5)
+                    var result: Result[String, Failure] = forward[read_read=True](failure, first, second, function=3, first=5)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -558,20 +558,20 @@ def check_5(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         if pure:
             if count == 0:
                 if library:
-                    var result: Result[String, Never] = forward(success, first, second^)
+                    var result: Result[String, Never] = forward[read_owned=True](success, first, second^)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first, second^)
             else:
                 if library:
-                    var result: Result[String, Never] = forward(success, first, second^, function=3, first=5)
+                    var result: Result[String, Never] = forward[read_owned=True](success, first, second^, function=3, first=5)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first, second^, function=3, first=5)
         else:
             if count == 0:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first, second^)
+                    var result: Result[String, Failure] = forward[read_owned=True](failure, first, second^)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -579,7 +579,7 @@ def check_5(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
                     except error: error_code = error.code
             else:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first, second^, function=3, first=5)
+                    var result: Result[String, Failure] = forward[read_owned=True](failure, first, second^, function=3, first=5)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -614,20 +614,20 @@ def check_6(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         if pure:
             if count == 0:
                 if library:
-                    var result: Result[String, Never] = forward(success, first, second)
+                    var result: Result[String, Never] = forward[read_mut=True](success, first, second)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first, second)
             else:
                 if library:
-                    var result: Result[String, Never] = forward(success, first, second, function=3, first=5)
+                    var result: Result[String, Never] = forward[read_mut=True](success, first, second, function=3, first=5)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first, second, function=3, first=5)
         else:
             if count == 0:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first, second)
+                    var result: Result[String, Failure] = forward[read_mut=True](failure, first, second)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -635,7 +635,7 @@ def check_6(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
                     except error: error_code = error.code
             else:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first, second, function=3, first=5)
+                    var result: Result[String, Failure] = forward[read_mut=True](failure, first, second, function=3, first=5)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -669,20 +669,20 @@ def check_7(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         if pure:
             if count == 0:
                 if library:
-                    var result: Result[String, Never] = forward(success, first^, second)
+                    var result: Result[String, Never] = forward[owned_read=True](success, first^, second)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first^, second)
             else:
                 if library:
-                    var result: Result[String, Never] = forward(success, first^, second, function=3, first=5)
+                    var result: Result[String, Never] = forward[owned_read=True](success, first^, second, function=3, first=5)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first^, second, function=3, first=5)
         else:
             if count == 0:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first^, second)
+                    var result: Result[String, Failure] = forward[owned_read=True](failure, first^, second)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -690,7 +690,7 @@ def check_7(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
                     except error: error_code = error.code
             else:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first^, second, function=3, first=5)
+                    var result: Result[String, Failure] = forward[owned_read=True](failure, first^, second, function=3, first=5)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -723,20 +723,20 @@ def check_8(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         if pure:
             if count == 0:
                 if library:
-                    var result: Result[String, Never] = forward(success, first^, second^)
+                    var result: Result[String, Never] = forward[owned_owned=True](success, first^, second^)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first^, second^)
             else:
                 if library:
-                    var result: Result[String, Never] = forward(success, first^, second^, function=3, first=5)
+                    var result: Result[String, Never] = forward[owned_owned=True](success, first^, second^, function=3, first=5)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first^, second^, function=3, first=5)
         else:
             if count == 0:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first^, second^)
+                    var result: Result[String, Failure] = forward[owned_owned=True](failure, first^, second^)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -744,7 +744,7 @@ def check_8(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
                     except error: error_code = error.code
             else:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first^, second^, function=3, first=5)
+                    var result: Result[String, Failure] = forward[owned_owned=True](failure, first^, second^, function=3, first=5)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -778,20 +778,20 @@ def check_9(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         if pure:
             if count == 0:
                 if library:
-                    var result: Result[String, Never] = forward(success, first^, second)
+                    var result: Result[String, Never] = forward[owned_mut=True](success, first^, second)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first^, second)
             else:
                 if library:
-                    var result: Result[String, Never] = forward(success, first^, second, function=3, first=5)
+                    var result: Result[String, Never] = forward[owned_mut=True](success, first^, second, function=3, first=5)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first^, second, function=3, first=5)
         else:
             if count == 0:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first^, second)
+                    var result: Result[String, Failure] = forward[owned_mut=True](failure, first^, second)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -799,7 +799,7 @@ def check_9(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
                     except error: error_code = error.code
             else:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first^, second, function=3, first=5)
+                    var result: Result[String, Failure] = forward[owned_mut=True](failure, first^, second, function=3, first=5)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -834,20 +834,20 @@ def check_10(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         if pure:
             if count == 0:
                 if library:
-                    var result: Result[String, Never] = forward(success, first, second)
+                    var result: Result[String, Never] = forward[mut_read=True](success, first, second)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first, second)
             else:
                 if library:
-                    var result: Result[String, Never] = forward(success, first, second, function=3, first=5)
+                    var result: Result[String, Never] = forward[mut_read=True](success, first, second, function=3, first=5)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first, second, function=3, first=5)
         else:
             if count == 0:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first, second)
+                    var result: Result[String, Failure] = forward[mut_read=True](failure, first, second)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -855,7 +855,7 @@ def check_10(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
                     except error: error_code = error.code
             else:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first, second, function=3, first=5)
+                    var result: Result[String, Failure] = forward[mut_read=True](failure, first, second, function=3, first=5)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -891,20 +891,20 @@ def check_11(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         if pure:
             if count == 0:
                 if library:
-                    var result: Result[String, Never] = forward(success, first, second^)
+                    var result: Result[String, Never] = forward[mut_owned=True](success, first, second^)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first, second^)
             else:
                 if library:
-                    var result: Result[String, Never] = forward(success, first, second^, function=3, first=5)
+                    var result: Result[String, Never] = forward[mut_owned=True](success, first, second^, function=3, first=5)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first, second^, function=3, first=5)
         else:
             if count == 0:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first, second^)
+                    var result: Result[String, Failure] = forward[mut_owned=True](failure, first, second^)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -912,7 +912,7 @@ def check_11(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
                     except error: error_code = error.code
             else:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first, second^, function=3, first=5)
+                    var result: Result[String, Failure] = forward[mut_owned=True](failure, first, second^, function=3, first=5)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -949,20 +949,20 @@ def check_12(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         if pure:
             if count == 0:
                 if library:
-                    var result: Result[String, Never] = forward(success, first, second)
+                    var result: Result[String, Never] = forward[mut_mut=True](success, first, second)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first, second)
             else:
                 if library:
-                    var result: Result[String, Never] = forward(success, first, second, function=3, first=5)
+                    var result: Result[String, Never] = forward[mut_mut=True](success, first, second, function=3, first=5)
                     observed = raise_on_err(result^)
                 else:
                     observed = success(first, second, function=3, first=5)
         else:
             if count == 0:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first, second)
+                    var result: Result[String, Failure] = forward[mut_mut=True](failure, first, second)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:
@@ -970,7 +970,7 @@ def check_12(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
                     except error: error_code = error.code
             else:
                 if library:
-                    var result: Result[String, Failure] = forward(failure, first, second, function=3, first=5)
+                    var result: Result[String, Failure] = forward[mut_mut=True](failure, first, second, function=3, first=5)
                     try: observed = raise_on_err(result^)
                     except error: error_code = error.code
                 else:

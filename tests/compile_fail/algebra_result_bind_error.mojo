@@ -1,4 +1,5 @@
-# error: flat_map: callback must return the same Result family
+# error: no matching function
+# error: violated constraint
 from fp.algebra import flat_map, ResultFamily
 from fp.callables import as_unary
 from fp.data import Result, Ok

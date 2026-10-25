@@ -6,7 +6,7 @@ caller will handle later. `map` transforms a successful value; `flat_map`
 sequences computations that can themselves return an `Err`.
 
 Stored failures and raised errors are separate. If a callback raises, its
-error propagates to the caller. Use `attempt` to catch it in a `Result`.
+error propagates to the caller. Use `Capture[E]` to catch it in a `Result`.
 
 ## Transform only the active branch
 
@@ -137,53 +137,56 @@ a native closure cannot carry their origins through its captures.
 prints `raised: callback failed`. The shared `String` error type does not turn
 the raised error into a stored `Err`.
 
-To convert it on purpose, call `attempt(consuming(may_raise), 21)`. It returns
+To convert it on purpose, call `Capture[String].args(21).run(may_raise)`. It returns
 `Err("callback failed")` with the declared `String` error type.
 `raise_on_err` consumes that `Result` and raises the error again. These two
 operations let you choose where failures move between values and exceptions.
 
-## Forward arguments through attempt
+## Bind arguments before the callback
 
-`attempt` forwards positional arguments; `attempt_kwargs` forwards callbacks
-with a native keyword pack. Both call the callback exactly once. The
-example shows each rule with its own values:
+For a zero-argument callback use `Capture().run(callback)` or
+`Capture[Failure]().run(callback)`. Construction fixes the context before the
+callback is matched. `Capture.args().run(callback)` is the equivalent empty
+argument bundle. Direct `run` and `stateful` calls require a context instance.
 
-- `attempt_kwargs(scale, 7, factor=3)` forwards the positional `7` and the keyword
-  `factor=3` to the captured closure `scale`, which declares
-  `var **options: Int`. It returns `Result[Int, Never]` holding `21`, because
-  `scale` does not raise, and the counter records one call.
-- A second call consumes a `StringDict[Int]` through `**options^`, returns
-  `28`, and brings the same counter to two.
-- A `mut` prefix keeps the callback's changes even when it raises. `debit`
-  takes `balance` from 5 to 2, then to -2 while returning `Err("overdrawn")`.
-  `attempt(mut_owned(debit), balance, amount)` selects its mutable/owned pair.
+`Capture[E]` selects the native error type before callback inference. `args`
+binds zero, one or two consumed operands; `borrow`, `mutable` and `take` bind
+individual operands with their native ownership. Finish with `run(callback)`.
+The callback is borrowed and called once. Pure and explicitly `raises Never`
+callbacks return `Result[R, Never]`, even in a context selecting another error.
 
-The forwarding contract:
+The example binds `7` and `factor=3` with
+`Capture.args(7).kwargs(factor=3).run(scale)`. Expanding a typed dictionary
+through `kwargs(**options^)` also works. A mutable/owned call uses
+`Capture[String].mutable(balance).take(amount).run(debit)`. Its mutations stay
+visible even when the callback raises.
 
-- Zero, one or two positional arguments. For a callback with a homogeneous
-  native keyword pack, use `attempt_kwargs`, even when the pack is empty.
-  Its callback and positional prefixes are passed positionally.
-- Every positional argument, including those with defaults; omitted prefixes
-  are not supported.
-- Borrowed resource arguments stay usable after the call. Move a named resource
-  that the callback consumes with `^`.
-- Conflicting mutable borrows are rejected as in native calls.
-- Ordinary fixed keyword parameters and generic positional packs are not
-  supported. Bind those forms in a local native closure, when Mojo admits that
-  closure's encoding.
-- A callback that returns an ordinary `Result` gets it nested inside `Ok`;
-  neither bridge captures that `Result`'s error.
+<!-- example: docs/examples/capture_native.mojo -->
 
-On nightly, keyword calls previously written as `attempt(f, key=value)` become
-`attempt_kwargs(f, key=value)`. An empty keyword-pack call similarly becomes
-`attempt_kwargs(f)`. The [Mojo 1.2 qualification](../architecture/native-boundaries.md#attempt-inference-on-mojo-12)
-records remaining inference and callback limitations. Use `mutating(f)` for
-one mutable argument, `consuming(f)` for one owned argument, `mut_owned(f)`
-for a mutable/owned pair, and `mut_owned_kwargs(f)` for that pair plus a native
-keyword pack. These adapters borrow the callback and retain its exact types;
-[the reference](../reference/data.md#select-a-native-argument-convention)
-shows all four forms. Other native convention combinations still have
-compatibility failures.
+A pending bundle owns consumed arguments and keyword values and retains the
+origins of borrowed arguments. Moving it transfers that responsibility; an
+unused bundle destroys its owned values without calling anything. A bundle
+runs once. Conflicting borrows and use after consumption are compile errors.
+
+There may be up to two positional operands followed by one homogeneous native
+keyword pack. An empty pack needs `kwargs[K=Int]()` or a typed dictionary,
+because there is no value from which to infer K. Fixed named parameters,
+omitted defaults and larger positional packs use a zero-argument closure or
+an existing `OnceThunk`. Returning a Result nests it inside Ok; capture does
+not flatten stored errors.
+
+`Capture().stateful(step, state^)` owns explicit state for repeated calls through
+a plain `def(mut State, var Input)` function. `run(value^)` captures each call;
+`state()` borrows the state and `into_state()` consumes the owner. Pure and
+explicitly `raises Never` steps retain `Never`, including when the context
+selects another error type.
+This representation preserves mutable owned state without requiring a user
+callable struct or mutation through a native closure's owned captures.
+
+The older `attempt`, `attempt_kwargs`, convention selectors and borrowed
+adapters remain available. Their compiler inference limitations are described
+in the [compatibility reference](../reference/data.md#select-a-native-argument-convention).
+New code can use `Capture` without callback-type hints.
 
 ## Aggregate a sequence
 
@@ -206,8 +209,8 @@ leaves the balance at 3, and returns the receipt `"3"`. The second charges
 a payment of `5`, leaves the balance at -2, and returns `Declined(-2)`. Catching the
 error does not roll back the debit. The same callback serves both calls, each
 transaction invokes it once, and the keyword values pass through both helpers.
-The inner helper calls `attempt_kwargs(mut_owned_kwargs(function), ...)`,
-selecting the mutable/owned convention without type hints or a result cast.
+The inner helper binds `Capture[X].mutable(state).take(payment^)`, then
+forwards the dictionary through `kwargs(**options^)` before admitting the callback.
 The second call demonstrates an empty keyword pack.
 
 ## Generic transformations

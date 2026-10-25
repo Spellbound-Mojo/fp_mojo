@@ -36,3 +36,5 @@ from .result import collect_results
 from .non_empty_list import NonEmptyList
 
 from .ior import Ior, Left, Right, Both
+
+from ._capture import Capture

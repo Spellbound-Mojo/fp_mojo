@@ -1,0 +1,43 @@
+from fp.data import Capture
+from fp.data import Result
+from std.testing import assert_equal
+
+def pure(mut state: Int, var text: String) -> Int:
+    state += text.byte_length()
+    return state
+def never(mut state: Int, var text: String) raises Never -> Int:
+    state += text.byte_length()
+    return state
+def pure_void(mut state: Int, var text: String): state += text.byte_length()
+def never_void(mut state: Int, var text: String) raises Never: state += text.byte_length()
+def failure(mut state: Int, var text: String) raises -> Int:
+    state += text.byte_length()
+    raise Error("failed")
+def failure_void(mut state:Int,var text:String) raises:
+    state+=text.byte_length()
+    raise Error("failed")
+def main() raises:
+    var a = Capture().stateful(pure, 1)
+    var x = a.run(String("ab"))
+    comptime assert type_of(x) == Result[Int, Never]
+    assert_equal(x._ok().value, 3)
+    var b = Capture().stateful(never, 1)
+    var b_result = b.run(String("ab"))
+    comptime assert type_of(b_result) == Result[Int, Never]
+    assert_equal(b_result._ok().value, 3)
+    var c = Capture().stateful(pure_void, 1)
+    var v = c.run(String("ab"))
+    comptime assert type_of(v) == Result[type_of(None), Never]
+    assert_equal(v.is_ok(), True)
+    assert_equal(c.state(), 3)
+    var d = Capture().stateful(never_void, 1)
+    var d_result = d.run(String("ab"))
+    comptime assert type_of(d_result) == Result[type_of(None), Never]
+    assert_equal(d_result.is_ok(), True)
+    assert_equal(d.state(), 3)
+    var e = Capture[Error]().stateful(failure, 1)
+    assert_equal(e.run(String("ab")).is_err(), True)
+    assert_equal(e.state(), 3)
+    var f = Capture[Error]().stateful(failure_void, 1)
+    assert_equal(f.run(String("ab")).is_err(), True)
+    assert_equal(f.state(), 3)

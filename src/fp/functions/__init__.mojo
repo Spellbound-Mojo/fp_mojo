@@ -30,3 +30,5 @@ from .composition import Composition, Identity, flow, compose
 from .kleisli import Kleisli, kleisli
 from .flipped import Flipped, FlippedFunction, flip
 from .partial import Partial, partial
+
+from .context import Pipeline, pipeline

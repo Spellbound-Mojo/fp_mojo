@@ -10,4 +10,4 @@ def target(mut first: Token, var second: Token, /, var **values: Int) -> Int:
 
 def main():
     var value = Token(3)
-    _ = attempt_kwargs(target, value, value^, one=7)
+    _ = attempt_kwargs[mut_owned=True](target, value, value^, one=7)

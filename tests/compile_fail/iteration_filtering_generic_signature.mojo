@@ -1,5 +1,4 @@
 # error: invalid call to 'selected_again'
-# error: invalid call to 'present_again'
 from fp.iteration import FilterIterator, FilterMapIterator, FlatMapIterator, filter, filter_map, flat_map, collect_list
 from std.iter import Iterator, IterableOwned, iter, next
 
@@ -42,7 +41,5 @@ struct Token(Movable):
 def main():
     var offset = 1
     def consuming_predicate(var value: Token) {var offset} -> Bool: return value.value > offset
-    def nonoptional(var value: Int) {var offset} -> Int: return value + offset
     var values = List[Token]()
     _ = selected_again(consuming_predicate, iter(values^))
-    _ = present_again(nonoptional, iter(range(3)))

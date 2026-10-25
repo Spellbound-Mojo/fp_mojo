@@ -4,6 +4,7 @@ from std.utils import Variant
 from std.builtin.rebind import rebind_var
 from fp.callables._scan import _Carry
 from fp.callables.protocols import Binary
+from fp.callables.native import _call_native_binary
 from fp.iteration._terminal import _collect_list
 from fp._internal.errors import _propagate_error
 from ._loops import _indexed
@@ -77,22 +78,26 @@ def _scan_item[X: Movable & Deinitable, no_input: Bool](mut xs: List[X]) -> X:
         return xs.pop()
 
 
-# Keep the tuple result structural in these native signatures. Mojo 1.1 does
-# not recover it through the independent R parameter of _binary_plain/raising.
-# These bridges only apply a native signature; all scan behavior is shared.
+# Infer the entire native result before constraining its carry/output shape.
+# Mojo 1.2 crashes while inferring a Tuple pack inside a native return type.
+# These bridges preserve that admitted R; the shared driver keeps Tuple[A, Y].
 def _scan_plain[A: Movable & Deinitable, X: Movable & Deinitable,
-                Y: Movable & Deinitable, F: def(var A, var X) -> Tuple[A, Y]](
+                Y: Movable & Deinitable, R: Movable & Deinitable,
+                F: def(var A, var X) -> R](
     var carry: A, var value: X, function: F
-) capturing -> Tuple[A, Y]:
-    return function(carry^, value^)
+) capturing -> Tuple[A, Y] where R == Tuple[A, Y]:
+    return rebind_var[Tuple[A, Y]](function(carry^, value^))
 
 
 def _scan_raising[A: Movable & Deinitable, X: Movable & Deinitable,
-                  Y: Movable & Deinitable, E: Movable & Deinitable,
-                  F: def(var A, var X) raises E -> Tuple[A, Y]](
+                  Y: Movable & Deinitable, R: Movable & Deinitable,
+                  E: Movable & Deinitable, F: def(var A, var X) raises E -> R](
     var carry: A, var value: X, function: F
-) raises E capturing -> Tuple[A, Y]:
-    return function(carry^, value^)
+) raises E capturing -> Tuple[A, Y] where R == Tuple[A, Y]:
+    comptime if E == Never:
+        return rebind_var[Tuple[A, Y]](_call_native_binary[A, X, R, Never, F, True](function, carry^, value^))
+    else:
+        return rebind_var[Tuple[A, Y]](function(carry^, value^))
 
 
 @fieldwise_init
@@ -165,12 +170,13 @@ def _scan_fixed[A: Movable & Deinitable, X: Movable & Deinitable,
 def scan[A: Movable & Deinitable,
          X: Movable & Deinitable,
          Y: Movable & Deinitable,
-         F: def(var A, var X) -> Tuple[A, Y],
+         R: Movable & Deinitable,
+         F: def(var A, var X) -> R,
          //,
          unroll: Int = 1,
          static_length: Int = -1](
     f: F, var init: A, var xs: List[X], *, length: Optional[Int] = None, reverse: Bool = False
-) raises ScanError[Never] -> Tuple[A, List[Y]]:
+) raises ScanError[Never] -> Tuple[A, List[Y]] where R == Tuple[A, Y]:
     """Thread a carry through a sequence, collecting one output per element.
 
     The step receives `(carry, element)` and returns `(next_carry, output)`;
@@ -187,6 +193,7 @@ def scan[A: Movable & Deinitable,
         A: The carry type.
         X: The element type.
         Y: The output type.
+        R: The step result, constrained to the carry/output pair.
         F: The step's type: a plain function or a closure.
         unroll: How many steps each rolled iteration expands: `1`, the default,
             keeps a rolled loop, and `0` fully expands a scan of `static_length`.
@@ -208,22 +215,23 @@ def scan[A: Movable & Deinitable,
         `ScanLengthError` for a negative, missing or different length, before
         any step runs.
     """
-    return _scan[A, X, Y, F, Never, _scan_plain[A, X, Y, F], unroll, static_length](
+    return _scan[A, X, Y, F, Never, _scan_plain[A, X, Y, R, F], unroll, static_length](
         f, init^, xs^, length, reverse)
 
 
 def scan[A: Movable & Deinitable,
          X: Movable & Deinitable,
          Y: Movable & Deinitable,
+         R: Movable & Deinitable,
          E: Movable & Deinitable,
-         F: def(var A, var X) raises E -> Tuple[A, Y],
+         F: def(var A, var X) raises E -> R,
          //,
          unroll: Int = 1,
          static_length: Int = -1](
     f: F, var init: A, var xs: List[X], *, length: Optional[Int] = None, reverse: Bool = False
-) raises ScanError[E] -> Tuple[A, List[Y]]:
+) raises ScanError[E] -> Tuple[A, List[Y]] where R == Tuple[A, Y]:
     """Scan a `List` with a raising step; its error arrives as `ScanStepError[E]`."""
-    return _scan[A, X, Y, F, E, _scan_raising[A, X, Y, E, F], unroll, static_length](
+    return _scan[A, X, Y, F, E, _scan_raising[A, X, Y, R, E, F], unroll, static_length](
         f, init^, xs^, length, reverse)
 
 
@@ -244,31 +252,33 @@ def scan[A: Movable & Deinitable,
 def scan[A: Movable & Deinitable,
          X: Movable & Deinitable,
          Y: Movable & Deinitable,
+         R: Movable & Deinitable,
          I: Iterator,
-         F: def(var A, var X) -> Tuple[A, Y],
+         F: def(var A, var X) -> R,
          //,
          unroll: Int = 1,
          static_length: Int = -1](
     f: F, var init: A, var xs: I, *, length: Optional[Int] = None, reverse: Bool = False
-) raises ScanError[Never] -> Tuple[A, List[Y]] where I.Element == X:
+) raises ScanError[Never] -> Tuple[A, List[Y]] where I.Element == X and R == Tuple[A, Y]:
     """Scan a finite iterator, collected into a `List` before the first step."""
-    return _scan[A, X, Y, F, Never, _scan_plain[A, X, Y, F], unroll, static_length](
+    return _scan[A, X, Y, F, Never, _scan_plain[A, X, Y, R, F], unroll, static_length](
         f, init^, _collect_list[X, I](xs^), length, reverse)
 
 
 def scan[A: Movable & Deinitable,
          X: Movable & Deinitable,
          Y: Movable & Deinitable,
+         R: Movable & Deinitable,
          I: Iterator,
          E: Movable & Deinitable,
-         F: def(var A, var X) raises E -> Tuple[A, Y],
+         F: def(var A, var X) raises E -> R,
          //,
          unroll: Int = 1,
          static_length: Int = -1](
     f: F, var init: A, var xs: I, *, length: Optional[Int] = None, reverse: Bool = False
-) raises ScanError[E] -> Tuple[A, List[Y]] where I.Element == X:
+) raises ScanError[E] -> Tuple[A, List[Y]] where I.Element == X and R == Tuple[A, Y]:
     """Scan a finite iterator with a raising step."""
-    return _scan[A, X, Y, F, E, _scan_raising[A, X, Y, E, F], unroll, static_length](
+    return _scan[A, X, Y, F, E, _scan_raising[A, X, Y, R, E, F], unroll, static_length](
         f, init^, _collect_list[X, I](xs^), length, reverse)
 
 
@@ -288,28 +298,30 @@ def scan[A: Movable & Deinitable,
 
 def scan[A: Movable & Deinitable,
          Y: Movable & Deinitable,
-         F: def(var A, var Tuple[]) -> Tuple[A, Y],
+         R: Movable & Deinitable,
+         F: def(var A, var Tuple[]) -> R,
          //,
          unroll: Int = 1,
          static_length: Int = -1](
     f: F, var init: A, *, length: Optional[Int] = None, reverse: Bool = False
-) raises ScanError[Never] -> Tuple[A, List[Y]]:
+) raises ScanError[Never] -> Tuple[A, List[Y]] where R == Tuple[A, Y]:
     """Scan `length` times with no input; the step receives `Tuple[]`."""
-    return _scan[A, Tuple[], Y, F, Never, _scan_plain[A, Tuple[], Y, F], unroll, static_length, True](
+    return _scan[A, Tuple[], Y, F, Never, _scan_plain[A, Tuple[], Y, R, F], unroll, static_length, True](
         f, init^, List[Tuple[]](), length, reverse)
 
 
 def scan[A: Movable & Deinitable,
          Y: Movable & Deinitable,
+         R: Movable & Deinitable,
          E: Movable & Deinitable,
-         F: def(var A, var Tuple[]) raises E -> Tuple[A, Y],
+         F: def(var A, var Tuple[]) raises E -> R,
          //,
          unroll: Int = 1,
          static_length: Int = -1](
     f: F, var init: A, *, length: Optional[Int] = None, reverse: Bool = False
-) raises ScanError[E] -> Tuple[A, List[Y]]:
+) raises ScanError[E] -> Tuple[A, List[Y]] where R == Tuple[A, Y]:
     """Scan `length` times with no input and a raising step."""
-    return _scan[A, Tuple[], Y, F, E, _scan_raising[A, Tuple[], Y, E, F], unroll, static_length, True](
+    return _scan[A, Tuple[], Y, F, E, _scan_raising[A, Tuple[], Y, R, E, F], unroll, static_length, True](
         f, init^, List[Tuple[]](), length, reverse)
 
 

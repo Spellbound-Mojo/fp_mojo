@@ -3,4 +3,4 @@ from fp.data import attempt
 
 def defaults(first: Int, second: Int = 3) -> Int: return first * 10 + second
 
-def main(): _ = attempt(defaults, 2)
+def main(): _ = attempt[owned_owned=True](defaults, 2)

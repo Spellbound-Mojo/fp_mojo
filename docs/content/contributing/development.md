@@ -28,7 +28,7 @@ tooling does this for you).
 | `tests/benchmarks/` | Programs that time library code against hand-written loops; the suite reports them as diagnostics |
 | `tests/compile_fail/` | Programs that must be rejected, with `# error:` lines naming the expected diagnostics |
 | `tests/tooling/` | Python unit tests for the scripts |
-| `scripts/` | Test, build, measurement and documentation tooling, and the generator of native `Piped` methods and plain-function `pipe`, `flow`, `compose`, `match` and `rewrite` overloads (`python scripts/generate_plain_overloads.py`; `--check` reports drift) |
+| `scripts/` | Test, build, measurement and documentation tooling, and the generator of native `Piped` methods and plain-function `pipe`, `flow`, `compose`, `match` and `rewrite` overloads (`python scripts/generate_plain_overloads.py`; `--check` reports drift). Capture and selected Pipeline signatures use `generate_capture.py` and `generate_context.py`; tooling tests check their generated output |
 | `docs/content/` | This site's pages; navigation is in `mkdocs.yml` |
 | `docs/examples/` | The runnable examples |
 | `docs/theme/` | The MkDocs theme: templates, styles, scripts and bundled fonts |
@@ -46,6 +46,7 @@ does not exist yet; use a new name under `.cache/` each time.
 | `pixi run build --output .cache/b1` | Builds a source package in `<output>/fp/`, precompiles the whole package with `--Werror`, then runs `docs/examples/algebra_core.mojo` against it | About 15 s |
 | `pixi run build --format precompiled --output .cache/b2` | The same with `fp.mojoc` | About 15 s |
 | `pixi run -e docs docs-check` | Strict MkDocs build, then links, anchors, assets and the search index | Seconds |
+| `pixi run boundaries-test --output .cache/native-admission --jobs 4` | Capture and selected Pipeline tests through source and fresh package imports at O0/O3, including rejection diagnostics and lifetime controls | About 10–15 minutes on 4 cores |
 | `pixi run docs-test --output .cache/d1 --jobs 4` | Every example on the site through source and package imports at O0 and O3 with `--Werror` | A few minutes |
 | `pixi run python -m unittest discover -s tests/tooling` | Tooling unit tests | Seconds |
 

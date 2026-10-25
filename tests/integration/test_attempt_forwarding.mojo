@@ -29,7 +29,7 @@ def defaults(first: Int, second: Int = 3) -> Int:
     return first * 10 + second
 
 def main() raises:
-    var ordinary: Result[Item, Never] = attempt(consuming(stored), Token(-1))
+    var ordinary: Result[Item, Never] = attempt[owned=True](stored, Token(-1))
     assert_equal(ordinary.is_ok(), True)
     var inner = raise_on_err(ordinary^)
     assert_equal(inner.is_err(), True)
@@ -39,7 +39,7 @@ def main() raises:
     assert_equal(inner_code, 17)
     for mode in range(2):
         for value in range(-1, 2):
-            var captured: Result[Item, OuterFailure] = attempt(fallible, Token(value), mode)
+            var captured: Result[Item, OuterFailure] = attempt[owned_owned=True](fallible, Token(value), mode)
             assert_equal(captured.is_err(), Bool(mode))
             var outer_code = 0
             var selected: Optional[Item] = None
@@ -57,19 +57,19 @@ def main() raises:
                 except error: code = error.code
                 assert_equal(code, 17 if value < 0 else 0)
                 if value >= 0: assert_equal(observed, value)
-    assert_equal(raise_on_err(attempt(defaults, 2, 4)), defaults(2, 4))
+    assert_equal(raise_on_err(attempt[owned_owned=True](defaults, 2, 4)), defaults(2, 4))
     var calls = 0
     def stop(value: Int) raises StopIteration {mut calls} -> Int:
         calls += 1
         raise StopIteration()
-    var stopped: Result[Int, StopIteration] = attempt(stop, 7)
+    var stopped: Result[Int, StopIteration] = attempt[owned=True](stop, 7)
     assert_equal(stopped.is_err(), True)
     assert_equal(calls, 1)
     def nothing(value: Int) -> NoneType: return None
-    var empty: Result[NoneType, Never] = attempt(nothing, 3)
+    var empty: Result[NoneType, Never] = attempt[owned=True](nothing, 3)
     assert_equal(empty.is_ok(), True)
     def no_value(value: Int) {mut calls} -> None:
         calls += value
-    var inferred_void = attempt(no_value, 3)
+    var inferred_void = attempt[owned=True](no_value, 3)
     assert_equal(inferred_void.is_ok(), True)
     assert_equal(calls, 4)
