@@ -1,3 +1,4 @@
+from fp.data import mut_owned
 # error: aliasing values passed mutably
 from fp.data import Result, attempt, raise_on_err
 from std.testing import assert_equal
@@ -5,12 +6,12 @@ from std.testing import assert_equal
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B) -> R](
     function: F, mut first: A, var second: B
 ) -> Result[R, Never]:
-    return attempt(function, first, second^)
+    return attempt(mut_owned(function), first, second^)
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, var B) raises X -> R](
     function: F, mut first: A, var second: B
 ) -> Result[R, X]:
-    return attempt(function, first, second^)
+    return attempt(mut_owned(function), first, second^)
 
 def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B) -> R](
     function: F, mut first: A, var second: B

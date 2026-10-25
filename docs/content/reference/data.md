@@ -2,11 +2,38 @@
 
 `fp.data` provides `NonEmptyList` and three sum types: `Result` for success or failure,
 `Ior` for values with optional diagnostics, and `ControlFlow` for continuing or stopping a fold. Use `attempt` and `raise_on_err`
-to convert between stored failures and native exceptions. The
+to convert between stored failures and native exceptions; use `attempt_kwargs`
+for callbacks that declare a native keyword pack, including an empty pack. The
 [results tutorial](../tutorial/results.md) introduces these operations with a
 complete program.
 
 <!-- api: data -->
+
+## Select a native argument convention
+
+Mojo 1.2 can fail while selecting between native read, mutable and owned
+callback overloads. Import these borrowed adapters from `fp.data` to select the
+convention before passing the callback to `attempt` or `attempt_kwargs`:
+
+| Callback arguments | Call |
+|---|---|
+| One `mut` argument | `attempt(mutating(f), value)` |
+| One `var` argument | `attempt(consuming(f), value^)` |
+| `mut` then `var` | `attempt(mut_owned(f), first, second^)` |
+| `mut`, `var`, then `var **kwargs: K` | `attempt_kwargs(mut_owned_kwargs(f), first, second^, key=value)` |
+
+<!-- example: docs/examples/attempt_adapters.mojo -->
+
+Factories borrow the callback without calling or copying it. A saved adapter
+can be reused while that callback remains alive and unmoved. Arguments retain
+their native conventions, and the result retains the exact success and error
+types; mutations remain visible after an error. Callbacks that mutate owned
+captures still require the documented `@always_inline` workaround on Mojo 1.2.
+
+Choose the adapter matching the callback's convention. An incompatible factory
+call can still crash Mojo 1.2 during inference instead of reporting a type
+error. These four forms do not cover every two-argument combination; see the
+[compatibility qualification](../architecture/native-boundaries.md#convention-adapters).
 
 ## Consume handlers in a transformation and a fold
 

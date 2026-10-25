@@ -1,17 +1,18 @@
 """Generic Results compose with public Result and lazy iterator operations."""
 from fp.algebra import flat_map, ResultFamily
-from fp.data import Result, attempt, raise_on_err
+from fp.data import Result, attempt, attempt_kwargs, raise_on_err
+from fp.data import consuming, mut_owned, mutating
 from std.testing import assert_equal
 
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A) -> R](
     function: F, mut first: A
 ) -> Result[R, Never]:
-    return attempt(function, first)
+    return attempt(mutating(function), first)
 
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A) raises X -> R](
     function: F, mut first: A
 ) -> Result[R, X]:
-    return attempt(function, first)
+    return attempt(mutating(function), first)
 
 def forward[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A) -> R](
     function: F, mut first: A
@@ -26,12 +27,12 @@ def forward[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deini
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A) -> R](
     function: F, var first: A
 ) -> Result[R, Never]:
-    return attempt(function, first^)
+    return attempt(consuming(function), first^)
 
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A) raises X -> R](
     function: F, var first: A
 ) -> Result[R, X]:
-    return attempt(function, first^)
+    return attempt(consuming(function), first^)
 
 def forward[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A) -> R](
     function: F, var first: A
@@ -43,25 +44,25 @@ def forward[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deini
 ) -> Result[R, X]:
     return capture(function, first^)
 
-def capture[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) -> R](
+def capture_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) -> R](
     function: F, var first: A, /, var **values: K
 ) -> Result[R, Never]:
-    return attempt(function, first^, **values^)
+    return attempt_kwargs(function, first^, **values^)
 
-def capture[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) raises X -> R](
+def capture_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) raises X -> R](
     function: F, var first: A, /, var **values: K
 ) -> Result[R, X]:
-    return attempt(function, first^, **values^)
+    return attempt_kwargs(function, first^, **values^)
 
-def forward[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) -> R](
+def forward_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) -> R](
     function: F, var first: A, /, var **values: K
 ) -> Result[R, Never]:
-    return capture(function, first^, **values^)
+    return capture_kwargs(function, first^, **values^)
 
-def forward[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) raises X -> R](
+def forward_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) raises X -> R](
     function: F, var first: A, /, var **values: K
 ) -> Result[R, X]:
-    return capture(function, first^, **values^)
+    return capture_kwargs(function, first^, **values^)
 
 from fp.data import Ok, Err
 from fp.iteration import map
@@ -112,12 +113,12 @@ def first(var value: Value, /, var **options: Int) -> Int:
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B) -> R](
     function: F, mut first: A, var second: B
 ) -> Result[R, Never]:
-    return attempt(function, first, second^)
+    return attempt(mut_owned(function), first, second^)
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, var B) raises X -> R](
     function: F, mut first: A, var second: B
 ) -> Result[R, X]:
-    return attempt(function, first, second^)
+    return attempt(mut_owned(function), first, second^)
 
 def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B) -> R](
     function: F, mut first: A, var second: B
@@ -238,5 +239,5 @@ def main() raises:
     var mapped = failed^.map_err(remap)
     try: _ = raise_on_err(mapped^)
     except error: assert_equal(error.code, 107)
-    var overlap = forward(first, Value(4), function=2, first=3, values=5)
+    var overlap = forward_kwargs(first, Value(4), function=2, first=3, values=5)
     assert_equal(raise_on_err(overlap^), 14)

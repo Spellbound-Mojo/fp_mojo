@@ -138,16 +138,25 @@ and two callbacks with conflicting mutable captures remain invalid native calls.
 | Bridge | Behavior |
 |---|---|
 | `attempt(f, args...)` | Calls `f` once and returns `Ok(result)` or `Err(error)`, catching only `f`'s declared error type |
+| `attempt_kwargs(f, args..., **options^)` | The same for a callback declaring a native keyword pack, including an empty pack |
 | `attempt_once(thunk^)` | The same for a consuming `OnceThunk`, called once |
 | `raise_on_err(r^)` / `r^.raise_on_err()` | Returns the value or raises the stored error with its original type |
 | `collect_results(iterator)` | `Ok(List[T])` of the successes in order, or the first `Err`; stops pulling at the first `Err`. It takes a native iterator, such as `iter(results^)` or a lazy `map` |
 
 `attempt` accepts native functions with zero to two positional arguments, with
-read, owned or `mut` conventions, and targets that declare a native keyword pack
-`var **kwargs: K` (homogeneous values or a `StringDict[K]` expansion), with zero
-to two positional prefixes. Mutations a target made before failing remain
-visible. The error type must be stated or inferred exactly; `attempt` never
-catches process termination or unrelated failures.
+read, owned or `mut` conventions. `attempt_kwargs` handles targets that declare
+a native keyword pack `var **kwargs: K` (homogeneous values or a `StringDict[K]`
+expansion), with zero to two positional prefixes. Mutations a target made
+before failing remain visible. The error type must be stated or inferred
+exactly; neither bridge catches process termination or unrelated failures.
+On Mojo 1.2, `mutating`, `consuming`, `mut_owned` and `mut_owned_kwargs`
+select the supported argument conventions before the bridge performs native
+inference. They borrow the callback and preserve native moves, mutations,
+origins and exact errors. The private views live in `callables.native`;
+`consuming` reuses the existing native unary view. Result capture stays in
+`_attempt_core`. See [adapter call forms](../reference/data.md#select-a-native-argument-convention)
+and the [Mojo 1.2 qualification](native-boundaries.md#convention-adapters) for
+coverage and remaining failures.
 
 `collect_results` sequences Results and stops at the first `Err`; it does not
 accumulate validation errors. Empty input gives `Ok` of an empty list.

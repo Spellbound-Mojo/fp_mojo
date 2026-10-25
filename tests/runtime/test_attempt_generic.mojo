@@ -1,5 +1,6 @@
 """Two generic returns preserve every admitted argument convention and exact errors."""
 from fp.data import Result, attempt, raise_on_err
+from fp.data import consuming, mut_owned, mutating
 from std.testing import assert_equal
 
 @fieldwise_init
@@ -53,12 +54,12 @@ def forward[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deini
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A) -> R](
     function: F, var first: A
 ) -> Result[R, Never]:
-    return attempt(function, first^)
+    return attempt(consuming(function), first^)
 
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A) raises X -> R](
     function: F, var first: A
 ) -> Result[R, X]:
-    return attempt(function, first^)
+    return attempt(consuming(function), first^)
 
 def forward[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A) -> R](
     function: F, var first: A
@@ -73,12 +74,12 @@ def forward[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deini
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A) -> R](
     function: F, mut first: A
 ) -> Result[R, Never]:
-    return attempt(function, first)
+    return attempt(mutating(function), first)
 
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A) raises X -> R](
     function: F, mut first: A
 ) -> Result[R, X]:
-    return attempt(function, first)
+    return attempt(mutating(function), first)
 
 def forward[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A) -> R](
     function: F, mut first: A
@@ -233,12 +234,12 @@ def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deini
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B) -> R](
     function: F, mut first: A, var second: B
 ) -> Result[R, Never]:
-    return attempt(function, first, second^)
+    return attempt(mut_owned(function), first, second^)
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, var B) raises X -> R](
     function: F, mut first: A, var second: B
 ) -> Result[R, X]:
-    return attempt(function, first, second^)
+    return attempt(mut_owned(function), first, second^)
 
 def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B) -> R](
     function: F, mut first: A, var second: B

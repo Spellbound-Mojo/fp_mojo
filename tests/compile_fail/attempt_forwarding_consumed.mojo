@@ -1,3 +1,4 @@
+from fp.data import consuming
 # error: use of uninitialized value 'value'
 from fp.data import attempt
 @fieldwise_init
@@ -7,5 +8,5 @@ struct Token(Movable):
 def take(var value: Token) -> Token: return value^
 def main():
     var value = Token(7)
-    _ = attempt(take, value^)
+    _ = attempt(consuming(take), value^)
     _ = value.value

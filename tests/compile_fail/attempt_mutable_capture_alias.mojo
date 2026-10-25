@@ -1,3 +1,4 @@
+from fp.data import mutating
 # error: aliasing values passed mutably
 from fp.data import attempt
 @fieldwise_init
@@ -9,4 +10,4 @@ def main():
     def target(mut first: Token) {mut value} -> Int:
         value.value += first.value
         return value.value
-    _ = attempt(target, value)
+    _ = attempt(mutating(target), value)

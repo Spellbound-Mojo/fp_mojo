@@ -1,5 +1,6 @@
 """Stored Result failures stay distinct from the native channel selected by attempt."""
 from fp.data import Result, Ok, Err, attempt, raise_on_err
+from fp.data import consuming
 from std.testing import assert_equal
 
 @fieldwise_init
@@ -28,7 +29,7 @@ def defaults(first: Int, second: Int = 3) -> Int:
     return first * 10 + second
 
 def main() raises:
-    var ordinary: Result[Item, Never] = attempt(stored, Token(-1))
+    var ordinary: Result[Item, Never] = attempt(consuming(stored), Token(-1))
     assert_equal(ordinary.is_ok(), True)
     var inner = raise_on_err(ordinary^)
     assert_equal(inner.is_err(), True)

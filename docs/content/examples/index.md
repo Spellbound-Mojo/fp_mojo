@@ -42,7 +42,8 @@ compile them through source and precompiled package imports at O0 and O3 with
 |---|---|---|
 | `results.mojo` | Stored domain errors versus raised callback failures | [Results tutorial](../tutorial/results.md#transform-only-the-active-branch) |
 | `result_transform_generic.mojo` | Generic Result transformations | [Results tutorial](../tutorial/results.md#generic-transformations) |
-| `attempt_generic.mojo` | A generic transaction helper built on `attempt` | [Results tutorial](../tutorial/results.md#generic-transaction-helpers) |
+| `attempt_adapters.mojo` | Select a native callback argument convention with a borrowed adapter | [fp.data](../reference/data.md#select-a-native-argument-convention) |
+| `attempt_generic.mojo` | A generic transaction helper built on `attempt_kwargs` | [Results tutorial](../tutorial/results.md#generic-transaction-helpers) |
 | `attempt_once.mojo` | Capturing the failure of a consuming thunk | [fp.data](../reference/data.md#attempt_once) |
 | `result_once.mojo` | Consuming handlers in Result transformations and folds | [fp.data](../reference/data.md#Result.fold_once) |
 

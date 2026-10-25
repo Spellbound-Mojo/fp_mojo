@@ -8,7 +8,7 @@ stage limit and no promotion.
 from fp.algebra._admission import _MapCompatible, _BindCompatible, _CombineCompatible, _CollectCompatible
 from fp.algebra.validation import ValidationFamily, _ListErrors
 from fp.algebra._sequencing import _EffectRetain
-from fp.callables.native import _call_native_borrow, _NativeThunkRef, _borrow_ref_call_x, _borrow_predicate_call
+from fp.callables.native import _call_native_never, _call_native_borrow, _NativeThunkRef, _borrow_ref_call_x, _borrow_predicate_call
 from fp.callables.native import _unary_ref_left, _unary_ref_right, _borrow_factory_call
 from fp.algebra._adapt import _flat_map_as, _or_else_as
 from fp.algebra.errors import _Recovered, _ErrorFamily, _ConditionalRecovery, _ObserveError, _ErrorObservation
@@ -102,7 +102,10 @@ def pipe[A: Movable, R: Movable, //,
 def pipe[A: Movable, R: Movable, E: AnyType, //,
          F: def(var A) raises E -> R](var value: A, function: F) raises E -> R:
     """Apply one raising stage; its error type is kept."""
-    return function(value^)
+    comptime if E == Never:
+        return _call_native_never[A, R, F](function, value^)
+    else:
+        return function(value^)
 
 
 def pipe[A: Movable & Deinitable, F: Unary](

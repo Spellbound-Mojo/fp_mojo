@@ -1,7 +1,7 @@
 # error: invalid call to 'fold_until': lacking evidence to prove correctness
 from fp.iteration import fold_left, reduce, reduce_optional, fold_until
 from fp.iteration import find, any, all
-from fp.data import ControlFlow, Continue
+from fp.data import ControlFlow, Break
 from std.iter import iter
 
 def wrong(first: List[Int], second: List[Int]):
@@ -10,7 +10,7 @@ def wrong(first: List[Int], second: List[Int]):
     comptime A = type_of(a)
     comptime B = type_of(b)
     print(a[0], b[0])
-    def step(var acc: A, var item: Int) {b} -> ControlFlow[B, A]: return ControlFlow[B, A](Continue(acc))
+    def step(var acc: A, var item: Int) {b} -> ControlFlow[B, A]: return ControlFlow[B, A](Break(b))
     _ = fold_until[A=A, B=A](step, a, iter(range(1)))
 
 def main():

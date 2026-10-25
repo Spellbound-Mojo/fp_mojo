@@ -1,6 +1,6 @@
 """Whole Tuple/Result values, nested attempt channels, Never and StopIteration."""
 from fp.functions import as_unary, pipe
-from fp.data import Result, Err, attempt
+from fp.data import Result, Err, attempt, consuming
 from std.testing import assert_equal
 
 def pair(var value: Int) raises Int -> Tuple[Int, String]:
@@ -36,13 +36,13 @@ def main() raises:
     try: observed = pipe(3, a, b, c)
     except _: pass
     assert_equal(observed, True)
-    var ok = attempt(nested, 3)
+    var ok = attempt(consuming(nested), 3)
     assert_equal(ok.is_ok(), True)
     var inner_error = False
     try: inner_error = ok^.raise_on_err().is_err()
     except _: pass
     assert_equal(inner_error, True)
-    var err = attempt(nested, -7)
+    var err = attempt(consuming(nested), -7)
     assert_equal(err.is_err(), True)
     var code = 0
     try: _ = err^.raise_on_err()

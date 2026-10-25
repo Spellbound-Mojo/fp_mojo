@@ -137,17 +137,18 @@ a native closure cannot carry their origins through its captures.
 prints `raised: callback failed`. The shared `String` error type does not turn
 the raised error into a stored `Err`.
 
-To convert it on purpose, call `attempt(may_raise, 21)`. It returns
+To convert it on purpose, call `attempt(consuming(may_raise), 21)`. It returns
 `Err("callback failed")` with the declared `String` error type.
 `raise_on_err` consumes that `Result` and raises the error again. These two
 operations let you choose where failures move between values and exceptions.
 
 ## Forward arguments through attempt
 
-`attempt` calls its callback exactly once with the arguments you give it. The
+`attempt` forwards positional arguments; `attempt_kwargs` forwards callbacks
+with a native keyword pack. Both call the callback exactly once. The
 example shows each rule with its own values:
 
-- `attempt(scale, 7, factor=3)` forwards the positional `7` and the keyword
+- `attempt_kwargs(scale, 7, factor=3)` forwards the positional `7` and the keyword
   `factor=3` to the captured closure `scale`, which declares
   `var **options: Int`. It returns `Result[Int, Never]` holding `21`, because
   `scale` does not raise, and the counter records one call.
@@ -155,11 +156,13 @@ example shows each rule with its own values:
   `28`, and brings the same counter to two.
 - A `mut` prefix keeps the callback's changes even when it raises. `debit`
   takes `balance` from 5 to 2, then to -2 while returning `Err("overdrawn")`.
+  `attempt(mut_owned(debit), balance, amount)` selects its mutable/owned pair.
 
-What `attempt` accepts:
+The forwarding contract:
 
-- Zero, one or two positional arguments, optionally followed by a
-  homogeneous native keyword pack. The bridge function and the prefixes are positional-only.
+- Zero, one or two positional arguments. For a callback with a homogeneous
+  native keyword pack, use `attempt_kwargs`, even when the pack is empty.
+  Its callback and positional prefixes are passed positionally.
 - Every positional argument, including those with defaults; omitted prefixes
   are not supported.
 - Borrowed resource arguments stay usable after the call. Move a named resource
@@ -169,7 +172,18 @@ What `attempt` accepts:
   supported. Bind those forms in a local native closure, when Mojo admits that
   closure's encoding.
 - A callback that returns an ordinary `Result` gets it nested inside `Ok`;
-  `attempt` does not capture that `Result`'s error.
+  neither bridge captures that `Result`'s error.
+
+On nightly, keyword calls previously written as `attempt(f, key=value)` become
+`attempt_kwargs(f, key=value)`. An empty keyword-pack call similarly becomes
+`attempt_kwargs(f)`. The [Mojo 1.2 qualification](../architecture/native-boundaries.md#attempt-inference-on-mojo-12)
+records remaining inference and callback limitations. Use `mutating(f)` for
+one mutable argument, `consuming(f)` for one owned argument, `mut_owned(f)`
+for a mutable/owned pair, and `mut_owned_kwargs(f)` for that pair plus a native
+keyword pack. These adapters borrow the callback and retain its exact types;
+[the reference](../reference/data.md#select-a-native-argument-convention)
+shows all four forms. Other native convention combinations still have
+compatibility failures.
 
 ## Aggregate a sequence
 
@@ -187,13 +201,14 @@ both helpers return and decides how to handle it.
 
 <!-- example: docs/examples/attempt_generic.mojo -->
 
-The balance starts at 10. The first debit charges `purchase=6` and `fee=1`,
+The balance starts at 10. The first debit consumes a payment of `6` plus `fee=1`,
 leaves the balance at 3, and returns the receipt `"3"`. The second charges
-`purchase=5`, leaves the balance at -2, and returns `Declined(-2)`. Catching the
+a payment of `5`, leaves the balance at -2, and returns `Declined(-2)`. Catching the
 error does not roll back the debit. The same callback serves both calls, each
 transaction invokes it once, and the keyword values pass through both helpers.
-The helpers call the public `attempt` directly, with no callable object or
-result cast.
+The inner helper calls `attempt_kwargs(mut_owned_kwargs(function), ...)`,
+selecting the mutable/owned convention without type hints or a result cast.
+The second call demonstrates an empty keyword pack.
 
 ## Generic transformations
 

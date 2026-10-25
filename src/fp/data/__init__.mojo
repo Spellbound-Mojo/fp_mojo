@@ -7,7 +7,7 @@ and matched by `fp.match`. Mojo's typed native errors are efficient; `Result`
 is for failures that must be stored, collected or passed along as values, not
 a replacement for `raises`.
 
-The bridges: `attempt` and `attempt_once` turn a raising call into a `Result`,
+The bridges: `attempt`, `attempt_kwargs` and `attempt_once` turn a raising call into a `Result`,
 `raise_on_err` turns it back, each with the original error type, and
 `collect_results` collects a source of Results into one.
 """
@@ -22,7 +22,12 @@ from ._result import (
     Ok,
     Result,
     attempt,
+    attempt_kwargs,
     attempt_once,
+    mutating,
+    consuming,
+    mut_owned,
+    mut_owned_kwargs,
     raise_on_err,
 )
 

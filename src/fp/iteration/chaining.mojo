@@ -1935,11 +1935,11 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Fold with a library `Binary` step."""
         return _fold_left(step, initial^, self._iterator^)
 
-    def fold_until[A: Movable & Deinitable, B: Movable & Deinitable,
+    def fold_until[A: Movable & Deinitable, Q: Movable & Deinitable,
                    T: Movable & Deinitable, //,
-                   F: def(var A, var T) -> ControlFlow[B, A]](
+                   F: def(var A, var T) -> ControlFlow[Q, A], B: Movable & Deinitable = Q](
         deinit self, step: F, var initial: A
-    ) -> ControlFlow[B, A] where Self.I.Element == T:
+    ) -> ControlFlow[B, A] where Self.I.Element == T and Q == B:
         """Fold until `Break`, or return `Continue` with the final accumulator.
 
         A break returns immediately without another pull. Empty input returns
@@ -1948,9 +1948,10 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
 
         Parameters:
             A: The accumulator type.
-            B: The break payload type.
+            Q: The callback's break payload type, inferred with its origins.
             T: The source element type.
             F: The native step type.
+            B: The requested break payload type; defaults to `Q` and must match it.
 
         Args:
             step: The step returning `ControlFlow[B, A]`, borrowed.
@@ -1959,15 +1960,15 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             The first `Break`, or `Continue` with the final accumulator.
         """
-        return _fold_until(step, initial^, self._iterator^)
+        return _fold_until[B=B](step, initial^, self._iterator^)
 
-    def fold_until[A: Movable & Deinitable, B: Movable & Deinitable,
+    def fold_until[A: Movable & Deinitable, Q: Movable & Deinitable,
                    T: Movable & Deinitable, E: Movable & Deinitable, //,
-                   F: def(var A, var T) raises E -> ControlFlow[B, A]](
+                   F: def(var A, var T) raises E -> ControlFlow[Q, A], B: Movable & Deinitable = Q](
         deinit self, step: F, var initial: A
-    ) raises E -> ControlFlow[B, A] where Self.I.Element == T:
+    ) raises E -> ControlFlow[B, A] where Self.I.Element == T and Q == B:
         """Fold until `Break` with a raising step, preserving its error."""
-        return _fold_until[E=E](step, initial^, self._iterator^)
+        return _fold_until[E=E, B=B](step, initial^, self._iterator^)
 
     def fold_until[B: Movable & Deinitable, A: Movable & Deinitable, F: Binary](
         deinit self, step: F, var initial: A

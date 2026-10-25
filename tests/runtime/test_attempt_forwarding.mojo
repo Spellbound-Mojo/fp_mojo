@@ -1,5 +1,6 @@
 """All fixed attempt signatures agree with direct native calls and try/except."""
 from fp.data import Result, attempt, raise_on_err
+from fp.data import consuming
 from std.testing import assert_equal
 
 @fieldwise_init
@@ -96,14 +97,14 @@ def exercise_1_1(pure: Bool, library: Bool, negative: Bool) raises -> String:
     var left = Token(7)
     if pure:
         if library:
-            var result = attempt(success, left^)
+            var result = attempt(consuming(success), left^)
             var typed: Result[String, Never] = result^
             output = raise_on_err(typed^)
         else:
             output = success(left^)
     else:
         if library:
-            var result = attempt(fallible, left^)
+            var result = attempt(consuming(fallible), left^)
             var typed: Result[String, Failure] = result^
             try: output = raise_on_err(typed^)
             except error:

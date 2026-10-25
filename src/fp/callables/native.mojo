@@ -150,22 +150,44 @@ comptime _LazyUnary[T: Movable & Deinitable, U: Movable & Deinitable] = def(var 
 comptime _LazyOptional[T: Movable & Deinitable, U: Movable & Deinitable] = def(var T) -> Optional[U]
 
 
+def _call_native_never[A: Movable, R: Movable, F: Movable & Deinitable](
+    function: F, var value: A
+) raises Never -> R:
+    # Keep the literal Never signature; generic E loses its native witness.
+    # Movable inputs/results also support one-stage pipe without narrowing it.
+    comptime if F == def(var A) raises Never thin -> R:
+        return rebind[def(var A) raises Never thin -> R](function)(value^)
+    elif R == type_of(None):
+        comptime Fn = downcast[F, def(var A) raises Never]
+        _ = rebind[Fn](function)(value^)
+        return rebind_var[R](None)
+    else:
+        comptime Fn = downcast[F, def(var A) raises Never -> R]
+        return rebind[Fn](function)(value^)
+
+
 def _call_native[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable,
                  F: Movable & Deinitable, raising: Bool](function: F, var value: A) raises E -> R:
     # The one native-def call for owned unary callbacks: NativeUnary, the
     # borrowed reference view and pipeline stages all reach it.
-    comptime if not raising and F == def(var A) thin -> R:
+    comptime if raising and E == Never:
+        return _call_native_never[A, R, F](function, value^)
+    elif not raising and F == def(var A) thin -> R:
         comptime assert E == Never
         return rebind[def(var A) thin -> R](function)(value^)
-    elif raising and E == Never and F == def(var A) raises Never thin -> R:
-        return rebind[def(var A) raises Never thin -> R](function)(value^)
     elif raising and F == def(var A) raises E thin -> R:
         return rebind[def(var A) raises E thin -> R](function)(value^)
-    elif raising and E == Never:
-        # On Mojo 1.2 the explicit Never witness must retain its literal error
-        # spelling through dispatch; rebuilding it with a generic E loses it.
-        comptime Fn = downcast[F, def(var A) raises Never -> R]
-        return rebind[Fn](function)(value^)
+    elif R == type_of(None):
+        # Native no-value returns need their literal signature on Mojo 1.2;
+        # rebuilding it as -> R loses the closure witness.
+        comptime if raising:
+            comptime Fn = downcast[F, def(var A) raises E]
+            _ = rebind[Fn](function)(value^)
+        else:
+            comptime assert E == Never
+            comptime Fn = downcast[F, def(var A)]
+            _ = rebind[Fn](function)(value^)
+        return rebind_var[R](None)
     elif raising:
         comptime Fn = downcast[F, _RaisingUnary[A, R, E]]
         comptime assert conforms_to(Fn, _RaisingUnary[A, R, E]), "native unary: incompatible signature"
@@ -553,3 +575,133 @@ struct _ThinFunction[R: Movable & Deinitable, E: Movable & Deinitable,
 comptime _Thin0F[R: Movable & Deinitable, E: Movable & Deinitable] = _ThinFunction[R, E, TypeList.of[Trait=Movable & Deinitable]()]
 comptime _Thin1F[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable] = _ThinFunction[R, E, TypeList.of[Trait=Movable & Deinitable, A]()]
 comptime _Thin2F[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable] = _ThinFunction[R, E, TypeList.of[Trait=Movable & Deinitable, A, B]()]
+
+
+def _call_native_keywords[K: Movable & Deinitable, R: Movable & Deinitable,
+                          E: Movable & Deinitable, F: Movable & Deinitable,
+                          raising: Bool](function: F, /, var **values: K) raises E -> R:
+    # As for _call_native_borrow, preserve the literal no-value signature.
+    # Recover its witness through an unconstrained F: recovering it inside the
+    # public F: def(...) -> R overload retains the wrong generic result witness.
+    comptime if R == type_of(None):
+        comptime if raising:
+            comptime if E == Never:
+                comptime Fn = downcast[F, def(var **kwargs: K) raises Never]
+                _ = rebind[Fn](function)(**values^)
+            else:
+                comptime Fn = downcast[F, def(var **kwargs: K) raises E]
+                _ = rebind[Fn](function)(**values^)
+        else:
+            comptime assert E == Never
+            comptime Fn = downcast[F, def(var **kwargs: K)]
+            _ = rebind[Fn](function)(**values^)
+        return rebind_var[R](None)
+    elif raising and E == Never:
+        comptime Fn = downcast[F, def(var **kwargs: K) raises Never -> R]
+        return rebind[Fn](function)(**values^)
+    elif raising:
+        comptime Fn = downcast[F, def(var **kwargs: K) raises E -> R]
+        return rebind[Fn](function)(**values^)
+    else:
+        comptime assert E == Never
+        comptime Fn = downcast[F, def(var **kwargs: K) -> R]
+        return rebind[Fn](function)(**values^)
+
+
+# Borrowed native views for convention-specific admission. Deliberately omit
+# __call__: competing native def traits must reject these nominal values before
+# Mojo 1.2 attempts effect inference for an incompatible argument convention.
+# Each view keeps the exact F and origin; only its native signature differs.
+# Literal no-value and raises Never spellings preserve the native witnesses.
+@fieldwise_init
+struct _NativeMutatingRef[A: Movable & Deinitable, R: Movable & Deinitable,
+                        E: Movable & Deinitable, F: Movable & Deinitable,
+                        raising: Bool, o: ImmOrigin](ImplicitlyCopyable):
+    var function: Pointer[Self.F, Self.o]
+
+    def invoke(self, mut value: Self.A) raises Self.E -> Self.R:
+        comptime if Self.R == type_of(None):
+            comptime if Self.raising:
+                comptime if Self.E == Never:
+                    comptime Fn = downcast[Self.F, def(mut Self.A) raises Never]
+                    _ = rebind[Fn](self.function[])(value)
+                else:
+                    comptime Fn = downcast[Self.F, def(mut Self.A) raises Self.E]
+                    _ = rebind[Fn](self.function[])(value)
+            else:
+                comptime assert Self.E == Never
+                comptime Fn = downcast[Self.F, def(mut Self.A)]
+                _ = rebind[Fn](self.function[])(value)
+            return rebind_var[Self.R](None)
+        elif Self.raising and Self.E == Never:
+            comptime Fn = downcast[Self.F, def(mut Self.A) raises Never -> Self.R]
+            return rebind[Fn](self.function[])(value)
+        elif Self.raising:
+            comptime Fn = downcast[Self.F, def(mut Self.A) raises Self.E -> Self.R]
+            return rebind[Fn](self.function[])(value)
+        else:
+            comptime assert Self.E == Never
+            comptime Fn = downcast[Self.F, def(mut Self.A) -> Self.R]
+            return rebind[Fn](self.function[])(value)
+
+
+@fieldwise_init
+struct _NativeMutOwnedRef[A: Movable & Deinitable, B: Movable & Deinitable,
+                        R: Movable & Deinitable, E: Movable & Deinitable,
+                        F: Movable & Deinitable, raising: Bool, o: ImmOrigin](ImplicitlyCopyable):
+    var function: Pointer[Self.F, Self.o]
+    def invoke(self, mut first: Self.A, var second: Self.B) raises Self.E -> Self.R:
+        comptime if Self.R == type_of(None):
+            comptime if Self.raising:
+                comptime if Self.E == Never:
+                    comptime Fn = downcast[Self.F, def(mut Self.A, var Self.B) raises Never]
+                    _ = rebind[Fn](self.function[])(first, second^)
+                else:
+                    comptime Fn = downcast[Self.F, def(mut Self.A, var Self.B) raises Self.E]
+                    _ = rebind[Fn](self.function[])(first, second^)
+            else:
+                comptime assert Self.E == Never
+                comptime Fn = downcast[Self.F, def(mut Self.A, var Self.B)]
+                _ = rebind[Fn](self.function[])(first, second^)
+            return rebind_var[Self.R](None)
+        elif Self.raising and Self.E == Never:
+            comptime Fn = downcast[Self.F, def(mut Self.A, var Self.B) raises Never -> Self.R]
+            return rebind[Fn](self.function[])(first, second^)
+        elif Self.raising:
+            comptime Fn = downcast[Self.F, def(mut Self.A, var Self.B) raises Self.E -> Self.R]
+            return rebind[Fn](self.function[])(first, second^)
+        else:
+            comptime assert Self.E == Never
+            comptime Fn = downcast[Self.F, def(mut Self.A, var Self.B) -> Self.R]
+            return rebind[Fn](self.function[])(first, second^)
+
+
+@fieldwise_init
+struct _NativeMutOwnedKeywordsRef[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable,
+                          R: Movable & Deinitable, E: Movable & Deinitable,
+                          F: Movable & Deinitable, raising: Bool, o: ImmOrigin](ImplicitlyCopyable):
+    var function: Pointer[Self.F, Self.o]
+    def invoke(self, mut first: Self.A, var second: Self.B, /, var **values: Self.K) raises Self.E -> Self.R:
+        comptime if Self.R == type_of(None):
+            comptime if Self.raising:
+                comptime if Self.E == Never:
+                    comptime Fn = downcast[Self.F, def(mut Self.A, var Self.B, /, var **kwargs: Self.K) raises Never]
+                    _ = rebind[Fn](self.function[])(first, second^, **values^)
+                else:
+                    comptime Fn = downcast[Self.F, def(mut Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E]
+                    _ = rebind[Fn](self.function[])(first, second^, **values^)
+            else:
+                comptime assert Self.E == Never
+                comptime Fn = downcast[Self.F, def(mut Self.A, var Self.B, /, var **kwargs: Self.K)]
+                _ = rebind[Fn](self.function[])(first, second^, **values^)
+            return rebind_var[Self.R](None)
+        elif Self.raising and Self.E == Never:
+            comptime Fn = downcast[Self.F, def(mut Self.A, var Self.B, /, var **kwargs: Self.K) raises Never -> Self.R]
+            return rebind[Fn](self.function[])(first, second^, **values^)
+        elif Self.raising:
+            comptime Fn = downcast[Self.F, def(mut Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E -> Self.R]
+            return rebind[Fn](self.function[])(first, second^, **values^)
+        else:
+            comptime assert Self.E == Never
+            comptime Fn = downcast[Self.F, def(mut Self.A, var Self.B, /, var **kwargs: Self.K) -> Self.R]
+            return rebind[Fn](self.function[])(first, second^, **values^)

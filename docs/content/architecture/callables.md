@@ -126,7 +126,7 @@ different origin to make a call compile.
 | `partial` | A plain function stored directly; the result implements `Thunk`/`Unary`/`Binary` |
 | `map`, `filter_map`, `flat_map`, `scan_left`, folds, reductions | Native callbacks or shared-receiver `Unary`/`Binary`; one receiver for the whole run |
 | `filter`, `find`, `any`, `all` | Native predicates or `BorrowCallable`; candidates are borrowed |
-| `attempt`, `attempt_once` | Native calls or a `OnceThunk`, then the Result bridge in `fp.data` |
+| `attempt`, `attempt_kwargs`, `attempt_once` | Native calls or a `OnceThunk`, then the Result bridge in `fp.data` |
 | Result methods and folds | Native, fixed-arity or borrowed callbacks, called on the stored case |
 | `fp.match`, `fp.rewrite`, `fp.when` | Plain functions and lambdas without captures, called through their native thin function type |
 | `while_loop`, `fori_loop`, `scan` | Native callbacks, shared-receiver `Unary`/`Binary`, `BorrowCallable` predicates |

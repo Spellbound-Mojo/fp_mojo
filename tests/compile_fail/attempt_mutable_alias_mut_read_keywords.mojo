@@ -1,5 +1,5 @@
 # error: aliasing values passed mutably
-from fp.data import attempt
+from fp.data import attempt_kwargs
 @fieldwise_init
 struct Token(Movable):
     var value: Int
@@ -10,4 +10,4 @@ def target(mut first: Token, second: Token, /, var **values: Int) -> Int:
 
 def main():
     var value = Token(3)
-    _ = attempt(target, value, value, one=7)
+    _ = attempt_kwargs(target, value, value, one=7)

@@ -4833,12 +4833,12 @@
         ],
         "fold_until": [
           {
-            "signature": "def fold_until[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, var T) -> ControlFlow[B, A]]( deinit self, step: F, var initial: A ) -> ControlFlow[B, A] where Self.I.Element == T:",
-            "sha256": "e3ce581c7b8791071180e4abe6454e4fc66765afdaed4c8bd58bc9fbe4ade736"
+            "signature": "def fold_until[A: Movable & Deinitable, Q: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, var T) -> ControlFlow[Q, A], B: Movable & Deinitable = Q]( deinit self, step: F, var initial: A ) -> ControlFlow[B, A] where Self.I.Element == T and Q == B:",
+            "sha256": "134d81f4a6807342f513be665bb5e2006a6c8d6c46a28d414d89bdc8fd104cce"
           },
           {
-            "signature": "def fold_until[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, var T) raises E -> ControlFlow[B, A]]( deinit self, step: F, var initial: A ) raises E -> ControlFlow[B, A] where Self.I.Element == T:",
-            "sha256": "f8a6c845a14bada0ce2d1759d5d7b008e3f68acfd17c6db852b168bd81a7de29"
+            "signature": "def fold_until[A: Movable & Deinitable, Q: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, var T) raises E -> ControlFlow[Q, A], B: Movable & Deinitable = Q]( deinit self, step: F, var initial: A ) raises E -> ControlFlow[B, A] where Self.I.Element == T and Q == B:",
+            "sha256": "71993820453c17df81c8cb55a140244a8ae4e333a1a5194b43946e55e3553a9e"
           },
           {
             "signature": "def fold_until[B: Movable & Deinitable, A: Movable & Deinitable, F: Binary]( deinit self, step: F, var initial: A ) raises F.Error -> ControlFlow[B, A] where F.First == A and F.Second == Self.I.Element and F.Out == ControlFlow[B, A]:",
@@ -7396,12 +7396,12 @@
       "kind": "function",
       "overloads": [
         {
-          "signature": "def fold_until[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, I: Movable & Deinitable, //, F: def(var A, var T) -> ControlFlow[B, A]]( step: F, var initial: A, var iterator: I ) -> ControlFlow[B, A] where _Source[I].Element == T:",
-          "sha256": "3864bc549bbf7d77b7d2d781aefcda663782e3f76c3e80baaed0e91088902057"
+          "signature": "def fold_until[A: Movable & Deinitable, Q: Movable & Deinitable, T: Movable & Deinitable, I: Movable & Deinitable, //, F: def(var A, var T) -> ControlFlow[Q, A], B: Movable & Deinitable = Q]( step: F, var initial: A, var iterator: I ) -> ControlFlow[B, A] where _Source[I].Element == T and Q == B:",
+          "sha256": "5aba742fa53f1b0f071fbba90ec9b4a76b00009629ef06ca77c3cc1f3b1c24ad"
         },
         {
-          "signature": "def fold_until[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, I: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, var T) raises E -> ControlFlow[B, A]]( step: F, var initial: A, var iterator: I ) raises E -> ControlFlow[B, A] where _Source[I].Element == T:",
-          "sha256": "88b2ac6e7dd80ff233a3f142a7c7b4e1ef705af3068ec8e2da163586a78118ec"
+          "signature": "def fold_until[A: Movable & Deinitable, Q: Movable & Deinitable, T: Movable & Deinitable, I: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, var T) raises E -> ControlFlow[Q, A], B: Movable & Deinitable = Q]( step: F, var initial: A, var iterator: I ) raises E -> ControlFlow[B, A] where _Source[I].Element == T and Q == B:",
+          "sha256": "82ba901951868fe0ef3a4e14e91823a858ce4a8a1a43a544fc9ea13f8d692c92"
         },
         {
           "signature": "def fold_until[B: Movable & Deinitable, A: Movable & Deinitable, I: Movable & Deinitable, F: Binary]( step: F, var initial: A, var iterator: I ) raises F.Error -> ControlFlow[B, A] where F.First == A and F.Second == _Source[I].Element and F.Out == ControlFlow[B, A]:",
@@ -9000,156 +9000,178 @@
           "sha256": "700d510eb5a97bb2f7de2b42391dde718bad59b52492d5ab3473a3c2f92212c3"
         },
         {
-          "signature": "def attempt[K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var **kwargs: K) -> T]( function: F, /, var **values: K ) -> Result[T, Never]:",
-          "sha256": "e1532c78a2eac71a0a53bf7bcd50096ec5ecd9cb8116e80dff76f5499af7944e"
+          "signature": "def attempt[A: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A) -> T, _mut_fallback_0: Int = 0]( function: F, mut first: A ) -> Result[T, Never]:",
+          "sha256": "7459363807fd44186c20aba1a72428c80fb0036a787709efbcaf5fd10252b4b9"
         },
         {
-          "signature": "def attempt[K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var **kwargs: K) raises E -> T]( function: F, /, var **values: K ) -> Result[T, E]:",
-          "sha256": "37c1a491c7e36574f4f81f42edfaf6095f36e396b8f7b29a311819d5f2faa3d6"
+          "signature": "def attempt[A: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A) raises E -> T, _mut_fallback_0: Int = 0]( function: F, mut first: A ) -> Result[T, E]:",
+          "sha256": "826785cea169467f5625e5a0edff08a2391d403764b2295d0f0253b9b4449931"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(A, /, var **kwargs: K) -> T]( function: F, first: A, /, var **values: K ) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable):",
-          "sha256": "02fe5e12e7a743544330728919c735a399f04341986b15f8d49287eb5f9acf5e"
+          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(A, mut B) -> T, _mut_fallback_0: Int = 0]( function: F, first: A, mut second: B ) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable):",
+          "sha256": "4fc0551df73ac837be9f8f8f2a70f52de061be41059412a40ad0d1f59a204e77"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(A, /, var **kwargs: K) raises E -> T]( function: F, first: A, /, var **values: K ) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable):",
-          "sha256": "d16884ef420635675b3a55929934883d90a50438eff34673dc281b6214285109"
+          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(A, mut B) raises E -> T, _mut_fallback_0: Int = 0]( function: F, first: A, mut second: B ) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable):",
+          "sha256": "1e644bb6af9f7f6c5fceec6ff010a5dd7fa499150e2172600fe5d6500ae924d9"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) -> T]( function: F, var first: A, /, var **values: K ) -> Result[T, Never]:",
-          "sha256": "7bdabd54b7f693e668b3d32b88b1909277ec601b2338f058f42cb8c2e3e74435"
+          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, mut B) -> T, _mut_fallback_0: Int = 0]( function: F, var first: A, mut second: B ) -> Result[T, Never]:",
+          "sha256": "f873176bb32cfda4a572ce1bb4e8217236236c155cfd516ee82a7d781560f752"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) raises E -> T]( function: F, var first: A, /, var **values: K ) -> Result[T, E]:",
-          "sha256": "305168d4168f6a87f5cc2fadc285032c6b7474bb8f98ebe68baba447340a94ce"
+          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, mut B) raises E -> T, _mut_fallback_0: Int = 0]( function: F, var first: A, mut second: B ) -> Result[T, E]:",
+          "sha256": "20e21aff2cc30c00aeb2ade02d140f673f12dd15c8cf75315e412de20c0ba852"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(A, B, /, var **kwargs: K) -> T]( function: F, first: A, second: B, /, var **values: K ) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable):",
-          "sha256": "f8fade31901db2d18bdc9bff1dac409f8346b5f151c79d5a96fc50cf4cb25fa8"
+          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, B) -> T, _mut_fallback_0: Int = 0]( function: F, mut first: A, second: B ) -> Result[T, Never] where not conforms_to(B, TrivialRegisterPassable):",
+          "sha256": "205d4738f3507fbe6b35b1a21e7ba89c7d6380497151fbd0b7fe6423d58829d6"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(A, B, /, var **kwargs: K) raises E -> T]( function: F, first: A, second: B, /, var **values: K ) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable):",
-          "sha256": "63689ad401e135af72a9fa2c36f562fbf92f2626932730d0305468f7d86ca334"
+          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, B) raises E -> T, _mut_fallback_0: Int = 0]( function: F, mut first: A, second: B ) -> Result[T, E] where not conforms_to(B, TrivialRegisterPassable):",
+          "sha256": "8769f780e5d976b58f29c0f9f180363e8c09d12b32f3a08f513bdd44152a7bb6"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, B, /, var **kwargs: K) -> T]( function: F, var first: A, second: B, /, var **values: K ) -> Result[T, Never] where not conforms_to(B, TrivialRegisterPassable):",
-          "sha256": "d1055803b8f493499fe1fc48fff911842f8235e690552b69f6523733237fe12d"
+          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, var B) -> T, _mut_fallback_0: Int = 0]( function: F, mut first: A, var second: B ) -> Result[T, Never]:",
+          "sha256": "161dfaa9ba4f7d60219ff2631f9f083e2307ddf2ae6c5c3de92c2379ca4a1d65"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, B, /, var **kwargs: K) raises E -> T]( function: F, var first: A, second: B, /, var **values: K ) -> Result[T, E] where not conforms_to(B, TrivialRegisterPassable):",
-          "sha256": "6ea1cac3d32040843a7f74c8d759e53a0313176a13b7d67eba4db82fd355a35e"
+          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, var B) raises E -> T, _mut_fallback_0: Int = 0]( function: F, mut first: A, var second: B ) -> Result[T, E]:",
+          "sha256": "b1c0b7867b3c6dd97e9cb9bd7cef1424d6490554d5753c09dd6a81e3a59ecea0"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(A, var B, /, var **kwargs: K) -> T]( function: F, first: A, var second: B, /, var **values: K ) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable):",
-          "sha256": "b365d9ad4441897a5811ed939028d36be545af3b2a1882dfb87c69f7d4bb028d"
+          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, mut B) -> T, _mut_fallback_0: Int = 0, _mut_fallback_1: Int = 0]( function: F, mut first: A, mut second: B ) -> Result[T, Never]:",
+          "sha256": "fc6aa41e0f68b7687b03a25a1b067522b6fd8fa83b057d334ea1c58ff36d7e07"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(A, var B, /, var **kwargs: K) raises E -> T]( function: F, first: A, var second: B, /, var **values: K ) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable):",
-          "sha256": "d94891c965ad9203d917c0914c494e5286208ae46c76815b37820107194f8bda"
+          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, mut B) raises E -> T, _mut_fallback_0: Int = 0, _mut_fallback_1: Int = 0]( function: F, mut first: A, mut second: B ) -> Result[T, E]:",
+          "sha256": "89c75951f3ea50f1c62fb37afb0005d48483eec0a63f137f49bfb6b5b72365e7"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, var B, /, var **kwargs: K) -> T]( function: F, var first: A, var second: B, /, var **values: K ) -> Result[T, Never]:",
-          "sha256": "2b277b4c38a7ce3acd29ee86d9058620ca512728570711631190c7b818e10a1e"
+          "signature": "def attempt[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin, q: MutOrigin]( function: _NativeMutatingRef[A, R, E, F, raising, o], ref[q] value: A ) -> Result[R, E]:",
+          "sha256": "129377ad0e47b0428340ad89bc2201fcc48c12fe43c43fc2bb63ad47f3cb9655"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, var B, /, var **kwargs: K) raises E -> T]( function: F, var first: A, var second: B, /, var **values: K ) -> Result[T, E]:",
-          "sha256": "4ba46ec32e7c958f5ad0f0d15835ce2cfde026d3f45da2080b574bc4f2f1a79c"
+          "signature": "def attempt[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin]( function: _NativeUnaryRef[A, R, E, F, raising, o], var value: A ) -> Result[R, E]:",
+          "sha256": "4cf7b193d91d14a743ae3fc67375c503e4e2b329239141757e81cb10c7587f40"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A) -> T]( function: F, mut first: A ) -> Result[T, Never]:",
-          "sha256": "c65c72be8f8e485bf2305e601badcf61a2a5aa42792d719953edcdf4889fe428"
+          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin, q: MutOrigin]( function: _NativeMutOwnedRef[A, B, R, E, F, raising, o], ref[q] first: A, var second: B ) -> Result[R, E]:",
+          "sha256": "7dd18fa28cb12a701a5386fd223a04a75c9bf3d3efa8cf880ee4c35a187f59f2"
+        }
+      ],
+      "provider": "data/_result"
+    },
+    "data.attempt_kwargs": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def attempt_kwargs[K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var **kwargs: K) -> T]( function: F, /, var **values: K ) -> Result[T, Never]:",
+          "sha256": "9756d981692ce1521fbb6bc335d5d6dd979df836a137934f75540c25c5185f6a"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A) raises E -> T]( function: F, mut first: A ) -> Result[T, E]:",
-          "sha256": "b93dec486c7b6f046c47c0afc5585b62fcda8bb20f2e76acd5531d00b5d3d6d7"
+          "signature": "def attempt_kwargs[K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var **kwargs: K) raises E -> T]( function: F, /, var **values: K ) -> Result[T, E]:",
+          "sha256": "7001ffe210f92b71868d9622edf572237a83c8cf4bdaeec617e49304d5f36400"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(A, mut B) -> T]( function: F, first: A, mut second: B ) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable):",
-          "sha256": "6b1153f463548ec457606cd462a5a21cbb0ca0b4d6434ca59df4c83d5fb7dfb4"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(A, /, var **kwargs: K) -> T]( function: F, first: A, /, var **values: K ) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable):",
+          "sha256": "2c949642205585f78a4cb8a68d51c187d695c7b845ad9e02a2527aa38a45c880"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(A, mut B) raises E -> T]( function: F, first: A, mut second: B ) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable):",
-          "sha256": "60035e1d5ccf72083c303e5751c1762a1ee7154220abfd6bc2083c518efe0851"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(A, /, var **kwargs: K) raises E -> T]( function: F, first: A, /, var **values: K ) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable):",
+          "sha256": "8aaba9d8b8254f78ed9401d827b692afcd9a00b78e9faaa9bf571b83824cd8fb"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, mut B) -> T]( function: F, var first: A, mut second: B ) -> Result[T, Never]:",
-          "sha256": "0ec7f52fd59c855fd4bd46ff6abf065101fe0f0730772af23c445ec87a57658a"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) -> T]( function: F, var first: A, /, var **values: K ) -> Result[T, Never]:",
+          "sha256": "92506fe18f8f90954b7a0de908feb69febcd0b5152079041d68514203ac86880"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, mut B) raises E -> T]( function: F, var first: A, mut second: B ) -> Result[T, E]:",
-          "sha256": "3ccb25beebe9bfeeb759ad53c9d556b23766b0510be5b6a854fa9054d8e695d5"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) raises E -> T]( function: F, var first: A, /, var **values: K ) -> Result[T, E]:",
+          "sha256": "89bd574cc30d0899137954db132d362c392d843737ed1e376d0df18c2398b8ca"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, B) -> T]( function: F, mut first: A, second: B ) -> Result[T, Never] where not conforms_to(B, TrivialRegisterPassable):",
-          "sha256": "cf15b177879631fb5e9a0612aaa3e43f7f562363dc3d799076af6e86190e0445"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(A, B, /, var **kwargs: K) -> T]( function: F, first: A, second: B, /, var **values: K ) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable):",
+          "sha256": "cb9a899d687beebacd124ded4bdde757e18c533235cec0366a4b1defc9af9056"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, B) raises E -> T]( function: F, mut first: A, second: B ) -> Result[T, E] where not conforms_to(B, TrivialRegisterPassable):",
-          "sha256": "d3e78b25a324261c5496ebfd862bda21a514cc8d7e55098837f9b4958b287bdd"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(A, B, /, var **kwargs: K) raises E -> T]( function: F, first: A, second: B, /, var **values: K ) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable):",
+          "sha256": "4464ebbbddcdf24ca18a6084776bdecb4cbc12d0bdb02d95293bdf3170a78207"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, var B) -> T]( function: F, mut first: A, var second: B ) -> Result[T, Never]:",
-          "sha256": "1e22e3c5140fefd2427c51405f886158ae2c64a4ee08babadee2278c7b897f7b"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, B, /, var **kwargs: K) -> T]( function: F, var first: A, second: B, /, var **values: K ) -> Result[T, Never] where not conforms_to(B, TrivialRegisterPassable):",
+          "sha256": "aa1e75ab4a4244f365d34bada3ab786e1d958c938cd2902f0e6ac13bcd3d458c"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, var B) raises E -> T]( function: F, mut first: A, var second: B ) -> Result[T, E]:",
-          "sha256": "b94f9243cb413a3feba2072c46148eaecb116a22bb23a06c225ddf98a20cec52"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, B, /, var **kwargs: K) raises E -> T]( function: F, var first: A, second: B, /, var **values: K ) -> Result[T, E] where not conforms_to(B, TrivialRegisterPassable):",
+          "sha256": "ae0b319dd672eba956644eef9bc848286153294d5976cfdcd1b46c3134358ad1"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, mut B) -> T]( function: F, mut first: A, mut second: B ) -> Result[T, Never]:",
-          "sha256": "936787f23d7ecac7bdfbd76d70a3774255bce0a8f6a9169dd7d48f7f60fd2e1a"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(A, var B, /, var **kwargs: K) -> T]( function: F, first: A, var second: B, /, var **values: K ) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable):",
+          "sha256": "ab73fb1c24cd15ee9919919c8bca75ce04752d505441abb0c3e859f8f1151fa8"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, mut B) raises E -> T]( function: F, mut first: A, mut second: B ) -> Result[T, E]:",
-          "sha256": "fb82085d1cb4b037627417e11c15c368378d82a1eafc6507ca11f03384691529"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(A, var B, /, var **kwargs: K) raises E -> T]( function: F, first: A, var second: B, /, var **values: K ) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable):",
+          "sha256": "f00265a3afa7aaf1ab5ccae3a532264368a8587b61680ffa32c52525e4304293"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, /, var **kwargs: K) -> T]( function: F, mut first: A, /, var **values: K ) -> Result[T, Never]:",
-          "sha256": "95e8c154cea7dd941208bc951c174034aaee0dac22878609f7c4fa08208aeb21"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, var B, /, var **kwargs: K) -> T]( function: F, var first: A, var second: B, /, var **values: K ) -> Result[T, Never]:",
+          "sha256": "604c17fed16dbaaf508c9612f60b4c62179a5e07188155cb23ae76e84fe9e71e"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, /, var **kwargs: K) raises E -> T]( function: F, mut first: A, /, var **values: K ) -> Result[T, E]:",
-          "sha256": "47ba63cf9a621cf72379beaf66802c3eb98fd8dcc19417157311591dec71c8df"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, var B, /, var **kwargs: K) raises E -> T]( function: F, var first: A, var second: B, /, var **values: K ) -> Result[T, E]:",
+          "sha256": "cbf738545415f999a71d33d18af70cbd66d9cdccbf22fbd6638ebf7195fa6d84"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(A, mut B, /, var **kwargs: K) -> T]( function: F, first: A, mut second: B, /, var **values: K ) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable):",
-          "sha256": "35a72f1341f5edf76eab14e2d2dac471801c6dc63a5d8e0d51d4d9dd04be77d9"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, /, var **kwargs: K) -> T, _mut_fallback_0: Int = 0]( function: F, mut first: A, /, var **values: K ) -> Result[T, Never]:",
+          "sha256": "03d696e6c472308fe0886dd0d3283a3c978fabd55969a6574f38bfd8bacdc613"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(A, mut B, /, var **kwargs: K) raises E -> T]( function: F, first: A, mut second: B, /, var **values: K ) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable):",
-          "sha256": "bfe91b14349182f5cf539ef7f61d49368d601d76d9baf8ad02884cb6bed18640"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, /, var **kwargs: K) raises E -> T, _mut_fallback_0: Int = 0]( function: F, mut first: A, /, var **values: K ) -> Result[T, E]:",
+          "sha256": "28734bfbec2396f1d1ab7c98b7ed0d45b1d4e98e48028251e51df1f5ea97b82f"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, mut B, /, var **kwargs: K) -> T]( function: F, var first: A, mut second: B, /, var **values: K ) -> Result[T, Never]:",
-          "sha256": "2b938ea8f4139db0dc4a92928118c88b247a80a80a7ce65f52841133e5346c68"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(A, mut B, /, var **kwargs: K) -> T, _mut_fallback_0: Int = 0]( function: F, first: A, mut second: B, /, var **values: K ) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable):",
+          "sha256": "9a0671ad6c7d483421870d9a33efd3b9bb519b515eabd2d576baeaa499fe214f"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, mut B, /, var **kwargs: K) raises E -> T]( function: F, var first: A, mut second: B, /, var **values: K ) -> Result[T, E]:",
-          "sha256": "58b4032cd32ac011a61af31f2b7c362a0a3a98eb53db9603363a9f196982b569"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(A, mut B, /, var **kwargs: K) raises E -> T, _mut_fallback_0: Int = 0]( function: F, first: A, mut second: B, /, var **values: K ) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable):",
+          "sha256": "cd319713bdcaa98f0446a5fab1277f732f692cebb125a0af6c6e5ceae5e83a8e"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) -> T]( function: F, mut first: A, second: B, /, var **values: K ) -> Result[T, Never] where not conforms_to(B, TrivialRegisterPassable):",
-          "sha256": "9b4947e33b5ad5320542b8f7a1a20e14cd10d751bd20f525d2059675b00576eb"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, mut B, /, var **kwargs: K) -> T, _mut_fallback_0: Int = 0]( function: F, var first: A, mut second: B, /, var **values: K ) -> Result[T, Never]:",
+          "sha256": "a5518f73db50ee470d1d742c62b75ae5b2f214c3b4ae9087211cd07d866103e3"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) raises E -> T]( function: F, mut first: A, second: B, /, var **values: K ) -> Result[T, E] where not conforms_to(B, TrivialRegisterPassable):",
-          "sha256": "4246ea26325e655beb3c254b5665fc7b7ba404b459077e12d6efe674803de4f6"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, mut B, /, var **kwargs: K) raises E -> T, _mut_fallback_0: Int = 0]( function: F, var first: A, mut second: B, /, var **values: K ) -> Result[T, E]:",
+          "sha256": "9ac2f5d3b256394d64d18938653ad3480c38c25b3680815a7fdd0e760aa7c5ee"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) -> T]( function: F, mut first: A, var second: B, /, var **values: K ) -> Result[T, Never]:",
-          "sha256": "2aef3c2213707c376dd03c16506665df9c3bf4492512d107b827b0426974d193"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) -> T, _mut_fallback_0: Int = 0]( function: F, mut first: A, second: B, /, var **values: K ) -> Result[T, Never] where not conforms_to(B, TrivialRegisterPassable):",
+          "sha256": "6f8853090fd7c51e01a683b4fe531c331e010ce242e80a81f17c1d5faf460804"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) raises E -> T]( function: F, mut first: A, var second: B, /, var **values: K ) -> Result[T, E]:",
-          "sha256": "c2ed0544985f2c4831bcf7da3d8bb46ceaefc76c752140cf4c4a6242e15151d2"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) raises E -> T, _mut_fallback_0: Int = 0]( function: F, mut first: A, second: B, /, var **values: K ) -> Result[T, E] where not conforms_to(B, TrivialRegisterPassable):",
+          "sha256": "be8573e1250d8263183fe13b4c2547bf28dde7cef42245a702f87c28abeceb07"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, mut B, /, var **kwargs: K) -> T]( function: F, mut first: A, mut second: B, /, var **values: K ) -> Result[T, Never]:",
-          "sha256": "ae1b075115715909e8d5c5af4cee4c4da2d51488dfb7461824f84cf3a26f3739"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) -> T, _mut_fallback_0: Int = 0]( function: F, mut first: A, var second: B, /, var **values: K ) -> Result[T, Never]:",
+          "sha256": "22ea69c97a104d9a3d9314e562e072bc3e6f5ec211fd526360675a2937c13c5c"
         },
         {
-          "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, mut B, /, var **kwargs: K) raises E -> T]( function: F, mut first: A, mut second: B, /, var **values: K ) -> Result[T, E]:",
-          "sha256": "c43694489788a1cebea463f1a4fa093cb187a3852712f6c4335d83b0f2497810"
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) raises E -> T, _mut_fallback_0: Int = 0]( function: F, mut first: A, var second: B, /, var **values: K ) -> Result[T, E]:",
+          "sha256": "c72f8e51d3337e68354969c4c89978a268ee2b15733fc4f361f3c22b727bab52"
+        },
+        {
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, mut B, /, var **kwargs: K) -> T, _mut_fallback_0: Int = 0, _mut_fallback_1: Int = 0]( function: F, mut first: A, mut second: B, /, var **values: K ) -> Result[T, Never]:",
+          "sha256": "561823022ef74cf67a60355c61499ac2542113b8f5c1b31c9f04583b9de66284"
+        },
+        {
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, mut B, /, var **kwargs: K) raises E -> T, _mut_fallback_0: Int = 0, _mut_fallback_1: Int = 0]( function: F, mut first: A, mut second: B, /, var **values: K ) -> Result[T, E]:",
+          "sha256": "916798ada398dd8f7d0ef7bffab47630214116378d19e3868bc744dd84f2c0c9"
+        },
+        {
+          "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin, q: MutOrigin]( function: _NativeMutOwnedKeywordsRef[A, B, K, R, E, F, raising, o], ref[q] first: A, var second: B, /, var **values: K ) -> Result[R, E]:",
+          "sha256": "65174a838b64115042a1a6592bdd5f15e3905555fe0b1ae868418896fda52e3f"
         }
       ],
       "provider": "data/_result"
@@ -9170,6 +9192,62 @@
         {
           "signature": "def attempt_once[F: OnceThunk](var function: F) -> Result[F.Out, F.Error]:",
           "sha256": "394cf270db202b929522b286226f5c6fe45d796b725f03ad18022194c69f8dde"
+        }
+      ],
+      "provider": "data/_result"
+    },
+    "data.mutating": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def mutating[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: def(mut A) -> R](ref[o] function: F) -> _NativeMutatingRef[A, R, Never, F, False, o]:",
+          "sha256": "65fd67527ad9a69581381de4e25567cbf344df69334a045154a7e2c924ce39d0"
+        },
+        {
+          "signature": "def mutating[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //, F: def(mut A) raises E -> R](ref[o] function: F) -> _NativeMutatingRef[A, R, E, F, True, o]:",
+          "sha256": "5742259576d85c3c670664cbd5c718fe6e248e4966f87a8e0146d95ab1954cd7"
+        }
+      ],
+      "provider": "data/_result"
+    },
+    "data.consuming": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def consuming[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: def(var A) -> R](ref[o] function: F) -> _NativeUnaryRef[A, R, Never, F, False, o]:",
+          "sha256": "10a75128e4646da4fb7aebbd3c4c855f5d5a2ad6951099ee2627fdb6b0bf8ace"
+        },
+        {
+          "signature": "def consuming[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //, F: def(var A) raises E -> R](ref[o] function: F) -> _NativeUnaryRef[A, R, E, F, True, o]:",
+          "sha256": "f825f30f66579c8e7a12a7d79ad33575d0aef26f78e7d5cb6ee3e69f1e9cff91"
+        }
+      ],
+      "provider": "data/_result"
+    },
+    "data.mut_owned": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def mut_owned[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: def(mut A, var B) -> R](ref[o] function: F) -> _NativeMutOwnedRef[A, B, R, Never, F, False, o]:",
+          "sha256": "f1b862d11f5617c9ea691f87666b912752ebc3bae6c7c2d1e99a2dff58751998"
+        },
+        {
+          "signature": "def mut_owned[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //, F: def(mut A, var B) raises E -> R](ref[o] function: F) -> _NativeMutOwnedRef[A, B, R, E, F, True, o]:",
+          "sha256": "e2b813d81f7877ec61b8b1213f16d1fe54adc03a6848937d9db4388b90bab2af"
+        }
+      ],
+      "provider": "data/_result"
+    },
+    "data.mut_owned_kwargs": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def mut_owned_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: def(mut A, var B, /, var **kwargs: K) -> R](ref[o] function: F) -> _NativeMutOwnedKeywordsRef[A, B, K, R, Never, F, False, o]:",
+          "sha256": "30801db65ba9f3cec3139df0de96cffce1ca8cf49b3c74ecab8a7c9a7289165d"
+        },
+        {
+          "signature": "def mut_owned_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //, F: def(mut A, var B, /, var **kwargs: K) raises E -> R](ref[o] function: F) -> _NativeMutOwnedKeywordsRef[A, B, K, R, E, F, True, o]:",
+          "sha256": "cd0bfbb6c70f80b646cf25862bb6cae707892e71bcc3625e025596288a7a7b3c"
         }
       ],
       "provider": "data/_result"

@@ -1,5 +1,5 @@
 """Native keyword packs preserve Result channels, scalar prefixes and dictionary expansion."""
-from fp.data import Result, Ok, Err, attempt, raise_on_err
+from fp.data import Result, Ok, Err, attempt_kwargs, raise_on_err
 from std.collections import StringDict
 from std.testing import assert_equal
 
@@ -37,10 +37,10 @@ def total(var **values: Int) -> Int:
     return result
 
 def forward(var **values: Int) -> Result[Int, Never]:
-    return attempt(total, **values^)
+    return attempt_kwargs(total, **values^)
 
 def main() raises:
-    var ordinary: Result[Item, Never] = attempt(stored, code=-1)
+    var ordinary: Result[Item, Never] = attempt_kwargs(stored, code=-1)
     assert_equal(ordinary.is_ok(), True)
     var item = raise_on_err(ordinary^)
     assert_equal(item.is_err(), True)
@@ -51,7 +51,7 @@ def main() raises:
 
     for fail in range(2):
         for value in range(-24, -21):
-            var result: Result[Item, OuterFailure] = attempt(fallible, 2, 3, code=value, fail=fail)
+            var result: Result[Item, OuterFailure] = attempt_kwargs(fallible, 2, 3, code=value, fail=fail)
             assert_equal(result.is_err(), Bool(fail))
             var outer_code = 0
             var selected: Optional[Item] = None
@@ -74,24 +74,24 @@ def main() raises:
     values["one"] = 3
     values["two"] = 7
     var native_values = values.copy()
-    assert_equal(raise_on_err(attempt(total, **values^)), total(**native_values^))
+    assert_equal(raise_on_err(attempt_kwargs(total, **values^)), total(**native_values^))
     assert_equal(raise_on_err(forward(one=3, two=7)), 30)
     assert_equal(raise_on_err(forward()), 0)
-    assert_equal(raise_on_err(attempt(total, **StringDict[Int]())), 0)
+    assert_equal(raise_on_err(attempt_kwargs(total, **StringDict[Int]())), 0)
 
     var calls = 0
     def stop(var **values: Int) raises StopIteration {mut calls} -> Int:
         calls += 1
         raise StopIteration()
-    var stopped: Result[Int, StopIteration] = attempt(stop, code=7)
+    var stopped: Result[Int, StopIteration] = attempt_kwargs(stop, code=7)
     assert_equal(stopped.is_err(), True)
     assert_equal(calls, 1)
     def no_value(var **values: Int) {mut calls} -> None:
         calls += len(values)
-    var empty = attempt(no_value, first=1, second=2)
+    var empty = attempt_kwargs(no_value, first=1, second=2)
     assert_equal(empty.is_ok(), True)
     assert_equal(calls, 3)
-    assert_equal(raise_on_err(attempt(defaults, 3, one=4)), defaults(3, one=4))
+    assert_equal(raise_on_err(attempt_kwargs(defaults, 3, one=4)), defaults(3, one=4))
 
 
 def defaults(first: Int = 3, /, var **values: Int) -> Int:

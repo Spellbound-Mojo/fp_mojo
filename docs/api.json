@@ -24133,7 +24133,7 @@
        "variadic": false
       }
      ],
-     "description": "Overloads take zero, one or two positional arguments with their native read,\n`var` or `mut` conventions, and a native keyword pack `var **kwargs: K` after\nthem (homogeneous values, or a `StringDict[K]` expanded with\n`**options^`). Pass consumed arguments with `^`. Changes made through a `mut`\nargument before a failure remain visible. Every declared positional\nparameter must be supplied, including defaulted ones; other call shapes\nare written as a closure passed to the zero-argument form.\n\nThe function is borrowed and reusable. A returned `Result` is ordinary\nsuccess data, and a declared `StopIteration` is captured like any other\nerror; process aborts are never caught.",
+     "description": "Overloads take zero, one or two positional arguments with their native read,\n`var` or `mut` conventions. Use `attempt_kwargs` for a callback with a\nnative keyword pack, including an empty pack. Pass consumed arguments\nwith `^`. Changes made through a `mut`\nargument before a failure remain visible. Every declared positional\nparameter must be supplied, including defaulted ones; other call shapes\nare written as a closure passed to the zero-argument form.\n\nOn Mojo 1.2, select `mutating(function)`, `consuming(function)` or\n`mut_owned(function)` for the corresponding native argument conventions.\nThese borrowed adapters avoid incompatible overload inference.\n\nThe function is borrowed and reusable. A returned `Result` is ordinary\nsuccess data, and a declared `StopIteration` is captured like any other\nerror; process aborts are never caught.",
      "error": "",
      "parameters": [
       {
@@ -24980,11 +24980,11 @@
        "variadic": false
       },
       {
-       "convention": "var",
+       "convention": "mut",
        "description": "",
-       "name": "values",
-       "type": "K",
-       "variadic": true
+       "name": "first",
+       "type": "A",
+       "variadic": false
       }
      ],
      "description": "",
@@ -24993,7 +24993,7 @@
       {
        "description": "",
        "inferred": true,
-       "name": "K",
+       "name": "A",
        "type": "Movable & Deinitable",
        "variadic": false
       },
@@ -25008,7 +25008,14 @@
        "description": "",
        "inferred": false,
        "name": "F",
-       "type": "def(var **kwargs: K) -> T",
+       "type": "def(mut A) -> T",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
        "variadic": false
       }
      ],
@@ -25018,8 +25025,1145 @@
       "doc": "",
       "type": "Result[T, Never]"
      },
-     "signature": "def attempt[K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var **kwargs: K) -> T](function: F, /, var **values: K) -> Result[T, Never]",
-     "summary": "Forward native keyword values once; preserve the selected native error channel."
+     "signature": "def attempt[A: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A) -> T, _mut_fallback_0: Int = 0](function: F, mut first: A) -> Result[T, Never]",
+     "summary": "Forward once, preserving caller mutation and the exact native error channel."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "mut",
+       "description": "",
+       "name": "first",
+       "type": "A",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "def(mut A) raises E -> T",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Result[T, E]"
+     },
+     "signature": "def attempt[A: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A) raises E -> T, _mut_fallback_0: Int = 0](function: F, mut first: A) -> Result[T, E]",
+     "summary": "Forward once, preserving caller mutation and the exact native error channel."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "first",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "mut",
+       "description": "",
+       "name": "second",
+       "type": "B",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "def(A, mut B) -> T",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Result[T, Never]"
+     },
+     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(A, mut B) -> T, _mut_fallback_0: Int = 0](function: F, first: A, mut second: B) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable)",
+     "summary": "Forward once, preserving caller mutation and the exact native error channel."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "first",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "mut",
+       "description": "",
+       "name": "second",
+       "type": "B",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "def(A, mut B) raises E -> T",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Result[T, E]"
+     },
+     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(A, mut B) raises E -> T, _mut_fallback_0: Int = 0](function: F, first: A, mut second: B) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable)",
+     "summary": "Forward once, preserving caller mutation and the exact native error channel."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "first",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "mut",
+       "description": "",
+       "name": "second",
+       "type": "B",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "def(var A, mut B) -> T",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Result[T, Never]"
+     },
+     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, mut B) -> T, _mut_fallback_0: Int = 0](function: F, var first: A, mut second: B) -> Result[T, Never]",
+     "summary": "Forward once, preserving caller mutation and the exact native error channel."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "first",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "mut",
+       "description": "",
+       "name": "second",
+       "type": "B",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "def(var A, mut B) raises E -> T",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Result[T, E]"
+     },
+     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, mut B) raises E -> T, _mut_fallback_0: Int = 0](function: F, var first: A, mut second: B) -> Result[T, E]",
+     "summary": "Forward once, preserving caller mutation and the exact native error channel."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "mut",
+       "description": "",
+       "name": "first",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "second",
+       "type": "B",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "def(mut A, B) -> T",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Result[T, Never]"
+     },
+     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, B) -> T, _mut_fallback_0: Int = 0](function: F, mut first: A, second: B) -> Result[T, Never] where not conforms_to(B, TrivialRegisterPassable)",
+     "summary": "Forward once, preserving caller mutation and the exact native error channel."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "mut",
+       "description": "",
+       "name": "first",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "second",
+       "type": "B",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "def(mut A, B) raises E -> T",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Result[T, E]"
+     },
+     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, B) raises E -> T, _mut_fallback_0: Int = 0](function: F, mut first: A, second: B) -> Result[T, E] where not conforms_to(B, TrivialRegisterPassable)",
+     "summary": "Forward once, preserving caller mutation and the exact native error channel."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "mut",
+       "description": "",
+       "name": "first",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "second",
+       "type": "B",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "def(mut A, var B) -> T",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Result[T, Never]"
+     },
+     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, var B) -> T, _mut_fallback_0: Int = 0](function: F, mut first: A, var second: B) -> Result[T, Never]",
+     "summary": "Forward once, preserving caller mutation and the exact native error channel."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "mut",
+       "description": "",
+       "name": "first",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "second",
+       "type": "B",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "def(mut A, var B) raises E -> T",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Result[T, E]"
+     },
+     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, var B) raises E -> T, _mut_fallback_0: Int = 0](function: F, mut first: A, var second: B) -> Result[T, E]",
+     "summary": "Forward once, preserving caller mutation and the exact native error channel."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "mut",
+       "description": "",
+       "name": "first",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "mut",
+       "description": "",
+       "name": "second",
+       "type": "B",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "def(mut A, mut B) -> T",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_1",
+       "type": "Int",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Result[T, Never]"
+     },
+     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, mut B) -> T, _mut_fallback_0: Int = 0, _mut_fallback_1: Int = 0](function: F, mut first: A, mut second: B) -> Result[T, Never]",
+     "summary": "Forward once, preserving caller mutation and the exact native error channel."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "mut",
+       "description": "",
+       "name": "first",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "mut",
+       "description": "",
+       "name": "second",
+       "type": "B",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "def(mut A, mut B) raises E -> T",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_1",
+       "type": "Int",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Result[T, E]"
+     },
+     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, mut B) raises E -> T, _mut_fallback_0: Int = 0, _mut_fallback_1: Int = 0](function: F, mut first: A, mut second: B) -> Result[T, E]",
+     "summary": "Forward once, preserving caller mutation and the exact native error channel."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "_NativeMutatingRef[A, R, E, F, raising, o]",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "value",
+       "type": "A",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "raising",
+       "type": "Bool",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "q",
+       "type": "MutOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Result[R, E]"
+     },
+     "signature": "def attempt[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin, q: MutOrigin](function: _NativeMutatingRef[A, R, E, F, raising, o], ref[q] value: A) -> Result[R, E]",
+     "summary": "Call the borrowed convention adapter once and capture its exact outcome."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "_NativeUnaryRef[A, R, E, F, raising, o]",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "A",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "raising",
+       "type": "Bool",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Result[R, E]"
+     },
+     "signature": "def attempt[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin](function: _NativeUnaryRef[A, R, E, F, raising, o], var value: A) -> Result[R, E]",
+     "summary": "Call the borrowed convention adapter once and capture its exact outcome."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "_NativeMutOwnedRef[A, B, R, E, F, raising, o]",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "first",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "second",
+       "type": "B",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "raising",
+       "type": "Bool",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "q",
+       "type": "MutOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Result[R, E]"
+     },
+     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin, q: MutOrigin](function: _NativeMutOwnedRef[A, B, R, E, F, raising, o], ref[q] first: A, var second: B) -> Result[R, E]",
+     "summary": "Call the borrowed convention adapter once and capture its exact outcome."
+    }
+   ],
+   "provider": "data/_result",
+   "summary": ""
+  },
+  "data.attempt_kwargs": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The borrowed function, invoked once.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The owned keyword values forwarded to the callback.",
+       "name": "values",
+       "type": "K",
+       "variadic": true
+      }
+     ],
+     "description": "The callback must declare `var **kwargs: K`, optionally after zero, one\nor two positional parameters with read, `var` or `mut` conventions. Pass\nthe callback and its positional arguments positionally, and pass consumed\narguments with `^`. Keyword values are homogeneous and owned; a\n`StringDict[K]` can be expanded with `**options^`. An empty pack still uses\n`attempt_kwargs(function)`.\n\nThe callback is borrowed and reusable. Mutation before failure remains\nvisible; its exact declared error, including `StopIteration`, is stored\nas `Err`. A returned Result is ordinary success data. Every positional\nparameter must be supplied, including defaulted ones. Named parameters\nwithout a native keyword pack require a closure passed to `attempt`.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The owned keyword value type.",
+       "inferred": true,
+       "name": "K",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The function's type: a plain function or a closure.",
+       "inferred": false,
+       "name": "F",
+       "type": "def(var **kwargs: K) -> T",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The successful value as `Ok`, or the exact declared error as `Err`;\na non-raising callback has error type `Never`.",
+      "type": "Result[T, Never]"
+     },
+     "signature": "def attempt_kwargs[K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var **kwargs: K) -> T](function: F, /, var **values: K) -> Result[T, Never]",
+     "summary": "Call once with a native keyword pack and capture its outcome as a Result."
     },
     {
      "args": [
@@ -25076,7 +26220,7 @@
       "doc": "",
       "type": "Result[T, E]"
      },
-     "signature": "def attempt[K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var **kwargs: K) raises E -> T](function: F, /, var **values: K) -> Result[T, E]",
+     "signature": "def attempt_kwargs[K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var **kwargs: K) raises E -> T](function: F, /, var **values: K) -> Result[T, E]",
      "summary": "Forward native keyword values once; preserve the selected native error channel."
     },
     {
@@ -25141,7 +26285,7 @@
       "doc": "",
       "type": "Result[T, Never]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(A, /, var **kwargs: K) -> T](function: F, first: A, /, var **values: K) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable)",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(A, /, var **kwargs: K) -> T](function: F, first: A, /, var **values: K) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable)",
      "summary": "Forward native keyword values once; preserve the selected native error channel."
     },
     {
@@ -25213,7 +26357,7 @@
       "doc": "",
       "type": "Result[T, E]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(A, /, var **kwargs: K) raises E -> T](function: F, first: A, /, var **values: K) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable)",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(A, /, var **kwargs: K) raises E -> T](function: F, first: A, /, var **values: K) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable)",
      "summary": "Forward native keyword values once; preserve the selected native error channel."
     },
     {
@@ -25278,7 +26422,7 @@
       "doc": "",
       "type": "Result[T, Never]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) -> T](function: F, var first: A, /, var **values: K) -> Result[T, Never]",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) -> T](function: F, var first: A, /, var **values: K) -> Result[T, Never]",
      "summary": "Forward native keyword values once; preserve the selected native error channel."
     },
     {
@@ -25350,7 +26494,7 @@
       "doc": "",
       "type": "Result[T, E]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) raises E -> T](function: F, var first: A, /, var **values: K) -> Result[T, E]",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) raises E -> T](function: F, var first: A, /, var **values: K) -> Result[T, E]",
      "summary": "Forward native keyword values once; preserve the selected native error channel."
     },
     {
@@ -25429,7 +26573,7 @@
       "doc": "",
       "type": "Result[T, Never]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(A, B, /, var **kwargs: K) -> T](function: F, first: A, second: B, /, var **values: K) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable)",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(A, B, /, var **kwargs: K) -> T](function: F, first: A, second: B, /, var **values: K) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable)",
      "summary": "Forward native keyword values once; preserve the selected native error channel."
     },
     {
@@ -25515,7 +26659,7 @@
       "doc": "",
       "type": "Result[T, E]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(A, B, /, var **kwargs: K) raises E -> T](function: F, first: A, second: B, /, var **values: K) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable)",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(A, B, /, var **kwargs: K) raises E -> T](function: F, first: A, second: B, /, var **values: K) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable)",
      "summary": "Forward native keyword values once; preserve the selected native error channel."
     },
     {
@@ -25594,7 +26738,7 @@
       "doc": "",
       "type": "Result[T, Never]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, B, /, var **kwargs: K) -> T](function: F, var first: A, second: B, /, var **values: K) -> Result[T, Never] where not conforms_to(B, TrivialRegisterPassable)",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, B, /, var **kwargs: K) -> T](function: F, var first: A, second: B, /, var **values: K) -> Result[T, Never] where not conforms_to(B, TrivialRegisterPassable)",
      "summary": "Forward native keyword values once; preserve the selected native error channel."
     },
     {
@@ -25680,7 +26824,7 @@
       "doc": "",
       "type": "Result[T, E]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, B, /, var **kwargs: K) raises E -> T](function: F, var first: A, second: B, /, var **values: K) -> Result[T, E] where not conforms_to(B, TrivialRegisterPassable)",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, B, /, var **kwargs: K) raises E -> T](function: F, var first: A, second: B, /, var **values: K) -> Result[T, E] where not conforms_to(B, TrivialRegisterPassable)",
      "summary": "Forward native keyword values once; preserve the selected native error channel."
     },
     {
@@ -25759,7 +26903,7 @@
       "doc": "",
       "type": "Result[T, Never]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(A, var B, /, var **kwargs: K) -> T](function: F, first: A, var second: B, /, var **values: K) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable)",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(A, var B, /, var **kwargs: K) -> T](function: F, first: A, var second: B, /, var **values: K) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable)",
      "summary": "Forward native keyword values once; preserve the selected native error channel."
     },
     {
@@ -25845,7 +26989,7 @@
       "doc": "",
       "type": "Result[T, E]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(A, var B, /, var **kwargs: K) raises E -> T](function: F, first: A, var second: B, /, var **values: K) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable)",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(A, var B, /, var **kwargs: K) raises E -> T](function: F, first: A, var second: B, /, var **values: K) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable)",
      "summary": "Forward native keyword values once; preserve the selected native error channel."
     },
     {
@@ -25924,7 +27068,7 @@
       "doc": "",
       "type": "Result[T, Never]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, var B, /, var **kwargs: K) -> T](function: F, var first: A, var second: B, /, var **values: K) -> Result[T, Never]",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, var B, /, var **kwargs: K) -> T](function: F, var first: A, var second: B, /, var **values: K) -> Result[T, Never]",
      "summary": "Forward native keyword values once; preserve the selected native error channel."
     },
     {
@@ -26010,802 +27154,8 @@
       "doc": "",
       "type": "Result[T, E]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, var B, /, var **kwargs: K) raises E -> T](function: F, var first: A, var second: B, /, var **values: K) -> Result[T, E]",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, var B, /, var **kwargs: K) raises E -> T](function: F, var first: A, var second: B, /, var **values: K) -> Result[T, E]",
      "summary": "Forward native keyword values once; preserve the selected native error channel."
-    },
-    {
-     "args": [
-      {
-       "convention": "",
-       "description": "",
-       "name": "function",
-       "type": "F",
-       "variadic": false
-      },
-      {
-       "convention": "mut",
-       "description": "",
-       "name": "first",
-       "type": "A",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "A",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "T",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "F",
-       "type": "def(mut A) -> T",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "Result[T, Never]"
-     },
-     "signature": "def attempt[A: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A) -> T](function: F, mut first: A) -> Result[T, Never]",
-     "summary": "Forward once, preserving caller mutation and the exact native error channel."
-    },
-    {
-     "args": [
-      {
-       "convention": "",
-       "description": "",
-       "name": "function",
-       "type": "F",
-       "variadic": false
-      },
-      {
-       "convention": "mut",
-       "description": "",
-       "name": "first",
-       "type": "A",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "A",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "T",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "F",
-       "type": "def(mut A) raises E -> T",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "Result[T, E]"
-     },
-     "signature": "def attempt[A: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A) raises E -> T](function: F, mut first: A) -> Result[T, E]",
-     "summary": "Forward once, preserving caller mutation and the exact native error channel."
-    },
-    {
-     "args": [
-      {
-       "convention": "",
-       "description": "",
-       "name": "function",
-       "type": "F",
-       "variadic": false
-      },
-      {
-       "convention": "",
-       "description": "",
-       "name": "first",
-       "type": "A",
-       "variadic": false
-      },
-      {
-       "convention": "mut",
-       "description": "",
-       "name": "second",
-       "type": "B",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "A",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "B",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "T",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "F",
-       "type": "def(A, mut B) -> T",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "Result[T, Never]"
-     },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(A, mut B) -> T](function: F, first: A, mut second: B) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable)",
-     "summary": "Forward once, preserving caller mutation and the exact native error channel."
-    },
-    {
-     "args": [
-      {
-       "convention": "",
-       "description": "",
-       "name": "function",
-       "type": "F",
-       "variadic": false
-      },
-      {
-       "convention": "",
-       "description": "",
-       "name": "first",
-       "type": "A",
-       "variadic": false
-      },
-      {
-       "convention": "mut",
-       "description": "",
-       "name": "second",
-       "type": "B",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "A",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "B",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "T",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "F",
-       "type": "def(A, mut B) raises E -> T",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "Result[T, E]"
-     },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(A, mut B) raises E -> T](function: F, first: A, mut second: B) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable)",
-     "summary": "Forward once, preserving caller mutation and the exact native error channel."
-    },
-    {
-     "args": [
-      {
-       "convention": "",
-       "description": "",
-       "name": "function",
-       "type": "F",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "",
-       "name": "first",
-       "type": "A",
-       "variadic": false
-      },
-      {
-       "convention": "mut",
-       "description": "",
-       "name": "second",
-       "type": "B",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "A",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "B",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "T",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "F",
-       "type": "def(var A, mut B) -> T",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "Result[T, Never]"
-     },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, mut B) -> T](function: F, var first: A, mut second: B) -> Result[T, Never]",
-     "summary": "Forward once, preserving caller mutation and the exact native error channel."
-    },
-    {
-     "args": [
-      {
-       "convention": "",
-       "description": "",
-       "name": "function",
-       "type": "F",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "",
-       "name": "first",
-       "type": "A",
-       "variadic": false
-      },
-      {
-       "convention": "mut",
-       "description": "",
-       "name": "second",
-       "type": "B",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "A",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "B",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "T",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "F",
-       "type": "def(var A, mut B) raises E -> T",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "Result[T, E]"
-     },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, mut B) raises E -> T](function: F, var first: A, mut second: B) -> Result[T, E]",
-     "summary": "Forward once, preserving caller mutation and the exact native error channel."
-    },
-    {
-     "args": [
-      {
-       "convention": "",
-       "description": "",
-       "name": "function",
-       "type": "F",
-       "variadic": false
-      },
-      {
-       "convention": "mut",
-       "description": "",
-       "name": "first",
-       "type": "A",
-       "variadic": false
-      },
-      {
-       "convention": "",
-       "description": "",
-       "name": "second",
-       "type": "B",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "A",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "B",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "T",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "F",
-       "type": "def(mut A, B) -> T",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "Result[T, Never]"
-     },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, B) -> T](function: F, mut first: A, second: B) -> Result[T, Never] where not conforms_to(B, TrivialRegisterPassable)",
-     "summary": "Forward once, preserving caller mutation and the exact native error channel."
-    },
-    {
-     "args": [
-      {
-       "convention": "",
-       "description": "",
-       "name": "function",
-       "type": "F",
-       "variadic": false
-      },
-      {
-       "convention": "mut",
-       "description": "",
-       "name": "first",
-       "type": "A",
-       "variadic": false
-      },
-      {
-       "convention": "",
-       "description": "",
-       "name": "second",
-       "type": "B",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "A",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "B",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "T",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "F",
-       "type": "def(mut A, B) raises E -> T",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "Result[T, E]"
-     },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, B) raises E -> T](function: F, mut first: A, second: B) -> Result[T, E] where not conforms_to(B, TrivialRegisterPassable)",
-     "summary": "Forward once, preserving caller mutation and the exact native error channel."
-    },
-    {
-     "args": [
-      {
-       "convention": "",
-       "description": "",
-       "name": "function",
-       "type": "F",
-       "variadic": false
-      },
-      {
-       "convention": "mut",
-       "description": "",
-       "name": "first",
-       "type": "A",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "",
-       "name": "second",
-       "type": "B",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "A",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "B",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "T",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "F",
-       "type": "def(mut A, var B) -> T",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "Result[T, Never]"
-     },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, var B) -> T](function: F, mut first: A, var second: B) -> Result[T, Never]",
-     "summary": "Forward once, preserving caller mutation and the exact native error channel."
-    },
-    {
-     "args": [
-      {
-       "convention": "",
-       "description": "",
-       "name": "function",
-       "type": "F",
-       "variadic": false
-      },
-      {
-       "convention": "mut",
-       "description": "",
-       "name": "first",
-       "type": "A",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "",
-       "name": "second",
-       "type": "B",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "A",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "B",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "T",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "F",
-       "type": "def(mut A, var B) raises E -> T",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "Result[T, E]"
-     },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, var B) raises E -> T](function: F, mut first: A, var second: B) -> Result[T, E]",
-     "summary": "Forward once, preserving caller mutation and the exact native error channel."
-    },
-    {
-     "args": [
-      {
-       "convention": "",
-       "description": "",
-       "name": "function",
-       "type": "F",
-       "variadic": false
-      },
-      {
-       "convention": "mut",
-       "description": "",
-       "name": "first",
-       "type": "A",
-       "variadic": false
-      },
-      {
-       "convention": "mut",
-       "description": "",
-       "name": "second",
-       "type": "B",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "A",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "B",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "T",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "F",
-       "type": "def(mut A, mut B) -> T",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "Result[T, Never]"
-     },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, mut B) -> T](function: F, mut first: A, mut second: B) -> Result[T, Never]",
-     "summary": "Forward once, preserving caller mutation and the exact native error channel."
-    },
-    {
-     "args": [
-      {
-       "convention": "",
-       "description": "",
-       "name": "function",
-       "type": "F",
-       "variadic": false
-      },
-      {
-       "convention": "mut",
-       "description": "",
-       "name": "first",
-       "type": "A",
-       "variadic": false
-      },
-      {
-       "convention": "mut",
-       "description": "",
-       "name": "second",
-       "type": "B",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "A",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "B",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "T",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "F",
-       "type": "def(mut A, mut B) raises E -> T",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "Result[T, E]"
-     },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, mut B) raises E -> T](function: F, mut first: A, mut second: B) -> Result[T, E]",
-     "summary": "Forward once, preserving caller mutation and the exact native error channel."
     },
     {
      "args": [
@@ -26861,6 +27211,13 @@
        "name": "F",
        "type": "def(mut A, /, var **kwargs: K) -> T",
        "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
       }
      ],
      "raises": false,
@@ -26869,7 +27226,7 @@
       "doc": "",
       "type": "Result[T, Never]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, /, var **kwargs: K) -> T](function: F, mut first: A, /, var **values: K) -> Result[T, Never]",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, /, var **kwargs: K) -> T, _mut_fallback_0: Int = 0](function: F, mut first: A, /, var **values: K) -> Result[T, Never]",
      "summary": "Forward once, preserving caller mutation and the exact native error channel."
     },
     {
@@ -26933,6 +27290,13 @@
        "name": "F",
        "type": "def(mut A, /, var **kwargs: K) raises E -> T",
        "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
       }
      ],
      "raises": false,
@@ -26941,7 +27305,7 @@
       "doc": "",
       "type": "Result[T, E]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, /, var **kwargs: K) raises E -> T](function: F, mut first: A, /, var **values: K) -> Result[T, E]",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, /, var **kwargs: K) raises E -> T, _mut_fallback_0: Int = 0](function: F, mut first: A, /, var **values: K) -> Result[T, E]",
      "summary": "Forward once, preserving caller mutation and the exact native error channel."
     },
     {
@@ -27012,6 +27376,13 @@
        "name": "F",
        "type": "def(A, mut B, /, var **kwargs: K) -> T",
        "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
       }
      ],
      "raises": false,
@@ -27020,7 +27391,7 @@
       "doc": "",
       "type": "Result[T, Never]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(A, mut B, /, var **kwargs: K) -> T](function: F, first: A, mut second: B, /, var **values: K) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable)",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(A, mut B, /, var **kwargs: K) -> T, _mut_fallback_0: Int = 0](function: F, first: A, mut second: B, /, var **values: K) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable)",
      "summary": "Forward once, preserving caller mutation and the exact native error channel."
     },
     {
@@ -27098,6 +27469,13 @@
        "name": "F",
        "type": "def(A, mut B, /, var **kwargs: K) raises E -> T",
        "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
       }
      ],
      "raises": false,
@@ -27106,7 +27484,7 @@
       "doc": "",
       "type": "Result[T, E]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(A, mut B, /, var **kwargs: K) raises E -> T](function: F, first: A, mut second: B, /, var **values: K) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable)",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(A, mut B, /, var **kwargs: K) raises E -> T, _mut_fallback_0: Int = 0](function: F, first: A, mut second: B, /, var **values: K) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable)",
      "summary": "Forward once, preserving caller mutation and the exact native error channel."
     },
     {
@@ -27177,6 +27555,13 @@
        "name": "F",
        "type": "def(var A, mut B, /, var **kwargs: K) -> T",
        "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
       }
      ],
      "raises": false,
@@ -27185,7 +27570,7 @@
       "doc": "",
       "type": "Result[T, Never]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, mut B, /, var **kwargs: K) -> T](function: F, var first: A, mut second: B, /, var **values: K) -> Result[T, Never]",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, mut B, /, var **kwargs: K) -> T, _mut_fallback_0: Int = 0](function: F, var first: A, mut second: B, /, var **values: K) -> Result[T, Never]",
      "summary": "Forward once, preserving caller mutation and the exact native error channel."
     },
     {
@@ -27263,6 +27648,13 @@
        "name": "F",
        "type": "def(var A, mut B, /, var **kwargs: K) raises E -> T",
        "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
       }
      ],
      "raises": false,
@@ -27271,7 +27663,7 @@
       "doc": "",
       "type": "Result[T, E]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, mut B, /, var **kwargs: K) raises E -> T](function: F, var first: A, mut second: B, /, var **values: K) -> Result[T, E]",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, mut B, /, var **kwargs: K) raises E -> T, _mut_fallback_0: Int = 0](function: F, var first: A, mut second: B, /, var **values: K) -> Result[T, E]",
      "summary": "Forward once, preserving caller mutation and the exact native error channel."
     },
     {
@@ -27342,6 +27734,13 @@
        "name": "F",
        "type": "def(mut A, B, /, var **kwargs: K) -> T",
        "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
       }
      ],
      "raises": false,
@@ -27350,7 +27749,7 @@
       "doc": "",
       "type": "Result[T, Never]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) -> T](function: F, mut first: A, second: B, /, var **values: K) -> Result[T, Never] where not conforms_to(B, TrivialRegisterPassable)",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) -> T, _mut_fallback_0: Int = 0](function: F, mut first: A, second: B, /, var **values: K) -> Result[T, Never] where not conforms_to(B, TrivialRegisterPassable)",
      "summary": "Forward once, preserving caller mutation and the exact native error channel."
     },
     {
@@ -27428,6 +27827,13 @@
        "name": "F",
        "type": "def(mut A, B, /, var **kwargs: K) raises E -> T",
        "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
       }
      ],
      "raises": false,
@@ -27436,7 +27842,7 @@
       "doc": "",
       "type": "Result[T, E]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) raises E -> T](function: F, mut first: A, second: B, /, var **values: K) -> Result[T, E] where not conforms_to(B, TrivialRegisterPassable)",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) raises E -> T, _mut_fallback_0: Int = 0](function: F, mut first: A, second: B, /, var **values: K) -> Result[T, E] where not conforms_to(B, TrivialRegisterPassable)",
      "summary": "Forward once, preserving caller mutation and the exact native error channel."
     },
     {
@@ -27507,6 +27913,13 @@
        "name": "F",
        "type": "def(mut A, var B, /, var **kwargs: K) -> T",
        "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
       }
      ],
      "raises": false,
@@ -27515,7 +27928,7 @@
       "doc": "",
       "type": "Result[T, Never]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) -> T](function: F, mut first: A, var second: B, /, var **values: K) -> Result[T, Never]",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) -> T, _mut_fallback_0: Int = 0](function: F, mut first: A, var second: B, /, var **values: K) -> Result[T, Never]",
      "summary": "Forward once, preserving caller mutation and the exact native error channel."
     },
     {
@@ -27593,6 +28006,13 @@
        "name": "F",
        "type": "def(mut A, var B, /, var **kwargs: K) raises E -> T",
        "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
       }
      ],
      "raises": false,
@@ -27601,7 +28021,7 @@
       "doc": "",
       "type": "Result[T, E]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) raises E -> T](function: F, mut first: A, var second: B, /, var **values: K) -> Result[T, E]",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) raises E -> T, _mut_fallback_0: Int = 0](function: F, mut first: A, var second: B, /, var **values: K) -> Result[T, E]",
      "summary": "Forward once, preserving caller mutation and the exact native error channel."
     },
     {
@@ -27672,6 +28092,20 @@
        "name": "F",
        "type": "def(mut A, mut B, /, var **kwargs: K) -> T",
        "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_1",
+       "type": "Int",
+       "variadic": false
       }
      ],
      "raises": false,
@@ -27680,7 +28114,7 @@
       "doc": "",
       "type": "Result[T, Never]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, mut B, /, var **kwargs: K) -> T](function: F, mut first: A, mut second: B, /, var **values: K) -> Result[T, Never]",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //, F: def(mut A, mut B, /, var **kwargs: K) -> T, _mut_fallback_0: Int = 0, _mut_fallback_1: Int = 0](function: F, mut first: A, mut second: B, /, var **values: K) -> Result[T, Never]",
      "summary": "Forward once, preserving caller mutation and the exact native error channel."
     },
     {
@@ -27758,6 +28192,20 @@
        "name": "F",
        "type": "def(mut A, mut B, /, var **kwargs: K) raises E -> T",
        "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_0",
+       "type": "Int",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "_mut_fallback_1",
+       "type": "Int",
+       "variadic": false
       }
      ],
      "raises": false,
@@ -27766,8 +28214,115 @@
       "doc": "",
       "type": "Result[T, E]"
      },
-     "signature": "def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, mut B, /, var **kwargs: K) raises E -> T](function: F, mut first: A, mut second: B, /, var **values: K) -> Result[T, E]",
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(mut A, mut B, /, var **kwargs: K) raises E -> T, _mut_fallback_0: Int = 0, _mut_fallback_1: Int = 0](function: F, mut first: A, mut second: B, /, var **values: K) -> Result[T, E]",
      "summary": "Forward once, preserving caller mutation and the exact native error channel."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "_NativeMutOwnedKeywordsRef[A, B, K, R, E, F, raising, o]",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "first",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "second",
+       "type": "B",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "values",
+       "type": "K",
+       "variadic": true
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "K",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "raising",
+       "type": "Bool",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "q",
+       "type": "MutOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Result[R, E]"
+     },
+     "signature": "def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin, q: MutOrigin](function: _NativeMutOwnedKeywordsRef[A, B, K, R, E, F, raising, o], ref[q] first: A, var second: B, /, var **values: K) -> Result[R, E]",
+     "summary": "Call the borrowed mixed adapter once with a native keyword pack."
     }
    ],
    "provider": "data/_result",
@@ -27861,6 +28416,516 @@
     }
    ],
    "provider": "data/result",
+   "summary": ""
+  },
+  "data.consuming": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "The native callback, borrowed with its captures and origin.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "Use `attempt(consuming(function), value^)`. Only the argument is consumed;\nthe callback remains reusable.\n\nThis borrows the callback without invoking or copying it. Keep the callback\nalive while the adapter is used. Pure callbacks produce a `Never` error\nchannel; raising callbacks retain their exact declared error type.\nSelect the adapter matching the callback convention: incompatible factory\ncalls can crash the Mojo 1.2 compiler instead of producing a diagnostic.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The owned argument type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The borrowed callback origin, inferred.",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "The exact native function or closure type.",
+       "inferred": false,
+       "name": "F",
+       "type": "def(var A) -> R",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A reusable borrowed adapter for an owned argument.",
+      "type": "_NativeUnaryRef[A, R, Never, F, False, o]"
+     },
+     "signature": "def consuming[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: def(var A) -> R](ref[o] function: F) -> _NativeUnaryRef[A, R, Never, F, False, o]",
+     "summary": "Borrow a native callback taking one owned argument for `attempt`."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "def(var A) raises E -> R",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_NativeUnaryRef[A, R, E, F, True, o]"
+     },
+     "signature": "def consuming[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //, F: def(var A) raises E -> R](ref[o] function: F) -> _NativeUnaryRef[A, R, E, F, True, o]",
+     "summary": "Borrow a raising native callback, retaining its exact error type."
+    }
+   ],
+   "provider": "data/_result",
+   "summary": ""
+  },
+  "data.mut_owned": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "The native callback, borrowed with its captures and origin.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "Use `attempt(mut_owned(function), first, second^)`. Mutation of `first`\nremains visible even when the callback raises.\n\nThis borrows the callback without invoking or copying it. Keep the callback\nalive while the adapter is used. Pure callbacks produce a `Never` error\nchannel; raising callbacks retain their exact declared error type.\nSelect the adapter matching the callback convention: incompatible factory\ncalls can crash the Mojo 1.2 compiler instead of producing a diagnostic.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The mutable first argument type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The owned second argument type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The borrowed callback origin, inferred.",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "The exact native function or closure type.",
+       "inferred": false,
+       "name": "F",
+       "type": "def(mut A, var B) -> R",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A reusable borrowed adapter for `attempt` with a mutable/owned pair.",
+      "type": "_NativeMutOwnedRef[A, B, R, Never, F, False, o]"
+     },
+     "signature": "def mut_owned[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: def(mut A, var B) -> R](ref[o] function: F) -> _NativeMutOwnedRef[A, B, R, Never, F, False, o]",
+     "summary": "Borrow a native callback taking a mutable argument and an owned argument."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "def(mut A, var B) raises E -> R",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_NativeMutOwnedRef[A, B, R, E, F, True, o]"
+     },
+     "signature": "def mut_owned[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //, F: def(mut A, var B) raises E -> R](ref[o] function: F) -> _NativeMutOwnedRef[A, B, R, E, F, True, o]",
+     "summary": "Borrow a raising native callback, retaining its exact error type."
+    }
+   ],
+   "provider": "data/_result",
+   "summary": ""
+  },
+  "data.mut_owned_kwargs": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "The native callback, borrowed with its captures and origin.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "Use `attempt_kwargs(mut_owned_kwargs(function), first, second^, key=value)`.\nThe homogeneous native keyword pack may be empty. Mutation of `first`\nremains visible even when the callback raises.\n\nThis borrows the callback without invoking or copying it. Keep the callback\nalive while the adapter is used. Pure callbacks produce a `Never` error\nchannel; raising callbacks retain their exact declared error type.\nSelect the adapter matching the callback convention: incompatible factory\ncalls can crash the Mojo 1.2 compiler instead of producing a diagnostic.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The mutable first argument type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The owned second argument type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The owned keyword value type.",
+       "inferred": true,
+       "name": "K",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The borrowed callback origin, inferred.",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "The exact native function or closure type.",
+       "inferred": false,
+       "name": "F",
+       "type": "def(mut A, var B, /, var **kwargs: K) -> R",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A reusable borrowed adapter for `attempt_kwargs` with a mutable/owned pair.",
+      "type": "_NativeMutOwnedKeywordsRef[A, B, K, R, Never, F, False, o]"
+     },
+     "signature": "def mut_owned_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: def(mut A, var B, /, var **kwargs: K) -> R](ref[o] function: F) -> _NativeMutOwnedKeywordsRef[A, B, K, R, Never, F, False, o]",
+     "summary": "Borrow a native callback taking a mutable/owned pair and a keyword pack."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "K",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "def(mut A, var B, /, var **kwargs: K) raises E -> R",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_NativeMutOwnedKeywordsRef[A, B, K, R, E, F, True, o]"
+     },
+     "signature": "def mut_owned_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //, F: def(mut A, var B, /, var **kwargs: K) raises E -> R](ref[o] function: F) -> _NativeMutOwnedKeywordsRef[A, B, K, R, E, F, True, o]",
+     "summary": "Borrow a raising native callback, retaining its exact error type."
+    }
+   ],
+   "provider": "data/_result",
+   "summary": ""
+  },
+  "data.mutating": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "The native callback, borrowed with its captures and origin.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "Use `attempt(mutating(function), value)`. Mutation remains visible even\nwhen the callback raises.\n\nThis borrows the callback without invoking or copying it. Keep the callback\nalive while the adapter is used. Pure callbacks produce a `Never` error\nchannel; raising callbacks retain their exact declared error type.\nSelect the adapter matching the callback convention: incompatible factory\ncalls can crash the Mojo 1.2 compiler instead of producing a diagnostic.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The mutable argument type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The borrowed callback origin, inferred.",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "The exact native function or closure type.",
+       "inferred": false,
+       "name": "F",
+       "type": "def(mut A) -> R",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A reusable borrowed adapter for a mutable argument.",
+      "type": "_NativeMutatingRef[A, R, Never, F, False, o]"
+     },
+     "signature": "def mutating[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: def(mut A) -> R](ref[o] function: F) -> _NativeMutatingRef[A, R, Never, F, False, o]",
+     "summary": "Borrow a native callback taking one mutable argument for `attempt`."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "def(mut A) raises E -> R",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_NativeMutatingRef[A, R, E, F, True, o]"
+     },
+     "signature": "def mutating[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //, F: def(mut A) raises E -> R](ref[o] function: F) -> _NativeMutatingRef[A, R, E, F, True, o]",
+     "summary": "Borrow a raising native callback, retaining its exact error type."
+    }
+   ],
+   "provider": "data/_result",
    "summary": ""
   },
   "data.raise_on_err": {
@@ -97767,9 +98832,9 @@
         "variadic": false
        },
        {
-        "description": "The break payload type.",
+        "description": "The callback's break payload type, inferred with its origins.",
         "inferred": true,
-        "name": "B",
+        "name": "Q",
         "type": "Movable & Deinitable",
         "variadic": false
        },
@@ -97784,7 +98849,14 @@
         "description": "The native step type.",
         "inferred": false,
         "name": "F",
-        "type": "def(var A, var T) -> ControlFlow[B, A]",
+        "type": "def(var A, var T) -> ControlFlow[Q, A]",
+        "variadic": false
+       },
+       {
+        "description": "The requested break payload type; defaults to `Q` and must match it.",
+        "inferred": false,
+        "name": "B",
+        "type": "Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -97794,7 +98866,7 @@
        "doc": "The first `Break`, or `Continue` with the final accumulator.",
        "type": "ControlFlow[B, A]"
       },
-      "signature": "def fold_until[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, var T) -> ControlFlow[B, A]](deinit self, step: F, var initial: A) -> ControlFlow[B, A] where Self.I.Element == T",
+      "signature": "def fold_until[A: Movable & Deinitable, Q: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, var T) -> ControlFlow[Q, A], B: Movable & Deinitable = Q](deinit self, step: F, var initial: A) -> ControlFlow[B, A] where Self.I.Element == T and Q == B",
       "summary": "Fold until `Break`, or return `Continue` with the final accumulator."
      },
      {
@@ -97827,7 +98899,7 @@
        {
         "description": "",
         "inferred": true,
-        "name": "B",
+        "name": "Q",
         "type": "Movable & Deinitable",
         "variadic": false
        },
@@ -97849,7 +98921,14 @@
         "description": "",
         "inferred": false,
         "name": "F",
-        "type": "def(var A, var T) raises E -> ControlFlow[B, A]",
+        "type": "def(var A, var T) raises E -> ControlFlow[Q, A]",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "B",
+        "type": "Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -97859,7 +98938,7 @@
        "doc": "",
        "type": "ControlFlow[B, A]"
       },
-      "signature": "def fold_until[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, var T) raises E -> ControlFlow[B, A]](deinit self, step: F, var initial: A) raises E -> ControlFlow[B, A] where Self.I.Element == T",
+      "signature": "def fold_until[A: Movable & Deinitable, Q: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, var T) raises E -> ControlFlow[Q, A], B: Movable & Deinitable = Q](deinit self, step: F, var initial: A) raises E -> ControlFlow[B, A] where Self.I.Element == T and Q == B",
       "summary": "Fold until `Break` with a raising step, preserving its error."
      },
      {
@@ -107444,9 +108523,9 @@
        "variadic": false
       },
       {
-       "description": "The type of the value a step stops with.",
+       "description": "The callback's break payload type, inferred with its origins.",
        "inferred": true,
-       "name": "B",
+       "name": "Q",
        "type": "Movable & Deinitable",
        "variadic": false
       },
@@ -107468,7 +108547,14 @@
        "description": "The step's type: a plain function or a closure returning `ControlFlow[B, A]`.",
        "inferred": false,
        "name": "F",
-       "type": "def(var A, var T) -> ControlFlow[B, A]",
+       "type": "def(var A, var T) -> ControlFlow[Q, A]",
+       "variadic": false
+      },
+      {
+       "description": "The requested break payload type; defaults to `Q` and must match it.",
+       "inferred": false,
+       "name": "B",
+       "type": "Movable & Deinitable",
        "variadic": false
       }
      ],
@@ -107478,7 +108564,7 @@
       "doc": "The first `Break`, or `Continue` with the final accumulator.",
       "type": "ControlFlow[B, A]"
      },
-     "signature": "def fold_until[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, I: Movable & Deinitable, //, F: def(var A, var T) -> ControlFlow[B, A]](step: F, var initial: A, var iterator: I) -> ControlFlow[B, A] where _Source[I].Element == T",
+     "signature": "def fold_until[A: Movable & Deinitable, Q: Movable & Deinitable, T: Movable & Deinitable, I: Movable & Deinitable, //, F: def(var A, var T) -> ControlFlow[Q, A], B: Movable & Deinitable = Q](step: F, var initial: A, var iterator: I) -> ControlFlow[B, A] where _Source[I].Element == T and Q == B",
      "summary": "Fold until a step returns `Break`, without pulling another element."
     },
     {
@@ -107518,7 +108604,7 @@
       {
        "description": "",
        "inferred": true,
-       "name": "B",
+       "name": "Q",
        "type": "Movable & Deinitable",
        "variadic": false
       },
@@ -107547,7 +108633,14 @@
        "description": "",
        "inferred": false,
        "name": "F",
-       "type": "def(var A, var T) raises E -> ControlFlow[B, A]",
+       "type": "def(var A, var T) raises E -> ControlFlow[Q, A]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "B",
+       "type": "Movable & Deinitable",
        "variadic": false
       }
      ],
@@ -107557,7 +108650,7 @@
       "doc": "",
       "type": "ControlFlow[B, A]"
      },
-     "signature": "def fold_until[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, I: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, var T) raises E -> ControlFlow[B, A]](step: F, var initial: A, var iterator: I) raises E -> ControlFlow[B, A] where _Source[I].Element == T",
+     "signature": "def fold_until[A: Movable & Deinitable, Q: Movable & Deinitable, T: Movable & Deinitable, I: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A, var T) raises E -> ControlFlow[Q, A], B: Movable & Deinitable = Q](step: F, var initial: A, var iterator: I) raises E -> ControlFlow[B, A] where _Source[I].Element == T and Q == B",
      "summary": "Fold until `Break` with a raising step; its error is a separate outcome from `Break`."
     },
     {
@@ -138793,7 +139886,7 @@
    "summary": "Functional loops and scans over native Mojo values: `while_loop`, `fori_loop` and `scan`."
   },
   "data": {
-   "description": "`Result[T, E]` holds a success value `Ok[T]` or a stored failure `Err[E]`;\n`ControlFlow[B, C]` holds `Break[B]` or `Continue[C]`. `Ior[E, A]` holds\n`Left[E]`, `Right[A]` or `Both[E, A]` for values with diagnostics. These are stored in place\nand matched by `fp.match`. Mojo's typed native errors are efficient; `Result`\nis for failures that must be stored, collected or passed along as values, not\na replacement for `raises`.\n\nThe bridges: `attempt` and `attempt_once` turn a raising call into a `Result`,\n`raise_on_err` turns it back, each with the original error type, and\n`collect_results` collects a source of Results into one.",
+   "description": "`Result[T, E]` holds a success value `Ok[T]` or a stored failure `Err[E]`;\n`ControlFlow[B, C]` holds `Break[B]` or `Continue[C]`. `Ior[E, A]` holds\n`Left[E]`, `Right[A]` or `Both[E, A]` for values with diagnostics. These are stored in place\nand matched by `fp.match`. Mojo's typed native errors are efficient; `Result`\nis for failures that must be stored, collected or passed along as values, not\na replacement for `raises`.\n\nThe bridges: `attempt`, `attempt_kwargs` and `attempt_once` turn a raising call into a `Result`,\n`raise_on_err` turns it back, each with the original error type, and\n`collect_results` collects a source of Results into one.",
    "summary": "Typed results, early termination and bridges between raised and stored errors."
   },
   "effects": {

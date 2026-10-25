@@ -216,6 +216,16 @@ calling convention, which matters on Mojo 1.1: routing a callback through an
 implicit read intermediary loses owned-capture writes at O3, while passing it as
 a `ref` argument corrupts some captured layouts at O0.
 
+On Mojo 1.2, native `fold_until` infers the callback's break payload as `Q`
+independently of the requested `B`, then requires `Q == B` in the public
+signature. `B` defaults to `Q`, so ordinary calls still infer the type; explicit
+`B=` and positional callback type bindings keep working. The fluent method
+checks the same relationship and forwards `B`. The shared driver uses `Q`
+throughout, with the final result rebound only after the signature constraint
+has established equality. This rejects a callback returning a view from a
+different origin, including local storage, without changing iteration or
+cleanup semantics.
+
 ## Errors
 
 Non-raising and raising callbacks have separate overloads, and a raising terminal

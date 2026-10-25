@@ -9,10 +9,12 @@ from fp.callables.protocols import Unary, OnceUnary, OnceThunk, UnaryContract, B
 from fp.callables.invoke import call_once, invoke_borrowed, invoke_borrowed_once
 from fp.adt.data import Cases, Data, Value, _ChoiceType
 from std.builtin.rebind import rebind_var, downcast
+from std.collections import StringDict
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
 from fp.callables.protocols import BorrowCallContract, ThunkContract
-from fp.callables.native import (_call_native, _call_native_borrow, _Unary, _RaisingUnary, _Borrowing, _RaisingBorrowing,
-                                 _NativeBorrowRef, _Thunk, _RaisingThunk)
+from fp.callables.native import (_call_native_keywords, _call_native, _call_native_borrow, _Unary, _RaisingUnary, _Borrowing, _RaisingBorrowing,
+                                 _NativeBorrowRef, _NativeUnaryRef, _NativeMutatingRef,
+                                 _NativeMutOwnedRef, _NativeMutOwnedKeywordsRef, _Thunk, _RaisingThunk)
 from fp.callables._receiver import _borrow_once_as, _thunk_once_as, _unary_once_as
 from fp.callables._transforms import _IgnoreInput, _BorrowedUnary
 
@@ -1277,12 +1279,16 @@ def attempt[T: Movable & Deinitable, //, F: def() -> T](function: F) -> Result[T
     """Call `function` once and capture its outcome: `Ok(result)`, or `Err(error)` for its declared error.
 
     Overloads take zero, one or two positional arguments with their native read,
-    `var` or `mut` conventions, and a native keyword pack `var **kwargs: K` after
-    them (homogeneous values, or a `StringDict[K]` expanded with
-    `**options^`). Pass consumed arguments with `^`. Changes made through a `mut`
+    `var` or `mut` conventions. Use `attempt_kwargs` for a callback with a
+    native keyword pack, including an empty pack. Pass consumed arguments
+    with `^`. Changes made through a `mut`
     argument before a failure remain visible. Every declared positional
     parameter must be supplied, including defaulted ones; other call shapes
     are written as a closure passed to the zero-argument form.
+
+    On Mojo 1.2, select `mutating(function)`, `consuming(function)` or
+    `mut_owned(function)` for the corresponding native argument conventions.
+    These borrowed adapters avoid incompatible overload inference.
 
     The function is borrowed and reusable. A returned `Result` is ordinary
     success data, and a declared `StopIteration` is captured like any other
@@ -1412,24 +1418,53 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deini
 
 # Native keyword packs are owned homogeneous dictionaries. Fixed prefixes keep
 # their native argument conventions; all bridge arguments are positional-only.
-def attempt[K: Movable & Deinitable, T: Movable & Deinitable, //,
+# Keep these overloads separate from attempt: Mojo 1.2 crashes while inferring
+# the error type of an incompatible positional/keyword callback candidate.
+def attempt_kwargs[K: Movable & Deinitable, T: Movable & Deinitable, //,
             F: def(var **kwargs: K) -> T](
     function: F, /, var **values: K
 ) -> Result[T, Never]:
-    """Forward native keyword values once; preserve the selected native error channel."""
-    return Result[T, Never](Ok(function(**values^)))
+    """Call once with a native keyword pack and capture its outcome as a Result.
+
+    The callback must declare `var **kwargs: K`, optionally after zero, one
+    or two positional parameters with read, `var` or `mut` conventions. Pass
+    the callback and its positional arguments positionally, and pass consumed
+    arguments with `^`. Keyword values are homogeneous and owned; a
+    `StringDict[K]` can be expanded with `**options^`. An empty pack still uses
+    `attempt_kwargs(function)`.
+
+    The callback is borrowed and reusable. Mutation before failure remains
+    visible; its exact declared error, including `StopIteration`, is stored
+    as `Err`. A returned Result is ordinary success data. Every positional
+    parameter must be supplied, including defaulted ones. Named parameters
+    without a native keyword pack require a closure passed to `attempt`.
+
+    Parameters:
+        K: The owned keyword value type.
+        T: The result type.
+        F: The function's type: a plain function or a closure.
+
+    Args:
+        function: The borrowed function, invoked once.
+        values: The owned keyword values forwarded to the callback.
+
+    Returns:
+        The successful value as `Ok`, or the exact declared error as `Err`;
+        a non-raising callback has error type `Never`.
+    """
+    return Result[T, Never](Ok(_call_native_keywords[K, T, Never, F, False](function, **values^)))
 
 
-def attempt[K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
+def attempt_kwargs[K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
             F: def(var **kwargs: K) raises E -> T](
     function: F, /, var **values: K
 ) -> Result[T, E]:
     """Forward native keyword values once; preserve the selected native error channel."""
-    try: return Result[T, E](Ok(function(**values^)))
+    try: return Result[T, E](Ok(_call_native_keywords[K, T, E, F, True](function, **values^)))
     except error: return Result[T, E](Err(error^))
 
 
-def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
+def attempt_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
             F: def(A, /, var **kwargs: K) -> T](
     function: F, first: A, /, var **values: K
 ) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable):
@@ -1437,7 +1472,7 @@ def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deini
     return Result[T, Never](Ok(function(first, **values^)))
 
 
-def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
+def attempt_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
             F: def(A, /, var **kwargs: K) raises E -> T](
     function: F, first: A, /, var **values: K
 ) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable):
@@ -1446,7 +1481,7 @@ def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deini
     except error: return Result[T, E](Err(error^))
 
 
-def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
+def attempt_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
             F: def(var A, /, var **kwargs: K) -> T](
     function: F, var first: A, /, var **values: K
 ) -> Result[T, Never]:
@@ -1454,7 +1489,7 @@ def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deini
     return Result[T, Never](Ok(function(first^, **values^)))
 
 
-def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
+def attempt_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
             F: def(var A, /, var **kwargs: K) raises E -> T](
     function: F, var first: A, /, var **values: K
 ) -> Result[T, E]:
@@ -1463,7 +1498,7 @@ def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deini
     except error: return Result[T, E](Err(error^))
 
 
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
+def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
             F: def(A, B, /, var **kwargs: K) -> T](
     function: F, first: A, second: B, /, var **values: K
 ) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable):
@@ -1471,7 +1506,7 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
     return Result[T, Never](Ok(function(first, second, **values^)))
 
 
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
+def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
             F: def(A, B, /, var **kwargs: K) raises E -> T](
     function: F, first: A, second: B, /, var **values: K
 ) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable):
@@ -1480,7 +1515,7 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
     except error: return Result[T, E](Err(error^))
 
 
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
+def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
             F: def(var A, B, /, var **kwargs: K) -> T](
     function: F, var first: A, second: B, /, var **values: K
 ) -> Result[T, Never] where not conforms_to(B, TrivialRegisterPassable):
@@ -1488,7 +1523,7 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
     return Result[T, Never](Ok(function(first^, second, **values^)))
 
 
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
+def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
             F: def(var A, B, /, var **kwargs: K) raises E -> T](
     function: F, var first: A, second: B, /, var **values: K
 ) -> Result[T, E] where not conforms_to(B, TrivialRegisterPassable):
@@ -1497,7 +1532,7 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
     except error: return Result[T, E](Err(error^))
 
 
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
+def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
             F: def(A, var B, /, var **kwargs: K) -> T](
     function: F, first: A, var second: B, /, var **values: K
 ) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable):
@@ -1505,7 +1540,7 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
     return Result[T, Never](Ok(function(first, second^, **values^)))
 
 
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
+def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
             F: def(A, var B, /, var **kwargs: K) raises E -> T](
     function: F, first: A, var second: B, /, var **values: K
 ) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable):
@@ -1514,7 +1549,7 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
     except error: return Result[T, E](Err(error^))
 
 
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
+def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
             F: def(var A, var B, /, var **kwargs: K) -> T](
     function: F, var first: A, var second: B, /, var **values: K
 ) -> Result[T, Never]:
@@ -1522,7 +1557,7 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
     return Result[T, Never](Ok(function(first^, second^, **values^)))
 
 
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
+def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
             F: def(var A, var B, /, var **kwargs: K) raises E -> T](
     function: F, var first: A, var second: B, /, var **values: K
 ) -> Result[T, E]:
@@ -1532,8 +1567,16 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
 
 
 # Mutable prefixes retain exclusive native borrows on success and failure.
+# Mojo 1.2 admits read callbacks to these signatures without a conversion
+# penalty. One defaulted parameter per mutable argument makes a read overload
+# win otherwise equal candidates (OverloadFitness prefers fewer bindings).
+# Keep these parameters after F so existing explicit callback bindings retain
+# their positions. Their values are unused; callers need not supply them.
+# Pure/raising pairs remain separate: inferring E=Never can lose the native
+# closure witness at invocation, and incompatible conventions can still crash
+# during inference, before this ranking is considered.
 def attempt[A: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(mut A) -> T](
+            F: def(mut A) -> T, _mut_fallback_0: Int = 0](
     function: F, mut first: A
 ) -> Result[T, Never]:
     """Forward once, preserving caller mutation and the exact native error channel."""
@@ -1541,7 +1584,7 @@ def attempt[A: Movable & Deinitable, T: Movable & Deinitable, //,
 
 
 def attempt[A: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(mut A) raises E -> T](
+            F: def(mut A) raises E -> T, _mut_fallback_0: Int = 0](
     function: F, mut first: A
 ) -> Result[T, E]:
     """Forward once, preserving caller mutation and the exact native error channel."""
@@ -1550,7 +1593,7 @@ def attempt[A: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deini
 
 
 def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(A, mut B) -> T](
+            F: def(A, mut B) -> T, _mut_fallback_0: Int = 0](
     function: F, first: A, mut second: B
 ) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable):
     """Forward once, preserving caller mutation and the exact native error channel."""
@@ -1558,7 +1601,7 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deini
 
 
 def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(A, mut B) raises E -> T](
+            F: def(A, mut B) raises E -> T, _mut_fallback_0: Int = 0](
     function: F, first: A, mut second: B
 ) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable):
     """Forward once, preserving caller mutation and the exact native error channel."""
@@ -1567,7 +1610,7 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deini
 
 
 def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(var A, mut B) -> T](
+            F: def(var A, mut B) -> T, _mut_fallback_0: Int = 0](
     function: F, var first: A, mut second: B
 ) -> Result[T, Never]:
     """Forward once, preserving caller mutation and the exact native error channel."""
@@ -1575,7 +1618,7 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deini
 
 
 def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(var A, mut B) raises E -> T](
+            F: def(var A, mut B) raises E -> T, _mut_fallback_0: Int = 0](
     function: F, var first: A, mut second: B
 ) -> Result[T, E]:
     """Forward once, preserving caller mutation and the exact native error channel."""
@@ -1584,7 +1627,7 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deini
 
 
 def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(mut A, B) -> T](
+            F: def(mut A, B) -> T, _mut_fallback_0: Int = 0](
     function: F, mut first: A, second: B
 ) -> Result[T, Never] where not conforms_to(B, TrivialRegisterPassable):
     """Forward once, preserving caller mutation and the exact native error channel."""
@@ -1592,7 +1635,7 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deini
 
 
 def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(mut A, B) raises E -> T](
+            F: def(mut A, B) raises E -> T, _mut_fallback_0: Int = 0](
     function: F, mut first: A, second: B
 ) -> Result[T, E] where not conforms_to(B, TrivialRegisterPassable):
     """Forward once, preserving caller mutation and the exact native error channel."""
@@ -1601,7 +1644,7 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deini
 
 
 def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(mut A, var B) -> T](
+            F: def(mut A, var B) -> T, _mut_fallback_0: Int = 0](
     function: F, mut first: A, var second: B
 ) -> Result[T, Never]:
     """Forward once, preserving caller mutation and the exact native error channel."""
@@ -1609,7 +1652,7 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deini
 
 
 def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(mut A, var B) raises E -> T](
+            F: def(mut A, var B) raises E -> T, _mut_fallback_0: Int = 0](
     function: F, mut first: A, var second: B
 ) -> Result[T, E]:
     """Forward once, preserving caller mutation and the exact native error channel."""
@@ -1618,7 +1661,7 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deini
 
 
 def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(mut A, mut B) -> T](
+            F: def(mut A, mut B) -> T, _mut_fallback_0: Int = 0, _mut_fallback_1: Int = 0](
     function: F, mut first: A, mut second: B
 ) -> Result[T, Never]:
     """Forward once, preserving caller mutation and the exact native error channel."""
@@ -1626,7 +1669,7 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deini
 
 
 def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(mut A, mut B) raises E -> T](
+            F: def(mut A, mut B) raises E -> T, _mut_fallback_0: Int = 0, _mut_fallback_1: Int = 0](
     function: F, mut first: A, mut second: B
 ) -> Result[T, E]:
     """Forward once, preserving caller mutation and the exact native error channel."""
@@ -1634,16 +1677,16 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deini
     except error: return Result[T, E](Err(error^))
 
 
-def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(mut A, /, var **kwargs: K) -> T](
+def attempt_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
+            F: def(mut A, /, var **kwargs: K) -> T, _mut_fallback_0: Int = 0](
     function: F, mut first: A, /, var **values: K
 ) -> Result[T, Never]:
     """Forward once, preserving caller mutation and the exact native error channel."""
     return Result[T, Never](Ok(function(first, **values^)))
 
 
-def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(mut A, /, var **kwargs: K) raises E -> T](
+def attempt_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
+            F: def(mut A, /, var **kwargs: K) raises E -> T, _mut_fallback_0: Int = 0](
     function: F, mut first: A, /, var **values: K
 ) -> Result[T, E]:
     """Forward once, preserving caller mutation and the exact native error channel."""
@@ -1651,16 +1694,16 @@ def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deini
     except error: return Result[T, E](Err(error^))
 
 
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(A, mut B, /, var **kwargs: K) -> T](
+def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
+            F: def(A, mut B, /, var **kwargs: K) -> T, _mut_fallback_0: Int = 0](
     function: F, first: A, mut second: B, /, var **values: K
 ) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable):
     """Forward once, preserving caller mutation and the exact native error channel."""
     return Result[T, Never](Ok(function(first, second, **values^)))
 
 
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(A, mut B, /, var **kwargs: K) raises E -> T](
+def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
+            F: def(A, mut B, /, var **kwargs: K) raises E -> T, _mut_fallback_0: Int = 0](
     function: F, first: A, mut second: B, /, var **values: K
 ) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable):
     """Forward once, preserving caller mutation and the exact native error channel."""
@@ -1668,16 +1711,16 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
     except error: return Result[T, E](Err(error^))
 
 
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(var A, mut B, /, var **kwargs: K) -> T](
+def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
+            F: def(var A, mut B, /, var **kwargs: K) -> T, _mut_fallback_0: Int = 0](
     function: F, var first: A, mut second: B, /, var **values: K
 ) -> Result[T, Never]:
     """Forward once, preserving caller mutation and the exact native error channel."""
     return Result[T, Never](Ok(function(first^, second, **values^)))
 
 
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(var A, mut B, /, var **kwargs: K) raises E -> T](
+def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
+            F: def(var A, mut B, /, var **kwargs: K) raises E -> T, _mut_fallback_0: Int = 0](
     function: F, var first: A, mut second: B, /, var **values: K
 ) -> Result[T, E]:
     """Forward once, preserving caller mutation and the exact native error channel."""
@@ -1685,16 +1728,16 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
     except error: return Result[T, E](Err(error^))
 
 
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(mut A, B, /, var **kwargs: K) -> T](
+def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
+            F: def(mut A, B, /, var **kwargs: K) -> T, _mut_fallback_0: Int = 0](
     function: F, mut first: A, second: B, /, var **values: K
 ) -> Result[T, Never] where not conforms_to(B, TrivialRegisterPassable):
     """Forward once, preserving caller mutation and the exact native error channel."""
     return Result[T, Never](Ok(function(first, second, **values^)))
 
 
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(mut A, B, /, var **kwargs: K) raises E -> T](
+def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
+            F: def(mut A, B, /, var **kwargs: K) raises E -> T, _mut_fallback_0: Int = 0](
     function: F, mut first: A, second: B, /, var **values: K
 ) -> Result[T, E] where not conforms_to(B, TrivialRegisterPassable):
     """Forward once, preserving caller mutation and the exact native error channel."""
@@ -1702,16 +1745,16 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
     except error: return Result[T, E](Err(error^))
 
 
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(mut A, var B, /, var **kwargs: K) -> T](
+def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
+            F: def(mut A, var B, /, var **kwargs: K) -> T, _mut_fallback_0: Int = 0](
     function: F, mut first: A, var second: B, /, var **values: K
 ) -> Result[T, Never]:
     """Forward once, preserving caller mutation and the exact native error channel."""
     return Result[T, Never](Ok(function(first, second^, **values^)))
 
 
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(mut A, var B, /, var **kwargs: K) raises E -> T](
+def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
+            F: def(mut A, var B, /, var **kwargs: K) raises E -> T, _mut_fallback_0: Int = 0](
     function: F, mut first: A, var second: B, /, var **values: K
 ) -> Result[T, E]:
     """Forward once, preserving caller mutation and the exact native error channel."""
@@ -1719,16 +1762,16 @@ def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
     except error: return Result[T, E](Err(error^))
 
 
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(mut A, mut B, /, var **kwargs: K) -> T](
+def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
+            F: def(mut A, mut B, /, var **kwargs: K) -> T, _mut_fallback_0: Int = 0, _mut_fallback_1: Int = 0](
     function: F, mut first: A, mut second: B, /, var **values: K
 ) -> Result[T, Never]:
     """Forward once, preserving caller mutation and the exact native error channel."""
     return Result[T, Never](Ok(function(first, second, **values^)))
 
 
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(mut A, mut B, /, var **kwargs: K) raises E -> T](
+def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
+            F: def(mut A, mut B, /, var **kwargs: K) raises E -> T, _mut_fallback_0: Int = 0, _mut_fallback_1: Int = 0](
     function: F, mut first: A, mut second: B, /, var **values: K
 ) -> Result[T, E]:
     """Forward once, preserving caller mutation and the exact native error channel."""
@@ -2043,3 +2086,229 @@ def _result_transform[T:Movable & Deinitable,E:Movable & Deinitable,
     comptime P = T if success else E
     return _transform_result_owned[T,E,U,V,F.Error,success,wrap,P,F.Out,F,
         _call_transform[P,F],wrap_ok](value^,function^)
+
+
+# Convention-specific admission lives here; native invocation lives in
+# callables.native. Contexts borrow inputs and move pending owned values once;
+# _attempt_core remains the single owner of success/error capture.
+def mutating[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //,
+             F: def(mut A) -> R](ref[o] function: F) -> _NativeMutatingRef[A, R, Never, F, False, o]:
+    """Borrow a native callback taking one mutable argument for `attempt`.
+
+    Use `attempt(mutating(function), value)`. Mutation remains visible even
+    when the callback raises.
+
+    This borrows the callback without invoking or copying it. Keep the callback
+    alive while the adapter is used. Pure callbacks produce a `Never` error
+    channel; raising callbacks retain their exact declared error type.
+    Select the adapter matching the callback convention: incompatible factory
+    calls can crash the Mojo 1.2 compiler instead of producing a diagnostic.
+
+    Parameters:
+        A: The mutable argument type.
+        R: The result type.
+        o: The borrowed callback origin, inferred.
+        F: The exact native function or closure type.
+
+    Args:
+        function: The native callback, borrowed with its captures and origin.
+
+    Returns:
+        A reusable borrowed adapter for a mutable argument.
+    """
+    return _NativeMutatingRef[A, R, Never, F, False, o](Pointer(to=function))
+
+
+def mutating[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //,
+             F: def(mut A) raises E -> R](ref[o] function: F) -> _NativeMutatingRef[A, R, E, F, True, o]:
+    """Borrow a raising native callback, retaining its exact error type."""
+    return _NativeMutatingRef[A, R, E, F, True, o](Pointer(to=function))
+
+
+def consuming[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //,
+              F: def(var A) -> R](ref[o] function: F) -> _NativeUnaryRef[A, R, Never, F, False, o]:
+    """Borrow a native callback taking one owned argument for `attempt`.
+
+    Use `attempt(consuming(function), value^)`. Only the argument is consumed;
+    the callback remains reusable.
+
+    This borrows the callback without invoking or copying it. Keep the callback
+    alive while the adapter is used. Pure callbacks produce a `Never` error
+    channel; raising callbacks retain their exact declared error type.
+    Select the adapter matching the callback convention: incompatible factory
+    calls can crash the Mojo 1.2 compiler instead of producing a diagnostic.
+
+    Parameters:
+        A: The owned argument type.
+        R: The result type.
+        o: The borrowed callback origin, inferred.
+        F: The exact native function or closure type.
+
+    Args:
+        function: The native callback, borrowed with its captures and origin.
+
+    Returns:
+        A reusable borrowed adapter for an owned argument.
+    """
+    return _NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function))
+
+
+def consuming[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //,
+              F: def(var A) raises E -> R](ref[o] function: F) -> _NativeUnaryRef[A, R, E, F, True, o]:
+    """Borrow a raising native callback, retaining its exact error type."""
+    return _NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function))
+
+
+def _attempt_mutating_apply[A: Movable & Deinitable, R: Movable & Deinitable,
+                            E: Movable & Deinitable, F: Movable & Deinitable,
+                            raising: Bool, o: ImmOrigin, q: MutOrigin](
+    context: Tuple[_NativeMutatingRef[A, R, E, F, raising, o], Pointer[A, q]]
+) raises E capturing -> R:
+    return context[0].invoke(context[1][])
+
+
+def _attempt_owned_apply[A: Movable & Deinitable, R: Movable & Deinitable,
+                         E: Movable & Deinitable, F: Movable & Deinitable,
+                         raising: Bool, o: ImmOrigin, q: MutOrigin](
+    context: Tuple[_NativeUnaryRef[A, R, E, F, raising, o], Pointer[Optional[A], q]]
+) raises E capturing -> R:
+    var value = context[1][].take()
+    return context[0].call(value^)
+
+
+def attempt[A: Movable & Deinitable, R: Movable & Deinitable,
+            E: Movable & Deinitable, F: Movable & Deinitable,
+            raising: Bool, o: ImmOrigin, q: MutOrigin](
+    function: _NativeMutatingRef[A, R, E, F, raising, o], ref[q] value: A
+) -> Result[R, E]:
+    """Call the borrowed convention adapter once and capture its exact outcome."""
+    var context = (function, Pointer(to=value))
+    return _attempt_core[R, E, type_of(context), _attempt_mutating_apply[A, R, E, F, raising, o, q]](context)
+
+
+def attempt[A: Movable & Deinitable, R: Movable & Deinitable,
+            E: Movable & Deinitable, F: Movable & Deinitable,
+            raising: Bool, o: ImmOrigin](
+    function: _NativeUnaryRef[A, R, E, F, raising, o], var value: A
+) -> Result[R, E]:
+    """Call the borrowed convention adapter once and capture its exact outcome."""
+    var pending = Optional(value^)
+    var context = (function, Pointer(to=pending))
+    return _attempt_core[R, E, type_of(context), _attempt_owned_apply[A, R, E, F, raising, o, origin_of(pending)]](context)
+
+
+def mut_owned[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //,
+              F: def(mut A, var B) -> R](ref[o] function: F) -> _NativeMutOwnedRef[A, B, R, Never, F, False, o]:
+    """Borrow a native callback taking a mutable argument and an owned argument.
+
+    Use `attempt(mut_owned(function), first, second^)`. Mutation of `first`
+    remains visible even when the callback raises.
+
+    This borrows the callback without invoking or copying it. Keep the callback
+    alive while the adapter is used. Pure callbacks produce a `Never` error
+    channel; raising callbacks retain their exact declared error type.
+    Select the adapter matching the callback convention: incompatible factory
+    calls can crash the Mojo 1.2 compiler instead of producing a diagnostic.
+
+    Parameters:
+        A: The mutable first argument type.
+        B: The owned second argument type.
+        R: The result type.
+        o: The borrowed callback origin, inferred.
+        F: The exact native function or closure type.
+
+    Args:
+        function: The native callback, borrowed with its captures and origin.
+
+    Returns:
+        A reusable borrowed adapter for `attempt` with a mutable/owned pair.
+    """
+    return _NativeMutOwnedRef[A, B, R, Never, F, False, o](Pointer(to=function))
+
+
+def mut_owned[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable,
+              E: Movable & Deinitable, o: ImmOrigin, //,
+              F: def(mut A, var B) raises E -> R](ref[o] function: F) -> _NativeMutOwnedRef[A, B, R, E, F, True, o]:
+    """Borrow a raising native callback, retaining its exact error type."""
+    return _NativeMutOwnedRef[A, B, R, E, F, True, o](Pointer(to=function))
+
+
+def _attempt_mut_owned_apply[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable,
+                             E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool,
+                             o: ImmOrigin, q: MutOrigin, s: MutOrigin](
+    context: Tuple[_NativeMutOwnedRef[A, B, R, E, F, raising, o], Pointer[A, q], Pointer[Optional[B], s]]
+) raises E capturing -> R:
+    var second = context[2][].take()
+    return context[0].invoke(context[1][], second^)
+
+
+def attempt[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable,
+            E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool,
+            o: ImmOrigin, q: MutOrigin](
+    function: _NativeMutOwnedRef[A, B, R, E, F, raising, o], ref[q] first: A, var second: B
+) -> Result[R, E]:
+    """Call the borrowed convention adapter once and capture its exact outcome."""
+    var pending = Optional(second^)
+    var context = (function, Pointer(to=first), Pointer(to=pending))
+    return _attempt_core[R, E, type_of(context), _attempt_mut_owned_apply[A, B, R, E, F, raising, o, q, origin_of(pending)]](context)
+
+
+def mut_owned_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable,
+                     R: Movable & Deinitable, o: ImmOrigin, //,
+                     F: def(mut A, var B, /, var **kwargs: K) -> R](ref[o] function: F) -> _NativeMutOwnedKeywordsRef[A, B, K, R, Never, F, False, o]:
+    """Borrow a native callback taking a mutable/owned pair and a keyword pack.
+
+    Use `attempt_kwargs(mut_owned_kwargs(function), first, second^, key=value)`.
+    The homogeneous native keyword pack may be empty. Mutation of `first`
+    remains visible even when the callback raises.
+
+    This borrows the callback without invoking or copying it. Keep the callback
+    alive while the adapter is used. Pure callbacks produce a `Never` error
+    channel; raising callbacks retain their exact declared error type.
+    Select the adapter matching the callback convention: incompatible factory
+    calls can crash the Mojo 1.2 compiler instead of producing a diagnostic.
+
+    Parameters:
+        A: The mutable first argument type.
+        B: The owned second argument type.
+        K: The owned keyword value type.
+        R: The result type.
+        o: The borrowed callback origin, inferred.
+        F: The exact native function or closure type.
+
+    Args:
+        function: The native callback, borrowed with its captures and origin.
+
+    Returns:
+        A reusable borrowed adapter for `attempt_kwargs` with a mutable/owned pair.
+    """
+    return _NativeMutOwnedKeywordsRef[A, B, K, R, Never, F, False, o](Pointer(to=function))
+
+
+def mut_owned_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable,
+                     R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //,
+                     F: def(mut A, var B, /, var **kwargs: K) raises E -> R](ref[o] function: F) -> _NativeMutOwnedKeywordsRef[A, B, K, R, E, F, True, o]:
+    """Borrow a raising native callback, retaining its exact error type."""
+    return _NativeMutOwnedKeywordsRef[A, B, K, R, E, F, True, o](Pointer(to=function))
+
+
+def _attempt_mut_owned_kw_apply[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable,
+                                R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable,
+                                raising: Bool, o: ImmOrigin, q: MutOrigin, s: MutOrigin, t: MutOrigin](
+    context: Tuple[_NativeMutOwnedKeywordsRef[A, B, K, R, E, F, raising, o], Pointer[A, q], Pointer[Optional[B], s], Pointer[Optional[StringDict[K]], t]]
+) raises E capturing -> R:
+    var second = context[2][].take()
+    var values = context[3][].take()
+    return context[0].invoke(context[1][], second^, **values^)
+
+
+def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable,
+                   R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable,
+                   raising: Bool, o: ImmOrigin, q: MutOrigin](
+    function: _NativeMutOwnedKeywordsRef[A, B, K, R, E, F, raising, o], ref[q] first: A, var second: B, /, var **values: K
+) -> Result[R, E]:
+    """Call the borrowed mixed adapter once with a native keyword pack."""
+    var pending = Optional(second^)
+    var options = Optional(values^)
+    var context = (function, Pointer(to=first), Pointer(to=pending), Pointer(to=options))
+    return _attempt_core[R, E, type_of(context), _attempt_mut_owned_kw_apply[A, B, K, R, E, F, raising, o, q, origin_of(pending), origin_of(options)]](context)

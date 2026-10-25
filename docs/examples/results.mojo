@@ -1,5 +1,5 @@
 """Domain errors remain distinct from raised callback failures."""
-from fp.data import Result, Ok, Err, attempt, raise_on_err
+from fp.data import Result, Ok, Err, attempt, attempt_kwargs, consuming, mut_owned, raise_on_err
 from std.collections import StringDict
 from std.testing import assert_equal
 
@@ -42,7 +42,7 @@ def main() raises:
     assert_equal(caught, True)
 
     # Explicitly capture the same native error as a Result value.
-    var captured: Checked = attempt(may_raise, 21)
+    var captured: Checked = attempt(consuming(may_raise), 21)
     assert_equal(captured.is_err(), True)
     caught = False
     try:
@@ -60,23 +60,23 @@ def main() raises:
         for entry in options.items():
             if entry.key == "factor": factor = entry.value
         return value * factor
-    var scaled: Result[Int, Never] = attempt(scale, 7, factor=3)
+    var scaled: Result[Int, Never] = attempt_kwargs(scale, 7, factor=3)
     assert_equal(raise_on_err(scaled^), 21)
     assert_equal(calls, 1)
     var options = StringDict[Int]()
     options["factor"] = 4
-    assert_equal(raise_on_err(attempt(scale, 7, **options^)), 28)
+    assert_equal(raise_on_err(attempt_kwargs(scale, 7, **options^)), 28)
     assert_equal(calls, 2)
 
     # Changes made before a native error remain visible to the caller.
     var balance = 5
-    def debit(mut value: Int, /, var **options: Int) raises String -> Int:
-        for entry in options.items(): value -= entry.value
+    def debit(mut value: Int, var amount: Int) raises String -> Int:
+        value -= amount
         if value < 0: raise String("overdrawn")
         return value
-    var first_debit: Checked = attempt(debit, balance, amount=3)
+    var first_debit: Checked = attempt(mut_owned(debit), balance, 3)
     assert_equal(first_debit.is_ok(), True)
     assert_equal(balance, 2)
-    var second_debit: Checked = attempt(debit, balance, amount=4)
+    var second_debit: Checked = attempt(mut_owned(debit), balance, 4)
     assert_equal(second_debit.is_err(), True)
     assert_equal(balance, -2)

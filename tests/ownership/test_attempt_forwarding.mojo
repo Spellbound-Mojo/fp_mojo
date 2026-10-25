@@ -1,5 +1,6 @@
 """Forwarding preserves borrowed inputs, move-only results/errors and callback ownership."""
 from fp.data import attempt, raise_on_err
+from fp.data import consuming
 from std.memory import ArcPointer
 from std.testing import assert_equal
 
@@ -98,7 +99,7 @@ def exercise_1_1_0(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed = -1
         if library:
-            var result = attempt(target, left^)
+            var result = attempt(consuming(target), left^)
             try:
                 var output = raise_on_err(result^)
                 observed = output.value
@@ -127,7 +128,7 @@ def exercise_1_1_1(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed: Int
         if library:
-            var result = attempt(target, left^)
+            var result = attempt(consuming(target), left^)
             var output = raise_on_err(result^)
             observed = output.value
         else:

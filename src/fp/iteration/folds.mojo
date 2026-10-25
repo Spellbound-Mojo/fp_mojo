@@ -91,11 +91,11 @@ def reduce_optional[T: Movable & Deinitable, I: Movable & Deinitable, E: AnyType
         step, _source(iterator^)
     )
 
-def fold_until[A: Movable & Deinitable, B: Movable & Deinitable,
+def fold_until[A: Movable & Deinitable, Q: Movable & Deinitable,
                T: Movable & Deinitable, I: Movable & Deinitable, //,
-               F: def(var A, var T) -> ControlFlow[B, A]](
+               F: def(var A, var T) -> ControlFlow[Q, A], B: Movable & Deinitable = Q](
     step: F, var initial: A, var iterator: I
-) -> ControlFlow[B, A] where _Source[I].Element == T:
+) -> ControlFlow[B, A] where _Source[I].Element == T and Q == B:
     """Fold until a step returns `Break`, without pulling another element.
 
     Each step returns `Continue(accumulator)` to go on or `Break(value)` to stop
@@ -104,11 +104,12 @@ def fold_until[A: Movable & Deinitable, B: Movable & Deinitable,
 
     Parameters:
         A: The accumulator type.
-        B: The type of the value a step stops with.
+        Q: The callback's break payload type, inferred with its origins.
         T: The element type.
         I: The source's type: a native iterator, or an owned collection
             (`IterableOwned`, such as `List`), which is consumed.
         F: The step's type: a plain function or a closure returning `ControlFlow[B, A]`.
+        B: The requested break payload type; defaults to `Q` and must match it.
 
     Args:
         step: The step, borrowed.
@@ -118,17 +119,19 @@ def fold_until[A: Movable & Deinitable, B: Movable & Deinitable,
     Returns:
         The first `Break`, or `Continue` with the final accumulator.
     """
-    return _fold_until[A, B, T, _Source[I], Never, F,
-        _control_plain[A, B, T, F]](step, initial^, _source(iterator^))
+    # Infer the callback break type independently before checking Q == B.
+    # The driver uses its exact signature; the public constraint admits rebind.
+    return rebind_var[ControlFlow[B, A]](_fold_until[A, Q, T, _Source[I], Never, F,
+        _control_plain[A, Q, T, F]](step, initial^, _source(iterator^)))
 
-def fold_until[A: Movable & Deinitable, B: Movable & Deinitable,
+def fold_until[A: Movable & Deinitable, Q: Movable & Deinitable,
                T: Movable & Deinitable, I: Movable & Deinitable, E: Movable & Deinitable, //,
-               F: def(var A, var T) raises E -> ControlFlow[B, A]](
+               F: def(var A, var T) raises E -> ControlFlow[Q, A], B: Movable & Deinitable = Q](
     step: F, var initial: A, var iterator: I
-) raises E -> ControlFlow[B, A] where _Source[I].Element == T:
+) raises E -> ControlFlow[B, A] where _Source[I].Element == T and Q == B:
     """Fold until `Break` with a raising step; its error is a separate outcome from `Break`."""
-    return _fold_until[A, B, T, _Source[I], E, F,
-        _control_raising[A, B, T, E, F]](step, initial^, _source(iterator^))
+    return rebind_var[ControlFlow[B, A]](_fold_until[A, Q, T, _Source[I], E, F,
+        _control_raising[A, Q, T, E, F]](step, initial^, _source(iterator^)))
 
 
 @fieldwise_init

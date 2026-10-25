@@ -1,6 +1,7 @@
 """Borrowed success and error payloads retain their exact native origin."""
 from fp.data import Result, attempt, raise_on_err
 from std.testing import assert_equal
+from fp.data import consuming
 
 def capture[R: Movable & Deinitable, //, F: def() -> R](function: F) -> Result[R, Never]:
     return attempt(function)
@@ -15,7 +16,7 @@ def forward[R: Movable & Deinitable, X: Movable & Deinitable, //, F: def() raise
     return capture(function)
 
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A) raises X -> R](function: F, var value: A) -> Result[R, X]:
-    return attempt(function, value^)
+    return attempt(consuming(function), value^)
 
 def forward[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A) raises X -> R](function: F, var value: A) -> Result[R, X]:
     return capture(function, value^)

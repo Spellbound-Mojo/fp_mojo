@@ -1,16 +1,17 @@
 """Generic returns preserve exact cleanup and moves, including discarded Results."""
-from fp.data import Result, attempt, raise_on_err
+from fp.data import Result, attempt, attempt_kwargs, raise_on_err
+from fp.data import mut_owned_kwargs, consuming
 from std.testing import assert_equal
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) -> R](
     function: F, mut first: A, var second: B, /, var **values: K
 ) -> Result[R, Never]:
-    return attempt(function, first, second^, **values^)
+    return attempt_kwargs(mut_owned_kwargs(function), first, second^, **values^)
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) raises X -> R](
     function: F, mut first: A, var second: B, /, var **values: K
 ) -> Result[R, X]:
-    return attempt(function, first, second^, **values^)
+    return attempt_kwargs(mut_owned_kwargs(function), first, second^, **values^)
 
 def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) -> R](
     function: F, mut first: A, var second: B, /, var **values: K
@@ -25,12 +26,12 @@ def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A) -> R](
     function: F, var first: A
 ) -> Result[R, Never]:
-    return attempt(function, first^)
+    return attempt(consuming(function), first^)
 
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A) raises X -> R](
     function: F, var first: A
 ) -> Result[R, X]:
-    return attempt(function, first^)
+    return attempt(consuming(function), first^)
 
 def forward[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A) -> R](
     function: F, var first: A
