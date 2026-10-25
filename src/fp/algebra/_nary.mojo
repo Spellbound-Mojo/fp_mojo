@@ -5,6 +5,7 @@ from fp.algebra.protocols import Applicative
 from fp.callables.protocols import Unary, UnaryContract, Binary
 from fp.callables._transforms import _ValueThunk
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
+from fp.algebra._admission import _CarrierCompatible
 
 from fp.callables.products import _OptionalCell
 @fieldwise_init
@@ -36,6 +37,8 @@ struct _ProductRun[I: Applicative, V: Movable & Deinitable, *Ws: Movable & Deini
     comptime Step[index: Int] = _AppendTuple[Self.Element[index], *Self.Prefix[index]]
     comptime Native[W: Movable & Deinitable]: Bool = W == Self.I.Pure[Self.I.Element[W]]
     comptime NativeInputs = Self.Native[Self.V] and Self.Ws.all[Self.Native[_]]()
+    comptime Admitted[W: Movable & Deinitable] = _CarrierCompatible[Self.I, W]
+    comptime AdmittedInputs = Self.Admitted[Self.V] and Self.Ws.all[Self.Admitted[_]]()
     comptime Payload = Tuple[*Self.Elements]
     comptime Slots = Self.Ws.map[_OptionalCell]()
     @staticmethod

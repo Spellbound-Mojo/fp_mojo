@@ -109,8 +109,8 @@ for callback input and output types are inferred independently, then checked
 against the family's contract. This approach still uses native function traits;
 it does not depend on unavailable signature reflection.
 
-`Pipeline` has one stored carrier. Its three `map` overloads and four `filter`
-overloads adapt native or library callables to the existing family operations.
+`Pipeline` has one stored carrier. Its generated callback overloads adapt
+native or library callables to the existing family operations.
 They introduce no traversal loops, erased callable boxes or new copy
 requirements. Deferred operations retain their existing borrow origins.
 
@@ -451,7 +451,37 @@ run. It never edits `src/`.
 
 Capture and the selected Pipeline boundary are public. The original APIs
 remain compatibility entry points; passing their rejection tests does not
-prove all their invalid inferred calls diagnose normally. Further migration
-of traversal, n-ary operations and iteration should retain the same admission
-rule and qualify original invalid calls beside valid counterparts. It must
-continue to reuse family and callable execution owners.
+prove all their invalid inferred calls diagnose normally.
+
+Pipeline now also admits whole-value stages, terminal folds, traversal and
+Applicative combinations. `_NativeFamily` owns recognition of List, Optional
+and Result; bare values use the existing Identity family. A whole-value stage
+may name its output family with `then[Family]`, so custom deferred carriers do
+not need reflection or an invented runtime wrapper. Traversal retains its
+explicit target family; combinations retain the selected source family.
+The native error context is independent of these changes and stays selected.
+
+Execution remains in `call_once`, the standalone folds, and the existing
+Applicative product and traversal implementations. Generated methods adapt
+signatures and forward the existing compatibility predicates. Carrier checks
+run before traversal or combination: a different stored Result error, including
+a different borrowed origin, must be rejected at admission rather than through
+a body assertion. Native n-ary signatures expose each fixed operand tuple
+before inspecting the callback; library tuple callbacks retain a variadic pack.
+
+Native constructor overloads retain their existing positional and named type
+bindings. Bare-value construction adds a disjoint Identity case; generic
+forwarders continue to select an explicit family. This avoids making a generic
+default constructor compete with the established native carrier overloads.
+
+The `context_stages` fixtures cover type transitions, error inference, generic
+forwarding, deferred execution, ordered validation, empty and early folds,
+move-only cleanup, origins and every native n-ary arity. Rejection fixtures use
+ordinary calls without explicit callback type hints. Run
+`pixi run boundaries-test --filter context_stages --jobs 3 --output <new-dir>`
+to qualify both source and fresh package imports at O0 and O3.
+
+Remaining legacy operations should follow this same admission rule and retain
+their existing execution owners as migration continues. This extension does
+not establish complete API parity or eliminate the documented compiler issues
+in legacy entry points.

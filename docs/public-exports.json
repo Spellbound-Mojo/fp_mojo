@@ -7849,6 +7849,42 @@
       "signature": "def flat_tap_err[R: Movable & Deinitable](deinit self, function: def(_Failure[Self.V]) raises Never thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == Result[_Success[R], _Failure[Self.V]]:"
      }
     ],
+    "fold_left": [
+     {
+      "sha256": "f3245f6494542c505a6f1db0079e11adf72bc1e30a1f19733786d1a54d290696",
+      "signature": "def fold_left[A: Movable & Deinitable, C: Binary](deinit self, var step: C, var initial: A) raises C.Error -> Pipeline[_NativeFamily[A], A, Self.E] where C.First == A and C.Second == _FoldElement[Self.V] and C.Out == A:"
+     },
+     {
+      "sha256": "68f015504ea4b2cf449a41c6db231188d16105c860add2149166c8bc5f318021",
+      "signature": "def fold_left[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var A, var _FoldElement[Self.V]) -> R](deinit self, ref[o] step: C, var initial: A) raises Never -> Pipeline[_NativeFamily[A], A, Self.E] where R == A:"
+     },
+     {
+      "sha256": "ef8c0693244f523f76ab3698fa5f5ac1bc4553465d5344ea61a1a2d02d36a1c9",
+      "signature": "def fold_left[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var A, var _FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] step: C, var initial: A) raises Self.E -> Pipeline[_NativeFamily[A], A, Self.E] where R == A:"
+     },
+     {
+      "sha256": "8445465621760abe9b81957c225ed157e39363c938afe86d5d7c051869af134d",
+      "signature": "def fold_left[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var A, var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] step: C, var initial: A) raises Never -> Pipeline[_NativeFamily[A], A, Self.E] where Self.E != Never and R == A:"
+     }
+    ],
+    "fold_until": [
+     {
+      "sha256": "712ee108a6de2feb37e33ad1969994f276112f6047a59ded367c38d23344daa3",
+      "signature": "def fold_until[A: Movable & Deinitable, C: Binary, //, B: Movable & Deinitable](deinit self, var step: C, var initial: A) raises C.Error -> Pipeline[_NativeFamily[ControlFlow[B, A]], ControlFlow[B, A], Self.E] where C.First == A and C.Second == _FoldElement[Self.V] and C.Out == ControlFlow[B, A]:"
+     },
+     {
+      "sha256": "56d848de296a281a4a7f890b3205c1d3a84d03c5eb95ddb7c430db3cd35ab1f7",
+      "signature": "def fold_until[A: Movable & Deinitable, B: Movable & Deinitable, o: ImmOrigin, //, C: def(var A, var _FoldElement[Self.V]) -> ControlFlow[B, A]](deinit self, ref[o] step: C, var initial: A) raises Never -> Pipeline[_NativeFamily[ControlFlow[B, A]], ControlFlow[B, A], Self.E] where ControlFlow[B, A] == ControlFlow[B, A]:"
+     },
+     {
+      "sha256": "00c5859e61f5707f4a7df51cb9163c5dece7ab4f247d783dde94587284401560",
+      "signature": "def fold_until[A: Movable & Deinitable, B: Movable & Deinitable, o: ImmOrigin, //, C: def(var A, var _FoldElement[Self.V]) raises Self.E -> ControlFlow[B, A]](deinit self, ref[o] step: C, var initial: A) raises Self.E -> Pipeline[_NativeFamily[ControlFlow[B, A]], ControlFlow[B, A], Self.E] where ControlFlow[B, A] == ControlFlow[B, A]:"
+     },
+     {
+      "sha256": "d94777669a55dbaff86a77daf23789c86d75878a92dfa423fd1031c105ca0c65",
+      "signature": "def fold_until[A: Movable & Deinitable, B: Movable & Deinitable, o: ImmOrigin, //, C: def(var A, var _FoldElement[Self.V]) raises Never -> ControlFlow[B, A]](deinit self, ref[o] step: C, var initial: A) raises Never -> Pipeline[_NativeFamily[ControlFlow[B, A]], ControlFlow[B, A], Self.E] where Self.E != Never and ControlFlow[B, A] == ControlFlow[B, A]:"
+     }
+    ],
     "followed_by": [
      {
       "sha256": "270dd19090f88c5ef9c0f764c6cd390d02c7ba345610f9c560d32140977ce3e4",
@@ -7905,6 +7941,24 @@
      {
       "sha256": "0ac1170f7aa250418b09c4a79d9e751e61a02c2ee36b6071064dd30e62a9687b",
       "signature": "def map[R: Movable & Deinitable, //](deinit self, function: def(var Self.I.Element[Self.V]) raises Never thin -> R) raises Self.I.MapError[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var Self.I.Element[Self.V]) raises Never thin -> R, True]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var Self.I.Element[Self.V]) raises Never thin -> R, True]], Self.E] where conforms_to(Self.I, Functor) and _MapCompatible[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var Self.I.Element[Self.V]) raises Never thin -> R, True]]:"
+     }
+    ],
+    "map2": [
+     {
+      "sha256": "7ae7470cf18582fbe0b1354da80fe48784db402f837b5bcabf1c6e2e0cbdf2e4",
+      "signature": "def map2[W: Movable & Deinitable, C: BinaryContract & Movable & Deinitable](deinit self, var other: W, var function: C) raises _Combining[Self.I].CombineError[Self.V, C, _ValueThunk[W]] -> Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, C, _ValueThunk[W]], Self.E] where conforms_to(Self.I, Applicative) and C.First == Self.I.Element[Self.V] and C.Second == Self.I.Element[W] and _CombineCompatible[_Combining[Self.I], Self.V, C, _ValueThunk[W]] and _CarrierCompatible[_Combining[Self.I], Self.V] and _CarrierCompatible[_Combining[Self.I], W]:"
+     },
+     {
+      "sha256": "bd56b735cbeb11329869a061adcfd2e06539b0ac584b9801dcc5b410a620eaff",
+      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W]) -> R](deinit self, var other: W, ref[o] function: C) raises _Combining[Self.I].CombineError[Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o], _ValueThunk[W]] -> Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o], _ValueThunk[W]], Self.E] where conforms_to(Self.I, Applicative) and _CombineCompatible[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o], _ValueThunk[W]] and _CarrierCompatible[_Combining[Self.I], Self.V] and _CarrierCompatible[_Combining[Self.I], W]:"
+     },
+     {
+      "sha256": "a46702bcc90af32d8f25403638254cbbcfc1a790559543226fd6b57d956aeb42",
+      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W]) raises Self.E -> R](deinit self, var other: W, ref[o] function: C) raises _Combining[Self.I].CombineError[Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o], _ValueThunk[W]] -> Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o], _ValueThunk[W]], Self.E] where conforms_to(Self.I, Applicative) and _CombineCompatible[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o], _ValueThunk[W]] and _CarrierCompatible[_Combining[Self.I], Self.V] and _CarrierCompatible[_Combining[Self.I], W]:"
+     },
+     {
+      "sha256": "a8f6ad708ea7b7a9abf4ff5c8b089754e707f48c6020df136875a07cf8a414b0",
+      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W]) raises Never -> R](deinit self, var other: W, ref[o] function: C) raises _Combining[Self.I].CombineError[Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o], _ValueThunk[W]] -> Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o], _ValueThunk[W]], Self.E] where conforms_to(Self.I, Applicative) and Self.E != Never and _CombineCompatible[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o], _ValueThunk[W]] and _CarrierCompatible[_Combining[Self.I], Self.V] and _CarrierCompatible[_Combining[Self.I], W]:"
      }
     ],
     "map_both": [
@@ -8079,6 +8133,108 @@
       "signature": "def map_err[R: Movable & Deinitable](deinit self, function: def(var _Failure[Self.V]) raises Never thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], R]]], Result[_Success[Self.V], R], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]:"
      }
     ],
+    "map_n": [
+     {
+      "sha256": "2ca929520db3ba5c3f144a4346c0226eb892a813b3f36cde544816afde4e914d",
+      "signature": "def map_n[C: UnaryContract & Movable & Deinitable, *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws], var function: C) raises _MapNTypes[_Combining[Self.I], Self.V, C, *Ws].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, C, *Ws].Out, Self.E] where conforms_to(Self.I, Applicative) and Ws.length < 8 and _ProductRun[_Combining[Self.I], Self.V, *Ws].AdmittedInputs and C.Arg == _ProductRun[_Combining[Self.I], Self.V, *Ws].Payload:"
+     },
+     {
+      "sha256": "9d92a75f57ecb43aeb0a945cc075d69d2e1be0a79a9ff2a5cf98bab95352499f",
+      "signature": "def map_n[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) -> R](deinit self, var others: Tuple[], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary1[Self.I.Element[Self.V], R, Never, C, False, o]].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary1[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V].AdmittedInputs:"
+     },
+     {
+      "sha256": "1071f5b9490a02687c335737a667294b4a14698aca642013048c4b4d93928a39",
+      "signature": "def map_n[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, var others: Tuple[], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary1[Self.I.Element[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary1[Self.I.Element[Self.V], R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V].AdmittedInputs:"
+     },
+     {
+      "sha256": "d56a81abbeb04b221ae5ef78a1e7bd27a13d8f6a6a4c308a128577eff107179f",
+      "signature": "def map_n[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, var others: Tuple[], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary1[Self.I.Element[Self.V], R, Never, C, True, o]].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary1[Self.I.Element[Self.V], R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V].AdmittedInputs and Self.E != Never:"
+     },
+     {
+      "sha256": "116477539a6e53bbcc8c9d00d41a6271a452f9fee9ac8fa8e43d543fdc3c9aa6",
+      "signature": "def map_n[W0: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0]) -> R](deinit self, var others: Tuple[W0], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary2[Self.I.Element[Self.V], Self.I.Element[W0], R, Never, C, False, o], W0].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary2[Self.I.Element[Self.V], Self.I.Element[W0], R, Never, C, False, o], W0].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0].AdmittedInputs:"
+     },
+     {
+      "sha256": "9bbf322755f72a399b38bfe54059060471f1ef6c5bf7a60b35745afb514808ba",
+      "signature": "def map_n[W0: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0]) raises Self.E -> R](deinit self, var others: Tuple[W0], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary2[Self.I.Element[Self.V], Self.I.Element[W0], R, Self.E, C, True, o], W0].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary2[Self.I.Element[Self.V], Self.I.Element[W0], R, Self.E, C, True, o], W0].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0].AdmittedInputs:"
+     },
+     {
+      "sha256": "2639e963292c438b59af54b1a4c36dcd9ce7c45448aa15523fcbd0b5cda88719",
+      "signature": "def map_n[W0: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0]) raises Never -> R](deinit self, var others: Tuple[W0], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary2[Self.I.Element[Self.V], Self.I.Element[W0], R, Never, C, True, o], W0].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary2[Self.I.Element[Self.V], Self.I.Element[W0], R, Never, C, True, o], W0].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0].AdmittedInputs and Self.E != Never:"
+     },
+     {
+      "sha256": "690eabe552b98343f6ec868be20ccefd1f41ada4d8c8add3ddac35b39d3cf927",
+      "signature": "def map_n[W0: Movable & Deinitable, W1: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0], var Self.I.Element[W1]) -> R](deinit self, var others: Tuple[W0, W1], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary3[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], R, Never, C, False, o], W0, W1].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary3[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], R, Never, C, False, o], W0, W1].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0, W1].AdmittedInputs:"
+     },
+     {
+      "sha256": "3d1a83fe398387bb644e70ba2b087611ba29d5935961b04ec4292c82db3c4de9",
+      "signature": "def map_n[W0: Movable & Deinitable, W1: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0], var Self.I.Element[W1]) raises Self.E -> R](deinit self, var others: Tuple[W0, W1], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary3[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], R, Self.E, C, True, o], W0, W1].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary3[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], R, Self.E, C, True, o], W0, W1].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0, W1].AdmittedInputs:"
+     },
+     {
+      "sha256": "800682103d4f1771af378e4c9a52fc95b2df36fb35fc8a943127c5ac95ce71a0",
+      "signature": "def map_n[W0: Movable & Deinitable, W1: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0], var Self.I.Element[W1]) raises Never -> R](deinit self, var others: Tuple[W0, W1], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary3[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], R, Never, C, True, o], W0, W1].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary3[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], R, Never, C, True, o], W0, W1].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0, W1].AdmittedInputs and Self.E != Never:"
+     },
+     {
+      "sha256": "1c17cf91dec311d10c40d55a934384a484e40cbce04a1764a06bb5cf0b4d70f5",
+      "signature": "def map_n[W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0], var Self.I.Element[W1], var Self.I.Element[W2]) -> R](deinit self, var others: Tuple[W0, W1, W2], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary4[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], R, Never, C, False, o], W0, W1, W2].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary4[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], R, Never, C, False, o], W0, W1, W2].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0, W1, W2].AdmittedInputs:"
+     },
+     {
+      "sha256": "e8fc42015faef170bfe1434cc34798e448ce9030f0a434fb234a3e34354ec663",
+      "signature": "def map_n[W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0], var Self.I.Element[W1], var Self.I.Element[W2]) raises Self.E -> R](deinit self, var others: Tuple[W0, W1, W2], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary4[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], R, Self.E, C, True, o], W0, W1, W2].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary4[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], R, Self.E, C, True, o], W0, W1, W2].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0, W1, W2].AdmittedInputs:"
+     },
+     {
+      "sha256": "7d47f594f0fc3c42548802170d737e359da61838052e2c5cd08fd9ff301be950",
+      "signature": "def map_n[W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0], var Self.I.Element[W1], var Self.I.Element[W2]) raises Never -> R](deinit self, var others: Tuple[W0, W1, W2], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary4[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], R, Never, C, True, o], W0, W1, W2].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary4[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], R, Never, C, True, o], W0, W1, W2].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0, W1, W2].AdmittedInputs and Self.E != Never:"
+     },
+     {
+      "sha256": "ad28a5304591e833f7249222f2695a5715cf5d173d961ff1120d5baac3e3dedc",
+      "signature": "def map_n[W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0], var Self.I.Element[W1], var Self.I.Element[W2], var Self.I.Element[W3]) -> R](deinit self, var others: Tuple[W0, W1, W2, W3], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary5[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], R, Never, C, False, o], W0, W1, W2, W3].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary5[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], R, Never, C, False, o], W0, W1, W2, W3].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0, W1, W2, W3].AdmittedInputs:"
+     },
+     {
+      "sha256": "9f14a05421d4e9466d7de852ea6807ced639894fb18f85f12ac1c27c5113ed00",
+      "signature": "def map_n[W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0], var Self.I.Element[W1], var Self.I.Element[W2], var Self.I.Element[W3]) raises Self.E -> R](deinit self, var others: Tuple[W0, W1, W2, W3], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary5[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], R, Self.E, C, True, o], W0, W1, W2, W3].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary5[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], R, Self.E, C, True, o], W0, W1, W2, W3].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0, W1, W2, W3].AdmittedInputs:"
+     },
+     {
+      "sha256": "2d4e329b0e70cdad2a1444acd676e390ec26e82866a795db91e71304dfb4ec45",
+      "signature": "def map_n[W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0], var Self.I.Element[W1], var Self.I.Element[W2], var Self.I.Element[W3]) raises Never -> R](deinit self, var others: Tuple[W0, W1, W2, W3], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary5[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], R, Never, C, True, o], W0, W1, W2, W3].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary5[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], R, Never, C, True, o], W0, W1, W2, W3].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0, W1, W2, W3].AdmittedInputs and Self.E != Never:"
+     },
+     {
+      "sha256": "f6beec6b078e7ec0df542218889e1693a26d723cb8a857e515ea3c76713ab4c4",
+      "signature": "def map_n[W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0], var Self.I.Element[W1], var Self.I.Element[W2], var Self.I.Element[W3], var Self.I.Element[W4]) -> R](deinit self, var others: Tuple[W0, W1, W2, W3, W4], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary6[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], Self.I.Element[W4], R, Never, C, False, o], W0, W1, W2, W3, W4].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary6[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], Self.I.Element[W4], R, Never, C, False, o], W0, W1, W2, W3, W4].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0, W1, W2, W3, W4].AdmittedInputs:"
+     },
+     {
+      "sha256": "f94874ca208c03ff492d8c8c48d7f1c78fc8d415b16245c218f20afc4b3f6c12",
+      "signature": "def map_n[W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0], var Self.I.Element[W1], var Self.I.Element[W2], var Self.I.Element[W3], var Self.I.Element[W4]) raises Self.E -> R](deinit self, var others: Tuple[W0, W1, W2, W3, W4], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary6[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], Self.I.Element[W4], R, Self.E, C, True, o], W0, W1, W2, W3, W4].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary6[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], Self.I.Element[W4], R, Self.E, C, True, o], W0, W1, W2, W3, W4].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0, W1, W2, W3, W4].AdmittedInputs:"
+     },
+     {
+      "sha256": "303c17a7008d53e57c928335bd13fea04bcd755b7b864c8e5cf0c6a43dd39d90",
+      "signature": "def map_n[W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0], var Self.I.Element[W1], var Self.I.Element[W2], var Self.I.Element[W3], var Self.I.Element[W4]) raises Never -> R](deinit self, var others: Tuple[W0, W1, W2, W3, W4], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary6[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], Self.I.Element[W4], R, Never, C, True, o], W0, W1, W2, W3, W4].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary6[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], Self.I.Element[W4], R, Never, C, True, o], W0, W1, W2, W3, W4].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0, W1, W2, W3, W4].AdmittedInputs and Self.E != Never:"
+     },
+     {
+      "sha256": "23b13d9f83ce8be836c5b681d770d43d86e825a76a580e4be7b0d71255266260",
+      "signature": "def map_n[W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, W5: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0], var Self.I.Element[W1], var Self.I.Element[W2], var Self.I.Element[W3], var Self.I.Element[W4], var Self.I.Element[W5]) -> R](deinit self, var others: Tuple[W0, W1, W2, W3, W4, W5], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary7[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], Self.I.Element[W4], Self.I.Element[W5], R, Never, C, False, o], W0, W1, W2, W3, W4, W5].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary7[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], Self.I.Element[W4], Self.I.Element[W5], R, Never, C, False, o], W0, W1, W2, W3, W4, W5].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0, W1, W2, W3, W4, W5].AdmittedInputs:"
+     },
+     {
+      "sha256": "896112a39dfe5540b55a7b573ab588c15b079dec9a0a26c001159a692acc8f31",
+      "signature": "def map_n[W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, W5: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0], var Self.I.Element[W1], var Self.I.Element[W2], var Self.I.Element[W3], var Self.I.Element[W4], var Self.I.Element[W5]) raises Self.E -> R](deinit self, var others: Tuple[W0, W1, W2, W3, W4, W5], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary7[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], Self.I.Element[W4], Self.I.Element[W5], R, Self.E, C, True, o], W0, W1, W2, W3, W4, W5].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary7[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], Self.I.Element[W4], Self.I.Element[W5], R, Self.E, C, True, o], W0, W1, W2, W3, W4, W5].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0, W1, W2, W3, W4, W5].AdmittedInputs:"
+     },
+     {
+      "sha256": "afb64435968127c828ecf7e8246346e49566c92e4f69f522a25ed718b6eadc20",
+      "signature": "def map_n[W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, W5: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0], var Self.I.Element[W1], var Self.I.Element[W2], var Self.I.Element[W3], var Self.I.Element[W4], var Self.I.Element[W5]) raises Never -> R](deinit self, var others: Tuple[W0, W1, W2, W3, W4, W5], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary7[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], Self.I.Element[W4], Self.I.Element[W5], R, Never, C, True, o], W0, W1, W2, W3, W4, W5].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary7[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], Self.I.Element[W4], Self.I.Element[W5], R, Never, C, True, o], W0, W1, W2, W3, W4, W5].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0, W1, W2, W3, W4, W5].AdmittedInputs and Self.E != Never:"
+     },
+     {
+      "sha256": "1023e3e0ac1c88f2f34affcd6e48081d34337a720e1146bec7814d28cfb48ff4",
+      "signature": "def map_n[W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, W5: Movable & Deinitable, W6: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0], var Self.I.Element[W1], var Self.I.Element[W2], var Self.I.Element[W3], var Self.I.Element[W4], var Self.I.Element[W5], var Self.I.Element[W6]) -> R](deinit self, var others: Tuple[W0, W1, W2, W3, W4, W5, W6], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary8[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], Self.I.Element[W4], Self.I.Element[W5], Self.I.Element[W6], R, Never, C, False, o], W0, W1, W2, W3, W4, W5, W6].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary8[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], Self.I.Element[W4], Self.I.Element[W5], Self.I.Element[W6], R, Never, C, False, o], W0, W1, W2, W3, W4, W5, W6].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0, W1, W2, W3, W4, W5, W6].AdmittedInputs:"
+     },
+     {
+      "sha256": "63934833ffd932709aad0383738aa1d958964568003ba06cf54662a1ea071f9f",
+      "signature": "def map_n[W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, W5: Movable & Deinitable, W6: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0], var Self.I.Element[W1], var Self.I.Element[W2], var Self.I.Element[W3], var Self.I.Element[W4], var Self.I.Element[W5], var Self.I.Element[W6]) raises Self.E -> R](deinit self, var others: Tuple[W0, W1, W2, W3, W4, W5, W6], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary8[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], Self.I.Element[W4], Self.I.Element[W5], Self.I.Element[W6], R, Self.E, C, True, o], W0, W1, W2, W3, W4, W5, W6].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary8[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], Self.I.Element[W4], Self.I.Element[W5], Self.I.Element[W6], R, Self.E, C, True, o], W0, W1, W2, W3, W4, W5, W6].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0, W1, W2, W3, W4, W5, W6].AdmittedInputs:"
+     },
+     {
+      "sha256": "f7f3d0a824421c2b0f97b88c8e9753528b85853a30cab651ce8a9b9ba3e00159",
+      "signature": "def map_n[W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, W5: Movable & Deinitable, W6: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0], var Self.I.Element[W1], var Self.I.Element[W2], var Self.I.Element[W3], var Self.I.Element[W4], var Self.I.Element[W5], var Self.I.Element[W6]) raises Never -> R](deinit self, var others: Tuple[W0, W1, W2, W3, W4, W5, W6], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary8[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], Self.I.Element[W4], Self.I.Element[W5], Self.I.Element[W6], R, Never, C, True, o], W0, W1, W2, W3, W4, W5, W6].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary8[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], Self.I.Element[W4], Self.I.Element[W5], Self.I.Element[W6], R, Never, C, True, o], W0, W1, W2, W3, W4, W5, W6].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0, W1, W2, W3, W4, W5, W6].AdmittedInputs and Self.E != Never:"
+     }
+    ],
     "or_else": [
      {
       "sha256": "fc6d3929390fbd8d83b47aa04d0673ad054003bc4f39514c7e3e26b3dcf283f4",
@@ -8249,6 +8405,18 @@
      {
       "sha256": "9d33c7ff9e6ef1a56ed9c8e54e53e82cf9464985a6a415ea915c756202fe8cfd",
       "signature": "def or_else_if[R: Movable & Deinitable, S: Movable & Deinitable](deinit self, predicate: def(_Failure[Self.V]) raises Never thin -> R, function: def(var _Failure[Self.V]) raises Never thin -> S) raises _CommonError[Never, Never] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == Bool and S == Result[_Success[Self.V], _Failure[Self.V]] and (Never == Never or Never == Never or Never == Never):"
+     }
+    ],
+    "product": [
+     {
+      "sha256": "63a74c93ef763640d80eec37859a5a102bec841d8cdfda6e3b9cf14f8ba8cd46",
+      "signature": "def product[W: Movable & Deinitable](deinit self, var other: W) raises _Combining[Self.I].CombineError[Self.V, _Pair[Self.I.Element[Self.V], Self.I.Element[W]], _ValueThunk[W]] -> Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _Pair[Self.I.Element[Self.V], Self.I.Element[W]], _ValueThunk[W]], Self.E] where conforms_to(Self.I, Applicative) and _CombineCompatible[_Combining[Self.I], Self.V, _Pair[Self.I.Element[Self.V], Self.I.Element[W]], _ValueThunk[W]] and _CarrierCompatible[_Combining[Self.I], Self.V] and _CarrierCompatible[_Combining[Self.I], W]:"
+     }
+    ],
+    "product_n": [
+     {
+      "sha256": "7ccbc247a45af15855089b375ba51a1cc41201a477c475cfe126a099d7a6bdea",
+      "signature": "def product_n[*Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws]) raises _ProductTypes[_Combining[Self.I], Self.V, *Ws].Error -> Pipeline[Self.I, _ProductTypes[_Combining[Self.I], Self.V, *Ws].Out, Self.E] where conforms_to(Self.I, Applicative) and Ws.length < 8 and _ProductRun[_Combining[Self.I], Self.V, *Ws].AdmittedInputs:"
      }
     ],
     "raising": [
@@ -8721,6 +8889,30 @@
       "signature": "def redeem_with[R: Movable & Deinitable, S: Movable & Deinitable](deinit self, on_ok: def(var _Success[Self.V]) raises Never thin -> R, on_err: def(var _Failure[Self.V]) raises Never thin -> S) raises _CommonError[Never, Never] -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and R == Result[_Success[R], _Failure[R]] and (Never == Never or Never == Never or Never == Never):"
      }
     ],
+    "reduce_optional": [
+     {
+      "sha256": "8aad719e4e375a8b9d54328bf5c243f13cfdd302800919c65baa9b4feb4e1cf7",
+      "signature": "def reduce_optional[C: Binary](deinit self, var step: C) raises C.Error -> Pipeline[_NativeFamily[Optional[C.Out]], Optional[C.Out], Self.E] where C.First == _FoldElement[Self.V] and C.Second == _FoldElement[Self.V] and C.Out == _FoldElement[Self.V]:"
+     },
+     {
+      "sha256": "071e1920e6da2f6c1cb6978df00c02d336c9976f19dbc0b3cb795027242b8ac2",
+      "signature": "def reduce_optional[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _FoldElement[Self.V], var _FoldElement[Self.V]) -> R](deinit self, ref[o] step: C) raises Never -> Pipeline[_NativeFamily[Optional[R]], Optional[R], Self.E] where R == _FoldElement[Self.V]:"
+     },
+     {
+      "sha256": "082fddaba0d72ea36b2094e8a612c6d788118500af5951c5f7531cc9b9b0b08a",
+      "signature": "def reduce_optional[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _FoldElement[Self.V], var _FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] step: C) raises Self.E -> Pipeline[_NativeFamily[Optional[R]], Optional[R], Self.E] where R == _FoldElement[Self.V]:"
+     },
+     {
+      "sha256": "1d4aa5269df2b3ff75f1d84298a305b1c1bf541b08ba4a5ea4ee8cd5c9745a64",
+      "signature": "def reduce_optional[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _FoldElement[Self.V], var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] step: C) raises Never -> Pipeline[_NativeFamily[Optional[R]], Optional[R], Self.E] where Self.E != Never and R == _FoldElement[Self.V]:"
+     }
+    ],
+    "sequence": [
+     {
+      "sha256": "b01a5899361f2ef992c118d49e98effd8e05392718b99f29a79a96d3f420a38e",
+      "signature": "def sequence[J: Applicative](deinit self) raises _Traversing[Self.I].TraverseError[J, Self.V, Identity[Self.I.Element[Self.V]]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]], Self.E] where conforms_to(Self.I, Traversable) and _CollectCompatible[J, Self.V, Identity[Self.I.Element[Self.V]]] and _CarrierCompatible[J, Self.I.Element[Self.V]]:"
+     }
+    ],
     "tap_err": [
      {
       "sha256": "bd7e8b0c38024d87ff43c8c037a13926ad9b8658afa41aef8d7faaf7cbdbfc56",
@@ -8745,6 +8937,58 @@
      {
       "sha256": "40d7233c6ab453a92ad60aa7a36e927e6fe14f58599820db6b921d8d0358e686",
       "signature": "def tap_err[R: Movable & Deinitable](deinit self, function: def(_Failure[Self.V]) raises Never thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]:"
+     }
+    ],
+    "then": [
+     {
+      "sha256": "983668b7023765539cb62010f4c1672c794e43ada267d63bfc35c0b507113d95",
+      "signature": "def then[C: UnaryContract & Movable & Deinitable, //, J: Functor = _NativeFamily[C.Out]](deinit self, var function: C) raises C.Error -> Pipeline[J, C.Out, Self.E] where C.Arg == Self.V:"
+     },
+     {
+      "sha256": "c7e3e72accdf34169992c1cccde18d0b522d6c832a7322f13bb9c3d8762dda1e",
+      "signature": "def then[R: Movable & Deinitable, o: ImmOrigin, C: def(var Self.V) -> R, //, J: Functor = _NativeFamily[R]](deinit self, ref[o] function: C) raises Never -> Pipeline[J, R, Self.E]:"
+     },
+     {
+      "sha256": "113efb8e72e402273b56f61c410ba36aac95d90f8fd5d6aafe1c0bab87eca9de",
+      "signature": "def then[R: Movable & Deinitable, //, J: Functor = _NativeFamily[R]](deinit self, function: def(var Self.V) thin -> R) raises Never -> Pipeline[J, R, Self.E]:"
+     },
+     {
+      "sha256": "ec01d4076de381611630e67b42402de9da248cab20a091d5353bb727c7b1a2ee",
+      "signature": "def then[R: Movable & Deinitable, o: ImmOrigin, C: def(var Self.V) raises Self.E -> R, //, J: Functor = _NativeFamily[R]](deinit self, ref[o] function: C) raises Self.E -> Pipeline[J, R, Self.E]:"
+     },
+     {
+      "sha256": "121d76aa10a87f76dddb748154c86c92cec77c22f95d47b6751c0a7b3e19d841",
+      "signature": "def then[R: Movable & Deinitable, o: ImmOrigin, C: def(var Self.V) raises Never -> R, //, J: Functor = _NativeFamily[R]](deinit self, ref[o] function: C) raises Never -> Pipeline[J, R, Self.E] where Self.E != Never:"
+     },
+     {
+      "sha256": "fbc95969b8ffb23355e173f30a6943ac26a63ce9b8079553d5a7df4f64baeceb",
+      "signature": "def then[R: Movable & Deinitable, //, J: Functor = _NativeFamily[R]](deinit self, function: def(var Self.V) raises Never thin -> R) raises Never -> Pipeline[J, R, Self.E]:"
+     }
+    ],
+    "traverse": [
+     {
+      "sha256": "17dc22cf582d7d983aac2e556c509bca151176476a21ce90bc4dce5591a556cb",
+      "signature": "def traverse[C: UnaryContract & Movable & Deinitable, //, J: Applicative](deinit self, var function: C) raises _Traversing[Self.I].TraverseError[J, Self.V, C] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, C], Self.E] where conforms_to(Self.I, Traversable) and C.Arg == Self.I.Element[Self.V] and _CollectCompatible[J, Self.V, C] and _CarrierCompatible[J, C.Out]:"
+     },
+     {
+      "sha256": "a477b8a8cb23001598858b2cfecbc3d04645cbc27c44bf479b58956ed9d10cec",
+      "signature": "def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative, C: def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises _Traversing[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], Self.E] where conforms_to(Self.I, Traversable) and _CollectCompatible[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]] and _CarrierCompatible[J, R]:"
+     },
+     {
+      "sha256": "4d43ec31b4298122a86a8ecbab11044fffb02ef2f227906ed2da0384afac9fb9",
+      "signature": "def traverse[R: Movable & Deinitable, //, J: Applicative](deinit self, function: def(var Self.I.Element[Self.V]) thin -> R) raises _Traversing[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var Self.I.Element[Self.V]) thin -> R, False]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var Self.I.Element[Self.V]) thin -> R, False]], Self.E] where conforms_to(Self.I, Traversable) and _CollectCompatible[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var Self.I.Element[Self.V]) thin -> R, False]] and _CarrierCompatible[J, R]:"
+     },
+     {
+      "sha256": "a938d593f74b8475c3d5155216ff702822029ab723ae4bc39e9eadf79422a8be",
+      "signature": "def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative, C: def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _Traversing[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], Self.E] where conforms_to(Self.I, Traversable) and _CollectCompatible[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]] and _CarrierCompatible[J, R]:"
+     },
+     {
+      "sha256": "558dcbe35fb2869c792f0cfa1dd1b1459428029e32f3bc23046bfda0ceacf4d2",
+      "signature": "def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative, C: def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _Traversing[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], Self.E] where conforms_to(Self.I, Traversable) and Self.E != Never and _CollectCompatible[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]] and _CarrierCompatible[J, R]:"
+     },
+     {
+      "sha256": "fc6213949a6da3644552ae6210ac90b47d884a43e625328a74788e09824a758f",
+      "signature": "def traverse[R: Movable & Deinitable, //, J: Applicative](deinit self, function: def(var Self.I.Element[Self.V]) raises Never thin -> R) raises _Traversing[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var Self.I.Element[Self.V]) raises Never thin -> R, True]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var Self.I.Element[Self.V]) raises Never thin -> R, True]], Self.E] where conforms_to(Self.I, Traversable) and _CollectCompatible[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var Self.I.Element[Self.V]) raises Never thin -> R, True]] and _CarrierCompatible[J, R]:"
      }
     ]
    },
@@ -9158,6 +9402,10 @@
     {
      "sha256": "89ef1047707f465a5c25704d43106ec2c2802545d44b81b1df551480671100fa",
      "signature": "def pipeline[V: Movable & Deinitable, //, I: Functor](var value: V) -> Pipeline[I, V]:"
+    },
+    {
+     "sha256": "d220bf59d231f031bcf0e7e7aad82288bf53a4dd3336e9123866282e82ebeffa",
+     "signature": "def pipeline[V: Movable & Deinitable](var value: V) -> Pipeline[_NativeFamily[V], V] where _NativeFamily[V] == IdentityFamily:"
     }
    ],
    "provider": "functions/context"

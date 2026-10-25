@@ -84,6 +84,17 @@ with identical layout, so it cannot serve as the nominal type check.
 
 ### Chained pipelines
 
+For Mojo 1.2, `pipeline(value).raising[E]()` selects native errors before
+admitting callbacks. Each `then` delegates to `call_once`; it consumes the
+whole value and selects the returned native family or Identity. Custom output
+families use `then[Family]`. Folds delegate to the existing iterator drivers,
+traversal selects its target family, and combinations use the existing
+Applicative product runner. These are signature adapters with no separate
+execution loop. The [redesign](mojo12-redesign.md#further-migration) describes
+admission checks and the source/package verification matrix.
+
+The legacy chain remains available:
+
 `piped(value)` returns a `Piped[T]` holding the value, and each `then(f)` applies
 one stage and returns `Piped[R]`. A chain is therefore a sequence of ordinary
 calls, each with one function-typed parameter, so Mojo infers every stage's

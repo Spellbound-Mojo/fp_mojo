@@ -6,6 +6,7 @@ import re
 from api_docs import parse_signature
 from generate_result_syntax import DOCS, OUTCOMES
 from generate_plain_overloads import splice_source
+from generate_nary_syntax import MAX
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "src/fp/functions/context.mojo"
@@ -31,9 +32,11 @@ def methods():
                 "owned": "UnaryContract",
                 "borrow": "BorrowCallContract",
                 "thunk": "ThunkContract",
+                "binary": "BinaryContract",
+                "nary": "UnaryContract",
             }[mode]
             if repeatable:
-                trait = "BorrowCallable"
+                trait = "Binary" if mode == "binary" else "BorrowCallable"
             return dict(
                 params=[f"{C}: {trait}" + ("" if repeatable else f" & {MD}")],
                 argument=f"var {arg}: {C}",
@@ -42,14 +45,28 @@ def methods():
                 result=C + (".Result" if mode == "borrow" else ".Out"),
                 error=C + (".Failure" if mode == "borrow" else ".Error"),
                 conditions=(
-                    []
-                    if mode == "thunk"
-                    else [C + (".Payload" if mode == "borrow" else ".Arg") + " == " + payload]
+                    [f"{C}.Arg == Tuple[{', '.join(payload)}]"]
+                    if mode == "nary"
+                    else (
+                        [f"{C}.First == {payload[0]}", f"{C}.Second == {payload[1]}"]
+                        if mode == "binary"
+                        else (
+                            []
+                            if mode == "thunk"
+                            else [
+                                C + (".Payload" if mode == "borrow" else ".Arg") + " == " + payload
+                            ]
+                        )
+                    )
                 ),
             )
         E = "Self.E" if kind == "raising" else "Never"
         raising = kind not in ("pure", "thin_pure")
-        native = ("var " if mode == "owned" else "") + payload if mode != "thunk" else ""
+        native = (
+            ", ".join("var " + p for p in payload)
+            if mode in ("binary", "nary")
+            else ("var " if mode == "owned" else "") + payload if mode != "thunk" else ""
+        )
         signature = (
             f"def({native})"
             + (" raises " + E if raising else "")
@@ -61,13 +78,19 @@ def methods():
             "owned": "_NativeUnaryRef",
             "borrow": "_NativeBorrowRef",
             "thunk": "_NativeThunkRef",
+            "binary": "_NativeBinaryRef",
+            "nary": f"_NativeNary{len(payload)}",
         }[mode]
         native_type = "type_of(" + arg + ")" if kind.startswith("thin_") else C
         origin = o
         cb = (
             adapter
             + "["
-            + (payload + ", " if mode != "thunk" else "")
+            + (
+                ", ".join(payload) + ", "
+                if mode in ("binary", "nary")
+                else payload + ", " if mode != "thunk" else ""
+            )
             + f"{R}, {E}, {native_type}, {raising}, {origin}]"
         )
         if kind.startswith("thin_"):
@@ -103,6 +126,215 @@ def methods():
             error=E,
             conditions=["Self.E != Never"] if kind == "never" else [],
         )
+
+    kinds = ("library", "pure", "thin_pure", "raising", "never", "thin_never")
+
+    def emit(name, cb, params, arguments, result, error, family, conditions, expr, summary):
+        target = f"Pipeline[{family}, {result}, Self.E]"
+        prelude = cb.get("prelude", "")
+        constraints = " where " + " and ".join(conditions) if conditions else ""
+        body.append(
+            f"\n    @always_inline\n    def {name}[{', '.join(params)}](deinit self, {arguments}) raises {error} -> {target}{constraints}:\n"
+            f'        """{summary}"""\n{prelude}        return {target}({expr})\n'
+        )
+
+    # Whole-value stages reselect the output family. The optional family comes
+    # after the inference barrier, so then[Family](f) is also available.
+    for kind in kinds:
+        cb = callback("owned", kind, "Self.V", "function")
+        params = [p for p in cb["params"] if p != "//"]
+        params += ["//", f"J: Functor = _NativeFamily[{cb['result']}]"]
+        emit(
+            "then",
+            cb,
+            params,
+            cb["argument"],
+            cb["result"],
+            cb["error"],
+            "J",
+            cb["conditions"],
+            f"call_once({cb['build']}, rebind_var[{cb['adapter_type']}.Arg](self.value^))",
+            "Consume the whole value with one stage and select its output family.",
+        )
+
+    # Folds share the existing source normalization and terminal drivers. Their
+    # callbacks need a shared Binary receiver, matching the standalone folds.
+    for name in ("fold_left", "reduce_optional", "fold_until"):
+        element = "_FoldElement[Self.V]"
+        initial = name != "reduce_optional"
+        accumulator = "A" if initial else element
+        for kind in ("library", "pure", "raising", "never"):
+            cb = callback("binary", kind, (accumulator, element), "step", repeatable=True)
+            result = "A" if initial else f"Optional[{cb['result']}]"
+            expected = accumulator
+            if name == "fold_until":
+                result = expected = "ControlFlow[B, A]"
+                if kind != "library":
+                    cb = {
+                        k: (
+                            [
+                                "B: " + MD if p == "R: " + MD else re.sub(r"\bR\b", result, p)
+                                for p in v
+                            ]
+                            if k == "params"
+                            else re.sub(r"\bR\b", result, v) if isinstance(v, str) else v
+                        )
+                        for k, v in cb.items()
+                    }
+                else:
+                    cb["params"] += ["//", f"B: {MD}"]
+            args = cb["argument"] + (", var initial: A" if initial else "")
+            params = ([f"A: {MD}"] if initial else []) + cb["params"]
+            build = "step" if kind == "library" else cb["build"]
+            entry = f"_context_{name}" + ("[B=B]" if name == "fold_until" else "")
+            expr = f"{entry}({build}, " + ("initial^, " if initial else "") + "self.value^)"
+            emit(
+                name,
+                cb,
+                params,
+                args,
+                result,
+                cb["error"],
+                f"_NativeFamily[{result}]",
+                cb["conditions"] + [f"{cb['result']} == {expected}"],
+                expr,
+                "Consume the source in order through the canonical terminal fold.",
+            )
+
+    for kind in kinds:
+        cb = callback("owned", kind, "Self.I.Element[Self.V]", "function")
+        params = list(cb["params"])
+        if "//" not in params:
+            params += ["//"]
+        params.insert(params.index("//") + 1, "J: Applicative")
+        family = "_Traversing[Self.I]"
+        result = f"{family}.Traversed[J, Self.V, {cb['adapter_type']}]"
+        error = f"{family}.TraverseError[J, Self.V, {cb['adapter_type']}]"
+        conditions = ["conforms_to(Self.I, Traversable)"] + cb["conditions"]
+        conditions += [
+            f"_CollectCompatible[J, Self.V, {cb['adapter_type']}]",
+            f"_CarrierCompatible[J, {cb['result']}]",
+        ]
+        emit(
+            "traverse",
+            cb,
+            params,
+            cb["argument"],
+            result,
+            error,
+            "J",
+            conditions,
+            f"{family}.traverse[J]({cb['build']}, self.value^)",
+            "Traverse into the selected target effect and continue in that family.",
+        )
+
+    for kind in ("library", "pure", "raising", "never"):
+        family = "_Combining[Self.I]"
+        cb = callback("binary", kind, ("Self.I.Element[Self.V]", "Self.I.Element[W]"), "function")
+        types = f"Self.V, {cb['adapter_type']}, _ValueThunk[W]"
+        result, error = f"{family}.Combined[{types}]", f"{family}.CombineError[{types}]"
+        conditions = ["conforms_to(Self.I, Applicative)"] + cb["conditions"]
+        conditions += [
+            f"_CombineCompatible[{family}, {types}]",
+            f"_CarrierCompatible[{family}, Self.V]",
+            f"_CarrierCompatible[{family}, W]",
+        ]
+        emit(
+            "map2",
+            cb,
+            [f"W: {MD}"] + cb["params"],
+            f"var other: W, {cb['argument']}",
+            result,
+            error,
+            "Self.I",
+            conditions,
+            f"_map2_as[{family}, X={error}]({cb['build']}, self.value^, other^)",
+            "Combine two evaluated carriers through the selected Applicative family.",
+        )
+
+    family = "_Combining[Self.I]"
+    pair = "_Pair[Self.I.Element[Self.V], Self.I.Element[W]]"
+    types = f"Self.V, {pair}, _ValueThunk[W]"
+    error, result = f"{family}.CombineError[{types}]", f"{family}.Combined[{types}]"
+    emit(
+        "product",
+        {},
+        [f"W: {MD}"],
+        "var other: W",
+        result,
+        error,
+        "Self.I",
+        [
+            "conforms_to(Self.I, Applicative)",
+            f"_CombineCompatible[{family}, {types}]",
+            f"_CarrierCompatible[{family}, Self.V]",
+            f"_CarrierCompatible[{family}, W]",
+        ],
+        f"_map2_as[{family}, X={error}]({pair}(), self.value^, other^)",
+        "Combine two evaluated carriers into pairs using the selected family.",
+    )
+
+    family = "_Traversing[Self.I]"
+    identity = "Identity[Self.I.Element[Self.V]]"
+    types = f"J, Self.V, {identity}"
+    result, error = f"{family}.Traversed[{types}]", f"{family}.TraverseError[{types}]"
+    target = f"Pipeline[J, {result}, Self.E]"
+    body.append(
+        f"\n    def sequence[J: Applicative](deinit self) raises {error} -> {target} where conforms_to(Self.I, Traversable) and _CollectCompatible[J, Self.V, {identity}] and _CarrierCompatible[J, Self.I.Element[Self.V]]:\n"
+        f'        """Sequence existing effects and continue in the target family."""\n'
+        f"        return {target}({family}.traverse[J]({identity}(), self.value^))\n"
+    )
+
+    # A selected family fixes every operand payload before the native function
+    # is admitted. Only the native signatures are arity-specific; the existing
+    # Applicative product runner owns evaluation, errors and partial cleanup.
+    family = "_Combining[Self.I]"
+    run = f"_ProductRun[{family}, Self.V, *Ws]"
+    product_type = f"_ProductTypes[{family}, Self.V, *Ws]"
+    target = f"Pipeline[Self.I, {product_type}.Out, Self.E]"
+    conditions = f"conforms_to(Self.I, Applicative) and Ws.length < {MAX} and {run}.AdmittedInputs"
+    body.append(
+        f"\n    def product_n[*Ws: {MD}](deinit self, var others: Tuple[*Ws]) raises {product_type}.Error -> {target} where {conditions}:\n"
+        '        """Combine up to eight evaluated carriers into flat tuples."""\n'
+        f"        return {target}({run}.run[{product_type}.Out, {product_type}.Error](self.value^, others^))\n"
+    )
+    cb = callback("owned", "library", f"{run}.Payload", "function")
+    mapped = f"_MapNTypes[{family}, Self.V, C, *Ws]"
+    emit(
+        "map_n",
+        cb,
+        cb["params"] + [f"*Ws: {MD}"],
+        f"var others: Tuple[*Ws], {cb['argument']}",
+        mapped + ".Out",
+        mapped + ".Error",
+        "Self.I",
+        [conditions] + cb["conditions"],
+        f"_map_n_as[{family}, {product_type}.Out, {mapped}.Out, {mapped}.Error](function^, self.value^, others^)",
+        "Combine up to eight carriers and consume each tuple through a library callback.",
+    )
+    for n in range(1, MAX + 1):
+        carriers = [f"W{i}" for i in range(n - 1)]
+        tail = ", " + ", ".join(carriers) if carriers else ""
+        operands = f"Self.V{tail}"
+        product_type = f"_ProductTypes[{family}, {operands}]"
+        run = f"_ProductRun[{family}, {operands}]"
+        payloads = [f"Self.I.Element[{v}]" for v in ["Self.V"] + carriers]
+        for kind in ("pure", "raising", "never"):
+            cb = callback("nary", kind, payloads, "function")
+            mapped = f"_MapNTypes[{family}, Self.V, {cb['adapter_type']}{tail}]"
+            params = [f"{w}: {MD}" for w in carriers] + cb["params"]
+            emit(
+                "map_n",
+                cb,
+                params,
+                f"var others: Tuple[{', '.join(carriers)}], {cb['argument']}",
+                mapped + ".Out",
+                mapped + ".Error",
+                "Self.I",
+                ["conforms_to(Self.I, Applicative)", f"{run}.AdmittedInputs"] + cb["conditions"],
+                f"_map_n_as[{family}, {product_type}.Out, {mapped}.Out, {mapped}.Error]({cb['build']}, self.value^, others^)",
+                f"Combine {n} carriers and call the native function with their separate payloads.",
+            )
 
     # The family and its input type are known before callback admission. Reuse
     # the exact native view/owned thin-pointer boundary used by Result methods.
@@ -247,7 +479,7 @@ def documented(source):
     """Document the primary overload of each family of public methods."""
     seen = set()
     params = {
-        "A": "The native callback input type, inferred and checked against the carrier.",
+        "A": "The accumulator type, inferred from the initial value and preserved by every step.",
         "P": "The borrowed payload type, including its origins.",
         "R": "The first callback result type, inferred from the callback.",
         "S": "The second callback result type, inferred from the callback.",
@@ -260,6 +492,10 @@ def documented(source):
         "G": "The second library callback type, retaining its receiver and origins.",
         "o": "The first callback origin, inferred from the borrowed callback.",
         "q": "The second callback origin, inferred from the borrowed callback.",
+        "J": "The output family; inferred for whole-value stages, explicit for traversal.",
+        "W": "The second carrier type, including its origins.",
+        "B": "The early termination payload, including its origins.",
+        "Ws": "The additional carrier types, including their origins; at most seven.",
     }
     args = {
         "function": "The callback; native callbacks are borrowed, library callbacks consumed.",
@@ -268,6 +504,10 @@ def documented(source):
         "on_ok": "The success handler, consuming the success payload.",
         "on_err": "The error handler, consuming the stored error payload.",
         "value": "The carrier, consumed.",
+        "step": "The fold step; native callbacks are borrowed, library Binary steps consumed.",
+        "initial": "The initial accumulator, consumed.",
+        "other": "The already evaluated second carrier, consumed.",
+        "others": "The tuple of already evaluated additional carriers, consumed.",
     }
     summaries = {
         "map": "Map payloads through the selected family.",

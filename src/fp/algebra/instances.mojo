@@ -21,10 +21,18 @@ from .protocols import (Applicative, ApplicativeError, Monad, Traversable, Filte
 
 comptime _ListElement[V: Movable & Deinitable] = downcast[downcast[V, IterableOwned].IteratorOwnedType.Element, Movable & Deinitable]
 
-# Default native Applicative syntax; custom carriers name their family explicitly.
-comptime _InferredApplicative[V: Movable & Deinitable]: Applicative = (
+# Native carrier recognition has one owner. Guard iterable projection before
+# inspecting its element; scalar and custom values use the caller's fallback.
+comptime _NativeFamily[V: Movable & Deinitable, Fallback: Applicative = IdentityFamily]: Applicative = (
     ResultFamily[downcast[V, _ResultType].Error] if conforms_to(V, _ResultType) else
-    ListFamily if V == List[_ListElement[V]] else OptionalFamily
+    (ListFamily if V == List[_ListElement[V]] else
+     OptionalFamily if V == Optional[_ListElement[V]] else Fallback)
+    if conforms_to(V, IterableOwned) else Fallback
+)
+
+# Keep the existing default for legacy native Applicative entry points.
+comptime _InferredApplicative[V: Movable & Deinitable]: Applicative = (
+    _NativeFamily[V, OptionalFamily]
 )
 
 

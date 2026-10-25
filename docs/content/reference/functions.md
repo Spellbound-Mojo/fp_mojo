@@ -17,9 +17,13 @@ result in the chain. `.get()` extracts the stored value. See
 
 ## Select family and native errors before callbacks
 
-`pipeline(values)` starts a `Pipeline` for List, Optional or Result.
+`pipeline(values)` starts a `Pipeline` for List, Optional or Result. Other
+values use Identity: `map` applies its callback to the whole bare value once.
 `pipeline[Family](value)` selects another Functor explicitly, including a
 deferred family. Call `raising[E]()` once to select native callback errors.
+Existing explicit payload bindings, such as `pipeline[T=Int](values)`, remain
+available. Generic wrappers over an unknown value type select a family
+explicitly; use `pipeline[IdentityFamily](value)` for a whole-value stage.
 `map`, `filter`, `flat_map` and `filter_map` use the selected family's
 capabilities. Result combinators use their existing branch and ownership rules.
 The result of `map_err` or `map_both` selects the new Result error family.
@@ -30,9 +34,38 @@ The result of `map_err` or `map_both` selects the new Result error family.
 errors, catch exceptions, or restrict the errors declared by library callables.
 Pure and Never callbacks retain Never. Custom families retain their own
 execution errors and deferred callback lifetimes. `get()` only extracts the
-carrier. `Pipeline` currently exposes these family operations and Result
-combinators; existing `Piped` remains the broader fluent API, including `then`,
-folding, traversal and n-ary combinations.
+carrier.
+
+`then(stage)` consumes the whole current value once, including a Result's Err.
+It selects List, Optional or Result for those output types and Identity for
+other outputs. Use `then[Family](stage)` when returning a custom carrier, or
+`then[IdentityFamily](stage)` to treat a native container as one payload.
+The selected native error remains in effect across these transitions.
+
+`fold_left(step, initial)`, `fold_until(step, initial)` and
+`reduce_optional(step)` use the existing consuming iterator drivers. Folds
+preserve source order and stop immediately on a raised error; `fold_until`
+also stops on Break without another pull. Empty `fold_left` returns its initial
+value; empty `reduce_optional` returns None. Native steps are borrowed;
+library steps use the standalone folds' shared `Binary` contract. The resulting
+value selects its family by the same rule as `then`.
+
+`traverse[TargetFamily](transform)` and `sequence[TargetFamily]()` continue in
+the target effect family. `map2(other, combine)`, `product(other)`,
+`map_n((other, ...), combine)` and `product_n((other, ...))` retain the current
+Applicative family. The n-ary forms accept one to eight total operands; native
+functions take separate payload arguments, while library Unary callables take
+one tuple. Operands are already evaluated and are consumed once. Result keeps
+its first stored error, Optional skips absent inputs, and List produces
+Cartesian combinations. Selecting `ValidationFamily[Semigroup]` explicitly
+accumulates stored errors through the same operations.
+
+<!-- example: docs/examples/selected_workflow.mojo -->
+
+This checkout selects its native error once, traverses into Result, folds the
+collected amounts, and combines shipping and tax. Invalid amounts remain stored
+errors; transport failures remain native raised errors. Existing `Piped` remains
+available, including operations not yet exposed through `Pipeline`.
 
 A generic bind wrapper retains a family parameter (`I: Monad`, optionally
 `I: Monad = ResultFamily[E]`) and forwards `I.BindCompatible[V, F]`,
@@ -45,7 +78,7 @@ a default family also preserves a wrapper's existing call syntax.
 
 <!-- api: functions -->
 
-## Chain ten stages with piped
+## Chain ten stages with pipeline
 
 <!-- example: docs/examples/chained_pipeline.mojo -->
 
@@ -56,6 +89,7 @@ coupon `4898`, shipping `5397`, and 8% tax `5828`, which rounds to the nickel
 as `5830` and prints as `total: $58.30`. With `"19.99"`, `parse_cents` raises
 `PriceError`, no later stage runs, and the program prints
 `invalid price: 19.99`.
+The entry point selects `PriceError` once; subsequent pure stages retain Never.
 
 ## Bind leading arguments with partial
 

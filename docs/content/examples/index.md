@@ -18,7 +18,7 @@ compile them through source and precompiled package imports at O0 and O3 with
 | `quickstart.mojo` | The smallest complete program: a one-stage `pipe` | [Home](../index.md) |
 | `callable_pipeline.mojo` | A pipeline of plain functions over a consumed list, ending in a fold | [Pipelines tutorial](../tutorial/pipelines.md) |
 | `callable_pipeline_generic.mojo` | Forwarding a pipeline through a generic function | [Pipelines tutorial](../tutorial/pipelines.md#forward-through-a-generic-function) |
-| `chained_pipeline.mojo` | A ten-stage chain with `piped(...).then(...)`: plain functions, closures and partials | [fp.functions](../reference/functions.md#chain-ten-stages-with-piped) |
+| `chained_pipeline.mojo` | A ten-stage chain with `pipeline(...).raising[E]().then(...)`: plain functions, closures and partials | [fp.functions](../reference/functions.md#chain-ten-stages-with-pipeline) |
 | `combinators.mojo` | Shared iterator stages in eager and lazy chains, without wrapper lambdas or type aliases | [Pipelines tutorial](../tutorial/pipelines.md#use-combinators-for-collection-stages) |
 | `kleisli.mojo` | Reusable effectful functions with clean eager and lazy callback syntax | [fp.functions](../reference/functions.md#compose-effectful-functions) |
 | `partial.mojo` | Binding leading arguments with `partial`; binding a keyword with a closure | [fp.functions](../reference/functions.md#bind-leading-arguments-with-partial) |
@@ -103,3 +103,5 @@ with warnings and compares sequential and independent diagnostic accumulation.
 
 The [iterator expansion example](../reference/iteration.md#prefixes-indexed-mapping-and-consuming-terminals)
 combines lazy prefixes, native zip, indexed mapping and explicit terminals.
+
+The [selected workflow](../reference/functions.md#select-family-and-native-errors-before-callbacks) combines traversal, folds and n-ary operations with one native error selection.

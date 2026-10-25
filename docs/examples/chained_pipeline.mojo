@@ -1,5 +1,5 @@
 """An order total in ten stages: plain functions, closures and partials, chained."""
-from fp.functions import piped, partial
+from fp.functions import pipeline, partial
 from std.testing import assert_equal
 
 
@@ -35,7 +35,7 @@ def total(text: String, quantity: Int, percent: Int, shipping: Int) raises Price
         return cents - cents * percent // 100
     def ship(cents: Int) {imm shipping} -> Int:
         return cents + shipping
-    return (piped(text)
+    return (pipeline(text).raising[PriceError]()
         .then(parse_cents)
         .then(partial(multiply, quantity))
         .then(discount)
