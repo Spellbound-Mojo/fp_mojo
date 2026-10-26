@@ -5,36 +5,51 @@ from operation_specs import error_operations
 MD = 'Movable & Deinitable'
 
 
+def _handler_callback(mode, kind, *, second=False):
+    """Specialize the shared owned callback description for legacy views."""
+    cb = callback(mode, kind if kind != 'view' else 'library', 'handler', second=second)
+    if kind == 'view':
+        assert mode == 'owned'
+        function, origin = cb.type, 'q' if second else 'o'
+        cb.parameters = [f'{function}: _UnaryViewable', f'{origin}: ImmOrigin']
+        cb.argument = f'ref[{origin}] handler: {function}'
+        cb.type = f'{function}._View[{origin}]'
+        cb.build = 'handler._unary_view()'
+        cb.payload, cb.result, cb.error = cb.type + '.Arg', cb.type + '.Out', cb.type + '.Error'
+    return cb
+
+
 def methods():
     out = []
+    # Error-capability members and dispatch use the projected native witness.
+    # Element and the value-to-pure handler retain the original Applicative I;
+    # changing that witness would change dependent continuation/error types.
+    family = '_ErrorFamily[I]'
+    elem = 'I.Element[Self.Value]'
     for operation in error_operations('recovery'):
         name = operation.name
         primary = operation.callbacks[0]
         for kind in ('library', 'pure', 'raising', 'view'):
             native = kind in ('pure', 'raising')
-            error = 'E' if kind == 'raising' else 'Never'
-            params = ([f'A: {MD}'] + ([f'E: {MD}'] if kind == 'raising' else []) + ['o: ImmOrigin'] if native else
-                      ['F: _UnaryViewable', 'o: ImmOrigin'] if kind == 'view' else [f'F: UnaryContract & {MD}'])
+            cb = _handler_callback(primary.mode, kind).renamed({'C': 'F', 'X': 'E'})
+            # This surface infers the native error before // and the result
+            # after I; use the shared shape without moving positional bindings.
+            params = ([f'{cb.payload}: {MD}'] + ([f'{cb.error}: {MD}'] if kind == 'raising' else []) + ['o: ImmOrigin'] if native else list(cb.parameters))
             params += ['//', 'I: Applicative']
             if native:
-                params += [f'R: {MD}']
-                params += ['F: _RaisingUnary[A, R, E]' if kind == 'raising' else 'F: _Unary[A, R]']
+                params += [f'{cb.result}: {MD}', cb.explicit[-1]]
             if kind == 'raising': params += ['X: AnyType = _InferError']
-            callback = f'_NativeUnaryRef[A, R, {error}, F, {kind == "raising"}, o]' if native else 'F._View[o]' if kind == 'view' else 'F'
-            build = f'{callback}(Pointer(to=handler))' if native else 'handler._unary_view()' if kind == 'view' else 'handler^'
-            arg = 'A' if native else callback + '.Arg'
-            result = 'R' if native else callback + '.Out'
-            payload = primary.input('I.Element[Self.Value]', 'I.Failure')
-            condition = f'conforms_to(I, ApplicativeError) and {arg} == {payload}'
-            if not operation.effect: condition += f' and {result} == I.Element[Self.Value]'
+            payload = primary.input(elem, family + '.Failure')
+            condition = f'conforms_to(I, ApplicativeError) and {cb.payload} == {payload}'
+            if not operation.effect: condition += f' and {cb.result} == {elem}'
             if kind == 'raising': condition += ' and (X == _InferError or X == E)'
-            continuation = operation.handler('I', callback)
-            condition += ' and I._ErrorCarrier[Self.Value]'
-            if operation.effect: condition += f' and I._ErrorCarrier[{result}] and I.Element[Self.Value] == I.Element[{result}]'
-            value = operation.handler_value('I', callback, build)
-            probe = f'_ErrorProbe[A, R, {error}]' if native else callback
+            continuation = operation.handler('I', cb.type)
+            condition += f' and {family}._ErrorCarrier[Self.Value]'
+            if operation.effect: condition += f' and {family}._ErrorCarrier[{cb.result}] and {elem} == I.Element[{cb.result}]'
+            value = operation.handler_value('I', cb.type, cb.build)
+            probe = f'_ErrorProbe[{cb.payload}, {cb.result}, {cb.error}]' if native else cb.type
             probe = operation.handler('I', probe)
-            raised = f'I.HandleError[Self.Value, {probe}]'
+            raised = f'{family}.HandleError[Self.Value, {probe}]'
             if kind == 'raising': raised = f'_EntryError[X, {raised}]'
             doc = 'Recover the selected stored-error layer with ' + ('a replacement success value.' if not operation.effect else 'a handler effect.')
             if kind == 'library':
@@ -59,19 +74,14 @@ def methods():
             remain in the resulting action's run contract.
         '''
             out.append(f'''
-    def {name}[{', '.join(params)}](deinit self, {'ref[o] handler: F' if native or kind == 'view' else 'var handler: F'}) raises {raised} -> Piped[I.Handled[Self.Value, {continuation}]] where {condition}:
+    def {name}[{', '.join(params)}](deinit self, {cb.argument}) raises {raised} -> Piped[{family}.Handled[Self.Value, {continuation}]] where {condition}:
         """{doc}"""
-        comptime assert I._Handles[Self.Value, {continuation}]
-        comptime assert _ErrorCompatible[{raised}, I.HandleError[Self.Value, {continuation}]]
-        return Piped(_or_else_as[{raised}, I, Self.Value, {continuation}]({value}, self.value^))
+        comptime assert {family}._Handles[Self.Value, {continuation}]
+        comptime assert _ErrorCompatible[{raised}, {family}.HandleError[Self.Value, {continuation}]]
+        return Piped(_or_else_as[{raised}, {family}, Self.Value, {continuation}]({value}, self.value^))
 ''')
-    source = ''.join(out)
-    for member in ('Failure', '_ErrorCarrier', '_Handles', 'Handled', 'HandleError'):
-        source = source.replace('I.' + member, '_ErrorFamily[I].' + member)
-    # Dispatch uses the projected native trait witness for conditional aliases.
-    source = source.replace(', I, Self.Value,', ', _ErrorFamily[I], Self.Value,')
     from generate_outcome_syntax import methods as outcome_methods
-    return source + conditional_methods() + observation_methods() + outcome_methods()
+    return ''.join(out) + conditional_methods() + observation_methods() + outcome_methods()
 
 
 def conditional_methods():
@@ -83,11 +93,7 @@ def conditional_methods():
         for pk, hk in product(('library', 'pure', 'raising'), ('library', 'pure', 'raising', 'view')):
             p = callback(primary.mode, pk, primary.argument).renamed({'R': 'S'})
             # Preserve the owned callback's canonical A/R/E native signature.
-            h = callback(secondary.mode, hk if hk != 'view' else 'library', 'handler', second=True).renamed({'Q': 'A', 'S': 'R', 'Y': 'E'})
-            if hk == 'view':
-                h.parameters = ['G: _UnaryViewable', 'q: ImmOrigin']
-                h.argument, h.type, h.build = 'ref[q] handler: G', 'G._View[q]', 'handler._unary_view()'
-                h.payload, h.result, h.error = h.type+'.Arg', h.type+'.Out', h.type+'.Error'
+            h = _handler_callback(secondary.mode, hk, second=True).renamed({'Q': 'A', 'S': 'R', 'Y': 'E'})
             params = p.parameters + [v for v in h.parameters if v != f'R: {MD}'] + ['//', 'I: Applicative'] + ([f'R: {MD}'] if hk in ('pure', 'raising') else []) + p.explicit + h.explicit + ['Z: AnyType = _InferError']
             family = '_ErrorFamily[I]'
             elem = 'I.Element[Self.Value]'

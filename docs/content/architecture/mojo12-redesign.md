@@ -166,6 +166,17 @@ latter. Ordered component lists and the shared native adapter descriptions are
 sufficient; this assembly introduces no general source transformation layer.
 Generated-source parity preserves every existing Mojo declaration and body.
 
+### Recovery signature witnesses
+
+Legacy recovery builds its exact family witnesses before rendering. Error
+members and dispatch use `_ErrorFamily[I]`; payload selection and `_Recovered`
+retain the original Applicative `I`. That distinction preserves dependent
+continuation and error types for conditional families. Shared callback
+descriptions supply handler types, arguments and adapters, while recovery keeps
+its existing native parameter order and error probes. Owned callable views
+share one local specialization across ordinary and conditional recovery.
+No completed declaration is rewritten, and generated Mojo remains byte-identical.
+
 ### Shared recovery and observation policies
 
 `ErrorOperation` in `scripts/operation_specs.py` owns callback roles and the
