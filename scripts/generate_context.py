@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from itertools import product
-from native_signatures import Operand, variants, argument as native_argument
+from native_signatures import Operand, variants, argument as native_argument, callable_protocol, native_adapter
 import re
 from api_docs import parse_signature
 from generate_result_syntax import DOCS, OUTCOMES
@@ -31,15 +31,7 @@ def methods(*, fold_stage=False):
     def callback(mode, kind, payload, arg, second=False, repeatable=False):
         C, R, o = ("G", "S", "q") if second else ("C", "R", "o")
         if kind == "library":
-            trait = {
-                "owned": "UnaryContract",
-                "borrow": "BorrowCallContract",
-                "thunk": "ThunkContract",
-                "binary": "BinaryContract",
-                "nary": "UnaryContract",
-            }[mode]
-            if repeatable:
-                trait = "Binary" if mode == "binary" else "BorrowCallable"
+            trait = callable_protocol(mode, repeatable=repeatable)
             return dict(
                 params=[f"{C}: {trait}" + ("" if repeatable else f" & {MD}")],
                 argument=f"var {arg}: {C}",
@@ -77,36 +69,11 @@ def methods(*, fold_stage=False):
             + " -> "
             + R
         )
-        adapter = {
-            "owned": "_NativeUnaryRef",
-            "borrow": "_NativeBorrowRef",
-            "thunk": "_NativeThunkRef",
-            "binary": "_NativeBinaryRef",
-            "nary": f"_NativeNary{len(payload)}",
-        }[mode]
-        native_type = "type_of(" + arg + ")" if kind.startswith("thin_") else C
-        origin = o
-        cb = (
-            adapter
-            + "["
-            + (
-                ", ".join(payload) + ", "
-                if mode in ("binary", "nary")
-                else payload + ", " if mode != "thunk" else ""
-            )
-            + f"{R}, {E}, {native_type}, {raising}, {origin}]"
+        cb = native_adapter(
+            mode, native_payloads, R, E,
+            signature if kind.startswith("thin_") else C, raising,
+            origin=None if kind.startswith("thin_") else o,
         )
-        if kind.startswith("thin_"):
-            if mode == "borrow":
-                cb = f"_NativeBorrow[{payload}, {R}, {E}, {signature}, {raising}]"
-            elif mode == "owned":
-                cb = f"NativeUnary[{payload}, {R}, {E}, {signature}, {raising}]"
-            elif mode == "binary":
-                cb = f"_NativeBinary[{', '.join(payload)}, {R}, {E}, {signature}, {raising}]"
-            elif mode == "nary":
-                cb = f"_OwnedNativeNary{len(payload)}[{', '.join(payload)}, {R}, {E}, {signature}, {raising}]"
-            else:
-                cb = f"_NativeThunk[{R}, {E}, {signature}, {raising}]"
         return dict(
             params=(
                 [f"{R}: {MD}"] + ([f"{E}: {MD}"] if kind == "thin_raising" else []) + ["//"]

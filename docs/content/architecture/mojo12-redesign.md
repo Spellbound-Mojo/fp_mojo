@@ -93,6 +93,14 @@ invocation bodies and `as_unary` pointer admission from the same descriptor.
 Generated files are checked against
 their generators by the tooling suite.
 
+The same module owns the mapping from callback shape to library protocol and
+native adapter type. Selected Pipeline, Result syntax and `as_unary` use that
+mapping; Result's callback description is also reused by error, outcome and
+sequencing generators. Each admission surface retains its parameter order,
+effect selection and ownership constraints. Sharing these facts does not
+merge the distinct selected-context and legacy overload policies. The
+consolidation produces identical generated Mojo signatures and bodies.
+
 Native closures keep an origin-preserving reference view. Deferred operations
 own plain thin pointers through the existing inline optional cell. This avoids
 losing native witnesses in generic fields without allocating callable boxes or

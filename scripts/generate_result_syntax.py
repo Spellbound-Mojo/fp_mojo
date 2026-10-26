@@ -1,6 +1,7 @@
 """Result combinator admission and Piped forwarding; no execution is generated."""
 from dataclasses import dataclass
 from itertools import product
+from native_signatures import callable_protocol, native_adapter
 
 MD = 'Movable & Deinitable'
 START = '    # --- Result combinators (generated) ---\n'
@@ -24,7 +25,7 @@ class Callback:
 def callback(mode, kind, arg='function', second=False):
     f, p, r, x, o = ('G', 'Q', 'S', 'Y', 'q') if second else ('C', 'A' if mode == 'owned' else 'P', 'R', 'X', 'o')
     if kind == 'library':
-        trait = {'borrow': 'BorrowCallContract', 'owned': 'UnaryContract', 'thunk': 'ThunkContract'}[mode]
+        trait = callable_protocol(mode)
         return Callback([f'{f}: {trait} & {MD}'], [], f'var {arg}: {f}', f, arg+'^',
                         f+'.Payload' if mode == 'borrow' else f+'.Arg',
                         f+'.Result' if mode == 'borrow' else f+'.Out',
@@ -35,8 +36,7 @@ def callback(mode, kind, arg='function', second=False):
     native_args = (f'{p}, ' if mode != 'thunk' else '') + r
     trait = f'_Raising{base}[{native_args}, {x}]' if kind == 'raising' else f'_{base}[{native_args}]'
     explicit = ([f'{x}: {MD}'] if kind == 'raising' else []) + [f'{f}: {trait}']
-    bridge = {'borrow': '_NativeBorrowRef', 'owned': '_NativeUnaryRef', 'thunk': ''}[mode]
-    typ = f'{bridge}[{native_args}, {error}, {f}, {kind == "raising"}, {o}]'
+    typ = native_adapter(mode, [p] if mode != 'thunk' else [], r, error, f, kind == 'raising', origin=o)
     return Callback(params, explicit, f'ref[{o}] {arg}: {f}', typ, f'{typ}(Pointer(to={arg}))', p, r, error, mode)
 
 

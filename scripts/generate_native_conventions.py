@@ -8,6 +8,7 @@ from native_signatures import (
     argument,
     factory_pointer,
     native_dispatch,
+    native_adapter,
     variants,
 )
 
@@ -81,8 +82,8 @@ def unary_factories():
                 )
                 result = "type_of(None)" if void else "R"
                 error = "E" if raising else "Never"
-                target = (
-                    f"NativeUnary[A, {result}, {error}, type_of(function), {raising}]"
+                target = native_adapter(
+                    "owned", ["A"], result, error, "type_of(function)", raising
                 )
                 where = (
                     " where " + " and ".join(pointer.conditions)

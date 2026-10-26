@@ -24,14 +24,6 @@ comptime _Thunk[R: Movable & Deinitable] = def() -> R
 comptime _RaisingThunk[R: Movable & Deinitable, E: Movable & Deinitable] = def() raises E -> R
 
 
-def _native_thunk[R: Movable & Deinitable, F: _Thunk[R]](function: F) -> R:
-    return _call_native_thunk[R, Never, F, False](function)
-
-
-def _native_raising_thunk[R: Movable & Deinitable, X: Movable & Deinitable, F: _RaisingThunk[R, X]](function: F) raises X -> R:
-    return _call_native_thunk[R, X, F, True](function)
-
-
 def _call_native_thunk[R: Movable & Deinitable, E: Movable & Deinitable,
                        F: Movable & Deinitable, raising: Bool](function: F) raises E -> R:
     # Preserve native register return conventions for stored thin pointers.
@@ -865,10 +857,9 @@ struct _NativeBorrowRef[P: AnyType, R: Movable & Deinitable, E: Movable & Deinit
         return _call_native_borrow[Self.P, Self.R, Self.E, Self.F, Self.raising](self.function[], payload)
 
 
-# A plain function whose parameter, result or error types are still symbolic at
-# the call site converts only to a spelled thin signature, never to a closure
-# trait such as _Unary, so NativeUnary cannot hold it. Each arity keeps its own
-# thin signature; the stored value is a function pointer.
+# Fixed-arity pipelines admit symbolic function types through spelled thin
+# signatures. These owners retain each arity's parameter ordering without a
+# conversion to a closure trait; the stored value is a function pointer.
 comptime _Thin0[R: Movable & Deinitable, E: Movable & Deinitable, Args: TypeList[Trait=Movable & Deinitable, ...]] = def() raises E thin -> R
 comptime _Thin1[R: Movable & Deinitable, E: Movable & Deinitable, Args: TypeList[Trait=Movable & Deinitable, ...]] = def(var Args[0]) raises E thin -> R
 comptime _Thin2[R: Movable & Deinitable, E: Movable & Deinitable, Args: TypeList[Trait=Movable & Deinitable, ...]] = def(var Args[0], var Args[1]) raises E thin -> R

@@ -1,4 +1,4 @@
-"""Native signature evidence shared by Context and Capture generators.
+"""Native signature evidence and adapter names shared by syntax generators.
 
 Admission fixes ownership and origin-bearing payloads before inferring a native
 callback. Known consumed types use _NativeOwnedArg; read and result positions
@@ -11,6 +11,51 @@ from dataclasses import dataclass
 from itertools import product
 
 MD = "Movable & Deinitable"
+
+
+@dataclass(frozen=True)
+class CallbackShape:
+    contract: str
+    repeatable: str
+    borrowed: str
+    owned: str
+
+
+CALLBACK_SHAPES = {
+    "owned": CallbackShape("UnaryContract", "Unary", "_NativeUnaryRef", "NativeUnary"),
+    "borrow": CallbackShape(
+        "BorrowCallContract", "BorrowCallable", "_NativeBorrowRef", "_NativeBorrow"
+    ),
+    "thunk": CallbackShape("ThunkContract", "Thunk", "_NativeThunkRef", "_NativeThunk"),
+    "binary": CallbackShape(
+        "BinaryContract", "Binary", "_NativeBinaryRef", "_NativeBinary"
+    ),
+    "nary": CallbackShape("UnaryContract", "Unary", "_NativeNary", "_OwnedNativeNary"),
+}
+
+
+def callable_protocol(mode, *, repeatable=False):
+    """The library protocol for a callback shape, before native admission."""
+    shape = CALLBACK_SHAPES[mode]
+    return shape.repeatable if repeatable else shape.contract
+
+
+def native_adapter(mode, payloads, result, error, function, raising, *, origin=None):
+    """Spell an existing owner or reference view without choosing admission.
+
+    An origin selects a borrowed callback view; its absence selects ownership.
+    Payload conventions, ABI evidence and caller parameter order stay with the
+    signature generator. This only names existing adapters, never their storage
+    or execution implementation.
+    """
+    shape = CALLBACK_SHAPES[mode]
+    owner = shape.borrowed if origin is not None else shape.owned
+    if mode == "nary":
+        owner += str(len(payloads))
+    parameters = [*payloads, result, error, function, str(raising)]
+    if origin is not None:
+        parameters.append(origin)
+    return owner + "[" + ", ".join(parameters) + "]"
 
 
 @dataclass(frozen=True)
