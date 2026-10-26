@@ -29,6 +29,35 @@ def types():
     return ''.join(out)+'\n'
 
 
+def thin_invocation(names):
+    """Recover the exact stored thin ABI after operand types are known.
+
+    The result needs a branch retaining its register witness. A conditional
+    result alias loses that witness for Mojo's inferred no-value return type.
+    Literal Never must also remain literal at the invocation boundary.
+    """
+    args = ', '.join(f'var _NativeOwnedArg[Self.{name}]' for name in names)
+    values = ', '.join(f'rebind_var[_NativeOwnedArg[Self.{name}]](a{i}^)'
+                       for i, name in enumerate(names))
+    out = []
+    for register in (True, False):
+        out.append('        comptime if conforms_to(Self.R, RegisterPassable):\n'
+                   '            comptime Out = downcast[Self.R, RegisterPassable & Deinitable]\n'
+                   if register else '        else:\n')
+        for raising, error, condition in (
+            (True, 'Never', 'Self.raising and Self.X == Never'),
+            (True, 'Self.X', 'Self.raising'),
+            (False, 'Never', 'not Self.raising'),
+        ):
+            signature = f'def({args})' + (f' raises {error}' if raising else '')
+            signature += ' thin -> ' + ('Out' if register else 'Self.R')
+            out.append(f'            comptime if {condition} and Self.F == {signature}:\n')
+            if not raising:
+                out.append('                comptime assert Self.X == Never\n')
+            out.append(f'                return rebind_var[Self.R](rebind[{signature}](self.function[])({values}))\n')
+    return ''.join(out)
+
+
 def native():
     out = ['''"""Generated native tuple application boundaries; do not edit by hand.
 
@@ -40,8 +69,8 @@ slots; every slot is consumed before the possibly raising native call.
 from std.builtin.rebind import downcast, rebind_var
 from std.memory import MaybeUninit
 from .protocols import Unary
-from .products import _take_pair
-from .native import _call_native, _call_native_binary, _Unary, _RaisingUnary, _Binary, _RaisingBinary
+from .products import _take_pair, _OptionalCell
+from .native import _NativeOwnedArg, _call_native, _call_native_binary, _Unary, _RaisingUnary, _Binary, _RaisingBinary
 ''']
     for n in range(1,MAX+1):
         names=[f'A{i}' for i in range(n)]
@@ -89,6 +118,7 @@ struct _NativeNary{n}[{params}, R: {MD}, X: {MD}, F: {MD}, raising: Bool, o: Imm
             fn='_call_native' if n==1 else '_call_native_binary'
             out.append(f'        return {fn}[{own}, Self.R, Self.X, Self.F, Self.raising](self.function[], {values})\n')
         else:
+            out.append(thin_invocation(names))
             for raising in (True,False):
                 out.append('        comptime if Self.raising:\n' if raising else '        else:\n')
                 sig=f'_RaisingNary{n}[{own}, Self.R, Self.X]' if raising else f'_Nary{n}[{own}, Self.R]'
@@ -98,6 +128,20 @@ struct _NativeNary{n}[{params}, R: {MD}, X: {MD}, F: {MD}, raising: Bool, o: Imm
                 suffix = '_raising' if raising else ''
                 ep = ', Self.X' if raising else ''
                 out.append(f'            return _native_nary{n}{suffix}[{own}, Self.R{ep}, Fn](rebind[Fn](self.function[]), {values})\n')
+        out.append(f'''
+struct _OwnedNativeNary{n}[{params}, R: {MD}, X: {MD}, F: {MD}, raising: Bool](Unary, Copyable where conforms_to(F, Copyable)):
+    # Deferred families retain the pointer value, never a borrow of its local
+    # variable. The existing adapter still owns tuple extraction and invocation.
+    comptime Arg = Tuple[{own}]
+    comptime Out = Self.R
+    comptime Error = Self.X
+    var _function: _OptionalCell[Self.F]
+    def __init__(out self, var function: Self.F):
+        self._function = Optional(function^)
+    def call(self, var arg: Self.Arg) raises Self.X -> Self.R:
+        ref function = self._function.value()
+        return _NativeNary{n}[{own}, Self.R, Self.X, Self.F, Self.raising, origin_of(function)](Pointer(to=function)).call(arg^)
+''')
     return ''.join(out)
 
 

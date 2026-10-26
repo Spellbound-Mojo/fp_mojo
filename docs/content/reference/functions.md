@@ -122,10 +122,11 @@ agree. N-ary accumulation retains the selected source family. Accumulating
 traversal returns a Result pipeline, allowing dependent `.flat_map` calls;
 explicit `.traverse[ValidationFamily[Policy]]` retains Validation instead.
 
-Stored thin pointers work for `par_traverse`. Stored n-ary thin pointers remain
-part of the native-signature consolidation work for both `map_n` and
-`par_map_n`; ordinary native functions and closures use their fixed arity
-signatures today.
+Stored thin pointers work for `par_traverse`, `map_n` and `par_map_n`, including
+mixed register/memory operands and no-value callbacks. N-ary calls support one
+through eight operands. Deferred families own the pointer value, so reassigning
+the caller's pointer variable does not change the pending computation. Captured
+native closures remain borrowed for that computation's lifetime.
 
 Effectful terminals consume an iterator or owned iterable into an explicit
 Monad target. `all_effect[Target](predicate)`, `any_effect[Target](predicate)`

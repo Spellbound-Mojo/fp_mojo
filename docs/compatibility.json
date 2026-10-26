@@ -243,7 +243,7 @@
       ],
       "status": "selected",
       "families": "Selected Applicative",
-      "callbacks": "Native separate operands; library tuple/binary contracts. Stored n-ary thin pointers await native ABI consolidation.",
+      "callbacks": "Native separate operands; library tuple/binary contracts. Stored n-ary thin pointers are owned and retain exact argument/result conventions.",
       "ownership": "Consumes evaluated carriers; Cartesian output may require copies.",
       "errors": "Family policy keeps or accumulates stored errors; native errors stay raised.",
       "timing": "Family-controlled; target selection is unchanged.",
@@ -252,7 +252,9 @@
         "src/fp/algebra/_nary.mojo"
       ],
       "evidence": [
-        "tests/runtime/test_context_stages_combinations.mojo"
+        "tests/runtime/test_context_stages_combinations.mojo",
+        "tests/runtime/test_context_native_nary_abi.mojo",
+        "tests/ownership/test_context_native_nary_ownership.mojo"
       ]
     },
     {
@@ -482,7 +484,7 @@
       ],
       "status": "selected",
       "families": "Validation policy for native Results; n-ary methods retain the source family, traversal selects Result",
-      "callbacks": "Fixed native arities 1\u20138 or library tuple callables. Stored n-ary thin pointers await native ABI consolidation.",
+      "callbacks": "Fixed native arities 1\u20138 or library tuple callables. Stored n-ary thin pointers are owned and retain exact argument/result conventions.",
       "ownership": "Consume evaluated operands, callbacks and sources; release unvisited inputs and partial output on native failure",
       "errors": "Stored errors accumulate through an inferred ListMonoid or explicit Semigroup; native raises stop immediately",
       "timing": "Ordered synchronous accumulation; a single n-ary operand never invokes the error combiner",
@@ -495,7 +497,9 @@
         "tests/runtime/test_context_accumulating_behavior.mojo",
         "tests/runtime/test_context_accumulating_generic.mojo",
         "tests/runtime/test_context_accumulating_effects.mojo",
-        "tests/ownership/test_context_accumulating_ownership.mojo"
+        "tests/ownership/test_context_accumulating_ownership.mojo",
+        "tests/runtime/test_context_native_nary_abi.mojo",
+        "tests/ownership/test_context_native_nary_ownership.mojo"
       ]
     }
   ],

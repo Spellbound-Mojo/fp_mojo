@@ -14,6 +14,12 @@ from ._receiver import _MutableBorrow
 from .products import _OptionalCell
 
 
+# Once an operand type is fixed, this projection retains its native consumed
+# argument ABI without enumerating every register/memory combination. Do not
+# use it to infer a result: symbolic return types still need a register branch.
+comptime _NativeOwnedArg[T: Movable & Deinitable] = downcast[T, RegisterPassable & Deinitable] if conforms_to(T, RegisterPassable) else T
+
+
 comptime _Thunk[R: Movable & Deinitable] = def() -> R
 comptime _RaisingThunk[R: Movable & Deinitable, E: Movable & Deinitable] = def() raises E -> R
 

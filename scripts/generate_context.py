@@ -65,7 +65,7 @@ def methods(*, fold_stage=False):
         E = "Self.E" if kind in ("raising", "thin_raising") else "Never"
         raising = kind not in ("pure", "thin_pure")
         native = (
-            ", ".join("var " + p for p in payload)
+            ", ".join("var " + (f"_NativeOwnedArg[{p}]" if mode == "nary" and kind.startswith("thin_") else p) for p in payload)
             if mode in ("binary", "nary")
             else ("var " if mode == "owned" else "") + payload if mode != "thunk" else ""
         )
@@ -102,6 +102,8 @@ def methods(*, fold_stage=False):
                 cb = f"NativeUnary[{payload}, {R}, {E}, {signature}, {raising}]"
             elif mode == "binary":
                 cb = f"_NativeBinary[{', '.join(payload)}, {R}, {E}, {signature}, {raising}]"
+            elif mode == "nary":
+                cb = f"_OwnedNativeNary{len(payload)}[{', '.join(payload)}, {R}, {E}, {signature}, {raising}]"
             else:
                 cb = f"_NativeThunk[{R}, {E}, {signature}, {raising}]"
         return dict(
@@ -163,6 +165,22 @@ def methods(*, fold_stage=False):
                     else:
                         cb["conditions"] += [f"not conforms_to({actual}, RegisterPassable)"]
                 if registers[-1]:
+                    cb["params"] = ["R: RegisterPassable & Deinitable" if p == f"R: {MD}" else p for p in cb["params"]]
+                else:
+                    cb["conditions"] += ["not conforms_to(R, RegisterPassable)"]
+                if kind == "thin_raising":
+                    cb["conditions"] += ["Self.E != Never"]
+                yield cb
+
+    def nary_callbacks(payloads, arg):
+        for kind in ("pure", "raising", "never"):
+            yield callback("nary", kind, payloads, arg)
+        # Carrier operands precede the callback, fixing their native conventions.
+        # Only return inference needs distinct register/memory signatures.
+        for kind in ("thin_pure", "thin_raising", "thin_never"):
+            for register_result in (False, True):
+                cb = callback("nary", kind, payloads, arg)
+                if register_result:
                     cb["params"] = ["R: RegisterPassable & Deinitable" if p == f"R: {MD}" else p for p in cb["params"]]
                 else:
                     cb["conditions"] += ["not conforms_to(R, RegisterPassable)"]
@@ -309,8 +327,7 @@ def methods(*, fold_stage=False):
             operands = ", ".join(["Self.V"] + carriers)
             run = f"_ProductRun[{family}, {operands}]"
             payloads = [f"{family}.Element[{v}]" for v in ["Self.V"] + carriers]
-            for kind in ("pure", "raising", "never"):
-                cb = callback("nary", kind, payloads, "function")
+            for cb in nary_callbacks(payloads, "function"):
                 params = [f"{w}: {MD}" for w in carriers] + cb["params"]
                 params[params.index("//")+1:params.index("//")+1] = policy
                 result = f"{family}.Pure[{cb['result']}]"
@@ -722,8 +739,7 @@ def methods(*, fold_stage=False):
         product_type = f"_ProductTypes[{family}, {operands}]"
         run = f"_ProductRun[{family}, {operands}]"
         payloads = [f"Self.I.Element[{v}]" for v in ["Self.V"] + carriers]
-        for kind in ("pure", "raising", "never"):
-            cb = callback("nary", kind, payloads, "function")
+        for cb in nary_callbacks(payloads, "function"):
             mapped = f"_MapNTypes[{family}, Self.V, {cb['adapter_type']}{tail}]"
             params = [f"{w}: {MD}" for w in carriers] + cb["params"]
             emit(

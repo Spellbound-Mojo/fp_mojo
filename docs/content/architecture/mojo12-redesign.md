@@ -734,6 +734,29 @@ error inside the successful target, matching the general traversal contract.
 `context_accumulating` clients cover inferred and explicit policies, generic
 forwarding, arity bounds, empty inputs, exact origins and native errors,
 single-use tuple callbacks, and move-only cleanup on both failure paths.
-Stored thin unary traversal callbacks use the common owning adapter. Stored
-thin n-ary pointers remain an admission gap shared with `map_n`; the native ABI
-pass will address their signatures and ownership together.
+Stored thin callbacks use the common owning adapters described below.
+
+## Fixed native operand conventions
+
+Selected `map_n` and `par_map_n` fix their carrier operands before admitting
+the callback. `_NativeOwnedArg` can therefore project each known payload's
+consumed native convention, including nontrivial register values. The generator
+needs two result signatures per arity and error mode, independent of the number
+of register/memory operand combinations. Result inference still needs a distinct
+register bound. In particular, Mojo's inferred no-value return type is not equal
+to `NoneType`, and a conditional result alias loses its register witness.
+
+`_OwnedNativeNaryN` owns the exact thin pointer in `_OptionalCell`. Its call
+borrows that stable storage into the existing `_NativeNaryN` adapter, which owns
+tuple extraction, argument cleanup and invocation. The arity-one and arity-two
+adapters use their shared native dispatchers; larger arities recover the exact
+thin signature before their existing closure fallback. There is no second tuple
+driver, allocation, runtime type selection or exception handler. Native closures
+retain their original borrow and origins.
+
+`context_native_nary` clients cover all supported arities, mixed argument and
+result conventions, literal Never and no-value calls, generic forwarding,
+borrowed results and errors, Validation ordering, deferred pointer reassignment,
+and move-only cleanup on execution, skipping, failure and abandonment. Rejections
+exercise ordinary calls with wrong conventions, arity, errors, origins or closure
+lifetimes. Existing legacy entry points keep their positional bindings.
