@@ -3663,6 +3663,73 @@
     "Functor"
    ]
   },
+  "algebra.RecoverContract": {
+   "aliases": [
+    {
+     "description": "The handler consumes the exact selected stored-error type and origins.",
+     "name": "InputCompatible"
+    },
+    {
+     "description": "The replacement value retains the source payload type and origins.",
+     "name": "OutputCompatible"
+    },
+    {
+     "description": "The source belongs to the family's selected stored-error layer.",
+     "name": "CarrierCompatible"
+    },
+    {
+     "description": "The existing library-handler recovery entry-point admission.",
+     "name": "Compatible"
+    },
+    {
+     "description": "The unchanged family for fluent continuation over Out.",
+     "name": "Family"
+    },
+    {
+     "description": "The existing adapter lifting a successful handler value through pure.",
+     "name": "Handler"
+    },
+    {
+     "description": "The family's exact recovered carrier, including deferred representations.",
+     "name": "Out"
+    },
+    {
+     "description": "The family's exact native construction error, separate from stored errors.",
+     "name": "Error"
+    }
+   ],
+   "description": "A generic wrapper forwards `Compatible`, returns `Out` and raises `Error`\nwhen calling `piped(value).recover[I](handler)`. This removes the need to\nname the private value-to-pure handler adapter in a public signature.\nExecution remains with the family's recovery primitive. Deferred families\nmay construct without raising and retain the handler's error until run.\n\nCompatible preserves the existing library-handler entry-point checks.\nFamilies still validate their adapted handler and receiver requirements;\nthis metadata does not turn those body checks into new admission rules.\nNative callbacks keep their existing signature-inference boundaries.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The family selecting the stored-error layer to recover.",
+     "inferred": false,
+     "name": "I",
+     "type": "ApplicativeError",
+     "variadic": false
+    },
+    {
+     "description": "The complete source carrier type, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The library handler consuming the stored error and returning a value.",
+     "inferred": false,
+     "name": "H",
+     "type": "UnaryContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/errors",
+   "signature": "struct RecoverContract[I: ApplicativeError, V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable]",
+   "summary": "The admission, output and construction error of value-returning recovery.",
+   "traits": []
+  },
   "algebra.ResultFamily": {
    "aliases": [
     {

@@ -10141,6 +10141,13 @@
       },
       "provider": "algebra/protocols"
     },
+    "algebra.RecoverContract": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct RecoverContract[I: ApplicativeError, V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable]:"
+      ],
+      "provider": "algebra/errors"
+    },
     "algebra.IdentityFamily": {
       "kind": "type or alias",
       "declarations": [

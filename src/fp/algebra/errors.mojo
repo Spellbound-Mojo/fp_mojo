@@ -57,6 +57,43 @@ struct _Recovered[I: Applicative, H: UnaryContract & Movable & Deinitable](
         return Self.I.pure(call_repeated(self.handler, arg^))
 
 
+struct RecoverContract[I: ApplicativeError, V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable]:
+    """The admission, output and construction error of value-returning recovery.
+
+    A generic wrapper forwards `Compatible`, returns `Out` and raises `Error`
+    when calling `piped(value).recover[I](handler)`. This removes the need to
+    name the private value-to-pure handler adapter in a public signature.
+    Execution remains with the family's recovery primitive. Deferred families
+    may construct without raising and retain the handler's error until run.
+
+    Compatible preserves the existing library-handler entry-point checks.
+    Families still validate their adapted handler and receiver requirements;
+    this metadata does not turn those body checks into new admission rules.
+    Native callbacks keep their existing signature-inference boundaries.
+
+    Parameters:
+        I: The family selecting the stored-error layer to recover.
+        V: The complete source carrier type, including origins.
+        H: The library handler consuming the stored error and returning a value.
+    """
+    comptime InputCompatible = Self.H.Arg == Self.I.Failure
+    """The handler consumes the exact selected stored-error type and origins."""
+    comptime OutputCompatible = Self.H.Out == Self.I.Element[Self.V]
+    """The replacement value retains the source payload type and origins."""
+    comptime CarrierCompatible = Self.I._ErrorCarrier[Self.V]
+    """The source belongs to the family's selected stored-error layer."""
+    comptime Compatible = Self.InputCompatible and Self.OutputCompatible and Self.CarrierCompatible
+    """The existing library-handler recovery entry-point admission."""
+    comptime Family = Self.I
+    """The unchanged family for fluent continuation over Out."""
+    comptime Handler = _Recovered[Self.I, Self.H]
+    """The existing adapter lifting a successful handler value through pure."""
+    comptime Out = Self.I.Handled[Self.V, Self.Handler]
+    """The family's exact recovered carrier, including deferred representations."""
+    comptime Error = Self.I.HandleError[Self.V, Self.Handler]
+    """The family's exact native construction error, separate from stored errors."""
+
+
 struct _Continue[M: Monad, recover: Bool]:
     """Select the base operation; deferred transformers own only their run boundary."""
     comptime Errors = downcast[Self.M, ApplicativeError]

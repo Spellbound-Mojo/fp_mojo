@@ -317,6 +317,30 @@ The [native boundaries](native-boundaries.md), [compatibility inventory](../guid
 and [performance observations](performance.md#mojo-12-capture-qualification)
 give the detailed scope and evidence.
 
+### Generic recovery metadata
+
+`RecoverContract` names value-returning recovery's admission, output family,
+carrier and native construction error. A generic client no longer imports
+the private `_Recovered` adapter to spell `Handled` and `HandleError` in its
+signature. The descriptor lives beside that adapter in `algebra.errors`;
+primitive operation contracts do not acquire a dependency on derived recovery
+and traversal modules. It adds no invocation or storage layer.
+
+Its `Compatible` predicate preserves the existing input equality, output
+equality and source error-carrier checks. The family's adapted-handler and
+receiver checks remain in their original bodies. Generic wrappers with
+`I: ApplicativeError` using the combined predicate and callers forwarding the
+original expanded constraints both qualify; the descriptor does not replace
+those constraints in existing overloads. Construction errors still belong to the family, so deferred
+ResultT/Reader recovery remains lazy and can raise a handler error only at run.
+Conditionally error-capable Applicatives use the same public downcast witness
+in the contract and operation, preserving dependent error-type identity.
+
+The recovery-contract client covers immediate success skipping, branching,
+deferred timing and errors, a custom family's construction error, owned
+one-shot handler cleanup and borrowed origins. Ordinary invalid input, output,
+carrier and cross-origin calls remain separate rejection fixtures.
+
 ## Further migration
 
 Every legacy Piped method now has a selected counterpart in the inventory.

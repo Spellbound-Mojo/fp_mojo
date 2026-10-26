@@ -91,7 +91,7 @@ Generic filter_map wrappers use its Family instead of I.MapFilteredFamily.
 Existing custom Functors need no new members; implementing RebindingFunctor is
 only necessary when the family itself binds the payload type.
 
-All six operation contracts expose `Family`, `Out`, `Error` and `Compatible`.
+Operation contracts expose `Family`, `Out`, `Error` and `Compatible`.
 For a fluent wrapper, use `Pipeline[Contract.Family, Contract.Out, E]` and
 raise `Contract.Error`. Bind and combine retain their family; traversal selects
 its target family. Filter follows FilteredFamily, including shape changes.
@@ -110,6 +110,27 @@ describe forwarding requirements, not every condition a family may check when
 instantiated. Existing component predicates remain available.
 
 <!-- example: docs/examples/fluent_contracts.mojo -->
+
+`RecoverContract[I, V, H]` describes value-returning recovery through an
+`ApplicativeError` family. Generic signatures can use its `Out` and `Error`
+without importing the private adapter that lifts the handler's value through
+the family's `pure`. With `I: ApplicativeError`, forward `Compatible`, or retain
+the existing expanded input, output and source-carrier checks. The family still
+checks its adapted handler and receiver requirements when instantiated.
+
+For a generic `I: Applicative` with conditional error capability, forward
+`conforms_to(I, ApplicativeError)` and use the public
+`downcast[I, ApplicativeError]` witness in both the contract and `recover` call.
+Using different family witnesses can leave their dependent construction-error
+types unrelated to the compiler. No private family alias is needed.
+
+Use `piped(value).recover[I](handler)` for this generic capability boundary.
+Selected Pipeline recovery retains its documented Result-specific scope.
+The descriptor's `Error` is the family's construction error: a deferred
+ResultT/Reader recovery can construct without raising and later raise the
+handler's exact error when run. Stored errors remain data throughout.
+
+<!-- example: docs/examples/recovery_contract.mojo -->
 
 Generic wrappers with an abstract callback return type `R` must forward the
 target proof, such as `where OptionalFamily.CarrierCompatible[R]`. This also

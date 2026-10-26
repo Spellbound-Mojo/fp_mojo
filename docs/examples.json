@@ -144,6 +144,9 @@
     "docs/examples/quickstart.mojo": {
       "stdout": "42\n"
     },
+    "docs/examples/recovery_contract.mojo": {
+      "stdout": "recovered: 4\ndeferred: 7\n"
+    },
     "docs/examples/result_combinators.mojo": {
       "stdout": "checked: 8\n8\nrejected -2\n0\n"
     },
