@@ -28,6 +28,16 @@ def _native_raising_thunk[R: Movable & Deinitable, X: Movable & Deinitable, F: _
 
 def _call_native_thunk[R: Movable & Deinitable, E: Movable & Deinitable,
                        F: Movable & Deinitable, raising: Bool](function: F) raises E -> R:
+    # Preserve native register return conventions for stored thin pointers.
+    comptime if conforms_to(R, RegisterPassable):
+        comptime Out = downcast[R, RegisterPassable & Deinitable]
+        comptime if raising and E == Never and F == def() raises Never thin -> Out:
+            return rebind_var[R](rebind[def() raises Never thin -> Out](function)())
+        elif raising and F == def() raises E thin -> Out:
+            return rebind_var[R](rebind[def() raises E thin -> Out](function)())
+        elif not raising and F == def() thin -> Out:
+            comptime assert E == Never
+            return rebind_var[R](rebind[def() thin -> Out](function)())
     # Keep native no-value and Never signatures literal at their invocation.
     # Adapters retain the exact F; this boundary never copies or erases captures.
     comptime if R == type_of(None) and raising and E == Never and F == def() raises Never thin:
@@ -69,6 +79,18 @@ def _call_native_thunk[R: Movable & Deinitable, E: Movable & Deinitable,
         comptime assert E == Never
         comptime Fn = downcast[F, def() -> R]
         return rebind[Fn](function)()
+
+
+struct _NativeThunk[R: Movable & Deinitable, E: Movable & Deinitable,
+                    F: Movable & Deinitable, raising: Bool](Thunk, Copyable where conforms_to(F, Copyable)):
+    # Own the exact thin function pointer when a family retains the factory.
+    comptime Out = Self.R
+    comptime Error = Self.E
+    var _function: _OptionalCell[Self.F]
+    def __init__(out self, var function: Self.F):
+        self._function = Optional(function^)
+    def call(self) raises Self.E -> Self.R:
+        return _call_native_thunk[Self.R, Self.E, Self.F, Self.raising](self._function.value())
 
 
 @fieldwise_init

@@ -95,6 +95,17 @@ requires copyable operands. Validation accumulates stored errors, and deferred
 families defer application. All eight methods retain the family's native error
 contract and embedded origins.
 
+`if_effect(on_true, on_false)` selects a zero-argument factory using the Bool
+inside the current Monad. An absent Optional or failed Result invokes neither
+factory. Both branches must produce carriers of that family with the same
+payload and stored error types. Native errors must match the selected
+`.raising[Error]()` context; library factory errors must be mutually compatible.
+List conditions can select a branch repeatedly, so both factories must support
+repeated calls. Optional and Result support single-use factories with move-only
+captures. Reader and other deferred families retain their usual timing and can
+join distinct branch representations. Native closures are borrowed for the
+effect's lifetime, while native thin pointers and library factories are owned.
+
 Effectful terminals consume an iterator or owned iterable into an explicit
 Monad target. `all_effect[Target](predicate)`, `any_effect[Target](predicate)`
 and `find_effect[Target](predicate)` borrow each item and require a Bool inside

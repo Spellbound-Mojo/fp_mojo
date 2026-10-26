@@ -103,7 +103,7 @@ def methods(*, fold_stage=False):
             elif mode == "binary":
                 cb = f"_NativeBinary[{', '.join(payload)}, {R}, {E}, {signature}, {raising}]"
             else:
-                cb = f"_NativeThunkRef[{R}, Never, {signature}, {raising}, origin_of(stored_{arg})]"
+                cb = f"_NativeThunk[{R}, {E}, {signature}, {raising}]"
         return dict(
             params=(
                 [f"{R}: {MD}", "//"]
@@ -111,21 +111,9 @@ def methods(*, fold_stage=False):
                 else [f"{R}: {MD}", f"{o}: ImmOrigin", "//", f"{C}: {signature}"]
             ),
             argument=f"{arg}: {signature}" if kind.startswith("thin_") else f"ref[{o}] {arg}: {C}",
-            build=(
-                f"{cb}({arg})"
-                if kind.startswith("thin_") and mode != "thunk"
-                else (
-                    f"{cb}(Pointer(to=stored_{arg}))"
-                    if kind.startswith("thin_")
-                    else f"{cb}(Pointer(to={arg}))"
-                )
-            ),
+            build=f"{cb}({arg})" if kind.startswith("thin_") else f"{cb}(Pointer(to={arg}))",
             adapter_type=cb,
-            prelude=(
-                f"        var stored_{arg} = {arg}\n"
-                if kind.startswith("thin_") and mode == "thunk"
-                else ""
-            ),
+            prelude="",
             result=R,
             error=E,
             conditions=["Self.E != Never"] if kind == "never" else [],
@@ -180,6 +168,19 @@ def methods(*, fold_stage=False):
                     cb["conditions"] += ["not conforms_to(R, RegisterPassable)"]
                 if kind == "thin_raising":
                     cb["conditions"] += ["Self.E != Never"]
+                yield cb
+
+    def thunk_callbacks(arg, second=False):
+        for kind in ("library", "pure", "raising", "never"):
+            yield callback("thunk", kind, "", arg, second=second)
+        for kind in ("thin_pure", "thin_raising", "thin_never"):
+            for register_result in (False, True):
+                cb = callback("thunk", kind, "", arg, second=second)
+                result = cb["result"]
+                if register_result:
+                    cb["params"] = [f"{result}: RegisterPassable & Deinitable" if p == f"{result}: {MD}" else p for p in cb["params"]]
+                else: cb["conditions"] += [f"not conforms_to({result}, RegisterPassable)"]
+                if kind == "thin_raising": cb["conditions"] += ["Self.E != Never"]
                 yield cb
 
     def emit(name, cb, params, arguments, result, error, family, conditions, expr, summary):
@@ -282,6 +283,32 @@ def methods(*, fold_stage=False):
                 expr,
                 "Consume the source in order through the canonical terminal fold.",
             )
+
+    # The selected Monad owns branching and retains the factories if deferred.
+    family = "_Binding[Self.I]"
+    for left, right in product(thunk_callbacks("on_true"), thunk_callbacks("on_false", second=True)):
+        callbacks = (left,right)
+        params, explicit = [], []
+        for cb in callbacks:
+            split = cb["params"].index("//") if "//" in cb["params"] else len(cb["params"])
+            params += cb["params"][:split]
+            explicit += cb["params"][split+1:]
+        params += ["//"] + explicit
+        l,r = left["adapter_type"],right["adapter_type"]
+        le,reffect = left["error"],right["error"]
+        common = reffect if le == "Never" else le if reffect == "Never" else f"_CommonError[{le}, {reffect}]"
+        composed = f"_IfEffect[{family}, {l}, {r}]"
+        probe = f"_ErrorProbe[Bool, {family}._Joined[{left['result']}, {right['result']}], {common}]"
+        result = f"{family}.Bound[Self.V, {composed}]"
+        error = f"{family}.BindError[Self.V, {probe}]"
+        conditions = ["conforms_to(Self.I, Monad)", "Self.I.Element[Self.V] == Bool"] + left["conditions"] + right["conditions"]
+        conditions += [f"{family}.Element[{left['result']}] == {family}.Element[{right['result']}]",
+                       f"_ErrorCompatible[{common}, {le}]", f"_ErrorCompatible[{common}, {reffect}]",
+                       f"_BindCompatible[{family}, Self.V, {composed}]"]
+        conditions += [f"_CarrierCompatible[{family}, {v}]" for v in ("Self.V",left["result"],right["result"])]
+        emit("if_effect", {}, params, left["argument"] + ", " + right["argument"], result, error, "Self.I", conditions,
+             f"_if_effect[{family}, Self.V, {l}, {r}, {error}](self.value^, {left['build']}, {right['build']})",
+             "Invoke only the factory selected by an effectful Bool through the selected Monad.")
 
     # Structural conveniences share their transforms with legacy fluent APIs.
     for name, bound, extra, arguments, _, c, built, summary in TRANSFORMS:
@@ -838,6 +865,8 @@ def documented(source):
         "function": "The callback; native callbacks are borrowed, library callbacks consumed.",
         "predicate": "The borrowing Bool predicate.",
         "make_error": "The borrowed-payload factory of a stored Result error.",
+        "on_true": "The factory invoked only for a true payload; native closures are borrowed.",
+        "on_false": "The factory invoked only for a false payload; native closures are borrowed.",
         "on_ok": "The success handler, consuming the success payload.",
         "on_err": "The error handler, consuming the stored error payload.",
         "value": "The carrier, consumed.",

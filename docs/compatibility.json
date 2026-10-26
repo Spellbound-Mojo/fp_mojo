@@ -448,6 +448,29 @@
         "tests/runtime/test_context_structural_effects.mojo",
         "tests/ownership/test_context_structural_ownership.mojo"
       ]
+    },
+    {
+      "name": "Conditional factories",
+      "methods": [
+        "if_effect"
+      ],
+      "status": "selected",
+      "families": "Selected Monad with Bool payloads and matching branch payload/error types",
+      "callbacks": "Native zero-argument closures and thin pointers; single-use or repeatable library factories as required by the source",
+      "ownership": "Borrow native closures with exact origins; own thin pointers and library factories. Release skipped and abandoned captures.",
+      "errors": "Compatible exact native factory errors; stored Result errors remain in the carrier",
+      "timing": "Run only selected branches; absence/failure skips both. Family owns repeated calls and deferral.",
+      "owner": [
+        "src/fp/algebra/_effect_combinators.mojo",
+        "src/fp/callables/native.mojo"
+      ],
+      "evidence": [
+        "tests/runtime/test_context_conditional_behavior.mojo",
+        "tests/runtime/test_context_conditional_generic.mojo",
+        "tests/runtime/test_context_conditional_native.mojo",
+        "tests/runtime/test_context_conditional_void.mojo",
+        "tests/ownership/test_context_conditional_ownership.mojo"
+      ]
     }
   ],
   "legacy_methods": [
@@ -521,15 +544,14 @@
   ],
   "migration": [
     {
-      "name": "Conditional and accumulating policies",
+      "name": "Accumulating policies",
       "methods": [
-        "if_effect",
         "par_map_n",
         "par_product_n",
         "par_sequence",
         "par_traverse"
       ],
-      "contract": "Monad branch factories or Validation policy; accumulation does not mean concurrent execution."
+      "contract": "Validation accumulation using the existing n-ary product and traversal owners; no concurrent execution."
     }
   ],
   "legacy_diagnostic_controls": [

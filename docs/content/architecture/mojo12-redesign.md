@@ -683,3 +683,25 @@ Validation accumulation, deferred Reader evaluation, borrowed views and
 single-use cleanup. The family-admission pass will further tighten native
 carrier predicates shared by all operations; these methods deliberately use
 that common admission owner instead of adding local container recognition.
+
+## Conditional factory storage
+
+Selected `if_effect` admits both factories after choosing the Monad and native
+error context, then delegates to `_if_effect` and `_IfEffect`. The existing
+family join owns differing deferred carrier representations. Error signatures
+reuse the conditional API's metadata probe, and the execution driver checks
+the actual raised type before propagating it.
+
+Native closures use `_NativeThunkRef` with their immutable borrow origins.
+Thin pointers use `_NativeThunk`, owning an `_OptionalCell` like the existing
+unary and binary adapters. This prevents a deferred family from retaining a
+reference to a temporary pointer variable. `_call_native_thunk` remains the
+single invocation owner and preserves register return conventions alongside
+literal Never and no-value signatures. Existing selected Result factory methods
+also use this owning adapter for thin pointers.
+
+Conditional clients cover branch skipping, stateful repeated factories,
+single-use cleanup, deferred joins, closure lifetime, exact origins, generic
+forwarding and mixed library/native storage at both return conventions. The
+shared native change is additionally checked against the complete positive
+and rejection suites.

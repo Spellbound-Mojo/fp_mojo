@@ -55,6 +55,9 @@ def main() raises:
     var compacted = pipeline(List[Optional[Int]]([Optional(1),Optional[Int](),Optional(3)])).compact().tuple_right(String("kept")).get()
     assert_equal(compacted[1][0], 3)
     assert_equal(compacted[1][1], "kept")
+    def present() -> Optional[Int]: return Optional(10)
+    def absent() -> Optional[Int]: return None
+    assert_equal(pipeline(Optional(True)).if_effect(present, absent).get().value(), 10)
 
     var checked: Result[Int, String]
     try:
