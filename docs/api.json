@@ -788,6 +788,38 @@
     "Functor"
    ]
   },
+  "algebra.ArrayFamily": {
+   "aliases": [],
+   "description": "Select with `pipeline[ArrayFamily[N]](values^)`. Mapping can change the element\ntype and moves each element; it requires a repeatable callback. This family\nimplements Functor only: fixed length does not support filtering or flat_map.\nThe existing Array mapping boundary uses O(N) temporary storage on Mojo 1.2.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The Array's fixed length.",
+     "inferred": false,
+     "name": "N",
+     "type": "Int",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/collections",
+   "signature": "comptime ArrayFamily[N: Int] = _ArrayFamily[N]",
+   "summary": "Map a native Array's elements, preserving its length and order.",
+   "traits": []
+  },
+  "algebra.DequeFamily": {
+   "aliases": [],
+   "description": "Select with `pipeline[DequeFamily](values^)`. Mapping and filter_map can change\nthe element type. Callbacks are repeatable and elements are moved. The family\nimplements Functor, Filterable and FunctorFilter, without Applicative or Monad.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [],
+   "provider": "algebra/collections",
+   "signature": "comptime DequeFamily = _DequeFamily",
+   "summary": "Map and filter native Deque elements, preserving their order and settings.",
+   "traits": []
+  },
   "algebra.Filterable": {
    "aliases": [
     {
@@ -1830,6 +1862,18 @@
     "Applicative",
     "Functor"
    ]
+  },
+  "algebra.LinkedListFamily": {
+   "aliases": [],
+   "description": "Select with `pipeline[LinkedListFamily](values^)`. Mapping and filter_map can\nchange the element type. Callbacks are repeatable and elements are moved. The\nfamily implements Functor, Filterable and FunctorFilter, without Applicative\nor Monad.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [],
+   "provider": "algebra/collections",
+   "signature": "comptime LinkedListFamily = _LinkedListFamily",
+   "summary": "Map and filter native LinkedList elements in their original order.",
+   "traits": []
   },
   "algebra.ListFamily": {
    "aliases": [

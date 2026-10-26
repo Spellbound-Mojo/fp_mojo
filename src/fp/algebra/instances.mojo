@@ -15,7 +15,7 @@ from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
 from fp.callables._receiver import _unary_repeated_as
 from ._result_accumulation import _result_map2, _result_loop, _FirstError
 from .filtering import _Select, _Keep
-from .protocols import (Applicative, ApplicativeError, Monad, Traversable, Filterable, FunctorFilter, _Lifting, _Accumulate, _Present, _Item, _iterator,
+from .protocols import (Functor, Applicative, ApplicativeError, Monad, Traversable, Filterable, FunctorFilter, _Lifting, _Accumulate, _Present, _Item, _iterator,
                         _next_item, _start_as, _combine_as, _map_accumulate, _Append)
 
 
@@ -23,16 +23,17 @@ comptime _ListElement[V: Movable & Deinitable] = downcast[downcast[V, IterableOw
 
 # Native carrier recognition has one owner. Guard iterable projection before
 # inspecting its element; scalar and custom values use the caller's fallback.
-comptime _NativeFamily[V: Movable & Deinitable, Fallback: Applicative = IdentityFamily]: Applicative = (
+comptime _NativeFamily[V: Movable & Deinitable, Fallback: Functor = IdentityFamily]: Functor = (
     ResultFamily[downcast[V, _ResultType].Error] if conforms_to(V, _ResultType) else
     (ListFamily if V == List[_ListElement[V]] else
      OptionalFamily if V == Optional[_ListElement[V]] else Fallback)
     if conforms_to(V, IterableOwned) else Fallback
 )
 
-# Keep the existing default for legacy native Applicative entry points.
+# Recognition requires only Functor. Legacy Applicative entry points select
+# their stronger capability here, retaining the existing Optional fallback.
 comptime _InferredApplicative[V: Movable & Deinitable]: Applicative = (
-    _NativeFamily[V, OptionalFamily]
+    downcast[_NativeFamily[V, OptionalFamily], Applicative]
 )
 
 

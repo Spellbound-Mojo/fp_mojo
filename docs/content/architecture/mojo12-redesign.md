@@ -84,6 +84,16 @@ must not be repeated in ways that prematurely reduce dependent projections.
 
 ## Native signatures and storage
 
+Native family recognition requires only Functor; Applicative entry points
+apply their stronger capability requirement after selection. The default
+selection policy remains List, Optional, Result, then Identity (or the legacy
+Applicative fallback). Public ArrayFamily, DequeFamily and LinkedListFamily
+aliases expose the existing sequence implementations for explicit selection.
+Map admission checks the native container shape and Array length before invoking
+the shared implementation. Dict and StringDict adapters remain private until
+their value type can follow type-changing operations without fixing an input
+payload or reflecting private native storage.
+
 `generate_context.py`, `generate_capture.py` and
 `generate_native_conventions.py` share `scripts/native_signatures.py`.
 Known consumed operands use `_NativeOwnedArg`;

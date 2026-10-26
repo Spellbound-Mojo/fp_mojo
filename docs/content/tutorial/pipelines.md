@@ -79,6 +79,19 @@ first. A stage that returns a `Result` holding `Err` passes that value to the
 next stage. To stop on a stored error, use `Result.flat_map`, introduced in the
 [results chapter](results.md).
 
+## Map sequence elements
+
+For a selected pipeline over sequence elements, choose `ArrayFamily[N]`,
+`DequeFamily` or `LinkedListFamily`. The family stays selected as element types
+change, so a chain can map Int to String and then String to Int without another
+annotation. Array preserves its fixed length; Deque and LinkedList also support
+filter and filter_map.
+
+<!-- example: docs/examples/collection_families.mojo -->
+
+`pipeline(array^)` keeps its existing whole-value Identity behavior. Explicit
+selection chooses element operations, as `piped(array^)` does for native map.
+
 ## Mix closures and library values
 
 A closure becomes a stage once you promote it with `as_unary(closure)`. Library

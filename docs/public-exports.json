@@ -10338,6 +10338,27 @@
       },
       "provider": "algebra/instances"
     },
+    "algebra.ArrayFamily": {
+      "kind": "type or alias",
+      "declarations": [
+        "comptime ArrayFamily[N: Int] = _ArrayFamily[N]"
+      ],
+      "provider": "algebra/collections"
+    },
+    "algebra.DequeFamily": {
+      "kind": "type or alias",
+      "declarations": [
+        "comptime DequeFamily = _DequeFamily"
+      ],
+      "provider": "algebra/collections"
+    },
+    "algebra.LinkedListFamily": {
+      "kind": "type or alias",
+      "declarations": [
+        "comptime LinkedListFamily = _LinkedListFamily"
+      ],
+      "provider": "algebra/collections"
+    },
     "algebra.StringMonoid": {
       "kind": "type or alias",
       "declarations": [

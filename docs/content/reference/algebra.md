@@ -36,6 +36,19 @@ ReaderT, StateT, WriterT, OptionalT and ResultT also implement these predicates.
 Their carriers may have several concrete representations; membership does not
 require equality with `Pure[A]`. See [effect admission](effects.md).
 
+`ArrayFamily[N]`, `DequeFamily` and `LinkedListFamily` select element operations
+on native sequences. For example, `pipeline[ArrayFamily[2]](values^).map(text)`
+preserves the Array length while changing its element type. DequeFamily and
+LinkedListFamily also support filter and filter_map; ArrayFamily supports map.
+None requires or claims Applicative or Monad. Deque operations preserve native
+capacity and eviction settings. These names reuse the same implementations as
+`piped`'s native collection methods.
+
+Selection is explicit: `pipeline(array^)` still treats the whole Array as an
+Identity payload, while `piped(array^).map(...)` maps its elements. Dict and
+StringDict value adapters remain private because their current dictionaries
+fix the input value type; exposing them would break type-changing chains.
+
 Generic wrappers with an abstract callback return type `R` must forward the
 target proof, such as `where OptionalFamily.CarrierCompatible[R]`. This also
 applies to legacy sequencing, effect searches and folds. Mojo 1.2 does not

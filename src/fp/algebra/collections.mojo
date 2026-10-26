@@ -1,7 +1,7 @@
 """Native collection adapters for container-preserving pipeline mapping and filtering.
 
-These private algebra dictionaries adapt native signatures to the public
-algebra operation. In particular Dict and StringDict do not expose their value
+The sequence dictionaries support explicit public family selection. Dict and
+StringDict do not expose their value
 parameter through a trait: their adapters specialize on the element inferred
 by Piped's native overload. They are not public, element-fixed Functor families.
 Traversal, callback receivers and native error propagation keep their existing
@@ -23,7 +23,38 @@ from fp.iteration.reductions import _Terminal
 from fp.iteration.adapters import map as _lazy_map
 
 
+comptime ArrayFamily[N: Int] = _ArrayFamily[N]
+"""Map a native Array's elements, preserving its length and order.
+
+Select with `pipeline[ArrayFamily[N]](values^)`. Mapping can change the element
+type and moves each element; it requires a repeatable callback. This family
+implements Functor only: fixed length does not support filtering or flat_map.
+The existing Array mapping boundary uses O(N) temporary storage on Mojo 1.2.
+
+Parameters:
+    N: The Array's fixed length.
+"""
+
+comptime DequeFamily = _DequeFamily
+"""Map and filter native Deque elements, preserving their order and settings.
+
+Select with `pipeline[DequeFamily](values^)`. Mapping and filter_map can change
+the element type. Callbacks are repeatable and elements are moved. The family
+implements Functor, Filterable and FunctorFilter, without Applicative or Monad.
+"""
+
+comptime LinkedListFamily = _LinkedListFamily
+"""Map and filter native LinkedList elements in their original order.
+
+Select with `pipeline[LinkedListFamily](values^)`. Mapping and filter_map can
+change the element type. Callbacks are repeatable and elements are moved. The
+family implements Functor, Filterable and FunctorFilter, without Applicative
+or Monad.
+"""
+
+
 struct _ArrayFamily[N: Int](Functor):
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == Array[F.Arg, Self.N]
     comptime Element[V: Movable & Deinitable] = _ListElement[V]
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Array[F.Out, Self.N]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
@@ -63,6 +94,7 @@ struct _DequeAppend[T: Movable & Deinitable](_Accumulate):
 
 
 struct _DequeFamily(Functor, Filterable, FunctorFilter):
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == Deque[F.Arg]
     comptime Element[V: Movable & Deinitable] = _ListElement[V]
     comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = V
     comptime FilterError[V: Movable & Deinitable, P: BorrowCallable] = P.Failure
@@ -124,6 +156,7 @@ struct _LinkedAppend[T: Movable & Deinitable](_Accumulate):
 
 
 struct _LinkedListFamily(Functor, Filterable, FunctorFilter):
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == LinkedList[F.Arg]
     comptime Element[V: Movable & Deinitable] = _ListElement[V]
     comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = V
     comptime FilterError[V: Movable & Deinitable, P: BorrowCallable] = P.Failure

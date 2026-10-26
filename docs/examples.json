@@ -33,6 +33,9 @@
     "docs/examples/chained_pipeline.mojo": {
       "stdout": "total: $58.30\ninvalid price: 19.99\n"
     },
+    "docs/examples/collection_families.mojo": {
+      "stdout": "array lengths: 1 2\nqueue label: 42\n"
+    },
     "docs/examples/combinators.mojo": {
       "stdout": "sum of positive squares = 50\n"
     },
