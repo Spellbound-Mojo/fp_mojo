@@ -189,7 +189,7 @@ def methods(*, fold_stage=False):
         prelude = cb.get("prelude", "")
         constraints = " where " + " and ".join(conditions) if conditions else ""
         body.append(
-            f"\n    @always_inline\n    def {name}[{', '.join(params)}]({receiver}{arguments}) raises {error} -> {target}{constraints}:\n"
+            f"\n    @always_inline\n    def {name}{('[' + ', '.join(params) + ']') if params else ''}({receiver}{arguments}) raises {error} -> {target}{constraints}:\n"
             f'        """{summary}"""\n{prelude}        return {target}({expr})\n'
         )
 
@@ -281,6 +281,44 @@ def methods(*, fold_stage=False):
                 expr,
                 "Consume the source in order through the canonical terminal fold.",
             )
+
+    # Pure reductions select their result family after one canonical source pass.
+    element = "_FoldElement[Self.V]"
+    for name in ("find_map", "fold_map", "sum_by", "min_by", "max_by"):
+        borrowed = name in ("min_by", "max_by")
+        for numeric in (("int", "simd") if name == "sum_by" else (None,)):
+            callbacks = borrowing_callbacks(element, "function") if borrowed else owning_callbacks("owned", element, "function")
+            for cb in callbacks:
+                c, result, error = cb["adapter_type"], cb["result"], cb["error"]
+                params = list(cb["params"])
+                conditions = list(cb["conditions"])
+                if "//" not in params: params += ["//"]
+                if borrowed:
+                    conditions += [f"conforms_to({result}, Comparable & Movable & Deinitable)"]
+                    result = f"Optional[{element}]"
+                    expr = f"_extremum[Self.V, {element}, {c}, {name == 'min_by'}]({cb['build']}, self.value^)"
+                elif name == "find_map":
+                    conditions += [f"{result} == Optional[_ListElement[{result}]]", f"RepeatableUnary[{c}]"]
+                    expr = f"_find_map({cb['build']}, self.value^)"
+                else:
+                    monoid = "M" if name == "fold_map" else ("_IntSum" if numeric == "int" else "_SIMDSum[dtype, size]")
+                    if name == "fold_map": params.insert(params.index("//") + 1, "M: Monoid")
+                    if numeric == "simd": params[params.index("//") + 1:params.index("//") + 1] = ["dtype: DType", "size: SIMDLength"]
+                    conditions += [f"{result} == {monoid}.Value", f"RepeatableUnary[{c}]"]
+                    if numeric == "simd": conditions += [f"{monoid}.Admitted"]
+                    error = f"_CommonError[{error}, {monoid}.Error]"
+                    conditions += [f"_ErrorCompatible[{error}, {monoid}.Error]", f"_ErrorCompatible[{error}, {cb['error']}]"]
+                    result = f"{monoid}.Value"
+                    expr = f"_fold_map[Self.V, {c}, {monoid}, {error}]({cb['build']}, self.value^)"
+                emit(name, cb, params, cb["argument"], result, error, f"_NativeFamily[{result}]", conditions, expr,
+                     "Reduce the consumed source in order through the canonical terminal driver.")
+    for name, monoid, params in (("combine_all", "M", ["M: Monoid"]), ("sum", "_IntSum", []),
+                                 ("sum", "_SIMDSum[dtype, size]", ["dtype: DType", "size: SIMDLength"])):
+        result = f"{monoid}.Value"
+        emit(name, {}, params, "", result, f"{monoid}.Error", f"_NativeFamily[{result}]",
+             [f"{element} == {result}"] + ([f"{monoid}.Admitted"] if monoid.startswith("_SIMDSum") else []),
+             f"_fold_map[M={monoid}, E={monoid}.Error](Identity[{result}](), self.value^)",
+             "Combine source elements in order, returning the identity for empty input.")
 
     # Effectful terminals consume the native source, independently of its
     # selected Functor. The target Monad owns ordering, stopping and deferral.
@@ -627,7 +665,7 @@ def methods(*, fold_stage=False):
                 expr = f"_filter_with[Self.V, {cb['adapter_type']}, {family}, True]({cb['build']}, self.value^)"
             prelude = cb.get("prelude", "")
             body.append(
-                f"\n    @always_inline\n    def {name}[{', '.join(params)}](deinit self, {cb['argument']}) raises {error} -> {target} where {' and '.join(conditions)}:\n        \"\"\"Apply {name} through the selected family's {trait} capability.\"\"\"\n{prelude}        return {target}({expr})\n"
+                f"\n    @always_inline\n    def {name}{('[' + ', '.join(params) + ']') if params else ''}(deinit self, {cb['argument']}) raises {error} -> {target} where {' and '.join(conditions)}:\n        \"\"\"Apply {name} through the selected family's {trait} capability.\"\"\"\n{prelude}        return {target}({expr})\n"
             )
 
     for name, (summary, detail) in (DOCS | OUTCOMES).items():

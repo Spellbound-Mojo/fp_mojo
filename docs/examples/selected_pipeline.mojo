@@ -49,6 +49,10 @@ def main() raises:
     assert_equal(expanded.value(), List[Int]([1,11,2,12]))
     _ = pipeline(List[Int]([1,2])).traverse_void[OptionalFamily](optional_double).get()
 
+    # Reductions infer numeric types and select the resulting carrier family.
+    assert_equal(pipeline(range(4)).sum_by(double).get(), 12)
+    assert_equal(pipeline(List[Int]([1,2,3])).max_by(as_text).get().value(), 3)
+
     var checked: Result[Int, String]
     try:
         checked = pipeline(Result[Int, String](Ok(4))).raising[PipelineProcessingFailure]().map(process).ensure(accepted, invalid).get()

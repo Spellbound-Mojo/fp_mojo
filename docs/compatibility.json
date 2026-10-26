@@ -389,6 +389,35 @@
         "tests/runtime/test_context_result_redeem_with.mojo",
         "tests/runtime/test_context_result_ensure.mojo"
       ]
+    },
+    {
+      "name": "Pure reductions",
+      "methods": [
+        "find_map",
+        "fold_map",
+        "combine_all",
+        "sum",
+        "sum_by",
+        "max_by",
+        "min_by"
+      ],
+      "status": "selected",
+      "families": "Native iterator and owned iterable sources; result selects its native family",
+      "callbacks": "Repeatable consuming projections or shared borrowing keys; stored native thin pointers supported",
+      "ownership": "Consume inputs; retain first extrema on ties and preserve result origins. Array uses shared temporary List conversion.",
+      "errors": "Exact callback or monoid errors; incompatible raised types reject at admission",
+      "timing": "Immediate ordered reduction; find_map stops without another pull, extrema evaluate each key once",
+      "owner": [
+        "src/fp/iteration/reductions.mojo",
+        "src/fp/algebra/protocols.mojo"
+      ],
+      "evidence": [
+        "tests/runtime/test_context_reductions_behavior.mojo",
+        "tests/runtime/test_context_reductions_generic.mojo",
+        "tests/runtime/test_context_reductions_errors.mojo",
+        "tests/runtime/test_context_reductions_native.mojo",
+        "tests/ownership/test_context_reductions_ownership.mojo"
+      ]
     }
   ],
   "legacy_methods": [
@@ -461,19 +490,6 @@
     "void"
   ],
   "migration": [
-    {
-      "name": "Pure reductions",
-      "methods": [
-        "find_map",
-        "fold_map",
-        "combine_all",
-        "sum",
-        "sum_by",
-        "max_by",
-        "min_by"
-      ],
-      "contract": "Existing consuming folds, monoids and terminal drivers; stable order and cleanup."
-    },
     {
       "name": "Structural conveniences",
       "methods": [

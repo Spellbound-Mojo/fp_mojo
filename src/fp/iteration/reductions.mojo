@@ -127,9 +127,10 @@ struct _IntSum(Monoid):
 
 struct _SIMDSum[dtype: DType, size: SIMDLength](Monoid):
     comptime Value = SIMD[Self.dtype, Self.size]
+    comptime Admitted = Self.dtype.is_integral() or Self.dtype.is_floating_point()
     @staticmethod
     def empty() -> Self.Value:
-        comptime assert Self.dtype.is_integral() or Self.dtype.is_floating_point(), "sum: numeric dtype required"
+        comptime assert Self.Admitted, "sum: numeric dtype required"
         return Self.Value(0)
     @staticmethod
     def combine(var left: Self.Value, var right: Self.Value) -> Self.Value:

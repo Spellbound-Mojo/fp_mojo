@@ -86496,7 +86496,7 @@
   },
   "functions.Pipeline": {
    "aliases": [],
-   "description": "Start with `pipeline(value)` for List, Optional, Result or a bare value, or\n`pipeline[Family](value)` for an explicit Functor. Select a native error\nonce with `raising[E]()`. Pure callbacks keep Never; library callbacks\nkeep their declared errors. `get()` extracts the value. Map, flat_map,\nfilter and filter_map delegate to the family's evaluation and ownership\nrules, including deferred execution and retained callback borrows.\n\n`tap` borrows the whole value once now, including empty carriers and Err.\n`tap_each` borrows each payload through the family's map; `pair_with`\nretains each original beside its projection. Observer results are\ndiscarded for both tap forms. `filter_not` retains payloads rejected by\na borrowing Bool predicate. These operations consume a library\nBorrowCallable or borrow a native closure; stored thin pointers are\ncopied. They preserve the selected family and native error context.\n\n`then` consumes the whole value once. It selects the returned List,\nOptional or Result family, or Identity for other values; `then[Family]`\nselects an explicit output family. Folds consume a native source and\nselect the accumulator's family by the same rule. Traversal selects its\ntarget effect family. `traverse_tap[TargetFamily]` borrows each payload,\nruns its effect and retains the original. `filter_effect[TargetFamily]`\nretains originals whose borrowing effect returns True; the source must\nalso support FunctorFilter. Both preserve the target's short-circuiting,\naccumulation, branching and deferred timing. Single-use library callbacks\nwork where traversal calls them at most once. Branching targets may require\ncopyable payloads. Combinations retain the current Applicative family.\n\n`traverse_filter` and `sequence_filter` compact Optional payloads inside\nthe target effect using the source's FunctorFilter. `flat_traverse` and\n`flat_sequence` flatten one source layer using its Monad. `traverse_void`\nand `sequence_void` discard successful outputs from native sources;\nResult traversal retains its source error layer inside the target.\n\nEffectful queries consume a native source into a target Monad.\n`all_effect`, `any_effect` and `find_effect` borrow each item;\n`find_map_effect` and `fold_map_effect` consume it. Bind a fold accumulator\nbefore its callback with `fold_effect[TargetFamily](initial).run(step)`.\nThe target controls stopping, branching and deferral. Monoid identity\nconstruction happens immediately; callback and combination timing follows\nthe target. Array sources move through temporary List storage.\n\nResult-specific methods delegate to Result and update ResultFamily when\nthe stored error type changes. Native raised errors remain raised;\nuse Capture to store them. Existing Piped and piped remain available.",
+   "description": "Start with `pipeline(value)` for List, Optional, Result or a bare value, or\n`pipeline[Family](value)` for an explicit Functor. Select a native error\nonce with `raising[E]()`. Pure callbacks keep Never; library callbacks\nkeep their declared errors. `get()` extracts the value. Map, flat_map,\nfilter and filter_map delegate to the family's evaluation and ownership\nrules, including deferred execution and retained callback borrows.\n\n`tap` borrows the whole value once now, including empty carriers and Err.\n`tap_each` borrows each payload through the family's map; `pair_with`\nretains each original beside its projection. Observer results are\ndiscarded for both tap forms. `filter_not` retains payloads rejected by\na borrowing Bool predicate. These operations consume a library\nBorrowCallable or borrow a native closure; stored thin pointers are\ncopied. They preserve the selected family and native error context.\n\n`then` consumes the whole value once. It selects the returned List,\nOptional or Result family, or Identity for other values; `then[Family]`\nselects an explicit output family. Folds consume a native source and\nselect the accumulator's family by the same rule. Traversal selects its\ntarget effect family. `traverse_tap[TargetFamily]` borrows each payload,\nruns its effect and retains the original. `filter_effect[TargetFamily]`\nretains originals whose borrowing effect returns True; the source must\nalso support FunctorFilter. Both preserve the target's short-circuiting,\naccumulation, branching and deferred timing. Single-use library callbacks\nwork where traversal calls them at most once. Branching targets may require\ncopyable payloads. Combinations retain the current Applicative family.\n\n`traverse_filter` and `sequence_filter` compact Optional payloads inside\nthe target effect using the source's FunctorFilter. `flat_traverse` and\n`flat_sequence` flatten one source layer using its Monad. `traverse_void`\nand `sequence_void` discard successful outputs from native sources;\nResult traversal retains its source error layer inside the target.\n\nEffectful queries consume a native source into a target Monad.\n`all_effect`, `any_effect` and `find_effect` borrow each item;\n`find_map_effect` and `fold_map_effect` consume it. Bind a fold accumulator\nbefore its callback with `fold_effect[TargetFamily](initial).run(step)`.\nThe target controls stopping, branching and deferral. Monoid identity\nconstruction happens immediately; callback and combination timing follows\nthe target. Array sources move through temporary List storage.\n\nPure reductions consume sources immediately. `find_map` stops at the\nfirst present projection. `fold_map[Monoid]` and `combine_all[Monoid]`\ncombine in source order; `sum` and `sum_by` infer numeric types and SIMD\nlanes. `min_by` and `max_by` borrow each item for its key, preserving the\nfirst item on ties. Reduction results select their native family.\n\nResult-specific methods delegate to Result and update ResultFamily when\nthe stored error type changes. Native raised errors remain raised;\nuse Capture to store them. Existing Piped and piped remain available.",
    "fields": [
     {
      "description": "The carrier owned by this pipeline.",
@@ -88308,6 +88308,30 @@
       },
       "signature": "def before[R: Movable & Deinitable](deinit self, function: def() raises Never thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == Result[_Success[R], _Failure[Self.V]]",
       "summary": "On success, call a zero-argument factory and retain the original value."
+     }
+    ],
+    "combine_all": [
+     {
+      "args": [],
+      "description": "",
+      "error": "M.Error",
+      "parameters": [
+       {
+        "description": "The Monoid used for the identity and ordered combination of mapped values.",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[_NativeFamily[M.Value], M.Value, Self.E]"
+      },
+      "signature": "def combine_all[M: Monoid](deinit self) raises M.Error -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where _FoldElement[Self.V] == M.Value",
+      "summary": "Combine source elements in order, returning the identity for empty input."
      }
     ],
     "ensure": [
@@ -92770,6 +92794,572 @@
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      }
     ],
+    "find_map": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback; native callbacks are borrowed, library callbacks consumed.",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C.Error",
+      "parameters": [
+       {
+        "description": "The first library callback type, retaining its receiver and origins.",
+        "inferred": true,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[_NativeFamily[C.Out], C.Out, Self.E]"
+      },
+      "signature": "def find_map[C: UnaryContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Error -> Pipeline[_NativeFamily[C.Out], C.Out, Self.E] where C.Arg == _FoldElement[Self.V] and C.Out == Optional[_ListElement[C.Out]] and RepeatableUnary[C]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _FoldElement[Self.V]) -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[R], R, Self.E]"
+      },
+      "signature": "def find_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where R == Optional[_ListElement[R]] and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _FoldElement[Self.V]) raises Self.E -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[R], R, Self.E]"
+      },
+      "signature": "def find_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises Self.E -> Pipeline[_NativeFamily[R], R, Self.E] where R == Optional[_ListElement[R]] and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _FoldElement[Self.V]) raises Never -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[R], R, Self.E]"
+      },
+      "signature": "def find_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where Self.E != Never and R == Optional[_ListElement[R]] and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[R], R, Self.E]"
+      },
+      "signature": "def find_map[R: Movable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) thin -> R) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) thin -> R, False]]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[R], R, Self.E]"
+      },
+      "signature": "def find_map[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) thin -> R) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) thin -> R, False]]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[R], R, Self.E]"
+      },
+      "signature": "def find_map[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //](deinit self, function: def(var P0) thin -> R) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) thin -> R, False]]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[R], R, Self.E]"
+      },
+      "signature": "def find_map[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, function: def(var P0) thin -> R) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where P0 == _FoldElement[Self.V] and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) thin -> R, False]]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[R], R, Self.E]"
+      },
+      "signature": "def find_map[R: Movable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[R], R, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and Self.E != Never and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Self.E, def(var _FoldElement[Self.V]) raises Self.E thin -> R, True]]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[R], R, Self.E]"
+      },
+      "signature": "def find_map[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[R], R, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and Self.E != Never and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Self.E, def(var _FoldElement[Self.V]) raises Self.E thin -> R, True]]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[R], R, Self.E]"
+      },
+      "signature": "def find_map[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //](deinit self, function: def(var P0) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[R], R, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and Self.E != Never and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[P0, R, Self.E, def(var P0) raises Self.E thin -> R, True]]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[R], R, Self.E]"
+      },
+      "signature": "def find_map[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, function: def(var P0) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[R], R, Self.E] where P0 == _FoldElement[Self.V] and Self.E != Never and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[P0, R, Self.E, def(var P0) raises Self.E thin -> R, True]]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[R], R, Self.E]"
+      },
+      "signature": "def find_map[R: Movable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) raises Never thin -> R, True]]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[R], R, Self.E]"
+      },
+      "signature": "def find_map[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) raises Never thin -> R, True]]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[R], R, Self.E]"
+      },
+      "signature": "def find_map[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //](deinit self, function: def(var P0) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[R], R, Self.E]"
+      },
+      "signature": "def find_map[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, function: def(var P0) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where P0 == _FoldElement[Self.V] and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     }
+    ],
     "find_map_effect": [
      {
       "args": [
@@ -95303,6 +95893,684 @@
       },
       "signature": "def fold_left[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var A, var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] step: C, var initial: A) raises Never -> Pipeline[_NativeFamily[A], A, Self.E] where Self.E != Never and R == A",
       "summary": "Consume the source in order through the canonical terminal fold."
+     }
+    ],
+    "fold_map": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback; native callbacks are borrowed, library callbacks consumed.",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Error, M.Error]",
+      "parameters": [
+       {
+        "description": "The first library callback type, retaining its receiver and origins.",
+        "inferred": true,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The Monoid used for the identity and ordered combination of mapped values.",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[_NativeFamily[M.Value], M.Value, Self.E]"
+      },
+      "signature": "def fold_map[C: UnaryContract & Movable & Deinitable, //, M: Monoid](deinit self, var function: C) raises _CommonError[C.Error, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where C.Arg == _FoldElement[Self.V] and C.Out == M.Value and RepeatableUnary[C] and _ErrorCompatible[_CommonError[C.Error, M.Error], M.Error] and _ErrorCompatible[_CommonError[C.Error, M.Error], C.Error]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _FoldElement[Self.V]) -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[M.Value], M.Value, Self.E]"
+      },
+      "signature": "def fold_map[R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where R == M.Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _FoldElement[Self.V]) raises Self.E -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[M.Value], M.Value, Self.E]"
+      },
+      "signature": "def fold_map[R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, C: def(var _FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _CommonError[Self.E, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where R == M.Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]] and _ErrorCompatible[_CommonError[Self.E, M.Error], M.Error] and _ErrorCompatible[_CommonError[Self.E, M.Error], Self.E]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _FoldElement[Self.V]) raises Never -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[M.Value], M.Value, Self.E]"
+      },
+      "signature": "def fold_map[R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, C: def(var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where Self.E != Never and R == M.Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[M.Value], M.Value, Self.E]"
+      },
+      "signature": "def fold_map[R: Movable & Deinitable, //, M: Monoid](deinit self, function: def(var _FoldElement[Self.V]) thin -> R) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and R == M.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) thin -> R, False]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[M.Value], M.Value, Self.E]"
+      },
+      "signature": "def fold_map[R: RegisterPassable & Deinitable, //, M: Monoid](deinit self, function: def(var _FoldElement[Self.V]) thin -> R) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and R == M.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) thin -> R, False]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[M.Value], M.Value, Self.E]"
+      },
+      "signature": "def fold_map[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //, M: Monoid](deinit self, function: def(var P0) thin -> R) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and R == M.Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) thin -> R, False]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[M.Value], M.Value, Self.E]"
+      },
+      "signature": "def fold_map[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, M: Monoid](deinit self, function: def(var P0) thin -> R) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where P0 == _FoldElement[Self.V] and R == M.Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) thin -> R, False]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[M.Value], M.Value, Self.E]"
+      },
+      "signature": "def fold_map[R: Movable & Deinitable, //, M: Monoid](deinit self, function: def(var _FoldElement[Self.V]) raises Self.E thin -> R) raises _CommonError[Self.E, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and Self.E != Never and R == M.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Self.E, def(var _FoldElement[Self.V]) raises Self.E thin -> R, True]] and _ErrorCompatible[_CommonError[Self.E, M.Error], M.Error] and _ErrorCompatible[_CommonError[Self.E, M.Error], Self.E]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[M.Value], M.Value, Self.E]"
+      },
+      "signature": "def fold_map[R: RegisterPassable & Deinitable, //, M: Monoid](deinit self, function: def(var _FoldElement[Self.V]) raises Self.E thin -> R) raises _CommonError[Self.E, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and Self.E != Never and R == M.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Self.E, def(var _FoldElement[Self.V]) raises Self.E thin -> R, True]] and _ErrorCompatible[_CommonError[Self.E, M.Error], M.Error] and _ErrorCompatible[_CommonError[Self.E, M.Error], Self.E]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[M.Value], M.Value, Self.E]"
+      },
+      "signature": "def fold_map[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //, M: Monoid](deinit self, function: def(var P0) raises Self.E thin -> R) raises _CommonError[Self.E, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and Self.E != Never and R == M.Value and RepeatableUnary[NativeUnary[P0, R, Self.E, def(var P0) raises Self.E thin -> R, True]] and _ErrorCompatible[_CommonError[Self.E, M.Error], M.Error] and _ErrorCompatible[_CommonError[Self.E, M.Error], Self.E]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[M.Value], M.Value, Self.E]"
+      },
+      "signature": "def fold_map[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, M: Monoid](deinit self, function: def(var P0) raises Self.E thin -> R) raises _CommonError[Self.E, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where P0 == _FoldElement[Self.V] and Self.E != Never and R == M.Value and RepeatableUnary[NativeUnary[P0, R, Self.E, def(var P0) raises Self.E thin -> R, True]] and _ErrorCompatible[_CommonError[Self.E, M.Error], M.Error] and _ErrorCompatible[_CommonError[Self.E, M.Error], Self.E]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[M.Value], M.Value, Self.E]"
+      },
+      "signature": "def fold_map[R: Movable & Deinitable, //, M: Monoid](deinit self, function: def(var _FoldElement[Self.V]) raises Never thin -> R) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and R == M.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) raises Never thin -> R, True]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[M.Value], M.Value, Self.E]"
+      },
+      "signature": "def fold_map[R: RegisterPassable & Deinitable, //, M: Monoid](deinit self, function: def(var _FoldElement[Self.V]) raises Never thin -> R) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and R == M.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) raises Never thin -> R, True]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[M.Value], M.Value, Self.E]"
+      },
+      "signature": "def fold_map[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //, M: Monoid](deinit self, function: def(var P0) raises Never thin -> R) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and R == M.Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[M.Value], M.Value, Self.E]"
+      },
+      "signature": "def fold_map[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, M: Monoid](deinit self, function: def(var P0) raises Never thin -> R) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where P0 == _FoldElement[Self.V] and R == M.Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
      }
     ],
     "fold_map_effect": [
@@ -101176,6 +102444,1138 @@
       },
       "signature": "def map_n[W0: Movable & Deinitable, W1: Movable & Deinitable, W2: Movable & Deinitable, W3: Movable & Deinitable, W4: Movable & Deinitable, W5: Movable & Deinitable, W6: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W0], var Self.I.Element[W1], var Self.I.Element[W2], var Self.I.Element[W3], var Self.I.Element[W4], var Self.I.Element[W5], var Self.I.Element[W6]) raises Never -> R](deinit self, var others: Tuple[W0, W1, W2, W3, W4, W5, W6], ref[o] function: C) raises _MapNTypes[_Combining[Self.I], Self.V, _NativeNary8[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], Self.I.Element[W4], Self.I.Element[W5], Self.I.Element[W6], R, Never, C, True, o], W0, W1, W2, W3, W4, W5, W6].Error -> Pipeline[Self.I, _MapNTypes[_Combining[Self.I], Self.V, _NativeNary8[Self.I.Element[Self.V], Self.I.Element[W0], Self.I.Element[W1], Self.I.Element[W2], Self.I.Element[W3], Self.I.Element[W4], Self.I.Element[W5], Self.I.Element[W6], R, Never, C, True, o], W0, W1, W2, W3, W4, W5, W6].Out, Self.E] where conforms_to(Self.I, Applicative) and _ProductRun[_Combining[Self.I], Self.V, W0, W1, W2, W3, W4, W5, W6].AdmittedInputs and Self.E != Never",
       "summary": "Combine 8 carriers and call the native function with their separate payloads."
+     }
+    ],
+    "max_by": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback; native callbacks are borrowed, library callbacks consumed.",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C.Failure",
+      "parameters": [
+       {
+        "description": "The first library callback type, retaining its receiver and origins.",
+        "inferred": true,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where C.Payload == _FoldElement[Self.V] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(_FoldElement[Self.V]) -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def max_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(_FoldElement[Self.V]) raises Self.E -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def max_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises Self.E -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(_FoldElement[Self.V]) raises Never -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def max_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where Self.E != Never and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(_FoldElement[Self.V]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def max_by[R: Movable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(_FoldElement[Self.V]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def max_by[R: RegisterPassable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(P) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def max_by[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, function: def(P) thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(P) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def max_by[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, function: def(P) thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(_FoldElement[Self.V]) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def max_by[R: Movable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and Self.E != Never and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(_FoldElement[Self.V]) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def max_by[R: RegisterPassable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and Self.E != Never and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(P) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def max_by[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, function: def(P) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and Self.E != Never and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(P) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def max_by[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, function: def(P) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and Self.E != Never and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(_FoldElement[Self.V]) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def max_by[R: Movable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(_FoldElement[Self.V]) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def max_by[R: RegisterPassable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(P) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def max_by[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, function: def(P) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(P) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def max_by[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, function: def(P) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     }
+    ],
+    "min_by": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback; native callbacks are borrowed, library callbacks consumed.",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C.Failure",
+      "parameters": [
+       {
+        "description": "The first library callback type, retaining its receiver and origins.",
+        "inferred": true,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where C.Payload == _FoldElement[Self.V] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(_FoldElement[Self.V]) -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def min_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(_FoldElement[Self.V]) raises Self.E -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def min_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises Self.E -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(_FoldElement[Self.V]) raises Never -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def min_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where Self.E != Never and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(_FoldElement[Self.V]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def min_by[R: Movable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(_FoldElement[Self.V]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def min_by[R: RegisterPassable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(P) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def min_by[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, function: def(P) thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(P) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def min_by[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, function: def(P) thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(_FoldElement[Self.V]) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def min_by[R: Movable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and Self.E != Never and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(_FoldElement[Self.V]) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def min_by[R: RegisterPassable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and Self.E != Never and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(P) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def min_by[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, function: def(P) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and Self.E != Never and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(P) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def min_by[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, function: def(P) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and Self.E != Never and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(_FoldElement[Self.V]) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def min_by[R: Movable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(_FoldElement[Self.V]) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def min_by[R: RegisterPassable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(P) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def min_by[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, function: def(P) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(P) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
+      },
+      "signature": "def min_by[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, function: def(P) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and conforms_to(R, Comparable & Movable & Deinitable)",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
      }
     ],
     "or_else": [
@@ -110896,6 +113296,1405 @@
       },
       "signature": "def sequence_void[J: Applicative](deinit self) raises (ResultFamily[_Failure[Self.V]].TraverseError[J, Self.V, _ErrorProbe[Self.I.Element[Self.V], J.Mapped[Self.I.Element[Self.V], _Fill[J.Element[Self.I.Element[Self.V]], NoneType]], _CommonError[Never, J.MapError[Self.I.Element[Self.V], _Fill[J.Element[Self.I.Element[Self.V]], NoneType]]]]] if Self.I == ResultFamily[_Failure[Self.V]] else _Traversing[Self.I].TraverseError[J, Self.V, Composition[False, 1, Identity[Self.I.Element[Self.V]], _EffectVoid[J, Self.I.Element[Self.V]]]]) -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, Composition[False, 1, Identity[Self.I.Element[Self.V]], _EffectVoid[J, Self.I.Element[Self.V]]]], Self.E] where conforms_to(Self.V, _ResultType) and _CarrierCompatible[J, Self.I.Element[Self.V]] and conforms_to(Self.I, Traversable) and _MapCompatible[Self.I, Self.V, Identity[Self.I.Element[Self.V]]] and _CollectCompatible[J, Self.V, Composition[False, 1, Identity[Self.I.Element[Self.V]], _EffectVoid[J, Self.I.Element[Self.V]]]] and _MapCompatible[J, Self.I.Element[Self.V], _Fill[J.Element[Self.I.Element[Self.V]], NoneType]]",
       "summary": "Traverse effects and discard successful payloads, retaining source Result errors."
+     }
+    ],
+    "sum": [
+     {
+      "args": [],
+      "description": "",
+      "error": "_IntSum.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E]"
+      },
+      "signature": "def sum(deinit self) raises _IntSum.Error -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where _FoldElement[Self.V] == _IntSum.Value",
+      "summary": "Combine source elements in order, returning the identity for empty input."
+     },
+     {
+      "args": [],
+      "description": "",
+      "error": "_SIMDSum[dtype, size].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E]"
+      },
+      "signature": "def sum[dtype: DType, size: SIMDLength](deinit self) raises _SIMDSum[dtype, size].Error -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where _FoldElement[Self.V] == _SIMDSum[dtype, size].Value and _SIMDSum[dtype, size].Admitted",
+      "summary": "Combine source elements in order, returning the identity for empty input."
+     }
+    ],
+    "sum_by": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback; native callbacks are borrowed, library callbacks consumed.",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Error, _IntSum.Error]",
+      "parameters": [
+       {
+        "description": "The first library callback type, retaining its receiver and origins.",
+        "inferred": true,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E]"
+      },
+      "signature": "def sum_by[C: UnaryContract & Movable & Deinitable, //](deinit self, var function: C) raises _CommonError[C.Error, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where C.Arg == _FoldElement[Self.V] and C.Out == _IntSum.Value and RepeatableUnary[C] and _ErrorCompatible[_CommonError[C.Error, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[C.Error, _IntSum.Error], C.Error]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, _IntSum.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _FoldElement[Self.V]) -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E]"
+      },
+      "signature": "def sum_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where R == _IntSum.Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, _IntSum.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _FoldElement[Self.V]) raises Self.E -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E]"
+      },
+      "signature": "def sum_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _CommonError[Self.E, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where R == _IntSum.Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]] and _ErrorCompatible[_CommonError[Self.E, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Self.E, _IntSum.Error], Self.E]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, _IntSum.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _FoldElement[Self.V]) raises Never -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E]"
+      },
+      "signature": "def sum_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where Self.E != Never and R == _IntSum.Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, _IntSum.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E]"
+      },
+      "signature": "def sum_by[R: Movable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) thin -> R) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and R == _IntSum.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) thin -> R, False]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, _IntSum.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E]"
+      },
+      "signature": "def sum_by[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) thin -> R) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and R == _IntSum.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) thin -> R, False]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, _IntSum.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E]"
+      },
+      "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //](deinit self, function: def(var P0) thin -> R) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and R == _IntSum.Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) thin -> R, False]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, _IntSum.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E]"
+      },
+      "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, function: def(var P0) thin -> R) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where P0 == _FoldElement[Self.V] and R == _IntSum.Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) thin -> R, False]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, _IntSum.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E]"
+      },
+      "signature": "def sum_by[R: Movable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) raises Self.E thin -> R) raises _CommonError[Self.E, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and Self.E != Never and R == _IntSum.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Self.E, def(var _FoldElement[Self.V]) raises Self.E thin -> R, True]] and _ErrorCompatible[_CommonError[Self.E, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Self.E, _IntSum.Error], Self.E]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, _IntSum.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E]"
+      },
+      "signature": "def sum_by[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) raises Self.E thin -> R) raises _CommonError[Self.E, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and Self.E != Never and R == _IntSum.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Self.E, def(var _FoldElement[Self.V]) raises Self.E thin -> R, True]] and _ErrorCompatible[_CommonError[Self.E, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Self.E, _IntSum.Error], Self.E]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, _IntSum.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E]"
+      },
+      "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //](deinit self, function: def(var P0) raises Self.E thin -> R) raises _CommonError[Self.E, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and Self.E != Never and R == _IntSum.Value and RepeatableUnary[NativeUnary[P0, R, Self.E, def(var P0) raises Self.E thin -> R, True]] and _ErrorCompatible[_CommonError[Self.E, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Self.E, _IntSum.Error], Self.E]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, _IntSum.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E]"
+      },
+      "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, function: def(var P0) raises Self.E thin -> R) raises _CommonError[Self.E, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where P0 == _FoldElement[Self.V] and Self.E != Never and R == _IntSum.Value and RepeatableUnary[NativeUnary[P0, R, Self.E, def(var P0) raises Self.E thin -> R, True]] and _ErrorCompatible[_CommonError[Self.E, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Self.E, _IntSum.Error], Self.E]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, _IntSum.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E]"
+      },
+      "signature": "def sum_by[R: Movable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) raises Never thin -> R) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and R == _IntSum.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) raises Never thin -> R, True]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, _IntSum.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E]"
+      },
+      "signature": "def sum_by[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) raises Never thin -> R) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and R == _IntSum.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) raises Never thin -> R, True]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, _IntSum.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E]"
+      },
+      "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //](deinit self, function: def(var P0) raises Never thin -> R) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and R == _IntSum.Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, _IntSum.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E]"
+      },
+      "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, function: def(var P0) raises Never thin -> R) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where P0 == _FoldElement[Self.V] and R == _IntSum.Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Error, _SIMDSum[dtype, size].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E]"
+      },
+      "signature": "def sum_by[C: UnaryContract & Movable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, var function: C) raises _CommonError[C.Error, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where C.Arg == _FoldElement[Self.V] and C.Out == _SIMDSum[dtype, size].Value and RepeatableUnary[C] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[C.Error, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[C.Error, _SIMDSum[dtype, size].Error], C.Error]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, _SIMDSum[dtype, size].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _FoldElement[Self.V]) -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E]"
+      },
+      "signature": "def sum_by[R: Movable & Deinitable, o: ImmOrigin, //, dtype: DType, size: SIMDLength, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where R == _SIMDSum[dtype, size].Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, _SIMDSum[dtype, size].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _FoldElement[Self.V]) raises Self.E -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E]"
+      },
+      "signature": "def sum_by[R: Movable & Deinitable, o: ImmOrigin, //, dtype: DType, size: SIMDLength, C: def(var _FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _CommonError[Self.E, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where R == _SIMDSum[dtype, size].Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Self.E, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Self.E, _SIMDSum[dtype, size].Error], Self.E]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, _SIMDSum[dtype, size].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _FoldElement[Self.V]) raises Never -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E]"
+      },
+      "signature": "def sum_by[R: Movable & Deinitable, o: ImmOrigin, //, dtype: DType, size: SIMDLength, C: def(var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where Self.E != Never and R == _SIMDSum[dtype, size].Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, _SIMDSum[dtype, size].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E]"
+      },
+      "signature": "def sum_by[R: Movable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var _FoldElement[Self.V]) thin -> R) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) thin -> R, False]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, _SIMDSum[dtype, size].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E]"
+      },
+      "signature": "def sum_by[R: RegisterPassable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var _FoldElement[Self.V]) thin -> R) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) thin -> R, False]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, _SIMDSum[dtype, size].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E]"
+      },
+      "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var P0) thin -> R) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) thin -> R, False]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, _SIMDSum[dtype, size].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E]"
+      },
+      "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var P0) thin -> R) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where P0 == _FoldElement[Self.V] and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) thin -> R, False]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, _SIMDSum[dtype, size].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E]"
+      },
+      "signature": "def sum_by[R: Movable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var _FoldElement[Self.V]) raises Self.E thin -> R) raises _CommonError[Self.E, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and Self.E != Never and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Self.E, def(var _FoldElement[Self.V]) raises Self.E thin -> R, True]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Self.E, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Self.E, _SIMDSum[dtype, size].Error], Self.E]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, _SIMDSum[dtype, size].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E]"
+      },
+      "signature": "def sum_by[R: RegisterPassable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var _FoldElement[Self.V]) raises Self.E thin -> R) raises _CommonError[Self.E, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and Self.E != Never and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Self.E, def(var _FoldElement[Self.V]) raises Self.E thin -> R, True]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Self.E, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Self.E, _SIMDSum[dtype, size].Error], Self.E]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, _SIMDSum[dtype, size].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E]"
+      },
+      "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var P0) raises Self.E thin -> R) raises _CommonError[Self.E, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and Self.E != Never and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[P0, R, Self.E, def(var P0) raises Self.E thin -> R, True]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Self.E, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Self.E, _SIMDSum[dtype, size].Error], Self.E]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) raises Self.E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, _SIMDSum[dtype, size].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E]"
+      },
+      "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var P0) raises Self.E thin -> R) raises _CommonError[Self.E, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where P0 == _FoldElement[Self.V] and Self.E != Never and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[P0, R, Self.E, def(var P0) raises Self.E thin -> R, True]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Self.E, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Self.E, _SIMDSum[dtype, size].Error], Self.E]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, _SIMDSum[dtype, size].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E]"
+      },
+      "signature": "def sum_by[R: Movable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var _FoldElement[Self.V]) raises Never thin -> R) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) raises Never thin -> R, True]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _FoldElement[Self.V]) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, _SIMDSum[dtype, size].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E]"
+      },
+      "signature": "def sum_by[R: RegisterPassable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var _FoldElement[Self.V]) raises Never thin -> R) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) raises Never thin -> R, True]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, _SIMDSum[dtype, size].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E]"
+      },
+      "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var P0) raises Never thin -> R) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var P0) raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, _SIMDSum[dtype, size].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P0",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E]"
+      },
+      "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var P0) raises Never thin -> R) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where P0 == _FoldElement[Self.V] and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
      }
     ],
     "tap": [

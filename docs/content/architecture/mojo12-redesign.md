@@ -640,3 +640,25 @@ accumulation, custom compaction errors, deferred evaluation, native StopIteratio
 thin-pointer conventions, generic forwarding, origins, move-only cleanup and
 callback lifetime. Ordinary invalid calls require normal diagnostics without
 callback-type hints.
+
+## Pure reductions
+
+Selected `find_map`, `fold_map`, `combine_all`, `sum`, `sum_by`, `min_by` and
+`max_by` delegate to `iteration.reductions`. That module owns Optional search,
+ordered monoid accumulation and extrema; the existing source adapter owns
+iterator advancement and Array conversion. The selected Functor does not
+change native source consumption. Each result reselects its native family,
+retaining the pipeline's native error context.
+
+Admission checks projection payloads, repeatability, comparable keys and exact
+monoid/callback error compatibility before execution. Consuming projections
+use the shared native ABI descriptors; extrema use the borrowing descriptors.
+Int and SIMD summation reuse their existing monoids. The compiler infers dtype
+and lane count from source or callback constraints, while explicit positional
+bindings remain available. No numeric reflection or alternate reduction loop
+is needed.
+
+`context_reductions` clients cover empty input, early stopping, stable ties,
+numeric inference, monoid construction and combination failures, generic
+forwarding, thin pointers, borrowed origins and move-only cleanup. Negative
+clients use ordinary calls without callback-type hints.

@@ -4032,6 +4032,416 @@
             "sha256": "d94777669a55dbaff86a77daf23789c86d75878a92dfa423fd1031c105ca0c65"
           }
         ],
+        "find_map": [
+          {
+            "signature": "def find_map[C: UnaryContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Error -> Pipeline[_NativeFamily[C.Out], C.Out, Self.E] where C.Arg == _FoldElement[Self.V] and C.Out == Optional[_ListElement[C.Out]] and RepeatableUnary[C]:",
+            "sha256": "4a15e74a148baa1695581b6672b135dc3d2b5b8dfe25da1a6c58f7c972075e6f"
+          },
+          {
+            "signature": "def find_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where R == Optional[_ListElement[R]] and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]]:",
+            "sha256": "b9819a1ab6b841127fe7729147b4e5dbf38d7d6cf02eefa2fcf990bda04bf786"
+          },
+          {
+            "signature": "def find_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises Self.E -> Pipeline[_NativeFamily[R], R, Self.E] where R == Optional[_ListElement[R]] and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]]:",
+            "sha256": "ef4acf512f62a04d6affd0713c548c29f798bfb64b98a8057123ea208a3396c7"
+          },
+          {
+            "signature": "def find_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where Self.E != Never and R == Optional[_ListElement[R]] and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]]:",
+            "sha256": "45c531d84cacdb16736f7caeab483231ea987b2e9a84c991c91d7cda00719cf8"
+          },
+          {
+            "signature": "def find_map[R: Movable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) thin -> R) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) thin -> R, False]]:",
+            "sha256": "d4423eac00b699740521574652f8ec4fa09486872ffa17cace9419f6402b536b"
+          },
+          {
+            "signature": "def find_map[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) thin -> R) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) thin -> R, False]]:",
+            "sha256": "0b55fd79fdc0b08a5c83645be079cb3bb7e3cb871a330de063897e078ce29cec"
+          },
+          {
+            "signature": "def find_map[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //](deinit self, function: def(var P0) thin -> R) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) thin -> R, False]]:",
+            "sha256": "53c22335d2d671407cdf1fe0a0681701cadc71343dd46435393eed0686a5d94f"
+          },
+          {
+            "signature": "def find_map[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, function: def(var P0) thin -> R) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where P0 == _FoldElement[Self.V] and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) thin -> R, False]]:",
+            "sha256": "34adcd21010d5e03e2579d3b303cd59832a85187c8148498b8187d0e3179ea17"
+          },
+          {
+            "signature": "def find_map[R: Movable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[R], R, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and Self.E != Never and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Self.E, def(var _FoldElement[Self.V]) raises Self.E thin -> R, True]]:",
+            "sha256": "e049e96eacaa67161db0520fbcf7204edfee22a9347726d3988870d572e54a6b"
+          },
+          {
+            "signature": "def find_map[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[R], R, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and Self.E != Never and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Self.E, def(var _FoldElement[Self.V]) raises Self.E thin -> R, True]]:",
+            "sha256": "334f8215147c0d6e286b1d392b9b0fff4807bb1d41109eeb83803c59a1162d2f"
+          },
+          {
+            "signature": "def find_map[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //](deinit self, function: def(var P0) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[R], R, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and Self.E != Never and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[P0, R, Self.E, def(var P0) raises Self.E thin -> R, True]]:",
+            "sha256": "d2e68f2d3300cf79cd76074a79eee95a13c713dd8260eb9198deba92df1f2947"
+          },
+          {
+            "signature": "def find_map[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, function: def(var P0) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[R], R, Self.E] where P0 == _FoldElement[Self.V] and Self.E != Never and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[P0, R, Self.E, def(var P0) raises Self.E thin -> R, True]]:",
+            "sha256": "08a4b50d00e05f076b084eb1f87e58c2a8d7fcda491ae9097e279c6044c7fdc1"
+          },
+          {
+            "signature": "def find_map[R: Movable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) raises Never thin -> R, True]]:",
+            "sha256": "86b034b08576c7557946c97332707334d9240f04d745816f03baae7b3a6d8da5"
+          },
+          {
+            "signature": "def find_map[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) raises Never thin -> R, True]]:",
+            "sha256": "9b3ac0bb59c6a1e53a426af0857316b786535980a4b7010b60b0e2403215870e"
+          },
+          {
+            "signature": "def find_map[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //](deinit self, function: def(var P0) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]]:",
+            "sha256": "d092dbd5b6d16d1bd8b7710fd5c1bd14970f8ddd0957e14552995d696f310999"
+          },
+          {
+            "signature": "def find_map[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, function: def(var P0) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where P0 == _FoldElement[Self.V] and R == Optional[_ListElement[R]] and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]]:",
+            "sha256": "0b50c7936f204aca4961727219612d1a02af570f9207a2d482518d47ef18be60"
+          }
+        ],
+        "fold_map": [
+          {
+            "signature": "def fold_map[C: UnaryContract & Movable & Deinitable, //, M: Monoid](deinit self, var function: C) raises _CommonError[C.Error, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where C.Arg == _FoldElement[Self.V] and C.Out == M.Value and RepeatableUnary[C] and _ErrorCompatible[_CommonError[C.Error, M.Error], M.Error] and _ErrorCompatible[_CommonError[C.Error, M.Error], C.Error]:",
+            "sha256": "1b618ad038bdcc30231abadb5c27f3d6f2f7d0ad275fd806c1c8bf6cbd66a15c"
+          },
+          {
+            "signature": "def fold_map[R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where R == M.Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]:",
+            "sha256": "561d76a56bd96a9844e0c60689c66490c6d418e005e674c3799b1a4ccb4cddac"
+          },
+          {
+            "signature": "def fold_map[R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, C: def(var _FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _CommonError[Self.E, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where R == M.Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]] and _ErrorCompatible[_CommonError[Self.E, M.Error], M.Error] and _ErrorCompatible[_CommonError[Self.E, M.Error], Self.E]:",
+            "sha256": "ee649135de65581760f110d5cbf64593861709c6f051c511af3e7cce1a3220f6"
+          },
+          {
+            "signature": "def fold_map[R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, C: def(var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where Self.E != Never and R == M.Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]:",
+            "sha256": "cff00aa9bbc2aec4a1e84a4b89bf7d4720b82ee5d45459f7902ac4f28a01e40f"
+          },
+          {
+            "signature": "def fold_map[R: Movable & Deinitable, //, M: Monoid](deinit self, function: def(var _FoldElement[Self.V]) thin -> R) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and R == M.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) thin -> R, False]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]:",
+            "sha256": "7ecb9bad36d686c11d8097b5231f2b97324678071562e73d943fd582f2b0c01a"
+          },
+          {
+            "signature": "def fold_map[R: RegisterPassable & Deinitable, //, M: Monoid](deinit self, function: def(var _FoldElement[Self.V]) thin -> R) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and R == M.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) thin -> R, False]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]:",
+            "sha256": "d7fac1a20d5ad2be1dc6af25cf8f88b55bda67f768de1413e8ab6aa4996863c5"
+          },
+          {
+            "signature": "def fold_map[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //, M: Monoid](deinit self, function: def(var P0) thin -> R) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and R == M.Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) thin -> R, False]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]:",
+            "sha256": "db8ac91a2dd8cfa07905656f01ea5a297c5523c54eff717cc3e40b8c90691b0c"
+          },
+          {
+            "signature": "def fold_map[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, M: Monoid](deinit self, function: def(var P0) thin -> R) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where P0 == _FoldElement[Self.V] and R == M.Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) thin -> R, False]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]:",
+            "sha256": "a225228290170faef04408b8edfe85e23dd2ee315072ba6d40f4add7807739db"
+          },
+          {
+            "signature": "def fold_map[R: Movable & Deinitable, //, M: Monoid](deinit self, function: def(var _FoldElement[Self.V]) raises Self.E thin -> R) raises _CommonError[Self.E, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and Self.E != Never and R == M.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Self.E, def(var _FoldElement[Self.V]) raises Self.E thin -> R, True]] and _ErrorCompatible[_CommonError[Self.E, M.Error], M.Error] and _ErrorCompatible[_CommonError[Self.E, M.Error], Self.E]:",
+            "sha256": "8ee3b3f3e9aa26ecd16826af17e2e53e1958f64281f6184473eb9b2e25cb2990"
+          },
+          {
+            "signature": "def fold_map[R: RegisterPassable & Deinitable, //, M: Monoid](deinit self, function: def(var _FoldElement[Self.V]) raises Self.E thin -> R) raises _CommonError[Self.E, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and Self.E != Never and R == M.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Self.E, def(var _FoldElement[Self.V]) raises Self.E thin -> R, True]] and _ErrorCompatible[_CommonError[Self.E, M.Error], M.Error] and _ErrorCompatible[_CommonError[Self.E, M.Error], Self.E]:",
+            "sha256": "9a7e44818ffe210c7f2479bf085e05599555b1ae5f9d901b4d45f718c255564c"
+          },
+          {
+            "signature": "def fold_map[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //, M: Monoid](deinit self, function: def(var P0) raises Self.E thin -> R) raises _CommonError[Self.E, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and Self.E != Never and R == M.Value and RepeatableUnary[NativeUnary[P0, R, Self.E, def(var P0) raises Self.E thin -> R, True]] and _ErrorCompatible[_CommonError[Self.E, M.Error], M.Error] and _ErrorCompatible[_CommonError[Self.E, M.Error], Self.E]:",
+            "sha256": "0520daef1513399f5ea13b20e58bc4a056f08a57dfae79bddd496bc25dc00da3"
+          },
+          {
+            "signature": "def fold_map[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, M: Monoid](deinit self, function: def(var P0) raises Self.E thin -> R) raises _CommonError[Self.E, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where P0 == _FoldElement[Self.V] and Self.E != Never and R == M.Value and RepeatableUnary[NativeUnary[P0, R, Self.E, def(var P0) raises Self.E thin -> R, True]] and _ErrorCompatible[_CommonError[Self.E, M.Error], M.Error] and _ErrorCompatible[_CommonError[Self.E, M.Error], Self.E]:",
+            "sha256": "61b586db5092f3594db35dcd88986c205f5b5394e4d18ec676bc01429835c6b0"
+          },
+          {
+            "signature": "def fold_map[R: Movable & Deinitable, //, M: Monoid](deinit self, function: def(var _FoldElement[Self.V]) raises Never thin -> R) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and R == M.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) raises Never thin -> R, True]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]:",
+            "sha256": "cb9a09e2d57894a02e7039384134e82d8e2950cc5e51ce22a07259953730a4be"
+          },
+          {
+            "signature": "def fold_map[R: RegisterPassable & Deinitable, //, M: Monoid](deinit self, function: def(var _FoldElement[Self.V]) raises Never thin -> R) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and R == M.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) raises Never thin -> R, True]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]:",
+            "sha256": "b44b238178821e0ba24894fa2c9401fe162aff6731dea1f05c56f6eea8bb3ad5"
+          },
+          {
+            "signature": "def fold_map[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //, M: Monoid](deinit self, function: def(var P0) raises Never thin -> R) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and R == M.Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]:",
+            "sha256": "f2b6422200fe651eef3697ee381697dfa80e7d8fbaafa22e4779dfa2bd93af10"
+          },
+          {
+            "signature": "def fold_map[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, M: Monoid](deinit self, function: def(var P0) raises Never thin -> R) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where P0 == _FoldElement[Self.V] and R == M.Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]:",
+            "sha256": "dbca5deece270685787df2d6ba24f584fa07275337012bc9cd58b885cf9768cc"
+          }
+        ],
+        "sum_by": [
+          {
+            "signature": "def sum_by[C: UnaryContract & Movable & Deinitable, //](deinit self, var function: C) raises _CommonError[C.Error, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where C.Arg == _FoldElement[Self.V] and C.Out == _IntSum.Value and RepeatableUnary[C] and _ErrorCompatible[_CommonError[C.Error, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[C.Error, _IntSum.Error], C.Error]:",
+            "sha256": "c17f835d74806e7a8e68527ef3d49ef8bc4da00ebc0c7b91c1f727a91f74d981"
+          },
+          {
+            "signature": "def sum_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where R == _IntSum.Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]:",
+            "sha256": "2534b5ab4fdcecc6dddaa8f7a196d2488a0f9a0d8cdea9e3b791d3308d40fa34"
+          },
+          {
+            "signature": "def sum_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _CommonError[Self.E, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where R == _IntSum.Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]] and _ErrorCompatible[_CommonError[Self.E, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Self.E, _IntSum.Error], Self.E]:",
+            "sha256": "946cfbeca75fbcc278e0ffd9d89bc41f747ef77cf750223c65536bd8d32cb511"
+          },
+          {
+            "signature": "def sum_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where Self.E != Never and R == _IntSum.Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]:",
+            "sha256": "a987aec9ef898a64e0c1d191eb2209115339d2bcf38e7e800d4cf8204716a075"
+          },
+          {
+            "signature": "def sum_by[R: Movable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) thin -> R) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and R == _IntSum.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) thin -> R, False]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]:",
+            "sha256": "53ef8cd18bfd39405917bb4e68b5eb43bbb843a2b2424ef400260b107c86492d"
+          },
+          {
+            "signature": "def sum_by[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) thin -> R) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and R == _IntSum.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) thin -> R, False]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]:",
+            "sha256": "b7b1b32f3336df01346b78fb849f046076e33fe096464179deccebb830ee00f9"
+          },
+          {
+            "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //](deinit self, function: def(var P0) thin -> R) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and R == _IntSum.Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) thin -> R, False]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]:",
+            "sha256": "a82d1c87cdd07093fe6d806c812fd476516a86b7adfcb6b383d919b3e3e16558"
+          },
+          {
+            "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, function: def(var P0) thin -> R) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where P0 == _FoldElement[Self.V] and R == _IntSum.Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) thin -> R, False]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]:",
+            "sha256": "89f4fede1c3c67cb72868527d45eab2b1b30ad09b67185ba9fbe1f2bd656c19b"
+          },
+          {
+            "signature": "def sum_by[R: Movable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) raises Self.E thin -> R) raises _CommonError[Self.E, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and Self.E != Never and R == _IntSum.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Self.E, def(var _FoldElement[Self.V]) raises Self.E thin -> R, True]] and _ErrorCompatible[_CommonError[Self.E, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Self.E, _IntSum.Error], Self.E]:",
+            "sha256": "81e9280047040db41338eb1e1c5cd297ad43913f85dfb2673d93dfbc4e28fd01"
+          },
+          {
+            "signature": "def sum_by[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) raises Self.E thin -> R) raises _CommonError[Self.E, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and Self.E != Never and R == _IntSum.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Self.E, def(var _FoldElement[Self.V]) raises Self.E thin -> R, True]] and _ErrorCompatible[_CommonError[Self.E, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Self.E, _IntSum.Error], Self.E]:",
+            "sha256": "cb526dd5e4f991cbf935b1aa765ff31ca6772cf01a31104b0672db227a696a26"
+          },
+          {
+            "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //](deinit self, function: def(var P0) raises Self.E thin -> R) raises _CommonError[Self.E, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and Self.E != Never and R == _IntSum.Value and RepeatableUnary[NativeUnary[P0, R, Self.E, def(var P0) raises Self.E thin -> R, True]] and _ErrorCompatible[_CommonError[Self.E, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Self.E, _IntSum.Error], Self.E]:",
+            "sha256": "c9ed2dd178bffd187b037d9a3b1a4072fcc5dd9fd01c2e18ae123e28e96f290a"
+          },
+          {
+            "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, function: def(var P0) raises Self.E thin -> R) raises _CommonError[Self.E, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where P0 == _FoldElement[Self.V] and Self.E != Never and R == _IntSum.Value and RepeatableUnary[NativeUnary[P0, R, Self.E, def(var P0) raises Self.E thin -> R, True]] and _ErrorCompatible[_CommonError[Self.E, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Self.E, _IntSum.Error], Self.E]:",
+            "sha256": "474b1d525a142af113bc36a1d7a43c1dcc89b0b92e744507c0f2673bc97c45f9"
+          },
+          {
+            "signature": "def sum_by[R: Movable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) raises Never thin -> R) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and R == _IntSum.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) raises Never thin -> R, True]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]:",
+            "sha256": "d37281f72883943e6ff4723977988f549e1a8df4ecce878d922b1c454a6959b1"
+          },
+          {
+            "signature": "def sum_by[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _FoldElement[Self.V]) raises Never thin -> R) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and R == _IntSum.Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) raises Never thin -> R, True]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]:",
+            "sha256": "e0fbc8c3a0244fe162c7cb70812ccbd602a40054e6038e97fef579339e553737"
+          },
+          {
+            "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //](deinit self, function: def(var P0) raises Never thin -> R) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and R == _IntSum.Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]:",
+            "sha256": "77032a8d3f0251b16a3f7509f6787eaeb8bc77a3af1eb672dadd21ca3dc37190"
+          },
+          {
+            "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, function: def(var P0) raises Never thin -> R) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where P0 == _FoldElement[Self.V] and R == _IntSum.Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]:",
+            "sha256": "67a98a968e261e4166a9588daa300c7e6164676575db4d36aa2bb33dcffb37a7"
+          },
+          {
+            "signature": "def sum_by[C: UnaryContract & Movable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, var function: C) raises _CommonError[C.Error, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where C.Arg == _FoldElement[Self.V] and C.Out == _SIMDSum[dtype, size].Value and RepeatableUnary[C] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[C.Error, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[C.Error, _SIMDSum[dtype, size].Error], C.Error]:",
+            "sha256": "32d8d01bb2b3788133dc2389fc6de839880457a1e72aab56ddae7c5ae9b63453"
+          },
+          {
+            "signature": "def sum_by[R: Movable & Deinitable, o: ImmOrigin, //, dtype: DType, size: SIMDLength, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where R == _SIMDSum[dtype, size].Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]:",
+            "sha256": "5a6161f3ca47b95d07abab178d016a89a7f6d31f3ed02b6bce4d322c4c4b603b"
+          },
+          {
+            "signature": "def sum_by[R: Movable & Deinitable, o: ImmOrigin, //, dtype: DType, size: SIMDLength, C: def(var _FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _CommonError[Self.E, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where R == _SIMDSum[dtype, size].Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Self.E, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Self.E, _SIMDSum[dtype, size].Error], Self.E]:",
+            "sha256": "7c95fe36523980a2b352d6d9f2b5c1b1c0730d649ed59fa34958dd273d64b8fc"
+          },
+          {
+            "signature": "def sum_by[R: Movable & Deinitable, o: ImmOrigin, //, dtype: DType, size: SIMDLength, C: def(var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where Self.E != Never and R == _SIMDSum[dtype, size].Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]:",
+            "sha256": "ef8a7de877a669b16436d6c0a7f912a7d08ae989d4d261a053bb5da3b2d02d70"
+          },
+          {
+            "signature": "def sum_by[R: Movable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var _FoldElement[Self.V]) thin -> R) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) thin -> R, False]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]:",
+            "sha256": "87906469310bf46e86e5452cc42444dd8f67ac4278c37e01afab86d737d220fb"
+          },
+          {
+            "signature": "def sum_by[R: RegisterPassable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var _FoldElement[Self.V]) thin -> R) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) thin -> R, False]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]:",
+            "sha256": "8685f2175f132288c7d532c25f99d19c09251eff8646ebb8c718759b37035623"
+          },
+          {
+            "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var P0) thin -> R) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) thin -> R, False]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]:",
+            "sha256": "5b0e1baa3d50a59920a152eb473b8185a6e3622008666a90a0290abaf5bf9059"
+          },
+          {
+            "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var P0) thin -> R) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where P0 == _FoldElement[Self.V] and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) thin -> R, False]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]:",
+            "sha256": "b7f79c5faf16c1c9933dfeb4487f4ea99073eeccb57343a8b186445cfa5a4618"
+          },
+          {
+            "signature": "def sum_by[R: Movable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var _FoldElement[Self.V]) raises Self.E thin -> R) raises _CommonError[Self.E, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and Self.E != Never and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Self.E, def(var _FoldElement[Self.V]) raises Self.E thin -> R, True]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Self.E, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Self.E, _SIMDSum[dtype, size].Error], Self.E]:",
+            "sha256": "fee2fe820d305cef6ebd0f542e550a1aeda7ca6f6549982fd0d2abc2fc30dfc0"
+          },
+          {
+            "signature": "def sum_by[R: RegisterPassable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var _FoldElement[Self.V]) raises Self.E thin -> R) raises _CommonError[Self.E, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and Self.E != Never and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Self.E, def(var _FoldElement[Self.V]) raises Self.E thin -> R, True]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Self.E, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Self.E, _SIMDSum[dtype, size].Error], Self.E]:",
+            "sha256": "2e827b16e6876030e6e6c89348faffff26a1b1e97bf7c4183ba5aef9a9fc75c5"
+          },
+          {
+            "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var P0) raises Self.E thin -> R) raises _CommonError[Self.E, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and Self.E != Never and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[P0, R, Self.E, def(var P0) raises Self.E thin -> R, True]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Self.E, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Self.E, _SIMDSum[dtype, size].Error], Self.E]:",
+            "sha256": "036a6a28b0fe2591c1bbf9c529034a82608ea9598a63f831e326500d2514f18a"
+          },
+          {
+            "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var P0) raises Self.E thin -> R) raises _CommonError[Self.E, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where P0 == _FoldElement[Self.V] and Self.E != Never and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[P0, R, Self.E, def(var P0) raises Self.E thin -> R, True]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Self.E, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Self.E, _SIMDSum[dtype, size].Error], Self.E]:",
+            "sha256": "f561359505cc7b197d61543df02bcaaff80b1ee028b794690cebadda56744c64"
+          },
+          {
+            "signature": "def sum_by[R: Movable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var _FoldElement[Self.V]) raises Never thin -> R) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and not conforms_to(R, RegisterPassable) and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) raises Never thin -> R, True]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]:",
+            "sha256": "b6b3aa3105d1fb4af908d80941b710c42eea4a3f525d57737c302bdcac35e1ee"
+          },
+          {
+            "signature": "def sum_by[R: RegisterPassable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var _FoldElement[Self.V]) raises Never thin -> R) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where not conforms_to(_FoldElement[Self.V], RegisterPassable) and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _FoldElement[Self.V]) raises Never thin -> R, True]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]:",
+            "sha256": "ee346cc8d49607cda26b7e23d85b9b43208ad679d52893e10496dd55db2dfa8b"
+          },
+          {
+            "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: Movable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var P0) raises Never thin -> R) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where P0 == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]:",
+            "sha256": "25ff16bf876e0ac54db858a906987ac9301894ad2ebc109058e954f59ea62bea"
+          },
+          {
+            "signature": "def sum_by[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var P0) raises Never thin -> R) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where P0 == _FoldElement[Self.V] and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]:",
+            "sha256": "b0420d877d7ccd08d0ef8704458c8d70b3cb80b7418b14820ae3dec9a7d29b33"
+          }
+        ],
+        "min_by": [
+          {
+            "signature": "def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where C.Payload == _FoldElement[Self.V] and conforms_to(C.Result, Comparable & Movable & Deinitable):",
+            "sha256": "fb438759892c56dd84e33524fdb9febde585de1343d2519360bd627ebcfd5d43"
+          },
+          {
+            "signature": "def min_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "bcfcbb10c00d4697fbf6693301642550d0a46e97d12e32f0c17f44d9b9829a69"
+          },
+          {
+            "signature": "def min_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises Self.E -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "50c0886e2d64add6a2932d0100cd85dafb2101ef9b1f09ece118538c5779ed93"
+          },
+          {
+            "signature": "def min_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where Self.E != Never and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "8c0a67d59a194d32d1c971fde353816c3c2104f98517b6058f27b35d877d49fd"
+          },
+          {
+            "signature": "def min_by[R: Movable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "a427e7f630b0f62ee96e51a62920e534003a72dbf5eeca9dedf249f2fc9bc4db"
+          },
+          {
+            "signature": "def min_by[R: RegisterPassable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "bf852adad8f28d997edbb11473edbb897f666afaa2d486b763a3e09b096af146"
+          },
+          {
+            "signature": "def min_by[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, function: def(P) thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "5809db10d9fede60b3c29516468d460c479f32c5e03cd5c5c6c0086978bd56a7"
+          },
+          {
+            "signature": "def min_by[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, function: def(P) thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "b69cb245cceb71d279c3c813fafa4f062f1f9d5a82f7c88dd5007023410d1e6b"
+          },
+          {
+            "signature": "def min_by[R: Movable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and Self.E != Never and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "576c3710007b306910d63751924e237bbdb10b3cff12d73cf46324fbceba58d2"
+          },
+          {
+            "signature": "def min_by[R: RegisterPassable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and Self.E != Never and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "8bdb2f369320a23de80c9412fc702359ecf515e7f1a7ab9662175efa15ad6c0f"
+          },
+          {
+            "signature": "def min_by[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, function: def(P) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and Self.E != Never and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "929eb0ca42366ea0ebb43d74200a960ef1df0e75d085a09f0041a01e6a5dee74"
+          },
+          {
+            "signature": "def min_by[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, function: def(P) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and Self.E != Never and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "08d6424913db331176338151101f5656783bc8313ecf5d6989e6f36aaa6f8cbc"
+          },
+          {
+            "signature": "def min_by[R: Movable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "287b80044b73b1e56eaa0ed85a614fafd706d3c074c9744231e7e967135d9fa0"
+          },
+          {
+            "signature": "def min_by[R: RegisterPassable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "f50b87fa402dcb26782f5ff98234ccdc5b443817e046ea5bcd74f8db28397e97"
+          },
+          {
+            "signature": "def min_by[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, function: def(P) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "61e1580ea7859aec34da868d792a5aaaea3f78778165586dcd417dd921c2410f"
+          },
+          {
+            "signature": "def min_by[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, function: def(P) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "a9b275eba2628ca1996898308aff9a722967d5601aeb365a5fb8b41715a5672b"
+          }
+        ],
+        "max_by": [
+          {
+            "signature": "def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where C.Payload == _FoldElement[Self.V] and conforms_to(C.Result, Comparable & Movable & Deinitable):",
+            "sha256": "24e70579d8f0fe457575c94ed8be9dcbe67610c19c8d2debce965ef81fcab120"
+          },
+          {
+            "signature": "def max_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "2d348eaa90502ea7b81f8a50271412fa65996ab3c386a2f068e98b4cff604129"
+          },
+          {
+            "signature": "def max_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises Self.E -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "7f834e2b7bd882c71c429993704af841a7bf1ac9784a9e76d216972c4fc4b94d"
+          },
+          {
+            "signature": "def max_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where Self.E != Never and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "a7ab1ae0aeeab2ae49598d0153cee1e0f3f084a7529b014016e5673fc6a462f9"
+          },
+          {
+            "signature": "def max_by[R: Movable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "438d52b38b5899190c84f2e8444484d4614614ff74127ec0f11a664add2840b0"
+          },
+          {
+            "signature": "def max_by[R: RegisterPassable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "4577d2121cdbe11e89c0cfc99ff3523cb8c194dad9e93ca645efc319d8230b35"
+          },
+          {
+            "signature": "def max_by[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, function: def(P) thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "9260e721a02243bcc662688cc0a5cb69131ab04229284e2b2191bbb7838b74a9"
+          },
+          {
+            "signature": "def max_by[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, function: def(P) thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "0d962a09eb625d72f1258ed57dfe0776d1b0decca9bcd540f31ec0033eb9c0de"
+          },
+          {
+            "signature": "def max_by[R: Movable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and Self.E != Never and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "e65b997929306a711aa970f2928f4a6c8dfc47ee3c97dc8e2368f0d24dcb27b9"
+          },
+          {
+            "signature": "def max_by[R: RegisterPassable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and Self.E != Never and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "434258f7458c122f50785b0c73bd3d293f6bd430d925234cf812b20390ec506d"
+          },
+          {
+            "signature": "def max_by[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, function: def(P) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and Self.E != Never and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "f9ec9bedbac4f743db6c435fe9955a432d108be8fc5124c1aea63c9b6449afd3"
+          },
+          {
+            "signature": "def max_by[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, function: def(P) raises Self.E thin -> R) raises Self.E -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and Self.E != Never and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "bce361031c6cc96d5ceef8702ac3611d23f8fb8d0074ea84a5378f579b9d7fdd"
+          },
+          {
+            "signature": "def max_by[R: Movable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "b1e763937912198bd530aa823f81f8c01be6ada8c2ed5ba09fbe47c9d9dda48e"
+          },
+          {
+            "signature": "def max_by[R: RegisterPassable & Deinitable, //](deinit self, function: def(_FoldElement[Self.V]) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "2ae076a4559efdee82d2704fb2e88f3f01dac27cb8956d99608a92e910da5d36"
+          },
+          {
+            "signature": "def max_by[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, function: def(P) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "6a270e82b05dbba7fe0d40afc04ba76c1c2a6d6ffe46d4614a1d18b3d9a29be5"
+          },
+          {
+            "signature": "def max_by[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, function: def(P) raises Never thin -> R) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where P == _FoldElement[Self.V] and conforms_to(R, Comparable & Movable & Deinitable):",
+            "sha256": "0012834d191507ee145bd9f9491b330b950fed4fe36f05415b33f561b60ec70f"
+          }
+        ],
+        "combine_all": [
+          {
+            "signature": "def combine_all[M: Monoid](deinit self) raises M.Error -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where _FoldElement[Self.V] == M.Value:",
+            "sha256": "dbc784d78898cfac3b88c57afdbab997065cdc8a887d62734d94a68aad4cd0db"
+          }
+        ],
+        "sum": [
+          {
+            "signature": "def sum(deinit self) raises _IntSum.Error -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where _FoldElement[Self.V] == _IntSum.Value:",
+            "sha256": "60ca5d83fcd695b992a9099990dbb62837cf2db631b395e5f29232d17454662c"
+          },
+          {
+            "signature": "def sum[dtype: DType, size: SIMDLength](deinit self) raises _SIMDSum[dtype, size].Error -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where _FoldElement[Self.V] == _SIMDSum[dtype, size].Value and _SIMDSum[dtype, size].Admitted:",
+            "sha256": "e40f2183fbc110014f1f07940dd04b36005e068474e91063c9d07df2145ab58b"
+          }
+        ],
         "all_effect": [
           {
             "signature": "def all_effect[C: BorrowCallable, //, J: Monad](deinit self, var function: C) raises _EffectFold[J, Self.V, _PredicateStep[C], _BoolLive[True]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[C], _BoolLive[True]].Out, Self.E] where C.Payload == _FoldElement[Self.V] and _CarrierCompatible[J, C.Result] and J.Element[C.Result] == Bool:",

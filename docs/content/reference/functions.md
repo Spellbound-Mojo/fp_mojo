@@ -66,6 +66,18 @@ value; empty `reduce_optional` returns None. Native steps are borrowed;
 library steps use the standalone folds' shared `Binary` contract. The resulting
 value selects its family by the same rule as `then`.
 
+`find_map(transform)` consumes items until the first present Optional result,
+without another source pull. `fold_map[Monoid](transform)` projects and combines
+in order; `combine_all[Monoid]()` combines the elements themselves. Empty input
+returns the monoid identity. `sum()` and `sum_by(transform)` infer Int or numeric
+SIMD types and preserve every lane; explicit `[dtype, size]` bindings also work.
+`min_by(key)` and `max_by(key)` borrow each item, compute its key once, and keep
+the first item on ties. Empty extrema return None. Consuming projections accept
+repeatable library callables, including mutable state; borrowing keys use
+`BorrowCallable`. Native callbacks remain borrowed. Monoid and callback errors
+must agree when both can raise. These eager reductions select the result's
+native family and preserve the selected native error for subsequent stages.
+
 Effectful terminals consume an iterator or owned iterable into an explicit
 Monad target. `all_effect[Target](predicate)`, `any_effect[Target](predicate)`
 and `find_effect[Target](predicate)` borrow each item and require a Bool inside
