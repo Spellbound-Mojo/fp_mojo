@@ -14,6 +14,47 @@ from ._sequencing import _EffectRetain
 comptime _ErrorMonad[I: Applicative] = downcast[I, ApplicativeError & Monad]
 
 
+struct EnsureContract[I: ApplicativeError & Monad, V: Movable & Deinitable,
+                      P: BorrowCallContract & Movable & Deinitable,
+                      G: BorrowCallContract & Movable & Deinitable]:
+    """Admission, output and exact construction error of family-based ensure.
+
+    A generic selected-pipeline wrapper forwards Compatible and projects
+    Family, Out and Error without naming the private validation continuation.
+    Both callbacks borrow successes. Existing stored failures skip them; the
+    error factory runs only after the predicate rejects a success. Families
+    retain their native timing, receiver validation and branching semantics.
+
+    Parameters:
+        I: The selected Monad with a stored-error capability.
+        V: The complete consumed source carrier, including origins.
+        P: The borrowing Bool predicate.
+        G: The borrowing factory producing I.Failure.
+    """
+    comptime Continuation = _Ensure[Self.I, Self.I.Element[Self.V], Self.P, Self.G]
+    """The existing validation continuation supplied to family bind."""
+    comptime InputCompatible = Self.P.Payload == Self.I.Element[Self.V] and Self.G.Payload == Self.I.Element[Self.V]
+    """Both callbacks borrow the exact success payload, including origins."""
+    comptime PredicateCompatible = Self.P.Result == Bool
+    """The predicate produces the native Bool type."""
+    comptime FailureCompatible = Self.G.Result == Self.I.Failure
+    """The factory produces the exact selected stored-error type and origins."""
+    comptime CarrierCompatible = Self.I._ErrorCarrier[Self.V]
+    """The source belongs to the selected stored-error layer."""
+    comptime CallbackErrorsCompatible = Self.P.Failure == Never or Self.G.Failure == Never or Self.P.Failure == Self.G.Failure
+    """The callbacks share an exact native error type or cannot raise."""
+    comptime BindCompatible = Self.I.BindCompatible[Self.V, Self.Continuation]
+    """The selected family's admission of the existing validation continuation."""
+    comptime Compatible = Self.InputCompatible and Self.PredicateCompatible and Self.FailureCompatible and Self.CarrierCompatible and Self.CallbackErrorsCompatible and Self.BindCompatible
+    """Selected ensure admission; legacy Piped keeps its original predicates."""
+    comptime Family = Self.I
+    """The unchanged family for fluent continuation."""
+    comptime Out = Self.I.Bound[Self.V, Self.Continuation]
+    """The family's exact validated carrier, including deferred representations."""
+    comptime Error = Self.I.BindError[Self.V, Self.Continuation]
+    """The native construction error; deferred run errors remain with the carrier."""
+
+
 @fieldwise_init
 struct _Ensure[I: ApplicativeError, A: Movable & Deinitable,
                C: BorrowCallContract & Movable & Deinitable,

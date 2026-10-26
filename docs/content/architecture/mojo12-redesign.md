@@ -449,6 +449,27 @@ Intrinsic native Result overloads remain disjoint under non-error families.
 Canonical Result and custom families with Result storage use family recovery;
 no extra selector, callback binding or invocation mechanism is introduced.
 
+### Selected success validation
+
+Selected `ensure` delegates to `_Ensure` through the family's existing bind
+primitive. The predicate borrows successes and a rejection invokes the
+borrowing error factory; existing failures skip both callbacks. The selected
+family owns failure construction, branch behavior, receiver checks and exact
+construction/deferred errors. Custom families retain these policies even when
+their carrier is native Result. Canonical Result uses the same family path;
+intrinsic Result calls under proven non-error families remain disjoint.
+An error-capable family without Monad, including Validation, cannot bypass the
+bind requirement by exposing Result storage.
+
+`EnsureContract`, declared beside `_Ensure` and exported by `fp.algebra`, names
+the selected admission predicates and family/output/error projections. Its
+`Compatible` includes `I.BindCompatible[V, Continuation]`; this is the selected
+entry contract, while legacy Piped's signature predicates remain unchanged.
+Expanded generic proofs must include bind admission. No validation execution
+or callback storage is duplicated. The selected generator shares callback
+parameter grouping across validation, conditional recovery and intrinsic Result
+operations, preserving inferred parameter order and the inference barrier.
+
 ### Generic sequencing metadata
 
 The four public sequencing contracts name the existing selected Monad

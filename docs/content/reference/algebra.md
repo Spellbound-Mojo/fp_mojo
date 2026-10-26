@@ -158,6 +158,21 @@ for the descriptor and pipeline selection.
 
 <!-- example: docs/examples/selected_conditional_recovery.mojo -->
 
+`EnsureContract[I, V, P, G]` describes selected success validation for an
+`ApplicativeError & Monad` family. The predicate and error factory borrow the
+source success payload, including its origins. Forward `Compatible` and
+project `Family`, `Out` and `Error`; the factory must return the family's exact
+stored-error type. `BindCompatible` includes the selected family's admission
+of the validation continuation. An expanded generic proof must include that
+bind requirement as well as the callback and source-carrier predicates.
+Legacy `piped(...).ensure[I](...)` retains its existing signature requirements.
+The family owns receiver checks, branching and construction errors; deferred
+callback and failure-constructor errors remain in the action's run contract.
+Conditional wrappers use the public `downcast[I, ApplicativeError & Monad]`
+witness consistently for the descriptor and family selection.
+
+<!-- example: docs/examples/selected_validation_workflow.mojo -->
+
 `FlatTapContract`, `FlatPairWithContract`, `BeforeContract` and
 `FollowedByContract` describe selected Monad sequencing. Each takes the family,
 complete source carrier and library callback type. Generic signatures project

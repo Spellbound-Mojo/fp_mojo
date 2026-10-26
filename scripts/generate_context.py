@@ -127,6 +127,18 @@ def methods(*, fold_stage=False):
     def thunk_callbacks(arg, second=False):
         return native_callbacks("thunk", "", arg, second=second)
 
+    def callback_parameters(callbacks):
+        """Keep selected inferred parameters before the shared inference barrier."""
+        params, explicit = [], []
+        for cb in callbacks:
+            if "//" in cb["params"]:
+                split = cb["params"].index("//")
+                params += cb["params"][:split]
+                explicit += cb["params"][split + 1:]
+            else:
+                params += cb["params"]
+        return params + (["//"] + explicit if explicit else [])
+
     def emit(name, cb, params, arguments, result, error, family, conditions, expr, summary):
         if params and params[0] == "//":
             params = params[1:]
@@ -753,6 +765,32 @@ def methods(*, fold_stage=False):
             emit(name, cb, cb["params"], cb["argument"], result, error, "Self.I", conditions,
                  f"_flat_map_as[{error}, {family}, Self.V, {continuation}]({continuation}({built}), self.value^)", operation.selected_summary)
 
+    # Family validation borrows successes and delegates branch ownership to
+    # _Ensure and the selected family's bind/fail primitives.
+    family = "_Ensuring[Self.I]"
+    operation = RESULT_OPERATIONS["ensure"]
+    primary, secondary = operation.callbacks
+    element = "Self.I.Element[Self.V]"
+    left = list(native_callbacks(primary.mode, primary.input(element, family + ".Failure"), primary.argument))
+    right = list(native_callbacks(secondary.mode, secondary.input(element, family + ".Failure"), secondary.argument, second=True))
+    for p, g in product(left, right):
+        contract = f"EnsureContract[{family}, Self.V, {p['adapter_type']}, {g['adapter_type']}]"
+        params = callback_parameters((p, g))
+        conditions = ["conforms_to(Self.I, ApplicativeError)", "conforms_to(Self.I, Monad)"]
+        # Compatible already contains library payload equality; repeating it
+        # prevents abstract wrappers from forwarding the combined predicate.
+        for cb in (p, g):
+            if cb["adapter_type"] not in ("C", "G"):
+                conditions += cb["conditions"]
+        conditions += [contract + ".Compatible"]
+        error = contract + ".Error"
+        continuation = contract + ".Continuation"
+        emit("ensure", {"prelude": p.get("prelude", "") + g.get("prelude", "")}, params,
+             p["argument"] + ", " + g["argument"], contract + ".Out", error,
+             "Self.I", conditions,
+             f"_flat_map_as[{error}, {family}]({continuation}({p['build']}, {g['build']}), self.value^)",
+             "Validate successes through the selected family's bind and failure construction.")
+
     # Select or_else semantics before callback inference. The library boundary
     # and error-capable native boundary use one policy; no caller must decide
     # whether two stored error types are equal. Proven non-error families keep
@@ -805,21 +843,15 @@ def methods(*, fold_stage=False):
     # error family is selected before either native callback is admitted.
     for operation in error_operations("conditional"):
         primary, secondary = operation.callbacks
-        predicates = native_callbacks(primary.mode, family + ".Failure", primary.argument)
-        handlers = list(native_callbacks(secondary.mode, family + ".Failure", secondary.argument, second=True))
+        predicates = native_callbacks(primary.mode, primary.input("Self.I.Element[Self.V]", family + ".Failure"), primary.argument)
+        handlers = list(native_callbacks(secondary.mode, secondary.input("Self.I.Element[Self.V]", family + ".Failure"), secondary.argument, second=True))
         for p, h in product(predicates, handlers):
             contract_name = "OrElseIfContract" if operation.effect else "RecoverIfContract"
             contract = f"{contract_name}[{family}, Self.V, {p['adapter_type']}, {h['adapter_type']}]"
             handler = operation.handler(family, h["adapter_type"])
             build = operation.handler_value(family, h["adapter_type"], h["build"])
             continuation = f"_ConditionalRecovery[{family}, Self.I.Element[Self.V], {p['adapter_type']}, {handler}]"
-            params, explicit = [], []
-            for cb in (p, h):
-                split = cb["params"].index("//") if "//" in cb["params"] else len(cb["params"])
-                params += cb["params"][:split]
-                explicit += cb["params"][split + 1:]
-            if explicit:
-                params += ["//"] + explicit
+            params = callback_parameters((p, h))
             conditions = ["conforms_to(Self.I, ApplicativeError)", contract + ".Compatible"]
             # The public contract owns callback input/output proofs for generic
             # library forwards. Native error selection and ABI evidence remain
@@ -853,7 +885,7 @@ def methods(*, fold_stage=False):
             conditions = [f"conforms_to(Self.V, _ResultType)", f"Self.V == {Source}"] + sum(
                 (c["conditions"] for c in callbacks), []
             )
-            if name in ("recover", "or_else", "tap_err", "flat_tap_err", "recover_if", "or_else_if"):
+            if name in ("recover", "or_else", "tap_err", "flat_tap_err", "recover_if", "or_else_if", "ensure"):
                 conditions += ["not conforms_to(Self.I, ApplicativeError)"]
             R = a["result"]
             result = operation.result(T, Err, R, b["result"] if two else "", value=lambda r: f"_Success[{r}]")
@@ -874,17 +906,7 @@ def methods(*, fold_stage=False):
                 effect = operation.native_error(ex, ey, pure_first=ex == "Never", pure_second=ey == "Never")
             else:
                 effect = a["error"]
-            params = []
-            explicit = []
-            for c in callbacks:
-                if "//" in c["params"]:
-                    split = c["params"].index("//")
-                    params += c["params"][:split]
-                    explicit += c["params"][split + 1 :]
-                else:
-                    params += c["params"]
-            if explicit:
-                params += ["//"] + explicit
+            params = callback_parameters(callbacks)
             family = f"ResultFamily[_Failure[{result}]]"
             target = f"Pipeline[{family}, {result}, Self.E]"
             expr = (

@@ -91,6 +91,19 @@ subsequent fluent calls. Deferred callbacks execute when the action runs.
 
 <!-- example: docs/examples/selected_conditional_recovery.mojo -->
 
+`ensure(predicate, make_error)` validates each success through the selected
+family. Both callbacks borrow the payload; the error factory runs only when
+the predicate returns false. Existing failures skip both callbacks. The family
+must provide `Monad` and `ApplicativeError`: this supports sequential Result
+validation, custom families and deferred transformer stacks. Validation's
+accumulating family has no Monad and does not admit this operation.
+
+Validation, observation and conditional recovery can stay in one deferred
+chain. Their callbacks run with the selected computation, and `.map(...)`
+continues in the same family:
+
+<!-- example: docs/examples/selected_validation_workflow.mojo -->
+
 `flat_tap(callback)` sequences a borrowing effect and keeps each original
 payload. `flat_pair_with(callback)` pairs each original with every successful
 projection. `before(factory)` sequences a zero-argument effect and keeps

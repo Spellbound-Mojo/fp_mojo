@@ -469,10 +469,32 @@
       ]
     },
     {
+      "name": "Success validation",
+      "methods": [
+        "ensure"
+      ],
+      "status": "selected",
+      "families": "Selected ApplicativeError and Monad, including custom and deferred families; Validation has no Monad; intrinsic Result calls remain available under non-error families",
+      "callbacks": "Borrowing Bool predicate and borrowing stored-error factory; native closures borrowed, stored thin pointers owned, library receivers preserved",
+      "ownership": "Existing failures skip both callbacks; accepted successes skip the factory; family bind admission and receiver rules apply",
+      "errors": "Exact family bind construction errors; deferred predicate, factory and failure-constructor errors remain deferred",
+      "timing": "Selected family owns bind and failure construction; deferred effects remain deferred",
+      "owner": [
+        "src/fp/algebra/_outcomes.mojo",
+        "src/fp/algebra/protocols.mojo"
+      ],
+      "evidence": [
+        "docs/examples/selected_validation_workflow.mojo",
+        "tests/runtime/test_context_family_ensure.mojo",
+        "tests/runtime/test_context_family_ensure_native.mojo",
+        "tests/runtime/test_context_family_ensure_ownership.mojo",
+        "tests/runtime/test_context_result_ensure.mojo"
+      ]
+    },
+    {
       "name": "Result operations",
       "methods": [
         "attempt_tap",
-        "ensure",
         "map_both",
         "map_err",
         "redeem",
@@ -490,7 +512,6 @@
       "evidence": [
         "tests/runtime/test_context_result_recover.mojo",
         "tests/runtime/test_context_result_redeem_with.mojo",
-        "tests/runtime/test_context_result_ensure.mojo",
         "tests/runtime/test_context_native_signatures_results.mojo"
       ]
     },
