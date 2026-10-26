@@ -78,6 +78,23 @@ repeatable library callables, including mutable state; borrowing keys use
 must agree when both can raise. These eager reductions select the result's
 native family and preserve the selected native error for subsequent stages.
 
+Structural methods keep the selected family. `fill(value)` copies a constant
+into each payload position; `replace(old, new)` copies `new` into positions
+equal to `old` and moves other payloads unchanged. `tuple_left(value)` and
+`tuple_right(value)` pair each payload with a copy of the constant. `void()`
+discards payloads while retaining the carrier shape and stored errors.
+Constants must be Copyable; pairing and discarding still support move-only
+source payloads. Deferred families perform these transformations when run.
+
+`compact()` removes absent inner Optional payloads through FunctorFilter.
+`flatten()` removes one layer of the same Monad family, preserving the
+error type of both Result layers. `ap(values)` applies stored library callables
+to an already evaluated carrier of arguments. Optional and Result can consume
+single-use callables; List forms a Cartesian product in left-major order and
+requires copyable operands. Validation accumulates stored errors, and deferred
+families defer application. All eight methods retain the family's native error
+contract and embedded origins.
+
 Effectful terminals consume an iterator or owned iterable into an explicit
 Monad target. `all_effect[Target](predicate)`, `any_effect[Target](predicate)`
 and `find_effect[Target](predicate)` borrow each item and require a Bool inside

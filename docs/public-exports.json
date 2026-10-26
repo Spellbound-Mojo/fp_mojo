@@ -4032,6 +4032,54 @@
             "sha256": "d94777669a55dbaff86a77daf23789c86d75878a92dfa423fd1031c105ca0c65"
           }
         ],
+        "fill": [
+          {
+            "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _Fill[T, U]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, _Fill[T, U]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Fill[T, U]]:",
+            "sha256": "fe51a7a6a4a7a38671ab82be65307e56c64af464f143d7652825dd8cf8672534"
+          }
+        ],
+        "replace": [
+          {
+            "signature": "def replace[T: Copyable & Equatable & Deinitable, //](deinit self, var old: T, var new: T) raises Self.I.MapError[Self.V, _Replace[T]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, _Replace[T]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Replace[T]]:",
+            "sha256": "d35f53498f025e2e2c105d677d97020ce6fc59270e47d6a18e641fab76dd3e67"
+          }
+        ],
+        "void": [
+          {
+            "signature": "def void[T: Movable & Deinitable, //](deinit self) raises Self.I.MapError[Self.V, _Fill[T, NoneType]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, _Fill[T, NoneType]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Fill[T, NoneType]]:",
+            "sha256": "fe2131bddbe25315ac69e109802f15c0ba3b42bcbfa15a457dcca63bceccda92"
+          }
+        ],
+        "tuple_left": [
+          {
+            "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _TupleWith[T, U, True]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, _TupleWith[T, U, True]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _TupleWith[T, U, True]]:",
+            "sha256": "198a83ed5be57bc5431458ecd1e90c1be1a9a95ac9f61dfe816d0209d78fb65b"
+          }
+        ],
+        "tuple_right": [
+          {
+            "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _TupleWith[T, U, False]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, _TupleWith[T, U, False]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _TupleWith[T, U, False]]:",
+            "sha256": "3c7599143c049a0eae1a3d4a650c307bd3f7c543d9186afc37d8c85562e11710"
+          }
+        ],
+        "compact": [
+          {
+            "signature": "def compact(deinit self) raises _Compacting[Self.I].MapFilterError[Self.V, Identity[Self.I.Element[Self.V]]] -> Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, Identity[Self.I.Element[Self.V]]], Self.E] where conforms_to(Self.I, FunctorFilter) and _MapCompatible[Self.I, Self.V, Identity[Self.I.Element[Self.V]]] and Self.I.Element[Self.V] == Optional[_ListElement[Self.I.Element[Self.V]]]:",
+            "sha256": "27d905c1ed62a4f7fa54b5f893abd9776de02fe2f3e6e5a458b48395864f5995"
+          }
+        ],
+        "flatten": [
+          {
+            "signature": "def flatten(deinit self) raises _Binding[Self.I].BindError[Self.V, Identity[Self.I.Element[Self.V]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, Identity[Self.I.Element[Self.V]]], Self.E] where conforms_to(Self.I, Monad) and _MapCompatible[Self.I, Self.V, Identity[Self.I.Element[Self.V]]] and _CarrierCompatible[_Binding[Self.I], Self.I.Element[Self.V]] and _BindCompatible[_Binding[Self.I], Self.V, Identity[Self.I.Element[Self.V]]]:",
+            "sha256": "18e083a2eaa23bb545e50bc4f4a03c5edaa22f4d654227d7bfdbaeb6ea89f5e3"
+          }
+        ],
+        "ap": [
+          {
+            "signature": "def ap[W: Movable & Deinitable, //](deinit self, var values: W) raises _Combining[Self.I].CombineError[Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]] -> Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]], Self.E] where conforms_to(Self.I, Applicative) and conforms_to(Self.I.Element[Self.V], UnaryContract & Movable & Deinitable) and _CombineCompatible[_Combining[Self.I], Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]] and _CarrierCompatible[_Combining[Self.I], Self.V] and _CarrierCompatible[_Combining[Self.I], W] and _Combining[Self.I].Element[W] == _Function[_Combining[Self.I], Self.V].Arg:",
+            "sha256": "9575f2ad4b129819937ca8648e9467e271439d8e93452a99ea1dbc27e2bca1e3"
+          }
+        ],
         "find_map": [
           {
             "signature": "def find_map[C: UnaryContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Error -> Pipeline[_NativeFamily[C.Out], C.Out, Self.E] where C.Arg == _FoldElement[Self.V] and C.Out == Optional[_ListElement[C.Out]] and RepeatableUnary[C]:",

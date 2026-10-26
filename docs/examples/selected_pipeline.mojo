@@ -52,6 +52,9 @@ def main() raises:
     # Reductions infer numeric types and select the resulting carrier family.
     assert_equal(pipeline(range(4)).sum_by(double).get(), 12)
     assert_equal(pipeline(List[Int]([1,2,3])).max_by(as_text).get().value(), 3)
+    var compacted = pipeline(List[Optional[Int]]([Optional(1),Optional[Int](),Optional(3)])).compact().tuple_right(String("kept")).get()
+    assert_equal(compacted[1][0], 3)
+    assert_equal(compacted[1][1], "kept")
 
     var checked: Result[Int, String]
     try:

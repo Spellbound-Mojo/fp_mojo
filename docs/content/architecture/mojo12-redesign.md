@@ -662,3 +662,24 @@ is needed.
 numeric inference, monoid construction and combination failures, generic
 forwarding, thin pointers, borrowed origins and move-only cleanup. Negative
 clients use ordinary calls without callback-type hints.
+
+## Structural conveniences
+
+`fill`, `replace`, `void` and tuple pairing use the same `TRANSFORMS` generator
+catalog and callable implementations as the legacy fluent API. Their selected
+signatures forward the family's map predicate and preserve the original family
+on the output. The constants' Copyable contract is unchanged; source payloads
+can still be moved when the operation does not compare or copy them.
+
+`compact`, `flatten` and `ap` reuse the algebra's derived owners. Their
+signatures expose source capabilities, carrier/error compatibility and the
+stored callable's argument type. Family methods continue to own evaluation,
+failure propagation, branching and callback consumption. Result flattening
+requires the same error type, including origins, in both layers. No container
+dispatch or new execution loop is introduced.
+
+`context_structural` tests exercise generic forwarding, custom family errors,
+Validation accumulation, deferred Reader evaluation, borrowed views and
+single-use cleanup. The family-admission pass will further tighten native
+carrier predicates shared by all operations; these methods deliberately use
+that common admission owner instead of adding local container recognition.

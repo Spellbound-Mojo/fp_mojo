@@ -418,6 +418,36 @@
         "tests/runtime/test_context_reductions_native.mojo",
         "tests/ownership/test_context_reductions_ownership.mojo"
       ]
+    },
+    {
+      "name": "Structural conveniences",
+      "methods": [
+        "ap",
+        "compact",
+        "flatten",
+        "fill",
+        "replace",
+        "tuple_left",
+        "tuple_right",
+        "void"
+      ],
+      "status": "selected",
+      "families": "Selected Functor, FunctorFilter, Monad or Applicative as required",
+      "callbacks": "ap consumes stored library callables; other methods use shared internal transforms",
+      "ownership": "Move source payloads; copied constants require Copyable. Branching application requires copyable operands.",
+      "errors": "Exact family and stored callable errors; source and target Result errors retain embedded origins",
+      "timing": "Family-owned ordering, accumulation and deferral; ap arguments are already evaluated",
+      "owner": [
+        "src/fp/algebra/_derived.mojo",
+        "src/fp/algebra/filtering.mojo",
+        "src/fp/callables/_transforms.mojo"
+      ],
+      "evidence": [
+        "tests/runtime/test_context_structural_behavior.mojo",
+        "tests/runtime/test_context_structural_generic.mojo",
+        "tests/runtime/test_context_structural_effects.mojo",
+        "tests/ownership/test_context_structural_ownership.mojo"
+      ]
     }
   ],
   "legacy_methods": [
@@ -490,20 +520,6 @@
     "void"
   ],
   "migration": [
-    {
-      "name": "Structural conveniences",
-      "methods": [
-        "ap",
-        "compact",
-        "flatten",
-        "fill",
-        "replace",
-        "tuple_left",
-        "tuple_right",
-        "void"
-      ],
-      "contract": "Selected family primitives and shared callable transforms; no new per-container execution."
-    },
     {
       "name": "Conditional and accumulating policies",
       "methods": [

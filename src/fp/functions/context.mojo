@@ -5,10 +5,10 @@ from fp.data._result import _ResultType
 from fp.algebra.protocols import Functor, Filterable, Monad, FunctorFilter, Applicative, Traversable, Monoid, _BindFirst, _AccumulatePair
 from fp.algebra.instances import ListFamily, OptionalFamily, ResultFamily, IdentityFamily, _NativeFamily, _ListElement
 from fp.algebra._admission import _MapCompatible, _BindCompatible, _CombineCompatible, _CollectCompatible, _CarrierCompatible
-from fp.algebra._derived import _map2_as
+from fp.algebra._derived import _map2_as, _Function, ap as _context_ap, flatten as _context_flatten
 from fp.algebra.operations import _ErrorProbe
 from fp.algebra._nary import _ProductRun, _ProductTypes, _MapNTypes, _map_n_as
-from fp.algebra.filtering import _filter_with
+from fp.algebra.filtering import _filter_with, compact as _context_compact
 from fp.algebra._traversal import _FlattenAfter, _Discard, _EffectVoid, _traverse_void, _TraverseTap, _CompactAfter, _traverse_as, _traverse_then
 from fp.algebra._effect_combinators import _AllLive, _BoolLive, _PredicateStep, _SearchStep, _FoldMappedStep, _EffectFold, _fold_effect, _fold_map_effect
 from fp.algebra._accumulation import _FirstPresent, _Combine
@@ -16,7 +16,7 @@ from fp.callables.native import _NativeUnaryRef, _NativeBorrowRef, _NativeBorrow
 from fp.callables.protocols import UnaryContract, BorrowCallable, BorrowCallContract, ThunkContract, BinaryContract, Binary
 from fp.callables.invoke import call_once, RepeatableUnary, RepeatableBinary
 from fp.callables._nary import _NativeNary1, _NativeNary2, _NativeNary3, _NativeNary4, _NativeNary5, _NativeNary6, _NativeNary7, _NativeNary8
-from fp.callables._transforms import _Fill, _ValueThunk, _Pair, _Observe
+from fp.callables._transforms import _Apply, _Replace, _TupleWith, _Fill, _ValueThunk, _Pair, _Observe
 from fp.callables._predicates import _FilterPredicate
 from fp.functions.composition import Identity, Composition
 from fp.iteration._advance import _Source
@@ -250,6 +250,11 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
     combine in source order; `sum` and `sum_by` infer numeric types and SIMD
     lanes. `min_by` and `max_by` borrow each item for its key, preserving the
     first item on ties. Reduction results select their native family.
+
+    Structural methods retain the selected family. `fill`, `replace`, `void`
+    and tuple pairing use its map; copied constants must be Copyable.
+    `compact` requires FunctorFilter, `flatten` requires Monad, and `ap`
+    applies stored library callables through Applicative combination.
 
     Result-specific methods delegate to Result and update ResultFamily when
     the stored error type changes. Native raised errors remain raised;
@@ -711,6 +716,139 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
     def fold_until[A: Movable & Deinitable, B: Movable & Deinitable, o: ImmOrigin, //, C: def(var A, var _FoldElement[Self.V]) raises Never -> ControlFlow[B, A]](deinit self, ref[o] step: C, var initial: A) raises Never -> Pipeline[_NativeFamily[ControlFlow[B, A]], ControlFlow[B, A], Self.E] where Self.E != Never and ControlFlow[B, A] == ControlFlow[B, A]:
         """Consume the source in order through the canonical terminal fold."""
         return Pipeline[_NativeFamily[ControlFlow[B, A]], ControlFlow[B, A], Self.E](_context_fold_until[B=B](_NativeBinaryRef[A, _FoldElement[Self.V], ControlFlow[B, A], Never, C, True, o](Pointer(to=step)), initial^, self.value^))
+
+    @always_inline
+    def fill[T: Movable & Deinitable, U: Copyable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _Fill[T, U]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, _Fill[T, U]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Fill[T, U]]:
+        """Copy value into every payload position.
+
+        Parameters:
+            T: The carrier payload type.
+            U: The copied value type, including its origins.
+
+        Args:
+            value: The value consumed here and copied into each payload position.
+
+        Returns:
+            The pipeline containing the operation result, retaining its selected native error.
+
+        Raises:
+            The exact callback or family error; it never becomes a stored Result error.
+        """
+        return Pipeline[Self.I, Self.I.Mapped[Self.V, _Fill[T, U]], Self.E](Self.I.map(_Fill[T, U](value^), self.value^))
+
+    @always_inline
+    def replace[T: Copyable & Equatable & Deinitable, //](deinit self, var old: T, var new: T) raises Self.I.MapError[Self.V, _Replace[T]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, _Replace[T]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Replace[T]]:
+        """Replace equal payloads, moving unmatched values unchanged.
+
+        Parameters:
+            T: The carrier payload type.
+
+        Args:
+            old: The payload to compare against, consumed.
+            new: The replacement payload, copied into matching positions.
+
+        Returns:
+            The pipeline containing the operation result, retaining its selected native error.
+
+        Raises:
+            The exact callback or family error; it never becomes a stored Result error.
+        """
+        return Pipeline[Self.I, Self.I.Mapped[Self.V, _Replace[T]], Self.E](Self.I.map(_Replace[T](old^, new^), self.value^))
+
+    @always_inline
+    def void[T: Movable & Deinitable, //](deinit self) raises Self.I.MapError[Self.V, _Fill[T, NoneType]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, _Fill[T, NoneType]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Fill[T, NoneType]]:
+        """Discard payloads while preserving their container shape.
+
+        Parameters:
+            T: The carrier payload type.
+
+        Returns:
+            The pipeline containing the operation result, retaining its selected native error.
+
+        Raises:
+            The exact callback or family error; it never becomes a stored Result error.
+        """
+        return Pipeline[Self.I, Self.I.Mapped[Self.V, _Fill[T, NoneType]], Self.E](Self.I.map(_Fill[T, NoneType](None), self.value^))
+
+    @always_inline
+    def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _TupleWith[T, U, True]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, _TupleWith[T, U, True]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _TupleWith[T, U, True]]:
+        """Pair each payload with a copy of value on the left.
+
+        Parameters:
+            T: The carrier payload type.
+            U: The copied value type, including its origins.
+
+        Args:
+            value: The value consumed here and copied into each payload position.
+
+        Returns:
+            The pipeline containing the operation result, retaining its selected native error.
+
+        Raises:
+            The exact callback or family error; it never becomes a stored Result error.
+        """
+        return Pipeline[Self.I, Self.I.Mapped[Self.V, _TupleWith[T, U, True]], Self.E](Self.I.map(_TupleWith[T, U, True](value^), self.value^))
+
+    @always_inline
+    def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _TupleWith[T, U, False]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, _TupleWith[T, U, False]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _TupleWith[T, U, False]]:
+        """Pair each payload with a copy of value on the right.
+
+        Parameters:
+            T: The carrier payload type.
+            U: The copied value type, including its origins.
+
+        Args:
+            value: The value consumed here and copied into each payload position.
+
+        Returns:
+            The pipeline containing the operation result, retaining its selected native error.
+
+        Raises:
+            The exact callback or family error; it never becomes a stored Result error.
+        """
+        return Pipeline[Self.I, Self.I.Mapped[Self.V, _TupleWith[T, U, False]], Self.E](Self.I.map(_TupleWith[T, U, False](value^), self.value^))
+
+    @always_inline
+    def compact(deinit self) raises _Compacting[Self.I].MapFilterError[Self.V, Identity[Self.I.Element[Self.V]]] -> Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, Identity[Self.I.Element[Self.V]]], Self.E] where conforms_to(Self.I, FunctorFilter) and _MapCompatible[Self.I, Self.V, Identity[Self.I.Element[Self.V]]] and Self.I.Element[Self.V] == Optional[_ListElement[Self.I.Element[Self.V]]]:
+        """Remove one admitted inner layer through the selected source family.
+
+        Returns:
+            The pipeline containing the operation result, retaining its selected native error.
+
+        Raises:
+            The exact callback or family error; it never becomes a stored Result error.
+        """
+        return Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, Identity[Self.I.Element[Self.V]]], Self.E](_context_compact[_Compacting[Self.I]](self.value^))
+
+    @always_inline
+    def flatten(deinit self) raises _Binding[Self.I].BindError[Self.V, Identity[Self.I.Element[Self.V]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, Identity[Self.I.Element[Self.V]]], Self.E] where conforms_to(Self.I, Monad) and _MapCompatible[Self.I, Self.V, Identity[Self.I.Element[Self.V]]] and _CarrierCompatible[_Binding[Self.I], Self.I.Element[Self.V]] and _BindCompatible[_Binding[Self.I], Self.V, Identity[Self.I.Element[Self.V]]]:
+        """Remove one admitted inner layer through the selected source family.
+
+        Returns:
+            The pipeline containing the operation result, retaining its selected native error.
+
+        Raises:
+            The exact callback or family error; it never becomes a stored Result error.
+        """
+        return Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, Identity[Self.I.Element[Self.V]]], Self.E](_context_flatten[_Binding[Self.I]](self.value^))
+
+    @always_inline
+    def ap[W: Movable & Deinitable, //](deinit self, var values: W) raises _Combining[Self.I].CombineError[Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]] -> Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]], Self.E] where conforms_to(Self.I, Applicative) and conforms_to(Self.I.Element[Self.V], UnaryContract & Movable & Deinitable) and _CombineCompatible[_Combining[Self.I], Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]] and _CarrierCompatible[_Combining[Self.I], Self.V] and _CarrierCompatible[_Combining[Self.I], W] and _Combining[Self.I].Element[W] == _Function[_Combining[Self.I], Self.V].Arg:
+        """Apply the stored library callables through the selected Applicative.
+
+        Parameters:
+            W: The second carrier type, including its origins.
+
+        Args:
+            values: The already evaluated carrier of arguments, consumed.
+
+        Returns:
+            The pipeline containing the operation result, retaining its selected native error.
+
+        Raises:
+            The exact callback or family error; it never becomes a stored Result error.
+        """
+        return Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]], Self.E](_context_ap[_Combining[Self.I]](self.value^, values^))
 
     @always_inline
     def find_map[C: UnaryContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Error -> Pipeline[_NativeFamily[C.Out], C.Out, Self.E] where C.Arg == _FoldElement[Self.V] and C.Out == Optional[_ListElement[C.Out]] and RepeatableUnary[C]:

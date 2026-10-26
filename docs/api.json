@@ -86496,7 +86496,7 @@
   },
   "functions.Pipeline": {
    "aliases": [],
-   "description": "Start with `pipeline(value)` for List, Optional, Result or a bare value, or\n`pipeline[Family](value)` for an explicit Functor. Select a native error\nonce with `raising[E]()`. Pure callbacks keep Never; library callbacks\nkeep their declared errors. `get()` extracts the value. Map, flat_map,\nfilter and filter_map delegate to the family's evaluation and ownership\nrules, including deferred execution and retained callback borrows.\n\n`tap` borrows the whole value once now, including empty carriers and Err.\n`tap_each` borrows each payload through the family's map; `pair_with`\nretains each original beside its projection. Observer results are\ndiscarded for both tap forms. `filter_not` retains payloads rejected by\na borrowing Bool predicate. These operations consume a library\nBorrowCallable or borrow a native closure; stored thin pointers are\ncopied. They preserve the selected family and native error context.\n\n`then` consumes the whole value once. It selects the returned List,\nOptional or Result family, or Identity for other values; `then[Family]`\nselects an explicit output family. Folds consume a native source and\nselect the accumulator's family by the same rule. Traversal selects its\ntarget effect family. `traverse_tap[TargetFamily]` borrows each payload,\nruns its effect and retains the original. `filter_effect[TargetFamily]`\nretains originals whose borrowing effect returns True; the source must\nalso support FunctorFilter. Both preserve the target's short-circuiting,\naccumulation, branching and deferred timing. Single-use library callbacks\nwork where traversal calls them at most once. Branching targets may require\ncopyable payloads. Combinations retain the current Applicative family.\n\n`traverse_filter` and `sequence_filter` compact Optional payloads inside\nthe target effect using the source's FunctorFilter. `flat_traverse` and\n`flat_sequence` flatten one source layer using its Monad. `traverse_void`\nand `sequence_void` discard successful outputs from native sources;\nResult traversal retains its source error layer inside the target.\n\nEffectful queries consume a native source into a target Monad.\n`all_effect`, `any_effect` and `find_effect` borrow each item;\n`find_map_effect` and `fold_map_effect` consume it. Bind a fold accumulator\nbefore its callback with `fold_effect[TargetFamily](initial).run(step)`.\nThe target controls stopping, branching and deferral. Monoid identity\nconstruction happens immediately; callback and combination timing follows\nthe target. Array sources move through temporary List storage.\n\nPure reductions consume sources immediately. `find_map` stops at the\nfirst present projection. `fold_map[Monoid]` and `combine_all[Monoid]`\ncombine in source order; `sum` and `sum_by` infer numeric types and SIMD\nlanes. `min_by` and `max_by` borrow each item for its key, preserving the\nfirst item on ties. Reduction results select their native family.\n\nResult-specific methods delegate to Result and update ResultFamily when\nthe stored error type changes. Native raised errors remain raised;\nuse Capture to store them. Existing Piped and piped remain available.",
+   "description": "Start with `pipeline(value)` for List, Optional, Result or a bare value, or\n`pipeline[Family](value)` for an explicit Functor. Select a native error\nonce with `raising[E]()`. Pure callbacks keep Never; library callbacks\nkeep their declared errors. `get()` extracts the value. Map, flat_map,\nfilter and filter_map delegate to the family's evaluation and ownership\nrules, including deferred execution and retained callback borrows.\n\n`tap` borrows the whole value once now, including empty carriers and Err.\n`tap_each` borrows each payload through the family's map; `pair_with`\nretains each original beside its projection. Observer results are\ndiscarded for both tap forms. `filter_not` retains payloads rejected by\na borrowing Bool predicate. These operations consume a library\nBorrowCallable or borrow a native closure; stored thin pointers are\ncopied. They preserve the selected family and native error context.\n\n`then` consumes the whole value once. It selects the returned List,\nOptional or Result family, or Identity for other values; `then[Family]`\nselects an explicit output family. Folds consume a native source and\nselect the accumulator's family by the same rule. Traversal selects its\ntarget effect family. `traverse_tap[TargetFamily]` borrows each payload,\nruns its effect and retains the original. `filter_effect[TargetFamily]`\nretains originals whose borrowing effect returns True; the source must\nalso support FunctorFilter. Both preserve the target's short-circuiting,\naccumulation, branching and deferred timing. Single-use library callbacks\nwork where traversal calls them at most once. Branching targets may require\ncopyable payloads. Combinations retain the current Applicative family.\n\n`traverse_filter` and `sequence_filter` compact Optional payloads inside\nthe target effect using the source's FunctorFilter. `flat_traverse` and\n`flat_sequence` flatten one source layer using its Monad. `traverse_void`\nand `sequence_void` discard successful outputs from native sources;\nResult traversal retains its source error layer inside the target.\n\nEffectful queries consume a native source into a target Monad.\n`all_effect`, `any_effect` and `find_effect` borrow each item;\n`find_map_effect` and `fold_map_effect` consume it. Bind a fold accumulator\nbefore its callback with `fold_effect[TargetFamily](initial).run(step)`.\nThe target controls stopping, branching and deferral. Monoid identity\nconstruction happens immediately; callback and combination timing follows\nthe target. Array sources move through temporary List storage.\n\nPure reductions consume sources immediately. `find_map` stops at the\nfirst present projection. `fold_map[Monoid]` and `combine_all[Monoid]`\ncombine in source order; `sum` and `sum_by` infer numeric types and SIMD\nlanes. `min_by` and `max_by` borrow each item for its key, preserving the\nfirst item on ties. Reduction results select their native family.\n\nStructural methods retain the selected family. `fill`, `replace`, `void`\nand tuple pairing use its map; copied constants must be Copyable.\n`compact` requires FunctorFilter, `flatten` requires Monad, and `ap`\napplies stored library callables through Applicative combination.\n\nResult-specific methods delegate to Result and update ResultFamily when\nthe stored error type changes. Native raised errors remain raised;\nuse Capture to store them. Existing Piped and piped remain available.",
    "fields": [
     {
      "description": "The carrier owned by this pipeline.",
@@ -87862,6 +87862,38 @@
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      }
     ],
+    "ap": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The already evaluated carrier of arguments, consumed.",
+        "name": "values",
+        "type": "W",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_Combining[Self.I].CombineError[Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]]",
+      "parameters": [
+       {
+        "description": "The second carrier type, including its origins.",
+        "inferred": true,
+        "name": "W",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]], Self.E]"
+      },
+      "signature": "def ap[W: Movable & Deinitable, //](deinit self, var values: W) raises _Combining[Self.I].CombineError[Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]] -> Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]], Self.E] where conforms_to(Self.I, Applicative) and conforms_to(Self.I.Element[Self.V], UnaryContract & Movable & Deinitable) and _CombineCompatible[_Combining[Self.I], Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]] and _CarrierCompatible[_Combining[Self.I], Self.V] and _CarrierCompatible[_Combining[Self.I], W] and _Combining[Self.I].Element[W] == _Function[_Combining[Self.I], Self.V].Arg",
+      "summary": "Apply the stored library callables through the selected Applicative."
+     }
+    ],
     "attempt_tap": [
      {
       "args": [
@@ -88332,6 +88364,22 @@
       },
       "signature": "def combine_all[M: Monoid](deinit self) raises M.Error -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where _FoldElement[Self.V] == M.Value",
       "summary": "Combine source elements in order, returning the identity for empty input."
+     }
+    ],
+    "compact": [
+     {
+      "args": [],
+      "description": "",
+      "error": "_Compacting[Self.I].MapFilterError[Self.V, Identity[Self.I.Element[Self.V]]]",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, Identity[Self.I.Element[Self.V]]], Self.E]"
+      },
+      "signature": "def compact(deinit self) raises _Compacting[Self.I].MapFilterError[Self.V, Identity[Self.I.Element[Self.V]]] -> Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, Identity[Self.I.Element[Self.V]]], Self.E] where conforms_to(Self.I, FunctorFilter) and _MapCompatible[Self.I, Self.V, Identity[Self.I.Element[Self.V]]] and Self.I.Element[Self.V] == Optional[_ListElement[Self.I.Element[Self.V]]]",
+      "summary": "Remove one admitted inner layer through the selected source family."
      }
     ],
     "ensure": [
@@ -90422,6 +90470,45 @@
       },
       "signature": "def ensure[R: Movable & Deinitable, S: Movable & Deinitable](deinit self, predicate: def(_Success[Self.V]) raises Never thin -> R, make_error: def(_Success[Self.V]) raises Never thin -> S) raises _CommonError[Never, Never] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == Bool and S == _Failure[Self.V] and (Never == Never or Never == Never or Never == Never)",
       "summary": "Keep an accepted success or construct a stored error from its borrowed value."
+     }
+    ],
+    "fill": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The value consumed here and copied into each payload position.",
+        "name": "value",
+        "type": "U",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.I.MapError[Self.V, _Fill[T, U]]",
+      "parameters": [
+       {
+        "description": "The carrier payload type.",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The copied value type, including its origins.",
+        "inferred": true,
+        "name": "U",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[Self.I, Self.I.Mapped[Self.V, _Fill[T, U]], Self.E]"
+      },
+      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _Fill[T, U]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, _Fill[T, U]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Fill[T, U]]",
+      "summary": "Copy value into every payload position."
      }
     ],
     "filter": [
@@ -95634,6 +95721,22 @@
       },
       "signature": "def flat_traverse[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, J: Applicative](deinit self, function: def(var P0) raises Never thin -> R) raises _CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]]]]]] -> Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and P0 == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, Identity[Self.I.Element[Self.V]]] and _CollectCompatible[J, Self.V, NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]] and _CarrierCompatible[J, R] and _MapCompatible[J, _FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]]]]] and _CarrierCompatible[_FlatteningTraversal[Self.I], J.Element[R]] and _BindCompatible[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]]], Identity[_FlatteningTraversal[Self.I].Element[J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True]]]]]]",
       "summary": "Traverse and finish inside the selected target effect."
+     }
+    ],
+    "flatten": [
+     {
+      "args": [],
+      "description": "",
+      "error": "_Binding[Self.I].BindError[Self.V, Identity[Self.I.Element[Self.V]]]",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, Identity[Self.I.Element[Self.V]]], Self.E]"
+      },
+      "signature": "def flatten(deinit self) raises _Binding[Self.I].BindError[Self.V, Identity[Self.I.Element[Self.V]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, Identity[Self.I.Element[Self.V]]], Self.E] where conforms_to(Self.I, Monad) and _MapCompatible[Self.I, Self.V, Identity[Self.I.Element[Self.V]]] and _CarrierCompatible[_Binding[Self.I], Self.I.Element[Self.V]] and _BindCompatible[_Binding[Self.I], Self.V, Identity[Self.I.Element[Self.V]]]",
+      "summary": "Remove one admitted inner layer through the selected source family."
      }
     ],
     "fold_effect": [
@@ -113204,6 +113307,45 @@
       "summary": "Consume the source in order through the canonical terminal fold."
      }
     ],
+    "replace": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The payload to compare against, consumed.",
+        "name": "old",
+        "type": "T",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The replacement payload, copied into matching positions.",
+        "name": "new",
+        "type": "T",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.I.MapError[Self.V, _Replace[T]]",
+      "parameters": [
+       {
+        "description": "The carrier payload type.",
+        "inferred": true,
+        "name": "T",
+        "type": "Copyable & Equatable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[Self.I, Self.I.Mapped[Self.V, _Replace[T]], Self.E]"
+      },
+      "signature": "def replace[T: Copyable & Equatable & Deinitable, //](deinit self, var old: T, var new: T) raises Self.I.MapError[Self.V, _Replace[T]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, _Replace[T]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Replace[T]]",
+      "summary": "Replace equal payloads, moving unmatched values unchanged."
+     }
+    ],
     "sequence": [
      {
       "args": [],
@@ -119293,6 +119435,108 @@
       },
       "signature": "def traverse_void[P0: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, J: Applicative](deinit self, function: def(var P0) raises Never thin -> R) raises (ResultFamily[_Failure[Self.V]].TraverseError[J, Self.V, _ErrorProbe[Self.I.Element[Self.V], J.Mapped[R, _Fill[J.Element[R], NoneType]], _CommonError[Never, J.MapError[R, _Fill[J.Element[R], NoneType]]]]] if Self.I == ResultFamily[_Failure[Self.V]] else _Traversing[Self.I].TraverseError[J, Self.V, Composition[False, 1, NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True], _EffectVoid[J, R]]]) -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, Composition[False, 1, NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True], _EffectVoid[J, R]]], Self.E] where conforms_to(Self.V, _ResultType) and P0 == Self.I.Element[Self.V] and _CarrierCompatible[J, R] and conforms_to(Self.I, Traversable) and _MapCompatible[Self.I, Self.V, Identity[Self.I.Element[Self.V]]] and _CollectCompatible[J, Self.V, Composition[False, 1, NativeUnary[P0, R, Never, def(var P0) raises Never thin -> R, True], _EffectVoid[J, R]]] and _MapCompatible[J, R, _Fill[J.Element[R], NoneType]]",
       "summary": "Traverse effects and discard successful payloads, retaining source Result errors."
+     }
+    ],
+    "tuple_left": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The value consumed here and copied into each payload position.",
+        "name": "value",
+        "type": "U",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.I.MapError[Self.V, _TupleWith[T, U, True]]",
+      "parameters": [
+       {
+        "description": "The carrier payload type.",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The copied value type, including its origins.",
+        "inferred": true,
+        "name": "U",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[Self.I, Self.I.Mapped[Self.V, _TupleWith[T, U, True]], Self.E]"
+      },
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _TupleWith[T, U, True]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, _TupleWith[T, U, True]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _TupleWith[T, U, True]]",
+      "summary": "Pair each payload with a copy of value on the left."
+     }
+    ],
+    "tuple_right": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The value consumed here and copied into each payload position.",
+        "name": "value",
+        "type": "U",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.I.MapError[Self.V, _TupleWith[T, U, False]]",
+      "parameters": [
+       {
+        "description": "The carrier payload type.",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The copied value type, including its origins.",
+        "inferred": true,
+        "name": "U",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[Self.I, Self.I.Mapped[Self.V, _TupleWith[T, U, False]], Self.E]"
+      },
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _TupleWith[T, U, False]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, _TupleWith[T, U, False]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _TupleWith[T, U, False]]",
+      "summary": "Pair each payload with a copy of value on the right."
+     }
+    ],
+    "void": [
+     {
+      "args": [],
+      "description": "",
+      "error": "Self.I.MapError[Self.V, _Fill[T, NoneType]]",
+      "parameters": [
+       {
+        "description": "The carrier payload type.",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[Self.I, Self.I.Mapped[Self.V, _Fill[T, NoneType]], Self.E]"
+      },
+      "signature": "def void[T: Movable & Deinitable, //](deinit self) raises Self.I.MapError[Self.V, _Fill[T, NoneType]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, _Fill[T, NoneType]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Fill[T, NoneType]]",
+      "summary": "Discard payloads while preserving their container shape."
      }
     ]
    },

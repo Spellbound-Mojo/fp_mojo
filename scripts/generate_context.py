@@ -7,6 +7,7 @@ from api_docs import parse_signature
 from generate_result_syntax import DOCS, OUTCOMES
 from generate_plain_overloads import splice_source
 from generate_nary_syntax import MAX
+from generate_pipeline_syntax import TRANSFORMS
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "src/fp/functions/context.mojo"
@@ -281,6 +282,36 @@ def methods(*, fold_stage=False):
                 expr,
                 "Consume the source in order through the canonical terminal fold.",
             )
+
+    # Structural conveniences share their transforms with legacy fluent APIs.
+    for name, bound, extra, arguments, _, c, built, summary in TRANSFORMS:
+        emit(name, {}, [bound, *extra, "//"], arguments,
+             f"Self.I.Mapped[Self.V, {c}]", f"Self.I.MapError[Self.V, {c}]", "Self.I",
+             ["T == Self.I.Element[Self.V]", f"_MapCompatible[Self.I, Self.V, {c}]"],
+             f"Self.I.map({c}({built}), self.value^)", summary)
+    element = "Self.I.Element[Self.V]"
+    identity = f"Identity[{element}]"
+    for name, family, capability, result_alias, error_alias in (
+        ("compact", "_Compacting[Self.I]", "FunctorFilter", "MapFiltered", "MapFilterError"),
+        ("flatten", "_Binding[Self.I]", "Monad", "Bound", "BindError"),
+    ):
+        conditions = [f"conforms_to(Self.I, {capability})", f"_MapCompatible[Self.I, Self.V, {identity}]"]
+        if name == "compact": conditions += [f"{element} == Optional[_ListElement[{element}]]"]
+        else: conditions += [f"_CarrierCompatible[{family}, {element}]", f"_BindCompatible[{family}, Self.V, {identity}]"]
+        result, error = f"{family}.{result_alias}[Self.V, {identity}]", f"{family}.{error_alias}[Self.V, {identity}]"
+        emit(name, {}, [], "", result, error, "Self.I", conditions,
+             f"_context_{name}[{family}](self.value^)", "Remove one admitted inner layer through the selected source family.")
+    family = "_Combining[Self.I]"
+    function = f"_Function[{family}, Self.V]"
+    apply = f"_Apply[{function}]"
+    types = f"Self.V, {apply}, _ValueThunk[W]"
+    emit("ap", {}, [f"W: {MD}", "//"], "var values: W",
+         f"{family}.Combined[{types}]", f"{family}.CombineError[{types}]", "Self.I",
+         ["conforms_to(Self.I, Applicative)", f"conforms_to({element}, UnaryContract & Movable & Deinitable)",
+          f"_CombineCompatible[{family}, {types}]", f"_CarrierCompatible[{family}, Self.V]",
+          f"_CarrierCompatible[{family}, W]", f"{family}.Element[W] == {function}.Arg"],
+         f"_context_ap[{family}](self.value^, values^)",
+         "Apply the stored library callables through the selected Applicative.")
 
     # Pure reductions select their result family after one canonical source pass.
     element = "_FoldElement[Self.V]"
@@ -789,6 +820,7 @@ def documented(source):
         "R": "The first callback result type, inferred from the callback.",
         "S": "The second callback result type, inferred from the callback.",
         "T": "The carrier payload type.",
+        "U": "The copied value type, including its origins.",
         "V": "The complete carrier type.",
         "E": "The stored Result error type; independent of the selected native error.",
         "I": "The explicit Functor family, including its evaluation and error semantics.",
@@ -812,6 +844,9 @@ def documented(source):
         "step": "The fold step; native callbacks are borrowed, library Binary steps consumed.",
         "initial": "The initial accumulator, consumed.",
         "other": "The already evaluated second carrier, consumed.",
+        "old": "The payload to compare against, consumed.",
+        "new": "The replacement payload, copied into matching positions.",
+        "values": "The already evaluated carrier of arguments, consumed.",
         "others": "The tuple of already evaluated additional carriers, consumed.",
     }
     summaries = {
@@ -865,7 +900,11 @@ def documented(source):
         if spec["arguments"]:
             doc += ["\n" + indent + "Args:\n"]
             doc += [
-                indent + "    " + a["name"] + ": " + args[a["name"]] + "\n"
+                indent + "    " + a["name"] + ": " + (
+                    "The value consumed here and copied into each payload position."
+                    if a["name"] == "value" and name in ("fill", "tuple_left", "tuple_right")
+                    else args[a["name"]]
+                ) + "\n"
                 for a in spec["arguments"]
             ]
         doc += [
