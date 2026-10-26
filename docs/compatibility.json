@@ -399,6 +399,31 @@
       ]
     },
     {
+      "name": "Family recovery",
+      "methods": [
+        "recover",
+        "or_else"
+      ],
+      "status": "selected",
+      "families": "Selected ApplicativeError, including native, custom and deferred families; intrinsic Result recovery remains available under non-error families",
+      "callbacks": "Handlers consume stored errors; native closures borrowed, stored thin pointers owned, library receivers preserved",
+      "ownership": "Success skips the handler; single-use carriers move owned captures, branching families require repeatable handlers",
+      "errors": "Exact family construction errors; deferred handler errors remain deferred. Canonical Result or_else may change the stored-error type and output family",
+      "timing": "Selected family owns recovery, even when its storage is a native Result",
+      "owner": [
+        "src/fp/functions/_recovery.mojo",
+        "src/fp/algebra/errors.mojo",
+        "src/fp/algebra/protocols.mojo",
+        "src/fp/data/_result.mojo"
+      ],
+      "evidence": [
+        "docs/examples/selected_recovery.mojo",
+        "tests/runtime/test_context_family_recovery.mojo",
+        "tests/runtime/test_context_result_recover.mojo",
+        "tests/runtime/test_context_result_or_else.mojo"
+      ]
+    },
+    {
       "name": "Result operations",
       "methods": [
         "attempt_tap",
@@ -406,9 +431,7 @@
         "flat_tap_err",
         "map_both",
         "map_err",
-        "or_else",
         "or_else_if",
-        "recover",
         "recover_if",
         "redeem",
         "redeem_with",

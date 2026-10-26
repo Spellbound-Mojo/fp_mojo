@@ -42,6 +42,28 @@ Pure and Never callbacks retain Never. Custom families retain their own
 execution errors and deferred callback lifetimes. `get()` only extracts the
 carrier.
 
+`recover(handler)` replaces a stored failure with a payload; `or_else(handler)`
+replaces it with another effect. Both honor the selected `ApplicativeError`
+family, including deferred transformers and custom families whose storage is a
+native Result. Recovery preserves that family's construction errors, timing and
+callback ownership, so the chain can continue with `.map(...)` immediately.
+Deferred handler errors occur when the resulting computation runs.
+
+Canonical Result pipelines also preserve their existing `or_else` behavior:
+the replacement Result may change the stored-error type, selecting the matching
+output `ResultFamily`. Intrinsic Result calls under a non-error family, such as
+an explicit Identity selection, retain this behavior. Other error-capable
+families retain their selected stored-error layer.
+
+Generic value-returning recovery can use `fp.algebra.RecoverContract` with an
+`ApplicativeError` family. For selected `or_else`, use
+`fp.functions.OrElseContract[I,V,H]`: its `Compatible` predicate and
+`Family`/`Out`/`Error` projections describe both family recovery and Result's
+type-changing case. This lets a generic wrapper retain fluent continuation
+without importing a private adapter or assuming the result has native storage.
+
+<!-- example: docs/examples/selected_recovery.mojo -->
+
 `flat_tap(callback)` sequences a borrowing effect and keeps each original
 payload. `flat_pair_with(callback)` pairs each original with every successful
 projection. `before(factory)` sequences a zero-argument effect and keeps

@@ -12,6 +12,7 @@ SOURCE_MODULES = (
     *(( 'callables', 'callables/' + name) for name in ('protocols', 'invoke', 'native')),
     ('functions', 'functions/pipeline'),
     ('functions', 'functions/context'),
+    ('functions', 'functions/_recovery'),
     ('functions', 'functions/composition'),
     ('functions', 'functions/kleisli'),
     ('functions', 'functions/flipped'),

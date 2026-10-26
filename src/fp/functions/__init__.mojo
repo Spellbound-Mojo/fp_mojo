@@ -32,3 +32,5 @@ from .flipped import Flipped, FlippedFunction, flip
 from .partial import Partial, partial
 
 from .context import Pipeline, pipeline, pipeline_values
+
+from ._recovery import OrElseContract

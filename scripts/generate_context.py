@@ -5,7 +5,7 @@ from itertools import product
 from native_signatures import Operand, variants, argument as native_argument, callable_protocol, native_adapter
 import re
 from api_docs import parse_signature
-from operation_specs import RESULT_OPERATIONS
+from operation_specs import RESULT_OPERATIONS, error_operations
 from generate_plain_overloads import splice_source
 from generate_nary_syntax import MAX
 from generate_pipeline_syntax import TRANSFORMS
@@ -768,12 +768,42 @@ def methods(*, fold_stage=False):
             emit(name, cb, cb["params"], cb["argument"], result, error, "Self.I", conditions,
                  f"_flat_map_as[{error}, {family}, Self.V, {continuation}]({continuation}({built}), self.value^)", operation.selected_summary)
 
+    # Select or_else semantics before callback inference. The library boundary
+    # and error-capable native boundary use one policy; no caller must decide
+    # whether two stored error types are equal. Proven non-error families keep
+    # the disjoint Result-shaped native signatures below: Mojo cannot project
+    # their input from a conditional policy while matching a generic callback.
+    for cb in native_callbacks("owned", "_RecoverySelection[Self.I, Self.V].Input", "function"):
+        contract = f"OrElseContract[Self.I, Self.V, {cb['adapter_type']}]"
+        # The contract owns library input equality too; requiring the expanded
+        # predicate again prevents abstract wrappers forwarding Compatible.
+        conditions = [] if cb["adapter_type"] == "C" else ["conforms_to(Self.I, ApplicativeError)"] + cb["conditions"]
+        emit("or_else", cb, cb["params"], cb["argument"], contract + ".Out",
+             contract + ".Error", contract + ".Family", conditions + [contract + ".Compatible"],
+             f"_selected_or_else[Self.I]({cb['build']}, self.value^)",
+             "Recover through the selected family; intrinsic Result may change its stored error.")
+
+    family = "_Recovering[Self.I]"
+    operation = next(op for op in error_operations("recovery") if op.name == "recover")
+    for cb in native_callbacks("owned", family + ".Failure", "function"):
+        handler = operation.handler(family, cb["adapter_type"])
+        built = operation.handler_value(family, cb["adapter_type"], cb["build"])
+        conditions = ["conforms_to(Self.I, ApplicativeError)"] + cb["conditions"]
+        conditions += [f"{family}._ErrorCarrier[Self.V]", f"{cb['result']} == Self.I.Element[Self.V]"]
+        contract = f"RecoverContract[{family}, Self.V, {cb['adapter_type']}]"
+        result, error = contract + ".Out", contract + ".Error"
+        cb["prelude"] = cb.get("prelude", "") + f"        comptime assert {family}._Handles[Self.V, {handler}]\n"
+        emit(operation.name, cb, cb["params"], cb["argument"], result, error,
+             "Self.I", conditions,
+             f"_or_else_as[{error}, {family}, Self.V, {handler}]({built}, self.value^)",
+             "Recover the selected family's stored errors, preserving its timing and carrier.")
+
     for name, operation in RESULT_OPERATIONS.items():
         if operation.sequence: continue
         summary, detail = operation.documentation
         two = len(operation.callbacks) == 2
         primary = operation.callbacks[0]
-        left = list(native_callbacks(primary.mode, primary.input(T, Err, whole=Source), primary.argument))
+        left = list(native_callbacks(primary.mode, primary.input(T, Err, whole=Source), primary.argument, library=name != "or_else"))
         if two:
             secondary = operation.callbacks[1]
             right = native_callbacks(secondary.mode, secondary.input(T, Err, whole=Source), secondary.argument, second=True)
@@ -785,6 +815,8 @@ def methods(*, fold_stage=False):
             conditions = [f"conforms_to(Self.V, _ResultType)", f"Self.V == {Source}"] + sum(
                 (c["conditions"] for c in callbacks), []
             )
+            if name in ("recover", "or_else"):
+                conditions += ["not conforms_to(Self.I, ApplicativeError)"]
             R = a["result"]
             result = operation.result(T, Err, R, b["result"] if two else "", value=lambda r: f"_Success[{r}]")
             conditions += operation.first_constraints(T, Err, R,
@@ -822,6 +854,8 @@ def methods(*, fold_stage=False):
                 + ", ".join(c["build"] for c in callbacks)
                 + ")"
             )
+            if name == "or_else":
+                expr = f"_IntrinsicOrElse.apply({a['build']}, rebind_var[{Source}](self.value^))"
             prelude = "".join(c.get("prelude", "") for c in callbacks)
             body += [
                 f'\n    def {name}[{", ".join(params)}](deinit self, {", ".join(c["argument"] for c in callbacks)}) raises {effect} -> {target} where '

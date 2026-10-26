@@ -341,6 +341,40 @@ deferred timing and errors, a custom family's construction error, owned
 one-shot handler cleanup and borrowed origins. Ordinary invalid input, output,
 carrier and cross-origin calls remain separate rejection fixtures.
 
+### Selected family recovery
+
+Selected `recover` and `or_else` honor `ApplicativeError`, including deferred
+transformers and custom families backed by native Result storage. Value
+recovery delegates through the existing `_Recovered` adapter and family
+primitive. Canonical Result recovery and intrinsic Result calls under
+non-error families retain their existing behavior.
+
+`functions._recovery` owns the selected `or_else` distinction: canonical Result
+and legacy non-error-family Result calls may change the stored-error type;
+other error-capable families preserve their selected layer. One compile-time
+policy supplies callback input, admission, output family, carrier and native
+construction error. Its execution methods only delegate to the existing
+Result or family primitive. There is no duplicated catching, storage or
+ownership implementation.
+
+Public `fp.functions.OrElseContract` exposes that selected contract to generic
+clients. It belongs to the syntax layer because the type-changing Result case
+is broader than the `ApplicativeError` primitive's contract. Choosing the
+policy before native callback admission avoids asking overload resolution to
+prove whether two still-generic stored-error types are equal or different.
+Library handlers use one selected entry. Native admission distinguishes
+error-capable families from their exact complement: Mojo cannot use a generic
+non-error-family proof to resolve the policy's projected callback input.
+The intrinsic Result boundary spells that known input directly, preserving
+existing generic forwards. Both admissions use the same execution policy.
+
+Previously, Result storage could bypass an explicitly selected error family's
+recovery implementation. Honoring that family intentionally corrects this
+behavior. A generic wrapper over an entirely unknown family must project
+`OrElseContract.Family`, `Out` and `Error` instead of promising that every family
+returns the handler's native Result and raises only the handler's error.
+Ordinary canonical Result calls keep their existing type-changing behavior.
+
 ## Further migration
 
 Every legacy Piped method now has a selected counterpart in the inventory.

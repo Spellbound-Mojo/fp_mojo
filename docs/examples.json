@@ -165,6 +165,9 @@
     "docs/examples/selected_pipeline.mojo": {
       "stdout": "accepted: 8\nrecovered: 6\nraised: 90\n"
     },
+    "docs/examples/selected_recovery.mojo": {
+      "stdout": "changed error: 5\ndeferred: 14\ngeneric effect: 9\n"
+    },
     "docs/examples/selected_workflow.mojo": {
       "stdout": "total: 34\ninvalid amount\ntransport: 503\n"
     },

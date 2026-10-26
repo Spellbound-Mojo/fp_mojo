@@ -5,13 +5,15 @@ from std.hash import Hasher
 from fp.algebra.collections import _DictFamily, _StringDictFamily
 from fp._internal.errors import _CommonError, _ErrorCompatible
 from fp.data._result import _ResultType
-from fp.algebra.protocols import _MappedFamily, Functor, Filterable, Monad, FunctorFilter, Applicative, Traversable, Monoid, Semigroup, _BindFirst, _AccumulatePair
+from fp.algebra.protocols import _MappedFamily, Functor, Filterable, Monad, FunctorFilter, Applicative, ApplicativeError, Traversable, Monoid, Semigroup, _BindFirst, _AccumulatePair
 from fp.algebra.validation import ValidationFamily, _ListErrors
 from fp.algebra.instances import ListFamily, OptionalFamily, ResultFamily, IdentityFamily, _NativeFamily, _ListElement
 from fp.algebra.contracts import MapContract, FilterMapContract, BindContract, TraverseContract, FilterContract, CombineContract
 from fp.algebra._admission import _TraverseCompatible, _MapCompatible, _BindCompatible, _CombineCompatible, _CollectCompatible, _CarrierCompatible
 from fp.algebra._sequencing import _EffectRetain
-from fp.algebra._adapt import _flat_map_as
+from fp.algebra._adapt import _flat_map_as, _or_else_as
+from fp.algebra.errors import _Recovered, RecoverContract
+from ._recovery import OrElseContract, _RecoverySelection, _selected_or_else, _IntrinsicOrElse
 from fp.algebra._derived import _map2_as, _Function, ap as _context_ap, flatten as _context_flatten
 from fp.algebra.operations import _ErrorProbe
 from fp.algebra._nary import _ProductRun, _ProductTypes, _MapNTypes, _map_n_as
@@ -31,6 +33,8 @@ from fp.iteration.reductions import _find_map, _fold_map, _extremum, _IntSum, _S
 from fp.iteration.folds import fold_left as _context_fold_left, reduce_optional as _context_reduce_optional, fold_until as _context_fold_until
 from fp.data.control import ControlFlow
 from fp.data._result import Result
+
+comptime _Recovering[I: Functor] = downcast[I, ApplicativeError]
 
 comptime _Filtering[I: Functor] = downcast[I, Filterable]
 comptime _Binding[I: Functor] = downcast[I, Monad]
@@ -3940,6 +3944,120 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         """Sequence a factory and keep its produced payloads."""
         return Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]], Self.E](_flat_map_as[_Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]], _Binding[Self.I], Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]](_BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]](_IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]](_NativeThunk[R, X, def() raises X thin -> R, True](function))), self.value^))
 
+    @always_inline
+    def or_else[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises OrElseContract[Self.I, Self.V, C].Error -> Pipeline[OrElseContract[Self.I, Self.V, C].Family, OrElseContract[Self.I, Self.V, C].Out, Self.E] where OrElseContract[Self.I, Self.V, C].Compatible:
+        """Recover through the selected family; intrinsic Result may change its stored error.
+
+        Parameters:
+            C: The first library callback type, retaining its receiver and origins.
+
+        Args:
+            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+
+        Returns:
+            The pipeline containing the operation result, retaining its selected native error.
+
+        Raises:
+            The exact callback or family error; it never becomes a stored Result error.
+        """
+        return Pipeline[OrElseContract[Self.I, Self.V, C].Family, OrElseContract[Self.I, Self.V, C].Out, Self.E](_selected_or_else[Self.I](function^, self.value^))
+
+    @always_inline
+    def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _RecoverySelection[Self.I, Self.V].Input) -> R](deinit self, ref[o] function: C) raises OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Error -> Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Compatible:
+        """Recover through the selected family; intrinsic Result may change its stored error."""
+        return Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Out, Self.E](_selected_or_else[Self.I](_NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o](Pointer(to=function)), self.value^))
+
+    @always_inline
+    def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _RecoverySelection[Self.I, Self.V].Input) raises Self.E -> R](deinit self, ref[o] function: C) raises OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Error -> Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Compatible:
+        """Recover through the selected family; intrinsic Result may change its stored error."""
+        return Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Out, Self.E](_selected_or_else[Self.I](_NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o](Pointer(to=function)), self.value^))
+
+    @always_inline
+    def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _RecoverySelection[Self.I, Self.V].Input) raises Never -> R](deinit self, ref[o] function: C) raises OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Error -> Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and Self.E != Never and OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Compatible:
+        """Recover through the selected family; intrinsic Result may change its stored error."""
+        return Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Out, Self.E](_selected_or_else[Self.I](_NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o](Pointer(to=function)), self.value^))
+
+    @always_inline
+    def or_else[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R) raises OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Error -> Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and not conforms_to(R, RegisterPassable) and OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Compatible:
+        """Recover through the selected family; intrinsic Result may change its stored error."""
+        return Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Out, Self.E](_selected_or_else[Self.I](NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False](function), self.value^))
+
+    @always_inline
+    def or_else[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R) raises OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Error -> Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Compatible:
+        """Recover through the selected family; intrinsic Result may change its stored error."""
+        return Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Out, Self.E](_selected_or_else[Self.I](NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False](function), self.value^))
+
+    @always_inline
+    def or_else[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R) raises OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Error -> Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Compatible:
+        """Recover through the selected family; intrinsic Result may change its stored error."""
+        return Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Out, Self.E](_selected_or_else[Self.I](NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True](function), self.value^))
+
+    @always_inline
+    def or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R) raises OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Error -> Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and _ErrorCompatible[Self.E, X] and OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Compatible:
+        """Recover through the selected family; intrinsic Result may change its stored error."""
+        return Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Out, Self.E](_selected_or_else[Self.I](NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True](function), self.value^))
+
+    @always_inline
+    def recover[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises RecoverContract[_Recovering[Self.I], Self.V, C].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, C].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and C.Arg == _Recovering[Self.I].Failure and _Recovering[Self.I]._ErrorCarrier[Self.V] and C.Out == Self.I.Element[Self.V]:
+        """Recover the selected family's stored errors, preserving its timing and carrier.
+
+        Parameters:
+            C: The first library callback type, retaining its receiver and origins.
+
+        Args:
+            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+
+        Returns:
+            The pipeline containing the operation result, retaining its selected native error.
+
+        Raises:
+            The exact callback or family error; it never becomes a stored Result error.
+        """
+        comptime assert _Recovering[Self.I]._Handles[Self.V, _Recovered[_Recovering[Self.I], C]]
+        return Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, C].Out, Self.E](_or_else_as[RecoverContract[_Recovering[Self.I], Self.V, C].Error, _Recovering[Self.I], Self.V, _Recovered[_Recovering[Self.I], C]](_Recovered[_Recovering[Self.I], C](function^), self.value^))
+
+    @always_inline
+    def recover[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Recovering[Self.I].Failure) -> R](deinit self, ref[o] function: C) raises RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and _Recovering[Self.I]._ErrorCarrier[Self.V] and R == Self.I.Element[Self.V]:
+        """Recover the selected family's stored errors, preserving its timing and carrier."""
+        comptime assert _Recovering[Self.I]._Handles[Self.V, _Recovered[_Recovering[Self.I], _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, False, o]]]
+        return Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Out, Self.E](_or_else_as[RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Error, _Recovering[Self.I], Self.V, _Recovered[_Recovering[Self.I], _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, False, o]]](_Recovered[_Recovering[Self.I], _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, False, o]](_NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, False, o](Pointer(to=function))), self.value^))
+
+    @always_inline
+    def recover[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Recovering[Self.I].Failure) raises Self.E -> R](deinit self, ref[o] function: C) raises RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Self.E, C, True, o]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and _Recovering[Self.I]._ErrorCarrier[Self.V] and R == Self.I.Element[Self.V]:
+        """Recover the selected family's stored errors, preserving its timing and carrier."""
+        comptime assert _Recovering[Self.I]._Handles[Self.V, _Recovered[_Recovering[Self.I], _NativeUnaryRef[_Recovering[Self.I].Failure, R, Self.E, C, True, o]]]
+        return Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Self.E, C, True, o]].Out, Self.E](_or_else_as[RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Self.E, C, True, o]].Error, _Recovering[Self.I], Self.V, _Recovered[_Recovering[Self.I], _NativeUnaryRef[_Recovering[Self.I].Failure, R, Self.E, C, True, o]]](_Recovered[_Recovering[Self.I], _NativeUnaryRef[_Recovering[Self.I].Failure, R, Self.E, C, True, o]](_NativeUnaryRef[_Recovering[Self.I].Failure, R, Self.E, C, True, o](Pointer(to=function))), self.value^))
+
+    @always_inline
+    def recover[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Recovering[Self.I].Failure) raises Never -> R](deinit self, ref[o] function: C) raises RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, True, o]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and Self.E != Never and _Recovering[Self.I]._ErrorCarrier[Self.V] and R == Self.I.Element[Self.V]:
+        """Recover the selected family's stored errors, preserving its timing and carrier."""
+        comptime assert _Recovering[Self.I]._Handles[Self.V, _Recovered[_Recovering[Self.I], _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, True, o]]]
+        return Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, True, o]].Out, Self.E](_or_else_as[RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, True, o]].Error, _Recovering[Self.I], Self.V, _Recovered[_Recovering[Self.I], _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, True, o]]](_Recovered[_Recovering[Self.I], _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, True, o]](_NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, True, o](Pointer(to=function))), self.value^))
+
+    @always_inline
+    def recover[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R) raises RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and not conforms_to(R, RegisterPassable) and _Recovering[Self.I]._ErrorCarrier[Self.V] and R == Self.I.Element[Self.V]:
+        """Recover the selected family's stored errors, preserving its timing and carrier."""
+        comptime assert _Recovering[Self.I]._Handles[Self.V, _Recovered[_Recovering[Self.I], NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]]]
+        return Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]].Out, Self.E](_or_else_as[RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]].Error, _Recovering[Self.I], Self.V, _Recovered[_Recovering[Self.I], NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]]](_Recovered[_Recovering[Self.I], NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]](NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False](function)), self.value^))
+
+    @always_inline
+    def recover[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R) raises RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and _Recovering[Self.I]._ErrorCarrier[Self.V] and R == Self.I.Element[Self.V]:
+        """Recover the selected family's stored errors, preserving its timing and carrier."""
+        comptime assert _Recovering[Self.I]._Handles[Self.V, _Recovered[_Recovering[Self.I], NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]]]
+        return Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]].Out, Self.E](_or_else_as[RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]].Error, _Recovering[Self.I], Self.V, _Recovered[_Recovering[Self.I], NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]]](_Recovered[_Recovering[Self.I], NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]](NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False](function)), self.value^))
+
+    @always_inline
+    def recover[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R) raises RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and _Recovering[Self.I]._ErrorCarrier[Self.V] and R == Self.I.Element[Self.V]:
+        """Recover the selected family's stored errors, preserving its timing and carrier."""
+        comptime assert _Recovering[Self.I]._Handles[Self.V, _Recovered[_Recovering[Self.I], NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]]]
+        return Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]].Out, Self.E](_or_else_as[RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]].Error, _Recovering[Self.I], Self.V, _Recovered[_Recovering[Self.I], NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]]](_Recovered[_Recovering[Self.I], NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]](NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True](function)), self.value^))
+
+    @always_inline
+    def recover[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R) raises RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and _ErrorCompatible[Self.E, X] and _Recovering[Self.I]._ErrorCarrier[Self.V] and R == Self.I.Element[Self.V]:
+        """Recover the selected family's stored errors, preserving its timing and carrier."""
+        comptime assert _Recovering[Self.I]._Handles[Self.V, _Recovered[_Recovering[Self.I], NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]]]
+        return Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]].Out, Self.E](_or_else_as[RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]].Error, _Recovering[Self.I], Self.V, _Recovered[_Recovering[Self.I], NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]]](_Recovered[_Recovering[Self.I], NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]](NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True](function)), self.value^))
+
     def ensure[C: BorrowCallContract & Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C, var make_error: G) raises _CommonError[C.Failure, G.Failure] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Success[Self.V] and G.Payload == _Success[Self.V] and C.Result == Bool and G.Result == _Failure[Self.V] and (C.Failure == Never or G.Failure == Never or C.Failure == G.Failure):
         """Keep an accepted success or construct a stored error from its borrowed value.
 
@@ -4531,48 +4649,35 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         """Keep an accepted success or construct a stored error from its borrowed value."""
         return Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E](rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).ensure(_NativeBorrow[P, R, X, def(P) raises X thin -> R, True](predicate), _NativeBorrow[Q, S, Y, def(Q) raises Y thin -> S, True](make_error)))
 
-    def recover[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises C.Error -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Failure[Self.V] and C.Out == _Success[Self.V]:
-        """Recover a stored error as a success, retaining the Result error type.
-
-        Parameters:
-            C: The first library callback type, retaining its receiver and origins.
-
-        Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
-
-        Returns:
-            The pipeline containing the operation result, retaining its selected native error.
-
-        Raises:
-            The exact callback or family error; it never becomes a stored Result error.
-        """
+    def recover[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises C.Error -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Failure[Self.V] and not conforms_to(Self.I, ApplicativeError) and C.Out == _Success[Self.V]:
+        """Recover a stored error as a success, retaining the Result error type."""
         return Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E](rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).recover(function^))
 
-    def recover[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]:
+    def recover[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Self.I, ApplicativeError) and R == _Success[Self.V]:
         """Recover a stored error as a success, retaining the Result error type."""
         return Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E](rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).recover(_NativeUnaryRef[_Failure[Self.V], R, Never, C, False, o](Pointer(to=function))))
 
-    def recover[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises Self.E -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]:
+    def recover[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises Self.E -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Self.I, ApplicativeError) and R == _Success[Self.V]:
         """Recover a stored error as a success, retaining the Result error type."""
         return Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E](rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).recover(_NativeUnaryRef[_Failure[Self.V], R, Self.E, C, True, o](Pointer(to=function))))
 
-    def recover[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == _Success[Self.V]:
+    def recover[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and not conforms_to(Self.I, ApplicativeError) and R == _Success[Self.V]:
         """Recover a stored error as a success, retaining the Result error type."""
         return Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E](rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).recover(_NativeUnaryRef[_Failure[Self.V], R, Never, C, True, o](Pointer(to=function))))
 
-    def recover[R: Movable & Deinitable](deinit self, function: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and R == _Success[Self.V]:
+    def recover[R: Movable & Deinitable](deinit self, function: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and not conforms_to(Self.I, ApplicativeError) and R == _Success[Self.V]:
         """Recover a stored error as a success, retaining the Result error type."""
         return Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E](rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).recover(NativeUnary[_Failure[Self.V], R, Never, def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R, False](function)))
 
-    def recover[R: RegisterPassable & Deinitable](deinit self, function: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]:
+    def recover[R: RegisterPassable & Deinitable](deinit self, function: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Self.I, ApplicativeError) and R == _Success[Self.V]:
         """Recover a stored error as a success, retaining the Result error type."""
         return Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E](rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).recover(NativeUnary[_Failure[Self.V], R, Never, def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R, False](function)))
 
-    def recover[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, function: def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and R == _Success[Self.V]:
+    def recover[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, function: def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and not conforms_to(Self.I, ApplicativeError) and R == _Success[Self.V]:
         """Recover a stored error as a success, retaining the Result error type."""
         return Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E](rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).recover(NativeUnary[_Failure[Self.V], R, X, def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R, True](function)))
 
-    def recover[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, function: def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and R == _Success[Self.V]:
+    def recover[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, function: def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I, ApplicativeError) and R == _Success[Self.V]:
         """Recover a stored error as a success, retaining the Result error type."""
         return Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E](rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).recover(NativeUnary[_Failure[Self.V], R, X, def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R, True](function)))
 
@@ -5602,50 +5707,33 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         """Transform the stored error of a Result."""
         return Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], R]]], Result[_Success[Self.V], R], Self.E](rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).map_err(NativeUnary[_Failure[Self.V], R, X, def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R, True](function)))
 
-    def or_else[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises C.Error -> Pipeline[ResultFamily[_Failure[C.Out]], C.Out, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Failure[Self.V] and C.Out == Result[_Success[Self.V], _Failure[C.Out]]:
-        """Continue a failed Result with the callback Result.
-
-        Parameters:
-            C: The first library callback type, retaining its receiver and origins.
-
-        Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
-
-        Returns:
-            The pipeline containing the operation result, retaining its selected native error.
-
-        Raises:
-            The exact callback or family error; it never becomes a stored Result error.
-        """
-        return Pipeline[ResultFamily[_Failure[C.Out]], C.Out, Self.E](rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).or_else(function^))
-
-    def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == Result[_Success[Self.V], _Failure[R]]:
+    def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Self.I, ApplicativeError) and R == Result[_Success[Self.V], _Failure[R]]:
         """Continue a failed Result with the callback Result."""
-        return Pipeline[ResultFamily[_Failure[R]], R, Self.E](rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).or_else(_NativeUnaryRef[_Failure[Self.V], R, Never, C, False, o](Pointer(to=function))))
+        return Pipeline[ResultFamily[_Failure[R]], R, Self.E](_IntrinsicOrElse.apply(_NativeUnaryRef[_Failure[Self.V], R, Never, C, False, o](Pointer(to=function)), rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^)))
 
-    def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises Self.E -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == Result[_Success[Self.V], _Failure[R]]:
+    def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises Self.E -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Self.I, ApplicativeError) and R == Result[_Success[Self.V], _Failure[R]]:
         """Continue a failed Result with the callback Result."""
-        return Pipeline[ResultFamily[_Failure[R]], R, Self.E](rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).or_else(_NativeUnaryRef[_Failure[Self.V], R, Self.E, C, True, o](Pointer(to=function))))
+        return Pipeline[ResultFamily[_Failure[R]], R, Self.E](_IntrinsicOrElse.apply(_NativeUnaryRef[_Failure[Self.V], R, Self.E, C, True, o](Pointer(to=function)), rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^)))
 
-    def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == Result[_Success[Self.V], _Failure[R]]:
+    def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and not conforms_to(Self.I, ApplicativeError) and R == Result[_Success[Self.V], _Failure[R]]:
         """Continue a failed Result with the callback Result."""
-        return Pipeline[ResultFamily[_Failure[R]], R, Self.E](rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).or_else(_NativeUnaryRef[_Failure[Self.V], R, Never, C, True, o](Pointer(to=function))))
+        return Pipeline[ResultFamily[_Failure[R]], R, Self.E](_IntrinsicOrElse.apply(_NativeUnaryRef[_Failure[Self.V], R, Never, C, True, o](Pointer(to=function)), rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^)))
 
-    def or_else[R: Movable & Deinitable](deinit self, function: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and R == Result[_Success[Self.V], _Failure[R]]:
+    def or_else[R: Movable & Deinitable](deinit self, function: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and not conforms_to(Self.I, ApplicativeError) and R == Result[_Success[Self.V], _Failure[R]]:
         """Continue a failed Result with the callback Result."""
-        return Pipeline[ResultFamily[_Failure[R]], R, Self.E](rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).or_else(NativeUnary[_Failure[Self.V], R, Never, def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R, False](function)))
+        return Pipeline[ResultFamily[_Failure[R]], R, Self.E](_IntrinsicOrElse.apply(NativeUnary[_Failure[Self.V], R, Never, def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R, False](function), rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^)))
 
-    def or_else[R: RegisterPassable & Deinitable](deinit self, function: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == Result[_Success[Self.V], _Failure[R]]:
+    def or_else[R: RegisterPassable & Deinitable](deinit self, function: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Self.I, ApplicativeError) and R == Result[_Success[Self.V], _Failure[R]]:
         """Continue a failed Result with the callback Result."""
-        return Pipeline[ResultFamily[_Failure[R]], R, Self.E](rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).or_else(NativeUnary[_Failure[Self.V], R, Never, def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R, False](function)))
+        return Pipeline[ResultFamily[_Failure[R]], R, Self.E](_IntrinsicOrElse.apply(NativeUnary[_Failure[Self.V], R, Never, def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R, False](function), rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^)))
 
-    def or_else[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, function: def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and R == Result[_Success[Self.V], _Failure[R]]:
+    def or_else[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, function: def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and not conforms_to(Self.I, ApplicativeError) and R == Result[_Success[Self.V], _Failure[R]]:
         """Continue a failed Result with the callback Result."""
-        return Pipeline[ResultFamily[_Failure[R]], R, Self.E](rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).or_else(NativeUnary[_Failure[Self.V], R, X, def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R, True](function)))
+        return Pipeline[ResultFamily[_Failure[R]], R, Self.E](_IntrinsicOrElse.apply(NativeUnary[_Failure[Self.V], R, X, def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R, True](function), rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^)))
 
-    def or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, function: def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and R == Result[_Success[Self.V], _Failure[R]]:
+    def or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, function: def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I, ApplicativeError) and R == Result[_Success[Self.V], _Failure[R]]:
         """Continue a failed Result with the callback Result."""
-        return Pipeline[ResultFamily[_Failure[R]], R, Self.E](rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).or_else(NativeUnary[_Failure[Self.V], R, X, def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R, True](function)))
+        return Pipeline[ResultFamily[_Failure[R]], R, Self.E](_IntrinsicOrElse.apply(NativeUnary[_Failure[Self.V], R, X, def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R, True](function), rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^)))
 
     def map_both[C: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var on_ok: C, var on_err: G) raises _CommonError[C.Error, G.Error] -> Pipeline[ResultFamily[_Failure[Result[C.Out, G.Out]]], Result[C.Out, G.Out], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Success[Self.V] and G.Arg == _Failure[Self.V] and (C.Error == Never or G.Error == Never or C.Error == G.Error):
         """Transform either payload, preserving its Result constructor.
