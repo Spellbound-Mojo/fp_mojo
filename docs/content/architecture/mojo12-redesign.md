@@ -84,11 +84,13 @@ must not be repeated in ways that prematurely reduce dependent projections.
 
 ## Native signatures and storage
 
-`generate_context.py` and `generate_capture.py` share
-`scripts/native_signatures.py`. Known consumed operands use `_NativeOwnedArg`;
+`generate_context.py`, `generate_capture.py` and
+`generate_native_conventions.py` share `scripts/native_signatures.py`.
+Known consumed operands use `_NativeOwnedArg`;
 read operands and results retain explicit register or memory evidence.
 `generate_native_conventions.py` emits the existing binary, keyword and mutable
-invocation bodies from the same descriptor. Generated files are checked against
+invocation bodies and `as_unary` pointer admission from the same descriptor.
+Generated files are checked against
 their generators by the tooling suite.
 
 Native closures keep an origin-preserving reference view. Deferred operations
@@ -101,10 +103,24 @@ when the call raises.
 
 Literal no-value returns and `raises Never` have explicit invocation paths.
 Capture also needs a literal Never admission specialization to resolve the
-read/read tie with a selected-error closure signature. Stateful factories keep
-a borrowed-pointer fallback for symbolic signatures, while exact register
-variants take priority for concrete functions. The stateful owner still copies
-the pointer into its own cell; reassigning the caller's pointer cannot change it.
+read/read tie with a selected-error closure signature. Stateful factories and
+`as_unary` share a borrowed-pointer fallback for symbolic signatures, while
+exact register variants take priority for concrete functions. Both owners copy
+the pointer into their own cell; reassigning the caller's pointer cannot change
+it. This admission policy applies only to thin pointers, never to closures.
+
+Conditional, Result and selected APIs use the same thunk, unary and borrowed
+callback views. Each view calls its canonical native helper directly. Views
+have no function-valued invocation policy or callback-name specialization.
+Zero-argument Result continuations compose the existing `_NativeThunkRef` and
+`_IgnoreInput`; retention and consumption remain in their existing owners.
+
+The direct call boundary is significant on Mojo 1.2: forwarding a Bool through
+the older function-valued policy and then the shared native helper can corrupt
+the result at O0. Removing that policy fixes the observed branch-selection
+failure without requiring callers to annotate or inline their predicates.
+The native-view regression tests check declarations and borrowed closures at
+O0/O3 through source and precompiled imports.
 
 Native Capture admission inlines internally to retain closure storage across
 generic forwards at O0. This does not repair Mojo's independent optimizer issue
@@ -144,11 +160,43 @@ burden, diagnostics, ownership, and cold compilation cost. Keep legacy bindings
 until replacements meet those contracts. Do not broaden an operation by
 recognizing native storage and discarding the selected family's semantics.
 
-The next designs below are not implemented public APIs. They add distinct
+### API quality and architectural consolidation
+
+The current priority is improving existing APIs before adding capabilities.
+Judge each change using executable client code, including generic clients,
+and measure both the caller's requirements and the number of handwritten
+implementations of a contract. Generated signature counts alone are not a
+measure of architectural duplication: Mojo still needs distinct native ABI
+evidence at admission.
+
+1. **Consistent callback use.** A declaration, stored pointer and library adapter
+   should work interchangeably wherever their receiver and argument contracts
+   agree. The first correction is stored-pointer admission in `as_unary`, with
+   shared ABI rules and unchanged ownership, errors and copyability. Keep
+   ordinary invalid calls in the source/package O0/O3 boundary matrix.
+2. **One invocation owner.** Remove private callback-name distinctions when
+   Mojo 1.2 no longer needs them. First delegate old paths to existing owners,
+   then simplify the views and their generator consumers. Preserve generic
+   forwards, no-value callbacks and borrowed origins throughout.
+3. **Shared signature descriptions.** Consolidate repeated callback descriptions
+   in syntax generators around the existing native-signature owner. Keep
+   family selection, admission and runtime execution separate. Require
+   unchanged generated public signatures for mechanical refactors.
+4. **Simpler generic extension.** Use real mapping, traversal and deferred-family
+   wrappers to identify repeated proof obligations. Reduce caller annotations
+   only when the shared operation contract preserves custom family semantics
+   and exact dependent errors and origins. Avoid a new public wrapper merely
+   to hide the same constraints elsewhere.
+
+Qualify and commit each complete pass separately. No CI work is part of this
+sequence. Resource scopes and fallible source advancement remain later design
+work, after these improvements to the existing API.
+
+The designs below are not implemented public APIs. They add distinct
 ownership or source-advancement contracts, rather than more overloads to the
 current admission table. Prototype them independently, qualify normal and
 invalid user calls at O0/O3 through source and packages, then promote one
-complete contract at a time. No CI work is part of this sequence.
+complete contract at a time.
 
 ### Resource scopes
 

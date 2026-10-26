@@ -242,13 +242,12 @@ keep their shared and consuming receivers.
 
 Generated methods handle native shape and callback admission. Native callbacks
 in Piped are borrowed through the existing pointer adapter, while Iter stores
-them by value and invokes them with mutable access. Mojo 1.1 preserves generic
-parameter names in native callable witnesses, so the sequencing boundary uses
+them by value and invokes them with mutable access. The sequencing boundary retains
 `P`, `R`, `X` for borrowing callbacks and `R`, `X` for factories. A generic
 wrapper can forward `.flat_tap[P=P, R=R, X=X](inspect)` or
 `.before[R=R, X=X](make_next)`. `R` names the complete effect result, including
 its origins; Result additionally requires its stored error type to match the
-source. The small native signature adapters retain these names and delegate
+source. The shared native reference views accept these bindings and delegate
 receiver ownership, retention and error propagation to their canonical owners.
 
 ### Fluent combination
@@ -655,9 +654,9 @@ Restoration retains native failure-constructor errors and their execution timing
 The selected family's recovery and bind operations determine state and logs.
 
 No family-specific outcome interpreter is added. Native overloads use the
-existing callback reference views. Mojo 1.1 needs separate invocation shims for
-the two admitted native signatures (`A/R/X` and `Q/S/Y`); their views share
-storage and receiver handling. Native error compatibility is checked at method
+same callback reference views for both admitted signatures (`A/R/X` and
+`Q/S/Y`). Mojo 1.2 no longer needs separate invocation shims for these names;
+each view calls its native invocation owner directly. Native error compatibility is checked at method
 admission because body-only comparisons can unify distinct embedded origins.
 
 The approved proposal is complete. Generalized operations retain the selected

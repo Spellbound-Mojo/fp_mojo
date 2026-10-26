@@ -4,13 +4,7 @@ from generate_result_syntax import callback
 
 
 def borrowed(kind, name, second=False):
-    cb = callback('borrow', kind, name, second)
-    if kind != 'library':
-        native = 'G' if second else 'C'
-        invoke = '_borrow_factory_call' if second else '_borrow_ref_call_x'
-        cb.type = cb.type[:-1] + f', True, {invoke}[{cb.payload}, {cb.result}, {cb.error}, {native}, {kind == "raising"}]]'
-        cb.build = cb.type + f'(Pointer(to={name}))'
-    return cb
+    return callback('borrow', kind, name, second)
 
 
 def parameters(callbacks):
@@ -69,10 +63,6 @@ def methods():
         effect = name == 'redeem_with'
         for lk, rk in product(('library', 'pure', 'raising'), repeat=2):
             left, right = callback('owned', lk, 'on_ok'), callback('owned', rk, 'on_err', True)
-            for cb, kind, native, invoke, name_arg in ((left, lk, 'C', '_unary_ref_left', 'on_ok'), (right, rk, 'G', '_unary_ref_right', 'on_err')):
-                if kind != 'library':
-                    cb.type = cb.type[:-1] + f', True, {invoke}[{cb.payload}, {cb.result}, {cb.error}, {native}, {kind == "raising"}]]'
-                    cb.build = cb.type + f'(Pointer(to={name_arg}))'
             runner = f'_Redeem[{family}, Self.Value, {left.type}, {right.type}, {effect}]'
             error = f'_EntryError[Z, {runner}.Error]'
             where = base + [f'{left.payload} == {elem}', f'{right.payload} == {family}.Failure']

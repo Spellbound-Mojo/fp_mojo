@@ -124,18 +124,6 @@ def methods(piped=False):
             # Keep a symbolic predicate error exact for generic forwarders.
             if selective and other == 'pure': error = cb.error
             prelude = ''
-            # Keep the native invocation at its admitted signature. The shared
-            # borrowed adapter accepts this call without reconstructing witnesses.
-            for index, (c, k) in enumerate(zip(cbs, (kind, other))):
-                if k == 'library' or c.mode != 'borrow': continue
-                native_type = 'C' if index == 0 else 'G'
-                invoke = f'invoke_{index}'
-                call = (f'_call_native_borrow[{c.payload}, {c.result}, {c.error}, {native_type}, {k == "raising"}](function, payload)'
-                        if name == 'tap_err' else 'function(payload)')
-                prelude += f'        def {invoke}(function: {native_type}, payload: {c.payload}) raises {c.error} capturing -> {c.result}:\n            return {call}\n'
-                admitted = c.type[:-1]+', True, '+invoke+']'
-                c.build = c.build.replace(c.type, admitted)
-                c.type = admitted
             builds = ', '.join(c.build for c in cbs)
             if piped:
                 body = f'return Piped(rebind_var[{source}](self.value^).{name}({builds}))'
@@ -194,10 +182,11 @@ def methods(piped=False):
                     effect = '[X=X]' if kind == 'raising' else ''
                     body = f'return Piped(rebind_var[{source}](self.value^).{name}{effect}(function))'
                 else:
-                    prelude = f'        def invoke_factory(factory: C, payload: {t}) raises {error} capturing -> {cb.result}:\n            return factory()\n'
-                    adapter = f'_NativeBorrowRef[{t}, {cb.result}, {error}, C, {kind == "raising"}, o, True, invoke_factory]'
+                    thunk = f'_NativeThunkRef[{cb.result}, {error}, C, {kind == "raising"}, o]'
+                    adapter = f'_IgnoreInput[{t}, {thunk}]'
                     wrapper = f'_BorrowedUnary[{t}, {adapter}]' if name == 'followed_by' else f'_ResultRetain[{t}, {e}, {adapter}, False]'
-                    body = f'return self^.flat_map({wrapper}({adapter}(Pointer(to=function))))'
+                    build = f'{adapter}({thunk}(Pointer(to=function)))'
+                    body = f'return self^.flat_map({wrapper}({build}))'
             doc = summary
             if kind == 'library' and other in (None, 'library'):
                 doc += '\n\n        '+detail+' Native errors propagate unchanged; they never become stored Err values. Native callbacks are borrowed in place; library callbacks are consumed and use their declared receiver mode.'

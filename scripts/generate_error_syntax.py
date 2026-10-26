@@ -91,9 +91,6 @@ def conditional_methods():
                 h.parameters = ['G: _UnaryViewable', 'q: ImmOrigin']
                 h.argument, h.type, h.build = 'ref[q] handler: G', 'G._View[q]', 'handler._unary_view()'
                 h.payload, h.result, h.error = h.type+'.Arg', h.type+'.Out', h.type+'.Error'
-            if pk != 'library':
-                p.type = p.type[:-1] + f', True, _borrow_predicate_call[{p.payload}, {p.result}, {p.error}, C, {pk == "raising"}]]'
-                p.build = p.type + '(Pointer(to=predicate))'
             params = p.parameters + [v for v in h.parameters if v != f'R: {MD}'] + ['//', 'I: Applicative'] + ([f'R: {MD}'] if hk in ('pure', 'raising') else []) + p.explicit + h.explicit + ['Z: AnyType = _InferError']
             family = '_ErrorFamily[I]'
             elem = 'I.Element[Self.Value]'
@@ -151,9 +148,6 @@ def observation_methods():
         effect = name == 'flat_tap_err'
         for kind in ('library', 'pure', 'raising'):
             cb = callback('borrow', kind, 'inspect')
-            if kind != 'library':
-                cb.type = cb.type[:-1] + f', True, _borrow_ref_call_x[{cb.payload}, R, {cb.error}, C, {kind == "raising"}]]'
-                cb.build = cb.type + '(Pointer(to=inspect))'
             params = [v for v in cb.parameters if v != f'R: {MD}'] + ['//', 'I: Applicative']
             if kind != 'library': params += [f'R: {MD}']
             params += cb.explicit + ['Z: AnyType = _InferError']

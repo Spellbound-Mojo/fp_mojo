@@ -105,12 +105,13 @@ supply the native Result mapping boundary while the callable helpers remain
 independent of the container.
 
 Native admission signatures are generated from
-`scripts/generate_result_syntax.py`. A native borrowing endpoint can supply
-its invocation to the existing borrowed-reference adapter. This preserves the
-signature at admission when Mojo 1.1 cannot reconstruct a second callback's
-native witness later. Existing callers keep the direct native bridge: routing
-its default through an extra function-valued parameter corrupts Bool predicates
-at O0 on Mojo 1.1. The eager filtering example covers that boundary.
+`scripts/generate_result_syntax.py`. Native borrowing endpoints use one
+reference view with a direct call to the shared native helper. Mojo 1.2 no
+longer needs separate invocation functions for differently named callbacks.
+Removing the extra function-valued dispatch layer also avoids the observed O0
+Bool corruption when that layer forwards through the shared helper. Factories
+use the shared thunk view and `_IgnoreInput`, preserving payload retention in
+the existing Result adapters.
 Native owned transformations retain Result's existing
 invocation boundary. Conditional continuations use its owned context form:
 library callbacks move into that context, while native callbacks enter by

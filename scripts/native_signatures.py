@@ -28,6 +28,30 @@ class ThinABI:
     conditions: tuple
 
 
+@dataclass(frozen=True)
+class FactoryPointer:
+    parameters: tuple
+    conditions: tuple
+    argument: str
+
+
+def factory_pointer(abi, *, name="function", origin="q"):
+    """Admit an owned thin pointer, including forwards with symbolic ABI.
+
+    A generic forward cannot prove negative register conformance. Borrow its
+    pointer at admission so exact by-value register variants take priority for
+    concrete declarations. The factory copies the pointer into its existing
+    owner; the temporary borrow never becomes part of the stored callback.
+    This policy is for thin pointers, never captured closures.
+    """
+    fallback = all(bound == MD for _, bound in abi.parameters)
+    return FactoryPointer(
+        ((origin, "ImmOrigin"),) if fallback else (),
+        () if fallback else abi.conditions,
+        f"ref[{origin}] {name}" if fallback else name,
+    )
+
+
 def argument(type_, convention, *, thin=False, known=True):
     if convention == "r":
         return type_

@@ -7,7 +7,13 @@ The generator enumerates those shapes; it never generates Result handling.
 
 from itertools import product
 import re
-from native_signatures import Operand, variants, argument, native_dispatch
+from native_signatures import (
+    Operand,
+    variants,
+    argument,
+    factory_pointer,
+    native_dispatch,
+)
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -350,20 +356,14 @@ for raising in (False, True):
                 + " thin"
                 + ("" if void else " -> R")
             )
-            # Keep generic symbolic-ABI forwards viable without demanding a
-            # negative conformance proof. Borrowing the fallback pointer lets
-            # exact register variants outrank it for concrete declarations.
-            # _Stateful copies the pointer into its existing owning cell.
-            fallback = all(bound == MD for _, bound in abi.parameters)
-            conditions = ([] if fallback else list(abi.conditions)) + (
+            pointer = factory_pointer(abi)
+            conditions = list(pointer.conditions) + (
                 ["_ErrorCompatible[Self.E, X]"] if raising else []
             )
             condition = " where " + " and ".join(conditions) if conditions else ""
-            if fallback:
-                gen += ["q: ImmOrigin"]
-            function_arg = "ref[q] function" if fallback else "function"
+            gen += [name + ": " + bound for name, bound in pointer.parameters]
             target = f"_Stateful[S, A, {result}, {err}, type_of(function), {raising}]"
-            state_factory += f'    @staticmethod\n    def stateful[{", ".join(gen+['//'])}]({function_arg}: {typ}, var state: S) -> {target}{condition}:\n        return {target}(function, state^)\n'
+            state_factory += f'    @staticmethod\n    def stateful[{", ".join(gen+['//'])}]({pointer.argument}: {typ}, var state: S) -> {target}{condition}:\n        return {target}(function, state^)\n'
 out += [state_factory]
 out += [
     "    @staticmethod\n    def args() -> _ArgsZ[Self.E]:\n        return _ArgsZ[Self.E]()\n\n    @staticmethod\n    def args[A: Movable & Deinitable, //](var first: A) -> _ArgsO[A, Self.E]:\n        return _ArgsO[A, Self.E](first^)\n\n    @staticmethod\n    def args[A: Movable & Deinitable, B: Movable & Deinitable, //](var first: A, var second: B) -> _ArgsOO[A, B, Self.E]:\n        return _ArgsOO[A, B, Self.E](first^, second^)\n\n",
@@ -395,7 +395,13 @@ def source():
         if line.startswith(("    def run", "    def stateful")):
             pivot = line.index("](") + 2 if "](" in line else line.index("(") + 1
             lines[i] = line[:pivot] + "self, " + line[pivot:]
-    return "\n".join(line.rstrip() for line in (text[:start] + "".join(lines) + text[end:]).splitlines()) + "\n"
+    return (
+        "\n".join(
+            line.rstrip()
+            for line in (text[:start] + "".join(lines) + text[end:]).splitlines()
+        )
+        + "\n"
+    )
 
 
 def document(text):

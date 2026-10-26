@@ -39,7 +39,7 @@ def methods(carrier=None, *, iteration=False):
                         adapter = f'_IgnoreInput[{elem}, {thunk}]'
                         build = f'{adapter}({thunk}(Pointer(to=function)))'
                     else:
-                        adapter = f'_NativeBorrowRef[{payload}, R, {cb.error}, C, {kind == "raising"}, o, True, _borrow_ref_call_x[{payload}, R, {cb.error}, C, {kind == "raising"}]]'
+                        adapter = f'_NativeBorrowRef[{payload}, R, {cb.error}, C, {kind == "raising"}, o]'
                         build = f'{adapter}(Pointer(to=function))'
             else:
                 adapter = f'_IgnoreInput[{elem}, C]' if factory else 'C'

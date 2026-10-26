@@ -23,7 +23,12 @@ def inventory(filter_=""):
     for folder in ("runtime", "ownership", "compile_fail"):
         for path in sorted((ROOT / "tests" / folder).glob("*.mojo")):
             stem = path.stem.removeprefix("test_")
-            if not stem.startswith(("capture_", "context_")) or filter_ not in stem:
+            if (
+                not stem.startswith(
+                    ("capture_", "context_", "native_unary_", "native_view_")
+                )
+                or filter_ not in stem
+            ):
                 continue
             errors = tuple(re.findall(r"^# error: (.+)$", path.read_text(), re.M))
             if bool(errors) != (folder == "compile_fail"):
@@ -74,7 +79,9 @@ def main():
         result = execute_case(case, binary, run.folder / "cases" / name)
         failures = audit_case(case, result, binary, folder=run.folder)
         print("PASS" if result["passed"] and not failures else "FAIL", name, flush=True)
-        return dict(route=route, specification=asdict(case), **result, audit_failures=failures)
+        return dict(
+            route=route, specification=asdict(case), **result, audit_failures=failures
+        )
 
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
         records = list(pool.map(check, jobs))

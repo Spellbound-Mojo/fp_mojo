@@ -101,54 +101,12 @@ struct _NativeThunk[R: Movable & Deinitable, E: Movable & Deinitable,
 
 @fieldwise_init
 struct _NativeThunkRef[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin](Thunk, ImplicitlyCopyable):
-    # R/X is the general factory boundary; conditional branches retain their
-    # distinct U/Y and W/D native signature spellings below on Mojo 1.1.
+    # The borrowed view retains the exact callback origin.
     var function: Pointer[Self.F, Self.o]
     comptime Out = Self.R
     comptime Error = Self.X
     def call(self) raises Self.Error -> Self.Out:
-        comptime if Self.raising:
-            comptime Fn = downcast[Self.F, _RaisingThunk[Self.R, Self.X]]
-            comptime assert conforms_to(Fn, _RaisingThunk[Self.R, Self.X])
-            return _native_raising_thunk[Self.R, Self.X, Fn](rebind[Fn](self.function[]))
-        else:
-            comptime assert Self.X == Never
-            comptime Fn = downcast[Self.F, _Thunk[Self.R]]
-            comptime assert conforms_to(Fn, _Thunk[Self.R])
-            return _native_thunk[Self.R, Fn](rebind[Fn](self.function[]))
-
-
-# Mojo 1.1's native function witnesses retain the generic result/error names.
-# Conditional syntax admits U/Y on the left and W/D on the right. Keep these
-# two native signatures here; receiver dispatch and branch selection are shared.
-@fieldwise_init
-struct _NativeBranchLeft[U: Movable & Deinitable, Y: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin](Thunk, ImplicitlyCopyable):
-    var function: Pointer[Self.F, Self.o]
-    comptime Out = Self.U
-    comptime Error = Self.Y
-    def call(self) raises Self.Y -> Self.U:
-        comptime if Self.raising:
-            comptime Fn = downcast[Self.F, _RaisingThunk[Self.U, Self.Y]]
-            return rebind[Fn](self.function[])()
-        else:
-            comptime assert Self.Y == Never
-            comptime Fn = downcast[Self.F, _Thunk[Self.U]]
-            return rebind[Fn](self.function[])()
-
-
-@fieldwise_init
-struct _NativeBranchRight[W: Movable & Deinitable, D: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin](Thunk, ImplicitlyCopyable):
-    var function: Pointer[Self.F, Self.o]
-    comptime Out = Self.W
-    comptime Error = Self.D
-    def call(self) raises Self.D -> Self.W:
-        comptime if Self.raising:
-            comptime Fn = downcast[Self.F, _RaisingThunk[Self.W, Self.D]]
-            return rebind[Fn](self.function[])()
-        else:
-            comptime assert Self.D == Never
-            comptime Fn = downcast[Self.F, _Thunk[Self.W]]
-            return rebind[Fn](self.function[])()
+        return _call_native_thunk[Self.R, Self.X, Self.F, Self.raising](self.function[])
 
 
 comptime _Binary[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable] = def(var A, var B) -> R
@@ -586,8 +544,7 @@ struct NativeUnary[A: Movable & Deinitable, R: Movable & Deinitable,
 @fieldwise_init
 struct _NativeUnaryRef[A: Movable & Deinitable, R: Movable & Deinitable,
                        E: Movable & Deinitable, F: Movable & Deinitable,
-                       raising: Bool, origin: ImmOrigin, admitted: Bool = False,
-                       apply: def(F, var A) raises E thin -> R = _unary_ref_call[A, R, E, F, raising]](Unary, ImplicitlyCopyable):
+                       raising: Bool, origin: ImmOrigin](Unary, ImplicitlyCopyable):
     # A borrowed native def. Generic forwarding holds a native function by
     # reference and cannot copy it; the call is the same as NativeUnary's.
     var function: Pointer[Self.F, Self.origin]
@@ -595,40 +552,7 @@ struct _NativeUnaryRef[A: Movable & Deinitable, R: Movable & Deinitable,
     comptime Out = Self.R
     comptime Error = Self.E
     def call(self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        comptime if Self.admitted:
-            return Self.apply(self.function[], arg^)
-        else:
-            return _call_native[Self.A, Self.R, Self.E, Self.F, Self.raising](self.function[], arg^)
-
-
-def _unary_ref_call[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable,
-                    F: Movable & Deinitable, raising: Bool](function: F, var value: A) raises E -> R:
-    return _call_native[A, R, E, F, raising](function, value^)
-
-
-# Two native callbacks carry different witnesses on Mojo 1.1. These shims
-# preserve their admitted parameter names; the reference view owns storage
-# and receiver dispatch, and the family owns execution and error semantics.
-def _unary_ref_left[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable,
-                    F: Movable & Deinitable, raising: Bool](function: F, var value: A) raises X -> R:
-    comptime if raising:
-        comptime Fn = downcast[F, _RaisingUnary[A, R, X]]
-        return rebind[Fn](function)(value^)
-    else:
-        comptime assert X == Never
-        comptime Fn = downcast[F, _Unary[A, R]]
-        return rebind[Fn](function)(value^)
-
-
-def _unary_ref_right[Q: Movable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable,
-                     F: Movable & Deinitable, raising: Bool](function: F, var value: Q) raises Y -> S:
-    comptime if raising:
-        comptime Fn = downcast[F, _RaisingUnary[Q, S, Y]]
-        return rebind[Fn](function)(value^)
-    else:
-        comptime assert Y == Never
-        comptime Fn = downcast[F, _Unary[Q, S]]
-        return rebind[Fn](function)(value^)
+        return _call_native[Self.A, Self.R, Self.E, Self.F, Self.raising](self.function[], arg^)
 
 
 def as_unary[A: Movable & Deinitable, R: Movable & Deinitable, //,
@@ -661,36 +585,96 @@ def as_unary[A: Movable & Deinitable, R: Movable & Deinitable,
     return NativeUnary[A, R, E, F, True](function^)
 
 
-# Preserve plain-function copyability without inflating a thin pointer to a
-# closure trait whose marker conformances can be lost on Mojo 1.2.
-def as_unary[A: Movable & Deinitable, R: Movable & Deinitable, //](
+# --- native unary admission (generated) ---
+# Preserve native pointer types and copyability. Register arguments and
+# results need explicit ABI evidence; symbolic forwards borrow a pointer
+# only for admission, then copy it into the existing NativeUnary owner.
+# No-value signatures must be admitted literally on Mojo 1.2.
+def as_unary[A: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //](
+    ref[q] function: def(var A) thin -> R
+) -> NativeUnary[A, R, Never, type_of(function), False]:
+    """Store a native pointer with its exact signature and copyability."""
+    return NativeUnary[A, R, Never, type_of(function), False](function)
+
+
+def as_unary[A: Movable & Deinitable, R: RegisterPassable & Deinitable, //](
     function: def(var A) thin -> R
-) -> NativeUnary[A, R, Never, def(var A) thin -> R, False]:
-    """Store a plain function, preserving its native copyability."""
-    return NativeUnary[A, R, Never, def(var A) thin -> R, False](function)
+) -> NativeUnary[A, R, Never, type_of(function), False] where not conforms_to(A, RegisterPassable):
+    """Store a native pointer with its exact signature and copyability."""
+    return NativeUnary[A, R, Never, type_of(function), False](function)
 
 
-def as_unary[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](
-    function: def(var A) raises E thin -> R
-) -> NativeUnary[A, R, E, def(var A) raises E thin -> R, True]:
-    """Store a raising plain function with its error and copyability intact."""
-    return NativeUnary[A, R, E, def(var A) raises E thin -> R, True](function)
+def as_unary[A: RegisterPassable & Deinitable, R: Movable & Deinitable, //](
+    function: def(var A) thin -> R
+) -> NativeUnary[A, R, Never, type_of(function), False] where not conforms_to(R, RegisterPassable):
+    """Store a native pointer with its exact signature and copyability."""
+    return NativeUnary[A, R, Never, type_of(function), False](function)
 
 
-# A native no-value signature is not a generic `-> R` witness on Mojo 1.2.
-# Admit it literally, then share storage and invocation with valued callbacks.
-def as_unary[A: Movable & Deinitable, //](
+def as_unary[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](
+    function: def(var A) thin -> R
+) -> NativeUnary[A, R, Never, type_of(function), False]:
+    """Store a native pointer with its exact signature and copyability."""
+    return NativeUnary[A, R, Never, type_of(function), False](function)
+
+
+def as_unary[A: Movable & Deinitable, q: ImmOrigin, //](
+    ref[q] function: def(var A) thin
+) -> NativeUnary[A, type_of(None), Never, type_of(function), False]:
+    """Store a native pointer with its exact signature and copyability."""
+    return NativeUnary[A, type_of(None), Never, type_of(function), False](function)
+
+
+def as_unary[A: RegisterPassable & Deinitable, //](
     function: def(var A) thin
-) -> NativeUnary[A, type_of(None), Never, def(var A) thin, False]:
-    """Store a plain no-value callback, preserving its native copyability."""
-    return NativeUnary[A, type_of(None), Never, def(var A) thin, False](function)
+) -> NativeUnary[A, type_of(None), Never, type_of(function), False]:
+    """Store a native pointer with its exact signature and copyability."""
+    return NativeUnary[A, type_of(None), Never, type_of(function), False](function)
 
 
-def as_unary[A: Movable & Deinitable, E: Movable & Deinitable, //](
+def as_unary[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](
+    ref[q] function: def(var A) raises E thin -> R
+) -> NativeUnary[A, R, E, type_of(function), True]:
+    """Store a native pointer with its exact signature and copyability."""
+    return NativeUnary[A, R, E, type_of(function), True](function)
+
+
+def as_unary[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+    function: def(var A) raises E thin -> R
+) -> NativeUnary[A, R, E, type_of(function), True] where not conforms_to(A, RegisterPassable):
+    """Store a native pointer with its exact signature and copyability."""
+    return NativeUnary[A, R, E, type_of(function), True](function)
+
+
+def as_unary[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](
+    function: def(var A) raises E thin -> R
+) -> NativeUnary[A, R, E, type_of(function), True] where not conforms_to(R, RegisterPassable):
+    """Store a native pointer with its exact signature and copyability."""
+    return NativeUnary[A, R, E, type_of(function), True](function)
+
+
+def as_unary[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+    function: def(var A) raises E thin -> R
+) -> NativeUnary[A, R, E, type_of(function), True]:
+    """Store a native pointer with its exact signature and copyability."""
+    return NativeUnary[A, R, E, type_of(function), True](function)
+
+
+def as_unary[A: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](
+    ref[q] function: def(var A) raises E thin
+) -> NativeUnary[A, type_of(None), E, type_of(function), True]:
+    """Store a native pointer with its exact signature and copyability."""
+    return NativeUnary[A, type_of(None), E, type_of(function), True](function)
+
+
+def as_unary[A: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
     function: def(var A) raises E thin
-) -> NativeUnary[A, type_of(None), E, def(var A) raises E thin, True]:
-    """Store a raising plain no-value callback with its exact error type."""
-    return NativeUnary[A, type_of(None), E, def(var A) raises E thin, True](function)
+) -> NativeUnary[A, type_of(None), E, type_of(function), True]:
+    """Store a native pointer with its exact signature and copyability."""
+    return NativeUnary[A, type_of(None), E, type_of(function), True](function)
+
+
+# --- end native unary admission ---
 
 
 # Preserve the P: AnyType / R admission spelling when recovering native
@@ -869,72 +853,16 @@ def _call_native_borrow[P: AnyType, R: Movable & Deinitable, E: Movable & Deinit
         return _native_borrow[P, R, Fn](rebind[Fn](function), payload)
 
 
-def _borrow_ref_call[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable,
-                     F: Movable & Deinitable, raising: Bool](function: F, payload: P) raises E capturing -> R:
-    return _call_native_borrow[P, R, E, F, raising](function, payload)
-
-
-def _borrow_ref_call_x[P: AnyType, R: Movable & Deinitable, X: Movable & Deinitable,
-                       F: Movable & Deinitable, raising: Bool](function: F, payload: P) raises X capturing -> R:
-    # Sequencing's established native boundary names the error X. Rebuilding
-    # that witness as E loses generic callback conformance on Mojo 1.1.
-    # Only the native invocation differs; the borrowed receiver is shared.
-    comptime if raising:
-        comptime Fn = downcast[F, _RaisingBorrowing[P, R, X]]
-        return rebind[Fn](function)(payload)
-    else:
-        comptime assert X == Never
-        comptime Fn = downcast[F, _Borrowing[P, R]]
-        return rebind[Fn](function)(payload)
-
-
-def _borrow_predicate_call[P: AnyType, S: Movable & Deinitable, X: Movable & Deinitable,
-                           F: Movable & Deinitable, raising: Bool](function: F, payload: P) raises X capturing -> S:
-    # Two-callback error syntax reserves A/R/E for its owned handler. Mojo 1.1
-    # needs this predicate's P/S/X witness at the native call boundary; storage,
-    # receiver dispatch and error propagation remain in _NativeBorrowRef.
-    comptime if raising:
-        comptime Fn = downcast[F, _RaisingBorrowing[P, S, X]]
-        return rebind[Fn](function)(payload)
-    else:
-        comptime assert X == Never
-        comptime Fn = downcast[F, _Borrowing[P, S]]
-        return rebind[Fn](function)(payload)
-
-
-def _borrow_factory_call[Q: AnyType, S: Movable & Deinitable, Y: Movable & Deinitable,
-                         F: Movable & Deinitable, raising: Bool](function: F, payload: Q) raises Y capturing -> S:
-    # The second borrowing callback retains its Q/S/Y admission witness.
-    comptime if raising:
-        comptime Fn = downcast[F, _RaisingBorrowing[Q, S, Y]]
-        return rebind[Fn](function)(payload)
-    else:
-        comptime assert Y == Never
-        comptime Fn = downcast[F, _Borrowing[Q, S]]
-        return rebind[Fn](function)(payload)
-
-
 @fieldwise_init
 struct _NativeBorrowRef[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable,
-                        F: Movable & Deinitable, raising: Bool, o: ImmOrigin,
-                        admitted: Bool = False,
-                        apply: def(F, P) raises E capturing -> R = _borrow_ref_call[P, R, E, F, raising]](BorrowCallable, ImplicitlyCopyable):
+                        F: Movable & Deinitable, raising: Bool, o: ImmOrigin](BorrowCallable, ImplicitlyCopyable):
     """Borrow a native callback without copying its captures; invocation is shared."""
     comptime Payload = Self.P
     comptime Result = Self.R
     comptime Failure = Self.E
     var function: Pointer[Self.F, Self.o]
     def invoke(self, ref payload: Self.P) raises Self.E capturing -> Self.R:
-        # Multiple native callbacks at one boundary may use different generic
-        # parameter names. Such boundaries supply their admitted call directly,
-        # instead of asking Mojo 1.1 to rediscover the native witness later.
-        comptime if Self.admitted:
-            return Self.apply(self.function[], payload)
-        else:
-            # Keep the established path direct. Routing it through an extra
-            # function-valued generic parameter corrupts Bool predicates at O0
-            # on Mojo 1.1 (covered by docs/examples/combinators.mojo).
-            return _call_native_borrow[Self.P, Self.R, Self.E, Self.F, Self.raising](self.function[], payload)
+        return _call_native_borrow[Self.P, Self.R, Self.E, Self.F, Self.raising](self.function[], payload)
 
 
 # A plain function whose parameter, result or error types are still symbolic at

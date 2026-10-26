@@ -27,6 +27,12 @@ API without a separate review.
   `NativeUnary` and the private lazy adapters use the existing inline optional
   cell, without allocating or copying captures. `NativeUnary.function` becomes
   `function()` for borrowing and `into_function()` for consuming extraction.
+- Stored thin pointers need explicit register or memory evidence at `as_unary`
+  admission, just as Capture does. Both factories share that signature policy.
+  Borrowed callback views call their native helpers directly: an extra
+  function-valued dispatch policy can corrupt Bool results at O0. The
+  [current architecture](mojo12-redesign.md#native-signatures-and-storage)
+  describes the shared boundaries and their regression coverage.
 - A consumed scalar forwarded through the generic borrowing bridge can arrive
   as zero at O0. Mandatory inlining of `invoke_borrowed` preserves the payload
   reference and fixes the effectful reduction example through both import routes.

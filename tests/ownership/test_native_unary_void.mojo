@@ -25,6 +25,15 @@ def raising(var value: VoidToken) raises VoidFailure:
 def explicit_none(var value: Int) -> NoneType:
     return None
 
+def pure_register(var value: Int):
+    _ = value
+
+def never_register(var value: Int) raises Never:
+    _ = value
+
+def raising_register(var value: Int) raises VoidFailure:
+    raise VoidFailure(value)
+
 def captures(drops: ArcPointer[Int]) raises:
     var calls = 0
     var owner = VoidToken(10, drops)
@@ -48,15 +57,18 @@ def captures(drops: ArcPointer[Int]) raises:
 
 def main() raises:
     var drops = ArcPointer(0)
-    var callback = as_unary(pure)
+    var pointer: def(var VoidToken) thin = pure
+    var callback = as_unary(pointer)
     comptime assert conforms_to(type_of(callback), ImplicitlyCopyable)
     var copied = callback.copy()
     var result = callback.call(VoidToken(1, drops))
     comptime assert type_of(result) == type_of(None)
     _ = result
     copied(VoidToken(2, drops))
-    as_unary(never).call(VoidToken(3, drops))
-    var checked = as_unary(raising)
+    var never_pointer: def(var VoidToken) raises Never thin = never
+    as_unary(never_pointer).call(VoidToken(3, drops))
+    var raising_pointer: def(var VoidToken) raises VoidFailure thin = raising
+    var checked = as_unary(raising_pointer)
     comptime assert conforms_to(type_of(checked), ImplicitlyCopyable)
     var caught = 0
     try:
@@ -68,5 +80,15 @@ def main() raises:
     assert_equal(caught, -5)
     assert_equal(drops[], 5)
     _ = as_unary(explicit_none).call(0)
+    var p: def(var Int) thin = pure_register
+    var n: def(var Int) raises Never thin = never_register
+    var r: def(var Int) raises VoidFailure thin = raising_register
+    var void = as_unary(p)(1)
+    comptime assert type_of(void) == type_of(None)
+    _ = void
+    as_unary(n)(2)
+    try: as_unary(r)(-6)
+    except error: caught = error.code
+    assert_equal(caught, -6)
     captures(drops)
     assert_equal(drops[], 13)

@@ -82,7 +82,7 @@ def conditional(mode, family=None):
                 errors.append(err)
                 if kind == 'raising': explicit += [f'{error}: {MD}']
                 explicit += [f'{typ}: '+(f'_RaisingThunk[{result}, {error}]' if kind == 'raising' else f'_Thunk[{result}]')]
-                cb = f'_NativeBranch{ "Left" if label == "on_true" else "Right"}[{result}, {err}, {typ}, {kind == "raising"}, {origin}]'
+                cb = f'_NativeThunkRef[{result}, {err}, {typ}, {kind == "raising"}, {origin}]'
                 types.append(cb); values.append(f'{cb}(Pointer(to={label}))'); results.append(result)
                 args += [f'ref[{origin}] {label}: {typ}']
         if mode == 'free': params += [f'V: {MD}']
