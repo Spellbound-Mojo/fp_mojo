@@ -9,7 +9,7 @@ from operation_specs import RESULT_OPERATIONS, error_operations
 from generate_plain_overloads import splice_source
 from generate_nary_syntax import MAX
 from generate_pipeline_syntax import TRANSFORMS
-from operation_specs import TERMINALS, TRAVERSALS, SEQUENCING
+from operation_specs import TERMINALS, TRAVERSALS, SEQUENCING, EFFECT_REDUCTIONS, EffectChoice
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "src/fp/functions/context.mojo"
@@ -323,18 +323,16 @@ def methods(*, fold_stage=False):
         params += ["//"] + explicit
         l,r = left["adapter_type"],right["adapter_type"]
         le,reffect = left["error"],right["error"]
-        common = reffect if le == "Never" else le if reffect == "Never" else f"_CommonError[{le}, {reffect}]"
-        composed = f"_IfEffect[{family}, {l}, {r}]"
-        probe = f"_ErrorProbe[Bool, {family}._Joined[{left['result']}, {right['result']}], {common}]"
-        result = f"{family}.Bound[Self.V, {composed}]"
-        error = f"{family}.BindError[Self.V, {probe}]"
+        plan = EffectChoice(family, "Self.V", l, r, left["result"], right["result"], le, reffect)
+        common, composed = plan.common_error, plan.callback
+        result, error = plan.result, plan.error
         conditions = ["conforms_to(Self.I, Monad)", "Self.I.Element[Self.V] == Bool"] + left["conditions"] + right["conditions"]
         conditions += [f"{family}.Element[{left['result']}] == {family}.Element[{right['result']}]",
                        f"_ErrorCompatible[{common}, {le}]", f"_ErrorCompatible[{common}, {reffect}]",
                        f"_BindCompatible[{family}, Self.V, {composed}]"]
         conditions += [f"_CarrierCompatible[{family}, {v}]" for v in ("Self.V",left["result"],right["result"])]
         emit("if_effect", {}, params, left["argument"] + ", " + right["argument"], result, error, "Self.I", conditions,
-             f"_if_effect[{family}, Self.V, {l}, {r}, {error}](self.value^, {left['build']}, {right['build']})",
+             plan.invoke(error, "self.value^", left["build"], right["build"]),
              "Invoke only the factory selected by an effectful Bool through the selected Monad.")
 
     # Structural conveniences share their transforms with legacy fluent APIs.
@@ -409,13 +407,12 @@ def methods(*, fold_stage=False):
     # Effectful terminals consume the native source, independently of its
     # selected Functor. The target Monad owns ordering, stopping and deferral.
     for name in ("all_effect", "any_effect", "find_effect", "find_map_effect", "fold_effect", "fold_map_effect"):
-        borrowing = name in ("all_effect", "any_effect", "find_effect")
-        folding = name == "fold_effect"
-        mapped_fold = name == "fold_map_effect"
+        operation = EFFECT_REDUCTIONS[name]
+        borrowing, folding, mapped_fold = operation.borrowing, operation.seeded, operation.mapped
         element = "_FoldElement[Self.V]"
         callbacks = (
             borrowing_callbacks(element, "function") if borrowing else
-            owning_callbacks("binary" if folding else "owned",
+            owning_callbacks(operation.mode,
                              ("Self.A", element) if folding else element, "function")
         )
         for cb in callbacks:
@@ -428,35 +425,23 @@ def methods(*, fold_stage=False):
                 )
             c, result = cb["adapter_type"], cb["result"]
             conditions = cb["conditions"] + [f"_CarrierCompatible[J, {result}]"]
-            built = cb["build"]
-            if name in ("all_effect", "any_effect"):
-                step = f"_PredicateStep[{c}]"
-                policy = f"_BoolLive[{name == 'all_effect'}]"
-                initial = str(name == "all_effect")
-                built = f"{step}({built})"
-                conditions += [f"J.Element[{result}] == Bool"]
-            elif name in ("find_effect", "find_map_effect"):
-                selected = element if borrowing else f"_ListElement[J.Element[{result}]]"
-                retained = f"_TraverseTap[{element}, J, {c}, True]" if borrowing else c
-                step = f"_SearchStep[{selected}, {retained}]"
-                policy, initial = f"_FirstPresent[{selected}]", f"Optional[{selected}]()"
-                built = f"{step}({retained}({built}))" if borrowing else f"{step}({built})"
-                conditions += [f"J.Element[{result}] == " + ("Bool" if borrowing else f"Optional[{selected}]"),
-                               f"RepeatableUnary[{retained}]"]
+            plan = operation.bind("J", "Self.V", element, c, cb["build"], result,
+                                  accumulator="Self.A", initial="self.initial^",
+                                  monoid="M" if mapped_fold else "",
+                                  retained=f"_TraverseTap[{element}, J, {c}, True]" if borrowing else "")
+            conditions += [f"J.Element[{result}] == {plan.payload}"]
+            if operation.searching:
+                conditions += [f"RepeatableUnary[{plan.callback}]"]
             elif folding:
-                step, policy, initial = c, "_AllLive[Self.A]", "self.initial^"
-                conditions += [f"J.Element[{result}] == Self.A", f"RepeatableBinary[{c}]"]
-            else:
-                step, policy = f"_FoldMappedStep[J, M, {c}]", "_AllLive[M.Value]"
-                conditions += [f"J.Element[{result}] == M.Value", f"RepeatableUnary[{c}]",
+                conditions += [f"RepeatableBinary[{c}]"]
+            elif mapped_fold:
+                conditions += [f"RepeatableUnary[{c}]",
                                f"_MapCompatible[J, {result}, _BindFirst[_AccumulatePair[_Combine[M]]]]",
                                f"_ErrorCompatible[_CommonError[{cb['error']}, M.Error], M.Error]"]
-            plan = f"_EffectFold[J, Self.V, {step}, {policy}]"
-            error = f"_CommonError[M.Error, {plan}.Error]" if mapped_fold else f"{plan}.Error"
-            expr = (f"_fold_map_effect[J, M, Self.V, {c}, {error}]({built}, self.value^)" if mapped_fold else
-                    f"_fold_effect[J, Self.V, {step}, {policy}, {error}]({built}, {initial}, self.value^)")
+            error = plan.error
+            expr = plan.invoke(error, "self.value^")
             emit("run" if folding else name, cb, params, cb["argument"],
-                 f"{plan}.Out", error, "J", conditions, expr,
+                 plan.result, error, "J", conditions, expr,
                  "Consume the source through the target Monad's ordered effectful reduction.")
             if folding:
                 fold_body.append(re.sub(r"\bJ\b", "Self.J", body.pop()))

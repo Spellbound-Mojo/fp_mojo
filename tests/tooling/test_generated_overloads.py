@@ -15,6 +15,7 @@ import generate_result_syntax as results
 import generate_traversal_syntax as traversals
 import generate_nary_syntax as nary
 import generate_sequencing_syntax as sequencing
+import generate_effect_syntax as effects
 
 
 class GeneratedOverloadTests(unittest.TestCase):
@@ -91,6 +92,19 @@ class GeneratedOverloadTests(unittest.TestCase):
         self.assertEqual(path.read_text(), generator.spliced(
             path, sequencing.methods(iteration=True),
             sequencing.START, sequencing.END, sequencing.HEADER))
+
+    def test_effect_sources_match_the_generator(self):
+        for module, mode, indent in (
+            ('iteration/effectful.mojo', 'free', ''),
+            ('algebra/conditional.mojo', 'conditional', ''),
+            ('iteration/chaining.mojo', 'iter', '    '),
+            ('functions/pipeline.mojo', 'piped', '    '),
+        ):
+            with self.subTest(module=module):
+                path = ROOT / 'src/fp' / module
+                self.assertEqual(path.read_text(), generator.spliced(
+                    path, effects.methods(mode), indent + effects.START,
+                    indent + effects.END, indent + effects.HEADER))
 
     def test_later_stages_name_their_own_input(self):
         # A mismatched call must still select the overload and reach the stage check.

@@ -167,6 +167,26 @@ with each surface. Family construction errors, stored errors and deferred run
 errors retain their separate formulas and timing. This consolidation changes
 no generated Mojo byte and adds no runtime execution owner.
 
+### Shared effectful reduction policies
+
+`operation_specs.EFFECT_REDUCTIONS` describes effectful folds, predicates and
+searches for the selected Pipeline and legacy free/Piped/Iter generators.
+Each operation chooses its callback mode, accumulator and stopping policy,
+step adapter, initialization and existing reduction driver once. A bound
+description supplies the exact result and construction-error expressions.
+`EffectChoice` likewise describes the existing `if_effect` continuation,
+joined result and branch-error probe. Only literal `Never` is simplified;
+generic associated errors retain their original spelling.
+
+The generators still own native admission, receiver constraints, error hints,
+family witnesses and source normalization. Borrowing search explicitly passes
+the retention alias used by its surface: selected syntax names `_TraverseTap`,
+while legacy syntax names `_EffectRetain`. Both keep their existing runtime
+owner. The catalog does not change source advancement, branch stopping,
+deferred execution or monoid initialization timing. Generated-source parity
+covers the selected and legacy effect blocks, and this extraction changes no
+production Mojo bytes.
+
 ## Native signatures and storage
 
 Native family recognition requires only Functor; Applicative entry points

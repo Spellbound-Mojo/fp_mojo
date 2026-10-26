@@ -195,6 +195,153 @@ TRAVERSALS = {
 
 
 @dataclass(frozen=True)
+class EffectReduction:
+    """Select the existing step and stopping rule for an effectful reduction."""
+
+    name: str
+    mode: str
+    accumulation: str
+    all_values: bool = False
+
+    @property
+    def borrowing(self):
+        return self.mode == "borrow"
+
+    @property
+    def seeded(self):
+        return self.accumulation == "fold"
+
+    @property
+    def mapped(self):
+        return self.accumulation == "monoid"
+
+    @property
+    def searching(self):
+        return self.accumulation == "present"
+
+    def bind(self, family, source, element, callback, build, result, *,
+             accumulator="", initial="", monoid="", retained=""):
+        # The caller supplies the exact retention alias used by its admission
+        # surface. Both aliases delegate to the same existing runtime owner.
+        if self.accumulation == "bool":
+            step = f"_PredicateStep[{callback}]"
+            policy = f"_BoolLive[{self.all_values}]"
+            initial, payload = str(self.all_values), "Bool"
+            build = f"{step}({build})"
+        elif self.searching:
+            selected = element if self.borrowing else f"_ListElement[{family}.Element[{result}]]"
+            if self.borrowing:
+                if not retained:
+                    raise ValueError("A borrowing effect search needs its retention adapter")
+                callback, build = retained, f"{retained}({build})"
+            step = f"_SearchStep[{selected}, {callback}]"
+            policy, initial = f"_FirstPresent[{selected}]", f"Optional[{selected}]()"
+            payload = "Bool" if self.borrowing else f"Optional[{selected}]"
+            build = f"{step}({build})"
+        elif self.seeded:
+            if not accumulator or not initial:
+                raise ValueError("An effectful fold needs its accumulator type and initial value")
+            step, policy, payload = callback, f"_AllLive[{accumulator}]", accumulator
+        elif self.mapped:
+            if not monoid:
+                raise ValueError("An effectful mapped fold needs its monoid")
+            step, policy = f"_FoldMappedStep[{family}, {monoid}, {callback}]", f"_AllLive[{monoid}.Value]"
+            payload = f"{monoid}.Value"
+        else:
+            raise ValueError(f"Unknown effectful accumulation policy: {self.accumulation}")
+        return EffectReductionPlan(family, source, callback, step, policy,
+                                   initial, build, payload, monoid)
+
+
+@dataclass(frozen=True)
+class EffectReductionPlan:
+    family: str
+    source: str
+    callback: str
+    step: str
+    policy: str
+    initial: str
+    build: str
+    payload: str
+    monoid: str
+
+    @property
+    def types(self):
+        return f"_EffectFold[{self.family}, {self.source}, {self.step}, {self.policy}]"
+
+    @property
+    def result(self):
+        return f"{self.types}.Out"
+
+    @property
+    def error(self):
+        error = f"{self.types}.Error"
+        return f"_CommonError[{self.monoid}.Error, {error}]" if self.monoid else error
+
+    def invoke(self, error, value):
+        if self.monoid:
+            return (f"_fold_map_effect[{self.family}, {self.monoid}, {self.source}, "
+                    f"{self.callback}, {error}]({self.build}, {value})")
+        return (f"_fold_effect[{self.family}, {self.source}, {self.step}, {self.policy}, "
+                f"{error}]({self.build}, {self.initial}, {value})")
+
+
+EFFECT_REDUCTIONS = {
+    op.name: op
+    for op in (
+        EffectReduction("fold_effect", "binary", "fold"),
+        EffectReduction("any_effect", "borrow", "bool"),
+        EffectReduction("all_effect", "borrow", "bool", all_values=True),
+        EffectReduction("find_effect", "borrow", "present"),
+        EffectReduction("find_map_effect", "owned", "present"),
+        EffectReduction("fold_map_effect", "owned", "monoid"),
+    )
+}
+
+
+@dataclass(frozen=True)
+class EffectChoice:
+    """Existing conditional continuation and its exact branch-error probe."""
+
+    family: str
+    source: str
+    left: str
+    right: str
+    left_result: str
+    right_result: str
+    left_error: str
+    right_error: str
+
+    @property
+    def common_error(self):
+        # Only literal Never is simplified. Evidence from a generic associated
+        # error, and admission of that error, remain with each surface.
+        if self.left_error == "Never":
+            return self.right_error
+        if self.right_error == "Never":
+            return self.left_error
+        return f"_CommonError[{self.left_error}, {self.right_error}]"
+
+    @property
+    def callback(self):
+        return f"_IfEffect[{self.family}, {self.left}, {self.right}]"
+
+    @property
+    def result(self):
+        return f"{self.family}.Bound[{self.source}, {self.callback}]"
+
+    @property
+    def error(self):
+        joined = f"{self.family}._Joined[{self.left_result}, {self.right_result}]"
+        probe = f"_ErrorProbe[Bool, {joined}, {self.common_error}]"
+        return f"{self.family}.BindError[{self.source}, {probe}]"
+
+    def invoke(self, error, value, left, right):
+        return (f"_if_effect[{self.family}, {self.source}, {self.left}, {self.right}, "
+                f"{error}]({value}, {left}, {right})")
+
+
+@dataclass(frozen=True)
 class Sequencing:
     name: str
     mode: str
