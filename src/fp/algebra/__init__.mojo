@@ -53,7 +53,7 @@ call order and count instead.
 """
 from .protocols import Functor, RebindingFunctor, Applicative, ApplicativeError, Monad, Traversable, Monoid, Semigroup, Filterable, FunctorFilter
 from .errors import fail, RecoverIfContract, OrElseIfContract, RecoverContract, TapErrContract, FlatTapErrContract
-from ._outcomes import EnsureContract
+from ._outcomes import EnsureContract, AttemptTapContract
 from .filtering import filter, filter_not, filter_map, compact
 from .operations import map, pure, flat_map, map2_lazy, traverse, empty, combine
 from .instances import IdentityFamily, OptionalFamily, ResultFamily, ListFamily

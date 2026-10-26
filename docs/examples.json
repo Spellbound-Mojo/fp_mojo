@@ -168,6 +168,9 @@
     "docs/examples/selected_error_observation.mojo": {
       "stdout": "before run: 0\ndeferred: 24 ; observed: 1\nResult observer: audit\nValidation observer: audit original\n"
     },
+    "docs/examples/selected_outcome_observation.mojo": {
+      "stdout": "before run: 0\nrecovered: 10 ; observed: 1\naccepted: 6 ; observed: 2\nobserver failure: audit failed\n"
+    },
     "docs/examples/selected_outcomes.mojo": {
       "stdout": "before run: 0\nrecovered: 14 ; handled: 1\npreserved: handler failure ; opposite calls: 0\nchanged error: 7\n"
     },

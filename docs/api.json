@@ -808,6 +808,93 @@
    "summary": "Map a native Array's elements, preserving its length and order.",
    "traits": []
   },
+  "algebra.AttemptTapContract": {
+   "aliases": [
+    {
+     "description": "The exact native Result borrowed by the observer, including origins.",
+     "name": "Outcome"
+    },
+    {
+     "description": "The observer borrows the selected complete stored outcome.",
+     "name": "InputCompatible"
+    },
+    {
+     "description": "The input belongs to the selected stored-error layer.",
+     "name": "SourceCompatible"
+    },
+    {
+     "description": "The observer produces a carrier in the selected stored-error layer.",
+     "name": "ObserverCompatible"
+    },
+    {
+     "description": "Family map admission for exposing each success as a native Result.",
+     "name": "MaterializeMapCompatible"
+    },
+    {
+     "description": "Family recovery admission for exposing each selected failure.",
+     "name": "MaterializeHandleCompatible"
+    },
+    {
+     "description": "Family bind admission for observing and retaining the native outcome.",
+     "name": "ObserveBindCompatible"
+    },
+    {
+     "description": "Family bind admission for restoring each retained outcome.",
+     "name": "RestoreBindCompatible"
+    },
+    {
+     "description": "Carrier and primitive admission without repeating callback input equality.",
+     "name": "FamilyCompatible"
+    },
+    {
+     "description": "Selected entry-point admission; receiver and copy checks remain with families.",
+     "name": "Compatible"
+    },
+    {
+     "description": "The unchanged family for fluent continuation.",
+     "name": "Family"
+    },
+    {
+     "description": "The exact observed/restored carrier, including deferred representations.",
+     "name": "Out"
+    },
+    {
+     "description": "The exact construction error; deferred callback and restoration errors remain deferred.",
+     "name": "Error"
+    }
+   ],
+   "description": "The observer borrows Result[Element[V], Failure] on either stored branch\nand returns an effect in I. Successful observer branches restore the\noriginal outcome; observer failures replace it and empty effects stay\nempty. Generic selected wrappers forward Compatible and project Family,\nOut and Error. Existing primitives retain receiver, copying and join checks.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected Monad with a stored-error capability.",
+     "inferred": false,
+     "name": "I",
+     "type": "ApplicativeError & Monad",
+     "variadic": false
+    },
+    {
+     "description": "The complete consumed source carrier, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The borrowing whole-outcome observer returning an effect in I.",
+     "inferred": false,
+     "name": "C",
+     "type": "BorrowCallContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/_outcomes",
+   "signature": "struct AttemptTapContract[I: ApplicativeError & Monad, V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable]",
+   "summary": "Admission and exact result of observing a selected whole stored outcome.",
+   "traits": []
+  },
   "algebra.BeforeContract": {
    "aliases": [],
    "description": "Project `Family`, `Out` and `Error` and forward `Compatible` in generic selected\nwrappers. `InputCompatible` is satisfied by the existing ignored-input adapter;\n`CarrierCompatible` checks F.Out and `BindCompatible` checks family admission.\nConstruction and execution keep the selected family's timing and exact errors.",
@@ -89881,7 +89968,7 @@
        }
       ],
       "description": "",
-      "error": "C.Failure",
+      "error": "AttemptTapContract[_Ensuring[Self.I], Self.V, C].Error",
       "parameters": [
        {
         "description": "The first library callback type, retaining its receiver and origins.",
@@ -89895,9 +89982,467 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, C].Out, Self.E]"
+      },
+      "signature": "def attempt_tap[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises AttemptTapContract[_Ensuring[Self.I], Self.V, C].Error -> Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, C].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and AttemptTapContract[_Ensuring[Self.I], Self.V, C].Compatible",
+      "summary": "Observe the selected stored outcome and restore it after successful observer effects."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, C, False, o]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, C, False, o]].Out, Self.E]"
+      },
+      "signature": "def attempt_tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) -> R](deinit self, ref[o] function: C) raises AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, C, False, o]].Error -> Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, C, False, o]].Compatible",
+      "summary": "Observe the selected stored outcome and restore it after successful observer effects."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Self.E, C, True, o]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) raises Self.E -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Self.E, C, True, o]].Out, Self.E]"
+      },
+      "signature": "def attempt_tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) raises Self.E -> R](deinit self, ref[o] function: C) raises AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Self.E, C, True, o]].Error -> Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Self.E, C, True, o]].Compatible",
+      "summary": "Observe the selected stored outcome and restore it after successful observer effects."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, C, True, o]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) raises Never -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, C, True, o]].Out, Self.E]"
+      },
+      "signature": "def attempt_tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) raises Never -> R](deinit self, ref[o] function: C) raises AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, C, True, o]].Error -> Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and Self.E != Never and AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, C, True, o]].Compatible",
+      "summary": "Observe the selected stored outcome and restore it after successful observer effects."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) thin -> R, False]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) thin -> R, False]].Out, Self.E]"
+      },
+      "signature": "def attempt_tap[R: Movable & Deinitable, //](deinit self, function: def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) thin -> R) raises AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) thin -> R, False]].Error -> Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and not conforms_to(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) thin -> R, False]].Compatible",
+      "summary": "Observe the selected stored outcome and restore it after successful observer effects."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) thin -> R, False]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) thin -> R, False]].Out, Self.E]"
+      },
+      "signature": "def attempt_tap[R: RegisterPassable & Deinitable, //](deinit self, function: def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) thin -> R) raises AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) thin -> R, False]].Error -> Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and not conforms_to(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], TrivialRegisterPassable) and AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) thin -> R, False]].Compatible",
+      "summary": "Observe the selected stored outcome and restore it after successful observer effects."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(P) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E]"
+      },
+      "signature": "def attempt_tap[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, function: def(P) thin -> R) raises AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and P == Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure] and not conforms_to(R, RegisterPassable) and AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Compatible",
+      "summary": "Observe the selected stored outcome and restore it after successful observer effects."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(P) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E]"
+      },
+      "signature": "def attempt_tap[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, function: def(P) thin -> R) raises AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and P == Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure] and AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Compatible",
+      "summary": "Observe the selected stored outcome and restore it after successful observer effects."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, X, def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) raises X thin -> R, True]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, X, def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) raises X thin -> R, True]].Out, Self.E]"
+      },
+      "signature": "def attempt_tap[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) raises X thin -> R) raises AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, X, def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) raises X thin -> R, True]].Error -> Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, X, def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and not conforms_to(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, X, def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) raises X thin -> R, True]].Compatible",
+      "summary": "Observe the selected stored outcome and restore it after successful observer effects."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, X, def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) raises X thin -> R, True]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, X, def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) raises X thin -> R, True]].Out, Self.E]"
+      },
+      "signature": "def attempt_tap[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) raises X thin -> R) raises AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, X, def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) raises X thin -> R, True]].Error -> Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, X, def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and not conforms_to(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], TrivialRegisterPassable) and AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, X, def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) raises X thin -> R, True]].Compatible",
+      "summary": "Observe the selected stored outcome and restore it after successful observer effects."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(P) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E]"
+      },
+      "signature": "def attempt_tap[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> R) raises AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and P == Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure] and not conforms_to(R, RegisterPassable) and AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Compatible",
+      "summary": "Observe the selected stored outcome and restore it after successful observer effects."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(P) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E]"
+      },
+      "signature": "def attempt_tap[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> R) raises AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and P == Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure] and AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Compatible",
+      "summary": "Observe the selected stored outcome and restore it after successful observer effects."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C.Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
        "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
       },
-      "signature": "def attempt_tap[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == Result[_Success[Self.V], _Failure[Self.V]] and C.Result == Result[_Success[C.Result], _Failure[Self.V]]",
+      "signature": "def attempt_tap[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Self.I, ApplicativeError) and C.Result == Result[_Success[C.Result], _Failure[Self.V]]",
       "summary": "Sequence an observer of the whole Result and retain its outcome on observer success."
      },
      {
@@ -89941,7 +90486,7 @@
        "doc": "",
        "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
       },
-      "signature": "def attempt_tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Result[_Success[Self.V], _Failure[Self.V]]) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == Result[_Success[R], _Failure[Self.V]]",
+      "signature": "def attempt_tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Result[_Success[Self.V], _Failure[Self.V]]) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Self.I, ApplicativeError) and R == Result[_Success[R], _Failure[Self.V]]",
       "summary": "Sequence an observer of the whole Result and retain its outcome on observer success."
      },
      {
@@ -89985,7 +90530,7 @@
        "doc": "",
        "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
       },
-      "signature": "def attempt_tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Result[_Success[Self.V], _Failure[Self.V]]) raises Self.E -> R](deinit self, ref[o] function: C) raises Self.E -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == Result[_Success[R], _Failure[Self.V]]",
+      "signature": "def attempt_tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Result[_Success[Self.V], _Failure[Self.V]]) raises Self.E -> R](deinit self, ref[o] function: C) raises Self.E -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Self.I, ApplicativeError) and R == Result[_Success[R], _Failure[Self.V]]",
       "summary": "Sequence an observer of the whole Result and retain its outcome on observer success."
      },
      {
@@ -90029,7 +90574,7 @@
        "doc": "",
        "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
       },
-      "signature": "def attempt_tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Result[_Success[Self.V], _Failure[Self.V]]) raises Never -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == Result[_Success[R], _Failure[Self.V]]",
+      "signature": "def attempt_tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Result[_Success[Self.V], _Failure[Self.V]]) raises Never -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and not conforms_to(Self.I, ApplicativeError) and R == Result[_Success[R], _Failure[Self.V]]",
       "summary": "Sequence an observer of the whole Result and retain its outcome on observer success."
      },
      {
@@ -90059,7 +90604,7 @@
        "doc": "",
        "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
       },
-      "signature": "def attempt_tap[R: Movable & Deinitable](deinit self, function: def(Result[_Success[Self.V], _Failure[Self.V]]) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Result[_Success[Self.V], _Failure[Self.V]], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
+      "signature": "def attempt_tap[R: Movable & Deinitable](deinit self, function: def(Result[_Success[Self.V], _Failure[Self.V]]) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Result[_Success[Self.V], _Failure[Self.V]], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and not conforms_to(Self.I, ApplicativeError) and R == Result[_Success[R], _Failure[Self.V]]",
       "summary": "Sequence an observer of the whole Result and retain its outcome on observer success."
      },
      {
@@ -90089,7 +90634,7 @@
        "doc": "",
        "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
       },
-      "signature": "def attempt_tap[R: RegisterPassable & Deinitable](deinit self, function: def(Result[_Success[Self.V], _Failure[Self.V]]) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Result[_Success[Self.V], _Failure[Self.V]], TrivialRegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
+      "signature": "def attempt_tap[R: RegisterPassable & Deinitable](deinit self, function: def(Result[_Success[Self.V], _Failure[Self.V]]) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Result[_Success[Self.V], _Failure[Self.V]], TrivialRegisterPassable) and not conforms_to(Self.I, ApplicativeError) and R == Result[_Success[R], _Failure[Self.V]]",
       "summary": "Sequence an observer of the whole Result and retain its outcome on observer success."
      },
      {
@@ -90126,7 +90671,7 @@
        "doc": "",
        "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
       },
-      "signature": "def attempt_tap[P: TrivialRegisterPassable, R: Movable & Deinitable](deinit self, function: def(P) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
+      "signature": "def attempt_tap[P: TrivialRegisterPassable, R: Movable & Deinitable](deinit self, function: def(P) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and not conforms_to(Self.I, ApplicativeError) and R == Result[_Success[R], _Failure[Self.V]]",
       "summary": "Sequence an observer of the whole Result and retain its outcome on observer success."
      },
      {
@@ -90163,7 +90708,7 @@
        "doc": "",
        "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
       },
-      "signature": "def attempt_tap[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable](deinit self, function: def(P) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == Result[_Success[Self.V], _Failure[Self.V]] and R == Result[_Success[R], _Failure[Self.V]]",
+      "signature": "def attempt_tap[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable](deinit self, function: def(P) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Self.I, ApplicativeError) and R == Result[_Success[R], _Failure[Self.V]]",
       "summary": "Sequence an observer of the whole Result and retain its outcome on observer success."
      },
      {
@@ -90200,7 +90745,7 @@
        "doc": "",
        "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
       },
-      "signature": "def attempt_tap[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, function: def(Result[_Success[Self.V], _Failure[Self.V]]) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(Result[_Success[Self.V], _Failure[Self.V]], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
+      "signature": "def attempt_tap[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, function: def(Result[_Success[Self.V], _Failure[Self.V]]) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(Result[_Success[Self.V], _Failure[Self.V]], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and not conforms_to(Self.I, ApplicativeError) and R == Result[_Success[R], _Failure[Self.V]]",
       "summary": "Sequence an observer of the whole Result and retain its outcome on observer success."
      },
      {
@@ -90237,7 +90782,7 @@
        "doc": "",
        "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
       },
-      "signature": "def attempt_tap[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, function: def(Result[_Success[Self.V], _Failure[Self.V]]) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(Result[_Success[Self.V], _Failure[Self.V]], TrivialRegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
+      "signature": "def attempt_tap[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, function: def(Result[_Success[Self.V], _Failure[Self.V]]) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(Result[_Success[Self.V], _Failure[Self.V]], TrivialRegisterPassable) and not conforms_to(Self.I, ApplicativeError) and R == Result[_Success[R], _Failure[Self.V]]",
       "summary": "Sequence an observer of the whole Result and retain its outcome on observer success."
      },
      {
@@ -90281,7 +90826,7 @@
        "doc": "",
        "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
       },
-      "signature": "def attempt_tap[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable](deinit self, function: def(P) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
+      "signature": "def attempt_tap[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable](deinit self, function: def(P) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and not conforms_to(Self.I, ApplicativeError) and R == Result[_Success[R], _Failure[Self.V]]",
       "summary": "Sequence an observer of the whole Result and retain its outcome on observer success."
      },
      {
@@ -90325,7 +90870,7 @@
        "doc": "",
        "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
       },
-      "signature": "def attempt_tap[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, function: def(P) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == Result[_Success[Self.V], _Failure[Self.V]] and R == Result[_Success[R], _Failure[Self.V]]",
+      "signature": "def attempt_tap[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, function: def(P) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Self.I, ApplicativeError) and R == Result[_Success[R], _Failure[Self.V]]",
       "summary": "Sequence an observer of the whole Result and retain its outcome on observer success."
      }
     ],

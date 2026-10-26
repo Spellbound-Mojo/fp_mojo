@@ -128,6 +128,16 @@ Existing family bodies still check representation and receiver requirements.
 
 <!-- example: docs/examples/selected_outcomes.mojo -->
 
+`attempt_tap(observer)` borrows either original outcome as
+`Result[Element, Failure]` and runs an observer effect in the selected family.
+Successful observer branches restore the original outcome through that
+family; observer failures replace it, and empty effects remain empty. This
+requires `ApplicativeError` and Monad. Native Result storage under a custom
+family does not bypass its construction or restoration policy. Deferred
+observation stays deferred, and the chain retains the selected family.
+
+<!-- example: docs/examples/selected_outcome_observation.mojo -->
+
 `flat_tap(callback)` sequences a borrowing effect and keeps each original
 payload. `flat_pair_with(callback)` pairs each original with every successful
 projection. `before(factory)` sequences a zero-argument effect and keeps

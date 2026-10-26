@@ -211,3 +211,47 @@ struct _AttemptTap[I: ApplicativeError & Monad, V: Movable & Deinitable, C: Borr
             return _flat_map_as[Self.Error, Self.I](Self.Restore(), observed^)
         except raised:
             _propagate_error[Self.Error](raised^)
+
+
+struct AttemptTapContract[I: ApplicativeError & Monad, V: Movable & Deinitable,
+                          C: BorrowCallContract & Movable & Deinitable]:
+    """Admission and exact result of observing a selected whole stored outcome.
+
+    The observer borrows Result[Element[V], Failure] on either stored branch
+    and returns an effect in I. Successful observer branches restore the
+    original outcome; observer failures replace it and empty effects stay
+    empty. Generic selected wrappers forward Compatible and project Family,
+    Out and Error. Existing primitives retain receiver, copying and join checks.
+
+    Parameters:
+        I: The selected Monad with a stored-error capability.
+        V: The complete consumed source carrier, including origins.
+        C: The borrowing whole-outcome observer returning an effect in I.
+    """
+    comptime _Plan = _AttemptTap[Self.I, Self.V, Self.C]
+    comptime Outcome = Self._Plan.Outcome
+    """The exact native Result borrowed by the observer, including origins."""
+    comptime InputCompatible = Self.C.Payload == Self.Outcome
+    """The observer borrows the selected complete stored outcome."""
+    comptime SourceCompatible = Self.I._ErrorCarrier[Self.V]
+    """The input belongs to the selected stored-error layer."""
+    comptime ObserverCompatible = Self.I._ErrorCarrier[Self.C.Result]
+    """The observer produces a carrier in the selected stored-error layer."""
+    comptime MaterializeMapCompatible = Self.I.MapCompatible[Self.V, Self._Plan.Capture.Wrap]
+    """Family map admission for exposing each success as a native Result."""
+    comptime MaterializeHandleCompatible = Self.I._Handles[Self._Plan.Capture.Mapped, Self._Plan.Capture.Recover]
+    """Family recovery admission for exposing each selected failure."""
+    comptime ObserveBindCompatible = Self.I.BindCompatible[Self._Plan.Capture.Out, Self._Plan.Retain]
+    """Family bind admission for observing and retaining the native outcome."""
+    comptime RestoreBindCompatible = Self.I.BindCompatible[Self._Plan.Observed, Self._Plan.Restore]
+    """Family bind admission for restoring each retained outcome."""
+    comptime FamilyCompatible = Self.SourceCompatible and Self.ObserverCompatible and Self.MaterializeMapCompatible and Self.MaterializeHandleCompatible and Self.ObserveBindCompatible and Self.RestoreBindCompatible
+    """Carrier and primitive admission without repeating callback input equality."""
+    comptime Compatible = Self.InputCompatible and Self.FamilyCompatible
+    """Selected entry-point admission; receiver and copy checks remain with families."""
+    comptime Family = Self.I
+    """The unchanged family for fluent continuation."""
+    comptime Out = Self._Plan.Out
+    """The exact observed/restored carrier, including deferred representations."""
+    comptime Error = Self._Plan.Error
+    """The exact construction error; deferred callback and restoration errors remain deferred."""

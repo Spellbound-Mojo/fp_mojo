@@ -173,6 +173,21 @@ witness consistently for the descriptor and family selection.
 
 <!-- example: docs/examples/selected_validation_workflow.mojo -->
 
+`AttemptTapContract[I,V,C]` describes selected whole-outcome observation for
+an `ApplicativeError & Monad` family. `Outcome` names the exact native Result
+borrowed by the observer. Generic wrappers forward `Compatible` and project
+`Family`, `Out` and `Error`. The component predicates check input equality,
+source and observer carrier membership, materialization through map/recovery,
+and the two bind steps for observation and restoration. Forwarding all these
+components is equivalent to the combined predicate; the older intrinsic
+Result input checks alone do not establish the selected family contract.
+Bodies retain receiver, copying, join and native-error compatibility checks.
+Deferred observer and restoration errors remain in the output action's run
+contract. Conditional capability wrappers use the same public
+`downcast[I, ApplicativeError & Monad]` witness throughout.
+
+<!-- example: docs/examples/selected_outcome_observation.mojo -->
+
 `FlatTapContract`, `FlatPairWithContract`, `BeforeContract` and
 `FollowedByContract` describe selected Monad sequencing. Each takes the family,
 complete source carrier and library callback type. Generic signatures project

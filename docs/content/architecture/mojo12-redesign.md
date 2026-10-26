@@ -535,6 +535,26 @@ requires Monad. Validation supports the former without acquiring the latter.
 Custom family construction errors, deferred run errors, origins, one-shot
 cleanup and branching repeatability remain with their existing owners.
 
+### Selected whole-outcome observation
+
+Selected `attempt_tap` delegates to the existing `_AttemptTap` plan:
+`_Materialize` exposes the selected native Result, `_EffectRetain` observes
+and retains it, and `_Restore` reconstructs the original through the family.
+Successful observer branches restore the outcome; observer failures replace
+it and empty effects remain empty. Outer stored-error layers remain outside
+the selected observation. Custom families own both construction and restore,
+including when their storage is native Result.
+
+`AttemptTapContract` is declared beside that plan and exported by `fp.algebra`.
+It exposes source/observer/input admission and the exact map, recovery and
+bind predicates consumed by the plan. The selected signature adds these
+family proofs without moving receiver, copying, join or error compatibility
+checks out of their existing bodies. Both combined and component predicates
+forward generically. Output and construction-error projections refer directly
+to the plan; no execution or callback storage is added. Family admission
+requires ApplicativeError and Monad; intrinsic Result overloads remain only
+under non-error families, preserving native generic forwarding.
+
 ### Generic sequencing metadata
 
 The four public sequencing contracts name the existing selected Monad

@@ -794,6 +794,21 @@ def methods(*, fold_stage=False):
              f"_flat_map_as[{error}, {family}]({continuation}({p['build']}, {g['build']}), self.value^)",
              "Validate successes through the selected family's bind and failure construction.")
 
+    # Materialize only the selected stored layer, then use the canonical
+    # observer/restore plan. Native storage does not select another family.
+    operation = RESULT_OPERATIONS["attempt_tap"]
+    primary = operation.callbacks[0]
+    outcome = f"Result[Self.I.Element[Self.V], {family}.Failure]"
+    for cb in native_callbacks(primary.mode, primary.input(element, family + ".Failure", whole=outcome), primary.argument):
+        contract = f"AttemptTapContract[{family}, Self.V, {cb['adapter_type']}]"
+        runner = f"_AttemptTap[{family}, Self.V, {cb['adapter_type']}]"
+        conditions = ["conforms_to(Self.I, ApplicativeError)", "conforms_to(Self.I, Monad)"]
+        if cb["adapter_type"] != "C": conditions += cb["conditions"]
+        conditions += [contract + ".Compatible"]
+        emit("attempt_tap", cb, cb["params"], cb["argument"], contract + ".Out", contract + ".Error",
+             "Self.I", conditions, f"{runner}.apply(self.value^, {cb['build']})",
+             "Observe the selected stored outcome and restore it after successful observer effects.")
+
     # Select or_else semantics before callback inference. The library boundary
     # and error-capable native boundary use one policy; no caller must decide
     # whether two stored error types are equal. Proven non-error families keep
@@ -915,7 +930,7 @@ def methods(*, fold_stage=False):
             conditions = [f"conforms_to(Self.V, _ResultType)", f"Self.V == {Source}"] + sum(
                 (c["conditions"] for c in callbacks), []
             )
-            if name in ("recover", "or_else", "tap_err", "flat_tap_err", "recover_if", "or_else_if", "ensure", "redeem", "redeem_with"):
+            if name in ("recover", "or_else", "tap_err", "flat_tap_err", "recover_if", "or_else_if", "ensure", "redeem", "redeem_with", "attempt_tap"):
                 conditions += ["not conforms_to(Self.I, ApplicativeError)"]
             R = a["result"]
             result = operation.result(T, Err, R, b["result"] if two else "", value=lambda r: f"_Success[{r}]")

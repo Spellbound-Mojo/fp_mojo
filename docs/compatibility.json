@@ -518,9 +518,31 @@
       ]
     },
     {
+      "name": "Whole-outcome observation",
+      "methods": [
+        "attempt_tap"
+      ],
+      "status": "selected",
+      "families": "Selected ApplicativeError and Monad, including custom and deferred families; intrinsic Result behavior remains under non-error families",
+      "callbacks": "Observer borrows the exact selected Result and returns an effect in that family; native closures borrowed, stored thin pointers owned, library receivers preserved",
+      "ownership": "Successful observer branches retain the original outcome; empty effects remain empty; branching requires repeatable observers and copyable retained outcomes; single-use paths admit move-only values",
+      "errors": "Exact family construction and deferred observer/restoration errors; observer stored failures replace the original outcome",
+      "timing": "Selected family owns materialization, observation and restoration; deferred effects remain deferred; unselected outer errors skip observation",
+      "owner": [
+        "src/fp/algebra/_outcomes.mojo",
+        "src/fp/algebra/_sequencing.mojo",
+        "src/fp/data/_result.mojo"
+      ],
+      "evidence": [
+        "docs/examples/selected_outcome_observation.mojo",
+        "tests/runtime/test_context_family_attempt_tap.mojo",
+        "tests/runtime/test_context_family_attempt_tap_generic.mojo",
+        "tests/ownership/test_context_family_attempt_tap_ownership.mojo"
+      ]
+    },
+    {
       "name": "Result operations",
       "methods": [
-        "attempt_tap",
         "map_both",
         "map_err"
       ],
@@ -534,7 +556,8 @@
         "src/fp/data/_result.mojo"
       ],
       "evidence": [
-        "tests/runtime/test_context_result_recover.mojo",
+        "tests/runtime/test_context_result_map_err.mojo",
+        "tests/runtime/test_context_result_map_both.mojo",
         "tests/runtime/test_context_native_signatures_results.mojo"
       ]
     },
