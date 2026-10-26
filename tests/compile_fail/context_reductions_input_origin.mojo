@@ -1,4 +1,5 @@
-# error: lacking evidence
+# error: no matching method
+# error: .value.origin of the first value
 from fp.functions import pipeline
 def check(left:List[Int],right:List[Int]):
     comptime L=type_of(Span(left))

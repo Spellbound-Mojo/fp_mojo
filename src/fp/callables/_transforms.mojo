@@ -93,18 +93,25 @@ def _observed[T: Movable & Deinitable, U: Movable & Deinitable, paired: Bool, se
 struct _BorrowedUnary[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](
     OnceUnary, MutableUnary where _RepeatableBorrow[C], Copyable where conforms_to(C, Copyable)
 ):
-    """Call a borrowed projection on one owned input, then discard the input."""
+    """Call a borrowed projection on one owned input, then discard the input.
+
+    Materialize the result before releasing the input. Mojo 1.2 mislowers a
+    tail-returned borrow of a consumed register value at O0; this explicit
+    evaluation order also matches the shared retention adapter.
+    """
     var function: Self.C
     comptime Arg = Self.T
     comptime Out = Self.C.Result
     comptime Error = Self.C.Failure
     def call_once(deinit self, var arg: Self.T) raises Self.Error -> Self.Out:
         comptime assert Self.C.Payload == Self.T
-        return _borrow_once_as[Self.Error](arg, self.function^)
+        var result = _borrow_once_as[Self.Error](arg, self.function^)
+        return result^
     def call_mut(mut self, var arg: Self.T) raises Self.Error -> Self.Out:
         comptime assert Self.C.Payload == Self.T
         comptime assert _RepeatableBorrow[Self.C]
-        return _borrow_repeated_as[Self.Error](arg, self.function)
+        var result = _borrow_repeated_as[Self.Error](arg, self.function)
+        return result^
 
 
 @fieldwise_init

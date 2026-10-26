@@ -21,6 +21,9 @@ def even(value: Int) -> Bool: return value % 2 == 0
 def as_text(value: Int) -> String: return String(value)
 
 def main() raises:
+    # A stored native pointer uses the same selected call syntax.
+    var transform: def(var Int) thin -> Int = double
+    assert_equal(pipeline(Optional(3)).map(transform).get().value(), 6)
     # Inspect the whole input, retain odd payloads, then pair each with text.
     var trace = List[Int]()
     def size(values: List[Int]) {ref trace}: trace.append(len(values))

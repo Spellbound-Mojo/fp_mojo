@@ -28,6 +28,12 @@ explicitly; use `pipeline[IdentityFamily](value)` for a whole-value stage.
 capabilities. Result combinators use their existing branch and ownership rules.
 The result of `map_err` or `map_both` selects the new Result error family.
 
+Stored thin native pointers can be passed directly to these selected operations,
+including Result handlers and the existing `fold_left(step, initial)` and
+`fold_until(step, initial)` forms. Deferred computations own the pointer value;
+native closures retain their borrow origins. Generic native error parameters
+may include `Never` without a separate non-Never constraint.
+
 <!-- example: docs/examples/selected_pipeline.mojo -->
 
 `raising[E]()` selects native callback admission. It does not change stored

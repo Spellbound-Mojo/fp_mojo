@@ -14,9 +14,9 @@ from ._receiver import _MutableBorrow
 from .products import _OptionalCell
 
 
-# Once an operand type is fixed, this projection retains its native consumed
-# argument ABI without enumerating every register/memory combination. Do not
-# use it to infer a result: symbolic return types still need a register branch.
+# Known consumed operands retain their native convention through this projection.
+# Read-only register arguments instead need an explicit TrivialRegisterPassable
+# parameter at overload admission. Symbolic returns also need a register branch.
 comptime _NativeOwnedArg[T: Movable & Deinitable] = downcast[T, RegisterPassable & Deinitable] if conforms_to(T, RegisterPassable) else T
 
 
@@ -371,6 +371,16 @@ def _call_native_never[A: Movable, R: Movable, F: Movable & Deinitable](
 
 def _call_native[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable,
                  F: Movable & Deinitable, raising: Bool](function: F, var value: A) raises E -> R:
+    # Recover memory/memory thin signatures here too: the legacy Never helper
+    # has broader Movable bounds for pipe, which lose these native witnesses.
+    comptime if not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable):
+        comptime if raising and E == Never and F == def(var A) raises Never thin -> R:
+            return rebind[def(var A) raises Never thin -> R](function)(value^)
+        elif raising and F == def(var A) raises E thin -> R:
+            return rebind[def(var A) raises E thin -> R](function)(value^)
+        elif not raising and F == def(var A) thin -> R:
+            comptime assert E == Never
+            return rebind[def(var A) thin -> R](function)(value^)
     # Thin pointers retain concrete register conventions for consumed operands.
     comptime if not conforms_to(A, RegisterPassable) and conforms_to(R, RegisterPassable):
         comptime Out = downcast[R, RegisterPassable & Deinitable]

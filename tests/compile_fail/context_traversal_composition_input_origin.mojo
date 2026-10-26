@@ -1,4 +1,5 @@
-# error: lacking evidence
+# error: no matching method
+# error: .value.origin of the first value
 from fp.functions import pipeline
 from fp.algebra import OptionalFamily
 def check(left: List[Int], right: List[Int]):

@@ -188,7 +188,10 @@
       "evidence": [
         "tests/runtime/test_context_observers_families.mojo",
         "tests/runtime/test_context_family_contract.mojo",
-        "tests/ownership/test_context_observers_ownership.mojo"
+        "tests/ownership/test_context_observers_ownership.mojo",
+        "tests/runtime/test_context_native_signatures_basic.mojo",
+        "tests/runtime/test_context_native_signatures_generic.mojo",
+        "tests/ownership/test_context_native_signatures_ownership.mojo"
       ]
     },
     {
@@ -230,7 +233,8 @@
       ],
       "evidence": [
         "tests/runtime/test_context_stages_folds.mojo",
-        "tests/ownership/test_context_stages_ownership.mojo"
+        "tests/ownership/test_context_stages_ownership.mojo",
+        "tests/runtime/test_context_native_signatures_folds.mojo"
       ]
     },
     {
@@ -379,7 +383,7 @@
       ],
       "status": "result_only",
       "families": "Result carriers; broader family capability admission still requires migration",
-      "callbacks": "Native or library callback; branch and receiver contracts follow Result.",
+      "callbacks": "Native closures or stored thin pointers, including mixed argument/result conventions; library callbacks retain their receiver and branch contracts.",
       "ownership": "Runs the selected branch; handlers consume values while observers borrow.",
       "errors": "Stored-error changes select a new ResultFamily; native raised errors retain their type.",
       "timing": "Immediate Result branch selection.",
@@ -389,7 +393,8 @@
       "evidence": [
         "tests/runtime/test_context_result_recover.mojo",
         "tests/runtime/test_context_result_redeem_with.mojo",
-        "tests/runtime/test_context_result_ensure.mojo"
+        "tests/runtime/test_context_result_ensure.mojo",
+        "tests/runtime/test_context_native_signatures_results.mojo"
       ]
     },
     {

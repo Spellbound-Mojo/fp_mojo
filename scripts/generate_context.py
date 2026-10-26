@@ -62,12 +62,13 @@ def methods(*, fold_stage=False):
                     )
                 ),
             )
-        E = "Self.E" if kind in ("raising", "thin_raising") else "Never"
+        E = ("Y" if second else "X") if kind == "thin_raising" else "Self.E" if kind == "raising" else "Never"
         raising = kind not in ("pure", "thin_pure")
-        native = (
-            ", ".join("var " + (f"_NativeOwnedArg[{p}]" if mode == "nary" and kind.startswith("thin_") else p) for p in payload)
-            if mode in ("binary", "nary")
-            else ("var " if mode == "owned" else "") + payload if mode != "thunk" else ""
+        native_payloads = payload if mode in ("binary", "nary") else [payload] if mode != "thunk" else []
+        native = ", ".join(
+            ("" if mode == "borrow" else "var ") +
+            (f"_NativeOwnedArg[{p}]" if kind.startswith("thin_") and mode != "borrow" else p)
+            for p in native_payloads
         )
         signature = (
             f"def({native})"
@@ -108,7 +109,7 @@ def methods(*, fold_stage=False):
                 cb = f"_NativeThunk[{R}, {E}, {signature}, {raising}]"
         return dict(
             params=(
-                [f"{R}: {MD}", "//"]
+                [f"{R}: {MD}"] + ([f"{E}: {MD}"] if kind == "thin_raising" else []) + ["//"]
                 if kind.startswith("thin_")
                 else [f"{R}: {MD}", f"{o}: ImmOrigin", "//", f"{C}: {signature}"]
             ),
@@ -118,88 +119,50 @@ def methods(*, fold_stage=False):
             prelude="",
             result=R,
             error=E,
-            conditions=["Self.E != Never"] if kind == "never" else [],
+            conditions=["Self.E != Never"] if kind == "never" else [f"_ErrorCompatible[Self.E, {E}]"] if kind == "thin_raising" else [],
         )
 
-    kinds = ("library", "pure", "thin_pure", "raising", "never", "thin_never")
+    def native_callbacks(mode, payload, arg, *, second=False, repeatable=False, library=True):
+        # Known operands project their exact native convention; only the result
+        # needs separate register/memory bounds during callback inference.
+        # Closure borrows and owned thin-pointer storage keep the same adapters.
+        for kind in (("library",) if library else ()) + ("pure", "raising", "never"):
+            yield callback(mode, kind, payload, arg, second=second, repeatable=repeatable)
+        # Read parameters need explicit TrivialRegisterPassable evidence at
+        # overload selection; a conditional read-type projection loses it.
+        # Infer a thin callback's exact error once, then admit it against E.
+        # Separate selected-E and literal-Never signatures become identical
+        # when E is Never; guarding either one restricts generic forwarding.
+        for kind in ("thin_pure", "thin_raising"):
+            for register_arg in ((False, True) if mode == "borrow" else (False,)):
+                p = "Q" if second else "P"
+                operand = p if register_arg else payload
+                for register_result in (False, True):
+                    cb = callback(mode, kind, operand, arg, second=second)
+                    result = cb["result"]
+                    if mode == "borrow":
+                        if register_arg:
+                            cb["params"].insert(0, f"{p}: TrivialRegisterPassable")
+                            cb["conditions"] += [f"{p} == {payload}"]
+                        else:
+                            cb["conditions"] += [f"not conforms_to({payload}, TrivialRegisterPassable)"]
+                    if register_result:
+                        cb["params"] = [f"{result}: RegisterPassable & Deinitable" if t == f"{result}: {MD}" else t for t in cb["params"]]
+                    else:
+                        cb["conditions"] += [f"not conforms_to({result}, RegisterPassable)"]
+                    yield cb
 
     def borrowing_callbacks(payload, arg, repeatable=True):
-        for kind in ("library", "pure", "raising", "never"):
-            yield callback("borrow", kind, payload, arg, repeatable=repeatable)
-        # Stored thin pointers cannot be converted between register and memory
-        # argument/result conventions. Spell their native ABI in the signature;
-        # every variant still uses the same borrowing adapter and invocation.
-        # Read arguments use registers only for trivial types; return values
-        # also include nontrivial RegisterPassable types such as Optional[Bool].
-        for kind in ("thin_pure", "thin_raising", "thin_never"):
-            for register_arg, register_result in product((False, True), repeat=2):
-                cb = callback("borrow", kind, "P" if register_arg else payload, arg)
-                if register_arg:
-                    cb["params"].insert(0, "P: TrivialRegisterPassable")
-                    cb["conditions"] += [f"P == {payload}"]
-                else:
-                    cb["conditions"] += [f"not conforms_to({payload}, TrivialRegisterPassable)"]
-                if register_result:
-                    cb["params"] = [
-                        "R: RegisterPassable & Deinitable" if p == f"R: {MD}" else p
-                        for p in cb["params"]
-                    ]
-                else:
-                    cb["conditions"] += ["not conforms_to(R, RegisterPassable)"]
-                if kind == "thin_raising":
-                    cb["conditions"] += ["Self.E != Never"]
-                yield cb
+        return native_callbacks("borrow", payload, arg, repeatable=repeatable)
 
     def owning_callbacks(mode, payload, arg):
-        for kind in ("library", "pure", "raising", "never"):
-            yield callback(mode, kind, payload, arg)
-        operands = payload if mode == "binary" else (payload,)
-        for kind in ("thin_pure", "thin_raising", "thin_never"):
-            for registers in product((False, True), repeat=len(operands) + 1):
-                native = tuple(f"P{i}" if registers[i] else t for i, t in enumerate(operands))
-                cb = callback(mode, kind, native if mode == "binary" else native[0], arg)
-                for i, actual in enumerate(operands):
-                    if registers[i]:
-                        cb["params"].insert(i, f"P{i}: RegisterPassable & Deinitable")
-                        cb["conditions"] += [f"P{i} == {actual}"]
-                    else:
-                        cb["conditions"] += [f"not conforms_to({actual}, RegisterPassable)"]
-                if registers[-1]:
-                    cb["params"] = ["R: RegisterPassable & Deinitable" if p == f"R: {MD}" else p for p in cb["params"]]
-                else:
-                    cb["conditions"] += ["not conforms_to(R, RegisterPassable)"]
-                if kind == "thin_raising":
-                    cb["conditions"] += ["Self.E != Never"]
-                yield cb
+        return native_callbacks(mode, payload, arg)
 
     def nary_callbacks(payloads, arg):
-        for kind in ("pure", "raising", "never"):
-            yield callback("nary", kind, payloads, arg)
-        # Carrier operands precede the callback, fixing their native conventions.
-        # Only return inference needs distinct register/memory signatures.
-        for kind in ("thin_pure", "thin_raising", "thin_never"):
-            for register_result in (False, True):
-                cb = callback("nary", kind, payloads, arg)
-                if register_result:
-                    cb["params"] = ["R: RegisterPassable & Deinitable" if p == f"R: {MD}" else p for p in cb["params"]]
-                else:
-                    cb["conditions"] += ["not conforms_to(R, RegisterPassable)"]
-                if kind == "thin_raising":
-                    cb["conditions"] += ["Self.E != Never"]
-                yield cb
+        return native_callbacks("nary", payloads, arg, library=False)
 
     def thunk_callbacks(arg, second=False):
-        for kind in ("library", "pure", "raising", "never"):
-            yield callback("thunk", kind, "", arg, second=second)
-        for kind in ("thin_pure", "thin_raising", "thin_never"):
-            for register_result in (False, True):
-                cb = callback("thunk", kind, "", arg, second=second)
-                result = cb["result"]
-                if register_result:
-                    cb["params"] = [f"{result}: RegisterPassable & Deinitable" if p == f"{result}: {MD}" else p for p in cb["params"]]
-                else: cb["conditions"] += [f"not conforms_to({result}, RegisterPassable)"]
-                if kind == "thin_raising": cb["conditions"] += ["Self.E != Never"]
-                yield cb
+        return native_callbacks("thunk", "", arg, second=second)
 
     def emit(name, cb, params, arguments, result, error, family, conditions, expr, summary):
         if params and params[0] == "//":
@@ -241,8 +204,7 @@ def methods(*, fold_stage=False):
 
     # Whole-value stages reselect the output family. The optional family comes
     # after the inference barrier, so then[Family](f) is also available.
-    for kind in kinds:
-        cb = callback("owned", kind, "Self.V", "function")
+    for cb in owning_callbacks("owned", "Self.V", "function"):
         params = [p for p in cb["params"] if p != "//"]
         params += ["//", f"J: Functor = _NativeFamily[{cb['result']}]"]
         emit(
@@ -301,6 +263,38 @@ def methods(*, fold_stage=False):
                 expr,
                 "Consume the source in order through the canonical terminal fold.",
             )
+
+    # Reduction fixes both consumed operands from the selected source.
+    for cb in native_callbacks("binary", ("_FoldElement[Self.V]", "_FoldElement[Self.V]"), "step", repeatable=True):
+        if " thin" not in cb["argument"]:
+            continue
+        result = f"Optional[{cb['result']}]"
+        emit("reduce_optional", cb, cb["params"], cb["argument"], result, cb["error"],
+             f"_NativeFamily[{result}]", cb["conditions"] + [f"{cb['result']} == _FoldElement[Self.V]"],
+             f"_context_reduce_optional({cb['build']}, self.value^)",
+             "Consume the source in order through the canonical terminal reduction.")
+
+    # These older folds admit the callback before the initial accumulator.
+    # A is still unknown there: spell its register/memory bounds explicitly.
+    # Source element conventions are already fixed by the pipeline value.
+    for name in ("fold_left", "fold_until"):
+        element = "_FoldElement[Self.V]"
+        result = "A" if name == "fold_left" else "ControlFlow[B, A]"
+        for kind in ("thin_pure", "thin_raising"):
+            for register in (False, True):
+                cb = callback("binary", kind, ("A", element), "step")
+                cb["params"] = [p for p in cb["params"] if p != f"R: {MD}"]
+                for key in ("argument", "build", "adapter_type", "result"):
+                    cb[key] = re.sub(r"\bR\b", result, cb[key]).replace("_NativeOwnedArg[A]", "A")
+                if not register: cb["conditions"] += ["not conforms_to(A, RegisterPassable)"]
+                params = ["A: RegisterPassable & Deinitable" if register else f"A: {MD}"]
+                if name == "fold_until": params += [f"B: {MD}"]
+                params += cb["params"]
+                entry = "_context_" + name + ("[B=B]" if name == "fold_until" else "")
+                emit(name, cb, params, cb["argument"] + ", var initial: A", result, cb["error"],
+                     f"_NativeFamily[{result}]", cb["conditions"],
+                     f"{entry}({cb['build']}, initial^, self.value^)",
+                     "Consume the source in order through the canonical terminal fold.")
 
     # Validation is an operation policy over native Result carriers.
     # N-ary operations retain the source family; traversal selects Result.
@@ -510,8 +504,7 @@ def methods(*, fold_stage=False):
 ''')
 
 
-    for kind in kinds:
-        cb = callback("owned", kind, "Self.I.Element[Self.V]", "function")
+    for cb in owning_callbacks("owned", "Self.I.Element[Self.V]", "function"):
         params = list(cb["params"])
         if "//" not in params:
             params += ["//"]
@@ -648,9 +641,8 @@ def methods(*, fold_stage=False):
                 emit(name, cb, params, cb["argument"], out, error, "J", conditions, expr,
                      "Traverse effects and discard successful payloads, retaining source Result errors.")
 
-    for kind in ("library", "pure", "raising", "never"):
+    for cb in owning_callbacks("binary", ("Self.I.Element[Self.V]", "Self.I.Element[W]"), "function"):
         family = "_Combining[Self.I]"
-        cb = callback("binary", kind, ("Self.I.Element[Self.V]", "Self.I.Element[W]"), "function")
         types = f"Self.V, {cb['adapter_type']}, _ValueThunk[W]"
         result, error = f"{family}.Combined[{types}]", f"{family}.CombineError[{types}]"
         conditions = ["conforms_to(Self.I, Applicative)"] + cb["conditions"]
@@ -770,7 +762,7 @@ def methods(*, fold_stage=False):
         callbacks = (
             borrowing_callbacks("Self.I.Element[Self.V]", arg)
             if name == "filter_not"
-            else (callback(mode, kind, "Self.I.Element[Self.V]", arg, repeatable=filtering) for kind in kinds)
+            else native_callbacks(mode, "Self.I.Element[Self.V]", arg, repeatable=filtering)
         )
         for cb in callbacks:
             params = cb["params"]
@@ -797,35 +789,27 @@ def methods(*, fold_stage=False):
 
     for name, (summary, detail) in (DOCS | OUTCOMES).items():
         two = name in ("ensure", "recover_if", "or_else_if") or name in OUTCOMES
-        for first, second in (
-            product(("library", "pure", "thin_pure", "raising", "never", "thin_never"), repeat=2)
-            if two
-            else (
-                (k, None)
-                for k in ("library", "pure", "thin_pure", "raising", "never", "thin_never")
-            )
-        ):
-            mode = (
-                "owned"
-                if name in ("recover", "map_err", "or_else") or name in OUTCOMES
-                else "thunk" if name in ("before", "followed_by") else "borrow"
-            )
-            payload = (
-                T
-                if name in ("flat_tap", "flat_pair_with", "ensure") or name in OUTCOMES
-                else Source if name == "attempt_tap" else Err
-            )
-            arg = "on_ok" if name in OUTCOMES else "predicate" if two else "function"
-            a = callback(mode, first, payload, arg)
-            callbacks = [a]
-            if two:
-                mode2 = "borrow" if name == "ensure" else "owned"
-                arg2 = (
-                    "on_err"
-                    if name in OUTCOMES
-                    else "make_error" if name == "ensure" else "function"
-                )
-                callbacks += [callback(mode2, second, T if name == "ensure" else Err, arg2, True)]
+        mode = (
+            "owned"
+            if name in ("recover", "map_err", "or_else") or name in OUTCOMES
+            else "thunk" if name in ("before", "followed_by") else "borrow"
+        )
+        payload = (
+            T
+            if name in ("flat_tap", "flat_pair_with", "ensure") or name in OUTCOMES
+            else Source if name == "attempt_tap" else Err
+        )
+        arg = "on_ok" if name in OUTCOMES else "predicate" if two else "function"
+        left = list(native_callbacks(mode, payload, arg))
+        if two:
+            mode2 = "borrow" if name == "ensure" else "owned"
+            arg2 = "on_err" if name in OUTCOMES else "make_error" if name == "ensure" else "function"
+            right = native_callbacks(mode2, T if name == "ensure" else Err, arg2, second=True)
+            combinations = product(left, right)
+        else:
+            combinations = ((cb, None) for cb in left)
+        for a, b in combinations:
+            callbacks = [a] + ([b] if two else [])
             conditions = [f"conforms_to(Self.V, _ResultType)", f"Self.V == {Source}"] + sum(
                 (c["conditions"] for c in callbacks), []
             )
@@ -872,8 +856,8 @@ def methods(*, fold_stage=False):
                 conditions += [f"({ex} == Never or {ey} == Never or {ex} == {ey})"]
                 effect = (
                     ey
-                    if first == "pure"
-                    else ex if second == "pure" else f"_CommonError[{ex}, {ey}]"
+                    if ex == "Never"
+                    else ex if ey == "Never" else f"_CommonError[{ex}, {ey}]"
                 )
             else:
                 effect = a["error"]
@@ -911,6 +895,7 @@ def documented(source):
         "A": "The accumulator type, inferred from the initial value and preserved by every step.",
         "M": "The Monoid used for the identity and ordered combination of mapped values.",
         "P": "The borrowed payload type, including its origins.",
+        "Q": "The second borrowed native operand type, including its origins.",
         "P0": "The first native register operand type, including its origins.",
         "P1": "The second native register operand type, including its origins.",
         "R": "The first callback result type, inferred from the callback.",
@@ -931,7 +916,7 @@ def documented(source):
         "Ws": "The additional carrier types, including their origins; at most seven.",
     }
     args = {
-        "function": "The callback; native callbacks are borrowed, library callbacks consumed.",
+        "function": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
         "predicate": "The borrowing Bool predicate.",
         "make_error": "The borrowed-payload factory of a stored Result error.",
         "on_true": "The factory invoked only for a true payload; native closures are borrowed.",
@@ -939,7 +924,7 @@ def documented(source):
         "on_ok": "The success handler, consuming the success payload.",
         "on_err": "The error handler, consuming the stored error payload.",
         "value": "The carrier, consumed.",
-        "step": "The fold step; native callbacks are borrowed, library Binary steps consumed.",
+        "step": "The fold step; closures are borrowed, thin pointers owned, library Binary steps consumed.",
         "initial": "The initial accumulator, consumed.",
         "other": "The already evaluated second carrier, consumed.",
         "old": "The payload to compare against, consumed.",

@@ -760,3 +760,51 @@ borrowed results and errors, Validation ordering, deferred pointer reassignment,
 and move-only cleanup on execution, skipping, failure and abandonment. Rejections
 exercise ordinary calls with wrong conventions, arity, errors, origins or closure
 lifetimes. Existing legacy entry points keep their positional bindings.
+
+## Shared selected callback admission
+
+One descriptor supplies selected native admission for consuming, borrowing,
+binary, n-ary and factory callbacks, including both sides of Result operations.
+Native closures keep their reference adapters. Stored thin pointers use the
+existing owning adapters and canonical native invocation functions. The same
+rules apply to `map`, `flat_map`, `traverse`, `map2`, whole-value stages,
+reductions and Result handlers; storing a native function in a variable no
+longer changes which of these selected operations can accept it.
+
+Consumed operands whose types are already fixed use `_NativeOwnedArg`.
+Read-only register operands require a declared `TrivialRegisterPassable`
+parameter and an equality to the selected payload. A conditional read-type
+projection loses that evidence during overload selection, even with a known
+source type. These small native signature distinctions do not change borrowing
+or introduce copies. Result bounds still distinguish register and memory returns.
+Those type guards remain necessary: removing their disjointness makes ordinary
+calls ambiguous. A generic thin signature retains its native ABI bounds;
+the selected error type does not determine its input or return convention.
+
+`fold_left(step, initial)` and `fold_until(step, initial)` keep their existing
+argument order. Their accumulator is unknown when admitting `step`, so these
+boundaries spell its register/memory bounds explicitly. The source element is
+already known. Both variants use the existing terminal drivers; no additional
+staging syntax or execution loop is required.
+
+Thin signatures infer the callback error once and admit it through the existing
+`_ErrorCompatible` predicate: the callback raises either the selected error or
+Never. Separate selected-error and literal-Never overloads become ambiguous
+when the selected error is Never. Guarding either overload instead restricts
+valid generic forwarding. Inference preserves Never even inside a generic
+error context, with no error-specific caller branches. Captured closure
+admission keeps its existing constraints.
+
+`context_native_signatures` clients exercise direct and generic forwarding,
+mixed Result handler signatures, borrowed results/errors, the existing fold
+syntax, pointer reassignment before deferred execution, move-only cleanup and
+ordinary invalid calls. The earlier observer, traversal, reduction and
+conditional clients additionally exercise the shared descriptor.
+
+Qualification exposed two additional invocation boundaries. Unary memory-input,
+memory-result thin callbacks must recover their native signature before the
+older Movable-only Never bridge. Borrowed projections materialize their result
+before releasing a consumed input; directly tail-returning that borrow corrupts
+register payloads at O0 on Mojo 1.2. Both fixes belong to the shared native or
+projection adapters and preserve their existing ownership and error contracts.
+The maintained Result client exercises these cases through ordinary calls.
