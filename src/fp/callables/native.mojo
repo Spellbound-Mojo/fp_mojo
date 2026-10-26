@@ -568,6 +568,38 @@ struct _NativeBorrow[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitabl
 
 def _call_native_borrow[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable,
                         F: Movable & Deinitable, raising: Bool](function: F, ref payload: P) raises E -> R:
+    # Thin pointers carry a concrete ABI, including register results. Recover
+    # those bounds before rebuilding their signature; closure conformance
+    # alone does not provide a callable witness for a thin pointer.
+    # Separate branches retain the bounds: a conditional alias joins them back
+    # to AnyType/Movable and would rebuild the memory convention again.
+    comptime if conforms_to(P, TrivialRegisterPassable):
+        comptime Arg = downcast[P, TrivialRegisterPassable]
+        comptime if conforms_to(R, RegisterPassable):
+            comptime Out = downcast[R, RegisterPassable & Deinitable]
+            comptime if raising and E == Never and F == def(Arg) raises Never thin -> Out:
+                return rebind_var[R](rebind[def(Arg) raises Never thin -> Out](function)(rebind[Arg](payload)))
+            elif raising and F == def(Arg) raises E thin -> Out:
+                return rebind_var[R](rebind[def(Arg) raises E thin -> Out](function)(rebind[Arg](payload)))
+            elif not raising and F == def(Arg) thin -> Out:
+                comptime assert E == Never
+                return rebind_var[R](rebind[def(Arg) thin -> Out](function)(rebind[Arg](payload)))
+        comptime if raising and E == Never and F == def(Arg) raises Never thin -> R:
+            return rebind[def(Arg) raises Never thin -> R](function)(rebind[Arg](payload))
+        elif raising and F == def(Arg) raises E thin -> R:
+            return rebind[def(Arg) raises E thin -> R](function)(rebind[Arg](payload))
+        elif not raising and F == def(Arg) thin -> R:
+            comptime assert E == Never
+            return rebind[def(Arg) thin -> R](function)(rebind[Arg](payload))
+    comptime if conforms_to(R, RegisterPassable):
+        comptime Out = downcast[R, RegisterPassable & Deinitable]
+        comptime if raising and E == Never and F == def(P) raises Never thin -> Out:
+            return rebind_var[R](rebind[def(P) raises Never thin -> Out](function)(payload))
+        elif raising and F == def(P) raises E thin -> Out:
+            return rebind_var[R](rebind[def(P) raises E thin -> Out](function)(payload))
+        elif not raising and F == def(P) thin -> Out:
+            comptime assert E == Never
+            return rebind_var[R](rebind[def(P) thin -> Out](function)(payload))
     comptime if R == type_of(None) and raising and E == Never and F == def(P) raises Never thin:
         _ = rebind[def(P) raises Never thin](function)(payload)
         return rebind_var[R](None)

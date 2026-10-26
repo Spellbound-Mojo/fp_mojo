@@ -1,5 +1,6 @@
 """Select native errors once; stored Result errors remain independent."""
 from fp.functions import pipeline
+from fp.algebra import OptionalFamily, ResultFamily
 from fp.data import Result, Ok, Err
 from std.testing import assert_equal
 
@@ -16,8 +17,28 @@ def invalid(value: Int) -> String: return String("too large")
 def length(var message: String) -> Int: return message.byte_length()
 def recover(var code: Int) -> Result[Int, String]: return Ok(code)
 def double(var value: Int) -> Int: return value * 2
+def even(value: Int) -> Bool: return value % 2 == 0
+def as_text(value: Int) -> String: return String(value)
 
 def main() raises:
+    # Inspect the whole input, retain odd payloads, then pair each with text.
+    var trace = List[Int]()
+    def size(values: List[Int]) {ref trace}: trace.append(len(values))
+    def record(value: Int) {ref trace}: trace.append(value)
+    var pairs = pipeline(List[Int]([1, 2, 3, 4])).tap(size).filter_not(even).tap_each(record).pair_with(as_text).get()
+    assert_equal(trace, List[Int]([4, 1, 3]))
+    assert_equal(pairs[1][0], 3)
+    assert_equal(pairs[1][1], "3")
+
+    # Borrow payloads for effects, then continue in the selected target family.
+    def audit(value: Int) -> Optional[String]: return Optional(String(value))
+    var audited = pipeline(List[Int]([1, 2, 3, 4])).traverse_tap[OptionalFamily](audit).get()
+    assert_equal(audited.value(), List[Int]([1, 2, 3, 4]))
+    def available(value: Int) -> Result[Bool, String]: return Ok(value % 2 == 0)
+    def count(var values: List[Int]) -> Int: return len(values)
+    var selected = pipeline(audited.take()).filter_effect[ResultFamily[String]](available).map(count).get()
+    assert_equal(selected._ok().value, 2)
+
     var checked: Result[Int, String]
     try:
         checked = pipeline(Result[Int, String](Ok(4))).raising[PipelineProcessingFailure]().map(process).ensure(accepted, invalid).get()

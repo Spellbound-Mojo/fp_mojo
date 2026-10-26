@@ -36,6 +36,22 @@ Pure and Never callbacks retain Never. Custom families retain their own
 execution errors and deferred callback lifetimes. `get()` only extracts the
 carrier.
 
+`tap(observer)` borrows the whole value once, immediately, including an empty
+container or Result's Err. `tap_each(observer)` borrows each payload using the
+selected family's map rules; empty List, absent Optional and Result's Err skip
+the observer. Both discard the callback result and retain the original value.
+`pair_with(project)` retains each payload beside the borrowed projection result.
+`filter_not(predicate)` retains payloads for which the borrowing Bool predicate
+returns False.
+
+These four operations keep the selected family and native-error context.
+Payloads move without requiring copies. Library callbacks use `BorrowCallable`
+and are consumed; native closures are borrowed and thin pointers are copied.
+Deferred families retain their evaluation timing and may keep the callback
+borrow until execution or disposal. Keep such callbacks alive and unmoved;
+overlapping mutable captures still follow Mojo's aliasing rules. A raised error
+stops eager processing and destroys remaining inputs and partial output.
+
 `then(stage)` consumes the whole current value once, including a Result's Err.
 It selects List, Optional or Result for those output types and Identity for
 other outputs. Use `then[Family](stage)` when returning a custom carrier, or
@@ -51,7 +67,23 @@ library steps use the standalone folds' shared `Binary` contract. The resulting
 value selects its family by the same rule as `then`.
 
 `traverse[TargetFamily](transform)` and `sequence[TargetFamily]()` continue in
-the target effect family. `map2(other, combine)`, `product(other)`,
+the target effect family. `traverse_tap[TargetFamily](effect)` borrows each
+payload, runs its effect and retains the original on success, discarding the
+effect's payload. `filter_effect[TargetFamily](predicate)` runs a borrowing
+effect returning Bool and retains the originals whose result is True. Both
+require a Traversable source; filtering also requires FunctorFilter, such as
+List or Optional. A subsequent `map` operates in the target family.
+
+The target controls sequencing: Optional and Result stop at the first absence
+or stored error, Validation accumulates stored errors, and List produces
+branches. Reader defers callback execution and filtering until `run`; `get()`
+does not execute them. Native raised errors keep their exact type and occur
+when the callback runs. Callbacks may borrow payloads containing origins.
+A library BorrowOnceCallable works with single-use sources such as Optional;
+List needs repeatable callbacks. Original move-only payloads are supported
+when the target does not need to duplicate them; List branching requires copies.
+
+`map2(other, combine)`, `product(other)`,
 `map_n((other, ...), combine)` and `product_n((other, ...))` retain the current
 Applicative family. The n-ary forms accept one to eight total operands; native
 functions take separate payload arguments, while library Unary callables take

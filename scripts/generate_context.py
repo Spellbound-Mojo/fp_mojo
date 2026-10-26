@@ -60,7 +60,7 @@ def methods():
                     )
                 ),
             )
-        E = "Self.E" if kind == "raising" else "Never"
+        E = "Self.E" if kind in ("raising", "thin_raising") else "Never"
         raising = kind not in ("pure", "thin_pure")
         native = (
             ", ".join("var " + p for p in payload)
@@ -95,7 +95,7 @@ def methods():
         )
         if kind.startswith("thin_"):
             if mode == "borrow":
-                cb = f"_NativeBorrow[{payload}, {R}, Never, {signature}, {raising}]"
+                cb = f"_NativeBorrow[{payload}, {R}, {E}, {signature}, {raising}]"
             elif mode == "owned":
                 cb = f"NativeUnary[{payload}, {R}, Never, {signature}, {raising}]"
             else:
@@ -129,6 +129,33 @@ def methods():
 
     kinds = ("library", "pure", "thin_pure", "raising", "never", "thin_never")
 
+    def borrowing_callbacks(payload, arg, repeatable=True):
+        for kind in ("library", "pure", "raising", "never"):
+            yield callback("borrow", kind, payload, arg, repeatable=repeatable)
+        # Stored thin pointers cannot be converted between register and memory
+        # argument/result conventions. Spell their native ABI in the signature;
+        # every variant still uses the same borrowing adapter and invocation.
+        # Read arguments use registers only for trivial types; return values
+        # also include nontrivial RegisterPassable types such as Optional[Bool].
+        for kind in ("thin_pure", "thin_raising", "thin_never"):
+            for register_arg, register_result in product((False, True), repeat=2):
+                cb = callback("borrow", kind, "P" if register_arg else payload, arg)
+                if register_arg:
+                    cb["params"].insert(0, "P: TrivialRegisterPassable")
+                    cb["conditions"] += [f"P == {payload}"]
+                else:
+                    cb["conditions"] += [f"not conforms_to({payload}, TrivialRegisterPassable)"]
+                if register_result:
+                    cb["params"] = [
+                        "R: RegisterPassable & Deinitable" if p == f"R: {MD}" else p
+                        for p in cb["params"]
+                    ]
+                else:
+                    cb["conditions"] += ["not conforms_to(R, RegisterPassable)"]
+                if kind == "thin_raising":
+                    cb["conditions"] += ["Self.E != Never"]
+                yield cb
+
     def emit(name, cb, params, arguments, result, error, family, conditions, expr, summary):
         target = f"Pipeline[{family}, {result}, Self.E]"
         prelude = cb.get("prelude", "")
@@ -137,6 +164,32 @@ def methods():
             f"\n    @always_inline\n    def {name}[{', '.join(params)}](deinit self, {arguments}) raises {error} -> {target}{constraints}:\n"
             f'        """{summary}"""\n{prelude}        return {target}({expr})\n'
         )
+
+    # Borrowing observation keeps the existing shared receiver contract. The
+    # whole-value tap runs once now; payload observers belong to the family's
+    # map, which may defer evaluation and retain the native callback borrow.
+    for name in ("tap", "tap_each", "pair_with"):
+        payload = "Self.V" if name == "tap" else "Self.I.Element[Self.V]"
+        for cb in borrowing_callbacks(payload, "function"):
+            observer = f"_Observe[{payload}, {cb['adapter_type']}, {name == 'pair_with'}]"
+            built = f"{observer}({cb['build']})"
+            conditions = cb["conditions"]
+            if name == "tap":
+                result, error = "Self.V", cb["error"]
+                expr = f"call_once({built}, self.value^)"
+                summary = "Inspect the whole value once now and retain it unchanged."
+            else:
+                conditions += [f"_MapCompatible[Self.I, Self.V, {observer}]"]
+                result = f"Self.I.Mapped[Self.V, {observer}]"
+                error = f"Self.I.MapError[Self.V, {observer}]"
+                expr = f"Self.I.map({built}, self.value^)"
+                summary = (
+                    "Borrow each payload and retain it beside the projection result."
+                    if name == "pair_with"
+                    else "Inspect each payload through the family and discard observer results."
+                )
+            emit(name, cb, cb["params"], cb["argument"], result, error,
+                 "Self.I", conditions, expr, summary)
 
     # Whole-value stages reselect the output family. The optional family comes
     # after the inference barrier, so then[Family](f) is also available.
@@ -227,6 +280,44 @@ def methods():
             f"{family}.traverse[J]({cb['build']}, self.value^)",
             "Traverse into the selected target effect and continue in that family.",
         )
+
+    # Retention and compaction are the existing traversal policies. Source and
+    # target carrier admission precede any body assertion or origin rebind.
+    for name in ("traverse_tap", "filter_effect"):
+        filtering = name == "filter_effect"
+        family = "_SelectingTraversal[Self.I]" if filtering else "_Traversing[Self.I]"
+        for cb in borrowing_callbacks("Self.I.Element[Self.V]", "function", repeatable=False):
+            params = list(cb["params"])
+            if "//" not in params:
+                params += ["//"]
+            params.insert(params.index("//") + 1, "J: Applicative")
+            retained = f"_TraverseTap[Self.I.Element[Self.V], J, {cb['adapter_type']}, {filtering}]"
+            built = f"{retained}({cb['build']})"
+            traversed = f"{family}.Traversed[J, Self.V, {retained}]"
+            before = f"{family}.TraverseError[J, Self.V, {retained}]"
+            result, error = traversed, before
+            conditions = ["conforms_to(Self.I, Traversable)"] + cb["conditions"]
+            conditions += [
+                "_MapCompatible[Self.I, Self.V, Identity[Self.I.Element[Self.V]]]",
+                f"_CarrierCompatible[J, {cb['result']}]",
+                f"_CollectCompatible[J, Self.V, {retained}]",
+            ]
+            expr = f"_traverse_as[{family}, J, Self.V, {retained}, {error}]({built}, self.value^)"
+            summary = "Traverse borrowed effects and retain each original payload on success."
+            if filtering:
+                finish = f"_CompactAfter[{family}, J.Element[{traversed}]]"
+                after = f"J.MapError[{traversed}, {finish}]"
+                error = f"_CommonError[{before}, {after}]"
+                result = f"J.Mapped[{traversed}, {finish}]"
+                conditions += [
+                    "conforms_to(Self.I, FunctorFilter)",
+                    f"J.Element[{cb['result']}] == Bool",
+                    f"J.Element[{retained}.Out] == Optional[Self.I.Element[Self.V]]",
+                    f"_MapCompatible[J, {traversed}, {finish}]",
+                ]
+                expr = f"_traverse_then[{family}, J, Self.V, {retained}, {finish}, {error}]({built}, self.value^, {finish}())"
+                summary = "Traverse borrowing Bool effects and retain accepted original payloads."
+            emit(name, cb, params, cb["argument"], result, error, "J", conditions, expr, summary)
 
     for kind in ("library", "pure", "raising", "never"):
         family = "_Combining[Self.I]"
@@ -341,26 +432,36 @@ def methods():
     for name, trait, family, result_alias, error_alias in (
         ("map", "Functor", "Self.I", "Mapped", "MapError"),
         ("filter", "Filterable", "_Filtering[Self.I]", "Filtered", "FilterError"),
+        ("filter_not", "Filterable", "_Filtering[Self.I]", "Filtered", "FilterError"),
         ("flat_map", "Monad", "_Binding[Self.I]", "Bound", "BindError"),
         ("filter_map", "FunctorFilter", "_Compacting[Self.I]", "MapFiltered", "MapFilterError"),
     ):
-        for kind in ("library", "pure", "thin_pure", "raising", "never", "thin_never"):
-            mode = "borrow" if name == "filter" else "owned"
-            arg = "predicate" if name == "filter" else "function"
-            cb = callback(mode, kind, "Self.I.Element[Self.V]", arg, repeatable=name == "filter")
+        filtering = name in ("filter", "filter_not")
+        mode = "borrow" if filtering else "owned"
+        arg = "predicate" if filtering else "function"
+        callbacks = (
+            borrowing_callbacks("Self.I.Element[Self.V]", arg)
+            if name == "filter_not"
+            else (callback(mode, kind, "Self.I.Element[Self.V]", arg, repeatable=filtering) for kind in kinds)
+        )
+        for cb in callbacks:
             params = cb["params"]
             cbtype = cb["adapter_type"]
             conditions = [f"conforms_to(Self.I, {trait})"] + cb["conditions"]
-            if name == "filter":
+            if filtering:
                 conditions.append(cb["result"] + " == Bool")
             if name == "map":
                 conditions.append(f"_MapCompatible[Self.I, Self.V, {cbtype}]")
             if name == "flat_map":
                 conditions.append(f"_BindCompatible[{family}, Self.V, {cbtype}]")
+            if name == "filter_not":
+                cbtype = f"_FilterPredicate[{cbtype}, True]"
             result = f"{family}.{result_alias}[Self.V, {cbtype}]"
             error = f"{family}.{error_alias}[Self.V, {cbtype}]"
             target = f"Pipeline[Self.I, {result}, Self.E]"
             expr = f"{family}.{name}({cb['build']}, self.value^)"
+            if name == "filter_not":
+                expr = f"_filter_with[Self.V, {cb['adapter_type']}, {family}, True]({cb['build']}, self.value^)"
             prelude = cb.get("prelude", "")
             body.append(
                 f"\n    @always_inline\n    def {name}[{', '.join(params)}](deinit self, {cb['argument']}) raises {error} -> {target} where {' and '.join(conditions)}:\n        \"\"\"Apply {name} through the selected family's {trait} capability.\"\"\"\n{prelude}        return {target}({expr})\n"

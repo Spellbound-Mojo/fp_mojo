@@ -510,3 +510,64 @@ error origins and callback input origins. They cover free functions, Piped,
 Pipeline, traversal, sequence and lazy right operands. Run the boundary gate
 with `--filter context_family_contract` to check source and package imports at
 both optimization levels.
+
+## Borrowing observers and projections
+
+Pipeline exposes `tap`, `tap_each`, `pair_with` and `filter_not` through the
+same selected family and error context. `_Observe` owns borrowed observation,
+retention and disposal of callback results. `tap` applies it once through
+`call_once`; `tap_each` and `pair_with` pass it to the family's map, forwarding
+`MapCompatible` in the public signature. `_filter_with` and `_FilterPredicate`
+own inversion for `filter_not`. No method duplicates an execution loop or
+error handler. Library callbacks retain the shared `BorrowCallable` contract.
+
+Stored thin function pointers need their native argument and result calling
+conventions at admission and invocation. Mojo 1.2 cannot convert a register
+signature to a generic memory signature. The borrowing descriptor emits
+disjoint register/memory signatures for non-raising, selected-error and literal
+Never pointers. The canonical native borrowing dispatcher recovers those
+exact signatures. Read arguments retain `TrivialRegisterPassable` evidence;
+returns retain `RegisterPassable & Deinitable`, which also covers nontrivial
+register results such as `Optional[Bool]`. A conditional type alias loses that
+evidence and rebuilds the memory convention.
+Captured callbacks continue through the existing origin-preserving reference
+view. No runtime type selection or callable allocation is introduced.
+
+The `context_observers` fixtures check source and package imports at O0/O3.
+They cover native functions, captures, stored thin pointers, library callables,
+generic forwarding, empty and failed carriers, deferred execution and disposal,
+move-only cleanup, stored and raised errors, and borrowed origins. Rejections
+use ordinary calls without callback-type hints. They include conflicting mutable
+captures and moving a callback while a deferred computation still borrows it.
+
+
+## Borrowing effect traversal
+
+`Pipeline.traverse_tap[TargetFamily]` and `filter_effect[TargetFamily]` use the
+same borrowing callback descriptor as observers. Their callbacks adapt into
+`_TraverseTap`, an alias of the shared `_EffectRetain` policy. `_traverse_as`
+owns traversal and native-error propagation. Filtering delegates to
+`_traverse_then` and `_CompactAfter`, so compaction happens inside the target
+effect through the source family's FunctorFilter implementation. These methods
+introduce no execution loops, storage layers or exception handlers.
+
+Admission fixes the source family, target family and native error before
+matching callbacks. It forwards source MapCompatible, target carrier and
+CollectCompatible constraints, and filtering's Bool and compaction constraints.
+This preserves embedded origins at the signature boundary. The returned
+Pipeline selects the target family and retains the native error context.
+
+The library callback contract remains BorrowCallContract, allowing a consuming
+BorrowOnceCallable where source traversal invokes it at most once. Repeated
+sources and branching effects enforce their existing repeatability and copying
+requirements. Deferred effects retain callback borrows and owned inputs until
+execution or disposal. Construction errors and callback execution errors must
+remain distinct: Reader construction can be Never even when its callback or
+later compaction raises. Admission must not equate those errors.
+
+The `context_traversal` fixtures check ordinary and generic calls, source and
+package imports, O0/O3, stored thin pointers with nontrivial register results,
+custom compaction errors, borrowed payload and error origins, single-use
+callbacks, move-only cleanup, deferred execution and abandonment. Invalid
+conventions, carriers, errors, origins and lifetimes use ordinary calls without
+callback-type hints; a compiler crash never counts as a rejection.
