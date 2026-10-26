@@ -1,6 +1,6 @@
 """Thin terminal admission signatures shared by free functions and fluent APIs."""
-from generate_pipeline_syntax import MD
 from combinator_docs import document_first_methods
+from native_signatures import MD, callable_protocol, native_adapter
 
 START = '# --- terminal syntax (generated) ---\n'
 END = '# --- end terminal syntax ---\n'
@@ -27,7 +27,7 @@ def terminal_methods(mode, carrier=None):
                 element = f'downcast[P, {MD}]' if borrowing else 'A'
                 callback_result = 'R'
             elif kind == 'library':
-                params += ['C: BorrowCallable' if borrowing else f'F: UnaryContract & {MD}']
+                params += [f'C: {callable_protocol("borrow", repeatable=True)}' if borrowing else f'F: {callable_protocol("owned")} & {MD}']
                 element = f'downcast[C.Payload, {MD}]' if borrowing else 'F.Arg'
                 callback_result = 'C.Result' if borrowing else 'F.Out'
             else:
@@ -41,7 +41,7 @@ def terminal_methods(mode, carrier=None):
                 bound = '_RaisingBorrowing[P, R, E]' if borrowing and kind == 'raising' else '_Borrowing[P, R]' if borrowing else '_RaisingUnary[A, R, E]' if kind == 'raising' else '_Unary[A, R]'
                 explicit.append('F: '+bound)
                 error = 'E' if kind == 'raising' else 'Never'
-                cb = f'_NativeBorrowRef[P, R, {error}, F, {str(kind == "raising")}, o]' if borrowing else f'_NativeUnaryRef[A, R, {error}, F, {str(kind == "raising")}, o]'
+                cb = native_adapter('borrow' if borrowing else 'owned', ['P' if borrowing else 'A'], 'R', error, 'F', kind == 'raising', origin='o')
                 build, arg = f'{cb}(Pointer(to=function))', 'ref[o] function: F'
             elif kind == 'library':
                 error, cb = ('C.Failure','C') if borrowing else ('F.Error','F')

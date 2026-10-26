@@ -1,14 +1,14 @@
 """Admission for fluent applicative combination; execution belongs to families."""
 from combinator_docs import document_first_methods
+from native_signatures import MD, callable_protocol, native_adapter
 
-MD = 'Movable & Deinitable'
 
 
 def methods(carrier=None, result=False):
     out=[]
     for kind in ('library', 'pure', 'raising'):
         native=kind!='library'
-        params=([f'A: {MD}',f'B: {MD}',f'R: {MD}','o: ImmOrigin'] if native else [f'F: BinaryContract & {MD}'])
+        params=([f'A: {MD}',f'B: {MD}',f'R: {MD}','o: ImmOrigin'] if native else [f'F: {callable_protocol("binary")} & {MD}'])
         a,b,r=('A','B','R') if native else ('F.First','F.Second','F.Out')
         # Infer the carrier independently of the native signature on Mojo 1.2;
         # its exact payload and origins remain an admission constraint below.
@@ -21,7 +21,7 @@ def methods(carrier=None, result=False):
         error='X' if kind=='raising' else 'Never'
         if kind=='raising': params += [f'{error}: {MD}']
         if native: params += [f'F: _RaisingBinary[A, B, R, {error}]' if kind=='raising' else 'F: _Binary[A, B, R]']
-        cb=f'_NativeBinaryRef[A, B, R, {error}, F, {kind=="raising"}, o]' if native else 'F'
+        cb=native_adapter('binary', ['A', 'B'], 'R', error, 'F', kind == 'raising', origin='o') if native else 'F'
         build=f'{cb}(Pointer(to=function))' if native else 'function^'
         if result:
             left=f'Result[{a}, Self.E]';right=f'Result[{b}, Self.E]';output=f'Result[{r}, Self.E]'
