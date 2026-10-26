@@ -17866,6 +17866,192 @@
         "convention": "",
         "description": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
         "name": "function",
+        "type": "def() thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The callback result type, inferred from the callback.",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The callback output in Ok, or its declared error in Err.",
+       "type": "Result[R, Never]"
+      },
+      "signature": "def run[R: Movable & Deinitable, //](self, function: def() thin -> R) -> Result[R, Never] where not conforms_to(R, RegisterPassable)",
+      "summary": "Call once and retain the exact native outcome."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
+        "name": "function",
+        "type": "def() thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The callback result type, inferred from the callback.",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The callback output in Ok, or its declared error in Err.",
+       "type": "Result[R, Never]"
+      },
+      "signature": "def run[R: RegisterPassable & Deinitable, //](self, function: def() thin -> R) -> Result[R, Never]",
+      "summary": "Call once and retain the exact native outcome."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
+        "name": "function",
+        "type": "def() thin",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The callback output in Ok, or its declared error in Err.",
+       "type": "Result[type_of(None), Never]"
+      },
+      "signature": "def run(self, function: def() thin) -> Result[type_of(None), Never]",
+      "summary": "Call once and retain the exact native outcome."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
+        "name": "function",
+        "type": "def() raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The callback result type, inferred from the callback.",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The inferred native callback error type.",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The callback output in Ok, or its declared error in Err.",
+       "type": "Result[R, X]"
+      },
+      "signature": "def run[R: Movable & Deinitable, X: Movable & Deinitable, //](self, function: def() raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]",
+      "summary": "Call once and retain the exact native outcome."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
+        "name": "function",
+        "type": "def() raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The callback result type, inferred from the callback.",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The inferred native callback error type.",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The callback output in Ok, or its declared error in Err.",
+       "type": "Result[R, X]"
+      },
+      "signature": "def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def() raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]",
+      "summary": "Call once and retain the exact native outcome."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
+        "name": "function",
+        "type": "def() raises X thin",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The inferred native callback error type.",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The callback output in Ok, or its declared error in Err.",
+       "type": "Result[type_of(None), X]"
+      },
+      "signature": "def run[X: Movable & Deinitable, //](self, function: def() raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]",
+      "summary": "Call once and retain the exact native outcome."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
+        "name": "function",
         "type": "def() raises Never thin -> R",
         "variadic": false
        }
@@ -17887,7 +18073,37 @@
        "doc": "The callback output in Ok, or its declared error in Err.",
        "type": "Result[R, Never]"
       },
-      "signature": "def run[R: Movable & Deinitable, //](self, function: def() raises Never thin -> R) -> Result[R, Never]",
+      "signature": "def run[R: Movable & Deinitable, //](self, function: def() raises Never thin -> R) -> Result[R, Never] where not conforms_to(R, RegisterPassable)",
+      "summary": "Call once and retain the exact native outcome."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
+        "name": "function",
+        "type": "def() raises Never thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The callback result type, inferred from the callback.",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The callback output in Ok, or its declared error in Err.",
+       "type": "Result[R, Never]"
+      },
+      "signature": "def run[R: RegisterPassable & Deinitable, //](self, function: def() raises Never thin -> R) -> Result[R, Never]",
       "summary": "Call once and retain the exact native outcome."
      },
      {
@@ -17947,7 +18163,7 @@
      {
       "args": [
        {
-        "convention": "",
+        "convention": "ref[q]",
         "description": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
         "name": "function",
         "type": "def(mut S, var A) thin -> R",
@@ -17984,6 +18200,13 @@
         "name": "R",
         "type": "Movable & Deinitable",
         "variadic": false
+       },
+       {
+        "description": "The callback origin, inferred from the borrowed function.",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
        }
       ],
       "raises": false,
@@ -17992,7 +18215,7 @@
        "doc": "A movable owner with run(value), state() and into_state() methods.",
        "type": "_Stateful[S, A, R, Never, type_of(function), False]"
       },
-      "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, //](self, function: def(mut S, var A) thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), False]",
+      "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //](self, ref[q] function: def(mut S, var A) thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), False]",
       "summary": "Own explicit state for repeated calls through a plain native function."
      },
      {
@@ -18001,7 +18224,7 @@
         "convention": "",
         "description": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
         "name": "function",
-        "type": "def(mut S, var A) raises Self.E thin -> R",
+        "type": "def(mut S, var A) thin -> R",
         "variadic": false
        },
        {
@@ -18033,6 +18256,57 @@
         "description": "The callback result type, inferred from the callback.",
         "inferred": true,
         "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A movable owner with run(value), state() and into_state() methods.",
+       "type": "_Stateful[S, A, R, Never, type_of(function), False]"
+      },
+      "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, //](self, function: def(mut S, var A) thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), False] where not conforms_to(A, RegisterPassable)",
+      "summary": "Own explicit state for repeated calls through a plain native function."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
+        "name": "function",
+        "type": "def(mut S, var A) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The explicit state, moved into the reusable owner.",
+        "name": "state",
+        "type": "S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The owned state type, including its origins.",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The first argument type, including its origins.",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The callback result type, inferred from the callback.",
+        "inferred": true,
+        "name": "R",
         "type": "Movable & Deinitable",
         "variadic": false
        }
@@ -18041,9 +18315,111 @@
       "raises_doc": "",
       "returns": {
        "doc": "A movable owner with run(value), state() and into_state() methods.",
-       "type": "_Stateful[S, A, R, Self.E, type_of(function), True]"
+       "type": "_Stateful[S, A, R, Never, type_of(function), False]"
       },
-      "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, //](self, function: def(mut S, var A) raises Self.E thin -> R, var state: S) -> _Stateful[S, A, R, Self.E, type_of(function), True]",
+      "signature": "def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, //](self, function: def(mut S, var A) thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), False] where not conforms_to(R, RegisterPassable)",
+      "summary": "Own explicit state for repeated calls through a plain native function."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
+        "name": "function",
+        "type": "def(mut S, var A) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The explicit state, moved into the reusable owner.",
+        "name": "state",
+        "type": "S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The owned state type, including its origins.",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The first argument type, including its origins.",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The callback result type, inferred from the callback.",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A movable owner with run(value), state() and into_state() methods.",
+       "type": "_Stateful[S, A, R, Never, type_of(function), False]"
+      },
+      "signature": "def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](self, function: def(mut S, var A) thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), False]",
+      "summary": "Own explicit state for repeated calls through a plain native function."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
+        "name": "function",
+        "type": "def(mut S, var A) thin",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The explicit state, moved into the reusable owner.",
+        "name": "state",
+        "type": "S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The owned state type, including its origins.",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The first argument type, including its origins.",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The callback origin, inferred from the borrowed function.",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A movable owner with run(value), state() and into_state() methods.",
+       "type": "_Stateful[S, A, type_of(None), Never, type_of(function), False]"
+      },
+      "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, q: ImmOrigin, //](self, ref[q] function: def(mut S, var A) thin, var state: S) -> _Stateful[S, A, type_of(None), Never, type_of(function), False]",
       "summary": "Own explicit state for repeated calls through a plain native function."
      },
      {
@@ -18077,7 +18453,7 @@
         "description": "The first argument type, including its origins.",
         "inferred": true,
         "name": "A",
-        "type": "Movable & Deinitable",
+        "type": "RegisterPassable & Deinitable",
         "variadic": false
        }
       ],
@@ -18087,60 +18463,16 @@
        "doc": "A movable owner with run(value), state() and into_state() methods.",
        "type": "_Stateful[S, A, type_of(None), Never, type_of(function), False]"
       },
-      "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, //](self, function: def(mut S, var A) thin, var state: S) -> _Stateful[S, A, type_of(None), Never, type_of(function), False]",
+      "signature": "def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, //](self, function: def(mut S, var A) thin, var state: S) -> _Stateful[S, A, type_of(None), Never, type_of(function), False]",
       "summary": "Own explicit state for repeated calls through a plain native function."
      },
      {
       "args": [
        {
-        "convention": "",
+        "convention": "ref[q]",
         "description": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
         "name": "function",
-        "type": "def(mut S, var A) raises Self.E thin",
-        "variadic": false
-       },
-       {
-        "convention": "var",
-        "description": "The explicit state, moved into the reusable owner.",
-        "name": "state",
-        "type": "S",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "",
-      "parameters": [
-       {
-        "description": "The owned state type, including its origins.",
-        "inferred": true,
-        "name": "S",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "The first argument type, including its origins.",
-        "inferred": true,
-        "name": "A",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       }
-      ],
-      "raises": false,
-      "raises_doc": "",
-      "returns": {
-       "doc": "A movable owner with run(value), state() and into_state() methods.",
-       "type": "_Stateful[S, A, type_of(None), Self.E, type_of(function), True]"
-      },
-      "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, //](self, function: def(mut S, var A) raises Self.E thin, var state: S) -> _Stateful[S, A, type_of(None), Self.E, type_of(function), True]",
-      "summary": "Own explicit state for repeated calls through a plain native function."
-     },
-     {
-      "args": [
-       {
-        "convention": "",
-        "description": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
-        "name": "function",
-        "type": "def(mut S, var A) raises Never thin -> R",
+        "type": "def(mut S, var A) raises X thin -> R",
         "variadic": false
        },
        {
@@ -18174,15 +18506,29 @@
         "name": "R",
         "type": "Movable & Deinitable",
         "variadic": false
+       },
+       {
+        "description": "The inferred native callback error type.",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The callback origin, inferred from the borrowed function.",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
        }
       ],
       "raises": false,
       "raises_doc": "",
       "returns": {
        "doc": "A movable owner with run(value), state() and into_state() methods.",
-       "type": "_Stateful[S, A, R, Never, type_of(function), True]"
+       "type": "_Stateful[S, A, R, X, type_of(function), True]"
       },
-      "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, //](self, function: def(mut S, var A) raises Never thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), True] where Self.E != Never",
+      "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, q: ImmOrigin, //](self, ref[q] function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where _ErrorCompatible[Self.E, X]",
       "summary": "Own explicit state for repeated calls through a plain native function."
      },
      {
@@ -18191,7 +18537,7 @@
         "convention": "",
         "description": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
         "name": "function",
-        "type": "def(mut S, var A) raises Never thin",
+        "type": "def(mut S, var A) raises X thin -> R",
         "variadic": false
        },
        {
@@ -18218,15 +18564,254 @@
         "name": "A",
         "type": "Movable & Deinitable",
         "variadic": false
+       },
+       {
+        "description": "The callback result type, inferred from the callback.",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The inferred native callback error type.",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
        }
       ],
       "raises": false,
       "raises_doc": "",
       "returns": {
        "doc": "A movable owner with run(value), state() and into_state() methods.",
-       "type": "_Stateful[S, A, type_of(None), Never, type_of(function), True]"
+       "type": "_Stateful[S, A, R, X, type_of(function), True]"
       },
-      "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, //](self, function: def(mut S, var A) raises Never thin, var state: S) -> _Stateful[S, A, type_of(None), Never, type_of(function), True] where Self.E != Never",
+      "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where not conforms_to(A, RegisterPassable) and _ErrorCompatible[Self.E, X]",
+      "summary": "Own explicit state for repeated calls through a plain native function."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
+        "name": "function",
+        "type": "def(mut S, var A) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The explicit state, moved into the reusable owner.",
+        "name": "state",
+        "type": "S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The owned state type, including its origins.",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The first argument type, including its origins.",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The callback result type, inferred from the callback.",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The inferred native callback error type.",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A movable owner with run(value), state() and into_state() methods.",
+       "type": "_Stateful[S, A, R, X, type_of(function), True]"
+      },
+      "signature": "def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]",
+      "summary": "Own explicit state for repeated calls through a plain native function."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
+        "name": "function",
+        "type": "def(mut S, var A) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The explicit state, moved into the reusable owner.",
+        "name": "state",
+        "type": "S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The owned state type, including its origins.",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The first argument type, including its origins.",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The callback result type, inferred from the callback.",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The inferred native callback error type.",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A movable owner with run(value), state() and into_state() methods.",
+       "type": "_Stateful[S, A, R, X, type_of(function), True]"
+      },
+      "signature": "def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where _ErrorCompatible[Self.E, X]",
+      "summary": "Own explicit state for repeated calls through a plain native function."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
+        "name": "function",
+        "type": "def(mut S, var A) raises X thin",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The explicit state, moved into the reusable owner.",
+        "name": "state",
+        "type": "S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The owned state type, including its origins.",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The first argument type, including its origins.",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The inferred native callback error type.",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The callback origin, inferred from the borrowed function.",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A movable owner with run(value), state() and into_state() methods.",
+       "type": "_Stateful[S, A, type_of(None), X, type_of(function), True]"
+      },
+      "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, X: Movable & Deinitable, q: ImmOrigin, //](self, ref[q] function: def(mut S, var A) raises X thin, var state: S) -> _Stateful[S, A, type_of(None), X, type_of(function), True] where _ErrorCompatible[Self.E, X]",
+      "summary": "Own explicit state for repeated calls through a plain native function."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
+        "name": "function",
+        "type": "def(mut S, var A) raises X thin",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The explicit state, moved into the reusable owner.",
+        "name": "state",
+        "type": "S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The owned state type, including its origins.",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The first argument type, including its origins.",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The inferred native callback error type.",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A movable owner with run(value), state() and into_state() methods.",
+       "type": "_Stateful[S, A, type_of(None), X, type_of(function), True]"
+      },
+      "signature": "def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin, var state: S) -> _Stateful[S, A, type_of(None), X, type_of(function), True] where _ErrorCompatible[Self.E, X]",
       "summary": "Own explicit state for repeated calls through a plain native function."
      }
     ],

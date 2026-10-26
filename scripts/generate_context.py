@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from itertools import product
+from native_signatures import Operand, variants, argument as native_argument
 import re
 from api_docs import parse_signature
 from generate_result_syntax import DOCS, OUTCOMES
@@ -66,8 +67,7 @@ def methods(*, fold_stage=False):
         raising = kind not in ("pure", "thin_pure")
         native_payloads = payload if mode in ("binary", "nary") else [payload] if mode != "thunk" else []
         native = ", ".join(
-            ("" if mode == "borrow" else "var ") +
-            (f"_NativeOwnedArg[{p}]" if kind.startswith("thin_") and mode != "borrow" else p)
+            native_argument(p, "r" if mode == "borrow" else "o", thin=kind.startswith("thin_"))
             for p in native_payloads
         )
         signature = (
@@ -133,24 +133,19 @@ def methods(*, fold_stage=False):
         # Infer a thin callback's exact error once, then admit it against E.
         # Separate selected-E and literal-Never signatures become identical
         # when E is Never; guarding either one restricts generic forwarding.
+        payloads = payload if mode in ("binary", "nary") else [payload] if mode != "thunk" else []
+        operands = [Operand(p, "r" if mode == "borrow" else "o",
+                            read_parameter="Q" if second else "P") for p in payloads]
+        result = "S" if second else "R"
         for kind in ("thin_pure", "thin_raising"):
-            for register_arg in ((False, True) if mode == "borrow" else (False,)):
-                p = "Q" if second else "P"
-                operand = p if register_arg else payload
-                for register_result in (False, True):
-                    cb = callback(mode, kind, operand, arg, second=second)
-                    result = cb["result"]
-                    if mode == "borrow":
-                        if register_arg:
-                            cb["params"].insert(0, f"{p}: TrivialRegisterPassable")
-                            cb["conditions"] += [f"{p} == {payload}"]
-                        else:
-                            cb["conditions"] += [f"not conforms_to({payload}, TrivialRegisterPassable)"]
-                    if register_result:
-                        cb["params"] = [f"{result}: RegisterPassable & Deinitable" if t == f"{result}: {MD}" else t for t in cb["params"]]
-                    else:
-                        cb["conditions"] += [f"not conforms_to({result}, RegisterPassable)"]
-                    yield cb
+            for abi in variants(operands, result):
+                selected = abi.payloads if mode in ("binary", "nary") else abi.payloads[0] if payloads else ""
+                cb = callback(mode, kind, selected, arg, second=second)
+                bounds = dict(abi.parameters)
+                cb["params"] = [f"{result}: {bounds[result]}" if t == f"{result}: {MD}" else t for t in cb["params"]]
+                cb["params"] = [f"{p}: {bound}" for p, bound in abi.parameters if p != result] + cb["params"]
+                cb["conditions"] += list(abi.conditions)
+                yield cb
 
     def borrowing_callbacks(payload, arg, repeatable=True):
         return native_callbacks("borrow", payload, arg, repeatable=repeatable)

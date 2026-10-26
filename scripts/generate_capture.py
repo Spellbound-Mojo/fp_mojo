@@ -7,12 +7,17 @@ The generator enumerates those shapes; it never generates Result handling.
 
 from itertools import product
 import re
+from native_signatures import Operand, variants, argument, native_dispatch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "src/fp/data/_capture.mojo"
 MD = "Movable & Deinitable"
-MODES = {"r": ("borrow", "ImmOrigin"), "m": ("mutable", "MutOrigin"), "o": ("take", None)}
+MODES = {
+    "r": ("borrow", "ImmOrigin"),
+    "m": ("mutable", "MutOrigin"),
+    "o": ("take", None),
+}
 SHAPES = [()] + [(x,) for x in MODES] + list(product(MODES, repeat=2))
 
 
@@ -49,7 +54,9 @@ def typename(shape, kw=False, prefix="", error=None):
 def fields(shape, kw=False):
     out = []
     for c, m in zip("AB", shape):
-        out.append((c.lower() + "_value", c if m == "o" else f"Pointer[{c}, {c.lower()}]"))
+        out.append(
+            (c.lower() + "_value", c if m == "o" else f"Pointer[{c}, {c.lower()}]")
+        )
     if kw:
         out.append(("options", "StringDict[K]"))
     return out
@@ -67,46 +74,26 @@ def sig(shape, kw=False, prefix=""):
     return ", ".join(p)
 
 
-def pass_fields(shape, kw=False, prefix="arguments."):
-    p = [prefix + c.lower() + "_value" + ("^" if m == "o" else "[]") for c, m in zip("AB", shape)]
-    if kw:
-        p += ["**" + prefix + "options^"]
-    return ", ".join(p)
-
-
 def native(shape, kw):
     nm = tag(shape, kw)
-    ps = params(shape, kw, False) + [f"R: {MD}", f"E: {MD}", f"F: {MD}", "raising: Bool"]
-    shape_type = typename(shape, kw, error="E")
-    out = [
-        f'def _invoke_{nm}[{", ".join(ps)}](function: F, var arguments: {shape_type}) raises E -> R:\n'
+    ps = params(shape, kw, False) + [
+        f"R: {MD}",
+        f"E: {MD}",
+        f"F: {MD}",
+        "raising: Bool",
     ]
-    # Exact thin native ABI first; generic closure invocation remains below.
-    for idx, (effect, void, cond) in enumerate(
-        [
-            (" raises Never", True, "R == type_of(None) and raising and E == Never"),
-            (" raises E", True, "R == type_of(None) and raising"),
-            ("", True, "R == type_of(None) and not raising"),
-            (" raises Never", False, "raising and E == Never"),
-            (" raises E", False, "raising"),
-            ("", False, "not raising"),
-        ]
-    ):
-        typ = f"def({sig(shape,kw)}){effect} thin" + ("" if void else " -> R")
-        out += [f'    {"comptime if" if idx==0 else "elif"} {cond} and F == {typ}:\n']
-        call = f"rebind[{typ}](function)({pass_fields(shape,kw)})"
-        out += [
-            (
-                f"        _ = {call}\n        return rebind_var[R](None)\n"
-                if void
-                else f"        return {call}\n"
-            )
-        ]
-    out += ["    else:\n"]
-    # Keep existing canonical native invocation owners for known signatures.
+    shape_type = typename(shape, kw, error="E")
+    header = f'def _invoke_{nm}[{", ".join(ps)}](function: F, var arguments: {shape_type}) raises E -> R:\n'
     known = {
+        (
+            "OO",
+            False,
+        ): "_call_native_binary[A, B, R, E, F, raising](function, arguments.a_value^, arguments.b_value^)",
         ("O", False): "_call_native[A, R, E, F, raising](function, arguments.a_value^)",
-        ("R", False): "_call_native_borrow[A, R, E, F, raising](function, arguments.a_value[])",
+        (
+            "R",
+            False,
+        ): "_call_native_borrow[A, R, E, F, raising](function, arguments.a_value[])",
         (
             "M",
             False,
@@ -116,7 +103,10 @@ def native(shape, kw):
             False,
         ): "_NativeMutOwnedRef[A, B, R, E, F, raising, origin_of(function)](Pointer(to=function)).invoke(arguments.a_value[], arguments.b_value^)",
         ("Z", False): "_call_native_thunk[R, E, F, raising](function)",
-        ("K", True): "_call_native_keywords[K, R, E, F, raising](function, **arguments.options^)",
+        (
+            "K",
+            True,
+        ): "_call_native_keywords[K, R, E, F, raising](function, **arguments.options^)",
         (
             "MK",
             True,
@@ -127,31 +117,22 @@ def native(shape, kw):
         ): "_NativeMutOwnedKeywordsRef[A, B, K, R, E, F, raising, origin_of(function)](Pointer(to=function)).invoke(arguments.a_value[], arguments.b_value^, **arguments.options^)",
     }
     if (nm, kw) in known:
-        out = [out[0], "    return " + known[nm, kw] + "\n"]
-    else:
-        for idx, (effect, void, cond) in enumerate(
-            [
-                (" raises Never", True, "R == type_of(None) and raising and E == Never"),
-                (" raises E", True, "R == type_of(None) and raising"),
-                ("", True, "R == type_of(None) and not raising"),
-                (" raises Never", False, "raising and E == Never"),
-                (" raises E", False, "raising"),
-                ("", False, "True"),
-            ]
-        ):
-            typ = f"def({sig(shape,kw)}){effect}" + ("" if void else " -> R")
-            out += [
-                f'        {"comptime if" if idx==0 else "elif"} {cond}:\n            comptime Fn = downcast[F, {typ}]\n'
-            ]
-            call = f"rebind[Fn](function)({pass_fields(shape,kw)})"
-            out += [
-                (
-                    f"            _ = {call}\n            return rebind_var[R](None)\n"
-                    if void
-                    else f"            return {call}\n"
-                )
-            ]
-    return "".join(out) + "\n"
+        return header + "    return " + known[nm, kw] + "\n\n"
+    values = [
+        "arguments." + c.lower() + "_value" + ("[]" if m != "o" else "")
+        for c, m in zip("AB", shape)
+    ]
+    return (
+        header
+        + native_dispatch(
+            shape,
+            list("AB"[: len(shape)]),
+            values,
+            keyword="K" if kw else None,
+            keyword_value="arguments.options",
+        )
+        + "\n"
+    )
 
 
 def builder(shape, kw):
@@ -187,34 +168,59 @@ def builder(shape, kw):
         "raising_void",
         "never",
         "never_void",
-        "thin_never",
-        "thin_void",
     ):
         err = "Self.E" if kind in ("raising", "raising_void") else "Never"
         raised = kind not in ("pure", "pure_void")
-        thin = kind.startswith("thin")
         result = "type_of(None)" if kind.endswith("void") else "R"
-        gen = ([f"R: {MD}"] if not kind.endswith("void") else []) + (
-            [] if thin else ["q: ImmOrigin"]
-        )
+        gen = ([f"R: {MD}"] if not kind.endswith("void") else []) + ["q: ImmOrigin"]
         effect = " raises " + err if raised else ""
-        typ = (
-            f'def({sig(shape,kw,"Self.")}){effect}'
-            + (" thin" if thin else "")
-            + ("" if kind.endswith("void") else " -> R")
+        typ = f'def({sig(shape,kw,"Self.")}){effect}' + (
+            "" if kind.endswith("void") else " -> R"
         )
-        if not thin:
-            gen += ["//", f"F: {typ}"]
-            arg = "ref[q] function: F"
-        else:
-            if gen:
-                gen += ["//"]
-            arg = "function: " + typ
+        gen += ["//", f"F: {typ}"]
+        arg = "ref[q] function: F"
         condition = " where Self.E != Never" if kind in ("never", "never_void") else ""
         bracket = "[" + ", ".join(gen) + "]" if gen else ""
         out += [
             f"    def run{bracket}(deinit self, {arg}) -> Result[{result}, {err}]{condition}:\n        return self^._run[{result}, {err}, type_of(function), {raised}](function)\n\n"
         ]
+    # The literal Never specialization resolves the native read/read tie with
+    # the selected-error closure signature. It retains the same ABI evidence
+    # as inferred-error thin calls, including generic selected error contexts.
+    operands = [
+        Operand("Self." + c, m, read_parameter="P" if c == "A" else "Q")
+        for c, m in zip("AB", shape)
+    ]
+    for native_kind in ("pure", "raising", "never"):
+        raising = native_kind != "pure"
+        for void in (False, True):
+            for abi in variants(operands, None if void else "R"):
+                gen = [name + ": " + bound for name, bound in abi.parameters]
+                if native_kind == "raising":
+                    gen += ["X: " + MD]
+                err = "X" if native_kind == "raising" else "Never"
+                result = "type_of(None)" if void else "R"
+                args = [argument(t, m, thin=True) for t, m in zip(abi.payloads, shape)]
+                if kw:
+                    if args:
+                        args += ["/"]
+                    args += ["var **kwargs: Self.K"]
+                typ = (
+                    "def("
+                    + ", ".join(args)
+                    + ")"
+                    + (" raises " + err if raising else "")
+                    + " thin"
+                    + ("" if void else " -> R")
+                )
+                conditions = list(abi.conditions) + (
+                    ["_ErrorCompatible[Self.E, X]"] if native_kind == "raising" else []
+                )
+                condition = " where " + " and ".join(conditions) if conditions else ""
+                bracket = "[" + ", ".join(gen + ["//"]) + "]" if gen else ""
+                out += [
+                    f"    def run{bracket}(deinit self, function: {typ}) -> Result[{result}, {err}]{condition}:\n        return self^._run[{result}, {err}, type_of(function), {raising}](function)\n\n"
+                ]
     if not kw:
         out += [
             f'    def kwargs[K: {MD}, //](deinit self, /, var **values: K) -> {typename(shape,True,"Self.").replace("Self.K", "K")}:\n        return {typename(shape,True,"Self.").replace("Self.K", "K")}({", ".join("self."+n+("^" if not t.startswith("Pointer") else "") for n,t in fields(shape))}{", " if shape else ""}values^)\n\n'
@@ -222,7 +228,11 @@ def builder(shape, kw):
         if len(shape) < 2:
             c = "AB"[len(shape)]
             for m, (name, origin) in MODES.items():
-                ps = [f"{c}: {MD}"] + ([f"{c.lower()}: {origin}"] if origin else []) + ["//"]
+                ps = (
+                    [f"{c}: {MD}"]
+                    + ([f"{c.lower()}: {origin}"] if origin else [])
+                    + ["//"]
+                )
                 target = (
                     typename(shape + (m,), False, "Self.")
                     .replace("Self." + c, c)
@@ -232,7 +242,9 @@ def builder(shape, kw):
                     "self." + n + ("^" if not t.startswith("Pointer") else "")
                     for n, t in fields(shape)
                 )
-                passed += (", " if shape else "") + ("Pointer(to=value)" if origin else "value^")
+                passed += (", " if shape else "") + (
+                    "Pointer(to=value)" if origin else "value^"
+                )
                 out += [
                     f'    def {name}[{", ".join(ps)}](deinit self, {"ref["+c.lower()+"]" if origin else "var"} value: {c}) -> {target}:\n        return {target}({passed})\n\n'
                 ]
@@ -252,8 +264,9 @@ from std.builtin.rebind import rebind, rebind_var, downcast
 from std.collections import StringDict
 from fp.callables.protocols import OnceThunk
 from fp.callables._binding import _BoundThunk
-from fp.callables.native import (_call_native, _call_native_borrow, _call_native_thunk, _call_native_keywords, _NativeMutatingRef, _NativeMutOwnedRef, _NativeMutatingKeywordsRef, _NativeMutOwnedKeywordsRef)
+from fp.callables.native import (_NativeOwnedArg, _call_native_binary, _call_native, _call_native_borrow, _call_native_thunk, _call_native_keywords, _NativeMutatingRef, _NativeMutOwnedRef, _NativeMutatingKeywordsRef, _NativeMutOwnedKeywordsRef)
 from fp.data._result import Result, attempt_once
+from fp._internal.errors import _ErrorCompatible
 
 '''
 out = [header]
@@ -288,14 +301,14 @@ methods = (
 methods = methods.replace("](/, var **values:", "](var **values:")
 methods = methods.replace("return self^._run[", "return _ArgsZ[Self.E]()._run[")
 for name in ("run", "kwargs", "borrow", "mutable", "take"):
-    methods = re.sub(r"    def " + name + r"\b", r"    @staticmethod\n    def " + name, methods)
+    methods = re.sub(
+        r"    def " + name + r"\b", r"    @staticmethod\n    def " + name, methods
+    )
 out += [methods]
-out += [
-    """    @staticmethod
+out += ["""    @staticmethod
     def run[F: OnceThunk](var function: F) -> Result[F.Out, F.Error]:
         return attempt_once(function^)
-"""
-]
+"""]
 # Stateful storage uses the same mutable/owned argument bundle. Its native
 # factory is thin: users pass owned mutable state explicitly, not in captures.
 state_class = """struct _Stateful[S: Movable & Deinitable, A: Movable & Deinitable,
@@ -315,28 +328,42 @@ state_class = """struct _Stateful[S: Movable & Deinitable, A: Movable & Deinitab
         return arguments^._run[Self.R, Self.E, Self.F, Self.raising](self._function.value())
 
 """
-state_factory = """    @staticmethod
-    def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, //](function: def(mut S, var A) thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), False]:
-        return _Stateful[S, A, R, Never, type_of(function), False](function, state^)
-    @staticmethod
-    def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, //](function: def(mut S, var A) raises Self.E thin -> R, var state: S) -> _Stateful[S, A, R, Self.E, type_of(function), True]:
-        return _Stateful[S, A, R, Self.E, type_of(function), True](function, state^)
-    @staticmethod
-    def stateful[S: Movable & Deinitable, A: Movable & Deinitable, //](function: def(mut S, var A) thin, var state: S) -> _Stateful[S, A, type_of(None), Never, type_of(function), False]:
-        return _Stateful[S, A, type_of(None), Never, type_of(function), False](function, state^)
-    @staticmethod
-    def stateful[S: Movable & Deinitable, A: Movable & Deinitable, //](function: def(mut S, var A) raises Self.E thin, var state: S) -> _Stateful[S, A, type_of(None), Self.E, type_of(function), True]:
-        return _Stateful[S, A, type_of(None), Self.E, type_of(function), True](function, state^)
-"""
-# Context instances fix E before native admission. A separate Never signature
-# preserves that effect; the guard excludes the identical selected-Never case.
-state_factory += """    @staticmethod
-    def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, //](function: def(mut S, var A) raises Never thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), True] where Self.E != Never:
-        return _Stateful[S, A, R, Never, type_of(function), True](function, state^)
-    @staticmethod
-    def stateful[S: Movable & Deinitable, A: Movable & Deinitable, //](function: def(mut S, var A) raises Never thin, var state: S) -> _Stateful[S, A, type_of(None), Never, type_of(function), True] where Self.E != Never:
-        return _Stateful[S, A, type_of(None), Never, type_of(function), True](function, state^)
-"""
+state_factory = ""
+for raising in (False, True):
+    for void in (False, True):
+        operands = [Operand("S", "m"), Operand("A", "o", known=False)]
+        for abi in variants(operands, None if void else "R"):
+            gen = ["S: " + MD] + [name + ": " + bound for name, bound in abi.parameters]
+            if raising:
+                gen += ["X: " + MD]
+            err = "X" if raising else "Never"
+            result = "type_of(None)" if void else "R"
+            args = [
+                argument(t, op.convention, thin=True, known=op.known)
+                for t, op in zip(abi.payloads, operands)
+            ]
+            typ = (
+                "def("
+                + ", ".join(args)
+                + ")"
+                + (" raises X" if raising else "")
+                + " thin"
+                + ("" if void else " -> R")
+            )
+            # Keep generic symbolic-ABI forwards viable without demanding a
+            # negative conformance proof. Borrowing the fallback pointer lets
+            # exact register variants outrank it for concrete declarations.
+            # _Stateful copies the pointer into its existing owning cell.
+            fallback = all(bound == MD for _, bound in abi.parameters)
+            conditions = ([] if fallback else list(abi.conditions)) + (
+                ["_ErrorCompatible[Self.E, X]"] if raising else []
+            )
+            condition = " where " + " and ".join(conditions) if conditions else ""
+            if fallback:
+                gen += ["q: ImmOrigin"]
+            function_arg = "ref[q] function" if fallback else "function"
+            target = f"_Stateful[S, A, {result}, {err}, type_of(function), {raising}]"
+            state_factory += f'    @staticmethod\n    def stateful[{", ".join(gen+['//'])}]({function_arg}: {typ}, var state: S) -> {target}{condition}:\n        return {target}(function, state^)\n'
 out += [state_factory]
 out += [
     "    @staticmethod\n    def args() -> _ArgsZ[Self.E]:\n        return _ArgsZ[Self.E]()\n\n    @staticmethod\n    def args[A: Movable & Deinitable, //](var first: A) -> _ArgsO[A, Self.E]:\n        return _ArgsO[A, Self.E](first^)\n\n    @staticmethod\n    def args[A: Movable & Deinitable, B: Movable & Deinitable, //](var first: A, var second: B) -> _ArgsOO[A, B, Self.E]:\n        return _ArgsOO[A, B, Self.E](first^, second^)\n\n",
@@ -346,7 +373,9 @@ out.insert(1, "from fp.callables.products import _OptionalCell\n\n")
 
 
 def source():
-    text = document("".join(out)).replace("    def run[", "    @always_inline\n    def run[")
+    text = document("".join(out)).replace(
+        "    def run[", "    @always_inline\n    def run["
+    )
     # A native callback must never infer the context's E. Mojo leaves metatype
     # defaults unbound during static overload selection, so direct run/stateful
     # admission requires an already constructed, zero-size context receiver.
@@ -366,7 +395,7 @@ def source():
         if line.startswith(("    def run", "    def stateful")):
             pivot = line.index("](") + 2 if "](" in line else line.index("(") + 1
             lines[i] = line[:pivot] + "self, " + line[pivot:]
-    return text[:start] + "".join(lines) + text[end:]
+    return "\n".join(line.rstrip() for line in (text[:start] + "".join(lines) + text[end:]).splitlines()) + "\n"
 
 
 def document(text):
@@ -412,6 +441,9 @@ def document(text):
         "B": "The second argument type, including its origins.",
         "S": "The owned state type, including its origins.",
         "R": "The callback result type, inferred from the callback.",
+        "X": "The inferred native callback error type.",
+        "P": "The native register read type, equal to the bound argument.",
+        "Q": "The second native register read type, equal to the bound argument.",
         "K": "The keyword value type, inferred from nonempty values or supplied explicitly.",
         "F": "The exact callback type, preserving its native signature and captures.",
         "a": "The first argument origin, inferred from the bound value.",

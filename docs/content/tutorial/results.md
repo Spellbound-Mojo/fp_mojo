@@ -183,6 +183,20 @@ selects another error type.
 This representation preserves mutable owned state without requiring a user
 callable struct or mutation through a native closure's owned captures.
 
+Stored native function pointers work with the same argument bundles and
+stateful owners. Register and memory argument/result types retain their native
+calling conventions; callers need no callback-type bindings. A stateful owner
+stores its pointer by value, so reassigning the original pointer does not change
+the saved operation. Generic wrappers with symbolic native signatures remain
+supported.
+
+For a stored pointer with a homogeneous keyword pack, name that pack `kwargs`
+in its explicit type, for example `def(var **kwargs: Int) thin -> Int`.
+The callback declaration itself may use another name. Mojo 1.2 includes the pack
+name in a stored pointer's type and cannot convert between names, even without
+this library. Direct function declarations and captured callbacks retain their
+existing keyword spelling.
+
 The older `attempt`, `attempt_kwargs`, convention selectors and borrowed
 adapters remain available. Their compiler inference limitations are described
 in the [compatibility reference](../reference/data.md#select-a-native-argument-convention).

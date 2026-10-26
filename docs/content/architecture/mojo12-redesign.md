@@ -920,3 +920,34 @@ selects ListFamily because every element may be discarded. filter, filter_not,
 filter_map, and compact continue in that output family. This does not guess
 semantics from native storage. Filterable remains independent of Functor for
 standalone operations; selected continuation requires a Functor output family.
+
+## Capture native signatures
+
+Context and Capture share `scripts/native_signatures.py` for native ABI
+evidence. Consumed operands with known types use the existing native projection;
+read operands and results retain explicit register bounds. Capture continues to
+bind zero to two operands and a homogeneous keyword pack before callback
+admission. It does not infer ownership from competing callback overloads.
+
+The literal `raises Never` specialization resolves the read/read native tie
+with a selected-error closure signature. It uses the same ABI variants as
+inferred-error thin functions. Stateful factories keep a borrowed-pointer
+fallback for symbolic native signatures; exact register variants take priority
+for concrete functions. This preserves generic forwards without requiring
+negative register-conformance proofs from callers. The existing optional cell
+still owns the stateful pointer by value.
+
+`generate_native_conventions.py` generates the bodies of the existing binary,
+keyword and mutable invocation owners from that shared descriptor. Capture's
+remaining mixed-convention bundles use the same emitter. All calls still reach
+the existing consuming thunk and Result capture engine. No new allocation,
+error conversion, or execution engine is introduced. Literal no-value returns
+are dispatched before valued returns, including binary consuming calls.
+
+The `capture_native_abi` clients cover stored pointers across all nine binary
+ownership shapes, mixed register/memory inputs and outputs, exact errors,
+no-value returns, typed empty keyword dictionaries, generic stateful wrappers,
+pointer reassignment, mutation after failure, embedded origins and move-only
+cleanup. Negative clients use ordinary inferred calls. Stored keyword pointers
+must use `kwargs` as their pack name because the pinned compiler cannot convert
+that part of the native function type; direct declarations retain their spelling.

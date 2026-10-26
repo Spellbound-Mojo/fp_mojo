@@ -11624,8 +11624,36 @@
             "sha256": "adeb003096520a95259ecd65131137f6a348c420809260603ae80e8b8009ecfd"
           },
           {
-            "signature": "def run[R: Movable & Deinitable, //](self, function: def() raises Never thin -> R) -> Result[R, Never]:",
-            "sha256": "57a655412f9d83248c7cd12885b26868a3e79b6ed02366533f4d68b7325ffb54"
+            "signature": "def run[R: Movable & Deinitable, //](self, function: def() thin -> R) -> Result[R, Never] where not conforms_to(R, RegisterPassable):",
+            "sha256": "5e7d728dc0a5f8758854c0cab22c0bd9d44e8bd29786d243e7184a3fb2261568"
+          },
+          {
+            "signature": "def run[R: RegisterPassable & Deinitable, //](self, function: def() thin -> R) -> Result[R, Never]:",
+            "sha256": "04dba06d99f9fc028e4db50b38f5b0f2d099b3f6f5d0cb12a993a4add0b0086e"
+          },
+          {
+            "signature": "def run(self, function: def() thin) -> Result[type_of(None), Never]:",
+            "sha256": "2a865e9c8d983215427d9acf101ca4a01d00c75024e0c2dbee6f31bca74df66d"
+          },
+          {
+            "signature": "def run[R: Movable & Deinitable, X: Movable & Deinitable, //](self, function: def() raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:",
+            "sha256": "134d0471dc09ace2c77210ac2f2f7abd9ee31f544ad66d8431e035ebbbf9baf0"
+          },
+          {
+            "signature": "def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def() raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:",
+            "sha256": "4ca6597408e1d46929c21625a4e8df16e028474e041233d7d0a33f6db5e4136a"
+          },
+          {
+            "signature": "def run[X: Movable & Deinitable, //](self, function: def() raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:",
+            "sha256": "a4946533ff25646e958bbe73ecde614cca94939817f056e88d9faffef77e1596"
+          },
+          {
+            "signature": "def run[R: Movable & Deinitable, //](self, function: def() raises Never thin -> R) -> Result[R, Never] where not conforms_to(R, RegisterPassable):",
+            "sha256": "412092d37844805d87c0950e762667ca646047d4c536cfcfe1e75d582a2be72f"
+          },
+          {
+            "signature": "def run[R: RegisterPassable & Deinitable, //](self, function: def() raises Never thin -> R) -> Result[R, Never]:",
+            "sha256": "64230dad8d8911dd1cf8b2f39e0afaf01698e9c1e5f01fa0c9335e0817799a66"
           },
           {
             "signature": "def run(self, function: def() raises Never thin) -> Result[type_of(None), Never]:",
@@ -11662,28 +11690,52 @@
         ],
         "stateful": [
           {
-            "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, //](self, function: def(mut S, var A) thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), False]:",
-            "sha256": "e27106e8cdb1d730a692a7a341b4d99f4fdf63e8ab3033353f6049d0b2b381e0"
+            "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //](self, ref[q] function: def(mut S, var A) thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), False]:",
+            "sha256": "14c4ba151a0f30ba8613df2917b4bc6715bb4ce3a282aa08b0812cc6a1e82eb1"
           },
           {
-            "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, //](self, function: def(mut S, var A) raises Self.E thin -> R, var state: S) -> _Stateful[S, A, R, Self.E, type_of(function), True]:",
-            "sha256": "3bed5a7fb17bd815dc19b548afcea3ca3bc547b0de64c04f255e9695668bca18"
+            "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, //](self, function: def(mut S, var A) thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), False] where not conforms_to(A, RegisterPassable):",
+            "sha256": "84028d25b807838f1b08ff94ec0de3bdb4b60c02ff1f9159ffdde1e16952ea6b"
           },
           {
-            "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, //](self, function: def(mut S, var A) thin, var state: S) -> _Stateful[S, A, type_of(None), Never, type_of(function), False]:",
-            "sha256": "1c13ee68eb5be4711aa8fa561be59b1e04a96028d6a7587ca97e0c49bbc279c7"
+            "signature": "def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, //](self, function: def(mut S, var A) thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), False] where not conforms_to(R, RegisterPassable):",
+            "sha256": "54437b660d13c983ef6c469828802e9643a978d2092473ec42b7ce43937f43c3"
           },
           {
-            "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, //](self, function: def(mut S, var A) raises Self.E thin, var state: S) -> _Stateful[S, A, type_of(None), Self.E, type_of(function), True]:",
-            "sha256": "1a0c2ac22962922ba5c680d95accd79361b03f94050e89dd2d282f54d4254496"
+            "signature": "def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](self, function: def(mut S, var A) thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), False]:",
+            "sha256": "25811d057e9597d64b6f50e5e012942e0afcae3f92f3d9a2a050e2d1edeb900f"
           },
           {
-            "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, //](self, function: def(mut S, var A) raises Never thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), True] where Self.E != Never:",
-            "sha256": "6283efdee7ec6f70171f5a4eccf30371b4782b9aaad35094642bb1104dcba1f7"
+            "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, q: ImmOrigin, //](self, ref[q] function: def(mut S, var A) thin, var state: S) -> _Stateful[S, A, type_of(None), Never, type_of(function), False]:",
+            "sha256": "274385aed266de3837d8774deb0f5fabec4880c5c868340c7c87912e45143180"
           },
           {
-            "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, //](self, function: def(mut S, var A) raises Never thin, var state: S) -> _Stateful[S, A, type_of(None), Never, type_of(function), True] where Self.E != Never:",
-            "sha256": "b8dd6b9224d71a89e054eaa0d023da493547373ab5ca6a6d243d893b2f2d8d20"
+            "signature": "def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, //](self, function: def(mut S, var A) thin, var state: S) -> _Stateful[S, A, type_of(None), Never, type_of(function), False]:",
+            "sha256": "b5da8bfe7d06bf11ec6e739262776cb3f6c070f51d06dbf48cad9896fe7d119d"
+          },
+          {
+            "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, q: ImmOrigin, //](self, ref[q] function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where _ErrorCompatible[Self.E, X]:",
+            "sha256": "13a30a9428e6347bcb21372aa52e01246eddc66db1164bda49590d71caf0b75e"
+          },
+          {
+            "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where not conforms_to(A, RegisterPassable) and _ErrorCompatible[Self.E, X]:",
+            "sha256": "9e4cd355882c0de3dcc2dabc6b955f5346902c938e1d1d810ed52ac40956ea96"
+          },
+          {
+            "signature": "def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:",
+            "sha256": "6ad9153afa53446f25403158a292afc6ba475c59c3e696a8b8b1669d6709abd6"
+          },
+          {
+            "signature": "def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where _ErrorCompatible[Self.E, X]:",
+            "sha256": "d4efed945a270d5f5db34b57b8a0076897dcbad0a6b10ba13d24a3f81bd170ef"
+          },
+          {
+            "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, X: Movable & Deinitable, q: ImmOrigin, //](self, ref[q] function: def(mut S, var A) raises X thin, var state: S) -> _Stateful[S, A, type_of(None), X, type_of(function), True] where _ErrorCompatible[Self.E, X]:",
+            "sha256": "7557e68ec38d4134ec73146a967462abd89c195055e7fb0fad504dba731b75ac"
+          },
+          {
+            "signature": "def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin, var state: S) -> _Stateful[S, A, type_of(None), X, type_of(function), True] where _ErrorCompatible[Self.E, X]:",
+            "sha256": "91ea4248732ac38473292c349dd6e7f3e4c13377a908611eb7aec7ee7d88327b"
           }
         ],
         "args": [

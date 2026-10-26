@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]/'scripts'))
 from fp_tools.runtime import ROOT
 import generate_capture as capture
 import generate_context as context
+import generate_native_conventions as native
 import generate_plain_overloads as generator
 import generate_pipeline_syntax as syntax
 import generate_combinator_syntax as combinators
@@ -21,6 +22,9 @@ class GeneratedOverloadTests(unittest.TestCase):
 
     def test_capture_signatures_match_the_generator(self):
         self.assertEqual(capture.OUTPUT.read_text(), capture.source())
+
+    def test_native_invocation_matches_the_generator(self):
+        self.assertEqual(native.OUTPUT.read_text(), native.source())
 
     def test_sources_match_the_generator(self):
         folder = ROOT/'src/fp/functions'

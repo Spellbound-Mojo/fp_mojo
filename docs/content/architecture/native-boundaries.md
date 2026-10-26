@@ -42,6 +42,12 @@ API without a separate review.
   native dispatch. An implicit no-value return is `type_of(None)`, distinct from
   `NoneType`; discarded Result observers dispatch through its literal signature
   inside the shared borrowing bridge, preserving the existing overload set.
+- Stored native pointers with homogeneous keyword packs retain the pack name
+  in their type. Mojo 1.2 rejects conversion between `**options` and `**kwargs`
+  even in a native-only client. Capture's stored-pointer type uses `**kwargs`;
+  the function declaration may retain its own spelling. The maintained
+  `capture_native_abi_keyword_name` fixture records this normal compiler
+  diagnostic separately from the library's ownership and error rejections.
 - Native `map_n` and `par_map_n` overloads use fixed tuple signatures for one
   through eight operands. Mojo 1.2 can crash before checking a variadic pack's
   length, including when both forms are available. These boundaries delegate
