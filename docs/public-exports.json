@@ -10482,6 +10482,34 @@
       ],
       "provider": "algebra/contracts"
     },
+    "algebra.FlatTapContract": {
+      "kind": "type or alias",
+      "declarations": [
+        "comptime FlatTapContract[I: Monad, V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = _SequencingContract[I, V, C, True, False]"
+      ],
+      "provider": "algebra/sequencing"
+    },
+    "algebra.FlatPairWithContract": {
+      "kind": "type or alias",
+      "declarations": [
+        "comptime FlatPairWithContract[I: Monad, V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = _SequencingContract[I, V, C, True, True]"
+      ],
+      "provider": "algebra/sequencing"
+    },
+    "algebra.BeforeContract": {
+      "kind": "type or alias",
+      "declarations": [
+        "comptime BeforeContract[I: Monad, V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable] = _SequencingContract[I, V, _IgnoreInput[I.Element[V], F], True, False]"
+      ],
+      "provider": "algebra/sequencing"
+    },
+    "algebra.FollowedByContract": {
+      "kind": "type or alias",
+      "declarations": [
+        "comptime FollowedByContract[I: Monad, V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable] = _SequencingContract[I, V, _IgnoreInput[I.Element[V], F], False, False]"
+      ],
+      "provider": "algebra/sequencing"
+    },
     "algebra.StringMonoid": {
       "kind": "type or alias",
       "declarations": [

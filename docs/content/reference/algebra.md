@@ -132,6 +132,39 @@ handler's exact error when run. Stored errors remain data throughout.
 
 <!-- example: docs/examples/recovery_contract.mojo -->
 
+
+`FlatTapContract`, `FlatPairWithContract`, `BeforeContract` and
+`FollowedByContract` describe selected Monad sequencing. Each takes the family,
+complete source carrier and library callback type. Generic signatures project
+`Family`, `Out` and `Error`, and forward `Compatible` to the selected operation.
+Previously, an effectful pairing wrapper had to spell
+`I.Bound[V, _EffectRetain[I.Element[V], I, C, False, True]]` and its matching
+`I.BindError`; `FlatPairWithContract[I, V, C]` removes that private continuation
+from both projections and the admission constraint.
+
+| Contract | Callback | Successful output |
+|---|---|---|
+| `FlatTapContract[I, V, C]` | Borrows each payload, produces an effect | Original payloads |
+| `FlatPairWithContract[I, V, C]` | Borrows each payload, produces an effect | Original/projected pairs |
+| `BeforeContract[I, V, F]` | Factory producing an effect | Original payloads |
+| `FollowedByContract[I, V, F]` | Factory producing an effect | Produced payloads |
+
+`InputCompatible` checks exact borrowed payload equality, including origins;
+factory adaptation satisfies it automatically. `CarrierCompatible` checks the
+produced effect, and `BindCompatible` preserves the selected family's existing
+bind predicate. `FamilyCompatible` combines the latter two, and `Compatible`
+adds input equality. These are selected entry-point checks: family bodies still
+validate receiver repeatability and copying retained originals when branching.
+Legacy Piped retains its input-and-carrier entry admission; its generic wrappers
+can forward those component predicates without adding a bind predicate.
+`Error` describes construction: deferred effects retain their separate run-time
+errors. No contract invokes or stores the callback.
+For a conditional Monad capability on an `Applicative` type, use the same
+public `downcast[I, Monad]` witness in both the contract and `pipeline` selection.
+This keeps dependent family result and error projections identical.
+
+<!-- example: docs/examples/sequencing_contracts.mojo -->
+
 Generic wrappers with an abstract callback return type `R` must forward the
 target proof, such as `where OptionalFamily.CarrierCompatible[R]`. This also
 applies to legacy sequencing, effect searches and folds. Mojo 1.2 does not

@@ -177,6 +177,9 @@
     "docs/examples/selective_recovery.mojo": {
       "stdout": "observed: retry\nvalue: 42\nobserved: missing\nvalue: 0\nobserved: fatal\nerror: fatal\n"
     },
+    "docs/examples/sequencing_contracts.mojo": {
+      "stdout": "paired: 2 12\ndeferred: 3 13\n"
+    },
     "docs/examples/shapes.mojo": {
       "stdout": "a circle 3.0 12.0\na rectangle 6.0 24.0\na square 4.0 16.0\nsomething else 0.0 0.0\nTrue False\n"
     },

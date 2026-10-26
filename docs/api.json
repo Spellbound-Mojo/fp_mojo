@@ -808,6 +808,40 @@
    "summary": "Map a native Array's elements, preserving its length and order.",
    "traits": []
   },
+  "algebra.BeforeContract": {
+   "aliases": [],
+   "description": "Project `Family`, `Out` and `Error` and forward `Compatible` in generic selected\nwrappers. `InputCompatible` is satisfied by the existing ignored-input adapter;\n`CarrierCompatible` checks F.Out and `BindCompatible` checks family admission.\nConstruction and execution keep the selected family's timing and exact errors.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected Monad family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad",
+     "variadic": false
+    },
+    {
+     "description": "The complete consumed source carrier, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The consuming or repeatable factory producing an effect in I.",
+     "inferred": false,
+     "name": "F",
+     "type": "ThunkContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/sequencing",
+   "signature": "comptime BeforeContract[I: Monad, V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable] = _SequencingContract[I, V, _IgnoreInput[I.Element[V], F], True, False]",
+   "summary": "The selected before contract, retaining originals after a factory succeeds.",
+   "traits": []
+  },
   "algebra.BindContract": {
    "aliases": [
     {
@@ -1156,6 +1190,108 @@
    "provider": "algebra/protocols",
    "signature": "trait Filterable",
    "summary": "A carrier family that can discard payloads while keeping its context.",
+   "traits": []
+  },
+  "algebra.FlatPairWithContract": {
+   "aliases": [],
+   "description": "Project `Family`, `Out` and `Error` and forward `Compatible` in generic selected\nwrappers. Component predicates have the same meaning as FlatTapContract.\nOnly retained originals need copying when the selected effect branches;\nprojected values are moved. Family primitives still own receiver admission.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected Monad family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad",
+     "variadic": false
+    },
+    {
+     "description": "The complete consumed source carrier, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The borrowing callback producing the paired effect in I.",
+     "inferred": false,
+     "name": "C",
+     "type": "BorrowCallContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/sequencing",
+   "signature": "comptime FlatPairWithContract[I: Monad, V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = _SequencingContract[I, V, C, True, True]",
+   "summary": "The selected flat_pair_with contract, retaining original/projected pairs.",
+   "traits": []
+  },
+  "algebra.FlatTapContract": {
+   "aliases": [],
+   "description": "Forward `Compatible` in generic selected-pipeline wrappers and project `Family`,\n`Out` and `Error` for their return and raised types. `InputCompatible` checks\nthe borrowed payload including origins, `CarrierCompatible` checks the effect\nproduced by C, and `BindCompatible` is the family's continuation admission.\n`FamilyCompatible` combines the latter two without repeating input equality.\nLegacy Piped keeps its input-and-carrier entry checks; this descriptor does not\nstrengthen an existing overload. Families retain receiver and copy checks.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected Monad family, including branching and deferred behavior.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad",
+     "variadic": false
+    },
+    {
+     "description": "The complete consumed source carrier, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The borrowing callback producing an effect in I.",
+     "inferred": false,
+     "name": "C",
+     "type": "BorrowCallContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/sequencing",
+   "signature": "comptime FlatTapContract[I: Monad, V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = _SequencingContract[I, V, C, True, False]",
+   "summary": "The selected flat_tap admission, output family, carrier and construction error.",
+   "traits": []
+  },
+  "algebra.FollowedByContract": {
+   "aliases": [],
+   "description": "Project `Family`, `Out` and `Error` and forward `Compatible` in generic selected\nwrappers. Component predicates have the same meaning as BeforeContract.\nNo original payload is copied for retention. The family owns branching,\ncallback repeatability, deferred execution and native construction errors.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected Monad family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad",
+     "variadic": false
+    },
+    {
+     "description": "The complete consumed source carrier, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The consuming or repeatable factory producing an effect in I.",
+     "inferred": false,
+     "name": "F",
+     "type": "ThunkContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/sequencing",
+   "signature": "comptime FollowedByContract[I: Monad, V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable] = _SequencingContract[I, V, _IgnoreInput[I.Element[V], F], False, False]",
+   "summary": "The selected followed_by contract, returning the factory's produced payloads.",
    "traits": []
   },
   "algebra.Functor": {

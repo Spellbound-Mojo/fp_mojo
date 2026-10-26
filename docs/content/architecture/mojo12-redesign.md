@@ -375,6 +375,35 @@ behavior. A generic wrapper over an entirely unknown family must project
 returns the handler's native Result and raises only the handler's error.
 Ordinary canonical Result calls keep their existing type-changing behavior.
 
+### Generic sequencing metadata
+
+The four public sequencing contracts name the existing selected Monad
+operations: `FlatTapContract`, `FlatPairWithContract`, `BeforeContract` and
+`FollowedByContract`. A private descriptor in `algebra.sequencing` owns their
+shared admission and result/error projections. Public aliases select the
+existing retention or borrowed continuation and factory input adapter, without
+exposing boolean mode parameters or adding execution. The module depends on
+the existing continuations; primitive operation contracts gain no dependency
+on derived sequencing.
+
+`Compatible` describes selected entry admission: exact borrowed input,
+produced-carrier membership and family bind admission. Component predicates
+remain separate so legacy Piped's input-and-carrier signature stays unchanged.
+Bodies retain their existing receiver and retained-value copy checks.
+Both combined and pre-existing expanded proofs forward through the public
+aliases. Metadata projects the exact family witness, output carrier and
+construction error; family-specific deferred run errors are never collapsed
+into callback errors at construction. Conditional Applicative-to-Monad clients
+use the same public `downcast[I, Monad]` witness in the contract and pipeline
+selection for all four operations.
+
+The generic clients cover all four operations, selected fluent continuation,
+legacy admission, a custom family construction failure, deferred Reader timing,
+mutable branching callbacks, one-shot move-only cleanup, and borrowed origins.
+Ordinary rejection clients cover callback/input/source/carrier mistakes, exact
+native errors, cross-owner origins, one-shot callbacks on branching sources,
+and retained move-only payloads in branching effects.
+
 ## Further migration
 
 Every legacy Piped method now has a selected counterpart in the inventory.
