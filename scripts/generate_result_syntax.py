@@ -54,7 +54,7 @@ def methods(piped=False):
                 params += ['//', *explicit]
             conditions = ([f'Self.Value == {source}'] if piped else [])
             if mode != 'thunk' and not (name in ('attempt_tap', 'flat_tap_err') and kind != 'library'):
-                conditions.append(f'{cb.payload} == '+primary.input(t, e))
+                conditions.append(f'{cb.payload} == '+primary.input(t, e, whole=source))
             if piped and name == 'or_else' and kind != 'library':
                 conditions.append('R == Result[T, U]')
             conditions += operation.first_constraints(t, e, cb.result,
@@ -64,7 +64,7 @@ def methods(piped=False):
                 conditions.append('U == downcast[R, _ResultType].Value')
             if conditional:
                 expected = operation.second_result(t, e)
-                conditions += [f'{cb.result} == Bool', f'{cbs[1].payload} == '+operation.callbacks[1].input(t, e), f'{cbs[1].result} == {expected}']
+                conditions += [f'{cb.result} == Bool', f'{cbs[1].payload} == '+operation.callbacks[1].input(t, e, whole=source), f'{cbs[1].result} == {expected}']
             result = operation.result(t, e, cb.result, value=lambda r: f'downcast[{r}, _ResultType].Value')
             error = operation.native_error(cb.error, cbs[1].error if conditional else None,
                 pure_second=selective and other == 'pure')

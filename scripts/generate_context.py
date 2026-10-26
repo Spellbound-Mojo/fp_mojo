@@ -773,10 +773,10 @@ def methods(*, fold_stage=False):
         summary, detail = operation.documentation
         two = len(operation.callbacks) == 2
         primary = operation.callbacks[0]
-        left = list(native_callbacks(primary.mode, primary.input(T, Err), primary.argument))
+        left = list(native_callbacks(primary.mode, primary.input(T, Err, whole=Source), primary.argument))
         if two:
             secondary = operation.callbacks[1]
-            right = native_callbacks(secondary.mode, secondary.input(T, Err), secondary.argument, second=True)
+            right = native_callbacks(secondary.mode, secondary.input(T, Err, whole=Source), secondary.argument, second=True)
             combinations = product(left, right)
         else:
             combinations = ((cb, None) for cb in left)

@@ -376,24 +376,100 @@ RESULT_OUTCOMES = {
 
 
 @dataclass(frozen=True)
-class ResultCallback:
+class OperationCallback:
     mode: str
     payload: str
     argument: str = "function"
 
-    def input(self, success, error):
-        return {
-            "success": success,
-            "error": error,
-            "whole": f"Result[{success}, {error}]",
-            "none": "",
-        }[self.payload]
+    def input(self, success, error, *, whole=None):
+        if self.payload == "whole":
+            if whole is None:
+                raise ValueError(
+                    "A whole-outcome callback needs its surface's carrier type"
+                )
+            return whole
+        return {"success": success, "error": error, "none": ""}[self.payload]
+
+
+def native_errors_compatible(first, second):
+    """The existing two-callback native-error rule, without stored errors."""
+    return f"({first} == Never or {second} == Never or {first} == {second})"
+
+
+_ERROR_CALLBACKS = {
+    "recovery": (OperationCallback("owned", "error"),),
+    "conditional": (
+        OperationCallback("borrow", "error", "predicate"),
+        OperationCallback("owned", "error"),
+    ),
+    "observation": (OperationCallback("borrow", "error"),),
+    "ensure": (
+        OperationCallback("borrow", "success", "predicate"),
+        OperationCallback("borrow", "success", "make_error"),
+    ),
+    "redeem": (
+        OperationCallback("owned", "success", "on_ok"),
+        OperationCallback("owned", "error", "on_err"),
+    ),
+    "whole_observation": (OperationCallback("borrow", "whole"),),
+}
+
+
+@dataclass(frozen=True)
+class ErrorOperation:
+    """Shared callback roles and value/effect choices, without family admission.
+
+    Result carrier constraints and family construction/deferred errors belong
+    to their respective emitters. Generic handler helpers name existing Mojo
+    continuations; this descriptor does not generate an execution mechanism.
+    """
+
+    name: str
+    category: str
+    effect: bool = False
+
+    @property
+    def callbacks(self):
+        return _ERROR_CALLBACKS[self.category]
+
+    def handler(self, family, callback):
+        if self.category not in ("recovery", "conditional"):
+            raise ValueError(f"{self.name} does not recover an error")
+        return callback if self.effect else f"_Recovered[{family}, {callback}]"
+
+    def handler_value(self, family, callback, value):
+        return value if self.effect else f"{self.handler(family, callback)}({value})"
+
+    def handler_carrier(self, family, result):
+        return result if self.effect else f"{family}.Pure[{result}]"
+
+
+# Order preserves each generic surface's existing overload/documentation order.
+ERROR_OPERATIONS = {
+    op.name: op
+    for op in (
+        ErrorOperation("or_else", "recovery", effect=True),
+        ErrorOperation("recover", "recovery"),
+        ErrorOperation("recover_if", "conditional"),
+        ErrorOperation("or_else_if", "conditional", effect=True),
+        ErrorOperation("tap_err", "observation"),
+        ErrorOperation("flat_tap_err", "observation", effect=True),
+        ErrorOperation("ensure", "ensure"),
+        ErrorOperation("redeem", "redeem"),
+        ErrorOperation("redeem_with", "redeem", effect=True),
+        ErrorOperation("attempt_tap", "whole_observation", effect=True),
+    )
+}
+
+
+def error_operations(category):
+    return (op for op in ERROR_OPERATIONS.values() if op.category == category)
 
 
 @dataclass(frozen=True)
 class ResultOperation:
     name: str
-    callbacks: tuple[ResultCallback, ...]
+    callbacks: tuple[OperationCallback, ...]
     output: str = "source"
     first_rule: str = ""
     second_rule: str = ""
@@ -454,9 +530,28 @@ class ResultOperation:
             return second
         return f"_CommonError[{first}, {second}]"
 
-    @staticmethod
-    def error_constraint(first, second):
-        return f"({first} == Never or {second} == Never or {first} == {second})"
+    error_constraint = staticmethod(native_errors_compatible)
+
+    @classmethod
+    def from_error(cls, name):
+        """Translate common callback policy to Result-specific carrier checks."""
+        operation = ERROR_OPERATIONS[name]
+        rules = {
+            "recovery": dict(
+                output="first" if operation.effect else "source",
+                first_rule="same_success" if operation.effect else "success",
+            ),
+            "conditional": dict(
+                second_rule="source" if operation.effect else "success"
+            ),
+            "observation": dict(first_rule="same_error" if operation.effect else ""),
+            "ensure": dict(second_rule="error"),
+            "redeem": dict(
+                output="first" if operation.effect else "success", outcome=True
+            ),
+            "whole_observation": dict(first_rule="same_error"),
+        }[operation.category]
+        return cls(name, operation.callbacks, **rules)
 
 
 RESULT_OPERATIONS = {
@@ -465,81 +560,33 @@ RESULT_OPERATIONS = {
         *(
             ResultOperation(
                 op.name,
-                (ResultCallback(op.mode, "none" if op.factory else "success"),),
+                (OperationCallback(op.mode, "none" if op.factory else "success"),),
                 output=op.result_output,
                 sequence=True,
             )
             for op in SEQUENCING.values()
         ),
+        ResultOperation.from_error("ensure"),
+        ResultOperation.from_error("recover"),
+        ResultOperation.from_error("tap_err"),
+        ResultOperation.from_error("recover_if"),
+        ResultOperation.from_error("or_else_if"),
+        ResultOperation.from_error("flat_tap_err"),
+        ResultOperation.from_error("attempt_tap"),
         ResultOperation(
-            "ensure",
-            (
-                ResultCallback("borrow", "success", "predicate"),
-                ResultCallback("borrow", "success", "make_error"),
-            ),
-            second_rule="error",
+            "map_err", (OperationCallback("owned", "error"),), output="error"
         ),
-        ResultOperation(
-            "recover", (ResultCallback("owned", "error"),), first_rule="success"
-        ),
-        ResultOperation("tap_err", (ResultCallback("borrow", "error"),)),
-        ResultOperation(
-            "recover_if",
-            (
-                ResultCallback("borrow", "error", "predicate"),
-                ResultCallback("owned", "error"),
-            ),
-            second_rule="success",
-        ),
-        ResultOperation(
-            "or_else_if",
-            (
-                ResultCallback("borrow", "error", "predicate"),
-                ResultCallback("owned", "error"),
-            ),
-            second_rule="source",
-        ),
-        ResultOperation(
-            "flat_tap_err",
-            (ResultCallback("borrow", "error"),),
-            first_rule="same_error",
-        ),
-        ResultOperation(
-            "attempt_tap", (ResultCallback("borrow", "whole"),), first_rule="same_error"
-        ),
-        ResultOperation("map_err", (ResultCallback("owned", "error"),), output="error"),
-        ResultOperation(
-            "or_else",
-            (ResultCallback("owned", "error"),),
-            output="first",
-            first_rule="same_success",
-        ),
+        ResultOperation.from_error("or_else"),
         ResultOperation(
             "map_both",
             (
-                ResultCallback("owned", "success", "on_ok"),
-                ResultCallback("owned", "error", "on_err"),
+                OperationCallback("owned", "success", "on_ok"),
+                OperationCallback("owned", "error", "on_err"),
             ),
             output="both",
             outcome=True,
         ),
-        ResultOperation(
-            "redeem",
-            (
-                ResultCallback("owned", "success", "on_ok"),
-                ResultCallback("owned", "error", "on_err"),
-            ),
-            output="success",
-            outcome=True,
-        ),
-        ResultOperation(
-            "redeem_with",
-            (
-                ResultCallback("owned", "success", "on_ok"),
-                ResultCallback("owned", "error", "on_err"),
-            ),
-            output="first",
-            outcome=True,
-        ),
+        ResultOperation.from_error("redeem"),
+        ResultOperation.from_error("redeem_with"),
     )
 }

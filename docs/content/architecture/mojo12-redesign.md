@@ -149,6 +149,24 @@ native callback owner. No shared description transfers those admission rules to
 another surface. Generator parity verifies that every Mojo source byte remains
 unchanged by this consolidation.
 
+### Shared recovery and observation policies
+
+`ErrorOperation` in `scripts/operation_specs.py` owns callback roles and the
+value-versus-effect choice for recovery, conditional recovery, error observation,
+validation and outcome handling. Generic family emitters use those choices to
+select the existing continuations. `ResultOperation.from_error` translates the
+same choices into Result-specific carrier constraints. The common two-callback
+native-error compatibility rule is shared only where its spelling and meaning
+are identical.
+
+`OperationCallback` describes a payload role without choosing its carrier.
+Whole-outcome consumers supply that exact carrier spelling explicitly; generic
+metadata never constructs a Result type implicitly. Public argument names,
+parameter order, signature inference exceptions and receiver admission remain
+with each surface. Family construction errors, stored errors and deferred run
+errors retain their separate formulas and timing. This consolidation changes
+no generated Mojo byte and adds no runtime execution owner.
+
 ## Native signatures and storage
 
 Native family recognition requires only Functor; Applicative entry points

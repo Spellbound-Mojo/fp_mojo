@@ -1,12 +1,15 @@
 """Explicit-family recovery admission; families and _Recovered own execution."""
 from native_signatures import callback
+from operation_specs import error_operations
 
 MD = 'Movable & Deinitable'
 
 
 def methods():
     out = []
-    for name in ('or_else', 'recover'):
+    for operation in error_operations('recovery'):
+        name = operation.name
+        primary = operation.callbacks[0]
         for kind in ('library', 'pure', 'raising', 'view'):
             native = kind in ('pure', 'raising')
             error = 'E' if kind == 'raising' else 'Never'
@@ -21,18 +24,19 @@ def methods():
             build = f'{callback}(Pointer(to=handler))' if native else 'handler._unary_view()' if kind == 'view' else 'handler^'
             arg = 'A' if native else callback + '.Arg'
             result = 'R' if native else callback + '.Out'
-            condition = f'conforms_to(I, ApplicativeError) and {arg} == I.Failure'
-            if name == 'recover': condition += f' and {result} == I.Element[Self.Value]'
+            payload = primary.input('I.Element[Self.Value]', 'I.Failure')
+            condition = f'conforms_to(I, ApplicativeError) and {arg} == {payload}'
+            if not operation.effect: condition += f' and {result} == I.Element[Self.Value]'
             if kind == 'raising': condition += ' and (X == _InferError or X == E)'
-            continuation = f'_Recovered[I, {callback}]' if name == 'recover' else callback
+            continuation = operation.handler('I', callback)
             condition += ' and I._ErrorCarrier[Self.Value]'
-            if name == 'or_else': condition += f' and I._ErrorCarrier[{result}] and I.Element[Self.Value] == I.Element[{result}]'
-            value = f'{continuation}({build})' if name == 'recover' else build
+            if operation.effect: condition += f' and I._ErrorCarrier[{result}] and I.Element[Self.Value] == I.Element[{result}]'
+            value = operation.handler_value('I', callback, build)
             probe = f'_ErrorProbe[A, R, {error}]' if native else callback
-            if name == 'recover': probe = f'_Recovered[I, {probe}]'
+            probe = operation.handler('I', probe)
             raised = f'I.HandleError[Self.Value, {probe}]'
             if kind == 'raising': raised = f'_EntryError[X, {raised}]'
-            doc = 'Recover the selected stored-error layer with ' + ('a replacement success value.' if name == 'recover' else 'a handler effect.')
+            doc = 'Recover the selected stored-error layer with ' + ('a replacement success value.' if not operation.effect else 'a handler effect.')
             if kind == 'library':
                 doc += '''
 
@@ -73,11 +77,13 @@ def methods():
 def conditional_methods():
     from itertools import product
     out = []
-    for name in ('recover_if', 'or_else_if'):
+    for operation in error_operations('conditional'):
+        name = operation.name
+        primary, secondary = operation.callbacks
         for pk, hk in product(('library', 'pure', 'raising'), ('library', 'pure', 'raising', 'view')):
-            p = callback('borrow', pk, 'predicate').renamed({'R': 'S'})
+            p = callback(primary.mode, pk, primary.argument).renamed({'R': 'S'})
             # Preserve the owned callback's canonical A/R/E native signature.
-            h = callback('owned', hk if hk != 'view' else 'library', 'handler', second=True).renamed({'Q': 'A', 'S': 'R', 'Y': 'E'})
+            h = callback(secondary.mode, hk if hk != 'view' else 'library', 'handler', second=True).renamed({'Q': 'A', 'S': 'R', 'Y': 'E'})
             if hk == 'view':
                 h.parameters = ['G: _UnaryViewable', 'q: ImmOrigin']
                 h.argument, h.type, h.build = 'ref[q] handler: G', 'G._View[q]', 'handler._unary_view()'
@@ -85,17 +91,19 @@ def conditional_methods():
             params = p.parameters + [v for v in h.parameters if v != f'R: {MD}'] + ['//', 'I: Applicative'] + ([f'R: {MD}'] if hk in ('pure', 'raising') else []) + p.explicit + h.explicit + ['Z: AnyType = _InferError']
             family = '_ErrorFamily[I]'
             elem = 'I.Element[Self.Value]'
-            handler = f'_Recovered[I, {h.type}]' if name == 'recover_if' else h.type
-            build = f'{handler}({h.build})' if name == 'recover_if' else h.build
-            carrier = f'I.Pure[{h.result}]' if name == 'recover_if' else h.result
+            handler = operation.handler('I', h.type)
+            build = operation.handler_value('I', h.type, h.build)
+            carrier = operation.handler_carrier('I', h.result)
             continuation = f'_ConditionalRecovery[{family}, {elem}, {p.type}, {handler}]'
             err = f'_CommonError[{p.error}, _CommonError[{h.error}, {family}.FailError[{elem}]]]'
             probe = f'_ErrorProbe[{family}.Failure, I._Joined[{family}.Failed[{elem}], {carrier}], {err}]'
             raised = f'_EntryError[Z, {family}.HandleError[Self.Value, {probe}]]'
-            conditions = [f'conforms_to(I, ApplicativeError)', f'{family}._ErrorCarrier[Self.Value]', f'{p.payload} == {family}.Failure', f'{p.result} == Bool', f'{h.payload} == {family}.Failure']
-            if name == 'recover_if': conditions += [f'{h.result} == {elem}']
+            predicate_input = primary.input(elem, family + '.Failure')
+            handler_input = secondary.input(elem, family + '.Failure')
+            conditions = [f'conforms_to(I, ApplicativeError)', f'{family}._ErrorCarrier[Self.Value]', f'{p.payload} == {predicate_input}', f'{p.result} == Bool', f'{h.payload} == {handler_input}']
+            if not operation.effect: conditions += [f'{h.result} == {elem}']
             else: conditions += [f'{family}._ErrorCarrier[{h.result}]', f'I.Element[{h.result}] == {elem}']
-            doc = 'Recover matching stored errors with ' + ('success values.' if name == 'recover_if' else 'handler effects.')
+            doc = 'Recover matching stored errors with ' + ('success values.' if not operation.effect else 'handler effects.')
             if pk == hk == 'library':
                 doc += '''
 
@@ -134,10 +142,11 @@ def conditional_methods():
 
 def observation_methods():
     out = []
-    for name in ('tap_err', 'flat_tap_err'):
-        effect = name == 'flat_tap_err'
+    for operation in error_operations('observation'):
+        name, effect = operation.name, operation.effect
+        primary = operation.callbacks[0]
         for kind in ('library', 'pure', 'raising'):
-            cb = callback('borrow', kind, 'inspect')
+            cb = callback(primary.mode, kind, 'inspect')
             params = [v for v in cb.parameters if v != f'R: {MD}'] + ['//', 'I: Applicative']
             if kind != 'library': params += [f'R: {MD}']
             params += cb.explicit + ['Z: AnyType = _InferError']
@@ -147,7 +156,8 @@ def observation_methods():
             shape = f'_ErrorObservation[{family}, {elem}, {cb.result}, {cb.error}, {effect}]'
             probe = f'_ErrorProbe[{family}.Failure, {shape}.Out, {shape}.Error]'
             raised = f'_EntryError[Z, {family}.HandleError[Self.Value, {probe}]]'
-            conditions = [f'conforms_to(I, ApplicativeError)', f'{family}._ErrorCarrier[Self.Value]', f'{cb.payload} == {family}.Failure']
+            payload = primary.input(elem, family + '.Failure')
+            conditions = [f'conforms_to(I, ApplicativeError)', f'{family}._ErrorCarrier[Self.Value]', f'{cb.payload} == {payload}']
             if effect: conditions += [f'{family}._ErrorCarrier[{cb.result}]']
             doc = ("Sequence a borrowed error observer using the selected family's combination policy." if effect else
                    'Inspect a borrowed selected error and retain the failure.')

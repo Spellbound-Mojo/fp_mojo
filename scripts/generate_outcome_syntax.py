@@ -1,10 +1,7 @@
 """Family admission for validation and fixed-error outcome composition."""
 from itertools import product
 from native_signatures import callback
-
-
-def borrowed(kind, name, second=False):
-    return callback('borrow', kind, name, second)
+from operation_specs import ERROR_OPERATIONS, error_operations, native_errors_compatible
 
 
 def parameters(callbacks):
@@ -21,13 +18,18 @@ def methods():
     monad = '_ErrorMonad[I]'
     elem = 'I.Element[Self.Value]'
     base = ['conforms_to(I, ApplicativeError)', f'{family}._ErrorCarrier[Self.Value]']
+    operation = ERROR_OPERATIONS['ensure']
+    primary, secondary = operation.callbacks
     for pk, fk in product(('library', 'pure', 'raising'), repeat=2):
-        p, f = borrowed(pk, 'predicate'), borrowed(fk, 'make_error', True)
+        p = callback(primary.mode, pk, primary.argument)
+        f = callback(secondary.mode, fk, secondary.argument, True)
         continuation = f'_Ensure[{family}, {elem}, {p.type}, {f.type}]'
         result = f'{monad}.Bound[Self.Value, {continuation}]'
         error = f'_EntryError[Z, {monad}.BindError[Self.Value, {continuation}]]'
-        where = base + ['conforms_to(I, Monad)', f'{p.payload} == {elem}', f'{p.result} == Bool', f'{f.payload} == {elem}', f'{f.result} == {family}.Failure']
-        where += [f'({p.error} == Never or {f.error} == Never or {p.error} == {f.error})']
+        predicate_input = primary.input(elem, family + '.Failure')
+        factory_input = secondary.input(elem, family + '.Failure')
+        where = base + ['conforms_to(I, Monad)', f'{p.payload} == {predicate_input}', f'{p.result} == Bool', f'{f.payload} == {factory_input}', f'{f.result} == {family}.Failure']
+        where += [native_errors_compatible(p.error, f.error)]
         doc = 'Keep accepted successes; construct a stored failure for rejected values.'
         if pk == fk == 'library':
             doc += '''
@@ -59,14 +61,18 @@ def methods():
         comptime assert _ErrorCompatible[{error}, {monad}.BindError[Self.Value, {continuation}]]
         return Piped(_flat_map_as[{error}, {monad}]({continuation}({p.build}, {f.build}), self.value^))
 ''')
-    for name in ('redeem', 'redeem_with'):
-        effect = name == 'redeem_with'
+    for operation in error_operations('redeem'):
+        name, effect = operation.name, operation.effect
+        primary, secondary = operation.callbacks
         for lk, rk in product(('library', 'pure', 'raising'), repeat=2):
-            left, right = callback('owned', lk, 'on_ok'), callback('owned', rk, 'on_err', True)
+            left = callback(primary.mode, lk, primary.argument)
+            right = callback(secondary.mode, rk, secondary.argument, True)
             runner = f'_Redeem[{family}, Self.Value, {left.type}, {right.type}, {effect}]'
             error = f'_EntryError[Z, {runner}.Error]'
-            where = base + [f'{left.payload} == {elem}', f'{right.payload} == {family}.Failure']
-            where += [f'({left.error} == Never or {right.error} == Never or {left.error} == {right.error})']
+            success_input = primary.input(elem, family + '.Failure')
+            error_input = secondary.input(elem, family + '.Failure')
+            where = base + [f'{left.payload} == {success_input}', f'{right.payload} == {error_input}']
+            where += [native_errors_compatible(left.error, right.error)]
             if effect:
                 where += ['conforms_to(I, Monad)', f'{family}._ErrorCarrier[{left.result}]', f'{family}._ErrorCarrier[{right.result}]', f'I.Element[{left.result}] == I.Element[{right.result}]']
             else:
@@ -107,11 +113,12 @@ def methods():
         except raised:
             _propagate_error[{error}](raised^)
 ''')
+    primary = ERROR_OPERATIONS['attempt_tap'].callbacks[0]
     for kind in ('library', 'pure', 'raising'):
-        c = borrowed(kind, 'inspect')
+        c = callback(primary.mode, kind, 'inspect')
         runner = f'_AttemptTap[{monad}, Self.Value, {c.type}]'
         error = f'_EntryError[Z, {runner}.Error]'
-        where = base + ['conforms_to(I, Monad)', f'{c.payload} == Result[{elem}, {family}.Failure]', f'{family}._ErrorCarrier[{c.result}]']
+        where = base + ['conforms_to(I, Monad)', f'{c.payload} == ' + primary.input(elem, family + '.Failure', whole=f'Result[{elem}, {family}.Failure]'), f'{family}._ErrorCarrier[{c.result}]']
         doc = 'Observe the whole selected Result and restore it after observer success.'
         if kind == 'library':
             doc += '''
