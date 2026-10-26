@@ -1,7 +1,7 @@
 """Result combinator admission and Piped forwarding; no execution is generated."""
 from itertools import product
 from native_signatures import callback
-from operation_specs import RESULT_DOCS as DOCS, RESULT_OUTCOMES as OUTCOMES, RESULT_OPERATIONS
+from operation_specs import RESULT_DOCS as DOCS, RESULT_OUTCOMES as OUTCOMES, RESULT_OPERATIONS, SEQUENCING
 
 MD = 'Movable & Deinitable'
 START = '    # --- Result combinators (generated) ---\n'
@@ -75,13 +75,12 @@ def methods(piped=False):
                 result = f'Piped[{result}]'
             elif kind != 'library' or (other is not None and other != 'library'):
                 body = f'return self^.{name}({builds})'
-            elif name in ('flat_tap', 'flat_pair_with'):
-                body = f'return self^.flat_map(_ResultRetain[{t}, {e}, {cb.type}, {name == "flat_pair_with"}]({builds}))'
-            elif name == 'followed_by':
-                body = f'return self^.flat_map(_IgnoreInput[{t}, {cb.type}]({builds}))'
-            elif name == 'before':
-                inner = f'_IgnoreInput[{t}, {cb.type}]'
-                body = f'return self^.flat_map(_ResultRetain[{t}, {e}, {inner}, False]({inner}({builds})))'
+            elif operation.sequence:
+                sequence = SEQUENCING[name]
+                adapter, build = sequence.adapt(t, cb.type, builds)
+                if sequence.retain:
+                    build = f'_ResultRetain[{t}, {e}, {adapter}, {sequence.paired}]({build})'
+                body = f'return self^.flat_map({build})'
             elif conditional:
                 handler = cbs[1].type if selective else f'_BorrowedUnary[{t}, {cbs[1].type}]'
                 handler_value = cbs[1].build if selective else f'{handler}({cbs[1].build})'
@@ -128,9 +127,9 @@ def methods(piped=False):
                     body = f'return Piped(rebind_var[{source}](self.value^).{name}{effect}(function))'
                 else:
                     thunk = f'_NativeThunkRef[{cb.result}, {error}, C, {kind == "raising"}, o]'
-                    adapter = f'_IgnoreInput[{t}, {thunk}]'
-                    wrapper = f'_BorrowedUnary[{t}, {adapter}]' if name == 'followed_by' else f'_ResultRetain[{t}, {e}, {adapter}, False]'
-                    build = f'{adapter}({thunk}(Pointer(to=function)))'
+                    sequence = SEQUENCING[name]
+                    adapter, build = sequence.adapt(t, thunk, f'{thunk}(Pointer(to=function))')
+                    wrapper = f'_ResultRetain[{t}, {e}, {adapter}, {sequence.paired}]' if sequence.retain else f'_BorrowedUnary[{t}, {adapter}]'
                     body = f'return self^.flat_map({wrapper}({build}))'
             doc = summary
             if kind == 'library' and other in (None, 'library'):

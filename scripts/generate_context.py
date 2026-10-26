@@ -9,7 +9,7 @@ from operation_specs import RESULT_OPERATIONS
 from generate_plain_overloads import splice_source
 from generate_nary_syntax import MAX
 from generate_pipeline_syntax import TRANSFORMS
-from operation_specs import TERMINALS, TRAVERSALS
+from operation_specs import TERMINALS, TRAVERSALS, SEQUENCING
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "src/fp/functions/context.mojo"
@@ -756,27 +756,17 @@ def methods(*, fold_stage=False):
     family = "_Binding[Self.I]"
     element = "Self.I.Element[Self.V]"
     for name in ("flat_tap", "flat_pair_with", "before", "followed_by"):
-        factory = name in ("before", "followed_by")
-        for cb in native_callbacks("thunk" if factory else "borrow", element, "function"):
-            adapter = cb["adapter_type"]
-            built = cb["build"]
-            if factory:
-                adapter = f"_IgnoreInput[{element}, {adapter}]"
-                built = f"{adapter}({built})"
-            extra = ", False, True" if name == "flat_pair_with" else ""
-            continuation = (f"_BorrowedUnary[{element}, {adapter}]" if name == "followed_by"
-                            else f"_EffectRetain[{element}, {family}, {adapter}{extra}]")
+        operation = SEQUENCING[name]
+        for cb in native_callbacks(operation.mode, element, "function"):
+            adapter, built = operation.adapt(element, cb["adapter_type"], cb["build"])
+            continuation = operation.continuation(element, family, adapter)
             result = f"{family}.Bound[Self.V, {continuation}]"
             error = f"{family}.BindError[Self.V, {continuation}]"
             conditions = ["conforms_to(Self.I, Monad)"] + cb["conditions"]
             conditions += [f"_CarrierCompatible[{family}, {cb['result']}]",
                            f"_BindCompatible[{family}, Self.V, {continuation}]"]
-            summary = {"flat_tap": "Sequence a borrowing effect and retain each original payload.",
-                       "flat_pair_with": "Sequence a borrowing effect and pair each original with each successful projection.",
-                       "before": "Sequence a factory and retain each original payload.",
-                       "followed_by": "Sequence a factory and keep its produced payloads."}[name]
             emit(name, cb, cb["params"], cb["argument"], result, error, "Self.I", conditions,
-                 f"_flat_map_as[{error}, {family}, Self.V, {continuation}]({continuation}({built}), self.value^)", summary)
+                 f"_flat_map_as[{error}, {family}, Self.V, {continuation}]({continuation}({built}), self.value^)", operation.selected_summary)
 
     for name, operation in RESULT_OPERATIONS.items():
         if operation.sequence: continue

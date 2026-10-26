@@ -194,6 +194,85 @@ TRAVERSALS = {
 }
 
 
+@dataclass(frozen=True)
+class Sequencing:
+    name: str
+    mode: str
+    retained: str
+    legacy_summary: str
+    selected_summary: str
+
+    @property
+    def factory(self):
+        return self.mode == "thunk"
+
+    @property
+    def retain(self):
+        return self.retained != "produced"
+
+    @property
+    def paired(self):
+        return self.retained == "pair"
+
+    @property
+    def result_output(self):
+        return {"original": "source", "pair": "pair", "produced": "first"}[
+            self.retained
+        ]
+
+    def adapt(self, element, callback, build):
+        """Give a factory the ignored input expected by the shared continuations."""
+        if self.factory:
+            callback = f"_IgnoreInput[{element}, {callback}]"
+            build = f"{callback}({build})"
+        return callback, build
+
+    def continuation(self, element, family, callback):
+        """Select the existing generic bind continuation, without choosing admission."""
+        if not self.retain:
+            return f"_BorrowedUnary[{element}, {callback}]"
+        extra = ", False, True" if self.paired else ""
+        return f"_EffectRetain[{element}, {family}, {callback}{extra}]"
+
+
+# Iteration and arbitrary Monad families share the callback/retention decisions.
+# Their repeatability, branching, errors and timing remain with the selected
+# family and admission surface. Result reuses only those semantic decisions.
+SEQUENCING = {
+    op.name: op
+    for op in (
+        Sequencing(
+            "flat_tap",
+            "borrow",
+            "original",
+            "Sequence a borrowing effectful callback and retain each original value.",
+            "Sequence a borrowing effect and retain each original payload.",
+        ),
+        Sequencing(
+            "flat_pair_with",
+            "borrow",
+            "pair",
+            "Sequence a borrowing effectful projection and pair each success with its original.",
+            "Sequence a borrowing effect and pair each original with each successful projection.",
+        ),
+        Sequencing(
+            "followed_by",
+            "thunk",
+            "produced",
+            "Sequence a zero-argument factory and keep its produced values.",
+            "Sequence a factory and keep its produced payloads.",
+        ),
+        Sequencing(
+            "before",
+            "thunk",
+            "original",
+            "Sequence a zero-argument factory and retain each original value.",
+            "Sequence a factory and retain each original payload.",
+        ),
+    )
+}
+
+
 # Result semantics are shared; native inference policy stays with each emitter.
 RESULT_DOCS = {
     "flat_tap": (
@@ -383,22 +462,15 @@ class ResultOperation:
 RESULT_OPERATIONS = {
     op.name: op
     for op in (
-        ResultOperation(
-            "flat_tap", (ResultCallback("borrow", "success"),), sequence=True
+        *(
+            ResultOperation(
+                op.name,
+                (ResultCallback(op.mode, "none" if op.factory else "success"),),
+                output=op.result_output,
+                sequence=True,
+            )
+            for op in SEQUENCING.values()
         ),
-        ResultOperation(
-            "flat_pair_with",
-            (ResultCallback("borrow", "success"),),
-            output="pair",
-            sequence=True,
-        ),
-        ResultOperation(
-            "followed_by",
-            (ResultCallback("thunk", "none"),),
-            output="first",
-            sequence=True,
-        ),
-        ResultOperation("before", (ResultCallback("thunk", "none"),), sequence=True),
         ResultOperation(
             "ensure",
             (

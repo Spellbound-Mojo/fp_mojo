@@ -132,6 +132,23 @@ exceptions and positional bindings stay local; the descriptor never adds a
 selected constraint to a legacy overload. The catalog extraction preserves all
 generated Mojo bytes and is covered by generated-source parity checks.
 
+### Shared sequencing policies
+
+`operation_specs.SEQUENCING` describes `flat_tap`, `flat_pair_with`, `followed_by`
+and `before` with one callback mode and one retained-output choice. Factory,
+pairing and retention decisions are derived from those facts. Selected Pipeline,
+legacy Piped and Iter share factory adaptation and generic continuation selection;
+Result derives its sequencing callback/output metadata from the same catalog.
+Each surface keeps its existing declaration order and documentation wording.
+
+The catalog selects the existing `_IgnoreInput`, `_BorrowedUnary`, `_EffectRetain`
+and Result continuations. Family bind still owns branching, repeated invocation,
+copy requirements and deferred execution. Result keeps its distinct native-thunk
+and owned-library callback boundaries, and lazy iteration keeps its mutable
+native callback owner. No shared description transfers those admission rules to
+another surface. Generator parity verifies that every Mojo source byte remains
+unchanged by this consolidation.
+
 ## Native signatures and storage
 
 Native family recognition requires only Functor; Applicative entry points
