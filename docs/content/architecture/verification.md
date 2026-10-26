@@ -10,14 +10,17 @@ satisfy the same laws.
 
 | Layer | Location | What it establishes | What it does not |
 |---|---|---|---|
-| Runtime | `tests/runtime/` (88 programs) | Values, ordering, source pulls and composed use | Every possible type or callback |
-| Ownership | `tests/ownership/` (56) | Liveness, copies, moves and exactly-once cleanup | A universal destructor order |
-| Laws | `tests/laws/` (5) | The [laws](laws.md) under their stated assumptions | Proofs over arbitrary programs |
-| Integration | `tests/integration/` (15) | Several packages working together | — |
-| Compile-failure | `tests/compile_fail/` (287) | Invalid ownership, origins, descriptors, clauses and error combinations are rejected with the declared diagnostic | That a rejected encoding is impossible in general |
-| Examples | `docs/examples/` (31) | Every program on this site compiles and prints its reviewed output, through source and package imports at O0 and O3 | Behavior beyond those programs |
-| Benchmarks | `tests/benchmarks/` (2) | Library code against hand-written loops on identical inputs, reported as diagnostics | A performance guarantee |
+| Runtime | `tests/runtime/` | Values, ordering, source pulls and composed use | Every possible type or callback |
+| Ownership | `tests/ownership/` | Liveness, copies, moves and exactly-once cleanup | A universal destructor order |
+| Laws | `tests/laws/` | The [laws](laws.md) under their stated assumptions | Proofs over arbitrary programs |
+| Integration | `tests/integration/` | Several packages working together | — |
+| Compile-failure | `tests/compile_fail/` | Invalid ownership, origins, descriptors, clauses and error combinations are rejected with the declared diagnostic | That a rejected encoding is impossible in general |
+| Examples | `docs/examples/` | Executable examples compile and print their reviewed output at the selected import/optimization matrix | Behavior beyond those programs |
+| Benchmarks | `tests/benchmarks/` | Library code against hand-written loops on identical inputs, reported as diagnostics | A performance guarantee |
 | Tooling | `tests/tooling/` | The runners' audit rules | — |
+
+The [compatibility checkpoint](../guides/compatibility.md#qualification-checkpoint)
+records the current counts and the scope of each completed run.
 
 Each runtime, ownership, law and integration program has a `main` that asserts
 its results with `std.testing`. `pixi run suite` builds these programs, the

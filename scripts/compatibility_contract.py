@@ -51,7 +51,8 @@ def compatibility_markdown(section, catalog):
     if section == 'migration':
         return table(('Pass', 'Legacy operations awaiting Pipeline admission', 'Execution contract'),
                      [(g['name'], names(g['methods']), g['contract']) for g in catalog['migration']])
-    if section == 'qualification':
+    if section in ('qualification', 'current-qualification'):
+        checkpoint = 'current' if section == 'current-qualification' else 'baseline'
         return table(('Check', 'Result', 'Scope'),
-                     [(g['check'], g['result'], g['scope']) for g in catalog['baseline']['checks']])
+                     [(g['check'], g['result'], g['scope']) for g in catalog[checkpoint]['checks']])
     raise ValueError('Unknown compatibility section: ' + section)

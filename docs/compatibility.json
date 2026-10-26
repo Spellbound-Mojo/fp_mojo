@@ -636,5 +636,84 @@
     "tests/compile_fail/shared_outcomes_ensure_factory_owned.mojo",
     "tests/compile_fail/traversal_expansion_owned.mojo",
     "tests/compile_fail/traversal_tap_owned.mojo"
-  ]
+  ],
+  "current": {
+    "commit": "1783fcf30dd0c06e89b060b230b9c929a0711c26",
+    "production_commit": "51e0ef40a141beb352bf47fb27cf3c4fb5913b6e",
+    "compiler": "Mojo 1.2.0 (2016d0cd)",
+    "platform": "Linux x86-64",
+    "checks": [
+      {
+        "check": "Positive suite",
+        "result": "614 / 614",
+        "scope": "Precompiled package, O3; benchmark programs also execute",
+        "report": ".cache/roadmap/capture-abi/qualification/suite/report.json",
+        "sha256": "ed751eaaae93ef7ea7934c1c7b80b4d73e94d2009d8e8becca340745b7fd0be5"
+      },
+      {
+        "check": "Capture regression",
+        "result": "155 / 155",
+        "scope": "Precompiled package, O0; native closures, pointers, generic forwarding and ownership",
+        "report": ".cache/roadmap/capture-abi/qualification/capture-o0/report.json",
+        "sha256": "a51a51bc49e25da474ca5f69d5893d6e069cee002bc7f4ce34722f98e1911374"
+      },
+      {
+        "check": "Rejections",
+        "result": "1365 / 1365",
+        "scope": "Precompiled package, O3; declared diagnostics, no negative execution",
+        "report": ".cache/roadmap/capture-abi/qualification/rejections/report.json",
+        "sha256": "79061344291922c305612632464fd883d35106e3e62a158829abb45c04a762e3"
+      },
+      {
+        "check": "Stored-pointer boundaries",
+        "result": "60 / 60",
+        "scope": "15 positive/negative clients through source/package at O0/O3",
+        "report": ".cache/roadmap/capture-abi/qualification/boundaries/report.json",
+        "sha256": "b218dfdc77b92f15fcb869474df0afed8583e0917c1a1abd31ca1f75550f7e57"
+      },
+      {
+        "check": "Source package",
+        "result": "pass",
+        "scope": "Independent source delivery, whole-library precompilation and O3 core client",
+        "report": ".cache/roadmap/resource-accounting/qualification/source-package/report.json",
+        "sha256": "8b5586c66217f345ec86082843ceeac15065de7a44de47ca81dd982aefaa7098"
+      },
+      {
+        "check": "Precompiled package",
+        "result": "pass",
+        "scope": "Whole-library precompilation and O3 core client",
+        "report": ".cache/roadmap/capture-abi/qualification/package/report.json",
+        "sha256": "a8b2bf5cbdb369874afcad03595516197f5bc0cedc21b91cead8229394d45ce2"
+      },
+      {
+        "check": "Installed clients",
+        "result": "16 / 16",
+        "scope": "Copied source/bytecode; compilation outside checkout; O0/O3 assertions and reviewed output",
+        "report": ".cache/roadmap/resource-accounting/qualification/install/report.json",
+        "sha256": "46f9eedc758345500139ef4951e2248c5cc75c1ed369e05391d94b28ac1cb7e3"
+      },
+      {
+        "check": "Cold compilation",
+        "result": "16 / 16",
+        "scope": "Serial fresh caches, two threads, 180 seconds and 4 GiB; individual observations",
+        "report": ".cache/roadmap/resource-accounting/verified.json",
+        "sha256": "f2fdd5608d0702a0ecbf8de05ff5a19dab8c15441a27e5030ebf3489dd5251ba"
+      },
+      {
+        "check": "Tooling",
+        "result": "43 / 43",
+        "scope": "Runner contracts, generated-source parity and descendant memory enforcement",
+        "report": ".cache/roadmap/resource-accounting/tooling-final.log",
+        "sha256": "3760a6186a696647f9508f906ec5e77fdf900914ad60c2c92809f21f910b069f"
+      },
+      {
+        "check": "Documentation",
+        "result": "pass",
+        "scope": "Strict rendered-site and manifest checks; runtime examples also participate in the positive suite",
+        "report": ".cache/roadmap/resource-accounting/docs-final.log",
+        "sha256": "23339ae9a0c7a008faf347e0a3e2534138f214333eb3b8f31aafd11ee6d747f1"
+      }
+    ],
+    "scope_note": "Production Mojo sources are identical at these two commits. Report post-run differences are documented prose or catalog key ordering; production and runner code remains bound by report hashes. Historical whole-documentation O0/O3 evidence remains in baseline."
+  }
 }

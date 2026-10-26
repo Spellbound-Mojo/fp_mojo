@@ -72,7 +72,7 @@ nav:
       - Laws: architecture/laws.md
       - Performance and targets: architecture/performance.md
       - Native Mojo boundaries: architecture/native-boundaries.md
-      - Mojo 1.2 boundary experiment: architecture/mojo12-redesign.md
+      - Mojo 1.2 contracts and next work: architecture/mojo12-redesign.md
       - Verification: architecture/verification.md
   - API reference:
       - How to read the reference: reference/index.md

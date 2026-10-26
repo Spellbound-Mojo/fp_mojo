@@ -8,6 +8,24 @@ use the `nightly` source checkout.
 
 ## Qualification checkpoint
 
+The functional checkpoint is
+[`51e0ef4`](https://github.com/Spellbound-Mojo/fp_mojo/commit/51e0ef40a141beb352bf47fb27cf3c4fb5913b6e).
+The memory-accounting, measurement and installation pass is
+[`1783fcf`](https://github.com/Spellbound-Mojo/fp_mojo/commit/1783fcf30dd0c06e89b060b230b9c929a0711c26);
+its production Mojo sources are identical. Both use Mojo 1.2.0 (2016d0cd)
+on Linux x86-64. Each row states its actual import and optimization scope;
+the selected O0 checks are not a claim that the entire suite ran at O0.
+
+<!-- compatibility: current-qualification -->
+
+The [performance page](../architecture/performance.md#mojo-12-capture-qualification)
+records individual cold-build observations, their resource budgets, and the
+limits of those measurements. Source and installed artifact hashes remained
+unchanged during qualification. Later changes recorded alongside reports are
+documentation or catalog serialization, not production code.
+
+## Historical baseline
+
 The baseline below qualifies production source at
 [51997ac](https://github.com/Spellbound-Mojo/fp_mojo/commit/51997aca96c3256a90bf6abdd4074a79f517a117)
 with Mojo 1.2.0 (2016d0cd), Linux x86-64. Later migration passes have their own
@@ -71,29 +89,33 @@ use an explicit native closure or OnceThunk. Stateful repeated calls use an
 owned state value and a plain mutable-state function. These restrictions are
 tracked for ergonomic review; they are not claims of arbitrary native-call parity.
 
-## Remaining Pipeline migration
+## Pipeline migration coverage
 
-The catalog assigns every legacy Piped method absent from Pipeline to one pass.
-The documentation audit rejects missing, duplicate or stale assignments. These
-operations already have execution owners; migration adds selected admission and
-delegation. Each pass checks ordinary invalid calls without compiler-type hints.
+Every legacy Piped method now has a selected counterpart in the catalog. The
+documentation audit rejects missing, duplicate or stale assignments when the
+API changes. The remaining-name inventory is empty:
 
 <!-- compatibility: migration -->
 
-After those passes, same-named Result-only methods need capability review for
-generic recovery, observation and sequencing. Iterator, transformer, Ior and
-custom-family contracts also need evaluation beyond a count of public names.
+Name coverage does not imply arbitrary family support. The catalog distinguishes
+Result-specific operations from capabilities; custom dictionaries and deferred
+families retain their public admission and execution contracts.
 
 ## Development sequence
 
-1. Maintain this compatibility inventory and reconcile current guidance.
-2. Complete the selected API workflow passes above.
-3. Stabilize family admission and public generic-extension contracts.
-4. Improve argument binding, reusable state and diagnostics against real clients.
-5. Measure compilation/runtime costs and qualify a clean release candidate on
-   each advertised platform, with a migration guide and explicit version decision.
-6. Consolidate compatibility code once replacement coverage is established;
-   design Resource scopes and fallible streams as separate ownership contracts.
+The selected workflow, family admission, capability sequencing/filtering,
+Capture pointer support, compilation measurements and clean-install passes are
+complete for the scope above. Current ownership and execution contracts are
+consolidated in the [architecture guide](../architecture/mojo12-redesign.md).
+
+1. Prototype Resource scopes against the documented acquisition/use/release
+   outcomes, exact error preservation and lifetime rejection cases.
+2. Prototype fallible source advancement separately from stored Result elements,
+   with terminal-state, no-read-ahead and cleanup checks.
+3. Promote each complete contract through the existing invocation and execution
+   owners; retain legacy APIs while replacement coverage grows.
+4. Qualify every additional advertised platform and prepare a migration guide
+   and explicit major-version decision before a stable release.
 
 Each implementation pass includes focused verification, appropriate regression
 gates, documentation, a commit and a push to `nightly`. Verification is run
