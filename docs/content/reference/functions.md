@@ -104,12 +104,37 @@ List or Optional. A subsequent `map` operates in the target family.
 
 The target controls sequencing: Optional and Result stop at the first absence
 or stored error, Validation accumulates stored errors, and List produces
-branches. Reader defers callback execution and filtering until `run`; `get()`
-does not execute them. Native raised errors keep their exact type and occur
+branches. List traversal into Reader defers callbacks and filtering until `run`;
+`get()` does not execute them. Native raised errors keep their exact type and occur
 when the callback runs. Callbacks may borrow payloads containing origins.
 A library BorrowOnceCallable works with single-use sources such as Optional;
 List needs repeatable callbacks. Original move-only payloads are supported
 when the target does not need to duplicate them; List branching requires copies.
+
+`traverse_filter[Target](transform)` consumes payloads into effects containing
+Optional values, then compacts them through the source's FunctorFilter.
+`sequence_filter[Target]()` does the same for effects already in the source.
+Both preserve the source shape inside the target; an inner None is filtered,
+while a failed target effect follows its normal failure policy.
+
+`flat_traverse[Target](transform)` consumes payloads into effects containing
+another source-family carrier. It flattens one source layer inside the target.
+`flat_sequence[Target]()` accepts those effects directly. The source must be
+both Traversable and Monad, and nested Result errors must match the selected
+source family, including their origins. Target failures remain separate.
+
+`traverse_void[Target](effect)` and `sequence_void[Target]()` consume native
+iterators or owned collections and discard successful outputs without building
+an output collection. Result sources instead use their traversal, preserving
+source errors: traversing `Result[Int, String]` into Optional returns
+`Optional[Result[NoneType, String]]`. Stored source errors skip callbacks.
+Native source loops require repeatable callbacks; Result traversal can consume
+a OnceUnary once. Array inputs use the shared safe source conversion.
+
+Compaction and flattening happen inside the target effect, so failures skip
+them and deferred targets postpone them. Source-family traversal retains its
+own callback-construction timing. Raised callback and postprocessing errors
+keep their exact types; none becomes a stored target error automatically.
 
 `map2(other, combine)`, `product(other)`,
 `map_n((other, ...), combine)` and `product_n((other, ...))` retain the current

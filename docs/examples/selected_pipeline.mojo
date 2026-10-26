@@ -39,6 +39,16 @@ def main() raises:
     var selected = pipeline(audited.take()).filter_effect[ResultFamily[String]](available).map(count).get()
     assert_equal(selected._ok().value, 2)
 
+    # Transform optional values inside the effect, then compact the source.
+    def optional_double(var value: Int) -> Optional[Optional[Int]]:
+        return Optional(Optional(value * 2) if value % 2 == 0 else Optional[Int]())
+    var doubled = pipeline(List[Int]([1,2,3,4])).traverse_filter[OptionalFamily](optional_double).get()
+    assert_equal(doubled.value(), List[Int]([4,8]))
+    def expand(var value: Int) -> Optional[List[Int]]: return Optional(List[Int]([value,value+10]))
+    var expanded = pipeline(List[Int]([1,2])).flat_traverse[OptionalFamily](expand).get()
+    assert_equal(expanded.value(), List[Int]([1,11,2,12]))
+    _ = pipeline(List[Int]([1,2])).traverse_void[OptionalFamily](optional_double).get()
+
     var checked: Result[Int, String]
     try:
         checked = pipeline(Result[Int, String](Ok(4))).raising[PipelineProcessingFailure]().map(process).ensure(accepted, invalid).get()

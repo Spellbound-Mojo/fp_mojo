@@ -610,3 +610,33 @@ invalid calls, generic forwarding, thin calling conventions, exact errors,
 borrowed origins, mutable callable receivers, move-only cleanup, abandoned
 deferred computations and Array ownership. They run against source and fresh
 package imports at both optimization levels.
+
+## Traversal composition
+
+Selected `traverse_filter`/`sequence_filter` and
+`flat_traverse`/`flat_sequence` adapt callbacks into the existing
+`_traverse_then` driver and `_CompactAfter` or `_FlattenAfter` continuation.
+Sequence uses Identity instead of a callback. Source capability, source carrier,
+target carrier, collection and finishing-map constraints stay in the signature.
+Flattening also forwards the source's bind predicate and checks the nested
+carrier, preserving Result error origins before body-level rebinding.
+
+Discard traversal has two source contracts. Native sources use `_traverse_void`
+and `_Discard`, consuming repeatable callbacks without retaining successful
+outputs. Result sources use their existing traversal with Composition and
+`_EffectVoid`, so a stored source error remains inside the target effect and a
+single-use callback can be consumed on success. These disjoint signature
+families share callback admission and add no loops or exception handlers.
+
+For the native Result family, the discard signature projects its error through
+the existing `_ErrorProbe`, using the callback and target-map errors directly.
+This avoids asking Mojo to simplify a generic error through Composition's
+stored type pack. The traversal driver validates the actual composed error;
+custom source families retain their original callback-dependent projection.
+
+`context_traversal_composition` tests distinguish absent inner values, failed
+target effects and source Result errors. They cover branch order, Validation
+accumulation, custom compaction errors, deferred evaluation, native StopIteration,
+thin-pointer conventions, generic forwarding, origins, move-only cleanup and
+callback lifetime. Ordinary invalid calls require normal diagnostics without
+callback-type hints.

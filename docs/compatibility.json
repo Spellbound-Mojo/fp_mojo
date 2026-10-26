@@ -281,6 +281,52 @@
       ]
     },
     {
+      "name": "Traversal composition",
+      "methods": [
+        "traverse_filter",
+        "sequence_filter",
+        "flat_traverse",
+        "flat_sequence"
+      ],
+      "status": "selected",
+      "families": "Traversable source with FunctorFilter for compaction or Monad for flattening; Applicative target",
+      "callbacks": "Consuming native or library callback; sequence uses Identity. Source and target determine repeatability.",
+      "ownership": "Move-only payloads survive compaction and flattening when the target does not duplicate them.",
+      "errors": "Source errors remain inside target effects; nested Result errors preserve the source family and origins.",
+      "timing": "Compaction and flattening run inside the target; source traversal retains its callback-construction timing.",
+      "owner": [
+        "src/fp/algebra/_traversal.mojo"
+      ],
+      "evidence": [
+        "tests/runtime/test_context_traversal_composition_behavior.mojo",
+        "tests/runtime/test_context_traversal_composition_effects.mojo",
+        "tests/runtime/test_context_traversal_composition_native.mojo",
+        "tests/ownership/test_context_traversal_composition_ownership.mojo"
+      ]
+    },
+    {
+      "name": "Discarded traversal",
+      "methods": [
+        "traverse_void",
+        "sequence_void"
+      ],
+      "status": "selected",
+      "families": "Native iterator/owned iterable, or Result traversal; Applicative target",
+      "callbacks": "Consuming repeated transform for native sources; Result traversal can consume a single-use callback.",
+      "ownership": "Discards successful payloads without an output collection. Array inputs use safe temporary storage.",
+      "errors": "Source Result errors remain nested; target failures and native raised errors stay distinct.",
+      "timing": "Uses target loop timing for native sources and source traversal timing for Result.",
+      "owner": [
+        "src/fp/algebra/_traversal.mojo",
+        "src/fp/functions/composition.mojo"
+      ],
+      "evidence": [
+        "tests/runtime/test_context_traversal_composition_behavior.mojo",
+        "tests/runtime/test_context_traversal_composition_effects.mojo",
+        "tests/ownership/test_context_traversal_composition_ownership.mojo"
+      ]
+    },
+    {
       "name": "Effectful queries and reductions",
       "methods": [
         "all_effect",
@@ -415,18 +461,6 @@
     "void"
   ],
   "migration": [
-    {
-      "name": "Traversal composition",
-      "methods": [
-        "traverse_filter",
-        "sequence_filter",
-        "flat_traverse",
-        "flat_sequence",
-        "traverse_void",
-        "sequence_void"
-      ],
-      "contract": "Existing traversal, compaction, flattening and discard policies; source errors stay nested."
-    },
     {
       "name": "Pure reductions",
       "methods": [

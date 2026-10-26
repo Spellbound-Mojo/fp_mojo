@@ -182,11 +182,14 @@ def methods(*, fold_stage=False):
                 yield cb
 
     def emit(name, cb, params, arguments, result, error, family, conditions, expr, summary):
+        if params and params[0] == "//":
+            params = params[1:]
         target = f"Pipeline[{family}, {result}, Self.E]"
+        receiver = "deinit self, " if arguments else "deinit self"
         prelude = cb.get("prelude", "")
         constraints = " where " + " and ".join(conditions) if conditions else ""
         body.append(
-            f"\n    @always_inline\n    def {name}[{', '.join(params)}](deinit self, {arguments}) raises {error} -> {target}{constraints}:\n"
+            f"\n    @always_inline\n    def {name}[{', '.join(params)}]({receiver}{arguments}) raises {error} -> {target}{constraints}:\n"
             f'        """{summary}"""\n{prelude}        return {target}({expr})\n'
         )
 
@@ -405,6 +408,79 @@ def methods(*, fold_stage=False):
                 expr = f"_traverse_then[{family}, J, Self.V, {retained}, {finish}, {error}]({built}, self.value^, {finish}())"
                 summary = "Traverse borrowing Bool effects and retain accepted original payloads."
             emit(name, cb, params, cb["argument"], result, error, "J", conditions, expr, summary)
+
+    # Traversal postprocessing stays inside the target effect.
+    for name in ("traverse_filter", "sequence_filter", "flat_traverse", "flat_sequence"):
+        sequence = name in ("sequence_filter", "flat_sequence")
+        compact = name in ("traverse_filter", "sequence_filter")
+        family = "_SelectingTraversal[Self.I]" if compact else "_FlatteningTraversal[Self.I]"
+        element = "Self.I.Element[Self.V]"
+        identity = f"Identity[{element}]"
+        callbacks = ([dict(params=[],argument="",adapter_type=identity,build=f"{identity}()",result=element,error="Never",conditions=[])]
+                     if sequence else owning_callbacks("owned", element, "function"))
+        for cb in callbacks:
+            params = list(cb["params"])
+            if "//" not in params: params += ["//"]
+            params.insert(params.index("//") + 1, "J: Applicative")
+            c, result = cb["adapter_type"], cb["result"]
+            traversed = f"{family}.Traversed[J, Self.V, {c}]"
+            finish = f"{'_CompactAfter' if compact else '_FlattenAfter'}[{family}, J.Element[{traversed}]]"
+            error = f"_CommonError[{family}.TraverseError[J, Self.V, {c}], J.MapError[{traversed}, {finish}]]"
+            conditions = ["conforms_to(Self.I, Traversable)",
+                          "conforms_to(Self.I, FunctorFilter)" if compact else "conforms_to(Self.I, Monad)"] + cb["conditions"]
+            conditions += ["_MapCompatible[Self.I, Self.V, Identity[Self.I.Element[Self.V]]]",
+                           f"_CollectCompatible[J, Self.V, {c}]", f"_CarrierCompatible[J, {result}]",
+                           f"_MapCompatible[J, {traversed}, {finish}]"]
+            if compact:
+                conditions += [f"J.Element[{result}] == Optional[_ListElement[J.Element[{result}]]]"]
+            else:
+                conditions += [f"_CarrierCompatible[{family}, J.Element[{result}]]",
+                               f"_BindCompatible[{family}, J.Element[{traversed}], Identity[{family}.Element[J.Element[{traversed}]]]]"]
+            expr = f"_traverse_then[{family}, J, Self.V, {c}, {finish}, {error}]({cb['build']}, self.value^, {finish}())"
+            emit(name, cb, params, cb["argument"], f"J.Mapped[{traversed}, {finish}]", error,
+                 "J", conditions, expr, "Traverse and finish inside the selected target effect.")
+
+    # Native sources discard successful output; Result traversal retains its
+    # source error layer through the existing composition/void policy.
+    for name in ("traverse_void", "sequence_void"):
+        for retained_error in (False, True):
+            element = "Self.I.Element[Self.V]" if retained_error else "_FoldElement[Self.V]"
+            identity = f"Identity[{element}]"
+            callbacks = ([dict(params=[],argument="",adapter_type=identity,build=f"{identity}()",result=element,error="Never",conditions=[])]
+                         if name == "sequence_void" else owning_callbacks("owned", element, "function"))
+            for cb in callbacks:
+                params = list(cb["params"])
+                if "//" not in params: params += ["//"]
+                params.insert(params.index("//") + 1, "J: Applicative")
+                c, result = cb["adapter_type"], cb["result"]
+                conditions = [("" if retained_error else "not ") + "conforms_to(Self.V, _ResultType)"] + cb["conditions"]
+                conditions += [f"_CarrierCompatible[J, {result}]"]
+                if retained_error:
+                    family = "_Traversing[Self.I]"
+                    discard = f"_EffectVoid[J, {result}]"
+                    composed = f"Composition[False, 1, {c}, {discard}]"
+                    out = f"{family}.Traversed[J, Self.V, {composed}]"
+                    error = f"{family}.TraverseError[J, Self.V, {composed}]"
+                    # Native Result traversal depends only on callback metadata.
+                    # Avoid projecting generic errors through Composition's stored
+                    # type pack; the execution driver checks the actual error.
+                    # Custom families retain their own callback-dependent aliases.
+                    filled = f"_Fill[J.Element[{result}], NoneType]"
+                    probe = f"_ErrorProbe[{element}, J.Mapped[{result}, {filled}], _CommonError[{cb['error']}, J.MapError[{result}, {filled}]]]"
+                    error = f"(ResultFamily[_Failure[Self.V]].TraverseError[J, Self.V, {probe}] if Self.I == ResultFamily[_Failure[Self.V]] else {error})"
+                    conditions += ["conforms_to(Self.I, Traversable)",
+                                   "_MapCompatible[Self.I, Self.V, Identity[Self.I.Element[Self.V]]]",
+                                   f"_CollectCompatible[J, Self.V, {composed}]",
+                                   f"_MapCompatible[J, {result}, _Fill[J.Element[{result}], NoneType]]"]
+                    expr = f"_traverse_as[{family}, J, Self.V, {composed}, {error}]({composed}({cb['build']}, {discard}()), self.value^)"
+                else:
+                    policy = f"_Discard[J.Element[{result}]]"
+                    out = f"J._Looped[Self.V, {c}, {policy}]"
+                    error = f"J._LoopError[Self.V, {c}, {policy}]"
+                    conditions += [f"RepeatableUnary[{c}]", f"_CollectCompatible[J, Self.V, {c}]"]
+                    expr = f"_traverse_void[Self.V, {c}, J, {error}]({cb['build']}, self.value^)"
+                emit(name, cb, params, cb["argument"], out, error, "J", conditions, expr,
+                     "Traverse effects and discard successful payloads, retaining source Result errors.")
 
     for kind in ("library", "pure", "raising", "never"):
         family = "_Combining[Self.I]"
