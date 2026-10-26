@@ -5,7 +5,7 @@ from itertools import product
 from native_signatures import Operand, variants, argument as native_argument, callable_protocol, native_adapter
 import re
 from api_docs import parse_signature
-from operation_specs import RESULT_OPERATIONS, error_operations
+from operation_specs import RESULT_OPERATIONS, ERROR_OPERATIONS, error_operations
 from generate_plain_overloads import splice_source
 from generate_nary_syntax import MAX
 from generate_pipeline_syntax import TRANSFORMS
@@ -871,6 +871,31 @@ def methods(*, fold_stage=False):
                  f"_or_else_as[{error}, {family}, Self.V, {continuation}]({continuation}({p['build']}, {build}), self.value^)",
                  "Recover matching stored errors through the selected family; success skips both callbacks.")
 
+    # Select the original outcome's policy before either callback is admitted.
+    # Canonical Result may change its stored error in redeem_with; custom error
+    # families always retain their own materialization and execution policy.
+    for operation in error_operations("redeem"):
+        primary, secondary = operation.callbacks
+        selection = f"_OutcomeSelection[Self.I, Self.V, {operation.effect}]"
+        left = native_callbacks(primary.mode, selection + ".Success", primary.argument)
+        right = list(native_callbacks(secondary.mode, selection + ".Failure", secondary.argument, second=True))
+        for a, b in product(left, right):
+            contract_name = "RedeemWithContract" if operation.effect else "RedeemContract"
+            contract = f"{contract_name}[Self.I, Self.V, {a['adapter_type']}, {b['adapter_type']}]"
+            params = callback_parameters((a, b))
+            native = a["adapter_type"] != "C" or b["adapter_type"] != "G"
+            conditions = ["conforms_to(Self.I, ApplicativeError)"] if native else []
+            for cb in (a, b):
+                if cb["adapter_type"] not in ("C", "G"):
+                    conditions += cb["conditions"]
+            conditions += [contract + ".Compatible"]
+            prelude = a.get("prelude", "") + b.get("prelude", "")
+            emit(operation.name, {"prelude": prelude}, params,
+                 a["argument"] + ", " + b["argument"], contract + ".Out", contract + ".Error",
+                 contract + ".Family", conditions,
+                 f"_selected_redeem[Self.I, Self.V, {a['adapter_type']}, {b['adapter_type']}, {operation.effect}](self.value^, {a['build']}, {b['build']})",
+                 "Consume the original outcome with its selected handler, preserving the selected family's execution policy.")
+
     for name, operation in RESULT_OPERATIONS.items():
         if operation.sequence: continue
         summary, detail = operation.documentation
@@ -884,11 +909,13 @@ def methods(*, fold_stage=False):
         else:
             combinations = ((cb, None) for cb in left)
         for a, b in combinations:
+            if name in ("redeem", "redeem_with") and a["adapter_type"] == "C" and b["adapter_type"] == "G":
+                continue
             callbacks = [a] + ([b] if two else [])
             conditions = [f"conforms_to(Self.V, _ResultType)", f"Self.V == {Source}"] + sum(
                 (c["conditions"] for c in callbacks), []
             )
-            if name in ("recover", "or_else", "tap_err", "flat_tap_err", "recover_if", "or_else_if", "ensure"):
+            if name in ("recover", "or_else", "tap_err", "flat_tap_err", "recover_if", "or_else_if", "ensure", "redeem", "redeem_with"):
                 conditions += ["not conforms_to(Self.I, ApplicativeError)"]
             R = a["result"]
             result = operation.result(T, Err, R, b["result"] if two else "", value=lambda r: f"_Success[{r}]")
@@ -919,6 +946,8 @@ def methods(*, fold_stage=False):
             )
             if name == "or_else":
                 expr = f"_IntrinsicOrElse.apply({a['build']}, rebind_var[{Source}](self.value^))"
+            if name in ("redeem", "redeem_with"):
+                expr = f"_IntrinsicOutcome[{ERROR_OPERATIONS[name].effect}].apply(rebind_var[{Source}](self.value^), {a['build']}, {b['build']})"
             prelude = "".join(c.get("prelude", "") for c in callbacks)
             body += [
                 f'\n    def {name}[{", ".join(params)}](deinit self, {", ".join(c["argument"] for c in callbacks)}) raises {effect} -> {target} where '

@@ -505,6 +505,36 @@ or callback storage is duplicated. The selected generator shares callback
 parameter grouping across validation, conditional recovery and intrinsic Result
 operations, preserving inferred parameter order and the inference barrier.
 
+### Selected outcome handling
+
+Selected `redeem` and `redeem_with` share recovery's canonical-Result versus
+custom-family selection. Intrinsic policies delegate to the existing Result
+methods; family policies delegate to `_Redeem`. `_Materialize` exposes only
+the original selected outcome before `_OutcomeFold` invokes one handler.
+This prevents a returned failure or native raise from entering the other arm.
+There is no new dispatcher, storage owner or exception interpreter.
+
+Public `fp.functions.RedeemContract` and `RedeemWithContract` aliases share
+one private metadata descriptor. They project policy admission, output family,
+carrier and construction error for generic wrappers. `OperationCompatible`
+checks materialization map/recovery and the final map or bind admission.
+Carrier agreement alone does not authorize a custom family operation: its
+primitives may assume the caller already enforced these predicates. Intrinsic
+Result uses its own admission; receiver, copying and native-error checks stay
+with the existing execution owners. Value handling uses
+`_MappedFamily` for payload-dependent selections; effect handling keeps the
+family's stored-error layer. Canonical Result retains its type-changing
+`redeem_with` behavior. Native admission under error-capable families and
+intrinsic Result admission under non-error families remain disjoint; library
+handlers use one contract route. Exact Result membership shares the existing
+recovery metadata predicate, and callback parameter grouping shares the
+selected generator's existing helper.
+
+Family value handling requires ApplicativeError; effect handling additionally
+requires Monad. Validation supports the former without acquiring the latter.
+Custom family construction errors, deferred run errors, origins, one-shot
+cleanup and branching repeatability remain with their existing owners.
+
 ### Generic sequencing metadata
 
 The four public sequencing contracts name the existing selected Monad

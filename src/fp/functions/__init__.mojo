@@ -34,3 +34,4 @@ from .partial import Partial, partial
 from .context import Pipeline, pipeline, pipeline_values
 
 from ._recovery import OrElseContract
+from ._outcomes import RedeemContract, RedeemWithContract

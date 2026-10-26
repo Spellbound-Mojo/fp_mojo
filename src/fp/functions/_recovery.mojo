@@ -7,6 +7,7 @@ from fp.data._result import Result, _ResultType
 
 comptime _RecoveryValue[V: Movable & Deinitable] = downcast[V, _ResultType].Value
 comptime _RecoveryFailure[V: Movable & Deinitable] = downcast[V, _ResultType].Error
+comptime _RecoveryCarrier[V: Movable & Deinitable] = (V == Result[_RecoveryValue[V], _RecoveryFailure[V]]) if conforms_to(V, _ResultType) else False
 
 trait _OrElsePolicy:
     comptime CarrierCompatible[V: Movable & Deinitable]: Bool
@@ -19,7 +20,7 @@ trait _OrElsePolicy:
 
 
 struct _IntrinsicOrElse(_OrElsePolicy):
-    comptime CarrierCompatible[V: Movable & Deinitable] = (V == Result[_RecoveryValue[V], _RecoveryFailure[V]]) if conforms_to(V, _ResultType) else False
+    comptime CarrierCompatible[V: Movable & Deinitable] = _RecoveryCarrier[V]
     comptime OutputCompatible[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = (H.Out == Result[_RecoveryValue[V], _RecoveryFailure[H.Out]]) if conforms_to(H.Out, _ResultType) else False
     comptime Family[H: UnaryContract & Movable & Deinitable] = ResultFamily[_RecoveryFailure[H.Out]]
     comptime Out[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = H.Out

@@ -104,6 +104,30 @@ continues in the same family:
 
 <!-- example: docs/examples/selected_validation_workflow.mojo -->
 
+`redeem(on_ok, on_err)` turns the original selected success or stored failure
+into a successful value. `redeem_with(on_ok, on_err)` continues with the chosen
+handler's effect. Exactly one handler consumes each original outcome; a
+returned stored failure or a native raise never invokes the opposite handler.
+Family `redeem` needs `ApplicativeError`, including Validation; family
+`redeem_with` also needs Monad. Deferred families keep the handlers deferred.
+
+Custom error-capable families retain their error layer and execution policy,
+even when their storage is native Result. Canonical and intrinsic Result
+`redeem_with` calls preserve their existing ability to change the stored-error
+type. Value `redeem` follows the family's payload-rebinding metadata, so a
+subsequent `.map(...)` uses the correct selection.
+
+For generic wrappers with library handlers, `fp.functions.RedeemContract[I,V,H,K]`
+and `RedeemWithContract[I,V,H,K]` expose `Compatible`, `Family`, `Out` and
+`Error`. Forward the combined predicate, or its `InputCompatible`,
+`CarrierCompatible`, `OutputCompatible`, `NativeErrorsCompatible` and
+`OperationCompatible` components. The last checks each map, recovery and bind
+step used by the selected policy. Project the output family instead of assuming it equals the input.
+`Error` describes construction; deferred actions retain their own run errors.
+Existing family bodies still check representation and receiver requirements.
+
+<!-- example: docs/examples/selected_outcomes.mojo -->
+
 `flat_tap(callback)` sequences a borrowing effect and keeps each original
 payload. `flat_pair_with(callback)` pairs each original with every successful
 projection. `before(factory)` sequences a zero-argument effect and keeps

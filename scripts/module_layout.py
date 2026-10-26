@@ -13,6 +13,7 @@ SOURCE_MODULES = (
     ('functions', 'functions/pipeline'),
     ('functions', 'functions/context'),
     ('functions', 'functions/_recovery'),
+    ('functions', 'functions/_outcomes'),
     ('functions', 'functions/composition'),
     ('functions', 'functions/kleisli'),
     ('functions', 'functions/flipped'),

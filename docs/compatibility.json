@@ -492,13 +492,37 @@
       ]
     },
     {
+      "name": "Outcome handling",
+      "methods": [
+        "redeem",
+        "redeem_with"
+      ],
+      "status": "selected",
+      "families": "ApplicativeError for values, plus Monad for effects; canonical and intrinsic Result preserve type-changing effect handlers",
+      "callbacks": "Both handlers consume their original payload; native closures borrowed, stored thin pointers owned, library receivers preserved",
+      "ownership": "Only the original branch selects a handler; inactive callbacks are disposed; branching requires repeatable handlers",
+      "errors": "Exact family construction and deferred run errors; returned stored failures and native raises never invoke the opposite arm",
+      "timing": "Selected custom families own materialization and execution even with native Result storage; deferred callbacks remain deferred",
+      "owner": [
+        "src/fp/functions/_outcomes.mojo",
+        "src/fp/functions/_recovery.mojo",
+        "src/fp/algebra/_outcomes.mojo",
+        "src/fp/data/_result.mojo"
+      ],
+      "evidence": [
+        "docs/examples/selected_outcomes.mojo",
+        "tests/runtime/test_context_family_outcome.mojo",
+        "tests/runtime/test_context_family_outcome_generic.mojo",
+        "tests/runtime/test_context_family_outcome_selection.mojo",
+        "tests/runtime/test_context_family_outcome_ownership.mojo"
+      ]
+    },
+    {
       "name": "Result operations",
       "methods": [
         "attempt_tap",
         "map_both",
-        "map_err",
-        "redeem",
-        "redeem_with"
+        "map_err"
       ],
       "status": "result_only",
       "families": "Result carriers; broader family capability admission still requires migration",
@@ -511,7 +535,6 @@
       ],
       "evidence": [
         "tests/runtime/test_context_result_recover.mojo",
-        "tests/runtime/test_context_result_redeem_with.mojo",
         "tests/runtime/test_context_native_signatures_results.mojo"
       ]
     },
