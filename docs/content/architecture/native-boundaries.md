@@ -874,10 +874,28 @@ supported API.
 
 ## Private standard-library spellings
 
-The library uses no non-public standard-library spelling. If one becomes
-necessary, isolate it in one private module with a test of the native behavior
-it relies on, record the compiler and source revision, and delete it when a
-public spelling passes the same test.
+Native collection storage access is isolated in
+`fp._internal.native_collections`; algebra operations delegate conversions to
+it and retain their existing callback/error loops. The boundary is qualified
+against Mojo 1.2.0 (`2016d0cd`) and the matching standard-library source at
+[revision 527d069](https://github.com/modular/modular/tree/527d069ee11a41ac5320af1f9402db0a66b2b868/Mojo/stdlib/std/collections).
+
+| Dependency | Why it remains | Replacement trigger |
+|---|---|---|
+| Deque `_capacity`, `_min_capacity`, `_maxlen`, `_shrink` | The public constructor accepts these settings, but there are no public getters. Transformations must preserve allocation/shrink policy and bounded eviction. | Public configuration accessors that pass the same settings and eviction checks. |
+| StringDict `_dict` | Whole-storage transfer preserves key order, hasher type and move-only payloads without copying or reinserting entries. The source field is reinitialized before destruction. | Public owning conversion to/from the backing Dict with the same ownership and cost. |
+
+StringDict has a public `deinit_with` that moves entries through a non-raising
+callback. It does not transfer the backing Dict intact; using it with the
+current fallible iterator driver would require rebuilding intermediate storage
+or a different shared accumulation protocol. Borrowing `items`/`values` also
+requires Copyable values. These are not equivalent replacements for the
+current conversion boundary.
+
+`test_context_collection_storage.mojo` qualifies configuration and eviction,
+empty storage, insertion order, hasher type, move-only destruction, partial
+failure cleanup and borrowed origins through source/package imports at O0/O3.
+The existing native container mapping/filtering tests cover its consumers.
 
 ## Upgrading the compiler
 

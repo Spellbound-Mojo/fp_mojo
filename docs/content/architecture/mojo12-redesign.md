@@ -144,7 +144,12 @@ the shared implementation. `pipeline_values` infers Dict and StringDict
 parameters at entry. Their RebindingFunctor.WithElement projection updates the
 selected value type after map, filter_map, compact and structural conveniences,
 preserving keys and hasher type. This selection uses no private-field reflection.
-Existing StringDict execution still uses its native backing Dict, as before.
+The only private native collection accesses live in
+`fp._internal.native_collections`: Deque settings and StringDict storage
+transfer/construction. Algebra and terminal operations use those adapters;
+callbacks, accumulation and exception handling retain their existing owners.
+The native-boundaries page records the exact source revision, public alternatives
+and the ownership/configuration tests needed before replacing a dependency.
 
 Rebinding is an optional capability. A default parameterized family alias on
 Functor left nested native callback signatures unfolded on Mojo 1.2, breaking

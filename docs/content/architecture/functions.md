@@ -268,8 +268,11 @@ ownership for non-trivial elements. Native `Array.deinit_with` safely transfers
 inputs to a list; ListFamily maps them; the native Array constructor consumes
 the results. This costs O(N) temporary heap storage in addition to the returned
 array. Drop-count tests cover success and partial failure. Deque's private
-settings and StringDict's native Dict field are isolated compatibility boundaries:
-Mojo 1.1 exposes no public accessors or equivalent owning value transform.
+settings and StringDict's native Dict field are isolated in
+`fp._internal.native_collections`. Mojo 1.2 has no public settings getters or
+whole-storage StringDict conversion. See the versioned
+[native storage boundary](native-boundaries.md#private-standard-library-spellings)
+for the public alternatives and replacement criteria.
 
 For custom containers, `.map[I](f)` uses the public `Functor` instance `I`.
 Its associated output and error types and its evaluation behavior are preserved;

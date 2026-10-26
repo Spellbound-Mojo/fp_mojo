@@ -11,6 +11,7 @@ from std.collections import Array, Deque, LinkedList, StringDict, KeyElement
 from std.collections.dict import DictEntry
 from std.hash import Hasher, default_comp_time_hasher
 from std.memory import MaybeUninit
+from fp._internal.native_collections import _empty_deque_like, _take_string_dict, _string_dict_from_native
 from fp.callables.products import _take_pair
 from fp.callables.protocols import UnaryContract, Unary, MutableUnary, BorrowCallable
 from fp.callables.invoke import call_repeated, RepeatableUnary
@@ -130,10 +131,7 @@ def _deque_accumulate[T: Movable & Deinitable, U: Movable & Deinitable,
     var f: F, var source: Deque[T]
 ) raises F.Error -> Deque[U]:
     comptime assert K.Acc == Deque[U] and K.Error == Never
-    # Mojo 1.1 has no public settings accessors. Preserve bounded eviction and
-    # storage policy at this single native construction boundary.
-    var result = Deque[U](capacity=source._capacity,
-        min_capacity=source._min_capacity, maxlen=source._maxlen, shrink=source._shrink)
+    var result = _empty_deque_like[T, U](source)
     return rebind_var[Deque[U]](_map_accumulate[Deque[T], F, K, F.Error](
         f^, source^, rebind_var[K.Acc](result^)))
 
@@ -300,21 +298,15 @@ struct _StringDictFamily[A: Movable & Deinitable](RebindingFunctor, Filterable, 
         comptime assert F.Out == Optional[U], "filter_map: Optional result required"
         comptime assert V == StringDict[Self.A] and F.Arg == Self.A
         var native = _take_string_dict(rebind_var[StringDict[Self.A]](value^))
-        var result = StringDict[U]()
-        result._dict = _DictFamily[String, Self.A, default_comp_time_hasher].filter_map(f^, native^)
-        return result^
+        return _string_dict_from_native(_DictFamily[String, Self.A, default_comp_time_hasher].filter_map(f^, native^))
 
     @staticmethod
     def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V
     ) raises F.Error -> Self.Mapped[V, F]:
         comptime assert V == StringDict[F.Arg] and Self.A == F.Arg, "map: StringDict carrier required"
         var source = rebind_var[StringDict[F.Arg]](value^)
-        var result = StringDict[F.Out]()
-        # StringDict exposes no owning, raising value transform. Delegate via
-        # its native Dict storage, retaining the compile-time string hasher.
         var native = _take_string_dict(source^)
-        result._dict = _DictFamily[String, F.Arg, default_comp_time_hasher].map(f^, native^)
-        return result^
+        return _string_dict_from_native(_DictFamily[String, F.Arg, default_comp_time_hasher].map(f^, native^))
 
     @staticmethod
     def filter[V: Movable & Deinitable, P: BorrowCallable](var predicate: P, var value: V
@@ -324,13 +316,6 @@ struct _StringDictFamily[A: Movable & Deinitable](RebindingFunctor, Filterable, 
         comptime assert P.Payload == T and P.Result == Bool
         return rebind_var[V](Self.filter_map(_Select[T, P](predicate^), value^))
 
-
-def _take_string_dict[T: Movable & Deinitable](var source: StringDict[T]) -> Dict[String, T, default_comp_time_hasher]:
-    # StringDict has no public owning entry extraction. Reinitialize before a
-    # later predicate can raise, so native destruction always sees valid storage.
-    var native = source._dict^
-    source._dict = Dict[String, T, default_comp_time_hasher]()
-    return native^
 
 
 @fieldwise_init
