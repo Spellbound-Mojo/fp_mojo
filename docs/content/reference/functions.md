@@ -68,13 +68,23 @@ the observer. Both discard the callback result and retain the original value.
 `filter_not(predicate)` retains payloads for which the borrowing Bool predicate
 returns False.
 
-These four operations keep the selected family and native-error context.
+These four operations keep the semantic family and native-error context;
+payload-dependent families rebind after pair_with.
 Payloads move without requiring copies. Library callbacks use `BorrowCallable`
 and are consumed; native closures are borrowed and thin pointers are copied.
 Deferred families retain their evaluation timing and may keep the callback
 borrow until execution or disposal. Keep such callbacks alive and unmoved;
 overlapping mutable captures still follow Mojo's aliasing rules. A raised error
 stops eager processing and destroys remaining inputs and partial output.
+
+`pipeline_values(dictionary^)` selects values of Dict or StringDict. Keys,
+key order, native hasher type and container type survive each transformation.
+The value type may change repeatedly through map, filter_map, compact and
+pair_with without selecting another family. Callbacks must be repeatable;
+values and keys can be move-only. Use `.raising[E]()` for native errors as usual.
+`pipeline(dictionary^)` continues to treat the entire dictionary as one value.
+
+<!-- example: docs/examples/dictionary_values.mojo -->
 
 `then(stage)` consumes the whole current value once, including a Result's Err.
 It selects List, Optional or Result for those output types and Identity for

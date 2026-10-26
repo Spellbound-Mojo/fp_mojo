@@ -45,6 +45,9 @@
     "docs/examples/control_flow.mojo": {
       "stdout": "while: 16\nfori: 10\nscan: 6 [6, 5, 3]\n"
     },
+    "docs/examples/dictionary_values.mojo": {
+      "stdout": "lengths: 2 1\n"
+    },
     "docs/examples/effectful_reductions.mojo": {
       "stdout": "total: 16\nlarge value found\nall positive: True\nnegative input failed: True\n"
     },

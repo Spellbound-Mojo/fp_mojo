@@ -6,7 +6,8 @@ input equality to a family's MapCompatible: lifted effect projections can be
 opaque until the operation is specialized. These descriptors store no values,
 adapt no callbacks and introduce no additional invocation boundary.
 """
-from .protocols import Functor, Monad, Traversable, Applicative, Filterable
+from .protocols import _MappedFamily, Functor, Monad, Traversable, Applicative, Filterable, FunctorFilter
+from fp.iteration._advance import _OwnedElement
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallable
 from fp.callables._predicates import _FilterPredicate
 
@@ -30,10 +31,34 @@ struct MapContract[I: Functor, V: Movable & Deinitable, F: UnaryContract & Movab
     """The family's admission without forcing input equality again."""
     comptime Compatible = Self.InputCompatible and Self.FamilyCompatible
     """The complete checked map admission."""
+    comptime Family = _MappedFamily[Self.I, Self.F.Out]
+    """The family selected for fluent continuation over Out."""
     comptime Out = Self.I.Mapped[Self.V, Self.F]
     """The exact carrier produced by the family."""
     comptime Error = Self.I.MapError[Self.V, Self.F]
     """The exact native error raised when constructing the mapped carrier."""
+
+
+struct FilterMapContract[I: FunctorFilter, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]:
+    """Result metadata for filter_map and its fluent continuation.
+
+    The family primitive owns Optional-result admission and invocation. This
+    descriptor preserves the existing generic input constraint and does not
+    add map's carrier proof to filtering.
+
+    Parameters:
+        I: The source family supporting filter_map.
+        V: The complete source carrier type, including origins.
+        F: The library callback type, with its Optional result and native error.
+    """
+    comptime InputCompatible = Self.I.Element[Self.V] == Self.F.Arg
+    """Exact input payload equality, including origins."""
+    comptime Family = _MappedFamily[Self.I.MapFilteredFamily, _OwnedElement[Self.F.Out]]
+    """The output shape family, rebound to the present transformed payload."""
+    comptime Out = Self.I.MapFiltered[Self.V, Self.F]
+    """The carrier of present transformed payloads."""
+    comptime Error = Self.I.MapFilterError[Self.V, Self.F]
+    """The family's exact construction error."""
 
 
 struct BindContract[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]:

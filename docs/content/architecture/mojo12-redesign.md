@@ -120,9 +120,18 @@ selection policy remains List, Optional, Result, then Identity (or the legacy
 Applicative fallback). Public ArrayFamily, DequeFamily and LinkedListFamily
 aliases expose the existing sequence implementations for explicit selection.
 Map admission checks the native container shape and Array length before invoking
-the shared implementation. Dict and StringDict adapters remain private until
-their value type can follow type-changing operations without fixing an input
-payload or reflecting private native storage.
+the shared implementation. `pipeline_values` infers Dict and StringDict
+parameters at entry. Their RebindingFunctor.WithElement projection updates the
+selected value type after map, filter_map, compact and structural conveniences,
+preserving keys and hasher type. This selection uses no private-field reflection.
+Existing StringDict execution still uses its native backing Dict, as before.
+
+Rebinding is an optional capability. A default parameterized family alias on
+Functor left nested native callback signatures unfolded on Mojo 1.2, breaking
+existing Array map chains. The conditional capability projection retains the
+exact original family for ordinary Functors and only expands WithElement when
+implemented. MapContract.Family is the public projection for generic fluent
+return types; execution remains in the original family primitive.
 
 `generate_context.py`, `generate_capture.py` and
 `generate_native_conventions.py` share `scripts/native_signatures.py`.

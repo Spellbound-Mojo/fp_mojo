@@ -70,8 +70,26 @@ capacity and eviction settings. These names reuse the same implementations as
 
 Selection is explicit: `pipeline(array^)` still treats the whole Array as an
 Identity payload, while `piped(array^).map(...)` maps its elements. Dict and
-StringDict value adapters remain private because their current dictionaries
-fix the input value type; exposing them would break type-changing chains.
+StringDict values are selected with `pipeline_values(dictionary^)`. The adapter
+infers the initial payload, key and hasher types and rebinds the payload after
+a type-changing operation.
+
+`RebindingFunctor` is an optional capability for families whose selection binds
+a payload type. Its `WithElement[A]` names the same semantic family for payload
+A. Mapping and structural mapping conveniences use it when present; ordinary
+Functors retain their exact family. Filtering first selects FilteredFamily or
+MapFilteredFamily; compact and filter_map then rebind the transformed payload.
+No carrier is wrapped or converted for family selection.
+
+`MapContract[I, V, F].Family` describes fluent continuation. A generic wrapper
+returning a Pipeline after mapping should return
+`Pipeline[MapContract[I, V, F].Family, MapContract[I, V, F].Out, E]`
+instead of promising that every Functor retains the exact input family `I`.
+`FilterMapContract[I, V, F]` provides the corresponding Family, Out and Error
+for filter_map, with InputCompatible for its existing generic payload proof.
+Generic filter_map wrappers use its Family instead of I.MapFilteredFamily.
+Existing custom Functors need no new members; implementing RebindingFunctor is
+only necessary when the family itself binds the payload type.
 
 Generic wrappers with an abstract callback return type `R` must forward the
 target proof, such as `where OptionalFamily.CarrierCompatible[R]`. This also

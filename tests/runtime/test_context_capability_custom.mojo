@@ -1,5 +1,5 @@
 from fp.functions import pipeline, Pipeline
-from fp.algebra import Functor, Filterable, FunctorFilter, ListFamily, filter
+from fp.algebra import Functor, Filterable, FunctorFilter, FilterMapContract, ListFamily, filter
 from fp.callables import BorrowCallable, UnaryContract, Unary
 from std.testing import assert_equal
 
@@ -25,7 +25,7 @@ struct Independent(Filterable):
     @staticmethod
     def filter[V:Movable & Deinitable,P:BorrowCallable](var p:P,var v:V) raises P.Failure -> V: return ListFamily.filter(p^,v^)
 
-def compact_generic[I:FunctorFilter,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable](var v:V,var f:F) raises I.MapFilterError[V,F] -> Pipeline[I.MapFilteredFamily,I.MapFiltered[V,F]] where F.Arg==I.Element[V]:
+def compact_generic[I:FunctorFilter,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable](var v:V,var f:F) raises I.MapFilterError[V,F] -> Pipeline[FilterMapContract[I,V,F].Family,FilterMapContract[I,V,F].Out] where F.Arg==I.Element[V]:
     return pipeline[I](v^).filter_map(f^)
 
 @fieldwise_init

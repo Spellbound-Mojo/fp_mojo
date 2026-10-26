@@ -62,6 +62,22 @@ trait Functor:
         ...
 
 
+trait RebindingFunctor(Functor):
+    """A family whose selection depends on its payload type.
+
+    Ordinary Functors continue with their existing family. Value dictionaries
+    implement this capability because native Dict exposes no generic value
+    type projection. Rebinding changes selection metadata, never the carrier.
+    """
+    comptime WithElement[A: Movable & Deinitable]: Functor
+    """The same semantic family selected for payload A, retaining other parameters."""
+
+
+comptime _MappedFamily[I: Functor, A: Movable & Deinitable] = (
+    downcast[I, RebindingFunctor].WithElement[A] if conforms_to(I, RebindingFunctor) else I
+)
+
+
 trait Filterable:
     """A carrier family that can discard payloads while keeping its context.
 

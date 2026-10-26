@@ -1,9 +1,8 @@
 """Native collection adapters for container-preserving pipeline mapping and filtering.
 
-The sequence dictionaries support explicit public family selection. Dict and
-StringDict do not expose their value
-parameter through a trait: their adapters specialize on the element inferred
-by Piped's native overload. They are not public, element-fixed Functor families.
+Sequence families support explicit public selection. Dict and StringDict do
+not expose their value parameter through a trait: pipeline_values infers it
+once, then operation family projections rebind it after type-changing maps.
 Traversal, callback receivers and native error propagation keep their existing
 owners; only construction and insertion differ between containers here.
 """
@@ -15,7 +14,7 @@ from std.memory import MaybeUninit
 from fp.callables.products import _take_pair
 from fp.callables.protocols import UnaryContract, Unary, MutableUnary, BorrowCallable
 from fp.callables.invoke import call_repeated, RepeatableUnary
-from .protocols import Functor, Filterable, FunctorFilter, _Accumulate, _map_accumulate
+from .protocols import Functor, RebindingFunctor, Filterable, FunctorFilter, _Accumulate, _map_accumulate
 from .filtering import _Select, _Keep
 from .instances import _ListElement, ListFamily
 from fp.iteration._advance import _next_optional, _buffer_owned
@@ -225,7 +224,9 @@ struct _DictInsert[K: KeyElement & Deinitable, T: Movable & Deinitable, H: Hashe
         return acc^
 
 
-struct _DictFamily[K: KeyElement & Deinitable, A: Movable & Deinitable, H: Hasher & Defaultable & Deinitable](Functor, Filterable, FunctorFilter):
+struct _DictFamily[K: KeyElement & Deinitable, A: Movable & Deinitable, H: Hasher & Defaultable & Deinitable](RebindingFunctor, Filterable, FunctorFilter):
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == Dict[Self.K, Self.A, Self.H] and F.Arg == Self.A
+    comptime WithElement[A: Movable & Deinitable] = _DictFamily[Self.K, A, Self.H]
     comptime Element[V: Movable & Deinitable] = Self.A
     comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = V
     comptime FilterError[V: Movable & Deinitable, P: BorrowCallable] = P.Failure
@@ -282,7 +283,9 @@ def _take_entry[K: KeyElement & Deinitable, T: Movable & Deinitable, H: Hasher &
     entry^.deinit_with(take)
 
 
-struct _StringDictFamily[A: Movable & Deinitable](Functor, Filterable, FunctorFilter):
+struct _StringDictFamily[A: Movable & Deinitable](RebindingFunctor, Filterable, FunctorFilter):
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == StringDict[Self.A] and F.Arg == Self.A
+    comptime WithElement[A: Movable & Deinitable] = _StringDictFamily[A]
     comptime Element[V: Movable & Deinitable] = Self.A
     comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = V
     comptime FilterError[V: Movable & Deinitable, P: BorrowCallable] = P.Failure

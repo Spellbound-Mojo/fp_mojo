@@ -163,7 +163,7 @@ def methods(*, fold_stage=False):
                     else "Inspect each payload through the family and discard observer results."
                 )
             emit(name, cb, cb["params"], cb["argument"], result, error,
-                 "Self.I", conditions, expr, summary)
+                 "Self.I" if name == "tap" else f"_MappedFamily[Self.I, {observer}.Out]", conditions, expr, summary)
 
     # Whole-value stages reselect the output family. The optional family comes
     # after the inference barrier, so then[Family](f) is also available.
@@ -340,7 +340,7 @@ def methods(*, fold_stage=False):
     # Structural conveniences share their transforms with legacy fluent APIs.
     for name, bound, extra, arguments, _, c, built, summary in TRANSFORMS:
         emit(name, {}, [bound, *extra, "//"], arguments,
-             f"Self.I.Mapped[Self.V, {c}]", f"Self.I.MapError[Self.V, {c}]", "Self.I",
+             f"Self.I.Mapped[Self.V, {c}]", f"Self.I.MapError[Self.V, {c}]", f"_MappedFamily[Self.I, {c}.Out]",
              ["T == Self.I.Element[Self.V]", f"_MapCompatible[Self.I, Self.V, {c}]"],
              f"Self.I.map({c}({built}), self.value^)", summary)
     element = "Self.I.Element[Self.V]"
@@ -353,7 +353,7 @@ def methods(*, fold_stage=False):
         if name == "compact": conditions += [f"{element} == Optional[_ListElement[{element}]]"]
         else: conditions += [f"_CarrierCompatible[{family}, {element}]", f"_BindCompatible[{family}, Self.V, {identity}]"]
         result, error = f"{family}.{result_alias}[Self.V, {identity}]", f"{family}.{error_alias}[Self.V, {identity}]"
-        emit(name, {}, [], "", result, error, f"{family}.MapFilteredFamily" if name == "compact" else "Self.I", conditions,
+        emit(name, {}, [], "", result, error, f"FilterMapContract[{family}, Self.V, {identity}].Family" if name == "compact" else "Self.I", conditions,
              f"_context_{name}[{family}](self.value^)", "Remove one admitted inner layer through the selected source family.")
     family = "_Combining[Self.I]"
     function = f"_Function[{family}, Self.V]"
@@ -732,13 +732,15 @@ def methods(*, fold_stage=False):
                 operation = "MapContract" if name == "map" else "BindContract"
                 contract = f"{operation}[{family}, Self.V, {cbtype}]"
                 conditions.append(contract + ".FamilyCompatible")
+            if name == "filter_map":
+                contract = f"FilterMapContract[{family}, Self.V, {cbtype}]"
             if filtering:
                 inversion = ", True" if name == "filter_not" else ""
                 contract = f"FilterContract[{family}, Self.V, {cbtype}{inversion}]"
             result = contract + ".Out" if contract else f"{family}.{result_alias}[Self.V, {cbtype}]"
             error = contract + ".Error" if contract else f"{family}.{error_alias}[Self.V, {cbtype}]"
             output_family = (f"downcast[{family}.FilteredFamily, Functor]" if filtering else
-                             f"{family}.MapFilteredFamily" if name == "filter_map" else "Self.I")
+                             contract + ".Family" if name in ("map", "filter_map") else "Self.I")
             if filtering:
                 conditions.append(f"conforms_to({family}.FilteredFamily, Functor)")
             target = f"Pipeline[{output_family}, {result}, Self.E]"
@@ -879,6 +881,8 @@ def documented(source):
         "P1": "The second native register operand type, including its origins.",
         "R": "The first callback result type, inferred from the callback.",
         "S": "The second callback result type, inferred from the callback.",
+        "K": "The native dictionary key type.",
+        "H": "The native dictionary hasher type, preserved by transformations.",
         "T": "The carrier payload type.",
         "U": "The copied value type, including its origins.",
         "V": "The complete carrier type.",
