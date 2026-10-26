@@ -20,6 +20,9 @@ ADAPTER_END = "# --- end native unary admission ---\n"
 # These are the existing invocation owners. Capture delegates matching shapes
 # here and uses the same emitter for its remaining mixed-convention bundles.
 VIEWS = {
+    "thunk": ("", [], [], False, False),
+    "unary": ("o", ["A"], ["value"], False, False),
+    "borrow": ("r", ["P"], ["payload"], False, False),
     "binary": ("oo", ["A", "B"], ["first", "second"], False, False),
     "keywords": ("", [], [], True, False),
     "mutating": ("m", ["A"], ["value"], False, True),
@@ -40,7 +43,10 @@ def markers(name):
 def body(name):
     shape, types, values, keywords, view = VIEWS[name]
     prefix = "Self." if view else ""
-    return native_dispatch(
+    prefix_body = ""
+    if name in ("unary", "borrow"):
+        prefix_body = register_void(types[0], values[0])
+    return prefix_body + native_dispatch(
         shape,
         [prefix + t for t in types],
         values,
@@ -53,6 +59,29 @@ def body(name):
         raising=prefix + "raising",
         indent="        " if view else "    ",
     )
+
+
+def register_void(payload, value):
+    """Keep the specialized no-value register closure boundary in one place.
+
+    Eager unary/borrowing callbacks share this rule. Lazy callbacks own mutable
+    captures between pulls and keep their distinct receiver implementation.
+    """
+    return f"""    comptime if R == type_of(None) and conforms_to({payload}, TrivialRegisterPassable):
+        comptime Arg = downcast[{payload}, TrivialRegisterPassable]
+        comptime if raising and E == Never:
+            comptime if F == def(Arg) raises Never thin or conforms_to(F, def(Arg) raises Never):
+                _call_native_register_void[Arg, Never, F, True](function, rebind_var[Arg]({value}))
+                return rebind_var[R](None)
+        elif raising:
+            comptime if F == def(Arg) raises E thin or conforms_to(F, def(Arg) raises E):
+                _call_native_register_void[Arg, E, F, True](function, rebind_var[Arg]({value}))
+                return rebind_var[R](None)
+        else:
+            comptime if F == def(Arg) thin or conforms_to(F, def(Arg)):
+                _call_native_register_void[Arg, Never, F, False](function, rebind_var[Arg]({value}))
+                return rebind_var[R](None)
+"""
 
 
 def unary_factories():

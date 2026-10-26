@@ -108,8 +108,17 @@ payload or reflecting private native storage.
 `generate_native_conventions.py` share `scripts/native_signatures.py`.
 Known consumed operands use `_NativeOwnedArg`;
 read operands and results retain explicit register or memory evidence.
-`generate_native_conventions.py` emits the existing binary, keyword and mutable
-invocation bodies and `as_unary` pointer admission from the same descriptor.
+`generate_native_conventions.py` emits thunk, unary, borrowing, binary, keyword
+and mutable invocation bodies and `as_unary` pointer admission from the same
+descriptor. N-ary calls use the same thin dispatcher, projecting their known
+consumed operands so dispatch does not enumerate register combinations as
+arity grows. The all-memory signature also serves as the exact symbolic
+fallback: a generic forward can preserve the full thin function type while
+being unable to prove either concrete register condition. Compare that type
+before asking for a closure witness, which a thin pointer does not have.
+Literal no-value register callbacks retain their shared specialized boundary.
+The single-stage pipe Never helper keeps its weaker Movable bounds, and lazy
+callbacks keep mutable access to their owned captures.
 Generated files are checked against
 their generators by the tooling suite.
 

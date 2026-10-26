@@ -1,6 +1,8 @@
 """Native n-argument boundaries and bounded type inference; execution is shared."""
 import re
 
+from native_signatures import thin_dispatch
+
 MD = 'Movable & Deinitable'
 MAX = 8
 START = '# --- n-ary type inference (generated) ---\n'
@@ -30,32 +32,11 @@ def types():
 
 
 def thin_invocation(names):
-    """Recover the exact stored thin ABI after operand types are known.
-
-    The result needs a branch retaining its register witness. A conditional
-    result alias loses that witness for Mojo's inferred no-value return type.
-    Literal Never must also remain literal at the invocation boundary.
-    """
-    args = ', '.join(f'var _NativeOwnedArg[Self.{name}]' for name in names)
-    values = ', '.join(f'rebind_var[_NativeOwnedArg[Self.{name}]](a{i}^)'
-                       for i, name in enumerate(names))
-    out = []
-    for register in (True, False):
-        out.append('        comptime if conforms_to(Self.R, RegisterPassable):\n'
-                   '            comptime Out = downcast[Self.R, RegisterPassable & Deinitable]\n'
-                   if register else '        else:\n')
-        for raising, error, condition in (
-            (True, 'Never', 'Self.raising and Self.X == Never'),
-            (True, 'Self.X', 'Self.raising'),
-            (False, 'Never', 'not Self.raising'),
-        ):
-            signature = f'def({args})' + (f' raises {error}' if raising else '')
-            signature += ' thin -> ' + ('Out' if register else 'Self.R')
-            out.append(f'            comptime if {condition} and Self.F == {signature}:\n')
-            if not raising:
-                out.append('                comptime assert Self.X == Never\n')
-            out.append(f'                return rebind_var[Self.R](rebind[{signature}](self.function[])({values}))\n')
-    return ''.join(out)
+    """Project known consumed inputs through the shared thin ABI dispatcher."""
+    return thin_dispatch(
+        "o" * len(names), ["Self." + name for name in names],
+        [f"a{i}" for i in range(len(names))], error="Self.X", known_owned=True,
+    )
 
 
 def native():

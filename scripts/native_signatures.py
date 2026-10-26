@@ -161,6 +161,40 @@ def variants(operands, result="R"):
 # its function type, including register results and borrowed register operands.
 
 
+def _effect_cases(result, error, raising):
+    """Literal no-value and Never signatures are shared by every invocation."""
+    return (
+        (
+            " raises Never",
+            True,
+            f"{result} == type_of(None) and {raising} and {error} == Never",
+        ),
+        (f" raises {error}", True, f"{result} == type_of(None) and {raising}"),
+        ("", True, f"{result} == type_of(None) and not {raising}"),
+        (" raises Never", False, f"{raising} and {error} == Never"),
+        (f" raises {error}", False, raising),
+        ("", False, f"not {raising}"),
+    )
+
+
+def _call_arguments(shape, types, values, keyword, keyword_value, *, known_owned=False):
+    args = [argument(t, m, thin=known_owned) for t, m in zip(types, shape)]
+    passed = [
+        (
+            f"rebind_var[_NativeOwnedArg[{t}]]({v}^)"
+            if known_owned and m == "o"
+            else v + ("^" if m == "o" else "")
+        )
+        for t, v, m in zip(types, values, shape)
+    ]
+    if keyword:
+        if args:
+            args += ["/"]
+        args += [f"var **kwargs: {keyword}"]
+        passed += ["**" + keyword_value + "^"]
+    return args, passed
+
+
 def thin_dispatch(
     shape,
     types,
@@ -174,13 +208,31 @@ def thin_dispatch(
     function="self.function[]",
     raising="Self.raising",
     indent="        ",
+    known_owned=False,
 ):
+    """Recover concrete thin ABIs, then accept an exact symbolic signature.
+
+    N-ary invocation already knows every consumed input. Project those inputs
+    instead of enumerating 2**arity register combinations. Result and read
+    positions still require explicit register evidence.
+    """
     out = []
     for void in (True, False):
         for regs in product(
-            *[((False, True) if m in ("r", "o") else (False,)) for m in shape]
+            *[
+                (
+                    (False, True)
+                    if m == "r" or (m == "o" and not known_owned)
+                    else (False,)
+                )
+                for m in shape
+            ]
         ):
             for rreg in ((False,) if void else (False, True)):
+                # The exact symbolic signature below also covers the all-memory
+                # case, without requiring negative register evidence.
+                if not any(regs) and not rreg:
+                    continue
                 conditions = []
                 decl = []
                 args = []
@@ -189,7 +241,10 @@ def thin_dispatch(
                     zip(shape, types, values, regs)
                 ):
                     typ = t
-                    if mode in ("r", "o"):
+                    projected = mode == "o" and known_owned
+                    if projected:
+                        typ = f"_NativeOwnedArg[{t}]"
+                    elif mode in ("r", "o"):
                         trait = (
                             "TrivialRegisterPassable"
                             if mode == "r"
@@ -208,7 +263,7 @@ def thin_dispatch(
                         if reg and mode == "r"
                         else (
                             f"rebind_var[{typ}]({value}^)"
-                            if reg
+                            if reg or projected
                             else value + ("^" if mode == "o" else "")
                         )
                     )
@@ -263,6 +318,32 @@ def thin_dispatch(
                         out += [
                             indent + f"        return rebind_var[{result}]({call})\n"
                         ]
+    # A generic forward may not prove either concrete register condition.
+    # Its original F still proves an exact generic thin signature. Check that
+    # evidence before attempting closure conformance (thin pointers have none).
+    args, passed = _call_arguments(
+        shape, types, values, keyword, keyword_value, known_owned=known_owned
+    )
+    for effect, void, condition in _effect_cases(result, error, raising):
+        typ = (
+            "def("
+            + ", ".join(args)
+            + ")"
+            + effect
+            + " thin"
+            + ("" if void else " -> " + result)
+        )
+        out += [indent + f"comptime if {condition} and {function_type} == {typ}:\n"]
+        if not effect:
+            out += [indent + f"    comptime assert {error} == Never\n"]
+        call = f"rebind[{typ}]({function})(" + ", ".join(passed) + ")"
+        if void:
+            out += [
+                indent + f"    _ = {call}\n",
+                indent + f"    return rebind_var[{result}](None)\n",
+            ]
+        else:
+            out += [indent + f"    return {call}\n"]
     return "".join(out)
 
 
@@ -293,26 +374,13 @@ def native_dispatch(
         raising=raising,
         indent=indent,
     )
-    args = [argument(t, m) for t, m in zip(types, shape)]
-    passed = [v + ("^" if m == "o" else "") for v, m in zip(values, shape)]
-    if keyword:
-        if args:
-            args += ["/"]
-        args += [f"var **kwargs: {keyword}"]
-        passed += ["**" + keyword_value + "^"]
-    cases = [
-        (
-            " raises Never",
-            True,
-            f"{result} == type_of(None) and {raising} and {error} == Never",
-        ),
-        (f" raises {error}", True, f"{result} == type_of(None) and {raising}"),
-        ("", True, f"{result} == type_of(None) and not {raising}"),
-        (" raises Never", False, f"{raising} and {error} == Never"),
-        (f" raises {error}", False, raising),
-        ("", False, "True"),
-    ]
+    args, passed = _call_arguments(shape, types, values, keyword, keyword_value)
+    cases = _effect_cases(result, error, raising)
     for i, (effect, void, cond) in enumerate(cases):
+        # The prior raising branches exhaust that effect; an unconditional
+        # final branch is needed for generic return-path checking on Mojo 1.2.
+        if i == len(cases) - 1:
+            cond = "True"
         typ = (
             "def(" + ", ".join(args) + ")" + effect + ("" if void else " -> " + result)
         )
