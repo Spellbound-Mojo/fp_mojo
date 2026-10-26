@@ -281,6 +281,35 @@
       ]
     },
     {
+      "name": "Effectful queries and reductions",
+      "methods": [
+        "all_effect",
+        "any_effect",
+        "find_effect",
+        "find_map_effect",
+        "fold_effect",
+        "fold_map_effect"
+      ],
+      "status": "selected",
+      "families": "Native source; explicit Monad target",
+      "callbacks": "Borrowing predicates; consuming unary/binary transformations; repeatable shared or mutable library receivers. Bind fold_effect(initial).run(step).",
+      "ownership": "Moves inputs, retains first matches and releases partial accumulators; Arrays use O(N) temporary List storage.",
+      "errors": "Exact native errors, stored target failures and borrowed origins remain distinct.",
+      "timing": "Target owns branch stopping and deferral; monoid identity is constructed before source binding.",
+      "owner": [
+        "src/fp/algebra/_effect_combinators.mojo",
+        "src/fp/algebra/protocols.mojo",
+        "src/fp/iteration/_advance.mojo"
+      ],
+      "evidence": [
+        "tests/runtime/test_context_effect_queries_behavior.mojo",
+        "tests/runtime/test_context_effect_queries_effects.mojo",
+        "tests/runtime/test_context_effect_queries_generic.mojo",
+        "tests/runtime/test_context_effect_queries_thin.mojo",
+        "tests/ownership/test_context_effect_queries_ownership.mojo"
+      ]
+    },
+    {
       "name": "Result operations",
       "methods": [
         "attempt_tap",
@@ -386,18 +415,6 @@
     "void"
   ],
   "migration": [
-    {
-      "name": "Effectful queries and reductions",
-      "methods": [
-        "all_effect",
-        "any_effect",
-        "find_effect",
-        "find_map_effect",
-        "fold_effect",
-        "fold_map_effect"
-      ],
-      "contract": "Shared dependent fold/search; Monad targets, precise stopping and deferred execution."
-    },
     {
       "name": "Traversal composition",
       "methods": [

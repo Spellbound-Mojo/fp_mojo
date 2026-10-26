@@ -143,6 +143,83 @@ def _call_native_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: Mov
                         X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](
     function: F, var first: A, var second: B
 ) raises X -> R:
+    # Thin pointers retain concrete register conventions for consumed operands.
+    comptime if not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):
+        comptime if raising and X == Never and F == def(var A, var B) raises Never thin -> R:
+            return rebind[def(var A, var B) raises Never thin -> R](function)(first^, second^)
+        elif raising and F == def(var A, var B) raises X thin -> R:
+            return rebind[def(var A, var B) raises X thin -> R](function)(first^, second^)
+        elif not raising and F == def(var A, var B) thin -> R:
+            comptime assert X == Never
+            return rebind[def(var A, var B) thin -> R](function)(first^, second^)
+    comptime if not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable) and conforms_to(R, RegisterPassable):
+        comptime Out = downcast[R, RegisterPassable & Deinitable]
+        comptime if raising and X == Never and F == def(var A, var B) raises Never thin -> Out:
+            return rebind_var[R](rebind[def(var A, var B) raises Never thin -> Out](function)(first^, second^))
+        elif raising and F == def(var A, var B) raises X thin -> Out:
+            return rebind_var[R](rebind[def(var A, var B) raises X thin -> Out](function)(first^, second^))
+        elif not raising and F == def(var A, var B) thin -> Out:
+            comptime assert X == Never
+            return rebind_var[R](rebind[def(var A, var B) thin -> Out](function)(first^, second^))
+    comptime if not conforms_to(A, RegisterPassable) and conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):
+        comptime Arg1 = downcast[B, RegisterPassable & Deinitable]
+        comptime if raising and X == Never and F == def(var A, var Arg1) raises Never thin -> R:
+            return rebind[def(var A, var Arg1) raises Never thin -> R](function)(first^, rebind_var[Arg1](second^))
+        elif raising and F == def(var A, var Arg1) raises X thin -> R:
+            return rebind[def(var A, var Arg1) raises X thin -> R](function)(first^, rebind_var[Arg1](second^))
+        elif not raising and F == def(var A, var Arg1) thin -> R:
+            comptime assert X == Never
+            return rebind[def(var A, var Arg1) thin -> R](function)(first^, rebind_var[Arg1](second^))
+    comptime if not conforms_to(A, RegisterPassable) and conforms_to(B, RegisterPassable) and conforms_to(R, RegisterPassable):
+        comptime Arg1 = downcast[B, RegisterPassable & Deinitable]
+        comptime Out = downcast[R, RegisterPassable & Deinitable]
+        comptime if raising and X == Never and F == def(var A, var Arg1) raises Never thin -> Out:
+            return rebind_var[R](rebind[def(var A, var Arg1) raises Never thin -> Out](function)(first^, rebind_var[Arg1](second^)))
+        elif raising and F == def(var A, var Arg1) raises X thin -> Out:
+            return rebind_var[R](rebind[def(var A, var Arg1) raises X thin -> Out](function)(first^, rebind_var[Arg1](second^)))
+        elif not raising and F == def(var A, var Arg1) thin -> Out:
+            comptime assert X == Never
+            return rebind_var[R](rebind[def(var A, var Arg1) thin -> Out](function)(first^, rebind_var[Arg1](second^)))
+    comptime if conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):
+        comptime Arg0 = downcast[A, RegisterPassable & Deinitable]
+        comptime if raising and X == Never and F == def(var Arg0, var B) raises Never thin -> R:
+            return rebind[def(var Arg0, var B) raises Never thin -> R](function)(rebind_var[Arg0](first^), second^)
+        elif raising and F == def(var Arg0, var B) raises X thin -> R:
+            return rebind[def(var Arg0, var B) raises X thin -> R](function)(rebind_var[Arg0](first^), second^)
+        elif not raising and F == def(var Arg0, var B) thin -> R:
+            comptime assert X == Never
+            return rebind[def(var Arg0, var B) thin -> R](function)(rebind_var[Arg0](first^), second^)
+    comptime if conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable) and conforms_to(R, RegisterPassable):
+        comptime Arg0 = downcast[A, RegisterPassable & Deinitable]
+        comptime Out = downcast[R, RegisterPassable & Deinitable]
+        comptime if raising and X == Never and F == def(var Arg0, var B) raises Never thin -> Out:
+            return rebind_var[R](rebind[def(var Arg0, var B) raises Never thin -> Out](function)(rebind_var[Arg0](first^), second^))
+        elif raising and F == def(var Arg0, var B) raises X thin -> Out:
+            return rebind_var[R](rebind[def(var Arg0, var B) raises X thin -> Out](function)(rebind_var[Arg0](first^), second^))
+        elif not raising and F == def(var Arg0, var B) thin -> Out:
+            comptime assert X == Never
+            return rebind_var[R](rebind[def(var Arg0, var B) thin -> Out](function)(rebind_var[Arg0](first^), second^))
+    comptime if conforms_to(A, RegisterPassable) and conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):
+        comptime Arg0 = downcast[A, RegisterPassable & Deinitable]
+        comptime Arg1 = downcast[B, RegisterPassable & Deinitable]
+        comptime if raising and X == Never and F == def(var Arg0, var Arg1) raises Never thin -> R:
+            return rebind[def(var Arg0, var Arg1) raises Never thin -> R](function)(rebind_var[Arg0](first^), rebind_var[Arg1](second^))
+        elif raising and F == def(var Arg0, var Arg1) raises X thin -> R:
+            return rebind[def(var Arg0, var Arg1) raises X thin -> R](function)(rebind_var[Arg0](first^), rebind_var[Arg1](second^))
+        elif not raising and F == def(var Arg0, var Arg1) thin -> R:
+            comptime assert X == Never
+            return rebind[def(var Arg0, var Arg1) thin -> R](function)(rebind_var[Arg0](first^), rebind_var[Arg1](second^))
+    comptime if conforms_to(A, RegisterPassable) and conforms_to(B, RegisterPassable) and conforms_to(R, RegisterPassable):
+        comptime Arg0 = downcast[A, RegisterPassable & Deinitable]
+        comptime Arg1 = downcast[B, RegisterPassable & Deinitable]
+        comptime Out = downcast[R, RegisterPassable & Deinitable]
+        comptime if raising and X == Never and F == def(var Arg0, var Arg1) raises Never thin -> Out:
+            return rebind_var[R](rebind[def(var Arg0, var Arg1) raises Never thin -> Out](function)(rebind_var[Arg0](first^), rebind_var[Arg1](second^)))
+        elif raising and F == def(var Arg0, var Arg1) raises X thin -> Out:
+            return rebind_var[R](rebind[def(var Arg0, var Arg1) raises X thin -> Out](function)(rebind_var[Arg0](first^), rebind_var[Arg1](second^)))
+        elif not raising and F == def(var Arg0, var Arg1) thin -> Out:
+            comptime assert X == Never
+            return rebind_var[R](rebind[def(var Arg0, var Arg1) thin -> Out](function)(rebind_var[Arg0](first^), rebind_var[Arg1](second^)))
     comptime if raising and X == Never:
         comptime Fn = downcast[F, def(var A, var B) raises Never -> R]
         return rebind[Fn](function)(first^, second^)
@@ -168,6 +245,23 @@ struct _NativeBinaryRef[A: Movable & Deinitable, B: Movable & Deinitable, R: Mov
     var function: Pointer[Self.F, Self.o]
     def call(self, var first: Self.A, var second: Self.B) raises Self.X -> Self.R:
         return _call_native_binary[Self.A, Self.B, Self.R, Self.X, Self.F, Self.raising](self.function[], first^, second^)
+
+
+@fieldwise_init
+struct _NativeBinary[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable,
+                     E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](Binary, Copyable where conforms_to(F, Copyable)):
+    # Owned thin pointers use the same native invocation as borrowed closures.
+    comptime First = Self.A
+    comptime Second = Self.B
+    comptime Out = Self.R
+    comptime Error = Self.E
+    var _function: _OptionalCell[Self.F]
+
+    def __init__(out self, var function: Self.F):
+        self._function = Optional(function^)
+
+    def call(self, var first: Self.A, var second: Self.B) raises Self.E -> Self.R:
+        return _call_native_binary[Self.A, Self.B, Self.R, Self.E, Self.F, Self.raising](self._function.value(), first^, second^)
 
 
 comptime _Unary[A: Movable & Deinitable, R: Movable & Deinitable] = def(var A) -> R
@@ -249,6 +343,35 @@ def _call_native_never[A: Movable, R: Movable, F: Movable & Deinitable](
 
 def _call_native[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable,
                  F: Movable & Deinitable, raising: Bool](function: F, var value: A) raises E -> R:
+    # Thin pointers retain concrete register conventions for consumed operands.
+    comptime if not conforms_to(A, RegisterPassable) and conforms_to(R, RegisterPassable):
+        comptime Out = downcast[R, RegisterPassable & Deinitable]
+        comptime if raising and E == Never and F == def(var A) raises Never thin -> Out:
+            return rebind_var[R](rebind[def(var A) raises Never thin -> Out](function)(value^))
+        elif raising and F == def(var A) raises E thin -> Out:
+            return rebind_var[R](rebind[def(var A) raises E thin -> Out](function)(value^))
+        elif not raising and F == def(var A) thin -> Out:
+            comptime assert E == Never
+            return rebind_var[R](rebind[def(var A) thin -> Out](function)(value^))
+    comptime if conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable):
+        comptime Arg0 = downcast[A, RegisterPassable & Deinitable]
+        comptime if raising and E == Never and F == def(var Arg0) raises Never thin -> R:
+            return rebind[def(var Arg0) raises Never thin -> R](function)(rebind_var[Arg0](value^))
+        elif raising and F == def(var Arg0) raises E thin -> R:
+            return rebind[def(var Arg0) raises E thin -> R](function)(rebind_var[Arg0](value^))
+        elif not raising and F == def(var Arg0) thin -> R:
+            comptime assert E == Never
+            return rebind[def(var Arg0) thin -> R](function)(rebind_var[Arg0](value^))
+    comptime if conforms_to(A, RegisterPassable) and conforms_to(R, RegisterPassable):
+        comptime Arg0 = downcast[A, RegisterPassable & Deinitable]
+        comptime Out = downcast[R, RegisterPassable & Deinitable]
+        comptime if raising and E == Never and F == def(var Arg0) raises Never thin -> Out:
+            return rebind_var[R](rebind[def(var Arg0) raises Never thin -> Out](function)(rebind_var[Arg0](value^)))
+        elif raising and F == def(var Arg0) raises E thin -> Out:
+            return rebind_var[R](rebind[def(var Arg0) raises E thin -> Out](function)(rebind_var[Arg0](value^)))
+        elif not raising and F == def(var Arg0) thin -> Out:
+            comptime assert E == Never
+            return rebind_var[R](rebind[def(var Arg0) thin -> Out](function)(rebind_var[Arg0](value^)))
     # The one native-def call for owned unary callbacks: NativeUnary, the
     # borrowed reference view and pipeline stages all reach it.
     comptime if raising and E == Never:

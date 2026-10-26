@@ -571,3 +571,42 @@ custom compaction errors, borrowed payload and error origins, single-use
 callbacks, move-only cleanup, deferred execution and abandonment. Invalid
 conventions, carriers, errors, origins and lifetimes use ordinary calls without
 callback-type hints; a compiler crash never counts as a rejection.
+
+## Effectful queries and reductions
+
+Selected queries delegate to `_EffectFold`, `_PredicateStep`, `_SearchStep`
+and `_FoldMappedStep`. The target Monad owns ordering, live-branch stopping and
+deferred execution. Public signatures retain the exact target carrier, payload,
+native error and repeatability constraints. Monoid identity creation precedes
+source binding; combination stays inside the target effect. Returning Pipeline
+selects that target while keeping the selected native error.
+
+A binary fold also needs its accumulator type before callback inference.
+Inferring it in `fold_effect(step, initial)` makes Mojo 1.2 crash on an invalid
+mutable second operand. Reordering those arguments or adding a generic fallback
+does not fix admission. The selected API therefore uses
+`fold_effect[Target](initial).run(step)`: a small owning stage binds source,
+accumulator and error first, then the existing native descriptor admits the
+step. It adds no allocation or execution engine. Existing legacy calls retain
+their API. Disposing an unused stage destroys its source and accumulator.
+
+Thin consumed operands use `RegisterPassable & Deinitable`, including
+nontrivial register types. Unary and binary invocation preserve the exact
+operand/result conventions through the common native dispatchers. Borrowing
+predicates still use `TrivialRegisterPassable` for read arguments.
+
+Source conversion now has one owner in `iteration._advance`; algebra's private
+aliases delegate to it. Mojo 1.2's owning Array iterator destroys transferred
+elements when moved. Array sources are drained in place into temporary List
+storage before the iterator escapes. Native nominal reflection recognizes
+Array because IterableOwned does not expose its length; the native protocol
+still supplies the element type. The private collection iterator hides this
+storage choice and keeps its public Element independent of reflection. Other
+collections retain their native cursor, and incoming iterators are never
+restarted. The existing Array collection adapter delegates to the same buffer.
+
+The `context_effect_queries` fixtures exercise all six operations, ordinary
+invalid calls, generic forwarding, thin calling conventions, exact errors,
+borrowed origins, mutable callable receivers, move-only cleanup, abandoned
+deferred computations and Array ownership. They run against source and fresh
+package imports at both optimization levels.

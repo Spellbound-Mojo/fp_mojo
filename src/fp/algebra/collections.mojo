@@ -18,7 +18,7 @@ from fp.callables.invoke import call_repeated, RepeatableUnary
 from .protocols import Functor, Filterable, FunctorFilter, _Accumulate, _map_accumulate
 from .filtering import _Select, _Keep
 from .instances import _ListElement, ListFamily
-from fp.iteration._advance import _next_optional
+from fp.iteration._advance import _next_optional, _buffer_owned
 from fp.iteration.reductions import _Terminal
 from fp.iteration.adapters import map as _lazy_map
 
@@ -32,9 +32,9 @@ struct _ArrayFamily[N: Int](Functor):
     ) raises F.Error -> Self.Mapped[V, F]:
         comptime assert V == Array[F.Arg, Self.N], "map: Array carrier required"
         var source = rebind_var[Array[F.Arg, Self.N]](value^)
-        # Mojo 1.1's owning Array iterator destroys its source slots when it is
-        # moved (covered by drop-count tests). Native deinit_with moves each
-        # element safely. Buffer through ListFamily instead of copying values
+        # Mojo 1.2's owning Array iterator destroys its source slots when it is
+        # moved (covered by drop-count tests). Drain the iterator in place.
+        # Buffer through ListFamily instead of copying values
         # or reproducing its callback/error loop. Cost: O(N) temporary storage.
         var items = _take_array(source^)
         var mapped = ListFamily.map(f^, items^)
@@ -320,9 +320,7 @@ struct _FilterValues[K: KeyElement & Deinitable, U: Movable & Deinitable, H: Has
 def _take_array[T: Movable & Deinitable, N: Int](var source: Array[T, N]) -> List[T]:
     # One workaround for the pinned owning Array iterator, shared by mapping
     # and terminal operations. Elements are moved, including move-only values.
-    var items = List[T](capacity=N)
-    source^.deinit_with(lambda (var item: T) {ref items}: items.append(item^))
-    return items^
+    return _buffer_owned(source^)
 
 
 @fieldwise_init

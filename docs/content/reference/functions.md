@@ -66,6 +66,34 @@ value; empty `reduce_optional` returns None. Native steps are borrowed;
 library steps use the standalone folds' shared `Binary` contract. The resulting
 value selects its family by the same rule as `then`.
 
+Effectful terminals consume an iterator or owned iterable into an explicit
+Monad target. `all_effect[Target](predicate)`, `any_effect[Target](predicate)`
+and `find_effect[Target](predicate)` borrow each item and require a Bool inside
+the target effect. Each branch stops at its decisive answer without another
+source pull. Empty input yields True, False or an absent Optional respectively.
+`find_map_effect[Target](transform)` consumes each item and stops at the first
+present Optional inside the effect. An absent outer Optional or stored Result
+error still stops the entire computation according to the target's rules.
+
+`fold_effect[Target](initial).run(step)` binds the initial accumulator before
+admitting a consuming binary callback. This ordering lets Mojo diagnose wrong
+argument conventions without inferring the accumulator at the same boundary.
+`run` returns a Pipeline in the target family; `get()` extracts its effect.
+The binding stage owns the source and initial value but evaluates no callback.
+Existing `Piped.fold_effect(step, initial)` retains its original syntax.
+`fold_map_effect[Target, Monoid](transform)` consumes items into effectful monoid
+values and combines them in order, starting with the identity.
+
+These operations require repeatable library callbacks; consuming unary and
+binary callbacks may use mutable receiver state. Reader and State defer source
+pulls and callbacks until execution. Monoid identity creation happens before
+source binding even for a deferred target; combinations happen inside the effect.
+Native callback and monoid errors retain their exact types. Validation's
+Applicative-only policy is not a Monad target for these dependent operations.
+Arrays use O(N) temporary List storage to avoid moving Mojo 1.2's owning Array
+iterator; their elements still move once without copying. Other native iterators
+continue from their current position.
+
 `traverse[TargetFamily](transform)` and `sequence[TargetFamily]()` continue in
 the target effect family. `traverse_tap[TargetFamily](effect)` borrows each
 payload, runs its effect and retains the original on success, discarding the

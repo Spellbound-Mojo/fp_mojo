@@ -1,0 +1,70 @@
+"""Effectful terminals preserve empty defaults, source position and branch stopping."""
+from fp.functions import pipeline
+from fp.algebra import OptionalFamily, ResultFamily, ListFamily, StringMonoid
+from fp.data import Result, Ok, Err
+from std.collections import Array, Deque
+from std.memory import ArcPointer
+from std.testing import assert_equal
+from algebra_support.iterators import Counted
+from test_combinators import CombinatorRestarting
+
+def even(value: Int) -> Optional[Bool]: return Optional(value % 2 == 0)
+def project(var value: Int) -> Optional[Optional[String]]:
+    return Optional(Optional(String(value)) if value == 2 else Optional[String]())
+def text(var value: Int) -> Optional[String]: return Optional(String(value))
+def sum_step(var a: Int, var b: Int) -> Optional[Int]: return Optional(a + b)
+
+def main() raises:
+    assert_equal(pipeline(List[Int]()).all_effect[OptionalFamily](even).get().value(), True)
+    assert_equal(pipeline(List[Int]()).any_effect[OptionalFamily](even).get().value(), False)
+    assert_equal(Bool(pipeline(List[Int]()).find_effect[OptionalFamily](even).get().value()), False)
+    assert_equal(Bool(pipeline(List[Int]([1])).find_map_effect[OptionalFamily](project).get().value()), False)
+    assert_equal(pipeline(List[Int]()).fold_effect[OptionalFamily](10).run(sum_step).get().value(), 10)
+    assert_equal(pipeline(List[Int]()).fold_map_effect[OptionalFamily, StringMonoid](text).get().value(), "")
+    assert_equal(pipeline(List[Int]([1,2,3])).find_map_effect[OptionalFamily](project).get().value().value(), "2")
+    assert_equal(pipeline(List[Int]([1,2,3])).fold_effect[OptionalFamily](10).run(sum_step).get().value(), 16)
+    assert_equal(pipeline(List[Int]([1,2,3])).fold_map_effect[OptionalFamily, StringMonoid](text).get().value(), "123")
+    assert_equal(pipeline(Optional(2)).find_effect[OptionalFamily](even).get().value().value(), 2)
+    var array: Array[Int, 3] = [1,2,3]
+    assert_equal(pipeline(array^).fold_effect[OptionalFamily](0).run(sum_step).get().value(), 6)
+    var deque = Deque[Int]()
+    deque.append(1); deque.append(2)
+    assert_equal(pipeline(deque^).fold_map_effect[OptionalFamily, StringMonoid](text).get().value(), "12")
+    var cursor = CombinatorRestarting(1)
+    _ = cursor.__next__()
+    assert_equal(pipeline(cursor^).fold_effect[OptionalFamily](0).run(sum_step).get().value(), 5)
+
+    var calls = ArcPointer(List[Int]())
+    var pulls = 0
+    def choose(value: Int) {calls} -> Optional[Bool]:
+        calls[].append(value)
+        return Optional(value == 2)
+    assert_equal(pipeline(Counted(Pointer(to=pulls),0,8)).any_effect[OptionalFamily](choose).get().value(), True)
+    assert_equal(pulls, 2); assert_equal(calls[], List[Int]([1,2]))
+    calls[].clear(); pulls = 0
+    assert_equal(pipeline(Counted(Pointer(to=pulls),0,8)).all_effect[OptionalFamily](choose).get().value(), False)
+    assert_equal(pulls, 1); assert_equal(calls[], List[Int]([1]))
+    calls[].clear(); pulls = 0
+    assert_equal(pipeline(Counted(Pointer(to=pulls),0,8)).find_effect[OptionalFamily](choose).get().value().value(), 2)
+    assert_equal(pulls, 2); assert_equal(calls[], List[Int]([1,2]))
+    calls[].clear(); pulls = 0
+    def missing(var value: Int) {calls} -> Result[Optional[Int], String]:
+        calls[].append(value)
+        if value == 2: return Err(String("stored"))
+        return Ok(Optional[Int]())
+    assert_equal(pipeline(Counted(Pointer(to=pulls),0,8)).find_map_effect[ResultFamily[String]](missing).get()._err().value, "stored")
+    assert_equal(pulls, 2); assert_equal(calls[], List[Int]([1,2]))
+    def absent(value: Int) -> Optional[Bool]: return None
+    pulls = 0
+    assert_equal(Bool(pipeline(Counted(Pointer(to=pulls),0,8)).find_effect[OptionalFamily](absent).get()), False)
+    assert_equal(pulls, 1)
+    def branches(value: Int) -> List[Bool]: return List[Bool]([False, True])
+    assert_equal(pipeline(List[Int]([1,2])).any_effect[ListFamily](branches).get(), List[Bool]([False,True,True]))
+    def alternatives(var value: Int) -> List[String]:
+        return List[String](["a","A"]) if value == 1 else List[String](["b","B"])
+    assert_equal(pipeline(List[Int]([1,2])).fold_map_effect[ListFamily, StringMonoid](alternatives).get(), List[String](["ab","aB","Ab","AB"]))
+    def find_branch(var value: Int) -> List[Optional[Int]]:
+        return List[Optional[Int]]([Optional[Int](),Optional(1)]) if value == 1 else List[Optional[Int]]([Optional(20)])
+    var found = pipeline(List[Int]([1,2,3])).find_map_effect[ListFamily](find_branch).get()
+    assert_equal(len(found), 2)
+    assert_equal(found[0].value(), 20); assert_equal(found[1].value(), 1)

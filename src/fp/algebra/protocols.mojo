@@ -15,7 +15,7 @@ from fp.callables.protocols import (UnaryContract, BinaryContract, ThunkContract
                                     Unary, Binary, OnceUnary, MutableUnary, OnceThunk, BorrowCallable)
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
 from fp.callables._receiver import _unary_repeated_as, _thunk_once_as
-from fp.iteration._advance import _next_optional
+from fp.iteration._advance import _next_optional, _Source, _source
 from fp.iteration._terminal import _append
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
 from fp.callables._receiver import _binary_repeated_as
@@ -482,17 +482,13 @@ trait Monoid(Semigroup):
 
 # Owned iteration. An iterator continues from its current position; any other
 # owned iterable starts a fresh iteration. Restarting an iterator would re-pull.
-comptime _Iterator[V: Movable & Deinitable] = downcast[V, Iterator] if conforms_to(V, Iterator) else downcast[V, IterableOwned].IteratorOwnedType
+comptime _Iterator[V: Movable & Deinitable] = _Source[V]
 comptime _Item[V: Movable & Deinitable] = downcast[_Iterator[V].Element, Movable & Deinitable]
 
 
 def _iterator[V: Movable & Deinitable](var source: V) -> _Iterator[V]:
-    comptime if conforms_to(V, Iterator):
-        return rebind_var[_Iterator[V]](source^)
-    else:
-        comptime assert conforms_to(V, IterableOwned), "traverse: the source must be an iterator or an owned iterable"
-        comptime I = downcast[V, IterableOwned & Movable & Deinitable]
-        return rebind_var[_Iterator[V]](iter(rebind_var[I](source^)))
+    comptime assert conforms_to(V, Iterator) or conforms_to(V, IterableOwned), "traverse: the source must be an iterator or an owned iterable"
+    return _source(source^)
 
 
 def _next_item[V: Movable & Deinitable](mut iterator: _Iterator[V]) -> Optional[_Item[V]]:

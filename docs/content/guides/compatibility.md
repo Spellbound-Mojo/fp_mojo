@@ -57,6 +57,13 @@ library-callable error. Construction and deferred execution can raise different
 errors at different times. Generic forwarding carries the family's public
 admission predicates in the signature, including embedded origins.
 
+Effectful queries and reductions now select a Monad target. The selected binary
+fold binds its accumulator first: `fold_effect[Target](initial).run(step)`.
+This avoids Mojo 1.2's crash while inferring an accumulator and diagnosing an
+incompatible native argument convention together. Legacy `Piped` calls keep
+their existing order. Array sources use temporary List storage to preserve
+move-only ownership across native iterator moves.
+
 `Capture[E]` currently binds zero to two positional operands with read, mutable
 or consuming conventions, followed by an optional homogeneous native keyword
 pack. Empty packs need a type; larger packs, fixed named parameters and defaults

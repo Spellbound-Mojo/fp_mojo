@@ -22,6 +22,17 @@ def total(var amounts: List[Int]) -> Int:
 def receipt(var amount: Int, var shipping: Int, var tax: Int) -> String:
     return "total: " + String(amount + shipping + tax)
 
+def add_parsed(var total: Int, var text: String) raises WorkflowTransportFailure -> Result[Int, String]:
+    def add_amount(var amount: Int) {total} -> Int: return total + amount
+    return pipeline(parse(text^)).map(add_amount).get()
+
+def checkout_fold(var amounts: List[String]) raises WorkflowTransportFailure -> Result[String, String]:
+    return (pipeline(amounts^)
+        .raising[WorkflowTransportFailure]()
+        .fold_effect[ResultFamily[String]](0).run(add_parsed)
+        .map_n((Result[Int, String](Ok(5)), Result[Int, String](Ok(2))), receipt)
+        .get())
+
 def checkout(var amounts: List[String]) raises WorkflowTransportFailure -> Result[String, String]:
     return (pipeline(amounts^)
         .raising[WorkflowTransportFailure]()
@@ -35,6 +46,10 @@ def main() raises:
     try: accepted = checkout(List[String](["12", "15"]))
     except _: raise Error("unexpected transport failure")
     assert_equal(accepted._ok().value, "total: 34")
+    var folded: Result[String, String]
+    try: folded = checkout_fold(List[String](["12", "15"]))
+    except _: raise Error("unexpected transport failure")
+    assert_equal(folded._ok().value, accepted._ok().value)
     print(accepted._ok().value)
 
     var rejected: Result[String, String]
