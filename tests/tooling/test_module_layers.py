@@ -22,7 +22,7 @@ class ModuleLayerTests(unittest.TestCase):
 
     def test_leaf_dependencies_do_not_reach_integration_layers(self):
         graph = dependencies(ROOT)
-        for leaf in ('data._result', 'data.control', 'data.non_empty_list', 'data.ior', 'adt.data',
+        for leaf in ('data._result', 'data.control', 'data.non_empty_list', 'data.ior', 'adt.data', 'callables._arguments',
                      'functions.composition'):
             reached, pending = set(), [leaf]
             while pending:
@@ -35,6 +35,10 @@ class ModuleLayerTests(unittest.TestCase):
                 self.assertFalse([m for m in reached if
                     m.split('.')[0] in ('algebra', 'effects') or
                     m in ('functions.pipeline', 'data', 'data.result')])
+                if leaf == 'data._result':
+                    self.assertFalse(reached & {'data._attempt', 'data._capture', 'callables._arguments'})
+                if leaf == 'callables._arguments':
+                    self.assertFalse([m for m in reached if m.split('.')[0] == 'data'])
 
 
 if __name__ == '__main__':

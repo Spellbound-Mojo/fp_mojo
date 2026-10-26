@@ -3,24 +3,31 @@
 Select native errors and bind argument conventions before admitting a callback.
 Borrowed slots retain their origins; consumed slots and keyword packs are owned.
 Native run admission inlines to retain closure storage across generic forwards
-at O0 on Mojo 1.2; callers need no annotation. Each _invoke consumes its receiver,
-so partially transferred fields are cleaned
-up exactly once if the native call raises. No allocation or type erasure is added.
+at O0 on Mojo 1.2; callers need no annotation. Storage, consuming transitions
+and invocation belong to callables._arguments. Its _invoke consumes the bundle,
+so native cleanup handles a partially transferred value if the callback raises.
+No allocation or type erasure is added.
 """
-from std.builtin.rebind import rebind, rebind_var, downcast
 from std.collections import StringDict
 from fp.callables.protocols import OnceThunk
 from fp.callables._binding import _BoundThunk
-from fp.callables.native import (_NativeOwnedArg, _call_native_binary, _call_native, _call_native_borrow, _call_native_thunk, _call_native_keywords, _NativeMutatingRef, _NativeMutOwnedRef, _NativeMutatingKeywordsRef, _NativeMutOwnedKeywordsRef)
-from fp.data._result import Result, attempt_once
+from fp.callables.native import _NativeOwnedArg
+from fp.data._result import Result
+from fp.data._attempt import attempt_once
 from fp._internal.errors import _ErrorCompatible
 
 from fp.callables.products import _OptionalCell
 
+from fp.callables._arguments import _ArgumentsZ, _invoke_Z, _ArgumentsK, _invoke_K, _ArgumentsR, _invoke_R, _ArgumentsRK, _invoke_RK, _ArgumentsM, _invoke_M, _ArgumentsMK, _invoke_MK, _ArgumentsO, _invoke_O, _ArgumentsOK, _invoke_OK, _ArgumentsRR, _invoke_RR, _ArgumentsRRK, _invoke_RRK, _ArgumentsRM, _invoke_RM, _ArgumentsRMK, _invoke_RMK, _ArgumentsRO, _invoke_RO, _ArgumentsROK, _invoke_ROK, _ArgumentsMR, _invoke_MR, _ArgumentsMRK, _invoke_MRK, _ArgumentsMM, _invoke_MM, _ArgumentsMMK, _invoke_MMK, _ArgumentsMO, _invoke_MO, _ArgumentsMOK, _invoke_MOK, _ArgumentsOR, _invoke_OR, _ArgumentsORK, _invoke_ORK, _ArgumentsOM, _invoke_OM, _ArgumentsOMK, _invoke_OMK, _ArgumentsOO, _invoke_OO, _ArgumentsOOK, _invoke_OOK
+
 @fieldwise_init
 struct _ArgsZ[E: Movable & Deinitable](Movable):
+    var _arguments: _ArgumentsZ
+    def __init__(out self):
+        self._arguments = _ArgumentsZ()
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsZ[X]()
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_Z[R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -82,28 +89,25 @@ struct _ArgsZ[E: Movable & Deinitable](Movable):
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
     def kwargs[K: Movable & Deinitable, //](deinit self, /, var **values: K) -> _ArgsK[K, Self.E]:
-        return _ArgsK[K, Self.E](values^)
+        return _ArgsK[K, Self.E](self._arguments^.kwargs(**values^))
 
     def borrow[A: Movable & Deinitable, a: ImmOrigin, //](deinit self, ref[a] value: A) -> _ArgsR[A, a, Self.E]:
-        return _ArgsR[A, a, Self.E](Pointer(to=value))
+        return _ArgsR[A, a, Self.E](self._arguments^.borrow(value))
 
     def mutable[A: Movable & Deinitable, a: MutOrigin, //](deinit self, ref[a] value: A) -> _ArgsM[A, a, Self.E]:
-        return _ArgsM[A, a, Self.E](Pointer(to=value))
+        return _ArgsM[A, a, Self.E](self._arguments^.mutable(value))
 
     def take[A: Movable & Deinitable, //](deinit self, var value: A) -> _ArgsO[A, Self.E]:
-        return _ArgsO[A, Self.E](value^)
-
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        return _call_native_thunk[R, Self.E, F, raising](function)
-
-def _invoke_Z[R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsZ[E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
+        return _ArgsO[A, Self.E](self._arguments^.take(value^))
 
 @fieldwise_init
 struct _ArgsK[K: Movable & Deinitable, E: Movable & Deinitable](Movable):
-    var options: StringDict[Self.K]
+    var _arguments: _ArgumentsK[Self.K]
+    def __init__(out self, var options: StringDict[Self.K]):
+        self._arguments = _ArgumentsK[Self.K](options^)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsK[Self.K, X](self.options^)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_K[Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -164,17 +168,14 @@ struct _ArgsK[K: Movable & Deinitable, E: Movable & Deinitable](Movable):
     def run(deinit self, function: def(var **kwargs: Self.K) raises Never thin) -> Result[type_of(None), Never]:
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        return _call_native_keywords[Self.K, R, Self.E, F, raising](function, **self.options^)
-
-def _invoke_K[K: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsK[K, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
-
 @fieldwise_init
 struct _ArgsR[A: Movable & Deinitable, a: ImmOrigin, E: Movable & Deinitable](Movable):
-    var a_value: Pointer[Self.A, Self.a]
+    var _arguments: _ArgumentsR[Self.A, Self.a]
+    def __init__(out self, a_value: Pointer[Self.A, Self.a]):
+        self._arguments = _ArgumentsR[Self.A, Self.a](a_value)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsR[Self.A, Self.a, X](self.a_value)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_R[Self.A, Self.a, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -272,29 +273,25 @@ struct _ArgsR[A: Movable & Deinitable, a: ImmOrigin, E: Movable & Deinitable](Mo
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
     def kwargs[K: Movable & Deinitable, //](deinit self, /, var **values: K) -> _ArgsRK[Self.A, Self.a, K, Self.E]:
-        return _ArgsRK[Self.A, Self.a, K, Self.E](self.a_value, values^)
+        return _ArgsRK[Self.A, Self.a, K, Self.E](self._arguments^.kwargs(**values^))
 
     def borrow[B: Movable & Deinitable, b: ImmOrigin, //](deinit self, ref[b] value: B) -> _ArgsRR[Self.A, B, Self.a, b, Self.E]:
-        return _ArgsRR[Self.A, B, Self.a, b, Self.E](self.a_value, Pointer(to=value))
+        return _ArgsRR[Self.A, B, Self.a, b, Self.E](self._arguments^.borrow(value))
 
     def mutable[B: Movable & Deinitable, b: MutOrigin, //](deinit self, ref[b] value: B) -> _ArgsRM[Self.A, B, Self.a, b, Self.E]:
-        return _ArgsRM[Self.A, B, Self.a, b, Self.E](self.a_value, Pointer(to=value))
+        return _ArgsRM[Self.A, B, Self.a, b, Self.E](self._arguments^.mutable(value))
 
     def take[B: Movable & Deinitable, //](deinit self, var value: B) -> _ArgsRO[Self.A, B, Self.a, Self.E]:
-        return _ArgsRO[Self.A, B, Self.a, Self.E](self.a_value, value^)
-
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        return _call_native_borrow[Self.A, R, Self.E, F, raising](function, self.a_value[])
-
-def _invoke_R[A: Movable & Deinitable, a: ImmOrigin, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsR[A, a, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
+        return _ArgsRO[Self.A, B, Self.a, Self.E](self._arguments^.take(value^))
 
 @fieldwise_init
 struct _ArgsRK[A: Movable & Deinitable, a: ImmOrigin, K: Movable & Deinitable, E: Movable & Deinitable](Movable):
-    var a_value: Pointer[Self.A, Self.a]
-    var options: StringDict[Self.K]
+    var _arguments: _ArgumentsRK[Self.A, Self.a, Self.K]
+    def __init__(out self, a_value: Pointer[Self.A, Self.a], var options: StringDict[Self.K]):
+        self._arguments = _ArgumentsRK[Self.A, Self.a, Self.K](a_value, options^)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsRK[Self.A, Self.a, Self.K, X](self.a_value, self.options^)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RK[Self.A, Self.a, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -391,96 +388,14 @@ struct _ArgsRK[A: Movable & Deinitable, a: ImmOrigin, K: Movable & Deinitable, E
     def run[P: TrivialRegisterPassable, //](deinit self, function: def(P, /, var **kwargs: Self.K) raises Never thin) -> Result[type_of(None), Never] where P == Self.A:
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and R == type_of(None):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Arg0, /, var **kwargs: Self.K) raises Never thin:
-                _ = rebind[def(Arg0, /, var **kwargs: Self.K) raises Never thin](function)(rebind[Arg0](self.a_value[]), **self.options^)
-                return rebind_var[R](None)
-            elif raising and F == def(Arg0, /, var **kwargs: Self.K) raises Self.E thin:
-                _ = rebind[def(Arg0, /, var **kwargs: Self.K) raises Self.E thin](function)(rebind[Arg0](self.a_value[]), **self.options^)
-                return rebind_var[R](None)
-            elif not raising and F == def(Arg0, /, var **kwargs: Self.K) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(Arg0, /, var **kwargs: Self.K) thin](function)(rebind[Arg0](self.a_value[]), **self.options^)
-                return rebind_var[R](None)
-        comptime if not conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Self.A, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, /, var **kwargs: Self.K) raises Never thin -> Out](function)(self.a_value[], **self.options^))
-            elif raising and F == def(Self.A, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(self.a_value[], **self.options^))
-            elif not raising and F == def(Self.A, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Self.A, /, var **kwargs: Self.K) thin -> Out](function)(self.a_value[], **self.options^))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Arg0, /, var **kwargs: Self.K) raises Never thin -> R:
-                return rebind_var[R](rebind[def(Arg0, /, var **kwargs: Self.K) raises Never thin -> R](function)(rebind[Arg0](self.a_value[]), **self.options^))
-            elif raising and F == def(Arg0, /, var **kwargs: Self.K) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(Arg0, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(rebind[Arg0](self.a_value[]), **self.options^))
-            elif not raising and F == def(Arg0, /, var **kwargs: Self.K) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, /, var **kwargs: Self.K) thin -> R](function)(rebind[Arg0](self.a_value[]), **self.options^))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Arg0, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, /, var **kwargs: Self.K) raises Never thin -> Out](function)(rebind[Arg0](self.a_value[]), **self.options^))
-            elif raising and F == def(Arg0, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(rebind[Arg0](self.a_value[]), **self.options^))
-            elif not raising and F == def(Arg0, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, /, var **kwargs: Self.K) thin -> Out](function)(rebind[Arg0](self.a_value[]), **self.options^))
-        comptime if R == type_of(None) and raising and Self.E == Never and F == def(Self.A, /, var **kwargs: Self.K) raises Never thin:
-            _ = rebind[def(Self.A, /, var **kwargs: Self.K) raises Never thin](function)(self.a_value[], **self.options^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and raising and F == def(Self.A, /, var **kwargs: Self.K) raises Self.E thin:
-            _ = rebind[def(Self.A, /, var **kwargs: Self.K) raises Self.E thin](function)(self.a_value[], **self.options^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and not raising and F == def(Self.A, /, var **kwargs: Self.K) thin:
-            comptime assert Self.E == Never
-            _ = rebind[def(Self.A, /, var **kwargs: Self.K) thin](function)(self.a_value[], **self.options^)
-            return rebind_var[R](None)
-        comptime if raising and Self.E == Never and F == def(Self.A, /, var **kwargs: Self.K) raises Never thin -> R:
-            return rebind[def(Self.A, /, var **kwargs: Self.K) raises Never thin -> R](function)(self.a_value[], **self.options^)
-        comptime if raising and F == def(Self.A, /, var **kwargs: Self.K) raises Self.E thin -> R:
-            return rebind[def(Self.A, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(self.a_value[], **self.options^)
-        comptime if not raising and F == def(Self.A, /, var **kwargs: Self.K) thin -> R:
-            comptime assert Self.E == Never
-            return rebind[def(Self.A, /, var **kwargs: Self.K) thin -> R](function)(self.a_value[], **self.options^)
-        comptime if R == type_of(None) and raising and Self.E == Never:
-            comptime Fn = downcast[F, def(Self.A, /, var **kwargs: Self.K) raises Never]
-            _ = rebind[Fn](function)(self.a_value[], **self.options^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and raising:
-            comptime Fn = downcast[F, def(Self.A, /, var **kwargs: Self.K) raises Self.E]
-            _ = rebind[Fn](function)(self.a_value[], **self.options^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and not raising:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(Self.A, /, var **kwargs: Self.K)]
-            _ = rebind[Fn](function)(self.a_value[], **self.options^)
-            return rebind_var[R](None)
-        elif raising and Self.E == Never:
-            comptime Fn = downcast[F, def(Self.A, /, var **kwargs: Self.K) raises Never -> R]
-            return rebind[Fn](function)(self.a_value[], **self.options^)
-        elif raising:
-            comptime Fn = downcast[F, def(Self.A, /, var **kwargs: Self.K) raises Self.E -> R]
-            return rebind[Fn](function)(self.a_value[], **self.options^)
-        elif True:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(Self.A, /, var **kwargs: Self.K) -> R]
-            return rebind[Fn](function)(self.a_value[], **self.options^)
-
-def _invoke_RK[A: Movable & Deinitable, a: ImmOrigin, K: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsRK[A, a, K, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
-
 @fieldwise_init
 struct _ArgsM[A: Movable & Deinitable, a: MutOrigin, E: Movable & Deinitable](Movable):
-    var a_value: Pointer[Self.A, Self.a]
+    var _arguments: _ArgumentsM[Self.A, Self.a]
+    def __init__(out self, a_value: Pointer[Self.A, Self.a]):
+        self._arguments = _ArgumentsM[Self.A, Self.a](a_value)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsM[Self.A, Self.a, X](self.a_value)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_M[Self.A, Self.a, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -542,29 +457,25 @@ struct _ArgsM[A: Movable & Deinitable, a: MutOrigin, E: Movable & Deinitable](Mo
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
     def kwargs[K: Movable & Deinitable, //](deinit self, /, var **values: K) -> _ArgsMK[Self.A, Self.a, K, Self.E]:
-        return _ArgsMK[Self.A, Self.a, K, Self.E](self.a_value, values^)
+        return _ArgsMK[Self.A, Self.a, K, Self.E](self._arguments^.kwargs(**values^))
 
     def borrow[B: Movable & Deinitable, b: ImmOrigin, //](deinit self, ref[b] value: B) -> _ArgsMR[Self.A, B, Self.a, b, Self.E]:
-        return _ArgsMR[Self.A, B, Self.a, b, Self.E](self.a_value, Pointer(to=value))
+        return _ArgsMR[Self.A, B, Self.a, b, Self.E](self._arguments^.borrow(value))
 
     def mutable[B: Movable & Deinitable, b: MutOrigin, //](deinit self, ref[b] value: B) -> _ArgsMM[Self.A, B, Self.a, b, Self.E]:
-        return _ArgsMM[Self.A, B, Self.a, b, Self.E](self.a_value, Pointer(to=value))
+        return _ArgsMM[Self.A, B, Self.a, b, Self.E](self._arguments^.mutable(value))
 
     def take[B: Movable & Deinitable, //](deinit self, var value: B) -> _ArgsMO[Self.A, B, Self.a, Self.E]:
-        return _ArgsMO[Self.A, B, Self.a, Self.E](self.a_value, value^)
-
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        return _NativeMutatingRef[Self.A, R, Self.E, F, raising, origin_of(function)](Pointer(to=function)).invoke(self.a_value[])
-
-def _invoke_M[A: Movable & Deinitable, a: MutOrigin, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsM[A, a, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
+        return _ArgsMO[Self.A, B, Self.a, Self.E](self._arguments^.take(value^))
 
 @fieldwise_init
 struct _ArgsMK[A: Movable & Deinitable, a: MutOrigin, K: Movable & Deinitable, E: Movable & Deinitable](Movable):
-    var a_value: Pointer[Self.A, Self.a]
-    var options: StringDict[Self.K]
+    var _arguments: _ArgumentsMK[Self.A, Self.a, Self.K]
+    def __init__(out self, a_value: Pointer[Self.A, Self.a], var options: StringDict[Self.K]):
+        self._arguments = _ArgumentsMK[Self.A, Self.a, Self.K](a_value, options^)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsMK[Self.A, Self.a, Self.K, X](self.a_value, self.options^)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MK[Self.A, Self.a, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -625,17 +536,14 @@ struct _ArgsMK[A: Movable & Deinitable, a: MutOrigin, K: Movable & Deinitable, E
     def run(deinit self, function: def(mut Self.A, /, var **kwargs: Self.K) raises Never thin) -> Result[type_of(None), Never]:
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        return _NativeMutatingKeywordsRef[Self.A, Self.K, R, Self.E, F, raising, origin_of(function)](Pointer(to=function)).invoke(self.a_value[], **self.options^)
-
-def _invoke_MK[A: Movable & Deinitable, a: MutOrigin, K: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsMK[A, a, K, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
-
 @fieldwise_init
 struct _ArgsO[A: Movable & Deinitable, E: Movable & Deinitable](Movable):
-    var a_value: Self.A
+    var _arguments: _ArgumentsO[Self.A]
+    def __init__(out self, var a_value: Self.A):
+        self._arguments = _ArgumentsO[Self.A](a_value^)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsO[Self.A, X](self.a_value^)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_O[Self.A, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -697,29 +605,25 @@ struct _ArgsO[A: Movable & Deinitable, E: Movable & Deinitable](Movable):
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
     def kwargs[K: Movable & Deinitable, //](deinit self, /, var **values: K) -> _ArgsOK[Self.A, K, Self.E]:
-        return _ArgsOK[Self.A, K, Self.E](self.a_value^, values^)
+        return _ArgsOK[Self.A, K, Self.E](self._arguments^.kwargs(**values^))
 
     def borrow[B: Movable & Deinitable, b: ImmOrigin, //](deinit self, ref[b] value: B) -> _ArgsOR[Self.A, B, b, Self.E]:
-        return _ArgsOR[Self.A, B, b, Self.E](self.a_value^, Pointer(to=value))
+        return _ArgsOR[Self.A, B, b, Self.E](self._arguments^.borrow(value))
 
     def mutable[B: Movable & Deinitable, b: MutOrigin, //](deinit self, ref[b] value: B) -> _ArgsOM[Self.A, B, b, Self.E]:
-        return _ArgsOM[Self.A, B, b, Self.E](self.a_value^, Pointer(to=value))
+        return _ArgsOM[Self.A, B, b, Self.E](self._arguments^.mutable(value))
 
     def take[B: Movable & Deinitable, //](deinit self, var value: B) -> _ArgsOO[Self.A, B, Self.E]:
-        return _ArgsOO[Self.A, B, Self.E](self.a_value^, value^)
-
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        return _call_native[Self.A, R, Self.E, F, raising](function, self.a_value^)
-
-def _invoke_O[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsO[A, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
+        return _ArgsOO[Self.A, B, Self.E](self._arguments^.take(value^))
 
 @fieldwise_init
 struct _ArgsOK[A: Movable & Deinitable, K: Movable & Deinitable, E: Movable & Deinitable](Movable):
-    var a_value: Self.A
-    var options: StringDict[Self.K]
+    var _arguments: _ArgumentsOK[Self.A, Self.K]
+    def __init__(out self, var a_value: Self.A, var options: StringDict[Self.K]):
+        self._arguments = _ArgumentsOK[Self.A, Self.K](a_value^, options^)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsOK[Self.A, Self.K, X](self.a_value^, self.options^)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OK[Self.A, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -780,97 +684,14 @@ struct _ArgsOK[A: Movable & Deinitable, K: Movable & Deinitable, E: Movable & De
     def run(deinit self, function: def(var _NativeOwnedArg[Self.A], /, var **kwargs: Self.K) raises Never thin) -> Result[type_of(None), Never]:
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and R == type_of(None):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, /, var **kwargs: Self.K) raises Never thin:
-                _ = rebind[def(var Arg0, /, var **kwargs: Self.K) raises Never thin](function)(rebind_var[Arg0](self.a_value^), **self.options^)
-                return rebind_var[R](None)
-            elif raising and F == def(var Arg0, /, var **kwargs: Self.K) raises Self.E thin:
-                _ = rebind[def(var Arg0, /, var **kwargs: Self.K) raises Self.E thin](function)(rebind_var[Arg0](self.a_value^), **self.options^)
-                return rebind_var[R](None)
-            elif not raising and F == def(var Arg0, /, var **kwargs: Self.K) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(var Arg0, /, var **kwargs: Self.K) thin](function)(rebind_var[Arg0](self.a_value^), **self.options^)
-                return rebind_var[R](None)
-        comptime if not conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(R, RegisterPassable):
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Self.A, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(var Self.A, /, var **kwargs: Self.K) raises Never thin -> Out](function)(self.a_value^, **self.options^))
-            elif raising and F == def(var Self.A, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(var Self.A, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(self.a_value^, **self.options^))
-            elif not raising and F == def(var Self.A, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Self.A, /, var **kwargs: Self.K) thin -> Out](function)(self.a_value^, **self.options^))
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and not conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, /, var **kwargs: Self.K) raises Never thin -> R:
-                return rebind_var[R](rebind[def(var Arg0, /, var **kwargs: Self.K) raises Never thin -> R](function)(rebind_var[Arg0](self.a_value^), **self.options^))
-            elif raising and F == def(var Arg0, /, var **kwargs: Self.K) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(var Arg0, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(rebind_var[Arg0](self.a_value^), **self.options^))
-            elif not raising and F == def(var Arg0, /, var **kwargs: Self.K) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Arg0, /, var **kwargs: Self.K) thin -> R](function)(rebind_var[Arg0](self.a_value^), **self.options^))
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(var Arg0, /, var **kwargs: Self.K) raises Never thin -> Out](function)(rebind_var[Arg0](self.a_value^), **self.options^))
-            elif raising and F == def(var Arg0, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(var Arg0, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(rebind_var[Arg0](self.a_value^), **self.options^))
-            elif not raising and F == def(var Arg0, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Arg0, /, var **kwargs: Self.K) thin -> Out](function)(rebind_var[Arg0](self.a_value^), **self.options^))
-        comptime if R == type_of(None) and raising and Self.E == Never and F == def(var Self.A, /, var **kwargs: Self.K) raises Never thin:
-            _ = rebind[def(var Self.A, /, var **kwargs: Self.K) raises Never thin](function)(self.a_value^, **self.options^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and raising and F == def(var Self.A, /, var **kwargs: Self.K) raises Self.E thin:
-            _ = rebind[def(var Self.A, /, var **kwargs: Self.K) raises Self.E thin](function)(self.a_value^, **self.options^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and not raising and F == def(var Self.A, /, var **kwargs: Self.K) thin:
-            comptime assert Self.E == Never
-            _ = rebind[def(var Self.A, /, var **kwargs: Self.K) thin](function)(self.a_value^, **self.options^)
-            return rebind_var[R](None)
-        comptime if raising and Self.E == Never and F == def(var Self.A, /, var **kwargs: Self.K) raises Never thin -> R:
-            return rebind[def(var Self.A, /, var **kwargs: Self.K) raises Never thin -> R](function)(self.a_value^, **self.options^)
-        comptime if raising and F == def(var Self.A, /, var **kwargs: Self.K) raises Self.E thin -> R:
-            return rebind[def(var Self.A, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(self.a_value^, **self.options^)
-        comptime if not raising and F == def(var Self.A, /, var **kwargs: Self.K) thin -> R:
-            comptime assert Self.E == Never
-            return rebind[def(var Self.A, /, var **kwargs: Self.K) thin -> R](function)(self.a_value^, **self.options^)
-        comptime if R == type_of(None) and raising and Self.E == Never:
-            comptime Fn = downcast[F, def(var Self.A, /, var **kwargs: Self.K) raises Never]
-            _ = rebind[Fn](function)(self.a_value^, **self.options^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and raising:
-            comptime Fn = downcast[F, def(var Self.A, /, var **kwargs: Self.K) raises Self.E]
-            _ = rebind[Fn](function)(self.a_value^, **self.options^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and not raising:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(var Self.A, /, var **kwargs: Self.K)]
-            _ = rebind[Fn](function)(self.a_value^, **self.options^)
-            return rebind_var[R](None)
-        elif raising and Self.E == Never:
-            comptime Fn = downcast[F, def(var Self.A, /, var **kwargs: Self.K) raises Never -> R]
-            return rebind[Fn](function)(self.a_value^, **self.options^)
-        elif raising:
-            comptime Fn = downcast[F, def(var Self.A, /, var **kwargs: Self.K) raises Self.E -> R]
-            return rebind[Fn](function)(self.a_value^, **self.options^)
-        elif True:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(var Self.A, /, var **kwargs: Self.K) -> R]
-            return rebind[Fn](function)(self.a_value^, **self.options^)
-
-def _invoke_OK[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsOK[A, K, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
-
 @fieldwise_init
 struct _ArgsRR[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, b: ImmOrigin, E: Movable & Deinitable](Movable):
-    var a_value: Pointer[Self.A, Self.a]
-    var b_value: Pointer[Self.B, Self.b]
+    var _arguments: _ArgumentsRR[Self.A, Self.B, Self.a, Self.b]
+    def __init__(out self, a_value: Pointer[Self.A, Self.a], b_value: Pointer[Self.B, Self.b]):
+        self._arguments = _ArgumentsRR[Self.A, Self.B, Self.a, Self.b](a_value, b_value)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsRR[Self.A, Self.B, Self.a, Self.b, X](self.a_value, self.b_value)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RR[Self.A, Self.B, Self.a, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -1040,165 +861,16 @@ struct _ArgsRR[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, b
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
     def kwargs[K: Movable & Deinitable, //](deinit self, /, var **values: K) -> _ArgsRRK[Self.A, Self.B, Self.a, Self.b, K, Self.E]:
-        return _ArgsRRK[Self.A, Self.B, Self.a, Self.b, K, Self.E](self.a_value, self.b_value, values^)
-
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        comptime if not conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, TrivialRegisterPassable) and R == type_of(None):
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Self.A, Arg1) raises Never thin:
-                _ = rebind[def(Self.A, Arg1) raises Never thin](function)(self.a_value[], rebind[Arg1](self.b_value[]))
-                return rebind_var[R](None)
-            elif raising and F == def(Self.A, Arg1) raises Self.E thin:
-                _ = rebind[def(Self.A, Arg1) raises Self.E thin](function)(self.a_value[], rebind[Arg1](self.b_value[]))
-                return rebind_var[R](None)
-            elif not raising and F == def(Self.A, Arg1) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(Self.A, Arg1) thin](function)(self.a_value[], rebind[Arg1](self.b_value[]))
-                return rebind_var[R](None)
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and R == type_of(None):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Arg0, Self.B) raises Never thin:
-                _ = rebind[def(Arg0, Self.B) raises Never thin](function)(rebind[Arg0](self.a_value[]), self.b_value[])
-                return rebind_var[R](None)
-            elif raising and F == def(Arg0, Self.B) raises Self.E thin:
-                _ = rebind[def(Arg0, Self.B) raises Self.E thin](function)(rebind[Arg0](self.a_value[]), self.b_value[])
-                return rebind_var[R](None)
-            elif not raising and F == def(Arg0, Self.B) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(Arg0, Self.B) thin](function)(rebind[Arg0](self.a_value[]), self.b_value[])
-                return rebind_var[R](None)
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, TrivialRegisterPassable) and R == type_of(None):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Arg0, Arg1) raises Never thin:
-                _ = rebind[def(Arg0, Arg1) raises Never thin](function)(rebind[Arg0](self.a_value[]), rebind[Arg1](self.b_value[]))
-                return rebind_var[R](None)
-            elif raising and F == def(Arg0, Arg1) raises Self.E thin:
-                _ = rebind[def(Arg0, Arg1) raises Self.E thin](function)(rebind[Arg0](self.a_value[]), rebind[Arg1](self.b_value[]))
-                return rebind_var[R](None)
-            elif not raising and F == def(Arg0, Arg1) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(Arg0, Arg1) thin](function)(rebind[Arg0](self.a_value[]), rebind[Arg1](self.b_value[]))
-                return rebind_var[R](None)
-        comptime if not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Self.A, Self.B) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, Self.B) raises Never thin -> Out](function)(self.a_value[], self.b_value[]))
-            elif raising and F == def(Self.A, Self.B) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, Self.B) raises Self.E thin -> Out](function)(self.a_value[], self.b_value[]))
-            elif not raising and F == def(Self.A, Self.B) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Self.A, Self.B) thin -> Out](function)(self.a_value[], self.b_value[]))
-        comptime if not conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable):
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Self.A, Arg1) raises Never thin -> R:
-                return rebind_var[R](rebind[def(Self.A, Arg1) raises Never thin -> R](function)(self.a_value[], rebind[Arg1](self.b_value[])))
-            elif raising and F == def(Self.A, Arg1) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(Self.A, Arg1) raises Self.E thin -> R](function)(self.a_value[], rebind[Arg1](self.b_value[])))
-            elif not raising and F == def(Self.A, Arg1) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Self.A, Arg1) thin -> R](function)(self.a_value[], rebind[Arg1](self.b_value[])))
-        comptime if not conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Self.A, Arg1) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, Arg1) raises Never thin -> Out](function)(self.a_value[], rebind[Arg1](self.b_value[])))
-            elif raising and F == def(Self.A, Arg1) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, Arg1) raises Self.E thin -> Out](function)(self.a_value[], rebind[Arg1](self.b_value[])))
-            elif not raising and F == def(Self.A, Arg1) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Self.A, Arg1) thin -> Out](function)(self.a_value[], rebind[Arg1](self.b_value[])))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Arg0, Self.B) raises Never thin -> R:
-                return rebind_var[R](rebind[def(Arg0, Self.B) raises Never thin -> R](function)(rebind[Arg0](self.a_value[]), self.b_value[]))
-            elif raising and F == def(Arg0, Self.B) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(Arg0, Self.B) raises Self.E thin -> R](function)(rebind[Arg0](self.a_value[]), self.b_value[]))
-            elif not raising and F == def(Arg0, Self.B) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, Self.B) thin -> R](function)(rebind[Arg0](self.a_value[]), self.b_value[]))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Arg0, Self.B) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, Self.B) raises Never thin -> Out](function)(rebind[Arg0](self.a_value[]), self.b_value[]))
-            elif raising and F == def(Arg0, Self.B) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, Self.B) raises Self.E thin -> Out](function)(rebind[Arg0](self.a_value[]), self.b_value[]))
-            elif not raising and F == def(Arg0, Self.B) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, Self.B) thin -> Out](function)(rebind[Arg0](self.a_value[]), self.b_value[]))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Arg0, Arg1) raises Never thin -> R:
-                return rebind_var[R](rebind[def(Arg0, Arg1) raises Never thin -> R](function)(rebind[Arg0](self.a_value[]), rebind[Arg1](self.b_value[])))
-            elif raising and F == def(Arg0, Arg1) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(Arg0, Arg1) raises Self.E thin -> R](function)(rebind[Arg0](self.a_value[]), rebind[Arg1](self.b_value[])))
-            elif not raising and F == def(Arg0, Arg1) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, Arg1) thin -> R](function)(rebind[Arg0](self.a_value[]), rebind[Arg1](self.b_value[])))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Arg0, Arg1) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, Arg1) raises Never thin -> Out](function)(rebind[Arg0](self.a_value[]), rebind[Arg1](self.b_value[])))
-            elif raising and F == def(Arg0, Arg1) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, Arg1) raises Self.E thin -> Out](function)(rebind[Arg0](self.a_value[]), rebind[Arg1](self.b_value[])))
-            elif not raising and F == def(Arg0, Arg1) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, Arg1) thin -> Out](function)(rebind[Arg0](self.a_value[]), rebind[Arg1](self.b_value[])))
-        comptime if R == type_of(None) and raising and Self.E == Never and F == def(Self.A, Self.B) raises Never thin:
-            _ = rebind[def(Self.A, Self.B) raises Never thin](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and raising and F == def(Self.A, Self.B) raises Self.E thin:
-            _ = rebind[def(Self.A, Self.B) raises Self.E thin](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and not raising and F == def(Self.A, Self.B) thin:
-            comptime assert Self.E == Never
-            _ = rebind[def(Self.A, Self.B) thin](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        comptime if raising and Self.E == Never and F == def(Self.A, Self.B) raises Never thin -> R:
-            return rebind[def(Self.A, Self.B) raises Never thin -> R](function)(self.a_value[], self.b_value[])
-        comptime if raising and F == def(Self.A, Self.B) raises Self.E thin -> R:
-            return rebind[def(Self.A, Self.B) raises Self.E thin -> R](function)(self.a_value[], self.b_value[])
-        comptime if not raising and F == def(Self.A, Self.B) thin -> R:
-            comptime assert Self.E == Never
-            return rebind[def(Self.A, Self.B) thin -> R](function)(self.a_value[], self.b_value[])
-        comptime if R == type_of(None) and raising and Self.E == Never:
-            comptime Fn = downcast[F, def(Self.A, Self.B) raises Never]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        elif R == type_of(None) and raising:
-            comptime Fn = downcast[F, def(Self.A, Self.B) raises Self.E]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        elif R == type_of(None) and not raising:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(Self.A, Self.B)]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        elif raising and Self.E == Never:
-            comptime Fn = downcast[F, def(Self.A, Self.B) raises Never -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[])
-        elif raising:
-            comptime Fn = downcast[F, def(Self.A, Self.B) raises Self.E -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[])
-        elif True:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(Self.A, Self.B) -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[])
-
-def _invoke_RR[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, b: ImmOrigin, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsRR[A, B, a, b, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
+        return _ArgsRRK[Self.A, Self.B, Self.a, Self.b, K, Self.E](self._arguments^.kwargs(**values^))
 
 @fieldwise_init
 struct _ArgsRRK[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, b: ImmOrigin, K: Movable & Deinitable, E: Movable & Deinitable](Movable):
-    var a_value: Pointer[Self.A, Self.a]
-    var b_value: Pointer[Self.B, Self.b]
-    var options: StringDict[Self.K]
+    var _arguments: _ArgumentsRRK[Self.A, Self.B, Self.a, Self.b, Self.K]
+    def __init__(out self, a_value: Pointer[Self.A, Self.a], b_value: Pointer[Self.B, Self.b], var options: StringDict[Self.K]):
+        self._arguments = _ArgumentsRRK[Self.A, Self.B, Self.a, Self.b, Self.K](a_value, b_value, options^)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsRRK[Self.A, Self.B, Self.a, Self.b, Self.K, X](self.a_value, self.b_value, self.options^)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RRK[Self.A, Self.B, Self.a, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -1367,162 +1039,14 @@ struct _ArgsRRK[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, 
     def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, //](deinit self, function: def(P, Q, /, var **kwargs: Self.K) raises Never thin) -> Result[type_of(None), Never] where P == Self.A and Q == Self.B:
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        comptime if not conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, TrivialRegisterPassable) and R == type_of(None):
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Self.A, Arg1, /, var **kwargs: Self.K) raises Never thin:
-                _ = rebind[def(Self.A, Arg1, /, var **kwargs: Self.K) raises Never thin](function)(self.a_value[], rebind[Arg1](self.b_value[]), **self.options^)
-                return rebind_var[R](None)
-            elif raising and F == def(Self.A, Arg1, /, var **kwargs: Self.K) raises Self.E thin:
-                _ = rebind[def(Self.A, Arg1, /, var **kwargs: Self.K) raises Self.E thin](function)(self.a_value[], rebind[Arg1](self.b_value[]), **self.options^)
-                return rebind_var[R](None)
-            elif not raising and F == def(Self.A, Arg1, /, var **kwargs: Self.K) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(Self.A, Arg1, /, var **kwargs: Self.K) thin](function)(self.a_value[], rebind[Arg1](self.b_value[]), **self.options^)
-                return rebind_var[R](None)
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and R == type_of(None):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Arg0, Self.B, /, var **kwargs: Self.K) raises Never thin:
-                _ = rebind[def(Arg0, Self.B, /, var **kwargs: Self.K) raises Never thin](function)(rebind[Arg0](self.a_value[]), self.b_value[], **self.options^)
-                return rebind_var[R](None)
-            elif raising and F == def(Arg0, Self.B, /, var **kwargs: Self.K) raises Self.E thin:
-                _ = rebind[def(Arg0, Self.B, /, var **kwargs: Self.K) raises Self.E thin](function)(rebind[Arg0](self.a_value[]), self.b_value[], **self.options^)
-                return rebind_var[R](None)
-            elif not raising and F == def(Arg0, Self.B, /, var **kwargs: Self.K) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(Arg0, Self.B, /, var **kwargs: Self.K) thin](function)(rebind[Arg0](self.a_value[]), self.b_value[], **self.options^)
-                return rebind_var[R](None)
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, TrivialRegisterPassable) and R == type_of(None):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Arg0, Arg1, /, var **kwargs: Self.K) raises Never thin:
-                _ = rebind[def(Arg0, Arg1, /, var **kwargs: Self.K) raises Never thin](function)(rebind[Arg0](self.a_value[]), rebind[Arg1](self.b_value[]), **self.options^)
-                return rebind_var[R](None)
-            elif raising and F == def(Arg0, Arg1, /, var **kwargs: Self.K) raises Self.E thin:
-                _ = rebind[def(Arg0, Arg1, /, var **kwargs: Self.K) raises Self.E thin](function)(rebind[Arg0](self.a_value[]), rebind[Arg1](self.b_value[]), **self.options^)
-                return rebind_var[R](None)
-            elif not raising and F == def(Arg0, Arg1, /, var **kwargs: Self.K) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(Arg0, Arg1, /, var **kwargs: Self.K) thin](function)(rebind[Arg0](self.a_value[]), rebind[Arg1](self.b_value[]), **self.options^)
-                return rebind_var[R](None)
-        comptime if not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Self.A, Self.B, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, Self.B, /, var **kwargs: Self.K) raises Never thin -> Out](function)(self.a_value[], self.b_value[], **self.options^))
-            elif raising and F == def(Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(self.a_value[], self.b_value[], **self.options^))
-            elif not raising and F == def(Self.A, Self.B, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Self.A, Self.B, /, var **kwargs: Self.K) thin -> Out](function)(self.a_value[], self.b_value[], **self.options^))
-        comptime if not conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable):
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Self.A, Arg1, /, var **kwargs: Self.K) raises Never thin -> R:
-                return rebind_var[R](rebind[def(Self.A, Arg1, /, var **kwargs: Self.K) raises Never thin -> R](function)(self.a_value[], rebind[Arg1](self.b_value[]), **self.options^))
-            elif raising and F == def(Self.A, Arg1, /, var **kwargs: Self.K) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(Self.A, Arg1, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(self.a_value[], rebind[Arg1](self.b_value[]), **self.options^))
-            elif not raising and F == def(Self.A, Arg1, /, var **kwargs: Self.K) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Self.A, Arg1, /, var **kwargs: Self.K) thin -> R](function)(self.a_value[], rebind[Arg1](self.b_value[]), **self.options^))
-        comptime if not conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Self.A, Arg1, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, Arg1, /, var **kwargs: Self.K) raises Never thin -> Out](function)(self.a_value[], rebind[Arg1](self.b_value[]), **self.options^))
-            elif raising and F == def(Self.A, Arg1, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, Arg1, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(self.a_value[], rebind[Arg1](self.b_value[]), **self.options^))
-            elif not raising and F == def(Self.A, Arg1, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Self.A, Arg1, /, var **kwargs: Self.K) thin -> Out](function)(self.a_value[], rebind[Arg1](self.b_value[]), **self.options^))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Arg0, Self.B, /, var **kwargs: Self.K) raises Never thin -> R:
-                return rebind_var[R](rebind[def(Arg0, Self.B, /, var **kwargs: Self.K) raises Never thin -> R](function)(rebind[Arg0](self.a_value[]), self.b_value[], **self.options^))
-            elif raising and F == def(Arg0, Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(Arg0, Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(rebind[Arg0](self.a_value[]), self.b_value[], **self.options^))
-            elif not raising and F == def(Arg0, Self.B, /, var **kwargs: Self.K) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, Self.B, /, var **kwargs: Self.K) thin -> R](function)(rebind[Arg0](self.a_value[]), self.b_value[], **self.options^))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Arg0, Self.B, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, Self.B, /, var **kwargs: Self.K) raises Never thin -> Out](function)(rebind[Arg0](self.a_value[]), self.b_value[], **self.options^))
-            elif raising and F == def(Arg0, Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(rebind[Arg0](self.a_value[]), self.b_value[], **self.options^))
-            elif not raising and F == def(Arg0, Self.B, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, Self.B, /, var **kwargs: Self.K) thin -> Out](function)(rebind[Arg0](self.a_value[]), self.b_value[], **self.options^))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Arg0, Arg1, /, var **kwargs: Self.K) raises Never thin -> R:
-                return rebind_var[R](rebind[def(Arg0, Arg1, /, var **kwargs: Self.K) raises Never thin -> R](function)(rebind[Arg0](self.a_value[]), rebind[Arg1](self.b_value[]), **self.options^))
-            elif raising and F == def(Arg0, Arg1, /, var **kwargs: Self.K) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(Arg0, Arg1, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(rebind[Arg0](self.a_value[]), rebind[Arg1](self.b_value[]), **self.options^))
-            elif not raising and F == def(Arg0, Arg1, /, var **kwargs: Self.K) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, Arg1, /, var **kwargs: Self.K) thin -> R](function)(rebind[Arg0](self.a_value[]), rebind[Arg1](self.b_value[]), **self.options^))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Arg0, Arg1, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, Arg1, /, var **kwargs: Self.K) raises Never thin -> Out](function)(rebind[Arg0](self.a_value[]), rebind[Arg1](self.b_value[]), **self.options^))
-            elif raising and F == def(Arg0, Arg1, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, Arg1, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(rebind[Arg0](self.a_value[]), rebind[Arg1](self.b_value[]), **self.options^))
-            elif not raising and F == def(Arg0, Arg1, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, Arg1, /, var **kwargs: Self.K) thin -> Out](function)(rebind[Arg0](self.a_value[]), rebind[Arg1](self.b_value[]), **self.options^))
-        comptime if R == type_of(None) and raising and Self.E == Never and F == def(Self.A, Self.B, /, var **kwargs: Self.K) raises Never thin:
-            _ = rebind[def(Self.A, Self.B, /, var **kwargs: Self.K) raises Never thin](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and raising and F == def(Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E thin:
-            _ = rebind[def(Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E thin](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and not raising and F == def(Self.A, Self.B, /, var **kwargs: Self.K) thin:
-            comptime assert Self.E == Never
-            _ = rebind[def(Self.A, Self.B, /, var **kwargs: Self.K) thin](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        comptime if raising and Self.E == Never and F == def(Self.A, Self.B, /, var **kwargs: Self.K) raises Never thin -> R:
-            return rebind[def(Self.A, Self.B, /, var **kwargs: Self.K) raises Never thin -> R](function)(self.a_value[], self.b_value[], **self.options^)
-        comptime if raising and F == def(Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R:
-            return rebind[def(Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(self.a_value[], self.b_value[], **self.options^)
-        comptime if not raising and F == def(Self.A, Self.B, /, var **kwargs: Self.K) thin -> R:
-            comptime assert Self.E == Never
-            return rebind[def(Self.A, Self.B, /, var **kwargs: Self.K) thin -> R](function)(self.a_value[], self.b_value[], **self.options^)
-        comptime if R == type_of(None) and raising and Self.E == Never:
-            comptime Fn = downcast[F, def(Self.A, Self.B, /, var **kwargs: Self.K) raises Never]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and raising:
-            comptime Fn = downcast[F, def(Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and not raising:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(Self.A, Self.B, /, var **kwargs: Self.K)]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        elif raising and Self.E == Never:
-            comptime Fn = downcast[F, def(Self.A, Self.B, /, var **kwargs: Self.K) raises Never -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-        elif raising:
-            comptime Fn = downcast[F, def(Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-        elif True:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(Self.A, Self.B, /, var **kwargs: Self.K) -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-
-def _invoke_RRK[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, b: ImmOrigin, K: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsRRK[A, B, a, b, K, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
-
 @fieldwise_init
 struct _ArgsRM[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, b: MutOrigin, E: Movable & Deinitable](Movable):
-    var a_value: Pointer[Self.A, Self.a]
-    var b_value: Pointer[Self.B, Self.b]
+    var _arguments: _ArgumentsRM[Self.A, Self.B, Self.a, Self.b]
+    def __init__(out self, a_value: Pointer[Self.A, Self.a], b_value: Pointer[Self.B, Self.b]):
+        self._arguments = _ArgumentsRM[Self.A, Self.B, Self.a, Self.b](a_value, b_value)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsRM[Self.A, Self.B, Self.a, Self.b, X](self.a_value, self.b_value)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RM[Self.A, Self.B, Self.a, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -1620,100 +1144,16 @@ struct _ArgsRM[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, b
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
     def kwargs[K: Movable & Deinitable, //](deinit self, /, var **values: K) -> _ArgsRMK[Self.A, Self.B, Self.a, Self.b, K, Self.E]:
-        return _ArgsRMK[Self.A, Self.B, Self.a, Self.b, K, Self.E](self.a_value, self.b_value, values^)
-
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and R == type_of(None):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Arg0, mut Self.B) raises Never thin:
-                _ = rebind[def(Arg0, mut Self.B) raises Never thin](function)(rebind[Arg0](self.a_value[]), self.b_value[])
-                return rebind_var[R](None)
-            elif raising and F == def(Arg0, mut Self.B) raises Self.E thin:
-                _ = rebind[def(Arg0, mut Self.B) raises Self.E thin](function)(rebind[Arg0](self.a_value[]), self.b_value[])
-                return rebind_var[R](None)
-            elif not raising and F == def(Arg0, mut Self.B) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(Arg0, mut Self.B) thin](function)(rebind[Arg0](self.a_value[]), self.b_value[])
-                return rebind_var[R](None)
-        comptime if not conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Self.A, mut Self.B) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, mut Self.B) raises Never thin -> Out](function)(self.a_value[], self.b_value[]))
-            elif raising and F == def(Self.A, mut Self.B) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, mut Self.B) raises Self.E thin -> Out](function)(self.a_value[], self.b_value[]))
-            elif not raising and F == def(Self.A, mut Self.B) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Self.A, mut Self.B) thin -> Out](function)(self.a_value[], self.b_value[]))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Arg0, mut Self.B) raises Never thin -> R:
-                return rebind_var[R](rebind[def(Arg0, mut Self.B) raises Never thin -> R](function)(rebind[Arg0](self.a_value[]), self.b_value[]))
-            elif raising and F == def(Arg0, mut Self.B) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(Arg0, mut Self.B) raises Self.E thin -> R](function)(rebind[Arg0](self.a_value[]), self.b_value[]))
-            elif not raising and F == def(Arg0, mut Self.B) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, mut Self.B) thin -> R](function)(rebind[Arg0](self.a_value[]), self.b_value[]))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Arg0, mut Self.B) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, mut Self.B) raises Never thin -> Out](function)(rebind[Arg0](self.a_value[]), self.b_value[]))
-            elif raising and F == def(Arg0, mut Self.B) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, mut Self.B) raises Self.E thin -> Out](function)(rebind[Arg0](self.a_value[]), self.b_value[]))
-            elif not raising and F == def(Arg0, mut Self.B) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, mut Self.B) thin -> Out](function)(rebind[Arg0](self.a_value[]), self.b_value[]))
-        comptime if R == type_of(None) and raising and Self.E == Never and F == def(Self.A, mut Self.B) raises Never thin:
-            _ = rebind[def(Self.A, mut Self.B) raises Never thin](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and raising and F == def(Self.A, mut Self.B) raises Self.E thin:
-            _ = rebind[def(Self.A, mut Self.B) raises Self.E thin](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and not raising and F == def(Self.A, mut Self.B) thin:
-            comptime assert Self.E == Never
-            _ = rebind[def(Self.A, mut Self.B) thin](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        comptime if raising and Self.E == Never and F == def(Self.A, mut Self.B) raises Never thin -> R:
-            return rebind[def(Self.A, mut Self.B) raises Never thin -> R](function)(self.a_value[], self.b_value[])
-        comptime if raising and F == def(Self.A, mut Self.B) raises Self.E thin -> R:
-            return rebind[def(Self.A, mut Self.B) raises Self.E thin -> R](function)(self.a_value[], self.b_value[])
-        comptime if not raising and F == def(Self.A, mut Self.B) thin -> R:
-            comptime assert Self.E == Never
-            return rebind[def(Self.A, mut Self.B) thin -> R](function)(self.a_value[], self.b_value[])
-        comptime if R == type_of(None) and raising and Self.E == Never:
-            comptime Fn = downcast[F, def(Self.A, mut Self.B) raises Never]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        elif R == type_of(None) and raising:
-            comptime Fn = downcast[F, def(Self.A, mut Self.B) raises Self.E]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        elif R == type_of(None) and not raising:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(Self.A, mut Self.B)]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        elif raising and Self.E == Never:
-            comptime Fn = downcast[F, def(Self.A, mut Self.B) raises Never -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[])
-        elif raising:
-            comptime Fn = downcast[F, def(Self.A, mut Self.B) raises Self.E -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[])
-        elif True:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(Self.A, mut Self.B) -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[])
-
-def _invoke_RM[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, b: MutOrigin, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsRM[A, B, a, b, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
+        return _ArgsRMK[Self.A, Self.B, Self.a, Self.b, K, Self.E](self._arguments^.kwargs(**values^))
 
 @fieldwise_init
 struct _ArgsRMK[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, b: MutOrigin, K: Movable & Deinitable, E: Movable & Deinitable](Movable):
-    var a_value: Pointer[Self.A, Self.a]
-    var b_value: Pointer[Self.B, Self.b]
-    var options: StringDict[Self.K]
+    var _arguments: _ArgumentsRMK[Self.A, Self.B, Self.a, Self.b, Self.K]
+    def __init__(out self, a_value: Pointer[Self.A, Self.a], b_value: Pointer[Self.B, Self.b], var options: StringDict[Self.K]):
+        self._arguments = _ArgumentsRMK[Self.A, Self.B, Self.a, Self.b, Self.K](a_value, b_value, options^)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsRMK[Self.A, Self.B, Self.a, Self.b, Self.K, X](self.a_value, self.b_value, self.options^)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RMK[Self.A, Self.B, Self.a, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -1810,97 +1250,14 @@ struct _ArgsRMK[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, 
     def run[P: TrivialRegisterPassable, //](deinit self, function: def(P, mut Self.B, /, var **kwargs: Self.K) raises Never thin) -> Result[type_of(None), Never] where P == Self.A:
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and R == type_of(None):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Arg0, mut Self.B, /, var **kwargs: Self.K) raises Never thin:
-                _ = rebind[def(Arg0, mut Self.B, /, var **kwargs: Self.K) raises Never thin](function)(rebind[Arg0](self.a_value[]), self.b_value[], **self.options^)
-                return rebind_var[R](None)
-            elif raising and F == def(Arg0, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin:
-                _ = rebind[def(Arg0, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin](function)(rebind[Arg0](self.a_value[]), self.b_value[], **self.options^)
-                return rebind_var[R](None)
-            elif not raising and F == def(Arg0, mut Self.B, /, var **kwargs: Self.K) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(Arg0, mut Self.B, /, var **kwargs: Self.K) thin](function)(rebind[Arg0](self.a_value[]), self.b_value[], **self.options^)
-                return rebind_var[R](None)
-        comptime if not conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never thin -> Out](function)(self.a_value[], self.b_value[], **self.options^))
-            elif raising and F == def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(self.a_value[], self.b_value[], **self.options^))
-            elif not raising and F == def(Self.A, mut Self.B, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Self.A, mut Self.B, /, var **kwargs: Self.K) thin -> Out](function)(self.a_value[], self.b_value[], **self.options^))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Arg0, mut Self.B, /, var **kwargs: Self.K) raises Never thin -> R:
-                return rebind_var[R](rebind[def(Arg0, mut Self.B, /, var **kwargs: Self.K) raises Never thin -> R](function)(rebind[Arg0](self.a_value[]), self.b_value[], **self.options^))
-            elif raising and F == def(Arg0, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(Arg0, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(rebind[Arg0](self.a_value[]), self.b_value[], **self.options^))
-            elif not raising and F == def(Arg0, mut Self.B, /, var **kwargs: Self.K) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, mut Self.B, /, var **kwargs: Self.K) thin -> R](function)(rebind[Arg0](self.a_value[]), self.b_value[], **self.options^))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Arg0, mut Self.B, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, mut Self.B, /, var **kwargs: Self.K) raises Never thin -> Out](function)(rebind[Arg0](self.a_value[]), self.b_value[], **self.options^))
-            elif raising and F == def(Arg0, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(rebind[Arg0](self.a_value[]), self.b_value[], **self.options^))
-            elif not raising and F == def(Arg0, mut Self.B, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, mut Self.B, /, var **kwargs: Self.K) thin -> Out](function)(rebind[Arg0](self.a_value[]), self.b_value[], **self.options^))
-        comptime if R == type_of(None) and raising and Self.E == Never and F == def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never thin:
-            _ = rebind[def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never thin](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and raising and F == def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin:
-            _ = rebind[def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and not raising and F == def(Self.A, mut Self.B, /, var **kwargs: Self.K) thin:
-            comptime assert Self.E == Never
-            _ = rebind[def(Self.A, mut Self.B, /, var **kwargs: Self.K) thin](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        comptime if raising and Self.E == Never and F == def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never thin -> R:
-            return rebind[def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never thin -> R](function)(self.a_value[], self.b_value[], **self.options^)
-        comptime if raising and F == def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R:
-            return rebind[def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(self.a_value[], self.b_value[], **self.options^)
-        comptime if not raising and F == def(Self.A, mut Self.B, /, var **kwargs: Self.K) thin -> R:
-            comptime assert Self.E == Never
-            return rebind[def(Self.A, mut Self.B, /, var **kwargs: Self.K) thin -> R](function)(self.a_value[], self.b_value[], **self.options^)
-        comptime if R == type_of(None) and raising and Self.E == Never:
-            comptime Fn = downcast[F, def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and raising:
-            comptime Fn = downcast[F, def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and not raising:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(Self.A, mut Self.B, /, var **kwargs: Self.K)]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        elif raising and Self.E == Never:
-            comptime Fn = downcast[F, def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-        elif raising:
-            comptime Fn = downcast[F, def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-        elif True:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(Self.A, mut Self.B, /, var **kwargs: Self.K) -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-
-def _invoke_RMK[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, b: MutOrigin, K: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsRMK[A, B, a, b, K, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
-
 @fieldwise_init
 struct _ArgsRO[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, E: Movable & Deinitable](Movable):
-    var a_value: Pointer[Self.A, Self.a]
-    var b_value: Self.B
+    var _arguments: _ArgumentsRO[Self.A, Self.B, Self.a]
+    def __init__(out self, a_value: Pointer[Self.A, Self.a], var b_value: Self.B):
+        self._arguments = _ArgumentsRO[Self.A, Self.B, Self.a](a_value, b_value^)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsRO[Self.A, Self.B, Self.a, X](self.a_value, self.b_value^)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RO[Self.A, Self.B, Self.a, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -1998,165 +1355,16 @@ struct _ArgsRO[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, E
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
     def kwargs[K: Movable & Deinitable, //](deinit self, /, var **values: K) -> _ArgsROK[Self.A, Self.B, Self.a, K, Self.E]:
-        return _ArgsROK[Self.A, Self.B, Self.a, K, Self.E](self.a_value, self.b_value^, values^)
-
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        comptime if not conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, RegisterPassable & Deinitable) and R == type_of(None):
-            comptime Arg1 = downcast[Self.B, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Self.A, var Arg1) raises Never thin:
-                _ = rebind[def(Self.A, var Arg1) raises Never thin](function)(self.a_value[], rebind_var[Arg1](self.b_value^))
-                return rebind_var[R](None)
-            elif raising and F == def(Self.A, var Arg1) raises Self.E thin:
-                _ = rebind[def(Self.A, var Arg1) raises Self.E thin](function)(self.a_value[], rebind_var[Arg1](self.b_value^))
-                return rebind_var[R](None)
-            elif not raising and F == def(Self.A, var Arg1) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(Self.A, var Arg1) thin](function)(self.a_value[], rebind_var[Arg1](self.b_value^))
-                return rebind_var[R](None)
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, RegisterPassable & Deinitable) and R == type_of(None):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Arg0, var Self.B) raises Never thin:
-                _ = rebind[def(Arg0, var Self.B) raises Never thin](function)(rebind[Arg0](self.a_value[]), self.b_value^)
-                return rebind_var[R](None)
-            elif raising and F == def(Arg0, var Self.B) raises Self.E thin:
-                _ = rebind[def(Arg0, var Self.B) raises Self.E thin](function)(rebind[Arg0](self.a_value[]), self.b_value^)
-                return rebind_var[R](None)
-            elif not raising and F == def(Arg0, var Self.B) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(Arg0, var Self.B) thin](function)(rebind[Arg0](self.a_value[]), self.b_value^)
-                return rebind_var[R](None)
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, RegisterPassable & Deinitable) and R == type_of(None):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime Arg1 = downcast[Self.B, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Arg0, var Arg1) raises Never thin:
-                _ = rebind[def(Arg0, var Arg1) raises Never thin](function)(rebind[Arg0](self.a_value[]), rebind_var[Arg1](self.b_value^))
-                return rebind_var[R](None)
-            elif raising and F == def(Arg0, var Arg1) raises Self.E thin:
-                _ = rebind[def(Arg0, var Arg1) raises Self.E thin](function)(rebind[Arg0](self.a_value[]), rebind_var[Arg1](self.b_value^))
-                return rebind_var[R](None)
-            elif not raising and F == def(Arg0, var Arg1) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(Arg0, var Arg1) thin](function)(rebind[Arg0](self.a_value[]), rebind_var[Arg1](self.b_value^))
-                return rebind_var[R](None)
-        comptime if not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, RegisterPassable & Deinitable) and conforms_to(R, RegisterPassable):
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Self.A, var Self.B) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, var Self.B) raises Never thin -> Out](function)(self.a_value[], self.b_value^))
-            elif raising and F == def(Self.A, var Self.B) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, var Self.B) raises Self.E thin -> Out](function)(self.a_value[], self.b_value^))
-            elif not raising and F == def(Self.A, var Self.B) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Self.A, var Self.B) thin -> Out](function)(self.a_value[], self.b_value^))
-        comptime if not conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, RegisterPassable & Deinitable) and not conforms_to(R, RegisterPassable):
-            comptime Arg1 = downcast[Self.B, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Self.A, var Arg1) raises Never thin -> R:
-                return rebind_var[R](rebind[def(Self.A, var Arg1) raises Never thin -> R](function)(self.a_value[], rebind_var[Arg1](self.b_value^)))
-            elif raising and F == def(Self.A, var Arg1) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(Self.A, var Arg1) raises Self.E thin -> R](function)(self.a_value[], rebind_var[Arg1](self.b_value^)))
-            elif not raising and F == def(Self.A, var Arg1) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Self.A, var Arg1) thin -> R](function)(self.a_value[], rebind_var[Arg1](self.b_value^)))
-        comptime if not conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, RegisterPassable & Deinitable) and conforms_to(R, RegisterPassable):
-            comptime Arg1 = downcast[Self.B, RegisterPassable & Deinitable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Self.A, var Arg1) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, var Arg1) raises Never thin -> Out](function)(self.a_value[], rebind_var[Arg1](self.b_value^)))
-            elif raising and F == def(Self.A, var Arg1) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, var Arg1) raises Self.E thin -> Out](function)(self.a_value[], rebind_var[Arg1](self.b_value^)))
-            elif not raising and F == def(Self.A, var Arg1) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Self.A, var Arg1) thin -> Out](function)(self.a_value[], rebind_var[Arg1](self.b_value^)))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, RegisterPassable & Deinitable) and not conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Arg0, var Self.B) raises Never thin -> R:
-                return rebind_var[R](rebind[def(Arg0, var Self.B) raises Never thin -> R](function)(rebind[Arg0](self.a_value[]), self.b_value^))
-            elif raising and F == def(Arg0, var Self.B) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(Arg0, var Self.B) raises Self.E thin -> R](function)(rebind[Arg0](self.a_value[]), self.b_value^))
-            elif not raising and F == def(Arg0, var Self.B) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, var Self.B) thin -> R](function)(rebind[Arg0](self.a_value[]), self.b_value^))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, RegisterPassable & Deinitable) and conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Arg0, var Self.B) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, var Self.B) raises Never thin -> Out](function)(rebind[Arg0](self.a_value[]), self.b_value^))
-            elif raising and F == def(Arg0, var Self.B) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, var Self.B) raises Self.E thin -> Out](function)(rebind[Arg0](self.a_value[]), self.b_value^))
-            elif not raising and F == def(Arg0, var Self.B) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, var Self.B) thin -> Out](function)(rebind[Arg0](self.a_value[]), self.b_value^))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, RegisterPassable & Deinitable) and not conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime Arg1 = downcast[Self.B, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Arg0, var Arg1) raises Never thin -> R:
-                return rebind_var[R](rebind[def(Arg0, var Arg1) raises Never thin -> R](function)(rebind[Arg0](self.a_value[]), rebind_var[Arg1](self.b_value^)))
-            elif raising and F == def(Arg0, var Arg1) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(Arg0, var Arg1) raises Self.E thin -> R](function)(rebind[Arg0](self.a_value[]), rebind_var[Arg1](self.b_value^)))
-            elif not raising and F == def(Arg0, var Arg1) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, var Arg1) thin -> R](function)(rebind[Arg0](self.a_value[]), rebind_var[Arg1](self.b_value^)))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, RegisterPassable & Deinitable) and conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime Arg1 = downcast[Self.B, RegisterPassable & Deinitable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Arg0, var Arg1) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, var Arg1) raises Never thin -> Out](function)(rebind[Arg0](self.a_value[]), rebind_var[Arg1](self.b_value^)))
-            elif raising and F == def(Arg0, var Arg1) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, var Arg1) raises Self.E thin -> Out](function)(rebind[Arg0](self.a_value[]), rebind_var[Arg1](self.b_value^)))
-            elif not raising and F == def(Arg0, var Arg1) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, var Arg1) thin -> Out](function)(rebind[Arg0](self.a_value[]), rebind_var[Arg1](self.b_value^)))
-        comptime if R == type_of(None) and raising and Self.E == Never and F == def(Self.A, var Self.B) raises Never thin:
-            _ = rebind[def(Self.A, var Self.B) raises Never thin](function)(self.a_value[], self.b_value^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and raising and F == def(Self.A, var Self.B) raises Self.E thin:
-            _ = rebind[def(Self.A, var Self.B) raises Self.E thin](function)(self.a_value[], self.b_value^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and not raising and F == def(Self.A, var Self.B) thin:
-            comptime assert Self.E == Never
-            _ = rebind[def(Self.A, var Self.B) thin](function)(self.a_value[], self.b_value^)
-            return rebind_var[R](None)
-        comptime if raising and Self.E == Never and F == def(Self.A, var Self.B) raises Never thin -> R:
-            return rebind[def(Self.A, var Self.B) raises Never thin -> R](function)(self.a_value[], self.b_value^)
-        comptime if raising and F == def(Self.A, var Self.B) raises Self.E thin -> R:
-            return rebind[def(Self.A, var Self.B) raises Self.E thin -> R](function)(self.a_value[], self.b_value^)
-        comptime if not raising and F == def(Self.A, var Self.B) thin -> R:
-            comptime assert Self.E == Never
-            return rebind[def(Self.A, var Self.B) thin -> R](function)(self.a_value[], self.b_value^)
-        comptime if R == type_of(None) and raising and Self.E == Never:
-            comptime Fn = downcast[F, def(Self.A, var Self.B) raises Never]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and raising:
-            comptime Fn = downcast[F, def(Self.A, var Self.B) raises Self.E]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and not raising:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(Self.A, var Self.B)]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value^)
-            return rebind_var[R](None)
-        elif raising and Self.E == Never:
-            comptime Fn = downcast[F, def(Self.A, var Self.B) raises Never -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value^)
-        elif raising:
-            comptime Fn = downcast[F, def(Self.A, var Self.B) raises Self.E -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value^)
-        elif True:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(Self.A, var Self.B) -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value^)
-
-def _invoke_RO[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsRO[A, B, a, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
+        return _ArgsROK[Self.A, Self.B, Self.a, K, Self.E](self._arguments^.kwargs(**values^))
 
 @fieldwise_init
 struct _ArgsROK[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, K: Movable & Deinitable, E: Movable & Deinitable](Movable):
-    var a_value: Pointer[Self.A, Self.a]
-    var b_value: Self.B
-    var options: StringDict[Self.K]
+    var _arguments: _ArgumentsROK[Self.A, Self.B, Self.a, Self.K]
+    def __init__(out self, a_value: Pointer[Self.A, Self.a], var b_value: Self.B, var options: StringDict[Self.K]):
+        self._arguments = _ArgumentsROK[Self.A, Self.B, Self.a, Self.K](a_value, b_value^, options^)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsROK[Self.A, Self.B, Self.a, Self.K, X](self.a_value, self.b_value^, self.options^)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ROK[Self.A, Self.B, Self.a, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -2253,162 +1461,14 @@ struct _ArgsROK[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, 
     def run[P: TrivialRegisterPassable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises Never thin) -> Result[type_of(None), Never] where P == Self.A:
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        comptime if not conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, RegisterPassable & Deinitable) and R == type_of(None):
-            comptime Arg1 = downcast[Self.B, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Self.A, var Arg1, /, var **kwargs: Self.K) raises Never thin:
-                _ = rebind[def(Self.A, var Arg1, /, var **kwargs: Self.K) raises Never thin](function)(self.a_value[], rebind_var[Arg1](self.b_value^), **self.options^)
-                return rebind_var[R](None)
-            elif raising and F == def(Self.A, var Arg1, /, var **kwargs: Self.K) raises Self.E thin:
-                _ = rebind[def(Self.A, var Arg1, /, var **kwargs: Self.K) raises Self.E thin](function)(self.a_value[], rebind_var[Arg1](self.b_value^), **self.options^)
-                return rebind_var[R](None)
-            elif not raising and F == def(Self.A, var Arg1, /, var **kwargs: Self.K) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(Self.A, var Arg1, /, var **kwargs: Self.K) thin](function)(self.a_value[], rebind_var[Arg1](self.b_value^), **self.options^)
-                return rebind_var[R](None)
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, RegisterPassable & Deinitable) and R == type_of(None):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Arg0, var Self.B, /, var **kwargs: Self.K) raises Never thin:
-                _ = rebind[def(Arg0, var Self.B, /, var **kwargs: Self.K) raises Never thin](function)(rebind[Arg0](self.a_value[]), self.b_value^, **self.options^)
-                return rebind_var[R](None)
-            elif raising and F == def(Arg0, var Self.B, /, var **kwargs: Self.K) raises Self.E thin:
-                _ = rebind[def(Arg0, var Self.B, /, var **kwargs: Self.K) raises Self.E thin](function)(rebind[Arg0](self.a_value[]), self.b_value^, **self.options^)
-                return rebind_var[R](None)
-            elif not raising and F == def(Arg0, var Self.B, /, var **kwargs: Self.K) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(Arg0, var Self.B, /, var **kwargs: Self.K) thin](function)(rebind[Arg0](self.a_value[]), self.b_value^, **self.options^)
-                return rebind_var[R](None)
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, RegisterPassable & Deinitable) and R == type_of(None):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime Arg1 = downcast[Self.B, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Arg0, var Arg1, /, var **kwargs: Self.K) raises Never thin:
-                _ = rebind[def(Arg0, var Arg1, /, var **kwargs: Self.K) raises Never thin](function)(rebind[Arg0](self.a_value[]), rebind_var[Arg1](self.b_value^), **self.options^)
-                return rebind_var[R](None)
-            elif raising and F == def(Arg0, var Arg1, /, var **kwargs: Self.K) raises Self.E thin:
-                _ = rebind[def(Arg0, var Arg1, /, var **kwargs: Self.K) raises Self.E thin](function)(rebind[Arg0](self.a_value[]), rebind_var[Arg1](self.b_value^), **self.options^)
-                return rebind_var[R](None)
-            elif not raising and F == def(Arg0, var Arg1, /, var **kwargs: Self.K) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(Arg0, var Arg1, /, var **kwargs: Self.K) thin](function)(rebind[Arg0](self.a_value[]), rebind_var[Arg1](self.b_value^), **self.options^)
-                return rebind_var[R](None)
-        comptime if not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, RegisterPassable & Deinitable) and conforms_to(R, RegisterPassable):
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Self.A, var Self.B, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, var Self.B, /, var **kwargs: Self.K) raises Never thin -> Out](function)(self.a_value[], self.b_value^, **self.options^))
-            elif raising and F == def(Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(self.a_value[], self.b_value^, **self.options^))
-            elif not raising and F == def(Self.A, var Self.B, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Self.A, var Self.B, /, var **kwargs: Self.K) thin -> Out](function)(self.a_value[], self.b_value^, **self.options^))
-        comptime if not conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, RegisterPassable & Deinitable) and not conforms_to(R, RegisterPassable):
-            comptime Arg1 = downcast[Self.B, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Self.A, var Arg1, /, var **kwargs: Self.K) raises Never thin -> R:
-                return rebind_var[R](rebind[def(Self.A, var Arg1, /, var **kwargs: Self.K) raises Never thin -> R](function)(self.a_value[], rebind_var[Arg1](self.b_value^), **self.options^))
-            elif raising and F == def(Self.A, var Arg1, /, var **kwargs: Self.K) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(Self.A, var Arg1, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(self.a_value[], rebind_var[Arg1](self.b_value^), **self.options^))
-            elif not raising and F == def(Self.A, var Arg1, /, var **kwargs: Self.K) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Self.A, var Arg1, /, var **kwargs: Self.K) thin -> R](function)(self.a_value[], rebind_var[Arg1](self.b_value^), **self.options^))
-        comptime if not conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, RegisterPassable & Deinitable) and conforms_to(R, RegisterPassable):
-            comptime Arg1 = downcast[Self.B, RegisterPassable & Deinitable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Self.A, var Arg1, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, var Arg1, /, var **kwargs: Self.K) raises Never thin -> Out](function)(self.a_value[], rebind_var[Arg1](self.b_value^), **self.options^))
-            elif raising and F == def(Self.A, var Arg1, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Self.A, var Arg1, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(self.a_value[], rebind_var[Arg1](self.b_value^), **self.options^))
-            elif not raising and F == def(Self.A, var Arg1, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Self.A, var Arg1, /, var **kwargs: Self.K) thin -> Out](function)(self.a_value[], rebind_var[Arg1](self.b_value^), **self.options^))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, RegisterPassable & Deinitable) and not conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(Arg0, var Self.B, /, var **kwargs: Self.K) raises Never thin -> R:
-                return rebind_var[R](rebind[def(Arg0, var Self.B, /, var **kwargs: Self.K) raises Never thin -> R](function)(rebind[Arg0](self.a_value[]), self.b_value^, **self.options^))
-            elif raising and F == def(Arg0, var Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(Arg0, var Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(rebind[Arg0](self.a_value[]), self.b_value^, **self.options^))
-            elif not raising and F == def(Arg0, var Self.B, /, var **kwargs: Self.K) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, var Self.B, /, var **kwargs: Self.K) thin -> R](function)(rebind[Arg0](self.a_value[]), self.b_value^, **self.options^))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, RegisterPassable & Deinitable) and conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Arg0, var Self.B, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, var Self.B, /, var **kwargs: Self.K) raises Never thin -> Out](function)(rebind[Arg0](self.a_value[]), self.b_value^, **self.options^))
-            elif raising and F == def(Arg0, var Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, var Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(rebind[Arg0](self.a_value[]), self.b_value^, **self.options^))
-            elif not raising and F == def(Arg0, var Self.B, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, var Self.B, /, var **kwargs: Self.K) thin -> Out](function)(rebind[Arg0](self.a_value[]), self.b_value^, **self.options^))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, RegisterPassable & Deinitable) and not conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime Arg1 = downcast[Self.B, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Arg0, var Arg1, /, var **kwargs: Self.K) raises Never thin -> R:
-                return rebind_var[R](rebind[def(Arg0, var Arg1, /, var **kwargs: Self.K) raises Never thin -> R](function)(rebind[Arg0](self.a_value[]), rebind_var[Arg1](self.b_value^), **self.options^))
-            elif raising and F == def(Arg0, var Arg1, /, var **kwargs: Self.K) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(Arg0, var Arg1, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(rebind[Arg0](self.a_value[]), rebind_var[Arg1](self.b_value^), **self.options^))
-            elif not raising and F == def(Arg0, var Arg1, /, var **kwargs: Self.K) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, var Arg1, /, var **kwargs: Self.K) thin -> R](function)(rebind[Arg0](self.a_value[]), rebind_var[Arg1](self.b_value^), **self.options^))
-        comptime if conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.B, RegisterPassable & Deinitable) and conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, TrivialRegisterPassable]
-            comptime Arg1 = downcast[Self.B, RegisterPassable & Deinitable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(Arg0, var Arg1, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, var Arg1, /, var **kwargs: Self.K) raises Never thin -> Out](function)(rebind[Arg0](self.a_value[]), rebind_var[Arg1](self.b_value^), **self.options^))
-            elif raising and F == def(Arg0, var Arg1, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(Arg0, var Arg1, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(rebind[Arg0](self.a_value[]), rebind_var[Arg1](self.b_value^), **self.options^))
-            elif not raising and F == def(Arg0, var Arg1, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(Arg0, var Arg1, /, var **kwargs: Self.K) thin -> Out](function)(rebind[Arg0](self.a_value[]), rebind_var[Arg1](self.b_value^), **self.options^))
-        comptime if R == type_of(None) and raising and Self.E == Never and F == def(Self.A, var Self.B, /, var **kwargs: Self.K) raises Never thin:
-            _ = rebind[def(Self.A, var Self.B, /, var **kwargs: Self.K) raises Never thin](function)(self.a_value[], self.b_value^, **self.options^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and raising and F == def(Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E thin:
-            _ = rebind[def(Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E thin](function)(self.a_value[], self.b_value^, **self.options^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and not raising and F == def(Self.A, var Self.B, /, var **kwargs: Self.K) thin:
-            comptime assert Self.E == Never
-            _ = rebind[def(Self.A, var Self.B, /, var **kwargs: Self.K) thin](function)(self.a_value[], self.b_value^, **self.options^)
-            return rebind_var[R](None)
-        comptime if raising and Self.E == Never and F == def(Self.A, var Self.B, /, var **kwargs: Self.K) raises Never thin -> R:
-            return rebind[def(Self.A, var Self.B, /, var **kwargs: Self.K) raises Never thin -> R](function)(self.a_value[], self.b_value^, **self.options^)
-        comptime if raising and F == def(Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R:
-            return rebind[def(Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(self.a_value[], self.b_value^, **self.options^)
-        comptime if not raising and F == def(Self.A, var Self.B, /, var **kwargs: Self.K) thin -> R:
-            comptime assert Self.E == Never
-            return rebind[def(Self.A, var Self.B, /, var **kwargs: Self.K) thin -> R](function)(self.a_value[], self.b_value^, **self.options^)
-        comptime if R == type_of(None) and raising and Self.E == Never:
-            comptime Fn = downcast[F, def(Self.A, var Self.B, /, var **kwargs: Self.K) raises Never]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value^, **self.options^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and raising:
-            comptime Fn = downcast[F, def(Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value^, **self.options^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and not raising:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(Self.A, var Self.B, /, var **kwargs: Self.K)]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value^, **self.options^)
-            return rebind_var[R](None)
-        elif raising and Self.E == Never:
-            comptime Fn = downcast[F, def(Self.A, var Self.B, /, var **kwargs: Self.K) raises Never -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value^, **self.options^)
-        elif raising:
-            comptime Fn = downcast[F, def(Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value^, **self.options^)
-        elif True:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(Self.A, var Self.B, /, var **kwargs: Self.K) -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value^, **self.options^)
-
-def _invoke_ROK[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, K: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsROK[A, B, a, K, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
-
 @fieldwise_init
 struct _ArgsMR[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, b: ImmOrigin, E: Movable & Deinitable](Movable):
-    var a_value: Pointer[Self.A, Self.a]
-    var b_value: Pointer[Self.B, Self.b]
+    var _arguments: _ArgumentsMR[Self.A, Self.B, Self.a, Self.b]
+    def __init__(out self, a_value: Pointer[Self.A, Self.a], b_value: Pointer[Self.B, Self.b]):
+        self._arguments = _ArgumentsMR[Self.A, Self.B, Self.a, Self.b](a_value, b_value)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsMR[Self.A, Self.B, Self.a, Self.b, X](self.a_value, self.b_value)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MR[Self.A, Self.B, Self.a, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -2506,100 +1566,16 @@ struct _ArgsMR[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, b
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
     def kwargs[K: Movable & Deinitable, //](deinit self, /, var **values: K) -> _ArgsMRK[Self.A, Self.B, Self.a, Self.b, K, Self.E]:
-        return _ArgsMRK[Self.A, Self.B, Self.a, Self.b, K, Self.E](self.a_value, self.b_value, values^)
-
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        comptime if conforms_to(Self.B, TrivialRegisterPassable) and R == type_of(None):
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(mut Self.A, Arg1) raises Never thin:
-                _ = rebind[def(mut Self.A, Arg1) raises Never thin](function)(self.a_value[], rebind[Arg1](self.b_value[]))
-                return rebind_var[R](None)
-            elif raising and F == def(mut Self.A, Arg1) raises Self.E thin:
-                _ = rebind[def(mut Self.A, Arg1) raises Self.E thin](function)(self.a_value[], rebind[Arg1](self.b_value[]))
-                return rebind_var[R](None)
-            elif not raising and F == def(mut Self.A, Arg1) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(mut Self.A, Arg1) thin](function)(self.a_value[], rebind[Arg1](self.b_value[]))
-                return rebind_var[R](None)
-        comptime if not conforms_to(Self.B, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(mut Self.A, Self.B) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(mut Self.A, Self.B) raises Never thin -> Out](function)(self.a_value[], self.b_value[]))
-            elif raising and F == def(mut Self.A, Self.B) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(mut Self.A, Self.B) raises Self.E thin -> Out](function)(self.a_value[], self.b_value[]))
-            elif not raising and F == def(mut Self.A, Self.B) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(mut Self.A, Self.B) thin -> Out](function)(self.a_value[], self.b_value[]))
-        comptime if conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable):
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(mut Self.A, Arg1) raises Never thin -> R:
-                return rebind_var[R](rebind[def(mut Self.A, Arg1) raises Never thin -> R](function)(self.a_value[], rebind[Arg1](self.b_value[])))
-            elif raising and F == def(mut Self.A, Arg1) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(mut Self.A, Arg1) raises Self.E thin -> R](function)(self.a_value[], rebind[Arg1](self.b_value[])))
-            elif not raising and F == def(mut Self.A, Arg1) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(mut Self.A, Arg1) thin -> R](function)(self.a_value[], rebind[Arg1](self.b_value[])))
-        comptime if conforms_to(Self.B, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(mut Self.A, Arg1) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(mut Self.A, Arg1) raises Never thin -> Out](function)(self.a_value[], rebind[Arg1](self.b_value[])))
-            elif raising and F == def(mut Self.A, Arg1) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(mut Self.A, Arg1) raises Self.E thin -> Out](function)(self.a_value[], rebind[Arg1](self.b_value[])))
-            elif not raising and F == def(mut Self.A, Arg1) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(mut Self.A, Arg1) thin -> Out](function)(self.a_value[], rebind[Arg1](self.b_value[])))
-        comptime if R == type_of(None) and raising and Self.E == Never and F == def(mut Self.A, Self.B) raises Never thin:
-            _ = rebind[def(mut Self.A, Self.B) raises Never thin](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and raising and F == def(mut Self.A, Self.B) raises Self.E thin:
-            _ = rebind[def(mut Self.A, Self.B) raises Self.E thin](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and not raising and F == def(mut Self.A, Self.B) thin:
-            comptime assert Self.E == Never
-            _ = rebind[def(mut Self.A, Self.B) thin](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        comptime if raising and Self.E == Never and F == def(mut Self.A, Self.B) raises Never thin -> R:
-            return rebind[def(mut Self.A, Self.B) raises Never thin -> R](function)(self.a_value[], self.b_value[])
-        comptime if raising and F == def(mut Self.A, Self.B) raises Self.E thin -> R:
-            return rebind[def(mut Self.A, Self.B) raises Self.E thin -> R](function)(self.a_value[], self.b_value[])
-        comptime if not raising and F == def(mut Self.A, Self.B) thin -> R:
-            comptime assert Self.E == Never
-            return rebind[def(mut Self.A, Self.B) thin -> R](function)(self.a_value[], self.b_value[])
-        comptime if R == type_of(None) and raising and Self.E == Never:
-            comptime Fn = downcast[F, def(mut Self.A, Self.B) raises Never]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        elif R == type_of(None) and raising:
-            comptime Fn = downcast[F, def(mut Self.A, Self.B) raises Self.E]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        elif R == type_of(None) and not raising:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(mut Self.A, Self.B)]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        elif raising and Self.E == Never:
-            comptime Fn = downcast[F, def(mut Self.A, Self.B) raises Never -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[])
-        elif raising:
-            comptime Fn = downcast[F, def(mut Self.A, Self.B) raises Self.E -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[])
-        elif True:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(mut Self.A, Self.B) -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[])
-
-def _invoke_MR[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, b: ImmOrigin, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsMR[A, B, a, b, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
+        return _ArgsMRK[Self.A, Self.B, Self.a, Self.b, K, Self.E](self._arguments^.kwargs(**values^))
 
 @fieldwise_init
 struct _ArgsMRK[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, b: ImmOrigin, K: Movable & Deinitable, E: Movable & Deinitable](Movable):
-    var a_value: Pointer[Self.A, Self.a]
-    var b_value: Pointer[Self.B, Self.b]
-    var options: StringDict[Self.K]
+    var _arguments: _ArgumentsMRK[Self.A, Self.B, Self.a, Self.b, Self.K]
+    def __init__(out self, a_value: Pointer[Self.A, Self.a], b_value: Pointer[Self.B, Self.b], var options: StringDict[Self.K]):
+        self._arguments = _ArgumentsMRK[Self.A, Self.B, Self.a, Self.b, Self.K](a_value, b_value, options^)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsMRK[Self.A, Self.B, Self.a, Self.b, Self.K, X](self.a_value, self.b_value, self.options^)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MRK[Self.A, Self.B, Self.a, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -2696,97 +1672,14 @@ struct _ArgsMRK[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, 
     def run[Q: TrivialRegisterPassable, //](deinit self, function: def(mut Self.A, Q, /, var **kwargs: Self.K) raises Never thin) -> Result[type_of(None), Never] where Q == Self.B:
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        comptime if conforms_to(Self.B, TrivialRegisterPassable) and R == type_of(None):
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(mut Self.A, Arg1, /, var **kwargs: Self.K) raises Never thin:
-                _ = rebind[def(mut Self.A, Arg1, /, var **kwargs: Self.K) raises Never thin](function)(self.a_value[], rebind[Arg1](self.b_value[]), **self.options^)
-                return rebind_var[R](None)
-            elif raising and F == def(mut Self.A, Arg1, /, var **kwargs: Self.K) raises Self.E thin:
-                _ = rebind[def(mut Self.A, Arg1, /, var **kwargs: Self.K) raises Self.E thin](function)(self.a_value[], rebind[Arg1](self.b_value[]), **self.options^)
-                return rebind_var[R](None)
-            elif not raising and F == def(mut Self.A, Arg1, /, var **kwargs: Self.K) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(mut Self.A, Arg1, /, var **kwargs: Self.K) thin](function)(self.a_value[], rebind[Arg1](self.b_value[]), **self.options^)
-                return rebind_var[R](None)
-        comptime if not conforms_to(Self.B, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises Never thin -> Out](function)(self.a_value[], self.b_value[], **self.options^))
-            elif raising and F == def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(self.a_value[], self.b_value[], **self.options^))
-            elif not raising and F == def(mut Self.A, Self.B, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(mut Self.A, Self.B, /, var **kwargs: Self.K) thin -> Out](function)(self.a_value[], self.b_value[], **self.options^))
-        comptime if conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable):
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(mut Self.A, Arg1, /, var **kwargs: Self.K) raises Never thin -> R:
-                return rebind_var[R](rebind[def(mut Self.A, Arg1, /, var **kwargs: Self.K) raises Never thin -> R](function)(self.a_value[], rebind[Arg1](self.b_value[]), **self.options^))
-            elif raising and F == def(mut Self.A, Arg1, /, var **kwargs: Self.K) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(mut Self.A, Arg1, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(self.a_value[], rebind[Arg1](self.b_value[]), **self.options^))
-            elif not raising and F == def(mut Self.A, Arg1, /, var **kwargs: Self.K) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(mut Self.A, Arg1, /, var **kwargs: Self.K) thin -> R](function)(self.a_value[], rebind[Arg1](self.b_value[]), **self.options^))
-        comptime if conforms_to(Self.B, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(mut Self.A, Arg1, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(mut Self.A, Arg1, /, var **kwargs: Self.K) raises Never thin -> Out](function)(self.a_value[], rebind[Arg1](self.b_value[]), **self.options^))
-            elif raising and F == def(mut Self.A, Arg1, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(mut Self.A, Arg1, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(self.a_value[], rebind[Arg1](self.b_value[]), **self.options^))
-            elif not raising and F == def(mut Self.A, Arg1, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(mut Self.A, Arg1, /, var **kwargs: Self.K) thin -> Out](function)(self.a_value[], rebind[Arg1](self.b_value[]), **self.options^))
-        comptime if R == type_of(None) and raising and Self.E == Never and F == def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises Never thin:
-            _ = rebind[def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises Never thin](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and raising and F == def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E thin:
-            _ = rebind[def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E thin](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and not raising and F == def(mut Self.A, Self.B, /, var **kwargs: Self.K) thin:
-            comptime assert Self.E == Never
-            _ = rebind[def(mut Self.A, Self.B, /, var **kwargs: Self.K) thin](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        comptime if raising and Self.E == Never and F == def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises Never thin -> R:
-            return rebind[def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises Never thin -> R](function)(self.a_value[], self.b_value[], **self.options^)
-        comptime if raising and F == def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R:
-            return rebind[def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(self.a_value[], self.b_value[], **self.options^)
-        comptime if not raising and F == def(mut Self.A, Self.B, /, var **kwargs: Self.K) thin -> R:
-            comptime assert Self.E == Never
-            return rebind[def(mut Self.A, Self.B, /, var **kwargs: Self.K) thin -> R](function)(self.a_value[], self.b_value[], **self.options^)
-        comptime if R == type_of(None) and raising and Self.E == Never:
-            comptime Fn = downcast[F, def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises Never]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and raising:
-            comptime Fn = downcast[F, def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and not raising:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(mut Self.A, Self.B, /, var **kwargs: Self.K)]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        elif raising and Self.E == Never:
-            comptime Fn = downcast[F, def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises Never -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-        elif raising:
-            comptime Fn = downcast[F, def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-        elif True:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(mut Self.A, Self.B, /, var **kwargs: Self.K) -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-
-def _invoke_MRK[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, b: ImmOrigin, K: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsMRK[A, B, a, b, K, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
-
 @fieldwise_init
 struct _ArgsMM[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, b: MutOrigin, E: Movable & Deinitable](Movable):
-    var a_value: Pointer[Self.A, Self.a]
-    var b_value: Pointer[Self.B, Self.b]
+    var _arguments: _ArgumentsMM[Self.A, Self.B, Self.a, Self.b]
+    def __init__(out self, a_value: Pointer[Self.A, Self.a], b_value: Pointer[Self.B, Self.b]):
+        self._arguments = _ArgumentsMM[Self.A, Self.B, Self.a, Self.b](a_value, b_value)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsMM[Self.A, Self.B, Self.a, Self.b, X](self.a_value, self.b_value)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MM[Self.A, Self.B, Self.a, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -2848,69 +1741,16 @@ struct _ArgsMM[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, b
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
     def kwargs[K: Movable & Deinitable, //](deinit self, /, var **values: K) -> _ArgsMMK[Self.A, Self.B, Self.a, Self.b, K, Self.E]:
-        return _ArgsMMK[Self.A, Self.B, Self.a, Self.b, K, Self.E](self.a_value, self.b_value, values^)
-
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        comptime if conforms_to(R, RegisterPassable):
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(mut Self.A, mut Self.B) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(mut Self.A, mut Self.B) raises Never thin -> Out](function)(self.a_value[], self.b_value[]))
-            elif raising and F == def(mut Self.A, mut Self.B) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(mut Self.A, mut Self.B) raises Self.E thin -> Out](function)(self.a_value[], self.b_value[]))
-            elif not raising and F == def(mut Self.A, mut Self.B) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(mut Self.A, mut Self.B) thin -> Out](function)(self.a_value[], self.b_value[]))
-        comptime if R == type_of(None) and raising and Self.E == Never and F == def(mut Self.A, mut Self.B) raises Never thin:
-            _ = rebind[def(mut Self.A, mut Self.B) raises Never thin](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and raising and F == def(mut Self.A, mut Self.B) raises Self.E thin:
-            _ = rebind[def(mut Self.A, mut Self.B) raises Self.E thin](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and not raising and F == def(mut Self.A, mut Self.B) thin:
-            comptime assert Self.E == Never
-            _ = rebind[def(mut Self.A, mut Self.B) thin](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        comptime if raising and Self.E == Never and F == def(mut Self.A, mut Self.B) raises Never thin -> R:
-            return rebind[def(mut Self.A, mut Self.B) raises Never thin -> R](function)(self.a_value[], self.b_value[])
-        comptime if raising and F == def(mut Self.A, mut Self.B) raises Self.E thin -> R:
-            return rebind[def(mut Self.A, mut Self.B) raises Self.E thin -> R](function)(self.a_value[], self.b_value[])
-        comptime if not raising and F == def(mut Self.A, mut Self.B) thin -> R:
-            comptime assert Self.E == Never
-            return rebind[def(mut Self.A, mut Self.B) thin -> R](function)(self.a_value[], self.b_value[])
-        comptime if R == type_of(None) and raising and Self.E == Never:
-            comptime Fn = downcast[F, def(mut Self.A, mut Self.B) raises Never]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        elif R == type_of(None) and raising:
-            comptime Fn = downcast[F, def(mut Self.A, mut Self.B) raises Self.E]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        elif R == type_of(None) and not raising:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(mut Self.A, mut Self.B)]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[])
-            return rebind_var[R](None)
-        elif raising and Self.E == Never:
-            comptime Fn = downcast[F, def(mut Self.A, mut Self.B) raises Never -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[])
-        elif raising:
-            comptime Fn = downcast[F, def(mut Self.A, mut Self.B) raises Self.E -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[])
-        elif True:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(mut Self.A, mut Self.B) -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[])
-
-def _invoke_MM[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, b: MutOrigin, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsMM[A, B, a, b, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
+        return _ArgsMMK[Self.A, Self.B, Self.a, Self.b, K, Self.E](self._arguments^.kwargs(**values^))
 
 @fieldwise_init
 struct _ArgsMMK[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, b: MutOrigin, K: Movable & Deinitable, E: Movable & Deinitable](Movable):
-    var a_value: Pointer[Self.A, Self.a]
-    var b_value: Pointer[Self.B, Self.b]
-    var options: StringDict[Self.K]
+    var _arguments: _ArgumentsMMK[Self.A, Self.B, Self.a, Self.b, Self.K]
+    def __init__(out self, a_value: Pointer[Self.A, Self.a], b_value: Pointer[Self.B, Self.b], var options: StringDict[Self.K]):
+        self._arguments = _ArgumentsMMK[Self.A, Self.B, Self.a, Self.b, Self.K](a_value, b_value, options^)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsMMK[Self.A, Self.B, Self.a, Self.b, Self.K, X](self.a_value, self.b_value, self.options^)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MMK[Self.A, Self.B, Self.a, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -2971,66 +1811,14 @@ struct _ArgsMMK[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, 
     def run(deinit self, function: def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never thin) -> Result[type_of(None), Never]:
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        comptime if conforms_to(R, RegisterPassable):
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never thin -> Out](function)(self.a_value[], self.b_value[], **self.options^))
-            elif raising and F == def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(self.a_value[], self.b_value[], **self.options^))
-            elif not raising and F == def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) thin -> Out](function)(self.a_value[], self.b_value[], **self.options^))
-        comptime if R == type_of(None) and raising and Self.E == Never and F == def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never thin:
-            _ = rebind[def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never thin](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and raising and F == def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin:
-            _ = rebind[def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and not raising and F == def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) thin:
-            comptime assert Self.E == Never
-            _ = rebind[def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) thin](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        comptime if raising and Self.E == Never and F == def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never thin -> R:
-            return rebind[def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never thin -> R](function)(self.a_value[], self.b_value[], **self.options^)
-        comptime if raising and F == def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R:
-            return rebind[def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(self.a_value[], self.b_value[], **self.options^)
-        comptime if not raising and F == def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) thin -> R:
-            comptime assert Self.E == Never
-            return rebind[def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) thin -> R](function)(self.a_value[], self.b_value[], **self.options^)
-        comptime if R == type_of(None) and raising and Self.E == Never:
-            comptime Fn = downcast[F, def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and raising:
-            comptime Fn = downcast[F, def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and not raising:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(mut Self.A, mut Self.B, /, var **kwargs: Self.K)]
-            _ = rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        elif raising and Self.E == Never:
-            comptime Fn = downcast[F, def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-        elif raising:
-            comptime Fn = downcast[F, def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-        elif True:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) -> R]
-            return rebind[Fn](function)(self.a_value[], self.b_value[], **self.options^)
-
-def _invoke_MMK[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, b: MutOrigin, K: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsMMK[A, B, a, b, K, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
-
 @fieldwise_init
 struct _ArgsMO[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, E: Movable & Deinitable](Movable):
-    var a_value: Pointer[Self.A, Self.a]
-    var b_value: Self.B
+    var _arguments: _ArgumentsMO[Self.A, Self.B, Self.a]
+    def __init__(out self, a_value: Pointer[Self.A, Self.a], var b_value: Self.B):
+        self._arguments = _ArgumentsMO[Self.A, Self.B, Self.a](a_value, b_value^)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsMO[Self.A, Self.B, Self.a, X](self.a_value, self.b_value^)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MO[Self.A, Self.B, Self.a, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -3092,21 +1880,16 @@ struct _ArgsMO[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, E
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
     def kwargs[K: Movable & Deinitable, //](deinit self, /, var **values: K) -> _ArgsMOK[Self.A, Self.B, Self.a, K, Self.E]:
-        return _ArgsMOK[Self.A, Self.B, Self.a, K, Self.E](self.a_value, self.b_value^, values^)
-
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        return _NativeMutOwnedRef[Self.A, Self.B, R, Self.E, F, raising, origin_of(function)](Pointer(to=function)).invoke(self.a_value[], self.b_value^)
-
-def _invoke_MO[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsMO[A, B, a, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
+        return _ArgsMOK[Self.A, Self.B, Self.a, K, Self.E](self._arguments^.kwargs(**values^))
 
 @fieldwise_init
 struct _ArgsMOK[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, K: Movable & Deinitable, E: Movable & Deinitable](Movable):
-    var a_value: Pointer[Self.A, Self.a]
-    var b_value: Self.B
-    var options: StringDict[Self.K]
+    var _arguments: _ArgumentsMOK[Self.A, Self.B, Self.a, Self.K]
+    def __init__(out self, a_value: Pointer[Self.A, Self.a], var b_value: Self.B, var options: StringDict[Self.K]):
+        self._arguments = _ArgumentsMOK[Self.A, Self.B, Self.a, Self.K](a_value, b_value^, options^)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsMOK[Self.A, Self.B, Self.a, Self.K, X](self.a_value, self.b_value^, self.options^)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MOK[Self.A, Self.B, Self.a, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -3167,18 +1950,14 @@ struct _ArgsMOK[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, 
     def run(deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises Never thin) -> Result[type_of(None), Never]:
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        return _NativeMutOwnedKeywordsRef[Self.A, Self.B, Self.K, R, Self.E, F, raising, origin_of(function)](Pointer(to=function)).invoke(self.a_value[], self.b_value^, **self.options^)
-
-def _invoke_MOK[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, K: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsMOK[A, B, a, K, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
-
 @fieldwise_init
 struct _ArgsOR[A: Movable & Deinitable, B: Movable & Deinitable, b: ImmOrigin, E: Movable & Deinitable](Movable):
-    var a_value: Self.A
-    var b_value: Pointer[Self.B, Self.b]
+    var _arguments: _ArgumentsOR[Self.A, Self.B, Self.b]
+    def __init__(out self, var a_value: Self.A, b_value: Pointer[Self.B, Self.b]):
+        self._arguments = _ArgumentsOR[Self.A, Self.B, Self.b](a_value^, b_value)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsOR[Self.A, Self.B, Self.b, X](self.a_value^, self.b_value)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OR[Self.A, Self.B, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -3276,165 +2055,16 @@ struct _ArgsOR[A: Movable & Deinitable, B: Movable & Deinitable, b: ImmOrigin, E
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
     def kwargs[K: Movable & Deinitable, //](deinit self, /, var **values: K) -> _ArgsORK[Self.A, Self.B, Self.b, K, Self.E]:
-        return _ArgsORK[Self.A, Self.B, Self.b, K, Self.E](self.a_value^, self.b_value, values^)
-
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        comptime if not conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(Self.B, TrivialRegisterPassable) and R == type_of(None):
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(var Self.A, Arg1) raises Never thin:
-                _ = rebind[def(var Self.A, Arg1) raises Never thin](function)(self.a_value^, rebind[Arg1](self.b_value[]))
-                return rebind_var[R](None)
-            elif raising and F == def(var Self.A, Arg1) raises Self.E thin:
-                _ = rebind[def(var Self.A, Arg1) raises Self.E thin](function)(self.a_value^, rebind[Arg1](self.b_value[]))
-                return rebind_var[R](None)
-            elif not raising and F == def(var Self.A, Arg1) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(var Self.A, Arg1) thin](function)(self.a_value^, rebind[Arg1](self.b_value[]))
-                return rebind_var[R](None)
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and not conforms_to(Self.B, TrivialRegisterPassable) and R == type_of(None):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, Self.B) raises Never thin:
-                _ = rebind[def(var Arg0, Self.B) raises Never thin](function)(rebind_var[Arg0](self.a_value^), self.b_value[])
-                return rebind_var[R](None)
-            elif raising and F == def(var Arg0, Self.B) raises Self.E thin:
-                _ = rebind[def(var Arg0, Self.B) raises Self.E thin](function)(rebind_var[Arg0](self.a_value^), self.b_value[])
-                return rebind_var[R](None)
-            elif not raising and F == def(var Arg0, Self.B) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(var Arg0, Self.B) thin](function)(rebind_var[Arg0](self.a_value^), self.b_value[])
-                return rebind_var[R](None)
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(Self.B, TrivialRegisterPassable) and R == type_of(None):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, Arg1) raises Never thin:
-                _ = rebind[def(var Arg0, Arg1) raises Never thin](function)(rebind_var[Arg0](self.a_value^), rebind[Arg1](self.b_value[]))
-                return rebind_var[R](None)
-            elif raising and F == def(var Arg0, Arg1) raises Self.E thin:
-                _ = rebind[def(var Arg0, Arg1) raises Self.E thin](function)(rebind_var[Arg0](self.a_value^), rebind[Arg1](self.b_value[]))
-                return rebind_var[R](None)
-            elif not raising and F == def(var Arg0, Arg1) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(var Arg0, Arg1) thin](function)(rebind_var[Arg0](self.a_value^), rebind[Arg1](self.b_value[]))
-                return rebind_var[R](None)
-        comptime if not conforms_to(Self.A, RegisterPassable & Deinitable) and not conforms_to(Self.B, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Self.A, Self.B) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(var Self.A, Self.B) raises Never thin -> Out](function)(self.a_value^, self.b_value[]))
-            elif raising and F == def(var Self.A, Self.B) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(var Self.A, Self.B) raises Self.E thin -> Out](function)(self.a_value^, self.b_value[]))
-            elif not raising and F == def(var Self.A, Self.B) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Self.A, Self.B) thin -> Out](function)(self.a_value^, self.b_value[]))
-        comptime if not conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable):
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(var Self.A, Arg1) raises Never thin -> R:
-                return rebind_var[R](rebind[def(var Self.A, Arg1) raises Never thin -> R](function)(self.a_value^, rebind[Arg1](self.b_value[])))
-            elif raising and F == def(var Self.A, Arg1) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(var Self.A, Arg1) raises Self.E thin -> R](function)(self.a_value^, rebind[Arg1](self.b_value[])))
-            elif not raising and F == def(var Self.A, Arg1) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Self.A, Arg1) thin -> R](function)(self.a_value^, rebind[Arg1](self.b_value[])))
-        comptime if not conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(Self.B, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Self.A, Arg1) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(var Self.A, Arg1) raises Never thin -> Out](function)(self.a_value^, rebind[Arg1](self.b_value[])))
-            elif raising and F == def(var Self.A, Arg1) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(var Self.A, Arg1) raises Self.E thin -> Out](function)(self.a_value^, rebind[Arg1](self.b_value[])))
-            elif not raising and F == def(var Self.A, Arg1) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Self.A, Arg1) thin -> Out](function)(self.a_value^, rebind[Arg1](self.b_value[])))
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, Self.B) raises Never thin -> R:
-                return rebind_var[R](rebind[def(var Arg0, Self.B) raises Never thin -> R](function)(rebind_var[Arg0](self.a_value^), self.b_value[]))
-            elif raising and F == def(var Arg0, Self.B) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(var Arg0, Self.B) raises Self.E thin -> R](function)(rebind_var[Arg0](self.a_value^), self.b_value[]))
-            elif not raising and F == def(var Arg0, Self.B) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Arg0, Self.B) thin -> R](function)(rebind_var[Arg0](self.a_value^), self.b_value[]))
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and not conforms_to(Self.B, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, Self.B) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(var Arg0, Self.B) raises Never thin -> Out](function)(rebind_var[Arg0](self.a_value^), self.b_value[]))
-            elif raising and F == def(var Arg0, Self.B) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(var Arg0, Self.B) raises Self.E thin -> Out](function)(rebind_var[Arg0](self.a_value^), self.b_value[]))
-            elif not raising and F == def(var Arg0, Self.B) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Arg0, Self.B) thin -> Out](function)(rebind_var[Arg0](self.a_value^), self.b_value[]))
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, Arg1) raises Never thin -> R:
-                return rebind_var[R](rebind[def(var Arg0, Arg1) raises Never thin -> R](function)(rebind_var[Arg0](self.a_value^), rebind[Arg1](self.b_value[])))
-            elif raising and F == def(var Arg0, Arg1) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(var Arg0, Arg1) raises Self.E thin -> R](function)(rebind_var[Arg0](self.a_value^), rebind[Arg1](self.b_value[])))
-            elif not raising and F == def(var Arg0, Arg1) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Arg0, Arg1) thin -> R](function)(rebind_var[Arg0](self.a_value^), rebind[Arg1](self.b_value[])))
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(Self.B, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, Arg1) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(var Arg0, Arg1) raises Never thin -> Out](function)(rebind_var[Arg0](self.a_value^), rebind[Arg1](self.b_value[])))
-            elif raising and F == def(var Arg0, Arg1) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(var Arg0, Arg1) raises Self.E thin -> Out](function)(rebind_var[Arg0](self.a_value^), rebind[Arg1](self.b_value[])))
-            elif not raising and F == def(var Arg0, Arg1) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Arg0, Arg1) thin -> Out](function)(rebind_var[Arg0](self.a_value^), rebind[Arg1](self.b_value[])))
-        comptime if R == type_of(None) and raising and Self.E == Never and F == def(var Self.A, Self.B) raises Never thin:
-            _ = rebind[def(var Self.A, Self.B) raises Never thin](function)(self.a_value^, self.b_value[])
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and raising and F == def(var Self.A, Self.B) raises Self.E thin:
-            _ = rebind[def(var Self.A, Self.B) raises Self.E thin](function)(self.a_value^, self.b_value[])
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and not raising and F == def(var Self.A, Self.B) thin:
-            comptime assert Self.E == Never
-            _ = rebind[def(var Self.A, Self.B) thin](function)(self.a_value^, self.b_value[])
-            return rebind_var[R](None)
-        comptime if raising and Self.E == Never and F == def(var Self.A, Self.B) raises Never thin -> R:
-            return rebind[def(var Self.A, Self.B) raises Never thin -> R](function)(self.a_value^, self.b_value[])
-        comptime if raising and F == def(var Self.A, Self.B) raises Self.E thin -> R:
-            return rebind[def(var Self.A, Self.B) raises Self.E thin -> R](function)(self.a_value^, self.b_value[])
-        comptime if not raising and F == def(var Self.A, Self.B) thin -> R:
-            comptime assert Self.E == Never
-            return rebind[def(var Self.A, Self.B) thin -> R](function)(self.a_value^, self.b_value[])
-        comptime if R == type_of(None) and raising and Self.E == Never:
-            comptime Fn = downcast[F, def(var Self.A, Self.B) raises Never]
-            _ = rebind[Fn](function)(self.a_value^, self.b_value[])
-            return rebind_var[R](None)
-        elif R == type_of(None) and raising:
-            comptime Fn = downcast[F, def(var Self.A, Self.B) raises Self.E]
-            _ = rebind[Fn](function)(self.a_value^, self.b_value[])
-            return rebind_var[R](None)
-        elif R == type_of(None) and not raising:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(var Self.A, Self.B)]
-            _ = rebind[Fn](function)(self.a_value^, self.b_value[])
-            return rebind_var[R](None)
-        elif raising and Self.E == Never:
-            comptime Fn = downcast[F, def(var Self.A, Self.B) raises Never -> R]
-            return rebind[Fn](function)(self.a_value^, self.b_value[])
-        elif raising:
-            comptime Fn = downcast[F, def(var Self.A, Self.B) raises Self.E -> R]
-            return rebind[Fn](function)(self.a_value^, self.b_value[])
-        elif True:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(var Self.A, Self.B) -> R]
-            return rebind[Fn](function)(self.a_value^, self.b_value[])
-
-def _invoke_OR[A: Movable & Deinitable, B: Movable & Deinitable, b: ImmOrigin, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsOR[A, B, b, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
+        return _ArgsORK[Self.A, Self.B, Self.b, K, Self.E](self._arguments^.kwargs(**values^))
 
 @fieldwise_init
 struct _ArgsORK[A: Movable & Deinitable, B: Movable & Deinitable, b: ImmOrigin, K: Movable & Deinitable, E: Movable & Deinitable](Movable):
-    var a_value: Self.A
-    var b_value: Pointer[Self.B, Self.b]
-    var options: StringDict[Self.K]
+    var _arguments: _ArgumentsORK[Self.A, Self.B, Self.b, Self.K]
+    def __init__(out self, var a_value: Self.A, b_value: Pointer[Self.B, Self.b], var options: StringDict[Self.K]):
+        self._arguments = _ArgumentsORK[Self.A, Self.B, Self.b, Self.K](a_value^, b_value, options^)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsORK[Self.A, Self.B, Self.b, Self.K, X](self.a_value^, self.b_value, self.options^)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ORK[Self.A, Self.B, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -3531,162 +2161,14 @@ struct _ArgsORK[A: Movable & Deinitable, B: Movable & Deinitable, b: ImmOrigin, 
     def run[Q: TrivialRegisterPassable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, /, var **kwargs: Self.K) raises Never thin) -> Result[type_of(None), Never] where Q == Self.B:
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        comptime if not conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(Self.B, TrivialRegisterPassable) and R == type_of(None):
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(var Self.A, Arg1, /, var **kwargs: Self.K) raises Never thin:
-                _ = rebind[def(var Self.A, Arg1, /, var **kwargs: Self.K) raises Never thin](function)(self.a_value^, rebind[Arg1](self.b_value[]), **self.options^)
-                return rebind_var[R](None)
-            elif raising and F == def(var Self.A, Arg1, /, var **kwargs: Self.K) raises Self.E thin:
-                _ = rebind[def(var Self.A, Arg1, /, var **kwargs: Self.K) raises Self.E thin](function)(self.a_value^, rebind[Arg1](self.b_value[]), **self.options^)
-                return rebind_var[R](None)
-            elif not raising and F == def(var Self.A, Arg1, /, var **kwargs: Self.K) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(var Self.A, Arg1, /, var **kwargs: Self.K) thin](function)(self.a_value^, rebind[Arg1](self.b_value[]), **self.options^)
-                return rebind_var[R](None)
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and not conforms_to(Self.B, TrivialRegisterPassable) and R == type_of(None):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, Self.B, /, var **kwargs: Self.K) raises Never thin:
-                _ = rebind[def(var Arg0, Self.B, /, var **kwargs: Self.K) raises Never thin](function)(rebind_var[Arg0](self.a_value^), self.b_value[], **self.options^)
-                return rebind_var[R](None)
-            elif raising and F == def(var Arg0, Self.B, /, var **kwargs: Self.K) raises Self.E thin:
-                _ = rebind[def(var Arg0, Self.B, /, var **kwargs: Self.K) raises Self.E thin](function)(rebind_var[Arg0](self.a_value^), self.b_value[], **self.options^)
-                return rebind_var[R](None)
-            elif not raising and F == def(var Arg0, Self.B, /, var **kwargs: Self.K) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(var Arg0, Self.B, /, var **kwargs: Self.K) thin](function)(rebind_var[Arg0](self.a_value^), self.b_value[], **self.options^)
-                return rebind_var[R](None)
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(Self.B, TrivialRegisterPassable) and R == type_of(None):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, Arg1, /, var **kwargs: Self.K) raises Never thin:
-                _ = rebind[def(var Arg0, Arg1, /, var **kwargs: Self.K) raises Never thin](function)(rebind_var[Arg0](self.a_value^), rebind[Arg1](self.b_value[]), **self.options^)
-                return rebind_var[R](None)
-            elif raising and F == def(var Arg0, Arg1, /, var **kwargs: Self.K) raises Self.E thin:
-                _ = rebind[def(var Arg0, Arg1, /, var **kwargs: Self.K) raises Self.E thin](function)(rebind_var[Arg0](self.a_value^), rebind[Arg1](self.b_value[]), **self.options^)
-                return rebind_var[R](None)
-            elif not raising and F == def(var Arg0, Arg1, /, var **kwargs: Self.K) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(var Arg0, Arg1, /, var **kwargs: Self.K) thin](function)(rebind_var[Arg0](self.a_value^), rebind[Arg1](self.b_value[]), **self.options^)
-                return rebind_var[R](None)
-        comptime if not conforms_to(Self.A, RegisterPassable & Deinitable) and not conforms_to(Self.B, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Self.A, Self.B, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(var Self.A, Self.B, /, var **kwargs: Self.K) raises Never thin -> Out](function)(self.a_value^, self.b_value[], **self.options^))
-            elif raising and F == def(var Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(var Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(self.a_value^, self.b_value[], **self.options^))
-            elif not raising and F == def(var Self.A, Self.B, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Self.A, Self.B, /, var **kwargs: Self.K) thin -> Out](function)(self.a_value^, self.b_value[], **self.options^))
-        comptime if not conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable):
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(var Self.A, Arg1, /, var **kwargs: Self.K) raises Never thin -> R:
-                return rebind_var[R](rebind[def(var Self.A, Arg1, /, var **kwargs: Self.K) raises Never thin -> R](function)(self.a_value^, rebind[Arg1](self.b_value[]), **self.options^))
-            elif raising and F == def(var Self.A, Arg1, /, var **kwargs: Self.K) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(var Self.A, Arg1, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(self.a_value^, rebind[Arg1](self.b_value[]), **self.options^))
-            elif not raising and F == def(var Self.A, Arg1, /, var **kwargs: Self.K) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Self.A, Arg1, /, var **kwargs: Self.K) thin -> R](function)(self.a_value^, rebind[Arg1](self.b_value[]), **self.options^))
-        comptime if not conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(Self.B, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Self.A, Arg1, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(var Self.A, Arg1, /, var **kwargs: Self.K) raises Never thin -> Out](function)(self.a_value^, rebind[Arg1](self.b_value[]), **self.options^))
-            elif raising and F == def(var Self.A, Arg1, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(var Self.A, Arg1, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(self.a_value^, rebind[Arg1](self.b_value[]), **self.options^))
-            elif not raising and F == def(var Self.A, Arg1, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Self.A, Arg1, /, var **kwargs: Self.K) thin -> Out](function)(self.a_value^, rebind[Arg1](self.b_value[]), **self.options^))
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, Self.B, /, var **kwargs: Self.K) raises Never thin -> R:
-                return rebind_var[R](rebind[def(var Arg0, Self.B, /, var **kwargs: Self.K) raises Never thin -> R](function)(rebind_var[Arg0](self.a_value^), self.b_value[], **self.options^))
-            elif raising and F == def(var Arg0, Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(var Arg0, Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(rebind_var[Arg0](self.a_value^), self.b_value[], **self.options^))
-            elif not raising and F == def(var Arg0, Self.B, /, var **kwargs: Self.K) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Arg0, Self.B, /, var **kwargs: Self.K) thin -> R](function)(rebind_var[Arg0](self.a_value^), self.b_value[], **self.options^))
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and not conforms_to(Self.B, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, Self.B, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(var Arg0, Self.B, /, var **kwargs: Self.K) raises Never thin -> Out](function)(rebind_var[Arg0](self.a_value^), self.b_value[], **self.options^))
-            elif raising and F == def(var Arg0, Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(var Arg0, Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(rebind_var[Arg0](self.a_value^), self.b_value[], **self.options^))
-            elif not raising and F == def(var Arg0, Self.B, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Arg0, Self.B, /, var **kwargs: Self.K) thin -> Out](function)(rebind_var[Arg0](self.a_value^), self.b_value[], **self.options^))
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, Arg1, /, var **kwargs: Self.K) raises Never thin -> R:
-                return rebind_var[R](rebind[def(var Arg0, Arg1, /, var **kwargs: Self.K) raises Never thin -> R](function)(rebind_var[Arg0](self.a_value^), rebind[Arg1](self.b_value[]), **self.options^))
-            elif raising and F == def(var Arg0, Arg1, /, var **kwargs: Self.K) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(var Arg0, Arg1, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(rebind_var[Arg0](self.a_value^), rebind[Arg1](self.b_value[]), **self.options^))
-            elif not raising and F == def(var Arg0, Arg1, /, var **kwargs: Self.K) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Arg0, Arg1, /, var **kwargs: Self.K) thin -> R](function)(rebind_var[Arg0](self.a_value^), rebind[Arg1](self.b_value[]), **self.options^))
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(Self.B, TrivialRegisterPassable) and conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime Arg1 = downcast[Self.B, TrivialRegisterPassable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, Arg1, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(var Arg0, Arg1, /, var **kwargs: Self.K) raises Never thin -> Out](function)(rebind_var[Arg0](self.a_value^), rebind[Arg1](self.b_value[]), **self.options^))
-            elif raising and F == def(var Arg0, Arg1, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(var Arg0, Arg1, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(rebind_var[Arg0](self.a_value^), rebind[Arg1](self.b_value[]), **self.options^))
-            elif not raising and F == def(var Arg0, Arg1, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Arg0, Arg1, /, var **kwargs: Self.K) thin -> Out](function)(rebind_var[Arg0](self.a_value^), rebind[Arg1](self.b_value[]), **self.options^))
-        comptime if R == type_of(None) and raising and Self.E == Never and F == def(var Self.A, Self.B, /, var **kwargs: Self.K) raises Never thin:
-            _ = rebind[def(var Self.A, Self.B, /, var **kwargs: Self.K) raises Never thin](function)(self.a_value^, self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and raising and F == def(var Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E thin:
-            _ = rebind[def(var Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E thin](function)(self.a_value^, self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and not raising and F == def(var Self.A, Self.B, /, var **kwargs: Self.K) thin:
-            comptime assert Self.E == Never
-            _ = rebind[def(var Self.A, Self.B, /, var **kwargs: Self.K) thin](function)(self.a_value^, self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        comptime if raising and Self.E == Never and F == def(var Self.A, Self.B, /, var **kwargs: Self.K) raises Never thin -> R:
-            return rebind[def(var Self.A, Self.B, /, var **kwargs: Self.K) raises Never thin -> R](function)(self.a_value^, self.b_value[], **self.options^)
-        comptime if raising and F == def(var Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R:
-            return rebind[def(var Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(self.a_value^, self.b_value[], **self.options^)
-        comptime if not raising and F == def(var Self.A, Self.B, /, var **kwargs: Self.K) thin -> R:
-            comptime assert Self.E == Never
-            return rebind[def(var Self.A, Self.B, /, var **kwargs: Self.K) thin -> R](function)(self.a_value^, self.b_value[], **self.options^)
-        comptime if R == type_of(None) and raising and Self.E == Never:
-            comptime Fn = downcast[F, def(var Self.A, Self.B, /, var **kwargs: Self.K) raises Never]
-            _ = rebind[Fn](function)(self.a_value^, self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and raising:
-            comptime Fn = downcast[F, def(var Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E]
-            _ = rebind[Fn](function)(self.a_value^, self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and not raising:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(var Self.A, Self.B, /, var **kwargs: Self.K)]
-            _ = rebind[Fn](function)(self.a_value^, self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        elif raising and Self.E == Never:
-            comptime Fn = downcast[F, def(var Self.A, Self.B, /, var **kwargs: Self.K) raises Never -> R]
-            return rebind[Fn](function)(self.a_value^, self.b_value[], **self.options^)
-        elif raising:
-            comptime Fn = downcast[F, def(var Self.A, Self.B, /, var **kwargs: Self.K) raises Self.E -> R]
-            return rebind[Fn](function)(self.a_value^, self.b_value[], **self.options^)
-        elif True:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(var Self.A, Self.B, /, var **kwargs: Self.K) -> R]
-            return rebind[Fn](function)(self.a_value^, self.b_value[], **self.options^)
-
-def _invoke_ORK[A: Movable & Deinitable, B: Movable & Deinitable, b: ImmOrigin, K: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsORK[A, B, b, K, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
-
 @fieldwise_init
 struct _ArgsOM[A: Movable & Deinitable, B: Movable & Deinitable, b: MutOrigin, E: Movable & Deinitable](Movable):
-    var a_value: Self.A
-    var b_value: Pointer[Self.B, Self.b]
+    var _arguments: _ArgumentsOM[Self.A, Self.B, Self.b]
+    def __init__(out self, var a_value: Self.A, b_value: Pointer[Self.B, Self.b]):
+        self._arguments = _ArgumentsOM[Self.A, Self.B, Self.b](a_value^, b_value)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsOM[Self.A, Self.B, Self.b, X](self.a_value^, self.b_value)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OM[Self.A, Self.B, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -3748,100 +2230,16 @@ struct _ArgsOM[A: Movable & Deinitable, B: Movable & Deinitable, b: MutOrigin, E
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
     def kwargs[K: Movable & Deinitable, //](deinit self, /, var **values: K) -> _ArgsOMK[Self.A, Self.B, Self.b, K, Self.E]:
-        return _ArgsOMK[Self.A, Self.B, Self.b, K, Self.E](self.a_value^, self.b_value, values^)
-
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and R == type_of(None):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, mut Self.B) raises Never thin:
-                _ = rebind[def(var Arg0, mut Self.B) raises Never thin](function)(rebind_var[Arg0](self.a_value^), self.b_value[])
-                return rebind_var[R](None)
-            elif raising and F == def(var Arg0, mut Self.B) raises Self.E thin:
-                _ = rebind[def(var Arg0, mut Self.B) raises Self.E thin](function)(rebind_var[Arg0](self.a_value^), self.b_value[])
-                return rebind_var[R](None)
-            elif not raising and F == def(var Arg0, mut Self.B) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(var Arg0, mut Self.B) thin](function)(rebind_var[Arg0](self.a_value^), self.b_value[])
-                return rebind_var[R](None)
-        comptime if not conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(R, RegisterPassable):
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Self.A, mut Self.B) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(var Self.A, mut Self.B) raises Never thin -> Out](function)(self.a_value^, self.b_value[]))
-            elif raising and F == def(var Self.A, mut Self.B) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(var Self.A, mut Self.B) raises Self.E thin -> Out](function)(self.a_value^, self.b_value[]))
-            elif not raising and F == def(var Self.A, mut Self.B) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Self.A, mut Self.B) thin -> Out](function)(self.a_value^, self.b_value[]))
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and not conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, mut Self.B) raises Never thin -> R:
-                return rebind_var[R](rebind[def(var Arg0, mut Self.B) raises Never thin -> R](function)(rebind_var[Arg0](self.a_value^), self.b_value[]))
-            elif raising and F == def(var Arg0, mut Self.B) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(var Arg0, mut Self.B) raises Self.E thin -> R](function)(rebind_var[Arg0](self.a_value^), self.b_value[]))
-            elif not raising and F == def(var Arg0, mut Self.B) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Arg0, mut Self.B) thin -> R](function)(rebind_var[Arg0](self.a_value^), self.b_value[]))
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, mut Self.B) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(var Arg0, mut Self.B) raises Never thin -> Out](function)(rebind_var[Arg0](self.a_value^), self.b_value[]))
-            elif raising and F == def(var Arg0, mut Self.B) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(var Arg0, mut Self.B) raises Self.E thin -> Out](function)(rebind_var[Arg0](self.a_value^), self.b_value[]))
-            elif not raising and F == def(var Arg0, mut Self.B) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Arg0, mut Self.B) thin -> Out](function)(rebind_var[Arg0](self.a_value^), self.b_value[]))
-        comptime if R == type_of(None) and raising and Self.E == Never and F == def(var Self.A, mut Self.B) raises Never thin:
-            _ = rebind[def(var Self.A, mut Self.B) raises Never thin](function)(self.a_value^, self.b_value[])
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and raising and F == def(var Self.A, mut Self.B) raises Self.E thin:
-            _ = rebind[def(var Self.A, mut Self.B) raises Self.E thin](function)(self.a_value^, self.b_value[])
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and not raising and F == def(var Self.A, mut Self.B) thin:
-            comptime assert Self.E == Never
-            _ = rebind[def(var Self.A, mut Self.B) thin](function)(self.a_value^, self.b_value[])
-            return rebind_var[R](None)
-        comptime if raising and Self.E == Never and F == def(var Self.A, mut Self.B) raises Never thin -> R:
-            return rebind[def(var Self.A, mut Self.B) raises Never thin -> R](function)(self.a_value^, self.b_value[])
-        comptime if raising and F == def(var Self.A, mut Self.B) raises Self.E thin -> R:
-            return rebind[def(var Self.A, mut Self.B) raises Self.E thin -> R](function)(self.a_value^, self.b_value[])
-        comptime if not raising and F == def(var Self.A, mut Self.B) thin -> R:
-            comptime assert Self.E == Never
-            return rebind[def(var Self.A, mut Self.B) thin -> R](function)(self.a_value^, self.b_value[])
-        comptime if R == type_of(None) and raising and Self.E == Never:
-            comptime Fn = downcast[F, def(var Self.A, mut Self.B) raises Never]
-            _ = rebind[Fn](function)(self.a_value^, self.b_value[])
-            return rebind_var[R](None)
-        elif R == type_of(None) and raising:
-            comptime Fn = downcast[F, def(var Self.A, mut Self.B) raises Self.E]
-            _ = rebind[Fn](function)(self.a_value^, self.b_value[])
-            return rebind_var[R](None)
-        elif R == type_of(None) and not raising:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(var Self.A, mut Self.B)]
-            _ = rebind[Fn](function)(self.a_value^, self.b_value[])
-            return rebind_var[R](None)
-        elif raising and Self.E == Never:
-            comptime Fn = downcast[F, def(var Self.A, mut Self.B) raises Never -> R]
-            return rebind[Fn](function)(self.a_value^, self.b_value[])
-        elif raising:
-            comptime Fn = downcast[F, def(var Self.A, mut Self.B) raises Self.E -> R]
-            return rebind[Fn](function)(self.a_value^, self.b_value[])
-        elif True:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(var Self.A, mut Self.B) -> R]
-            return rebind[Fn](function)(self.a_value^, self.b_value[])
-
-def _invoke_OM[A: Movable & Deinitable, B: Movable & Deinitable, b: MutOrigin, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsOM[A, B, b, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
+        return _ArgsOMK[Self.A, Self.B, Self.b, K, Self.E](self._arguments^.kwargs(**values^))
 
 @fieldwise_init
 struct _ArgsOMK[A: Movable & Deinitable, B: Movable & Deinitable, b: MutOrigin, K: Movable & Deinitable, E: Movable & Deinitable](Movable):
-    var a_value: Self.A
-    var b_value: Pointer[Self.B, Self.b]
-    var options: StringDict[Self.K]
+    var _arguments: _ArgumentsOMK[Self.A, Self.B, Self.b, Self.K]
+    def __init__(out self, var a_value: Self.A, b_value: Pointer[Self.B, Self.b], var options: StringDict[Self.K]):
+        self._arguments = _ArgumentsOMK[Self.A, Self.B, Self.b, Self.K](a_value^, b_value, options^)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsOMK[Self.A, Self.B, Self.b, Self.K, X](self.a_value^, self.b_value, self.options^)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OMK[Self.A, Self.B, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -3902,97 +2300,14 @@ struct _ArgsOMK[A: Movable & Deinitable, B: Movable & Deinitable, b: MutOrigin, 
     def run(deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, /, var **kwargs: Self.K) raises Never thin) -> Result[type_of(None), Never]:
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and R == type_of(None):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, mut Self.B, /, var **kwargs: Self.K) raises Never thin:
-                _ = rebind[def(var Arg0, mut Self.B, /, var **kwargs: Self.K) raises Never thin](function)(rebind_var[Arg0](self.a_value^), self.b_value[], **self.options^)
-                return rebind_var[R](None)
-            elif raising and F == def(var Arg0, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin:
-                _ = rebind[def(var Arg0, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin](function)(rebind_var[Arg0](self.a_value^), self.b_value[], **self.options^)
-                return rebind_var[R](None)
-            elif not raising and F == def(var Arg0, mut Self.B, /, var **kwargs: Self.K) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(var Arg0, mut Self.B, /, var **kwargs: Self.K) thin](function)(rebind_var[Arg0](self.a_value^), self.b_value[], **self.options^)
-                return rebind_var[R](None)
-        comptime if not conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(R, RegisterPassable):
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(var Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never thin -> Out](function)(self.a_value^, self.b_value[], **self.options^))
-            elif raising and F == def(var Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(var Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(self.a_value^, self.b_value[], **self.options^))
-            elif not raising and F == def(var Self.A, mut Self.B, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Self.A, mut Self.B, /, var **kwargs: Self.K) thin -> Out](function)(self.a_value^, self.b_value[], **self.options^))
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and not conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, mut Self.B, /, var **kwargs: Self.K) raises Never thin -> R:
-                return rebind_var[R](rebind[def(var Arg0, mut Self.B, /, var **kwargs: Self.K) raises Never thin -> R](function)(rebind_var[Arg0](self.a_value^), self.b_value[], **self.options^))
-            elif raising and F == def(var Arg0, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(var Arg0, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(rebind_var[Arg0](self.a_value^), self.b_value[], **self.options^))
-            elif not raising and F == def(var Arg0, mut Self.B, /, var **kwargs: Self.K) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Arg0, mut Self.B, /, var **kwargs: Self.K) thin -> R](function)(rebind_var[Arg0](self.a_value^), self.b_value[], **self.options^))
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, mut Self.B, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(var Arg0, mut Self.B, /, var **kwargs: Self.K) raises Never thin -> Out](function)(rebind_var[Arg0](self.a_value^), self.b_value[], **self.options^))
-            elif raising and F == def(var Arg0, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(var Arg0, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(rebind_var[Arg0](self.a_value^), self.b_value[], **self.options^))
-            elif not raising and F == def(var Arg0, mut Self.B, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Arg0, mut Self.B, /, var **kwargs: Self.K) thin -> Out](function)(rebind_var[Arg0](self.a_value^), self.b_value[], **self.options^))
-        comptime if R == type_of(None) and raising and Self.E == Never and F == def(var Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never thin:
-            _ = rebind[def(var Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never thin](function)(self.a_value^, self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and raising and F == def(var Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin:
-            _ = rebind[def(var Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin](function)(self.a_value^, self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and not raising and F == def(var Self.A, mut Self.B, /, var **kwargs: Self.K) thin:
-            comptime assert Self.E == Never
-            _ = rebind[def(var Self.A, mut Self.B, /, var **kwargs: Self.K) thin](function)(self.a_value^, self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        comptime if raising and Self.E == Never and F == def(var Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never thin -> R:
-            return rebind[def(var Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never thin -> R](function)(self.a_value^, self.b_value[], **self.options^)
-        comptime if raising and F == def(var Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R:
-            return rebind[def(var Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(self.a_value^, self.b_value[], **self.options^)
-        comptime if not raising and F == def(var Self.A, mut Self.B, /, var **kwargs: Self.K) thin -> R:
-            comptime assert Self.E == Never
-            return rebind[def(var Self.A, mut Self.B, /, var **kwargs: Self.K) thin -> R](function)(self.a_value^, self.b_value[], **self.options^)
-        comptime if R == type_of(None) and raising and Self.E == Never:
-            comptime Fn = downcast[F, def(var Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never]
-            _ = rebind[Fn](function)(self.a_value^, self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and raising:
-            comptime Fn = downcast[F, def(var Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E]
-            _ = rebind[Fn](function)(self.a_value^, self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and not raising:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(var Self.A, mut Self.B, /, var **kwargs: Self.K)]
-            _ = rebind[Fn](function)(self.a_value^, self.b_value[], **self.options^)
-            return rebind_var[R](None)
-        elif raising and Self.E == Never:
-            comptime Fn = downcast[F, def(var Self.A, mut Self.B, /, var **kwargs: Self.K) raises Never -> R]
-            return rebind[Fn](function)(self.a_value^, self.b_value[], **self.options^)
-        elif raising:
-            comptime Fn = downcast[F, def(var Self.A, mut Self.B, /, var **kwargs: Self.K) raises Self.E -> R]
-            return rebind[Fn](function)(self.a_value^, self.b_value[], **self.options^)
-        elif True:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(var Self.A, mut Self.B, /, var **kwargs: Self.K) -> R]
-            return rebind[Fn](function)(self.a_value^, self.b_value[], **self.options^)
-
-def _invoke_OMK[A: Movable & Deinitable, B: Movable & Deinitable, b: MutOrigin, K: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsOMK[A, B, b, K, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
-
 @fieldwise_init
 struct _ArgsOO[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable](Movable):
-    var a_value: Self.A
-    var b_value: Self.B
+    var _arguments: _ArgumentsOO[Self.A, Self.B]
+    def __init__(out self, var a_value: Self.A, var b_value: Self.B):
+        self._arguments = _ArgumentsOO[Self.A, Self.B](a_value^, b_value^)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsOO[Self.A, Self.B, X](self.a_value^, self.b_value^)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OO[Self.A, Self.B, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -4054,21 +2369,16 @@ struct _ArgsOO[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & De
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
     def kwargs[K: Movable & Deinitable, //](deinit self, /, var **values: K) -> _ArgsOOK[Self.A, Self.B, K, Self.E]:
-        return _ArgsOOK[Self.A, Self.B, K, Self.E](self.a_value^, self.b_value^, values^)
-
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        return _call_native_binary[Self.A, Self.B, R, Self.E, F, raising](function, self.a_value^, self.b_value^)
-
-def _invoke_OO[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsOO[A, B, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
+        return _ArgsOOK[Self.A, Self.B, K, Self.E](self._arguments^.kwargs(**values^))
 
 @fieldwise_init
 struct _ArgsOOK[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, E: Movable & Deinitable](Movable):
-    var a_value: Self.A
-    var b_value: Self.B
-    var options: StringDict[Self.K]
+    var _arguments: _ArgumentsOOK[Self.A, Self.B, Self.K]
+    def __init__(out self, var a_value: Self.A, var b_value: Self.B, var options: StringDict[Self.K]):
+        self._arguments = _ArgumentsOOK[Self.A, Self.B, Self.K](a_value^, b_value^, options^)
+
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
-        var arguments = _ArgsOOK[Self.A, Self.B, Self.K, X](self.a_value^, self.b_value^, self.options^)
+        var arguments = self._arguments^
         return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOK[Self.A, Self.B, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
@@ -4128,156 +2438,6 @@ struct _ArgsOOK[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & D
 
     def run(deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises Never thin) -> Result[type_of(None), Never]:
         return self^._run[type_of(None), Never, type_of(function), True](function)
-
-    def _invoke[R: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises Self.E -> R:
-        comptime if not conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(Self.B, RegisterPassable & Deinitable) and R == type_of(None):
-            comptime Arg1 = downcast[Self.B, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Self.A, var Arg1, /, var **kwargs: Self.K) raises Never thin:
-                _ = rebind[def(var Self.A, var Arg1, /, var **kwargs: Self.K) raises Never thin](function)(self.a_value^, rebind_var[Arg1](self.b_value^), **self.options^)
-                return rebind_var[R](None)
-            elif raising and F == def(var Self.A, var Arg1, /, var **kwargs: Self.K) raises Self.E thin:
-                _ = rebind[def(var Self.A, var Arg1, /, var **kwargs: Self.K) raises Self.E thin](function)(self.a_value^, rebind_var[Arg1](self.b_value^), **self.options^)
-                return rebind_var[R](None)
-            elif not raising and F == def(var Self.A, var Arg1, /, var **kwargs: Self.K) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(var Self.A, var Arg1, /, var **kwargs: Self.K) thin](function)(self.a_value^, rebind_var[Arg1](self.b_value^), **self.options^)
-                return rebind_var[R](None)
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and not conforms_to(Self.B, RegisterPassable & Deinitable) and R == type_of(None):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, var Self.B, /, var **kwargs: Self.K) raises Never thin:
-                _ = rebind[def(var Arg0, var Self.B, /, var **kwargs: Self.K) raises Never thin](function)(rebind_var[Arg0](self.a_value^), self.b_value^, **self.options^)
-                return rebind_var[R](None)
-            elif raising and F == def(var Arg0, var Self.B, /, var **kwargs: Self.K) raises Self.E thin:
-                _ = rebind[def(var Arg0, var Self.B, /, var **kwargs: Self.K) raises Self.E thin](function)(rebind_var[Arg0](self.a_value^), self.b_value^, **self.options^)
-                return rebind_var[R](None)
-            elif not raising and F == def(var Arg0, var Self.B, /, var **kwargs: Self.K) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(var Arg0, var Self.B, /, var **kwargs: Self.K) thin](function)(rebind_var[Arg0](self.a_value^), self.b_value^, **self.options^)
-                return rebind_var[R](None)
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(Self.B, RegisterPassable & Deinitable) and R == type_of(None):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime Arg1 = downcast[Self.B, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, var Arg1, /, var **kwargs: Self.K) raises Never thin:
-                _ = rebind[def(var Arg0, var Arg1, /, var **kwargs: Self.K) raises Never thin](function)(rebind_var[Arg0](self.a_value^), rebind_var[Arg1](self.b_value^), **self.options^)
-                return rebind_var[R](None)
-            elif raising and F == def(var Arg0, var Arg1, /, var **kwargs: Self.K) raises Self.E thin:
-                _ = rebind[def(var Arg0, var Arg1, /, var **kwargs: Self.K) raises Self.E thin](function)(rebind_var[Arg0](self.a_value^), rebind_var[Arg1](self.b_value^), **self.options^)
-                return rebind_var[R](None)
-            elif not raising and F == def(var Arg0, var Arg1, /, var **kwargs: Self.K) thin:
-                comptime assert Self.E == Never
-                _ = rebind[def(var Arg0, var Arg1, /, var **kwargs: Self.K) thin](function)(rebind_var[Arg0](self.a_value^), rebind_var[Arg1](self.b_value^), **self.options^)
-                return rebind_var[R](None)
-        comptime if not conforms_to(Self.A, RegisterPassable & Deinitable) and not conforms_to(Self.B, RegisterPassable & Deinitable) and conforms_to(R, RegisterPassable):
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Self.A, var Self.B, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(var Self.A, var Self.B, /, var **kwargs: Self.K) raises Never thin -> Out](function)(self.a_value^, self.b_value^, **self.options^))
-            elif raising and F == def(var Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(var Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(self.a_value^, self.b_value^, **self.options^))
-            elif not raising and F == def(var Self.A, var Self.B, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Self.A, var Self.B, /, var **kwargs: Self.K) thin -> Out](function)(self.a_value^, self.b_value^, **self.options^))
-        comptime if not conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(Self.B, RegisterPassable & Deinitable) and not conforms_to(R, RegisterPassable):
-            comptime Arg1 = downcast[Self.B, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Self.A, var Arg1, /, var **kwargs: Self.K) raises Never thin -> R:
-                return rebind_var[R](rebind[def(var Self.A, var Arg1, /, var **kwargs: Self.K) raises Never thin -> R](function)(self.a_value^, rebind_var[Arg1](self.b_value^), **self.options^))
-            elif raising and F == def(var Self.A, var Arg1, /, var **kwargs: Self.K) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(var Self.A, var Arg1, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(self.a_value^, rebind_var[Arg1](self.b_value^), **self.options^))
-            elif not raising and F == def(var Self.A, var Arg1, /, var **kwargs: Self.K) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Self.A, var Arg1, /, var **kwargs: Self.K) thin -> R](function)(self.a_value^, rebind_var[Arg1](self.b_value^), **self.options^))
-        comptime if not conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(Self.B, RegisterPassable & Deinitable) and conforms_to(R, RegisterPassable):
-            comptime Arg1 = downcast[Self.B, RegisterPassable & Deinitable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Self.A, var Arg1, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(var Self.A, var Arg1, /, var **kwargs: Self.K) raises Never thin -> Out](function)(self.a_value^, rebind_var[Arg1](self.b_value^), **self.options^))
-            elif raising and F == def(var Self.A, var Arg1, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(var Self.A, var Arg1, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(self.a_value^, rebind_var[Arg1](self.b_value^), **self.options^))
-            elif not raising and F == def(var Self.A, var Arg1, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Self.A, var Arg1, /, var **kwargs: Self.K) thin -> Out](function)(self.a_value^, rebind_var[Arg1](self.b_value^), **self.options^))
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and not conforms_to(Self.B, RegisterPassable & Deinitable) and not conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, var Self.B, /, var **kwargs: Self.K) raises Never thin -> R:
-                return rebind_var[R](rebind[def(var Arg0, var Self.B, /, var **kwargs: Self.K) raises Never thin -> R](function)(rebind_var[Arg0](self.a_value^), self.b_value^, **self.options^))
-            elif raising and F == def(var Arg0, var Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(var Arg0, var Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(rebind_var[Arg0](self.a_value^), self.b_value^, **self.options^))
-            elif not raising and F == def(var Arg0, var Self.B, /, var **kwargs: Self.K) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Arg0, var Self.B, /, var **kwargs: Self.K) thin -> R](function)(rebind_var[Arg0](self.a_value^), self.b_value^, **self.options^))
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and not conforms_to(Self.B, RegisterPassable & Deinitable) and conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, var Self.B, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(var Arg0, var Self.B, /, var **kwargs: Self.K) raises Never thin -> Out](function)(rebind_var[Arg0](self.a_value^), self.b_value^, **self.options^))
-            elif raising and F == def(var Arg0, var Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(var Arg0, var Self.B, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(rebind_var[Arg0](self.a_value^), self.b_value^, **self.options^))
-            elif not raising and F == def(var Arg0, var Self.B, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Arg0, var Self.B, /, var **kwargs: Self.K) thin -> Out](function)(rebind_var[Arg0](self.a_value^), self.b_value^, **self.options^))
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(Self.B, RegisterPassable & Deinitable) and not conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime Arg1 = downcast[Self.B, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, var Arg1, /, var **kwargs: Self.K) raises Never thin -> R:
-                return rebind_var[R](rebind[def(var Arg0, var Arg1, /, var **kwargs: Self.K) raises Never thin -> R](function)(rebind_var[Arg0](self.a_value^), rebind_var[Arg1](self.b_value^), **self.options^))
-            elif raising and F == def(var Arg0, var Arg1, /, var **kwargs: Self.K) raises Self.E thin -> R:
-                return rebind_var[R](rebind[def(var Arg0, var Arg1, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(rebind_var[Arg0](self.a_value^), rebind_var[Arg1](self.b_value^), **self.options^))
-            elif not raising and F == def(var Arg0, var Arg1, /, var **kwargs: Self.K) thin -> R:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Arg0, var Arg1, /, var **kwargs: Self.K) thin -> R](function)(rebind_var[Arg0](self.a_value^), rebind_var[Arg1](self.b_value^), **self.options^))
-        comptime if conforms_to(Self.A, RegisterPassable & Deinitable) and conforms_to(Self.B, RegisterPassable & Deinitable) and conforms_to(R, RegisterPassable):
-            comptime Arg0 = downcast[Self.A, RegisterPassable & Deinitable]
-            comptime Arg1 = downcast[Self.B, RegisterPassable & Deinitable]
-            comptime Out = downcast[R, RegisterPassable & Deinitable]
-            comptime if raising and Self.E == Never and F == def(var Arg0, var Arg1, /, var **kwargs: Self.K) raises Never thin -> Out:
-                return rebind_var[R](rebind[def(var Arg0, var Arg1, /, var **kwargs: Self.K) raises Never thin -> Out](function)(rebind_var[Arg0](self.a_value^), rebind_var[Arg1](self.b_value^), **self.options^))
-            elif raising and F == def(var Arg0, var Arg1, /, var **kwargs: Self.K) raises Self.E thin -> Out:
-                return rebind_var[R](rebind[def(var Arg0, var Arg1, /, var **kwargs: Self.K) raises Self.E thin -> Out](function)(rebind_var[Arg0](self.a_value^), rebind_var[Arg1](self.b_value^), **self.options^))
-            elif not raising and F == def(var Arg0, var Arg1, /, var **kwargs: Self.K) thin -> Out:
-                comptime assert Self.E == Never
-                return rebind_var[R](rebind[def(var Arg0, var Arg1, /, var **kwargs: Self.K) thin -> Out](function)(rebind_var[Arg0](self.a_value^), rebind_var[Arg1](self.b_value^), **self.options^))
-        comptime if R == type_of(None) and raising and Self.E == Never and F == def(var Self.A, var Self.B, /, var **kwargs: Self.K) raises Never thin:
-            _ = rebind[def(var Self.A, var Self.B, /, var **kwargs: Self.K) raises Never thin](function)(self.a_value^, self.b_value^, **self.options^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and raising and F == def(var Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E thin:
-            _ = rebind[def(var Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E thin](function)(self.a_value^, self.b_value^, **self.options^)
-            return rebind_var[R](None)
-        comptime if R == type_of(None) and not raising and F == def(var Self.A, var Self.B, /, var **kwargs: Self.K) thin:
-            comptime assert Self.E == Never
-            _ = rebind[def(var Self.A, var Self.B, /, var **kwargs: Self.K) thin](function)(self.a_value^, self.b_value^, **self.options^)
-            return rebind_var[R](None)
-        comptime if raising and Self.E == Never and F == def(var Self.A, var Self.B, /, var **kwargs: Self.K) raises Never thin -> R:
-            return rebind[def(var Self.A, var Self.B, /, var **kwargs: Self.K) raises Never thin -> R](function)(self.a_value^, self.b_value^, **self.options^)
-        comptime if raising and F == def(var Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R:
-            return rebind[def(var Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E thin -> R](function)(self.a_value^, self.b_value^, **self.options^)
-        comptime if not raising and F == def(var Self.A, var Self.B, /, var **kwargs: Self.K) thin -> R:
-            comptime assert Self.E == Never
-            return rebind[def(var Self.A, var Self.B, /, var **kwargs: Self.K) thin -> R](function)(self.a_value^, self.b_value^, **self.options^)
-        comptime if R == type_of(None) and raising and Self.E == Never:
-            comptime Fn = downcast[F, def(var Self.A, var Self.B, /, var **kwargs: Self.K) raises Never]
-            _ = rebind[Fn](function)(self.a_value^, self.b_value^, **self.options^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and raising:
-            comptime Fn = downcast[F, def(var Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E]
-            _ = rebind[Fn](function)(self.a_value^, self.b_value^, **self.options^)
-            return rebind_var[R](None)
-        elif R == type_of(None) and not raising:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(var Self.A, var Self.B, /, var **kwargs: Self.K)]
-            _ = rebind[Fn](function)(self.a_value^, self.b_value^, **self.options^)
-            return rebind_var[R](None)
-        elif raising and Self.E == Never:
-            comptime Fn = downcast[F, def(var Self.A, var Self.B, /, var **kwargs: Self.K) raises Never -> R]
-            return rebind[Fn](function)(self.a_value^, self.b_value^, **self.options^)
-        elif raising:
-            comptime Fn = downcast[F, def(var Self.A, var Self.B, /, var **kwargs: Self.K) raises Self.E -> R]
-            return rebind[Fn](function)(self.a_value^, self.b_value^, **self.options^)
-        elif True:
-            comptime assert Self.E == Never
-            comptime Fn = downcast[F, def(var Self.A, var Self.B, /, var **kwargs: Self.K) -> R]
-            return rebind[Fn](function)(self.a_value^, self.b_value^, **self.options^)
-
-def _invoke_OOK[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgsOOK[A, B, K, E]) raises E -> R:
-    return arguments^._invoke[R, F, raising](function)
 
 @fieldwise_init
 struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
@@ -4544,7 +2704,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
         Returns:
             A consumed-once bundle owning the keyword dictionary.
         """
-        return _ArgsK[K, Self.E](values^)
+        return _ArgsK[K, Self.E](_ArgumentsZ().kwargs(**values^))
 
     @staticmethod
     def borrow[A: Movable & Deinitable, a: ImmOrigin, //](ref[a] value: A) -> _ArgsR[A, a, Self.E]:
@@ -4560,7 +2720,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
         Returns:
             A consumed-once bundle borrowing the original value and origin.
         """
-        return _ArgsR[A, a, Self.E](Pointer(to=value))
+        return _ArgsR[A, a, Self.E](_ArgumentsZ().borrow(value))
 
     @staticmethod
     def mutable[A: Movable & Deinitable, a: MutOrigin, //](ref[a] value: A) -> _ArgsM[A, a, Self.E]:
@@ -4576,7 +2736,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
         Returns:
             A consumed-once bundle retaining exclusive access to the original value.
         """
-        return _ArgsM[A, a, Self.E](Pointer(to=value))
+        return _ArgsM[A, a, Self.E](_ArgumentsZ().mutable(value))
 
     @staticmethod
     def take[A: Movable & Deinitable, //](var value: A) -> _ArgsO[A, Self.E]:
@@ -4591,7 +2751,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
         Returns:
             A consumed-once bundle owning the argument.
         """
-        return _ArgsO[A, Self.E](value^)
+        return _ArgsO[A, Self.E](_ArgumentsZ().take(value^))
 
     @always_inline
     def run[F: OnceThunk](self, var function: F) -> Result[F.Out, F.Error]:

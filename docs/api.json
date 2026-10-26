@@ -28763,7 +28763,7 @@
      "summary": "Call the borrowed convention adapter once and capture its exact outcome."
     }
    ],
-   "provider": "data/_result",
+   "provider": "data/_attempt",
    "summary": ""
   },
   "data.attempt_kwargs": {
@@ -31163,7 +31163,7 @@
      "summary": "Call the borrowed mixed adapter once with a native keyword pack."
     }
    ],
-   "provider": "data/_result",
+   "provider": "data/_attempt",
    "summary": ""
   },
   "data.attempt_once": {
@@ -31201,7 +31201,7 @@
      "summary": "Consume a `OnceThunk`, call it once and capture its outcome."
     }
    ],
-   "provider": "data/_result",
+   "provider": "data/_attempt",
    "summary": ""
   },
   "data.collect_results": {
@@ -31370,7 +31370,7 @@
      "summary": "Borrow a raising native callback, retaining its exact error type."
     }
    ],
-   "provider": "data/_result",
+   "provider": "data/_attempt",
    "summary": ""
   },
   "data.mut_owned": {
@@ -31501,7 +31501,7 @@
      "summary": "Borrow a raising native callback, retaining its exact error type."
     }
    ],
-   "provider": "data/_result",
+   "provider": "data/_attempt",
    "summary": ""
   },
   "data.mut_owned_kwargs": {
@@ -31646,7 +31646,7 @@
      "summary": "Borrow a raising native callback, retaining its exact error type."
     }
    ],
-   "provider": "data/_result",
+   "provider": "data/_attempt",
    "summary": ""
   },
   "data.mutating": {
@@ -31763,7 +31763,7 @@
      "summary": "Borrow a raising native callback, retaining its exact error type."
     }
    ],
-   "provider": "data/_result",
+   "provider": "data/_attempt",
    "summary": ""
   },
   "data.raise_on_err": {

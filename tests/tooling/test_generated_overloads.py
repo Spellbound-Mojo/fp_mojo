@@ -22,6 +22,7 @@ class GeneratedOverloadTests(unittest.TestCase):
 
     def test_capture_signatures_match_the_generator(self):
         self.assertEqual(capture.OUTPUT.read_text(), capture.source())
+        self.assertEqual(capture.ARGUMENT_OUTPUT.read_text(), capture.arguments_source())
 
     def test_native_invocation_matches_the_generator(self):
         self.assertEqual(native.OUTPUT.read_text(), native.source())

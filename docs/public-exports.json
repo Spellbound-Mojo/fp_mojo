@@ -14183,6 +14183,16 @@
       ],
       "provider": "effects/capabilities"
     },
+    "data.raise_on_err": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def raise_on_err[T: Movable & Deinitable, E: Movable & Deinitable]( var result: Result[T, E] ) raises E -> T:",
+          "sha256": "0c0a9910d625ee3a60a59df52afb7011f5fe440650b8ec410931411270c7dcef"
+        }
+      ],
+      "provider": "data/_result"
+    },
     "data.attempt": {
       "kind": "function",
       "overloads": [
@@ -14303,7 +14313,7 @@
           "sha256": "7dd18fa28cb12a701a5386fd223a04a75c9bf3d3efa8cf880ee4c35a187f59f2"
         }
       ],
-      "provider": "data/_result"
+      "provider": "data/_attempt"
     },
     "data.attempt_kwargs": {
       "kind": "function",
@@ -14417,17 +14427,7 @@
           "sha256": "65174a838b64115042a1a6592bdd5f15e3905555fe0b1ae868418896fda52e3f"
         }
       ],
-      "provider": "data/_result"
-    },
-    "data.raise_on_err": {
-      "kind": "function",
-      "overloads": [
-        {
-          "signature": "def raise_on_err[T: Movable & Deinitable, E: Movable & Deinitable]( var result: Result[T, E] ) raises E -> T:",
-          "sha256": "0c0a9910d625ee3a60a59df52afb7011f5fe440650b8ec410931411270c7dcef"
-        }
-      ],
-      "provider": "data/_result"
+      "provider": "data/_attempt"
     },
     "data.attempt_once": {
       "kind": "function",
@@ -14437,7 +14437,7 @@
           "sha256": "394cf270db202b929522b286226f5c6fe45d796b725f03ad18022194c69f8dde"
         }
       ],
-      "provider": "data/_result"
+      "provider": "data/_attempt"
     },
     "data.mutating": {
       "kind": "function",
@@ -14451,7 +14451,7 @@
           "sha256": "5742259576d85c3c670664cbd5c718fe6e248e4966f87a8e0146d95ab1954cd7"
         }
       ],
-      "provider": "data/_result"
+      "provider": "data/_attempt"
     },
     "data.consuming": {
       "kind": "function",
@@ -14465,7 +14465,7 @@
           "sha256": "f825f30f66579c8e7a12a7d79ad33575d0aef26f78e7d5cb6ee3e69f1e9cff91"
         }
       ],
-      "provider": "data/_result"
+      "provider": "data/_attempt"
     },
     "data.mut_owned": {
       "kind": "function",
@@ -14479,7 +14479,7 @@
           "sha256": "e2b813d81f7877ec61b8b1213f16d1fe54adc03a6848937d9db4388b90bab2af"
         }
       ],
-      "provider": "data/_result"
+      "provider": "data/_attempt"
     },
     "data.mut_owned_kwargs": {
       "kind": "function",
@@ -14493,7 +14493,7 @@
           "sha256": "cd0bfbb6c70f80b646cf25862bb6cae707892e71bcc3625e025596288a7a7b3c"
         }
       ],
-      "provider": "data/_result"
+      "provider": "data/_attempt"
     },
     "data.collect_results": {
       "kind": "function",

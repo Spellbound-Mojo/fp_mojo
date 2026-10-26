@@ -21,6 +21,10 @@ from ._result import (
     Err,
     Ok,
     Result,
+    raise_on_err,
+)
+
+from ._attempt import (
     attempt,
     attempt_kwargs,
     attempt_once,
@@ -28,7 +32,6 @@ from ._result import (
     consuming,
     mut_owned,
     mut_owned_kwargs,
-    raise_on_err,
 )
 
 from .result import collect_results

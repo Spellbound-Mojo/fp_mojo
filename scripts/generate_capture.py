@@ -18,6 +18,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "src/fp/data/_capture.mojo"
+ARGUMENT_OUTPUT = ROOT / "src/fp/callables/_arguments.mojo"
 MD = "Movable & Deinitable"
 MODES = {
     "r": ("borrow", "ImmOrigin"),
@@ -57,6 +58,25 @@ def typename(shape, kw=False, prefix="", error=None):
     return "_Args" + tag(shape, kw) + "[" + ", ".join(ps) + "]"
 
 
+def storage_type(shape, kw=False, prefix=""):
+    ps = names(shape, kw, False, prefix)
+    return "_Arguments" + tag(shape, kw) + ("[" + ", ".join(ps) + "]" if ps else "")
+
+
+def storage(shape, kw):
+    ps = params(shape, kw, False)
+    declaration = (
+        "_Arguments" + tag(shape, kw) + ("[" + ", ".join(ps) + "]" if ps else "")
+    )
+    out = [f"@fieldwise_init\nstruct {declaration}(Movable):\n"]
+    for name, typ in fields(shape, kw):
+        for x in names(shape, kw, False):
+            typ = re.sub(r"\b" + x + r"\b", "Self." + x, typ)
+        out += [f"    var {name}: {typ}\n"]
+    out += [transitions(shape, kw, stored=True)]
+    return "".join(out)
+
+
 def fields(shape, kw=False):
     out = []
     for c, m in zip("AB", shape):
@@ -88,7 +108,7 @@ def native(shape, kw):
         f"F: {MD}",
         "raising: Bool",
     ]
-    shape_type = typename(shape, kw, error="E")
+    shape_type = storage_type(shape, kw)
     header = f'def _invoke_{nm}[{", ".join(ps)}](function: F, var arguments: {shape_type}) raises E -> R:\n'
     known = {
         (
@@ -141,22 +161,71 @@ def native(shape, kw):
     )
 
 
+def transitions(shape, kw, *, stored):
+    if kw:
+        return ""
+    out = []
+    type_name = storage_type if stored else typename
+    target = type_name(shape, True, "Self.").replace("Self.K", "K")
+    if stored:
+        values = [
+            "self." + n + ("^" if not t.startswith("Pointer") else "")
+            for n, t in fields(shape)
+        ] + ["values^"]
+        construct = f"{target}({', '.join(values)})"
+    else:
+        construct = f"{target}(self._arguments^.kwargs(**values^))"
+    out += [
+        f"    def kwargs[K: {MD}, //](deinit self, /, var **values: K) -> {target}:\n        return {construct}\n\n"
+    ]
+    if len(shape) < 2:
+        c = "AB"[len(shape)]
+        for m, (name, origin) in MODES.items():
+            ps = (
+                [f"{c}: {MD}"] + ([f"{c.lower()}: {origin}"] if origin else []) + ["//"]
+            )
+            target = (
+                type_name(shape + (m,), False, "Self.")
+                .replace("Self." + c, c)
+                .replace("Self." + c.lower(), c.lower())
+            )
+            if stored:
+                values = [
+                    "self." + n + ("^" if not t.startswith("Pointer") else "")
+                    for n, t in fields(shape)
+                ]
+                values += ["Pointer(to=value)" if origin else "value^"]
+                construct = f"{target}({', '.join(values)})"
+            else:
+                construct = f"{target}(self._arguments^.{name}(value{'^' if not origin else ''}))"
+            convention = "ref[" + c.lower() + "]" if origin else "var"
+            out += [
+                f"    def {name}[{', '.join(ps)}](deinit self, {convention} value: {c}) -> {target}:\n        return {construct}\n\n"
+            ]
+    return "".join(out)
+
+
 def builder(shape, kw):
     out = [
         f'@fieldwise_init\nstruct _Args{tag(shape,kw)}[{", ".join(params(shape,kw))}](Movable):\n'
     ]
-    for name, t in fields(shape, kw):
-        for x in names(shape, kw):
-
-            t = re.sub(r"\b" + x + r"\b", "Self." + x, t)
-        out += [f"    var {name}: {t}\n"]
+    stored = storage_type(shape, kw, "Self.")
+    out += [f"    var _arguments: {stored}\n"]
+    inputs, values = [], []
+    for name, typ in fields(shape, kw):
+        owned = not typ.startswith("Pointer")
+        for x in names(shape, kw, False):
+            typ = re.sub(r"\b" + x + r"\b", "Self." + x, typ)
+        inputs += [("var " if owned else "") + name + ": " + typ]
+        values += [name + ("^" if owned else "")]
+    out += [
+        f'    def __init__(out self{", " if inputs else ""}{", ".join(inputs)}):\n        self._arguments = {stored}({", ".join(values)})\n\n'
+    ]
     out += [
         f"    def _run[R: {MD}, X: {MD}, F: {MD}, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:\n"
     ]
-    # Rebind the context error metadata only: argument storage/types/origins remain identical.
-    out += [
-        f'        var arguments = {typename(shape,kw,"Self.","X")}({", ".join("self."+n+("^" if not t.startswith("Pointer") else "") for n,t in fields(shape,kw))})\n'
-    ]
+    # The error belongs to invocation, not to argument storage.
+    out += ["        var arguments = self._arguments^\n"]
     inv = (
         "_invoke_"
         + tag(shape, kw)
@@ -227,33 +296,7 @@ def builder(shape, kw):
                 out += [
                     f"    def run{bracket}(deinit self, function: {typ}) -> Result[{result}, {err}]{condition}:\n        return self^._run[{result}, {err}, type_of(function), {raising}](function)\n\n"
                 ]
-    if not kw:
-        out += [
-            f'    def kwargs[K: {MD}, //](deinit self, /, var **values: K) -> {typename(shape,True,"Self.").replace("Self.K", "K")}:\n        return {typename(shape,True,"Self.").replace("Self.K", "K")}({", ".join("self."+n+("^" if not t.startswith("Pointer") else "") for n,t in fields(shape))}{", " if shape else ""}values^)\n\n'
-        ]
-        if len(shape) < 2:
-            c = "AB"[len(shape)]
-            for m, (name, origin) in MODES.items():
-                ps = (
-                    [f"{c}: {MD}"]
-                    + ([f"{c.lower()}: {origin}"] if origin else [])
-                    + ["//"]
-                )
-                target = (
-                    typename(shape + (m,), False, "Self.")
-                    .replace("Self." + c, c)
-                    .replace("Self." + c.lower(), c.lower())
-                )
-                passed = ", ".join(
-                    "self." + n + ("^" if not t.startswith("Pointer") else "")
-                    for n, t in fields(shape)
-                )
-                passed += (", " if shape else "") + (
-                    "Pointer(to=value)" if origin else "value^"
-                )
-                out += [
-                    f'    def {name}[{", ".join(ps)}](deinit self, {"ref["+c.lower()+"]" if origin else "var"} value: {c}) -> {target}:\n        return {target}({passed})\n\n'
-                ]
+    out += [transitions(shape, kw, stored=False)]
     return "".join(out)
 
 
@@ -262,42 +305,63 @@ header = '''"""Argument-first native capture admission, generated by scripts/gen
 Select native errors and bind argument conventions before admitting a callback.
 Borrowed slots retain their origins; consumed slots and keyword packs are owned.
 Native run admission inlines to retain closure storage across generic forwards
-at O0 on Mojo 1.2; callers need no annotation. Each _invoke consumes its receiver,
-so partially transferred fields are cleaned
-up exactly once if the native call raises. No allocation or type erasure is added.
+at O0 on Mojo 1.2; callers need no annotation. Storage, consuming transitions
+and invocation belong to callables._arguments. Its _invoke consumes the bundle,
+so native cleanup handles a partially transferred value if the callback raises.
+No allocation or type erasure is added.
 """
-from std.builtin.rebind import rebind, rebind_var, downcast
 from std.collections import StringDict
 from fp.callables.protocols import OnceThunk
 from fp.callables._binding import _BoundThunk
-from fp.callables.native import (_NativeOwnedArg, _call_native_binary, _call_native, _call_native_borrow, _call_native_thunk, _call_native_keywords, _NativeMutatingRef, _NativeMutOwnedRef, _NativeMutatingKeywordsRef, _NativeMutOwnedKeywordsRef)
-from fp.data._result import Result, attempt_once
+from fp.callables.native import _NativeOwnedArg
+from fp.data._result import Result
+from fp.data._attempt import attempt_once
 from fp._internal.errors import _ErrorCompatible
 
 '''
-out = [header]
+argument_imports = [
+    name
+    for shape in SHAPES
+    for kw in (False, True)
+    for name in ("_Arguments" + tag(shape, kw), "_invoke_" + tag(shape, kw))
+]
+out = [
+    header,
+    "from fp.callables._arguments import " + ", ".join(argument_imports) + "\n\n",
+]
+argument_output = [
+    '"""Consumed native argument storage and invocation, generated by generate_capture.py.\n\nNo error-selection metadata or Result dependency belongs to these bundles.\nCapture and legacy attempt share their ownership, origins and invocation.\n"""\nfrom std.builtin.rebind import rebind, rebind_var, downcast\nfrom std.collections import StringDict\nfrom .native import (_NativeOwnedArg, _call_native_binary, _call_native, _call_native_borrow, _call_native_thunk, _call_native_keywords, _NativeMutatingRef, _NativeMutOwnedRef, _NativeMutatingKeywordsRef, _NativeMutOwnedKeywordsRef)\n\n'
+]
 for shape in SHAPES:
     for kw in (False, True):
         declaration = native(shape, kw)
-        header, body = declaration.split("\n", 1)
+        invoke_header, body = declaration.split("\n", 1)
         body = body.replace("arguments.", "self.")
-        import re
-
-        for x in names(shape, kw):
+        for x in names(shape, kw, False):
             body = re.sub(r"\b" + x + r"\b", "Self." + x, body)
-        method = f"    def _invoke[R: {MD}, F: {MD}, raising: Bool](deinit self, function: F) raises Self.E -> R:\n"
+        method = f"    def _invoke[R: {MD}, E: {MD}, F: {MD}, raising: Bool](deinit self, function: F) raises E -> R:\n"
         method += "".join("    " + line + "\n" for line in body.splitlines())
-        out += [
-            builder(shape, kw),
+        argument_output += [
+            storage(shape, kw),
             method,
-            header + "\n    return arguments^._invoke[R, F, raising](function)\n\n",
+            invoke_header
+            + "\n    return arguments^._invoke[R, E, F, raising](function)\n\n",
         ]
+        out += [builder(shape, kw)]
+
+
+def arguments_source():
+    return (
+        "\n".join(line.rstrip() for line in "".join(argument_output).splitlines()).rstrip()
+        + "\n"
+    )
+
+
 out += ["struct Capture[E: Movable & Deinitable = Error]:\n"]
 # Reuse zero-builder methods as static admission/factories.
 b = builder((), False)
 start = b.index("    def run[")
 methods = b[start:]
-import re
 
 methods = (
     methods.replace("deinit self, ", "")
@@ -306,6 +370,7 @@ methods = (
 )
 methods = methods.replace("](/, var **values:", "](var **values:")
 methods = methods.replace("return self^._run[", "return _ArgsZ[Self.E]()._run[")
+methods = methods.replace("self._arguments^.", "_ArgumentsZ().")
 for name in ("run", "kwargs", "borrow", "mutable", "take"):
     methods = re.sub(
         r"    def " + name + r"\b", r"    @staticmethod\n    def " + name, methods
@@ -494,4 +559,5 @@ def document(text):
 
 if __name__ == "__main__":
     OUTPUT.write_text(source())
-    print(f"wrote {OUTPUT.relative_to(ROOT)}")
+    ARGUMENT_OUTPUT.write_text(arguments_source())
+    print(f"wrote {OUTPUT.relative_to(ROOT)} and {ARGUMENT_OUTPUT.relative_to(ROOT)}")

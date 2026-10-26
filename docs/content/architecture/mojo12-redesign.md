@@ -41,7 +41,8 @@ explicit common mapping; matching memory layout is not type identity.
 | Responsibility | Canonical owner | Boundary responsibility |
 |---|---|---|
 | Callback receiver dispatch | `callables.protocols`, `callables.native` | Preserve shared, mutable and consuming contracts and exact callback origins. |
-| Native errors stored as Result | `data._result._attempt_core`, `attempt_once` | Bind a consumed argument bundle through `_BoundThunk`; never duplicate catching logic. |
+| Native argument storage and invocation | `callables._arguments` | Own borrowed pointers, consumed fields and consuming transitions independently of error selection. |
+| Native errors stored as Result | `data._attempt._attempt_core`, `attempt_once` | Bind a consumed argument bundle through `_BoundThunk`; never duplicate catching logic. |
 | Mapping, binding and products | The selected family and existing Applicative product runner | Adapt the native callback and forward the family's output and error projections. |
 | Native source normalization | `iteration._advance` | Retain ownership, iterator position and the existing Array buffering boundary. |
 | Folds and traversal | Existing iterator and algebra drivers | Admit a source and continuation; preserve pull order, early stop and cleanup. |
@@ -138,6 +139,26 @@ copying captures. Capture argument bundles contain native pointers for borrows
 and owned fields for consumed operands and keyword dictionaries. Invoking a
 bundle consumes its receiver, so native cleanup handles partially moved fields
 when the call raises.
+
+The generated `callables._arguments` module owns those layouts, consuming
+transitions and invocation for both Capture and every legacy `attempt` shape.
+A Capture bundle adds only its selected error context and callback admission;
+it moves the whole argument owner into `_BoundThunk` when run. Appending an
+argument consumes the storage receiver itself: moving fields out of nested
+storage from an outer wrapper is not a valid native cleanup boundary on Mojo
+1.2. Keyword packs and owned operands therefore keep one ownership contract
+through construction, abandonment, successful invocation and failure.
+
+`data._result` owns Result storage and transformations. `data._attempt` owns
+native capture frontends and the single `_attempt_core` catch boundary. Direct
+legacy calls and convention adapters now use the same argument bundles,
+`_BoundThunk` and `attempt_once` as Capture; they no longer duplicate catches or
+build separate pending slots for each owned operand. `attempt_once` retains one
+optional pending callable to transfer its consuming receiver through the
+borrowed catch context. Public names, parameter order, selectors, exact errors
+and the `fp.data` / `fp.data.result` import paths remain unchanged. This changes
+execution ownership after admission; it does not repair invalid legacy
+overloads that crash while the compiler is still choosing a signature.
 
 Literal no-value returns and `raises Never` have explicit invocation paths.
 Capture also needs a literal Never admission specialization to resolve the

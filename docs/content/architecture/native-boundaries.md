@@ -431,10 +431,12 @@ The private native views deliberately have no `__call__` method, so they do
 not participate in competing native closure-trait matches. They borrow the
 callback, retain its exact type and origin, and use the existing native unary
 view for consuming calls. Copying a view copies only its borrowed handle.
-The Result bridge holds owned arguments in temporary `Optional` cells and
-moves each once; `_attempt_core` owns success/error capture. Native invocation
-lives in `callables.native`, including the literal no-value and explicit
-`Never` signatures required by Mojo 1.2. The no-value correction to the shared
+The Result bridge transfers one consumed argument bundle from
+`callables._arguments` through `_BoundThunk` and `attempt_once`, sharing
+Capture's storage, origins and invocation. The pending callable uses one
+`Optional` cell; `data._attempt._attempt_core` owns success/error capture.
+Native invocation delegates to `callables.native`, including the literal
+no-value and explicit `Never` signatures required by Mojo 1.2. The shared
 owned unary dispatcher also serves `NativeUnary` and pipeline stages.
 
 Separate pure and raising factories preserve native signature evidence.

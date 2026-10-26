@@ -1,5 +1,5 @@
 # error: no matching function
-# error: BindCompatible
+# error: BindContract[I, V, F].Compatible
 from fp.algebra import flat_map, OptionalFamily
 from fp.callables import as_unary
 

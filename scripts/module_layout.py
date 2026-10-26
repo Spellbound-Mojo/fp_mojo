@@ -33,6 +33,7 @@ SOURCE_MODULES = (
     *(( 'algebra', 'algebra/' + name) for name in ('protocols', 'operations', 'filtering', 'conditional', 'errors', 'instances', 'collections', 'contracts', '_derived', 'monoids', 'validation', 'non_empty', 'ior')),
     *(( 'effects', 'effects/' + name) for name in ('protocols', 'reader', 'state', 'writer', 'layers', 'operations', 'capabilities')),
     ('data', 'data/_result'),
+    ('data', 'data/_attempt'),
     ('data', 'data/_capture'),
     ('data', 'data/result'),
     ('data', 'data/non_empty_list'),
