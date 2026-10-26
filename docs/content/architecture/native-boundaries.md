@@ -100,6 +100,76 @@ records the experiments and the promoted architecture.
 
 ### Rejection diagnostics
 
+#### Current API-quality audit
+
+The October 26, 2026 audit at `09f1664` rechecked all 31 rejection fixtures
+containing a literal `F=type_of(...)`, `C=type_of(...)` or `G=type_of(...)`
+binding. Removing just that binding reproduced a compiler crash in all 31
+source-import probes at O0 on Mojo 1.2.0 (2016d0cd). Of these, 21 bind `F`,
+nine bind `C`, and one binds `G`. This count includes later `attempt` selector
+fixtures; it is not the historical 22-fixture inventory below. Generic forwards
+using a symbolic binding such as `F=F` were not part of this removal audit.
+
+A small reproduction needs no FP import. The maintained
+[inferred-error client](https://github.com/Spellbound-Mojo/fp_mojo/blob/nightly/experiments/mojo12-diagnostics/inferred_error.mojo)
+passes a consuming callback to a function requiring a borrowing callback.
+The paired
+[selected-error client](https://github.com/Spellbound-Mojo/fp_mojo/blob/nightly/experiments/mojo12-diagnostics/selected_error.mojo)
+keeps the same invalid convention and fixes only the expected error type.
+Both clients are intentionally invalid; the inferred variant records an
+unresolved compiler failure under `experiments/`.
+
+```sh
+pixi run mojo build -O0 --Werror experiments/mojo12-diagnostics/inferred_error.mojo
+pixi run mojo build -O0 --Werror experiments/mojo12-diagnostics/selected_error.mojo
+```
+
+The invalid call crashes while inferring the native signature. Replacing
+`raises E` with `raises Int` and removing the unused `E` parameter gives a normal
+`value passed to 'function' cannot be converted` diagnostic. An overload pair
+with separate pure and generic-raising candidates also crashes. Fixing only the
+input/result types, defaulting `E` to `Never`, or adding an unconstrained
+diagnostic fallback did not repair the tested failures. These observations
+identify an inference boundary; they do not establish the compiler's internal
+root cause or prove that every possible native encoding fails.
+
+The production solution selects the family, argument conventions and native
+error context before callback admission:
+
+| Use | Preferred boundary | Evidence without callback-type bindings |
+|---|---|---|
+| Container predicates and transformations | `pipeline(values).filter(predicate)`; use `.raising[E]()` before a raising native callback | `context_filter_owned.mojo`, `context_filter_owned_raising.mojo` |
+| N-ary combination | `pipeline(value).map_n(others, callback)` | `context_native_nary_arity.mojo` |
+| Mutable native capture | `Capture[E].mutable(value).run(callback)` | `capture_m_convention.mojo` |
+| Observers and effectful queries | Selected Pipeline `pair_with`, `traverse_tap`, `all_effect` | `context_observers_pair_with_thin_owned.mojo`, `context_effect_queries_all_effect_convention.mojo` |
+
+These APIs preserve their documented ownership and error contracts. A selected
+native error does not replace a family's or library callable's error. Passing a
+native callback directly to Pipeline also avoids unnecessary `as_unary`
+promotion; code that actually needs an owned `Unary` still uses that factory.
+There is no new diagnostic guarantee for invalid `as_unary` calls.
+
+This pass retains the legacy signatures and their explicit-binding controls.
+Changing execution helpers cannot fix a crash that occurs before a body is
+selected, and silently dropping error inference would break valid legacy calls.
+The ordinary selected rejection clients remain separate tests; a successful
+explicit-binding control is never counted as an ordinary-call fix. The local
+removal audit is in `.cache/quality/{diagnostics,result-diagnostics}/report.json`;
+the [cold-build comparison](performance.md#mojo-12-api-quality-passes) records
+selected diagnostics and valid examples with independent empty caches.
+
+The same production source passed 632 programs/examples and all 1,385 declared
+rejection fixtures through fresh precompiled packages at O3 with `--Werror`.
+The focused `context_filter`, `context_native_nary` and `capture_m_` inventories
+also passed all 116 source/package checks at O0/O3. Each report has unchanged
+inputs and clean audits. Reports are in `.cache/quality/final-suite/`,
+`final-rejections/`, `final-context_filter/`, `final-context_native_nary/` and
+`final-capture_m_/`. The full rejection count includes the legacy explicit-binding
+controls; it does not imply that every invalid inferred native call diagnoses
+normally.
+
+#### Historical explicit-binding checkpoint
+
 The 22 remaining convention and arity fixtures now bind the callback's existing
 native type parameter explicitly. The invalid callbacks and their original
 expected diagnostics are retained. Each fixture additionally requires a

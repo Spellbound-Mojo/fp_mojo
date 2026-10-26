@@ -129,6 +129,54 @@ pixi run measure-compilation \
   --output .cache/mojo12-architecture/measure-prototype-1
 ```
 
+## Mojo 1.2 API-quality passes
+
+The contract metadata, Result generator policy and native collection adapter
+passes were compared at `1d90a02` and `09f1664` on October 26, 2026. The baseline
+source copy was checked byte-for-byte against all 99 tracked Mojo files at its
+commit. Both versions used Mojo 1.2.0 (2016d0cd), Linux x86-64, the same
+four-CPU/16-GiB container and source imports. No other compiler jobs ran during
+measurement.
+
+Each case ran twice per version, in baseline/current then current/baseline
+order. Every invocation used a separate empty Mojo cache, O3, two compiler
+threads, `--Werror`, a 180-second timeout and a 4-GiB sampled process-tree RSS
+limit. Successful examples also executed; rejection clients never executed.
+The table gives observed ranges, not confidence intervals or speedup claims.
+
+| Client | Before, seconds | After, seconds | After native-timer peak RSS, MiB |
+|---|---:|---:|---:|
+| Selected workflow | 7.42–7.69 | 7.47–8.70 | 299.2–311.0 |
+| Reusable Capture context | 2.98–3.40 | 3.44–3.48 | 232.4–240.9 |
+| Dictionary values | 4.43–4.86 | 4.27–5.15 | 247.7–262.4 |
+| Reject consuming filter predicate | 0.53–0.59 | 0.49–0.63 | 119.8–120.7 |
+| Reject wrong n-ary callback arity | 0.81–1.15 | 0.83–0.90 | 123.0–123.5 |
+| Reject consuming callback for mutable Capture | 0.18–0.22 | 0.17–0.18 | 102.1–103.2 |
+
+All 24 invocations passed with clean audits and unchanged inputs. The selected
+negative clients use ordinary calls without callback-type hints. They do not
+qualify the invalid legacy calls described in the
+[diagnostic audit](native-boundaries.md#current-api-quality-audit).
+The observed valid-build range remains approximately 3–9 seconds for these
+examples; the sample is too small to establish unchanged compile cost, a
+general regression or an improvement. Package imports and larger applications
+were not measured in this comparison.
+
+Reports are `.cache/quality/cold-{baseline,current}-{1,2}/report.json`.
+Reproduce the current cases with a fresh output directory:
+
+```sh
+pixi run measure-compilation \
+  docs/examples/selected_workflow.mojo \
+  docs/examples/capture_context.mojo \
+  docs/examples/dictionary_values.mojo \
+  tests/compile_fail/context_filter_owned.mojo \
+  tests/compile_fail/context_native_nary_arity.mojo \
+  tests/compile_fail/capture_m_convention.mojo \
+  --include src --level 3 --threads 2 \
+  --output .cache/quality/cold-current-recheck
+```
+
 ## Mojo 1.2 Capture qualification
 
 The Capture signature change in `51e0ef4` was compared with `3bf6041` on

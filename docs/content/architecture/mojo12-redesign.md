@@ -265,6 +265,10 @@ the documented `@always_inline` requirement or use explicit mutable state.
 - Legacy invalid native overloads can still require explicit callback-type
   bindings for normal diagnostics. Selected Pipeline and Capture fixtures use
   ordinary calls; no compiler crash or timeout counts as successful rejection.
+  The [API-quality audit](native-boundaries.md#current-api-quality-audit) reproduced
+  the generic-error inference failure without this library. Selecting the error
+  before matching the callback remains the architectural boundary; merging the
+  pure and raising legacy overloads or adding a fallback did not repair it.
 - Native Array iterator transfer needs the existing local drain into owned
   List storage before escape. Its O(N) buffering is part of the documented
   source normalization cost.
