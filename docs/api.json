@@ -823,6 +823,10 @@
      "name": "Compatible"
     },
     {
+     "description": "The family selected for fluent continuation over Out.",
+     "name": "Family"
+    },
+    {
      "description": "The exact carrier produced by the family.",
      "name": "Out"
     },
@@ -888,6 +892,10 @@
     {
      "description": "The complete checked lazy combination admission.",
      "name": "Compatible"
+    },
+    {
+     "description": "The family selected for fluent continuation over Out.",
+     "name": "Family"
     },
     {
      "description": "The exact carrier produced by the family, including deferred types.",
@@ -964,6 +972,10 @@
      "name": "Compatible"
     },
     {
+     "description": "The output Functor; project only when FilteredFamily conforms to Functor.",
+     "name": "Family"
+    },
+    {
      "description": "The predicate supplied to the family after optional inversion.",
      "name": "Predicate"
     },
@@ -1022,6 +1034,10 @@
      "name": "InputCompatible"
     },
     {
+     "description": "The selected filter_map signature's admission; family primitives check representation and receiver requirements.",
+     "name": "Compatible"
+    },
+    {
      "description": "The output shape family, rebound to the present transformed payload.",
      "name": "Family"
     },
@@ -1034,7 +1050,7 @@
      "name": "Error"
     }
    ],
-   "description": "The family primitive owns Optional-result admission and invocation. This\ndescriptor preserves the existing generic input constraint and does not\nadd map's carrier proof to filtering.",
+   "description": "The family primitive owns Optional-result admission and invocation. This\ndescriptor exposes the existing selected signature's input constraint as\nCompatible; it does not add map's carrier proof to\nfiltering. The legacy free function keeps its existing admission policy.",
    "fields": [],
    "kind": "struct",
    "methods": {},
@@ -4358,6 +4374,10 @@
     {
      "description": "The complete checked traversal admission.",
      "name": "Compatible"
+    },
+    {
+     "description": "The family selected for fluent continuation over Out.",
+     "name": "Family"
     },
     {
      "description": "The exact traversal result, retaining source shape and target effect.",

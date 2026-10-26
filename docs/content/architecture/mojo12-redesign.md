@@ -104,6 +104,17 @@ These contracts add no receiver adapter or execution layer. Folds continue to
 use their existing source and receiver contracts; new descriptors are added
 only where a client otherwise repeats operation-specific proofs.
 
+All operation contracts name their fluent output family. Generic return types
+can project Family/Out/Error consistently instead of reconstructing selection.
+FilterContract.Family is a lazy Functor projection: standalone filtering never
+requires it, so independent Filterable implementations remain supported.
+Fluent filtering keeps the explicit FilteredFamily conformance proof beside
+Compatible. On Mojo 1.2 a combined boolean alias cannot substitute for the
+existing expanded signature conditions in both directions; no redundant
+fallback overloads or weakened constraints are introduced to hide that limit.
+FilterMapContract.Compatible exposes selected input equality only, retaining
+family-owned representation/receiver checks and existing free-function admission.
+
 Terminal and traversal syntax share `scripts/operation_specs.py`. It owns
 callback mode, retention and postprocessing choices, associated result/error
 expressions, and existing execution targets. Selected Pipeline and legacy

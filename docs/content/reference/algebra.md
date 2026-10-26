@@ -91,6 +91,26 @@ Generic filter_map wrappers use its Family instead of I.MapFilteredFamily.
 Existing custom Functors need no new members; implementing RebindingFunctor is
 only necessary when the family itself binds the payload type.
 
+All six operation contracts expose `Family`, `Out`, `Error` and `Compatible`.
+For a fluent wrapper, use `Pipeline[Contract.Family, Contract.Out, E]` and
+raise `Contract.Error`. Bind and combine retain their family; traversal selects
+its target family. Filter follows FilteredFamily, including shape changes.
+
+Filterable is independent of Functor: standalone filtering needs only
+`Compatible`. Fluent filtering also requires
+`conforms_to(I.FilteredFamily, Functor)` before projecting Family. Constructing
+the returned Pipeline around the checked free filter preserves both proofs on
+Mojo 1.2. A single combined alias cannot currently replace these two clauses
+without breaking existing expanded generic constraints.
+
+FilterMapContract.Compatible names its existing selected input equality.
+The family primitive still checks Optional representation and callback receiver
+requirements; the legacy free function's admission is unchanged. Contracts
+describe forwarding requirements, not every condition a family may check when
+instantiated. Existing component predicates remain available.
+
+<!-- example: docs/examples/fluent_contracts.mojo -->
+
 Generic wrappers with an abstract callback return type `R` must forward the
 target proof, such as `where OptionalFamily.CarrierCompatible[R]`. This also
 applies to legacy sequencing, effect searches and folds. Mojo 1.2 does not

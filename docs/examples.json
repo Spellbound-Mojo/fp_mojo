@@ -75,6 +75,9 @@
     "docs/examples/file_tree.mojo": {
       "stdout": "home/{notes.txt, photos/{a.jpg, b.jpg}, latest@, broken@}\n10120\n"
     },
+    "docs/examples/fluent_contracts.mojo": {
+      "stdout": "kept: 1 3\n"
+    },
     "docs/examples/fluent_effects.mojo": {
       "stdout": "combined: 7\npaired: 3 4\napplied: 18\ncombined three: 12\nflat tuple: (3, 4, 5)\nretained: [1, 2, 3]\nall checked: True\nsource error preserved: True\n"
     },

@@ -6,6 +6,7 @@ input equality to a family's MapCompatible: lifted effect projections can be
 opaque until the operation is specialized. These descriptors store no values,
 adapt no callbacks and introduce no additional invocation boundary.
 """
+from std.builtin.rebind import downcast
 from .protocols import _MappedFamily, Functor, Monad, Traversable, Applicative, Filterable, FunctorFilter
 from fp.iteration._advance import _OwnedElement
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallable
@@ -43,8 +44,9 @@ struct FilterMapContract[I: FunctorFilter, V: Movable & Deinitable, F: UnaryCont
     """Result metadata for filter_map and its fluent continuation.
 
     The family primitive owns Optional-result admission and invocation. This
-    descriptor preserves the existing generic input constraint and does not
-    add map's carrier proof to filtering.
+    descriptor exposes the existing selected signature's input constraint as
+    Compatible; it does not add map's carrier proof to
+    filtering. The legacy free function keeps its existing admission policy.
 
     Parameters:
         I: The source family supporting filter_map.
@@ -53,6 +55,8 @@ struct FilterMapContract[I: FunctorFilter, V: Movable & Deinitable, F: UnaryCont
     """
     comptime InputCompatible = Self.I.Element[Self.V] == Self.F.Arg
     """Exact input payload equality, including origins."""
+    comptime Compatible = Self.InputCompatible
+    """The selected filter_map signature's admission; family primitives check representation and receiver requirements."""
     comptime Family = _MappedFamily[Self.I.MapFilteredFamily, _OwnedElement[Self.F.Out]]
     """The output shape family, rebound to the present transformed payload."""
     comptime Out = Self.I.MapFiltered[Self.V, Self.F]
@@ -79,6 +83,8 @@ struct BindContract[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movabl
     """The family's binding admission."""
     comptime Compatible = Self.InputCompatible and Self.FamilyCompatible
     """The complete checked flat_map admission."""
+    comptime Family = Self.I
+    """The family selected for fluent continuation over Out."""
     comptime Out = Self.I.Bound[Self.V, Self.F]
     """The exact carrier produced by the family."""
     comptime Error = Self.I.BindError[Self.V, Self.F]
@@ -112,6 +118,8 @@ struct TraverseContract[S: Traversable, G: Applicative, V: Movable & Deinitable,
     """Source and target admission without repeating input equality."""
     comptime Compatible = Self.InputCompatible and Self.FamilyCompatible
     """The complete checked traversal admission."""
+    comptime Family = Self.G
+    """The family selected for fluent continuation over Out."""
     comptime Out = Self.S.Traversed[Self.G, Self.V, Self.F]
     """The exact traversal result, retaining source shape and target effect."""
     comptime Error = Self.S.TraverseError[Self.G, Self.V, Self.F]
@@ -138,6 +146,8 @@ struct FilterContract[I: Filterable, V: Movable & Deinitable, P: BorrowCallable,
     """The predicate returns the native Bool type."""
     comptime Compatible = Self.InputCompatible and Self.PredicateCompatible
     """The complete checked filtering admission."""
+    comptime Family = downcast[Self.I.FilteredFamily, Functor]
+    """The output Functor; project only when FilteredFamily conforms to Functor."""
     comptime Predicate = _FilterPredicate[Self.P, Self.inverted]
     """The predicate supplied to the family after optional inversion."""
     comptime Out = Self.I.Filtered[Self.V, Self.Predicate]
@@ -173,6 +183,8 @@ struct CombineContract[I: Applicative, V: Movable & Deinitable, F: BinaryContrac
     """Family admission without repeating callback operand equality."""
     comptime Compatible = Self.InputCompatible and Self.FamilyCompatible
     """The complete checked lazy combination admission."""
+    comptime Family = Self.I
+    """The family selected for fluent continuation over Out."""
     comptime Out = Self.I.Combined[Self.V, Self.F, Self.R]
     """The exact carrier produced by the family, including deferred types."""
     comptime Error = Self.I.CombineError[Self.V, Self.F, Self.R]
