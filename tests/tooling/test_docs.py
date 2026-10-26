@@ -53,15 +53,19 @@ class DocumentationContractTests(unittest.TestCase):
                 docs_contract.audit_docs()
 
     def test_missing_migration_assignment_rejected(self):
-        original = docs_contract.data
-        def changed(name):
-            value = original(name)
-            if name == 'compatibility.json':
-                value['migration'][0]['methods'].pop()
-            return value
-        with patch.object(docs_contract, 'data', changed):
-            with self.assertRaisesRegex(AssertionError, 'migration inventory'):
-                docs_contract.audit_docs()
+        # Model an operation still missing from Pipeline even when the current
+        # catalog has completed migration. A pending group must account for it.
+        from compatibility_contract import audit_compatibility
+        catalog = docs_contract.data('compatibility.json')
+        exports = docs_contract.data('public-exports.json')
+        name = next(name for name in catalog['legacy_methods']
+                    if name in exports['exports']['functions.Pipeline']['methods'])
+        exports['exports']['functions.Pipeline']['methods'].pop(name)
+        for group in catalog['pipeline']:
+            if name in group['methods']:
+                group['methods'].remove(name)
+        with self.assertRaisesRegex(AssertionError, 'migration inventory'):
+            audit_compatibility(catalog, exports)
 
 
 if __name__ == '__main__':

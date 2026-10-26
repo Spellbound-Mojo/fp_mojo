@@ -106,6 +106,27 @@ captures. Reader and other deferred families retain their usual timing and can
 join distinct branch representations. Native closures are borrowed for the
 effect's lifetime, while native thin pointers and library factories are owned.
 
+`par_map_n(others, mapper)` and `par_product_n(others)` combine up to eight
+evaluated Result operands, including the receiver, and accumulate stored errors
+in operand order. Native mappers receive separate payload arguments; library
+callables consume the flat payload tuple. An empty `others` tuple produces a
+one-element tuple or invokes the unary mapper and never calls the error
+combiner. `par_traverse(transform)` and `par_sequence()` accumulate stored
+errors across the source traversal. Native raised errors still stop immediately.
+The `par_` prefix denotes error accumulation; it does not start concurrent work.
+
+List-valued stored errors infer ordered concatenation. Supply an error Semigroup
+positionally, such as `.par_map_n[StringMonoid](others, mapper)`, to select another
+policy. When the combiner and callback can both raise, their native errors must
+agree. N-ary accumulation retains the selected source family. Accumulating
+traversal returns a Result pipeline, allowing dependent `.flat_map` calls;
+explicit `.traverse[ValidationFamily[Policy]]` retains Validation instead.
+
+Stored thin pointers work for `par_traverse`. Stored n-ary thin pointers remain
+part of the native-signature consolidation work for both `map_n` and
+`par_map_n`; ordinary native functions and closures use their fixed arity
+signatures today.
+
 Effectful terminals consume an iterator or owned iterable into an explicit
 Monad target. `all_effect[Target](predicate)`, `any_effect[Target](predicate)`
 and `find_effect[Target](predicate)` borrow each item and require a Bool inside

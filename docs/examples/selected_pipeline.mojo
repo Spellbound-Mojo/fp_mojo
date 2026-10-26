@@ -58,6 +58,10 @@ def main() raises:
     def present() -> Optional[Int]: return Optional(10)
     def absent() -> Optional[Int]: return None
     assert_equal(pipeline(Optional(True)).if_effect(present, absent).get().value(), 10)
+    def validate(var value: Int) -> Result[Int,List[String]]:
+        if value < 0: return Err(List[String]([String(value)]))
+        return Ok(value)
+    assert_equal(pipeline(List[Int]([-1,2,-3])).par_traverse(validate).get()._err().value, List[String](["-1","-3"]))
 
     var checked: Result[Int, String]
     try:

@@ -284,6 +284,59 @@ def methods(*, fold_stage=False):
                 "Consume the source in order through the canonical terminal fold.",
             )
 
+    # Validation is an operation policy over native Result carriers.
+    # N-ary operations retain the source family; traversal selects Result.
+    for inferred in (False, True):
+        semigroup = "_ListErrors[Self.V]" if inferred else "S"
+        family = f"ValidationFamily[{semigroup}]"
+        policy = [] if inferred else ["S: Semigroup"]
+        run = f"_ProductRun[{family}, Self.V, *Ws]"
+        result = f"{family}.Pure[{run}.Payload]"
+        error = f"({semigroup}.Error if Ws.length > 0 else Never)"
+        conditions = ["conforms_to(Self.V, _ResultType)", f"Ws.length < {MAX}", f"{run}.NativeInputs"]
+        emit("par_product_n", {}, policy + [f"*Ws: {MD}"], "var others: Tuple[*Ws]", result, error, "Self.I", conditions,
+             f"{run}.run[{result}, {error}](self.value^, others^)", "Combine evaluated Results, accumulating stored errors in operand order.")
+        cb = callback("owned", "library", f"{run}.Payload", "function")
+        result = f"{family}.Pure[C.Out]"
+        error = f"(_CommonError[{semigroup}.Error, C.Error] if Ws.length > 0 else C.Error)"
+        params = cb["params"] + ["//"] + policy + [f"*Ws: {MD}"]
+        emit("par_map_n", cb, params, f"var others: Tuple[*Ws], {cb['argument']}", result, error, "Self.I",
+             conditions + cb["conditions"] + [f"_ErrorCompatible[{error}, C.Error]"],
+             f"_map_n_as[{family}, {family}.Pure[{run}.Payload], {result}, {error}]({cb['build']}, self.value^, others^)",
+             "Combine evaluated Results and map their successful tuple, accumulating stored errors.")
+        for n in range(1, MAX + 1):
+            carriers = [f"W{i}" for i in range(n - 1)]
+            operands = ", ".join(["Self.V"] + carriers)
+            run = f"_ProductRun[{family}, {operands}]"
+            payloads = [f"{family}.Element[{v}]" for v in ["Self.V"] + carriers]
+            for kind in ("pure", "raising", "never"):
+                cb = callback("nary", kind, payloads, "function")
+                params = [f"{w}: {MD}" for w in carriers] + cb["params"]
+                params[params.index("//")+1:params.index("//")+1] = policy
+                result = f"{family}.Pure[{cb['result']}]"
+                error = f"_CommonError[{semigroup}.Error, {cb['error']}]" if n > 1 else cb["error"]
+                conditions = ["conforms_to(Self.V, _ResultType)", f"{run}.NativeInputs"] + cb["conditions"] + [f"_ErrorCompatible[{error}, {cb['error']}]"]
+                emit("par_map_n", cb, params, f"var others: Tuple[{', '.join(carriers)}], {cb['argument']}", result, error, "Self.I", conditions,
+                     f"_map_n_as[{family}, {family}.Pure[{run}.Payload], {result}, {error}]({cb['build']}, self.value^, others^)",
+                     "Accumulate stored Result errors, then call the native mapper with separate successful payloads.")
+    for sequence in (False, True):
+        element = "Self.I.Element[Self.V]"
+        identity = f"Identity[{element}]"
+        callbacks = [dict(params=[],argument="",adapter_type=identity,build=f"{identity}()",result=element,error="Never",conditions=[])] if sequence else owning_callbacks("owned", element, "function")
+        for cb in callbacks:
+            policy = f"S: Semigroup = _ListErrors[{cb['result']}]"
+            family = "ValidationFamily[S]"
+            source = "_Traversing[Self.I]"
+            c = cb["adapter_type"]
+            params = [p for p in cb["params"] if p != "//"] + ["//", policy]
+            result = f"{source}.Traversed[{family}, Self.V, {c}]"
+            error = f"{source}.TraverseError[{family}, Self.V, {c}]"
+            conditions = ["conforms_to(Self.I, Traversable)", f"_MapCompatible[Self.I, Self.V, Identity[{element}]]",
+                          f"_CollectCompatible[{family}, Self.V, {c}]", f"_CarrierCompatible[{family}, {cb['result']}]"] + cb["conditions"]
+            emit("par_sequence" if sequence else "par_traverse", cb, params, cb["argument"], result, error, "ResultFamily[S.Value]", conditions,
+                 f"_traverse_as[{source}, {family}, Self.V, {c}, {error}]({cb['build']}, self.value^)",
+                 "Traverse with ordered Validation accumulation and continue with the resulting Result.")
+
     # The selected Monad owns branching and retains the factories if deferred.
     family = "_Binding[Self.I]"
     for left, right in product(thunk_callbacks("on_true"), thunk_callbacks("on_false", second=True)):
@@ -923,7 +976,10 @@ def documented(source):
         if spec["parameters"]:
             doc += ["\n" + indent + "Parameters:\n"]
             doc += [
-                indent + "    " + p["name"] + ": " + params[p["name"]] + "\n"
+                indent + "    " + p["name"] + ": " + (
+                    "The error Semigroup; inferred list errors concatenate in order."
+                    if p["name"] == "S" and name.startswith("par_") else params[p["name"]]
+                ) + "\n"
                 for p in spec["parameters"]
             ]
         if spec["arguments"]:

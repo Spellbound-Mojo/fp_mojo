@@ -705,3 +705,35 @@ single-use cleanup, deferred joins, closure lifetime, exact origins, generic
 forwarding and mixed library/native storage at both return conventions. The
 shared native change is additionally checked against the complete positive
 and rejection suites.
+
+## Accumulating policies
+
+Selected `par_map_n` and `par_product_n` choose `ValidationFamily[S]` for
+combination and delegate to `_ProductRun` and `_map_n_as`. Their output keeps
+the source's selected family: a normal Result pipeline can continue with
+dependent operations; an explicitly selected Validation pipeline keeps its
+accumulating policy. `par_traverse` and `par_sequence` delegate to
+`_traverse_as` and select `ResultFamily[S.Value]` on the output. Explicit
+`traverse[ValidationFamily[S]]` remains available when subsequent operations
+should retain Validation's policy.
+
+Native callback admission fixes each carrier before its corresponding payload.
+Native functions use fixed signatures for one through eight operands; library
+callables consume the existing flat Tuple. Inferred List errors and an explicit
+Semigroup have separate admission signatures, avoiding an optional positional
+policy in front of an inferred pack. The family owns ordered error accumulation,
+stored error compatibility, cleanup and immediate error propagation.
+
+A single operand never invokes the error combiner, so its declared error is the
+callback's error alone. Multiple operands combine that error with `S.Error`.
+This metadata follows the existing driver without introducing another exception
+handler. Native callback errors still stop execution immediately; stored Result
+errors continue to accumulate. Traversal preserves a source Result's stored
+error inside the successful target, matching the general traversal contract.
+
+`context_accumulating` clients cover inferred and explicit policies, generic
+forwarding, arity bounds, empty inputs, exact origins and native errors,
+single-use tuple callbacks, and move-only cleanup on both failure paths.
+Stored thin unary traversal callbacks use the common owning adapter. Stored
+thin n-ary pointers remain an admission gap shared with `map_n`; the native ABI
+pass will address their signatures and ownership together.

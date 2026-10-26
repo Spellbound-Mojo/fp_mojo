@@ -243,7 +243,7 @@
       ],
       "status": "selected",
       "families": "Selected Applicative",
-      "callbacks": "Native separate operands; library tuple/binary contracts.",
+      "callbacks": "Native separate operands; library tuple/binary contracts. Stored n-ary thin pointers await native ABI consolidation.",
       "ownership": "Consumes evaluated carriers; Cartesian output may require copies.",
       "errors": "Family policy keeps or accumulates stored errors; native errors stay raised.",
       "timing": "Family-controlled; target selection is unchanged.",
@@ -471,6 +471,32 @@
         "tests/runtime/test_context_conditional_void.mojo",
         "tests/ownership/test_context_conditional_ownership.mojo"
       ]
+    },
+    {
+      "name": "Accumulating policies",
+      "methods": [
+        "par_map_n",
+        "par_product_n",
+        "par_sequence",
+        "par_traverse"
+      ],
+      "status": "selected",
+      "families": "Validation policy for native Results; n-ary methods retain the source family, traversal selects Result",
+      "callbacks": "Fixed native arities 1\u20138 or library tuple callables. Stored n-ary thin pointers await native ABI consolidation.",
+      "ownership": "Consume evaluated operands, callbacks and sources; release unvisited inputs and partial output on native failure",
+      "errors": "Stored errors accumulate through an inferred ListMonoid or explicit Semigroup; native raises stop immediately",
+      "timing": "Ordered synchronous accumulation; a single n-ary operand never invokes the error combiner",
+      "owner": [
+        "src/fp/algebra/_nary.mojo",
+        "src/fp/algebra/validation.mojo",
+        "src/fp/algebra/_traversal.mojo"
+      ],
+      "evidence": [
+        "tests/runtime/test_context_accumulating_behavior.mojo",
+        "tests/runtime/test_context_accumulating_generic.mojo",
+        "tests/runtime/test_context_accumulating_effects.mojo",
+        "tests/ownership/test_context_accumulating_ownership.mojo"
+      ]
     }
   ],
   "legacy_methods": [
@@ -542,18 +568,7 @@
     "tuple_right",
     "void"
   ],
-  "migration": [
-    {
-      "name": "Accumulating policies",
-      "methods": [
-        "par_map_n",
-        "par_product_n",
-        "par_sequence",
-        "par_traverse"
-      ],
-      "contract": "Validation accumulation using the existing n-ary product and traversal owners; no concurrent execution."
-    }
-  ],
+  "migration": [],
   "legacy_diagnostic_controls": [
     "tests/compile_fail/attempt_adapter_wrong_convention.mojo",
     "tests/compile_fail/callable_pipeline_inferred_no_unpack.mojo",
