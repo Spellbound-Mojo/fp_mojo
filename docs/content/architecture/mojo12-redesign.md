@@ -555,6 +555,28 @@ to the plan; no execution or callback storage is added. Family admission
 requires ApplicativeError and Monad; intrinsic Result overloads remain only
 under non-error families, preserving native generic forwarding.
 
+### Compilation cost after selected outcome support
+
+A bounded comparison of `e42c2df` with `cda1207` includes predicate pruning,
+selected outcome handling and whole-outcome observation. Four unchanged clients
+were compiled serially at O3 on Mojo 1.2.0/Linux with two compiler threads and
+an empty cache for every build. Baseline/current/current/baseline ordering gives
+two samples per variant, 16 checked compilations in total. Median seconds were:
+
+| Client | Before | After |
+|---|---:|---:|
+| `docs/examples/selected_pipeline.mojo` | 11.15 | 9.90 |
+| `tests/runtime/test_context_result_redeem_with.mojo` | 5.58 | 7.03 |
+| `tests/runtime/test_context_result_attempt_tap.mojo` | 4.51 | 4.95 |
+| `tests/compile_fail/context_reject_result_ensure_input.mojo` | 1.44 | 1.09 |
+
+The selected-pipeline and rejection clients improved, while the two Result
+outcome clients became slower. Their exact family contracts introduce additional
+compile-time work; the combined changes are not a general compilation speedup.
+Executable sizes were unchanged for all three successful clients. These small
+samples are a baseline for further admission work, not a broad performance
+claim or a substitute for semantic qualification.
+
 ### Generic sequencing metadata
 
 The four public sequencing contracts name the existing selected Monad
@@ -628,11 +650,355 @@ Qualify and commit each complete pass separately. No CI work is part of this
 sequence. Resource scopes and fallible source advancement remain later design
 work, after these improvements to the existing API.
 
-The designs below are not implemented public APIs. They add distinct
-ownership or source-advancement contracts, rather than more overloads to the
-current admission table. Prototype them independently, qualify normal and
-invalid user calls at O0/O3 through source and packages, then promote one
-complete contract at a time.
+The designs below are not implemented public APIs. They need explicit
+contracts before implementation. Qualify normal and invalid user calls at
+O0/O3 through source and packages, then promote one complete contract at a
+time. The stored-error proposal is a design decision for the current API
+quality work; resource scopes and source advancement remain later work.
+
+### Proposed stored-error rebinding
+
+**Design only.** The capability, contracts and call spellings in this section
+are proposed, not implemented or compiler-qualified. The recommendation is
+one optional `ErrorMapping` capability with a two-arm primitive, an explicit
+destination family when policy cannot be inferred, and ordinary inferred
+calls for Result and uniquely rebindable transformers. This pass changes no
+public API or execution path.
+
+Today, selected `map_err` and `map_both` recognize native Result storage and
+return a `ResultFamily`. They do not describe how to change a selected custom
+family's stored-error type. `ApplicativeError` cannot supply this operation:
+its failure and recovery primitives intentionally preserve one selected error
+type. `RebindingFunctor.WithElement` only updates payload-dependent selection
+metadata; it neither transforms a carrier nor declares an error channel.
+Changing either alias alone would mislabel the original carrier.
+
+#### One execution primitive
+
+The primitive should map both success and selected failure in one traversal.
+`map_err(g)` derives from it using the existing consuming `Identity` callback
+on success. `map_both(f, g)` must not generally expand to `map(f).map_err(g)`
+or the reverse. For `ResultT[ListFamily, E]` containing
+`[Err(e1), Ok(a2), Err(e3)]`, one traversal observes callbacks in the order
+`g(e1), f(a2), g(e3)`. Two traversals group callbacks by branch. That changes
+observable mutation, which native exception stops evaluation, and when later
+callbacks run. Composition can also introduce an additional custom-family
+construction failure and another deferred stage.
+
+The new primitive is an algebraic boundary, not another Result dispatcher.
+`ResultFamily` delegates to existing `Result.map_both`, whose owned fold
+already owns branch selection, payload movement and unused callback cleanup.
+Transformer adapters delegate to that owner or to their base family's
+primitive. Existing `Functor.map` remains its own operation; adopting this
+capability does not replace all mapping with two-arm machinery.
+
+`ErrorMapping` should extend `Functor` independently of `ApplicativeError`.
+Mapping a stored error does not require failure construction or recovery.
+For example, State recovery currently requires copyable state because it
+restarts a handler with saved input state. Mapping the error after one State
+run requires no rollback and should not acquire that copying requirement.
+Validation remains eligible without acquiring Monad.
+
+#### Capability and exact admission
+
+The proposed full protocol is below in schematic notation. `Value` means
+`Movable & Deinitable`; `Callback` means
+`UnaryContract & Movable & Deinitable`. These abbreviations are only for this
+design. This is not a tested Mojo declaration.
+
+```text
+trait ErrorMapping(Functor):
+    Failure: Value
+    ErrorCarrierCompatible[V: Value]: Bool
+
+    DefaultErrorTarget[NewValue: Value, NewFailure: Value]: ErrorMapping = Self
+
+    BimapCompatible[Target: ErrorMapping, V: Value,
+                    F: Callback, G: Callback]: Bool
+    Bimapped[Target: ErrorMapping, V: Value,
+             F: Callback, G: Callback]: Value
+    BimapError[Target: ErrorMapping, V: Value,
+               F: Callback, G: Callback]: Value
+
+    static bimap[Target: ErrorMapping, V: Value, F: Callback, G: Callback](
+        var on_success: F, var on_failure: G, var source: V
+    ) raises Self.BimapError[Target, V, F, G]
+        -> Self.Bimapped[Target, V, F, G]
+```
+
+`Failure` names exactly one selected stored-error channel, including its
+origins. A family implementing both capabilities must give `ErrorMapping`
+and `ApplicativeError` the same selected `Failure`. Its carrier predicate
+should share the existing error-carrier validator where applicable, rather
+than add a second definition of membership. It also validates mapping-only
+families for which recovery is unavailable.
+
+The target must itself implement `ErrorMapping`, not merely `Functor`.
+Otherwise a generic client could not name its selected failure or establish
+that the output belongs to the new error channel. This avoids introducing a
+separate public channel-descriptor capability. Implementers consequently
+promise a coherent mapping interface on the destination, although any
+particular next operation can still be rejected by its admission predicates.
+
+`DefaultErrorTarget` is a candidate, not an unconditional conversion. Its
+conservative default is `Self`; exact target checks reject a changed error
+when no destination policy has been specified. Deterministic families
+override it. A family whose selection depends on the success type must also
+reselect that metadata, reusing `RebindingFunctor.WithElement` when available
+and proving that the selected result implements `ErrorMapping`. The existing
+`WithElement: Functor` bound alone does not prove this. No unsupported-target
+sentinel, erased `AnyType` family, or automatic Result fallback is needed.
+
+`BimapCompatible` belongs to the source family. It admits only supported
+source-to-target policy transitions and includes operation-specific native
+error, receiver, repetition and representation requirements. Equal payload
+and failure types alone do not authorize replacing a custom dictionary with
+an unrelated one. Families may add construction or execution errors, but
+must expose their exact types. Neither callback's native exception becomes a
+stored failure.
+
+Public metadata should eliminate private transformer adapters from generic
+clients. The proposed `MapBothContract` has these parameters, projections
+and component predicates:
+
+```text
+MapBothContract[
+    I: ErrorMapping, V: Value, F: Callback, G: Callback,
+    Target: ErrorMapping = I.DefaultErrorTarget[F.Out, G.Out]
+]:
+    SourceFailure = I.Failure
+    Failure = G.Out
+    Family = Target
+    Out = I.Bimapped[Target, V, F, G]
+    Error = I.BimapError[Target, V, F, G]
+
+    SourceCompatible = I.ErrorCarrierCompatible[V]
+    InputCompatible = F.Arg == I.Element[V] and G.Arg == I.Failure
+    TargetCompatible = Target.Failure == G.Out
+    OutputCompatible = (Target.ErrorCarrierCompatible[Out]
+                        and Target.Element[Out] == F.Out)
+    OperationCompatible = I.BimapCompatible[Target, V, F, G]
+    Compatible = (SourceCompatible and InputCompatible and TargetCompatible
+                  and OutputCompatible and OperationCompatible)
+
+MapErrContract[
+    I: ErrorMapping, V: Value, G: Callback,
+    Target: ErrorMapping = I.DefaultErrorTarget[I.Element[V], G.Out]
+] = MapBothContract[I, V, Identity[I.Element[V]], G, Target]
+```
+
+All type equalities above include embedded origins. Both callback inputs
+must be checked at admission, and both output types retain their origins in
+the exact destination carrier. Source, target and callback witnesses must be
+identical between the contract and operation; a generic conditional downcast
+must not be replaced by a superficially equivalent family expression.
+
+A checked operation requires `Contract.Compatible`, consumes the callbacks
+and source once, and delegates directly to `I.bimap`. Dictionary primitives
+retain the existing assumption of admitted types and validate their concrete
+receiver/ownership requirements. A generic wrapper forwards either
+`Compatible` or **all five** component predicates; the previous intrinsic
+Result input predicates alone do not establish this new family contract.
+The native boundary additionally keeps the existing selected native-error
+admission. These predicates must be demonstrated equivalent for forwarding
+before publishing aliases; boolean spelling alone is not a compiler proof.
+
+Input and target admission must not require constructing an invalid output
+alias merely to report an error. Projection order and safe rejected
+candidates are explicit prototype gates. Compiler crashes, origin erasure,
+or a requirement to spell ordinary callback types would fail the design's
+usability goal, not qualify as acceptable rejections.
+
+#### Family-specific destinations and owners
+
+| Source family | Recommended destination policy | Execution owner |
+|---|---|---|
+| `ResultFamily[E]` | Infer `ResultFamily[NewE]`. | Existing `Result.map_both` and owned Result fold. |
+| `ValidationFamily[S]` | Keep `S` for the same error type. A changed error requires explicit `ValidationFamily[S2]`, where `S2.Value == NewE`. | Existing Result fold; the destination dictionary governs subsequent accumulation. |
+| `ResultT[M, E]` | Change the inner selected `E`; retain the base policy, reselecting its payload metadata only when necessary. | One base `M.map` over an adapter to the existing Result two-arm owner. |
+| `OptionalT[M]` | Rebind the selected base error through `M`; retain the Optional layer. | Base two-arm owner, with the existing Optional success-map adapter. |
+| `ReaderT[M, R]` | Rebind `M`; retain exactly `R`. | Existing Reader run/hoist transport, then the base two-arm owner. |
+| `StateT[M, S]` | Rebind `M`; retain exactly `S`, without requiring `S: Copyable` for mapping. | Existing State run/hoist transport and success-pair adapter. |
+| `WriterT[M, W]` | Rebind `M`; retain exactly the log monoid `W`. | Existing Writer unwrap/hoist transport and success-value adapter. |
+| Custom family | Default to itself; override deterministic rebinding or require an explicit admitted target. | Its declared primitive, delegating shared representation semantics where appropriate. |
+
+The destination of a transformer must still satisfy its base requirements.
+ReaderT, StateT, WriterT, OptionalT and ResultT require a Monad base; native
+Result representation does not make a Validation base a Monad. An explicit
+target cannot silently change the environment, state type, log policy,
+outer error channel or transformer order.
+
+Validation maps its already accumulated error value once. It does not split
+that value, call the destination Semigroup's combine operation, or infer a
+Semigroup from its element type. Two Semigroups can operate on the same
+native type with different policies. The recommendation permits an explicit
+same-type transition from `S` to `S2`, making the change of future policy
+deliberate. Arbitrary error mapping is not promised to preserve Applicative
+combination laws: such a stronger claim would require the mapping to respect
+the two Semigroup operations.
+
+For nested `ResultT[ResultFamily[OuterE], InnerE]`, the carrier is
+`Result[Result[A, InnerE], OuterE]`. Selected error mapping changes only
+`InnerE`. An outer stored failure skips both callbacks; a native raise at
+either level remains native. The inner operation must work without requiring
+the base to implement `ErrorMapping`: it only needs the base's existing map.
+Rebinding payload metadata in `M` is not permission to change `OuterE`.
+Mapping that outer channel requires explicitly selecting that layer; the
+library must never search a stack for a matching error type.
+
+#### Construction, execution and ownership
+
+`BimapError` and `Contract.Error` describe construction only. The exact output
+carrier retains its existing execution contract. A universal `RunError`
+projection would misrepresent eager values and Reader's origin-indexed
+execution. Generic runners continue to use the appropriate public Reader,
+State or Writer execution metadata.
+
+For a Reader source action `S`, base family `M`, admitted destination base
+`N`, and callbacks `F` and `G`, the intended projections at run origin `o`
+are:
+
+```text
+OutputAction.Family = ReaderT[N, S.Env]
+OutputAction.Out[o] = M.Bimapped[N, S.Out[o], F, G]
+OutputAction.Error[o] = CommonError[
+    S.Error[o], M.BimapError[N, S.Out[o], F, G]
+]
+```
+
+Here `CommonError` denotes the existing Never-or-exact-same-error rule, not
+a new union type. Admission rejects incompatible inhabited native errors at
+the boundary where they must share a raise type. Construction may still
+raise a different error from deferred execution; it must not collapse those
+two stages into one callback error. Reader admission and running retain the
+actual origin checks in addition to the existing witness-origin checks.
+
+State uses the corresponding non-origin-indexed equation with the existing
+success adapter `(A, S) -> (B, S)`. It runs the source once and transforms the
+returned base carrier. It does not save, restore or copy the incoming state,
+including when the source fails. This permits mapping with move-only state
+without promising State recovery. Writer uses its existing `(Log, A) ->
+(Log, B)` adapter and constructs a real destination `WriterValue` around
+the transformed base carrier. It neither copies nor recombines the log just
+to change an error. Deferred base actions remain deferred when unwrapped.
+
+The existing Reader and State hoists currently fix `Family` to the source
+family. Their transport must be generalized to an explicitly admitted
+output family before reuse here. The source still runs under its original
+dictionary; no cast may relabel that action. Writer's transport similarly
+needs the destination wrapper family. This is a narrow generalization of
+existing transport, with regressions for current hoist consumers, rather
+than a new interpreter or a parallel family of runners.
+
+Where native Result construction can raise only callback errors, the exact
+error is the existing common error of the two callbacks. Custom families
+declare their own construction costs. ResultT's construction error is its
+base `MapError` for the two-arm inner adapter; a deferred base moves that
+work into its existing execution type. OptionalT and the other transformers
+delegate to the base's corresponding projections rather than assuming
+Result's error formula.
+
+One-shot carriers may consume one-shot callbacks. Branching carriers retain
+their existing repeatability and copy requirements; no universal `Copyable`
+bound belongs on this capability. Each original success invokes only its
+success arm, and each selected failure only its failure arm. Empty outer
+effects invoke neither. A stored error is consumed once, and callback
+outputs are not fed back through either arm. Discarding an unopened action
+invokes neither arm and destroys retained owners once.
+
+No implementation may use old-family `_Joined` to combine an original
+success carrier with a new-error failure carrier. Both branches must first
+produce the admitted destination representation, and any necessary join
+belongs to that destination. The existing Result fold or base map usually
+avoids such a join entirely. Deferred branch joins must preserve the new
+family, environment/state witnesses and origin-indexed outputs.
+
+#### User calls and generic clients
+
+The intended call shapes are schematic, not executable documentation yet:
+
+```text
+pipeline(result).map_err(to_message)
+pipeline(result).map_both(format_value, to_message)
+pipeline[ReaderT[ResultFamily[ParseError], Config]](action).map_err(to_message)
+
+pipeline[ValidationFamily[ParseErrors]](validation)
+    .map_err[Target=ValidationFamily[DisplayErrors]](format_errors)
+```
+
+The first three calls infer an unambiguous destination. The last supplies
+the policy that the error value's type cannot determine. `Target` should be
+an optional named binding appended after existing explicit type bindings;
+existing positional callback and native-error bindings must keep their
+meaning. This is not a request to force named bindings on existing APIs.
+
+A generic selected wrapper should name
+`C = MapBothContract[I, V, F, G, Target]`, require `C.Compatible`, and return
+`Pipeline[C.Family, C.Out, NativeContext]` while raising `C.Error`. It can
+continue fluently in the declared destination without importing private
+ResultT, Reader or State adapters. It cannot promise `Pipeline[I, ...]`
+unless it proves the target equals `I`. For `map_err`, `MapErrContract`
+also removes the need to spell the success Identity adapter.
+
+Native overloads retain the existing signature owner and selected error
+context. They fix source payload/error inputs before inferring callbacks,
+then compute the destination from callback outputs. A native context is
+still an admission rule for native callbacks; it does not replace library
+callables' errors or erase family construction errors. The implementation
+must qualify generic outputs and errors, pure/raising mixtures, declarations,
+stored pointers and adapters without extra caller type hints.
+
+#### Unsupported cases and compatibility decisions
+
+- A custom error-capable family without `ErrorMapping` cannot borrow this
+  operation merely because its storage happens to be Result. The proposed
+  correction is a normal unsupported-capability diagnostic. That family can
+  adopt the capability without changing native storage.
+- Intrinsic Result calls under a proven non-error family retain their
+  existing type-changing behavior. The fallback guard must exclude both
+  `ApplicativeError` and `ErrorMapping`; a mapping-only family also owns its
+  semantics. Canonical Result adopts the capability directly. Existing
+  Result methods and legacy Piped bindings need no migration in this pass.
+- A changed Validation error without a supplied destination Semigroup is
+  rejected. No fallback selects Result or a convenient default accumulation
+  policy. An explicitly unrelated target is also rejected even if its
+  carrier happens to have the correct types.
+- A callback cannot change an unselected stored-error channel, convert a
+  native raise into storage, change auxiliary state/log types, or escape
+  another owner's origin. Incompatible inhabited native errors require an
+  explicit user mapping, as elsewhere in the library.
+
+The first item deliberately changes selected custom-family behavior that
+currently drops the selected policy. It must be documented and approved
+with implementation scope. The recommendation also makes the same-error
+Validation policy transition available only through an explicit target.
+These are user-visible decisions; capability/parameter names and the exact
+Mojo encoding remain subject to the qualification below.
+
+#### Adoption sequence and acceptance gates
+
+1. Agree on the single capability, two-arm semantics, exact target contract
+   and the two compatibility decisions above. This document completes only
+   that design step; it does not establish compiler viability.
+2. Prototype the smallest Result/custom-family/Validation slice. Prove
+   ordinary invalid carrier, target, origin, receiver and error calls reject
+   normally. Qualify combined and expanded generic proofs, conditional
+   witnesses, explicit positional bindings, and deterministic target defaults
+   before promoting a public protocol. Preserve existing canonical and
+   proven intrinsic Result generic forwards.
+3. Add ResultT and OptionalT through existing inner adapters and base owners.
+   Test the interleaved branch-order example, outer failure/empty skipping,
+   exact additional base errors, nested selected channels and branching
+   callback state. Do not accept a two-traversal substitute.
+4. Generalize existing Reader/State/Writer transport narrowly. Qualify custom
+   construction versus execution errors, actual borrowed run origins,
+   move-only state/log cleanup, unopened-action disposal and joins. Mapping
+   must not acquire rollback or new copying requirements. Recheck existing
+   transport consumers, including local, listen and censor.
+5. Integrate selected admission and maintained generic/user examples; record
+   new custom-family obligations. Run source/package O0/O3 boundaries and
+   bounded cold-compilation comparisons, then publish complete passes
+   separately. No CI or compiler work is part of this sequence.
 
 ### Resource scopes
 
