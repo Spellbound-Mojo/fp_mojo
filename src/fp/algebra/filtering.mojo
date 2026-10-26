@@ -5,6 +5,7 @@ from fp.callables.protocols import BorrowCallable, Unary
 from fp.iteration._callbacks import _predicate_callable
 from fp.callables.native import _Borrowing, _RaisingBorrowing, _NativeBorrowRef
 from .protocols import Filterable, FunctorFilter, _Accumulate
+from .contracts import FilterContract
 from fp.callables.protocols import UnaryContract
 from fp.callables.native import _Unary, _RaisingUnary, _NativeUnaryRef
 from fp.functions.composition import Identity
@@ -12,7 +13,7 @@ from fp.callables._transforms import _selected
 
 
 def filter[V: Movable & Deinitable, P: BorrowCallable, //, I: Filterable](var predicate: P, var value: V
-) raises I.FilterError[V, P] -> I.Filtered[V, P] where I.Element[V] == P.Payload and P.Result == Bool:
+) raises FilterContract[I, V, P].Error -> FilterContract[I, V, P].Out where FilterContract[I, V, P].Compatible:
     """Filter a carrier through an explicit family, preserving its context.
 
     Native functions and closures are accepted directly and borrowed. A library
@@ -56,7 +57,7 @@ def filter[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmO
 
 
 def filter_not[V: Movable & Deinitable, P: BorrowCallable, //, I: Filterable](var predicate: P, var value: V
-) raises I.FilterError[V, _Negated[P]] -> I.Filtered[V, _Negated[P]] where I.Element[V] == P.Payload and P.Result == Bool:
+) raises FilterContract[I, V, P, True].Error -> FilterContract[I, V, P, True].Out where FilterContract[I, V, P, True].Compatible:
     """Retain payloads the predicate rejects, through an explicit family.
 
     This derives from the family's filter operation. Each predicate result is

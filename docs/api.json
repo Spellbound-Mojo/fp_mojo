@@ -863,6 +863,80 @@
    "summary": "The admission, result and error of flat_map with a library callable.",
    "traits": []
   },
+  "algebra.CombineContract": {
+   "aliases": [
+    {
+     "description": "Exact left and right payload equality, including embedded origins.",
+     "name": "InputCompatible"
+    },
+    {
+     "description": "The left value belongs to the selected family.",
+     "name": "LeftCompatible"
+    },
+    {
+     "description": "The right thunk produces a carrier of the selected family.",
+     "name": "RightCompatible"
+    },
+    {
+     "description": "The family's own combination predicate, without additional constraints.",
+     "name": "OperationCompatible"
+    },
+    {
+     "description": "Family admission without repeating callback operand equality.",
+     "name": "FamilyCompatible"
+    },
+    {
+     "description": "The complete checked lazy combination admission.",
+     "name": "Compatible"
+    },
+    {
+     "description": "The exact carrier produced by the family, including deferred types.",
+     "name": "Out"
+    },
+    {
+     "description": "The family's exact construction error, including callback and thunk effects.",
+     "name": "Error"
+    }
+   ],
+   "description": "`Compatible` combines exact operand equality, carrier membership and the\nfamily's operation predicate. Component predicates remain available for\nlegacy admission, which may intentionally require only OperationCompatible.\nThis descriptor never evaluates the right thunk or chooses eager versus\ndeferred execution. The family's Combined and CombineError own those types.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected Applicative family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Applicative",
+     "variadic": false
+    },
+    {
+     "description": "The complete left carrier type, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The binary library callback.",
+     "inferred": false,
+     "name": "F",
+     "type": "BinaryContract & Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The consuming or repeatable thunk producing the right carrier.",
+     "inferred": false,
+     "name": "R",
+     "type": "ThunkContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/contracts",
+   "signature": "struct CombineContract[I: Applicative, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable]",
+   "summary": "The joint contract of a left carrier, binary callback and lazy right carrier.",
+   "traits": []
+  },
   "algebra.DequeFamily": {
    "aliases": [],
    "description": "Select with `pipeline[DequeFamily](values^)`. Mapping and filter_map can change\nthe element type. Callbacks are repeatable and elements are moved. The family\nimplements Functor, Filterable and FunctorFilter, without Applicative or Monad.",
@@ -873,6 +947,72 @@
    "provider": "algebra/collections",
    "signature": "comptime DequeFamily = _DequeFamily",
    "summary": "Map and filter native Deque elements, preserving their order and settings.",
+   "traits": []
+  },
+  "algebra.FilterContract": {
+   "aliases": [
+    {
+     "description": "Exact predicate payload equality, including embedded origins.",
+     "name": "InputCompatible"
+    },
+    {
+     "description": "The predicate returns the native Bool type.",
+     "name": "PredicateCompatible"
+    },
+    {
+     "description": "The complete checked filtering admission.",
+     "name": "Compatible"
+    },
+    {
+     "description": "The predicate supplied to the family after optional inversion.",
+     "name": "Predicate"
+    },
+    {
+     "description": "The exact carrier produced by the family.",
+     "name": "Out"
+    },
+    {
+     "description": "The exact construction error, including predicate-dependent family errors.",
+     "name": "Error"
+    }
+   ],
+   "description": "Forward `Compatible` in a generic wrapper of `filter` or `filter_not`.\nInversion changes the predicate supplied to the family, so its associated\noutput and error must be projected using that adapted predicate too.\nFiltering does not require the family to implement Functor.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected Filterable family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Filterable",
+     "variadic": false
+    },
+    {
+     "description": "The complete consumed carrier type, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The repeatable borrowing predicate type.",
+     "inferred": false,
+     "name": "P",
+     "type": "BorrowCallable",
+     "variadic": false
+    },
+    {
+     "description": "Select filter_not semantics; False selects filter.",
+     "inferred": false,
+     "name": "inverted",
+     "type": "Bool",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/contracts",
+   "signature": "struct FilterContract[I: Filterable, V: Movable & Deinitable, P: BorrowCallable, inverted: Bool = False]",
+   "summary": "The admission, output and exact error of borrowing predicate selection.",
    "traits": []
   },
   "algebra.Filterable": {
@@ -4749,7 +4889,7 @@
       }
      ],
      "description": "Native functions and closures are accepted directly and borrowed. A library\nBorrowCallable is consumed. Built-in families run now, call once per payload\nin native order, move accepted values unchanged and destroy rejected values.\nEmpty carriers skip calls. Failure destroys remaining input and partial output.\nDeferred families retain their own evaluation and error semantics and may\nretain the native callback borrow. Keep it alive and unmoved until completion.\nGeneric forwarding of a raising native callback names its error with E=.",
-     "error": "I.FilterError[V, P]",
+     "error": "FilterContract[I, V, P].Error",
      "parameters": [
       {
        "description": "The carrier type.",
@@ -4777,9 +4917,9 @@
      "raises_doc": "The family's exact filtering error.",
      "returns": {
       "doc": "The family's carrier of accepted values, with their origins unchanged.",
-      "type": "I.Filtered[V, P]"
+      "type": "FilterContract[I, V, P].Out"
      },
-     "signature": "def filter[V: Movable & Deinitable, P: BorrowCallable, //, I: Filterable](var predicate: P, var value: V) raises I.FilterError[V, P] -> I.Filtered[V, P] where I.Element[V] == P.Payload and P.Result == Bool",
+     "signature": "def filter[V: Movable & Deinitable, P: BorrowCallable, //, I: Filterable](var predicate: P, var value: V) raises FilterContract[I, V, P].Error -> FilterContract[I, V, P].Out where FilterContract[I, V, P].Compatible",
      "summary": "Filter a carrier through an explicit family, preserving its context."
     },
     {
@@ -5169,7 +5309,7 @@
       }
      ],
      "description": "This derives from the family's filter operation. Each predicate result is\ninverted; input ownership, evaluation, result origins and errors otherwise\nfollow filter. Native callbacks are borrowed, library predicates consumed.\nDeferred families may retain that borrow: keep the callback alive and unmoved\nuntil completion. Generic native forwarding names the family and, for a\nraising callback, its error with E=.",
-     "error": "I.FilterError[V, _Negated[P]]",
+     "error": "FilterContract[I, V, P, True].Error",
      "parameters": [
       {
        "description": "The carrier type.",
@@ -5197,9 +5337,9 @@
      "raises_doc": "The family's exact error for filtering with the adapted predicate.",
      "returns": {
       "doc": "The family's carrier of rejected values, with their origins unchanged.",
-      "type": "I.Filtered[V, _Negated[P]]"
+      "type": "FilterContract[I, V, P, True].Out"
      },
-     "signature": "def filter_not[V: Movable & Deinitable, P: BorrowCallable, //, I: Filterable](var predicate: P, var value: V) raises I.FilterError[V, _Negated[P]] -> I.Filtered[V, _Negated[P]] where I.Element[V] == P.Payload and P.Result == Bool",
+     "signature": "def filter_not[V: Movable & Deinitable, P: BorrowCallable, //, I: Filterable](var predicate: P, var value: V) raises FilterContract[I, V, P, True].Error -> FilterContract[I, V, P, True].Out where FilterContract[I, V, P, True].Compatible",
      "summary": "Retain payloads the predicate rejects, through an explicit family."
     },
     {
@@ -6920,7 +7060,7 @@
       }
      ],
      "description": "`right` runs at most once per combination, and not at all when `left`\nalready determines failure or emptiness. A produced right value is kept for\nlater branches; a list combines in left-major Cartesian order.",
-     "error": "I.CombineError[V, F, R]",
+     "error": "CombineContract[I, V, F, R].Error",
      "parameters": [
       {
        "description": "The left carrier's type.",
@@ -6955,9 +7095,9 @@
      "raises_doc": "`I.CombineError[V, F, R]`: the combiner's or the thunk's error.",
      "returns": {
       "doc": "`I.Combined[V, F, R]`, the carrier of the combined payloads.",
-      "type": "I.Combined[V, F, R]"
+      "type": "CombineContract[I, V, F, R].Out"
      },
-     "signature": "def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, I: Applicative](var f: F, var left: V, var right: R) raises I.CombineError[V, F, R] -> I.Combined[V, F, R] where _CombineCompatible[I, V, F, R]",
+     "signature": "def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, I: Applicative](var f: F, var left: V, var right: R) raises CombineContract[I, V, F, R].Error -> CombineContract[I, V, F, R].Out where CombineContract[I, V, F, R].OperationCompatible",
      "summary": "Combine the payload of `left` with that of the carrier `right` produces."
     }
    ],
@@ -98578,7 +98718,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, C]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, C].Error",
       "parameters": [
        {
         "description": "The first library callback type, retaining its receiver and origins.",
@@ -98592,9 +98732,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, C], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, C].Out, Self.E]"
       },
-      "signature": "def filter[C: BorrowCallable](deinit self, var predicate: C) raises _Filtering[Self.I].FilterError[Self.V, C] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, C], Self.E] where conforms_to(Self.I, Filterable) and C.Payload == Self.I.Element[Self.V] and C.Result == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter[C: BorrowCallable](deinit self, var predicate: C) raises FilterContract[_Filtering[Self.I], Self.V, C].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, C].Out, Self.E] where conforms_to(Self.I, Filterable) and C.Payload == Self.I.Element[Self.V] and C.Result == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -98608,7 +98748,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -98636,9 +98776,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E]"
       },
-      "signature": "def filter[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] predicate: C) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]], Self.E] where conforms_to(Self.I, Filterable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] predicate: C) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, Filterable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -98652,7 +98792,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -98680,9 +98820,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Out, Self.E]"
       },
-      "signature": "def filter[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] predicate: C) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], Self.E] where conforms_to(Self.I, Filterable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] predicate: C) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, Filterable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -98696,7 +98836,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -98724,9 +98864,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]].Out, Self.E]"
       },
-      "signature": "def filter[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] predicate: C) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]], Self.E] where conforms_to(Self.I, Filterable) and Self.E != Never and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] predicate: C) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, Filterable) and Self.E != Never and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -98740,7 +98880,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -98754,9 +98894,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def filter[R: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]], Self.E] where conforms_to(Self.I, Filterable) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter[R: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) thin -> R) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Filterable) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -98770,7 +98910,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -98784,9 +98924,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def filter[R: RegisterPassable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]], Self.E] where conforms_to(Self.I, Filterable) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter[R: RegisterPassable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) thin -> R) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Filterable) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -98800,7 +98940,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -98821,9 +98961,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def filter[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, predicate: def(P) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]], Self.E] where conforms_to(Self.I, Filterable) and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, predicate: def(P) thin -> R) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Filterable) and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -98837,7 +98977,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -98858,9 +98998,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def filter[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, predicate: def(P) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]], Self.E] where conforms_to(Self.I, Filterable) and P == Self.I.Element[Self.V] and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, predicate: def(P) thin -> R) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Filterable) and P == Self.I.Element[Self.V] and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -98874,7 +99014,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -98895,9 +99035,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def filter[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) raises X thin -> R) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -98911,7 +99051,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -98932,9 +99072,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def filter[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) raises X thin -> R) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -98948,7 +99088,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -98976,9 +99116,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def filter[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(P) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(P) raises X thin -> R) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -98992,7 +99132,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -99020,9 +99160,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def filter[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(P) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(P) raises X thin -> R) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      }
     ],
@@ -99880,7 +100020,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _FilterPredicate[C, True]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, C, True].Error",
       "parameters": [
        {
         "description": "The first library callback type, retaining its receiver and origins.",
@@ -99894,9 +100034,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[C, True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, C, True].Out, Self.E]"
       },
-      "signature": "def filter_not[C: BorrowCallable](deinit self, var predicate: C) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[C, True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[C, True]], Self.E] where conforms_to(Self.I, Filterable) and C.Payload == Self.I.Element[Self.V] and C.Result == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter_not[C: BorrowCallable](deinit self, var predicate: C) raises FilterContract[_Filtering[Self.I], Self.V, C, True].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, C, True].Out, Self.E] where conforms_to(Self.I, Filterable) and C.Payload == Self.I.Element[Self.V] and C.Result == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -99910,7 +100050,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True].Error",
       "parameters": [
        {
         "description": "",
@@ -99938,9 +100078,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True].Out, Self.E]"
       },
-      "signature": "def filter_not[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] predicate: C) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]], Self.E] where conforms_to(Self.I, Filterable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter_not[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] predicate: C) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True].Out, Self.E] where conforms_to(Self.I, Filterable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -99954,7 +100094,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], True]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], True].Error",
       "parameters": [
        {
         "description": "",
@@ -99982,9 +100122,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], True].Out, Self.E]"
       },
-      "signature": "def filter_not[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] predicate: C) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], True]], Self.E] where conforms_to(Self.I, Filterable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter_not[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] predicate: C) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], True].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], True].Out, Self.E] where conforms_to(Self.I, Filterable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -99998,7 +100138,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], True]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], True].Error",
       "parameters": [
        {
         "description": "",
@@ -100026,9 +100166,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], True].Out, Self.E]"
       },
-      "signature": "def filter_not[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] predicate: C) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], True]], Self.E] where conforms_to(Self.I, Filterable) and Self.E != Never and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter_not[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] predicate: C) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], True].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], True].Out, Self.E] where conforms_to(Self.I, Filterable) and Self.E != Never and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -100042,7 +100182,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True].Error",
       "parameters": [
        {
         "description": "",
@@ -100056,9 +100196,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True].Out, Self.E]"
       },
-      "signature": "def filter_not[R: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True]], Self.E] where conforms_to(Self.I, Filterable) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter_not[R: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) thin -> R) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True].Out, Self.E] where conforms_to(Self.I, Filterable) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -100072,7 +100212,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True].Error",
       "parameters": [
        {
         "description": "",
@@ -100086,9 +100226,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True].Out, Self.E]"
       },
-      "signature": "def filter_not[R: RegisterPassable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True]], Self.E] where conforms_to(Self.I, Filterable) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter_not[R: RegisterPassable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) thin -> R) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True].Out, Self.E] where conforms_to(Self.I, Filterable) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -100102,7 +100242,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[P, R, Never, def(P) thin -> R, False], True]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False], True].Error",
       "parameters": [
        {
         "description": "",
@@ -100123,9 +100263,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, Never, def(P) thin -> R, False], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False], True].Out, Self.E]"
       },
-      "signature": "def filter_not[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, predicate: def(P) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[P, R, Never, def(P) thin -> R, False], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, Never, def(P) thin -> R, False], True]], Self.E] where conforms_to(Self.I, Filterable) and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter_not[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, predicate: def(P) thin -> R) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False], True].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False], True].Out, Self.E] where conforms_to(Self.I, Filterable) and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -100139,7 +100279,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[P, R, Never, def(P) thin -> R, False], True]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False], True].Error",
       "parameters": [
        {
         "description": "",
@@ -100160,9 +100300,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, Never, def(P) thin -> R, False], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False], True].Out, Self.E]"
       },
-      "signature": "def filter_not[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, predicate: def(P) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[P, R, Never, def(P) thin -> R, False], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, Never, def(P) thin -> R, False], True]], Self.E] where conforms_to(Self.I, Filterable) and P == Self.I.Element[Self.V] and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter_not[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, predicate: def(P) thin -> R) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False], True].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False], True].Out, Self.E] where conforms_to(Self.I, Filterable) and P == Self.I.Element[Self.V] and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -100176,7 +100316,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True].Error",
       "parameters": [
        {
         "description": "",
@@ -100197,9 +100337,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True].Out, Self.E]"
       },
-      "signature": "def filter_not[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter_not[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) raises X thin -> R) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True].Out, Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -100213,7 +100353,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True].Error",
       "parameters": [
        {
         "description": "",
@@ -100234,9 +100374,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True].Out, Self.E]"
       },
-      "signature": "def filter_not[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter_not[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) raises X thin -> R) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True].Out, Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -100250,7 +100390,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True].Error",
       "parameters": [
        {
         "description": "",
@@ -100278,9 +100418,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True].Out, Self.E]"
       },
-      "signature": "def filter_not[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(P) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter_not[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(P) raises X thin -> R) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True].Out, Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -100294,7 +100434,7 @@
        }
       ],
       "description": "",
-      "error": "_Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True]]",
+      "error": "FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True].Error",
       "parameters": [
        {
         "description": "",
@@ -100322,9 +100462,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True].Out, Self.E]"
       },
-      "signature": "def filter_not[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(P) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
+      "signature": "def filter_not[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(P) raises X thin -> R) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True].Out, Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      }
     ],
@@ -109543,7 +109683,7 @@
        }
       ],
       "description": "",
-      "error": "_Combining[Self.I].CombineError[Self.V, C, _ValueThunk[W]]",
+      "error": "CombineContract[_Combining[Self.I], Self.V, C, _ValueThunk[W]].Error",
       "parameters": [
        {
         "description": "The second carrier type, including its origins.",
@@ -109564,9 +109704,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, C, _ValueThunk[W]], Self.E]"
+       "type": "Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, C, _ValueThunk[W]].Out, Self.E]"
       },
-      "signature": "def map2[W: Movable & Deinitable, C: BinaryContract & Movable & Deinitable](deinit self, var other: W, var function: C) raises _Combining[Self.I].CombineError[Self.V, C, _ValueThunk[W]] -> Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, C, _ValueThunk[W]], Self.E] where conforms_to(Self.I, Applicative) and C.First == Self.I.Element[Self.V] and C.Second == Self.I.Element[W] and _CombineCompatible[_Combining[Self.I], Self.V, C, _ValueThunk[W]] and _CarrierCompatible[_Combining[Self.I], Self.V] and _CarrierCompatible[_Combining[Self.I], W]",
+      "signature": "def map2[W: Movable & Deinitable, C: BinaryContract & Movable & Deinitable](deinit self, var other: W, var function: C) raises CombineContract[_Combining[Self.I], Self.V, C, _ValueThunk[W]].Error -> Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, C, _ValueThunk[W]].Out, Self.E] where conforms_to(Self.I, Applicative) and C.First == Self.I.Element[Self.V] and C.Second == Self.I.Element[W] and CombineContract[_Combining[Self.I], Self.V, C, _ValueThunk[W]].FamilyCompatible",
       "summary": "Combine two evaluated carriers through the selected Applicative family."
      },
      {
@@ -109587,7 +109727,7 @@
        }
       ],
       "description": "",
-      "error": "_Combining[Self.I].CombineError[Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o], _ValueThunk[W]]",
+      "error": "CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o], _ValueThunk[W]].Error",
       "parameters": [
        {
         "description": "",
@@ -109622,9 +109762,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o], _ValueThunk[W]], Self.E]"
+       "type": "Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o], _ValueThunk[W]].Out, Self.E]"
       },
-      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W]) -> R](deinit self, var other: W, ref[o] function: C) raises _Combining[Self.I].CombineError[Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o], _ValueThunk[W]] -> Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o], _ValueThunk[W]], Self.E] where conforms_to(Self.I, Applicative) and _CombineCompatible[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o], _ValueThunk[W]] and _CarrierCompatible[_Combining[Self.I], Self.V] and _CarrierCompatible[_Combining[Self.I], W]",
+      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W]) -> R](deinit self, var other: W, ref[o] function: C) raises CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o], _ValueThunk[W]].Error -> Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o], _ValueThunk[W]].Out, Self.E] where conforms_to(Self.I, Applicative) and CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o], _ValueThunk[W]].FamilyCompatible",
       "summary": "Combine two evaluated carriers through the selected Applicative family."
      },
      {
@@ -109645,7 +109785,7 @@
        }
       ],
       "description": "",
-      "error": "_Combining[Self.I].CombineError[Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o], _ValueThunk[W]]",
+      "error": "CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o], _ValueThunk[W]].Error",
       "parameters": [
        {
         "description": "",
@@ -109680,9 +109820,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o], _ValueThunk[W]], Self.E]"
+       "type": "Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o], _ValueThunk[W]].Out, Self.E]"
       },
-      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W]) raises Self.E -> R](deinit self, var other: W, ref[o] function: C) raises _Combining[Self.I].CombineError[Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o], _ValueThunk[W]] -> Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o], _ValueThunk[W]], Self.E] where conforms_to(Self.I, Applicative) and _CombineCompatible[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o], _ValueThunk[W]] and _CarrierCompatible[_Combining[Self.I], Self.V] and _CarrierCompatible[_Combining[Self.I], W]",
+      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W]) raises Self.E -> R](deinit self, var other: W, ref[o] function: C) raises CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o], _ValueThunk[W]].Error -> Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o], _ValueThunk[W]].Out, Self.E] where conforms_to(Self.I, Applicative) and CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o], _ValueThunk[W]].FamilyCompatible",
       "summary": "Combine two evaluated carriers through the selected Applicative family."
      },
      {
@@ -109703,7 +109843,7 @@
        }
       ],
       "description": "",
-      "error": "_Combining[Self.I].CombineError[Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o], _ValueThunk[W]]",
+      "error": "CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o], _ValueThunk[W]].Error",
       "parameters": [
        {
         "description": "",
@@ -109738,9 +109878,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o], _ValueThunk[W]], Self.E]"
+       "type": "Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o], _ValueThunk[W]].Out, Self.E]"
       },
-      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W]) raises Never -> R](deinit self, var other: W, ref[o] function: C) raises _Combining[Self.I].CombineError[Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o], _ValueThunk[W]] -> Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o], _ValueThunk[W]], Self.E] where conforms_to(Self.I, Applicative) and Self.E != Never and _CombineCompatible[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o], _ValueThunk[W]] and _CarrierCompatible[_Combining[Self.I], Self.V] and _CarrierCompatible[_Combining[Self.I], W]",
+      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W]) raises Never -> R](deinit self, var other: W, ref[o] function: C) raises CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o], _ValueThunk[W]].Error -> Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o], _ValueThunk[W]].Out, Self.E] where conforms_to(Self.I, Applicative) and Self.E != Never and CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o], _ValueThunk[W]].FamilyCompatible",
       "summary": "Combine two evaluated carriers through the selected Applicative family."
      },
      {
@@ -109761,7 +109901,7 @@
        }
       ],
       "description": "",
-      "error": "_Combining[Self.I].CombineError[Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]]",
+      "error": "CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]].Error",
       "parameters": [
        {
         "description": "",
@@ -109782,9 +109922,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]], Self.E]"
+       "type": "Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]].Out, Self.E]"
       },
-      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, //](deinit self, var other: W, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R) raises _Combining[Self.I].CombineError[Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]] -> Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]], Self.E] where conforms_to(Self.I, Applicative) and not conforms_to(R, RegisterPassable) and _CombineCompatible[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]] and _CarrierCompatible[_Combining[Self.I], Self.V] and _CarrierCompatible[_Combining[Self.I], W]",
+      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, //](deinit self, var other: W, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R) raises CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]].Error -> Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]].Out, Self.E] where conforms_to(Self.I, Applicative) and not conforms_to(R, RegisterPassable) and CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]].FamilyCompatible",
       "summary": "Combine two evaluated carriers through the selected Applicative family."
      },
      {
@@ -109805,7 +109945,7 @@
        }
       ],
       "description": "",
-      "error": "_Combining[Self.I].CombineError[Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]]",
+      "error": "CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]].Error",
       "parameters": [
        {
         "description": "",
@@ -109826,9 +109966,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]], Self.E]"
+       "type": "Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]].Out, Self.E]"
       },
-      "signature": "def map2[W: Movable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, var other: W, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R) raises _Combining[Self.I].CombineError[Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]] -> Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]], Self.E] where conforms_to(Self.I, Applicative) and _CombineCompatible[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]] and _CarrierCompatible[_Combining[Self.I], Self.V] and _CarrierCompatible[_Combining[Self.I], W]",
+      "signature": "def map2[W: Movable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, var other: W, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R) raises CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]].Error -> Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]].Out, Self.E] where conforms_to(Self.I, Applicative) and CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]].FamilyCompatible",
       "summary": "Combine two evaluated carriers through the selected Applicative family."
      },
      {
@@ -109849,7 +109989,7 @@
        }
       ],
       "description": "",
-      "error": "_Combining[Self.I].CombineError[Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]]",
+      "error": "CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]].Error",
       "parameters": [
        {
         "description": "",
@@ -109877,9 +110017,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]], Self.E]"
+       "type": "Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]].Out, Self.E]"
       },
-      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, var other: W, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R) raises _Combining[Self.I].CombineError[Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]] -> Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]], Self.E] where conforms_to(Self.I, Applicative) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and _CombineCompatible[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]] and _CarrierCompatible[_Combining[Self.I], Self.V] and _CarrierCompatible[_Combining[Self.I], W]",
+      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, var other: W, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R) raises CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]].Error -> Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]].Out, Self.E] where conforms_to(Self.I, Applicative) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]].FamilyCompatible",
       "summary": "Combine two evaluated carriers through the selected Applicative family."
      },
      {
@@ -109900,7 +110040,7 @@
        }
       ],
       "description": "",
-      "error": "_Combining[Self.I].CombineError[Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]]",
+      "error": "CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]].Error",
       "parameters": [
        {
         "description": "",
@@ -109928,9 +110068,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]], Self.E]"
+       "type": "Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]].Out, Self.E]"
       },
-      "signature": "def map2[W: Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, var other: W, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R) raises _Combining[Self.I].CombineError[Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]] -> Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]], Self.E] where conforms_to(Self.I, Applicative) and _ErrorCompatible[Self.E, X] and _CombineCompatible[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]] and _CarrierCompatible[_Combining[Self.I], Self.V] and _CarrierCompatible[_Combining[Self.I], W]",
+      "signature": "def map2[W: Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, var other: W, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R) raises CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]].Error -> Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]].Out, Self.E] where conforms_to(Self.I, Applicative) and _ErrorCompatible[Self.E, X] and CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]].FamilyCompatible",
       "summary": "Combine two evaluated carriers through the selected Applicative family."
      }
     ],

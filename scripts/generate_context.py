@@ -604,13 +604,10 @@ def methods(*, fold_stage=False):
     for cb in owning_callbacks("binary", ("Self.I.Element[Self.V]", "Self.I.Element[W]"), "function"):
         family = "_Combining[Self.I]"
         types = f"Self.V, {cb['adapter_type']}, _ValueThunk[W]"
-        result, error = f"{family}.Combined[{types}]", f"{family}.CombineError[{types}]"
+        contract = f"CombineContract[{family}, {types}]"
+        result, error = contract + ".Out", contract + ".Error"
         conditions = ["conforms_to(Self.I, Applicative)"] + cb["conditions"]
-        conditions += [
-            f"_CombineCompatible[{family}, {types}]",
-            f"_CarrierCompatible[{family}, Self.V]",
-            f"_CarrierCompatible[{family}, W]",
-        ]
+        conditions += [contract + ".FamilyCompatible"]
         emit(
             "map2",
             cb,
@@ -735,8 +732,9 @@ def methods(*, fold_stage=False):
                 operation = "MapContract" if name == "map" else "BindContract"
                 contract = f"{operation}[{family}, Self.V, {cbtype}]"
                 conditions.append(contract + ".FamilyCompatible")
-            if name == "filter_not":
-                cbtype = f"_FilterPredicate[{cbtype}, True]"
+            if filtering:
+                inversion = ", True" if name == "filter_not" else ""
+                contract = f"FilterContract[{family}, Self.V, {cbtype}{inversion}]"
             result = contract + ".Out" if contract else f"{family}.{result_alias}[Self.V, {cbtype}]"
             error = contract + ".Error" if contract else f"{family}.{error_alias}[Self.V, {cbtype}]"
             output_family = (f"downcast[{family}.FilteredFamily, Functor]" if filtering else

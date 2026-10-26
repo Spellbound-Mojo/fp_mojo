@@ -156,6 +156,9 @@
     "docs/examples/selected_workflow.mojo": {
       "stdout": "total: 34\ninvalid amount\ntransport: 503\n"
     },
+    "docs/examples/selection_contracts.mojo": {
+      "stdout": "selected: 3 7\ncombined: 10\n"
+    },
     "docs/examples/selective_recovery.mojo": {
       "stdout": "observed: retry\nvalue: 42\nobserved: missing\nvalue: 0\nobserved: fatal\nerror: fatal\n"
     },

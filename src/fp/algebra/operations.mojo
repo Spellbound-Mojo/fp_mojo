@@ -12,7 +12,7 @@ from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract
 from fp.callables.native import _NativeUnaryRef, _Unary, _RaisingUnary
 from fp._internal.errors import _ErrorCompatible, _propagate_error
 from .protocols import Functor, Applicative, Monad, Traversable, Monoid, Semigroup
-from .contracts import MapContract, BindContract, TraverseContract
+from .contracts import MapContract, BindContract, TraverseContract, FilterContract, CombineContract
 
 
 def map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Functor](
@@ -69,7 +69,7 @@ def pure[A: Movable & Deinitable, //, I: Applicative](var value: A) -> I.Pure[A]
 
 
 def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //,
-              I: Applicative](var f: F, var left: V, var right: R) raises I.CombineError[V, F, R] -> I.Combined[V, F, R] where _CombineCompatible[I, V, F, R]:
+              I: Applicative](var f: F, var left: V, var right: R) raises CombineContract[I, V, F, R].Error -> CombineContract[I, V, F, R].Out where CombineContract[I, V, F, R].OperationCompatible:
     """Combine the payload of `left` with that of the carrier `right` produces.
 
     `right` runs at most once per combination, and not at all when `left`

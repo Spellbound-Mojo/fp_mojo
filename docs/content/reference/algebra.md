@@ -20,6 +20,14 @@ library callbacks; native callbacks keep their existing admission syntax.
 
 <!-- example: docs/examples/operation_contracts.mojo -->
 
+`FilterContract[I, V, P]` does the same for `filter`; pass `True` as the
+fourth parameter for `filter_not`. Its error and output use the actual
+predicate supplied to the family, including inversion. `CombineContract`
+describes a binary callback and a lazy right-hand thunk; it preserves the
+family's exact construction error and does not evaluate the thunk.
+
+<!-- example: docs/examples/selection_contracts.mojo -->
+
 The component predicates remain available for generic implementations that
 already know the input type. In particular, `FamilyCompatible` excludes the
 input-equality check. Existing family predicates and generic forwarding syntax

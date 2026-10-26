@@ -93,6 +93,17 @@ evaluation; no operation object, storage box or extra function-valued dispatch
 layer is introduced. Existing free-traversal admission is preserved through
 the contract's individual input and collection projections.
 
+FilterContract groups exact borrowed-payload equality and the Bool predicate
+requirement. Its optional inversion selects the actual family predicate before
+projecting output and error, preserving predicate-dependent family effects.
+CombineContract separates callback operand equality, left/right carrier
+membership and the family's combination predicate. Selected map2 consumes the
+family and carrier predicates together. Legacy map2_lazy still requires only
+OperationCompatible, so existing generic wrappers keep their admission policy.
+These contracts add no receiver adapter or execution layer. Folds continue to
+use their existing source and receiver contracts; new descriptors are added
+only where a client otherwise repeats operation-specific proofs.
+
 Terminal and traversal syntax share `scripts/operation_specs.py`. It owns
 callback mode, retention and postprocessing choices, associated result/error
 expressions, and existing execution targets. Selected Pipeline and legacy

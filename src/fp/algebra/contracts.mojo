@@ -6,8 +6,9 @@ input equality to a family's MapCompatible: lifted effect projections can be
 opaque until the operation is specialized. These descriptors store no values,
 adapt no callbacks and introduce no additional invocation boundary.
 """
-from .protocols import Functor, Monad, Traversable, Applicative
-from fp.callables.protocols import UnaryContract
+from .protocols import Functor, Monad, Traversable, Applicative, Filterable
+from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallable
+from fp.callables._predicates import _FilterPredicate
 
 
 struct MapContract[I: Functor, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]:
@@ -90,3 +91,64 @@ struct TraverseContract[S: Traversable, G: Applicative, V: Movable & Deinitable,
     """The exact traversal result, retaining source shape and target effect."""
     comptime Error = Self.S.TraverseError[Self.G, Self.V, Self.F]
     """The exact native error raised when constructing the traversal."""
+
+
+struct FilterContract[I: Filterable, V: Movable & Deinitable, P: BorrowCallable, inverted: Bool = False]:
+    """The admission, output and exact error of borrowing predicate selection.
+
+    Forward `Compatible` in a generic wrapper of `filter` or `filter_not`.
+    Inversion changes the predicate supplied to the family, so its associated
+    output and error must be projected using that adapted predicate too.
+    Filtering does not require the family to implement Functor.
+
+    Parameters:
+        I: The selected Filterable family.
+        V: The complete consumed carrier type, including origins.
+        P: The repeatable borrowing predicate type.
+        inverted: Select filter_not semantics; False selects filter.
+    """
+    comptime InputCompatible = Self.I.Element[Self.V] == Self.P.Payload
+    """Exact predicate payload equality, including embedded origins."""
+    comptime PredicateCompatible = Self.P.Result == Bool
+    """The predicate returns the native Bool type."""
+    comptime Compatible = Self.InputCompatible and Self.PredicateCompatible
+    """The complete checked filtering admission."""
+    comptime Predicate = _FilterPredicate[Self.P, Self.inverted]
+    """The predicate supplied to the family after optional inversion."""
+    comptime Out = Self.I.Filtered[Self.V, Self.Predicate]
+    """The exact carrier produced by the family."""
+    comptime Error = Self.I.FilterError[Self.V, Self.Predicate]
+    """The exact construction error, including predicate-dependent family errors."""
+
+
+struct CombineContract[I: Applicative, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable]:
+    """The joint contract of a left carrier, binary callback and lazy right carrier.
+
+    `Compatible` combines exact operand equality, carrier membership and the
+    family's operation predicate. Component predicates remain available for
+    legacy admission, which may intentionally require only OperationCompatible.
+    This descriptor never evaluates the right thunk or chooses eager versus
+    deferred execution. The family's Combined and CombineError own those types.
+
+    Parameters:
+        I: The selected Applicative family.
+        V: The complete left carrier type, including origins.
+        F: The binary library callback.
+        R: The consuming or repeatable thunk producing the right carrier.
+    """
+    comptime InputCompatible = Self.I.Element[Self.V] == Self.F.First and Self.I.Element[Self.R.Out] == Self.F.Second
+    """Exact left and right payload equality, including embedded origins."""
+    comptime LeftCompatible = Self.I.CarrierCompatible[Self.V]
+    """The left value belongs to the selected family."""
+    comptime RightCompatible = Self.I.CarrierCompatible[Self.R.Out]
+    """The right thunk produces a carrier of the selected family."""
+    comptime OperationCompatible = Self.I.CombineCompatible[Self.V, Self.F, Self.R]
+    """The family's own combination predicate, without additional constraints."""
+    comptime FamilyCompatible = Self.OperationCompatible and Self.LeftCompatible and Self.RightCompatible
+    """Family admission without repeating callback operand equality."""
+    comptime Compatible = Self.InputCompatible and Self.FamilyCompatible
+    """The complete checked lazy combination admission."""
+    comptime Out = Self.I.Combined[Self.V, Self.F, Self.R]
+    """The exact carrier produced by the family, including deferred types."""
+    comptime Error = Self.I.CombineError[Self.V, Self.F, Self.R]
+    """The family's exact construction error, including callback and thunk effects."""
