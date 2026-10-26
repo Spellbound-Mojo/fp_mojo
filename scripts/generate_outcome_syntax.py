@@ -1,6 +1,6 @@
 """Family admission for validation and fixed-error outcome composition."""
 from itertools import product
-from generate_result_syntax import callback
+from native_signatures import callback
 
 
 def borrowed(kind, name, second=False):

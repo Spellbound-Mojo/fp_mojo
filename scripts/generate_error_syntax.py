@@ -1,4 +1,6 @@
 """Explicit-family recovery admission; families and _Recovered own execution."""
+from native_signatures import callback
+
 MD = 'Movable & Deinitable'
 
 
@@ -69,24 +71,13 @@ def methods():
 
 
 def conditional_methods():
-    from generate_result_syntax import callback
     from itertools import product
-    import re
-
-    def rename(cb, mapping):
-        def change(s):
-            return re.sub(r'\b(' + '|'.join(mapping) + r')\b', lambda m: mapping[m[0]], s)
-        for field in ('parameters', 'explicit'):
-            setattr(cb, field, [change(v) for v in getattr(cb, field)])
-        for field in ('argument', 'type', 'build', 'payload', 'result', 'error'):
-            setattr(cb, field, change(getattr(cb, field)))
-        return cb
     out = []
     for name in ('recover_if', 'or_else_if'):
         for pk, hk in product(('library', 'pure', 'raising'), ('library', 'pure', 'raising', 'view')):
-            p = rename(callback('borrow', pk, 'predicate'), {'R': 'S'})
+            p = callback('borrow', pk, 'predicate').renamed({'R': 'S'})
             # Preserve the owned callback's canonical A/R/E native signature.
-            h = rename(callback('owned', hk if hk != 'view' else 'library', 'handler', second=True), {'Q': 'A', 'S': 'R', 'Y': 'E'})
+            h = callback('owned', hk if hk != 'view' else 'library', 'handler', second=True).renamed({'Q': 'A', 'S': 'R', 'Y': 'E'})
             if hk == 'view':
                 h.parameters = ['G: _UnaryViewable', 'q: ImmOrigin']
                 h.argument, h.type, h.build = 'ref[q] handler: G', 'G._View[q]', 'handler._unary_view()'
@@ -142,7 +133,6 @@ def conditional_methods():
 
 
 def observation_methods():
-    from generate_result_syntax import callback
     out = []
     for name in ('tap_err', 'flat_tap_err'):
         effect = name == 'flat_tap_err'

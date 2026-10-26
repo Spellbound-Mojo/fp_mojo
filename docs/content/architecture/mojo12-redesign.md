@@ -193,9 +193,12 @@ their generators by the tooling suite.
 
 The same module owns the mapping from callback shape to library protocol and
 native adapter type. Selected Pipeline, Result, Piped, terminal, traversal,
-iterator, effect and applicative syntax use that mapping, as does `as_unary`;
-Result's callback description is also reused by error, outcome and sequencing
-generators. Each admission surface retains its parameter order,
+iterator, effect and applicative syntax use that mapping, as does `as_unary`.
+The shared module also owns the ordered callback description used by Result,
+error, outcome and sequencing generators, so these emitters do not depend on
+the Result emitter for signature machinery. Parameter renaming returns an
+independently editable description, retaining whole identifiers and their
+order. Each admission surface retains its parameter order,
 effect selection and ownership constraints. Sharing these facts does not
 merge the distinct selected-context and legacy overload policies. The
 consolidation produces identical generated Mojo signatures and bodies.

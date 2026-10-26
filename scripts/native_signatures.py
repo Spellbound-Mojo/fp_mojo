@@ -7,8 +7,9 @@ only after comparing the complete native function type. No storage, effect
 handling, or Result construction belongs here.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from itertools import product
+import re
 
 MD = "Movable & Deinitable"
 
@@ -56,6 +57,100 @@ def native_adapter(mode, payloads, result, error, function, raising, *, origin=N
     if origin is not None:
         parameters.append(origin)
     return owner + "[" + ", ".join(parameters) + "]"
+
+
+@dataclass
+class Callback:
+    """Ordered admission parameters and the existing invocation adapter.
+
+    Emitters may specialize this description for their own surface. Renaming
+    returns a separate description so two callback positions cannot share edits.
+    """
+
+    parameters: list[str]
+    explicit: list[str]
+    argument: str
+    type: str
+    build: str
+    payload: str
+    result: str
+    error: str
+    mode: str
+
+    def renamed(self, mapping):
+        """Substitute complete parameter identifiers, retaining their order."""
+        pattern = re.compile(r"\b(" + "|".join(map(re.escape, mapping)) + r")\b")
+
+        def change(value):
+            return (
+                pattern.sub(lambda match: mapping[match[0]], value)
+                if mapping
+                else value
+            )
+
+        fields = {
+            name: change(getattr(self, name))
+            for name in ("argument", "type", "build", "payload", "result", "error")
+        }
+        return replace(
+            self,
+            parameters=[change(value) for value in self.parameters],
+            explicit=[change(value) for value in self.explicit],
+            **fields,
+        )
+
+
+def callback(mode, kind, arg="function", second=False):
+    """Describe legacy inferred admission without choosing operation semantics.
+
+    Selected-context emitters retain their existing admission policy. This
+    builder preserves the legacy explicit parameter positions and native
+    callback borrow, and uses the shared protocol and adapter names above.
+    """
+    f, p, r, x, o = (
+        ("G", "Q", "S", "Y", "q")
+        if second
+        else ("C", "A" if mode == "owned" else "P", "R", "X", "o")
+    )
+    if kind == "library":
+        trait = callable_protocol(mode)
+        return Callback(
+            [f"{f}: {trait} & {MD}"],
+            [],
+            f"var {arg}: {f}",
+            f,
+            arg + "^",
+            f + ".Payload" if mode == "borrow" else f + ".Arg",
+            f + ".Result" if mode == "borrow" else f + ".Out",
+            f + ".Failure" if mode == "borrow" else f + ".Error",
+            mode,
+        )
+    params = (
+        [] if mode == "thunk" else [f"{p}: " + ("AnyType" if mode == "borrow" else MD)]
+    ) + [f"{r}: {MD}", f"{o}: ImmOrigin"]
+    error = x if kind == "raising" else "Never"
+    base = {"borrow": "Borrowing", "owned": "Unary", "thunk": "Thunk"}[mode]
+    native_args = (f"{p}, " if mode != "thunk" else "") + r
+    trait = (
+        f"_Raising{base}[{native_args}, {x}]"
+        if kind == "raising"
+        else f"_{base}[{native_args}]"
+    )
+    explicit = ([f"{x}: {MD}"] if kind == "raising" else []) + [f"{f}: {trait}"]
+    typ = native_adapter(
+        mode, [p] if mode != "thunk" else [], r, error, f, kind == "raising", origin=o
+    )
+    return Callback(
+        params,
+        explicit,
+        f"ref[{o}] {arg}: {f}",
+        typ,
+        f"{typ}(Pointer(to={arg}))",
+        p,
+        r,
+        error,
+        mode,
+    )
 
 
 @dataclass(frozen=True)

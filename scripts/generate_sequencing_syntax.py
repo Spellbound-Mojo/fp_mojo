@@ -1,5 +1,5 @@
 """Fluent sequencing admission; bind, mapping and receiver adapters own execution."""
-from generate_result_syntax import callback
+from native_signatures import callback
 
 MD = 'Movable & Deinitable'
 START = '    # --- sequencing conveniences (generated) ---\n'
