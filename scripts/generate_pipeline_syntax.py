@@ -6,7 +6,6 @@ this separate from the stage-count generator makes adding a derived operation
 independent of the supported container count.
 """
 from dataclasses import dataclass
-import re
 from combinator_docs import document_first_methods
 from native_signatures import MD, callable_protocol, native_adapter
 
@@ -187,45 +186,42 @@ def observe_methods(carrier=None):
     for name, paired in (('pair_with', 'True'), ('tap_each', 'False')):
         for kind in ('pure', 'raising', 'library'):
             native = kind != 'library'
-            element = 'Tuple[T, R]' if paired == 'True' else 'T'
-            params = [f'T: {MD}']
+            # Native borrowing admits AnyType; only the retained carrier payload
+            # needs the movable witness. Choose both spellings before rendering
+            # so the native adapter never receives the downcast payload type.
+            payload = f'downcast[P, {MD}]' if native else 'T'
+            projected = 'R' if native else 'C.Result'
+            element = f'Tuple[{payload}, {projected}]' if paired == 'True' else payload
+            params = ['P: AnyType' if native else f'T: {MD}']
             if native:
                 params += [f'R: {MD}', *(carrier.parameters if carrier else ()), 'o: ImmOrigin', '//']
                 if not carrier:
                     params.append('I: Functor')
                 if kind == 'raising':
                     params.append(f'E: {MD}')
-                params.append('F: _RaisingBorrowing[T, R, E]' if kind == 'raising' else 'F: _Borrowing[T, R]')
+                params.append('F: _RaisingBorrowing[P, R, E]' if kind == 'raising' else 'F: _Borrowing[P, R]')
                 error = 'E' if kind == 'raising' else 'Never'
-                bridge = native_adapter('borrow', ['T'], 'R', error, 'F', kind == 'raising', origin='o')
+                bridge = native_adapter('borrow', ['P'], 'R', error, 'F', kind == 'raising', origin='o')
                 arg, build = 'ref[o] function: F', f'{bridge}(Pointer(to=function))'
             else:
                 params += [f'C: {callable_protocol("borrow", repeatable=True)}', *(carrier.parameters if carrier else ('//', 'I: Functor'))]
                 error, bridge, arg, build = 'C.Failure', 'C', 'var function: C', 'function^'
-                element = element.replace('R', 'C.Result')
-            source = carrier.value('T') if carrier else 'Self.Value'
-            family = carrier.instance('T') if carrier else 'I'
-            callback = f'_Observe[T, {bridge}, {paired}]'
+            source = carrier.value(payload) if carrier else 'Self.Value'
+            family = carrier.instance(payload) if carrier else 'I'
+            callback = f'_Observe[{payload}, {bridge}, {paired}]'
             result = carrier.value(element) if carrier else f'I.Mapped[Self.Value, {callback}]'
             effect = error if carrier else f'I.MapError[Self.Value, {callback}]'
-            condition = f'Self.Value == {source}' if carrier else 'I.Element[Self.Value] == T'
+            condition = f'Self.Value == {source}' if carrier else f'I.Element[Self.Value] == {payload}'
             if not carrier: condition += f' and _MapCompatible[I, Self.Value, {callback}]'
             if not native:
                 condition += ' and C.Payload == T'
             nominal = f'        comptime assert Self.Value == {source}\n' if carrier else ''
             value = f'rebind_var[{source}](self.value^)' if carrier else 'self.value^'
-            method = f'''
+            out.append(f'''
     def {name}[{', '.join(params)}](deinit self, {arg}) raises {effect} -> Piped[{result}] where {condition}:
         """Borrow each payload for {'projection and retain it beside the result' if paired == 'True' else 'inspection and retain it unchanged'}."""
 {nominal}        return Piped({family}.map({callback}({build}), {value}))
-'''
-            if native:
-                method = method.replace('T: Movable & Deinitable', 'P: AnyType')
-                method = re.sub(r'\bT\b', 'downcast[P, Movable & Deinitable]', method)
-                method = method.replace('_Borrowing[downcast[P, Movable & Deinitable], R]', '_Borrowing[P, R]')
-                method = method.replace('_RaisingBorrowing[downcast[P, Movable & Deinitable], R, E]', '_RaisingBorrowing[P, R, E]')
-                method = method.replace('_NativeBorrowRef[downcast[P, Movable & Deinitable],', '_NativeBorrowRef[P,')
-            out.append(method)
+''')
     return ''.join(out)
 
 

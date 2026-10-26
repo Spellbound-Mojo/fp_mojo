@@ -149,6 +149,23 @@ native callback owner. No shared description transfers those admission rules to
 another surface. Generator parity verifies that every Mojo source byte remains
 unchanged by this consolidation.
 
+### Structured signature assembly
+
+Native n-ary boundaries choose their fixed carrier parameters before rendering
+the declaration. Those ordered operands supply the argument tuple, associated
+product types and input constraints together. Library callbacks retain their
+variadic carrier pack. Validation constructs its explicit and inferred policy
+variants separately, preserving the existing parameter order and inference
+separator; it does not rewrite a completed declaration to remove a policy or
+specialize a pack.
+
+Borrowing observers similarly choose the native `P: AnyType` callback payload
+and the retained `downcast[P, Movable & Deinitable]` carrier payload separately.
+The existing native adapter receives the former and the operation receives the
+latter. Ordered component lists and the shared native adapter descriptions are
+sufficient; this assembly introduces no general source transformation layer.
+Generated-source parity preserves every existing Mojo declaration and body.
+
 ### Shared recovery and observation policies
 
 `ErrorOperation` in `scripts/operation_specs.py` owns callback roles and the
