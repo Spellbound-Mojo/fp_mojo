@@ -81,6 +81,16 @@ for `TapErrContract` and `FlatTapErrContract` generic-wrapper metadata.
 
 <!-- example: docs/examples/selected_error_observation.mojo -->
 
+`recover_if(predicate, handler)` recovers matching stored errors with a value;
+`or_else_if(predicate, handler)` uses a replacement effect in the same family.
+The predicate borrows the error, and a matching handler consumes it. Unmatched
+errors pass through the family's failure constructor. Success skips both
+callbacks. These methods support `ApplicativeError` families, including
+Validation and deferred transformers, and preserve the selected family for
+subsequent fluent calls. Deferred callbacks execute when the action runs.
+
+<!-- example: docs/examples/selected_conditional_recovery.mojo -->
+
 `flat_tap(callback)` sequences a borrowing effect and keeps each original
 payload. `flat_pair_with(callback)` pairs each original with every successful
 projection. `before(factory)` sequences a zero-argument effect and keeps

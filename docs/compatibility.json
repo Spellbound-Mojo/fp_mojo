@@ -446,14 +446,35 @@
       ]
     },
     {
+      "name": "Conditional recovery",
+      "methods": [
+        "recover_if",
+        "or_else_if"
+      ],
+      "status": "selected",
+      "families": "Selected ApplicativeError, including Validation, custom and deferred families; intrinsic Result calls remain available under non-error families",
+      "callbacks": "Borrowing Bool predicate and consuming value or effect handler; native closures borrowed, stored thin pointers owned, library receivers preserved",
+      "ownership": "Success skips both callbacks; only matching failures invoke the handler; family repeatability and move rules apply",
+      "errors": "Exact family construction errors; deferred predicate, handler and failure-constructor errors remain deferred; callback native errors agree unless one never raises",
+      "timing": "Selected family owns recovery and unmatched failure reconstruction; deferred effects remain deferred",
+      "owner": [
+        "src/fp/algebra/errors.mojo",
+        "src/fp/algebra/protocols.mojo"
+      ],
+      "evidence": [
+        "docs/examples/selected_conditional_recovery.mojo",
+        "tests/runtime/test_context_family_conditional.mojo",
+        "tests/runtime/test_context_family_conditional_generic.mojo",
+        "tests/runtime/test_context_family_conditional_ownership.mojo"
+      ]
+    },
+    {
       "name": "Result operations",
       "methods": [
         "attempt_tap",
         "ensure",
         "map_both",
         "map_err",
-        "or_else_if",
-        "recover_if",
         "redeem",
         "redeem_with"
       ],

@@ -801,6 +801,41 @@ def methods(*, fold_stage=False):
                  f"_or_else_as[{contract}.Error, {family}, Self.V, {contract}.Handler]({contract}.Handler({cb['build']}), self.value^)",
                  "Observe the selected stored-error layer using its family's timing and error policy.")
 
+    # Conditional recovery reuses the family's conditional continuation. The
+    # error family is selected before either native callback is admitted.
+    for operation in error_operations("conditional"):
+        primary, secondary = operation.callbacks
+        predicates = native_callbacks(primary.mode, family + ".Failure", primary.argument)
+        handlers = list(native_callbacks(secondary.mode, family + ".Failure", secondary.argument, second=True))
+        for p, h in product(predicates, handlers):
+            contract_name = "OrElseIfContract" if operation.effect else "RecoverIfContract"
+            contract = f"{contract_name}[{family}, Self.V, {p['adapter_type']}, {h['adapter_type']}]"
+            handler = operation.handler(family, h["adapter_type"])
+            build = operation.handler_value(family, h["adapter_type"], h["build"])
+            continuation = f"_ConditionalRecovery[{family}, Self.I.Element[Self.V], {p['adapter_type']}, {handler}]"
+            params, explicit = [], []
+            for cb in (p, h):
+                split = cb["params"].index("//") if "//" in cb["params"] else len(cb["params"])
+                params += cb["params"][:split]
+                explicit += cb["params"][split + 1:]
+            if explicit:
+                params += ["//"] + explicit
+            conditions = ["conforms_to(Self.I, ApplicativeError)", contract + ".Compatible"]
+            # The public contract owns callback input/output proofs for generic
+            # library forwards. Native error selection and ABI evidence remain
+            # at the native admission boundary.
+            for cb in (p, h):
+                if cb["adapter_type"] not in ("C", "G"):
+                    conditions += cb["conditions"]
+            error = contract + ".Error"
+            prelude = p.get("prelude", "") + h.get("prelude", "")
+            prelude += f"        comptime assert {family}._Handles[Self.V, {continuation}]\n"
+            emit(operation.name, {"prelude": prelude}, params,
+                 p["argument"] + ", " + h["argument"], contract + ".Out", error,
+                 "Self.I", conditions,
+                 f"_or_else_as[{error}, {family}, Self.V, {continuation}]({continuation}({p['build']}, {build}), self.value^)",
+                 "Recover matching stored errors through the selected family; success skips both callbacks.")
+
     for name, operation in RESULT_OPERATIONS.items():
         if operation.sequence: continue
         summary, detail = operation.documentation
@@ -818,7 +853,7 @@ def methods(*, fold_stage=False):
             conditions = [f"conforms_to(Self.V, _ResultType)", f"Self.V == {Source}"] + sum(
                 (c["conditions"] for c in callbacks), []
             )
-            if name in ("recover", "or_else", "tap_err", "flat_tap_err"):
+            if name in ("recover", "or_else", "tap_err", "flat_tap_err", "recover_if", "or_else_if"):
                 conditions += ["not conforms_to(Self.I, ApplicativeError)"]
             R = a["result"]
             result = operation.result(T, Err, R, b["result"] if two else "", value=lambda r: f"_Success[{r}]")

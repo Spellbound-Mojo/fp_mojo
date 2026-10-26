@@ -143,6 +143,84 @@ struct _ConditionalRecovery[I: ApplicativeError, A: Movable & Deinitable,
         return _ConditionalRecovery[Self.I, Self.A, type_of(predicate), type_of(handler)](predicate^, handler^).call_once(arg^)
 
 
+struct OrElseIfContract[I: ApplicativeError, V: Movable & Deinitable,
+                       P: BorrowCallContract & Movable & Deinitable,
+                       H: UnaryContract & Movable & Deinitable]:
+    """Admission, output and construction error of conditional effect recovery.
+
+    The predicate borrows the selected stored error. A match transfers it to
+    the handler; a nonmatch reintroduces it through the family's fail. Families
+    retain their receiver checks, branch behavior and deferred run errors.
+
+    Parameters:
+        I: The family selecting the stored-error layer.
+        V: The complete source carrier, including origins.
+        P: The borrowing Bool predicate, with its receiver and native error.
+        H: The consuming handler producing another carrier of the same family.
+    """
+    comptime InputCompatible = Self.P.Payload == Self.I.Failure and Self.H.Arg == Self.I.Failure
+    """Both callbacks receive the exact selected error type and origins."""
+    comptime PredicateCompatible = Self.P.Result == Bool
+    """The borrowing predicate returns native Bool."""
+    comptime CarrierCompatible = Self.I._ErrorCarrier[Self.V] and Self.I._ErrorCarrier[Self.H.Out]
+    """The source and replacement belong to the selected stored-error layer."""
+    comptime OutputCompatible = Self.I.Element[Self.H.Out] == Self.I.Element[Self.V]
+    """The replacement retains the source's success payload and origins."""
+    comptime NativeErrorsCompatible = Self.P.Failure == Never or Self.H.Error == Never or Self.P.Failure == Self.H.Error
+    """The callbacks share a native error type, or at least one never raises."""
+    comptime Compatible = Self.InputCompatible and Self.PredicateCompatible and Self.CarrierCompatible and Self.OutputCompatible and Self.NativeErrorsCompatible
+    """Entry-point admission; family primitives retain invocation checks."""
+    comptime Family = Self.I
+    """The unchanged family for fluent continuation."""
+    comptime Continuation = _ConditionalRecovery[Self.I, Self.I.Element[Self.V], Self.P, Self.H]
+    """The existing conditional recovery continuation."""
+    comptime Out = Self.I.Handled[Self.V, Self.Continuation]
+    """The family's exact handled carrier, including deferred representations."""
+    comptime Error = Self.I.HandleError[Self.V, Self.Continuation]
+    """Construction error; callback and failure-constructor errors may remain deferred."""
+
+
+struct RecoverIfContract[I: ApplicativeError, V: Movable & Deinitable,
+                        P: BorrowCallContract & Movable & Deinitable,
+                        H: UnaryContract & Movable & Deinitable]:
+    """Admission, output and construction error of conditional value recovery.
+
+    A generic wrapper forwards Compatible and projects Family, Out and Error
+    without naming the private value-lifting or conditional adapters. Unmatched
+    errors use the family's fail; success skips both callbacks.
+
+    Parameters:
+        I: The family selecting the stored-error layer.
+        V: The complete source carrier, including origins.
+        P: The borrowing Bool predicate, with its receiver and native error.
+        H: The consuming handler returning the source success payload type.
+    """
+    comptime Handler = _Recovered[Self.I, Self.H]
+    """The existing adapter lifting a matching handler value through pure."""
+    comptime Operation = OrElseIfContract[Self.I, Self.V, Self.P, Self.Handler]
+    """Effect recovery metadata after the value handler is lifted."""
+    comptime InputCompatible = Self.Operation.InputCompatible
+    """Both callbacks receive the exact selected error type and origins."""
+    comptime PredicateCompatible = Self.Operation.PredicateCompatible
+    """The borrowing predicate returns native Bool."""
+    comptime CarrierCompatible = Self.I._ErrorCarrier[Self.V]
+    """The source belongs to the selected stored-error layer."""
+    comptime OutputCompatible = Self.H.Out == Self.I.Element[Self.V]
+    """The handler returns the source's success payload type and origins."""
+    comptime NativeErrorsCompatible = Self.Operation.NativeErrorsCompatible
+    """The callbacks share a native error type, or at least one never raises."""
+    comptime Compatible = Self.InputCompatible and Self.PredicateCompatible and Self.CarrierCompatible and Self.OutputCompatible and Self.NativeErrorsCompatible
+    """Value-recovery admission; the family retains lifted-handler validation."""
+    comptime Family = Self.I
+    """The unchanged family for fluent continuation."""
+    comptime Continuation = Self.Operation.Continuation
+    """The existing conditional recovery continuation."""
+    comptime Out = Self.Operation.Out
+    """The family's exact handled carrier, including deferred representations."""
+    comptime Error = Self.Operation.Error
+    """Construction error; callback and failure-constructor errors may remain deferred."""
+
+
 @fieldwise_init
 struct _FailedThunk[I: ApplicativeError](OnceThunk, Copyable where conforms_to(I.Failure, Copyable)):
     """Defer reintroducing an error until combination demands its right operand."""

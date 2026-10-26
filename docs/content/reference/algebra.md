@@ -145,6 +145,19 @@ callback and failure-constructor errors remain in the action's run contract.
 <!-- example: docs/examples/selected_error_observation.mojo -->
 
 
+`RecoverIfContract[I, V, P, H]` and `OrElseIfContract[I, V, P, H]` describe
+conditional recovery. Both accept an `ApplicativeError` family, a complete
+source carrier, a borrowing Bool predicate and a consuming handler. Forward
+`Compatible` and project `Family`, `Out` and `Error` in a generic selected
+wrapper. Value recovery retains the success payload; effect recovery also
+checks that the replacement belongs to the same stored-error layer. Callback
+native errors must agree unless one callback never raises. Family receiver
+checks and exact construction/deferred errors remain in force. Conditional
+capability wrappers use the same public `downcast[I, ApplicativeError]` witness
+for the descriptor and pipeline selection.
+
+<!-- example: docs/examples/selected_conditional_recovery.mojo -->
+
 `FlatTapContract`, `FlatPairWithContract`, `BeforeContract` and
 `FollowedByContract` describe selected Monad sequencing. Each takes the family,
 complete source carrier and library callback type. Generic signatures project

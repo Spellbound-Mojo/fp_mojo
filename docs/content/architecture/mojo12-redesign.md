@@ -430,6 +430,25 @@ when their native storage is Result. Intrinsic Result overloads remain for
 non-error families, with disjoint capability guards preserving generic native
 forwarding. No caller chooses an overload based on error-type equality.
 
+### Selected conditional recovery
+
+Selected `recover_if` and `or_else_if` reuse `_ConditionalRecovery` through the
+selected family's recovery primitive. The predicate borrows the stored error;
+a match consumes it through the handler, and a nonmatch reconstructs failure
+through that family. `_Recovered` owns value lifting for `recover_if`. This
+requires `ApplicativeError`, so Validation participates without a Monad.
+Success skips both callbacks; deferred families retain deferred execution.
+
+`RecoverIfContract` and `OrElseIfContract` publish admission and exact
+family/output/construction-error projections. The value contract shares the
+effect contract's predicate and callback-error metadata, while checking the
+unlifted value boundary directly. The family validates the adapted handler in
+the body. This avoids requiring an abstract family to prove its own `Pure`
+representation belongs to its error layer during callback inference.
+Intrinsic native Result overloads remain disjoint under non-error families.
+Canonical Result and custom families with Result storage use family recovery;
+no extra selector, callback binding or invocation mechanism is introduced.
+
 ### Generic sequencing metadata
 
 The four public sequencing contracts name the existing selected Monad
