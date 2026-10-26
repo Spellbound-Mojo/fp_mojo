@@ -9,9 +9,10 @@ own structs. Pattern matching checks that every constructor is covered at
 compile time. Functions and closures keep their native ownership conventions
 and error types.
 
-The `nightly` checkout pins Mojo 1.2.0, with [compatibility work still
-outstanding](architecture/native-boundaries.md#mojo-12-qualification). The
-published FP Mojo 1.0.0 package still uses Mojo 1.1.0:
+The `nightly` checkout pins Mojo 1.2.0. Its verified Linux checkpoint passes the
+full positive and rejection suites; the [compatibility inventory](guides/compatibility.md)
+records API migration and remaining restrictions. The published FP Mojo 1.0.0
+package still uses Mojo 1.1.0:
 
 ```sh
 pixi add fp_mojo "mojo==1.1.0"  # after adding the modular-community channel

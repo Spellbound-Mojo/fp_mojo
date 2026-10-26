@@ -41,6 +41,28 @@ class DocumentationContractTests(unittest.TestCase):
             with self.assertRaisesRegex(AssertionError, 'executable example'):
                 docs_contract.audit_docs()
 
+    def test_missing_pipeline_contract_rejected(self):
+        original = docs_contract.data
+        def changed(name):
+            value = original(name)
+            if name == 'compatibility.json':
+                value['pipeline'][0]['methods'].pop()
+            return value
+        with patch.object(docs_contract, 'data', changed):
+            with self.assertRaisesRegex(AssertionError, 'Unclassified Pipeline method'):
+                docs_contract.audit_docs()
+
+    def test_missing_migration_assignment_rejected(self):
+        original = docs_contract.data
+        def changed(name):
+            value = original(name)
+            if name == 'compatibility.json':
+                value['migration'][0]['methods'].pop()
+            return value
+        with patch.object(docs_contract, 'data', changed):
+            with self.assertRaisesRegex(AssertionError, 'migration inventory'):
+                docs_contract.audit_docs()
+
 
 if __name__ == '__main__':
     unittest.main()

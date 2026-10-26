@@ -10,8 +10,11 @@ compiler constraints behind these choices.
 | Item | Status |
 |---|---|
 | Compiler | Mojo 1.2.0 (2016d0cd), pinned through Pixi for `nightly`; published FP Mojo 1.0.0 requires Mojo 1.1.0 |
-| Linux x86-64 | All 332 checked programs and 712 rejection fixtures pass. Twenty-two rejection fixtures require explicit callback types for normal diagnostics; those invalid calls still crash the compiler without the hints ([details](../architecture/native-boundaries.md#rejection-diagnostics)). The lazy-observer failure is fixed. |
+| Linux x86-64 | The [verified checkpoint](compatibility.md#qualification-checkpoint) passes the full positive and rejection suites. Selected Pipeline/Capture admission and retained legacy diagnostic restrictions are classified in the inventory. |
 | macOS arm64 | Locked environment available; last runtime verification was on Mojo 1.1.0 |
+
+The [compatibility inventory](compatibility.md) distinguishes selected, legacy
+and pending APIs and records the agreed development sequence.
 
 ## Combinator roadmap
 
@@ -60,9 +63,9 @@ Before fallible streams, an [iterator expansion](../architecture/iteration.md#it
 adds native adapter method chains, consuming terminals, lazy partitioning with
 explicit buffering policies, and alignment, with stateful and effectful
 follow-ups. Partition, partition_map and unzip return iterator branches;
-collection stays explicit. I1 and I2 are implemented: native adapter method chains, indexed mapping,
-captured prefixes and consuming terminals. I3 through I6 remain planned; I3
-adds lazy branching with an explicit buffering policy.
+collection stays explicit. I1 through I6 are implemented: native adapter method
+chains, consuming terminals, branching with explicit buffering, alignment, scans
+and effectful searches. See the [implementation contracts](../architecture/iteration.md#implementation-passes).
 
 The approved combinator proposal is complete for the documented capability
 families. Shared operations derive from family primitives; no operation requires
@@ -212,10 +215,10 @@ The source references are Cats' [Apply](https://github.com/typelevel/cats/blob/m
 | Selected pipeline | `pipeline(value).raising[E]()` selects native errors once for family operations and Result combinators. Existing Piped covers the broader fluent surface. |
 | Legacy `attempt` call shapes | Zero to two positional arguments; callbacks with homogeneous native keyword packs use `attempt_kwargs`, including empty packs. Other call shapes use a closure. On Mojo 1.2, optional named convention selectors cover all supported positional combinations; `mutating`, `consuming`, `mut_owned` and `mut_owned_kwargs` remain supported. An incompatible selector needs an explicit `F` hint to diagnose normally; incompatible adapter diagnostics remain incomplete. See the [reference](../reference/data.md#select-a-native-argument-convention). |
 | Named or defaulted parameters | Pass a native function with named or defaulted parameters to library functions through a closure that spells the call. |
-| Closures with owned mutable state | They can lose updates at O3 on Mojo 1.1 when called through a read borrow. Use an explicit mutable borrowed context instead. |
+| Closures with owned mutable state | Unannotated native callbacks can lose updates at O3 on Mojo 1.2. Use the documented always-inline requirement, explicit mutable library callables or Capture.stateful. |
 | Closures with embedded origins | Some closures that combine embedded origins with captured state fail to compile on Mojo 1.1; pass borrowed views as arguments instead. |
 | Same-named types in several modules | Two modules of one program that define same-named types and spell the same function type over them fail to compile on Mojo 1.1 (`invalid redefinition of 'def(...)'`); give those types distinct names ([details](../architecture/native-boundaries.md#known-compiler-defects)). |
-| Generic wrappers | Follow the spellings shown in the tutorials: pass `E=E` explicitly, keep the documented parameter names, and keep the nominal type assertion next to `rebind_var`. The reasons are in [native Mojo boundaries](../architecture/native-boundaries.md#generic-code). |
+| Generic wrappers | Selected native calls fix their error with `raising[E]()`. Generic family wrappers retain public admission predicates in their signatures, including carrier and error origins. Legacy native forwarders retain their documented explicit error bindings. |
 | Match ownership | Matches borrow their subject and return values, never references into it; consuming access belongs to the types (`Result.fold_owned`, `Choice.unwrap`, `Optional.take`). |
 | Guards and coverage | A guard is opaque to coverage: a guarded clause never covers a constructor alone. |
 | Match size | Sixteen clauses per match and three subjects; clauses do not capture, so data they need comes through `context=` or a subject. |

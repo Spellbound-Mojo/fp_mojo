@@ -7,9 +7,10 @@ The `nightly` development checkout pins Mojo 1.2.0 and Python 3.14 through
 [Pixi](https://pixi.sh). The published FP Mojo 1.0.0 package still requires
 Mojo 1.1.0, with which it was verified on Linux x86-64 and macOS arm64.
 Use the [checkout route](#work-from-a-checkout) for Mojo 1.2; the published
-package cannot yet be installed with that compiler. The nightly 1.2 migration
-is not fully qualified: [current verification failures](../architecture/native-boundaries.md#mojo-12-qualification)
-include compiler crashes and an origin-admission regression.
+package cannot yet be installed with that compiler. The verified nightly Linux
+checkpoint passes the full positive and rejection suites. See the
+[compatibility inventory](../guides/compatibility.md) for the qualified source
+commit, platform limits and legacy invalid-call inference restrictions.
 
 ## Install the package
 

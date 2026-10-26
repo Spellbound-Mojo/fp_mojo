@@ -76,10 +76,15 @@ that release with 1.2 is not supported. Use the nightly source checkout.
 
 ## Mojo 1.2 qualification
 
-The isolated [boundary experiment](mojo12-redesign.md) tests selecting the
-family and native error type before callback inference. Its new invalid-call
-clients need no explicit callback type hints; its results do not change the
-production qualification or limitations below.
+The production Capture and Pipeline APIs select family and native error context
+before callback inference. Their maintained invalid-call clients need no explicit
+callback-type hints. The [current compatibility inventory](../guides/compatibility.md)
+records the verified production checkpoint, scope and pending migration.
+
+The sections below preserve earlier qualification evidence and the legacy
+restrictions that remain relevant. Their test counts are historical checkpoints,
+not the current suite inventory. The [redesign history](mojo12-redesign.md)
+records the experiments and the promoted architecture.
 
 ### Rejection diagnostics
 
@@ -111,7 +116,7 @@ for each of the 22 negative clients. All 180 checks pass through source and
 fresh package imports at O0/O3 with `--Werror`, with unchanged inputs and clean
 audits (`.cache/mojo12-rejection-binding/qualification/report.json`).
 
-The updated checkout also passes these complete gates on Mojo 1.2.0 (2016d0cd),
+That earlier checkout passed these complete gates on Mojo 1.2.0 (2016d0cd),
 Linux x86-64, with `--Werror`:
 
 | Check | Result | Report under `.cache/mojo12-rejection-binding/` |

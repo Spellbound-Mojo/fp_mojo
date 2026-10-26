@@ -9,8 +9,10 @@ and error types.
 
 The `nightly` checkout pins Mojo 1.2.0. The published FP Mojo 1.0.0 package
 uses Mojo 1.1.0; see [installation](docs/content/start/installation.md).
-Mojo 1.2 compatibility is incomplete: package precompilation passes, but the
-full test suite does not. See the [qualification status](docs/content/architecture/native-boundaries.md#mojo-12-qualification).
+The verified Linux Mojo 1.2 checkpoint passes the full positive and rejection
+suites, package imports and executable documentation. Selected API migration
+continues; legacy invalid-call inference and platform limits remain documented
+in the [compatibility inventory](docs/content/guides/compatibility.md).
 
 ![Mojo 1.2.0](https://img.shields.io/badge/Mojo-1.2.0-orange)
 ![Platforms](https://img.shields.io/badge/platforms-Linux%20x86--64%20%7C%20macOS%20arm64-blue)

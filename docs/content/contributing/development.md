@@ -102,6 +102,12 @@ Rules that matter:
   pattern appears in its command line. Use a bracketed pattern such as
   `pkill -f "scripts/[s]uite.py"`, and stop orphaned `mojo build` children too.
 
+The local documentation audit also checks `docs/compatibility.json` against the
+reviewed public export inventory. New Pipeline methods must have a family,
+callback, ownership, error and evaluation contract; completed migration names
+move out of the pending assignment. Qualification checkpoints name the tested
+source commit and retain report digests. Update them only from completed gates.
+
 ## Making a change
 
 1. **Design the whole contract first.** State ownership, evaluation order, errors,

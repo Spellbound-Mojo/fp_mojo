@@ -1,0 +1,476 @@
+{
+  "version": 1,
+  "baseline": {
+    "commit": "51997aca96c3256a90bf6abdd4074a79f517a117",
+    "production_tree": "83836768863050a781d8f910ff0d86a3ae143e8a",
+    "compiler": "Mojo 1.2.0 (2016d0cd)",
+    "platform": "Linux x86-64",
+    "checks": [
+      {
+        "check": "Package",
+        "result": "pass",
+        "scope": "Whole package precompilation and a native O3 client",
+        "report": ".cache/context-traversal/final/package/report.json",
+        "sha256": "8e76d96465d9d0f1a978c8a7409ad70dbcda073431895b1870be87dd657d3c29"
+      },
+      {
+        "check": "Positive suite",
+        "result": "556 / 556",
+        "scope": "Fresh package, O3; benchmarks are diagnostic",
+        "report": ".cache/context-traversal/final/suite/report.json",
+        "sha256": "2e3e9f327dea56a8a540482c630d0cc4eb82c3f711c645b770d3ba703373ab9b"
+      },
+      {
+        "check": "Rejections",
+        "result": "1153 / 1153",
+        "scope": "Fresh package, O3; declared diagnostics, no execution",
+        "report": ".cache/context-traversal/final/rejections/report.json",
+        "sha256": "34d15f2e3d9a4131a115e3c8500d6e452ddbb67585272ea052b7400fc4754598"
+      },
+      {
+        "check": "Selected traversal",
+        "result": "184 / 184",
+        "scope": "Source/package at O0/O3",
+        "report": ".cache/context-traversal/final/traversal-matrix/report.json",
+        "sha256": "577a697f480b637404481ed56d0a4d4aac56ace717edc41cab266fc81de09bba"
+      },
+      {
+        "check": "Selected observers",
+        "result": "228 / 228",
+        "scope": "Source/package at O0/O3",
+        "report": ".cache/context-traversal/final/observer-matrix/report.json",
+        "sha256": "3badfba4ba3516e23fa82fd7e82a8024513bb67a563630dc82392f8957a58e32"
+      },
+      {
+        "check": "Executable documentation",
+        "result": "240 / 240",
+        "scope": "60 examples through source/package at O0/O3",
+        "report": ".cache/context-traversal/final/docs/report.json",
+        "sha256": "47823d806bbfcbb4715fb672d3ab55ac8458597f61f95db8181f6d0b543a08ca"
+      }
+    ]
+  },
+  "packages": {
+    "callables": {
+      "scope": "Native and library invocation; shared, mutable and single-use receivers.",
+      "restrictions": "Native ABI and owned-capture restrictions apply. Adapter diagnostics retain legacy exceptions.",
+      "evidence": [
+        "docs/examples/callable_pipeline.mojo",
+        "docs/examples/capture_native.mojo"
+      ]
+    },
+    "combinators": {
+      "scope": "Eager collection transformations, effects, traversal and validation.",
+      "restrictions": "Capability requirements and origin/error admission remain operation-specific; legacy native inference remains restricted.",
+      "evidence": [
+        "docs/examples/combinators.mojo",
+        "docs/examples/traversal_composition.mojo",
+        "docs/examples/effectful_reductions.mojo"
+      ]
+    },
+    "functions": {
+      "scope": "Selected Pipeline, legacy Piped, composition, partial application and Kleisli.",
+      "restrictions": "Pipeline migration is tracked below. Partial binds plain positional prefixes of up to eight operands.",
+      "evidence": [
+        "docs/examples/selected_pipeline.mojo",
+        "docs/examples/selected_workflow.mojo",
+        "docs/examples/partial.mojo",
+        "docs/examples/kleisli.mojo"
+      ]
+    },
+    "adt": {
+      "scope": "Algebraic choices and recursive data using native ownership.",
+      "restrictions": "Host qualification; device compilation does not establish GPU runtime support.",
+      "evidence": [
+        "docs/examples/algebra_choices.mojo",
+        "docs/examples/expression.mojo",
+        "docs/examples/file_tree.mojo"
+      ]
+    },
+    "data": {
+      "scope": "Result, Optional integration, non-empty lists, Ior and Capture.",
+      "restrictions": "Capture supports zero to two positional operands and homogeneous keyword packs. Legacy attempt has diagnostic restrictions.",
+      "evidence": [
+        "docs/examples/capture_native.mojo",
+        "docs/examples/result_once.mojo",
+        "docs/examples/non_empty_validation.mojo",
+        "docs/examples/ior_validation.mojo"
+      ]
+    },
+    "iteration": {
+      "scope": "Lazy native adapters, branches, alignment, scans and consuming terminals.",
+      "restrictions": "Lazy callbacks cannot raise; failures may be stored Result elements. Fallible source advancement and Resource scopes remain future contracts.",
+      "evidence": [
+        "docs/examples/iteration_branching.mojo",
+        "docs/examples/iteration_alignment.mojo",
+        "docs/examples/iteration_scan_map.mojo",
+        "docs/examples/iteration_effect_search.mojo"
+      ]
+    },
+    "control": {
+      "scope": "Loops, state transitions and early termination.",
+      "restrictions": "Native callback signatures and exact common raised errors remain part of admission.",
+      "evidence": [
+        "docs/examples/control_flow.mojo"
+      ]
+    },
+    "algebra": {
+      "scope": "Family primitives, laws, shared traversal, sequential and accumulating policies.",
+      "restrictions": "Public admission predicates are the generic extension contract. Audit coverage beyond Result/Validation and Ior remains a planned pass.",
+      "evidence": [
+        "docs/examples/algebra_core.mojo",
+        "docs/examples/algebra_traversal.mojo",
+        "docs/examples/parallel_validation.mojo"
+      ]
+    },
+    "effects": {
+      "scope": "Reader, State, Writer and transformer capabilities.",
+      "restrictions": "Deferred computations retain callback borrows. Carrier stability and Writer identity restrictions remain documented.",
+      "evidence": [
+        "docs/examples/environment_capabilities.mojo",
+        "docs/examples/stateful_capabilities.mojo",
+        "docs/examples/writer_capabilities.mojo",
+        "docs/examples/transformer_recovery.mojo"
+      ]
+    },
+    "matching": {
+      "scope": "Exhaustive value matching, guards and rewriting.",
+      "restrictions": "Up to sixteen noncapturing clauses and three subjects; matches borrow subjects and return owned values.",
+      "evidence": [
+        "docs/examples/shapes.mojo",
+        "docs/examples/job_router.mojo",
+        "docs/examples/expression.mojo"
+      ]
+    }
+  },
+  "pipeline": [
+    {
+      "name": "Context",
+      "methods": [
+        "get",
+        "raising"
+      ],
+      "status": "selected",
+      "families": "Any selected Functor",
+      "callbacks": "No callback",
+      "ownership": "Consumes the context; get extracts its carrier.",
+      "errors": "raising selects native admission only.",
+      "timing": "No evaluation.",
+      "owner": [
+        "src/fp/functions/context.mojo"
+      ],
+      "evidence": [
+        "tests/runtime/test_context_stages_transitions.mojo"
+      ]
+    },
+    {
+      "name": "Payload operations",
+      "methods": [
+        "map",
+        "filter",
+        "filter_not",
+        "flat_map",
+        "filter_map",
+        "tap_each",
+        "pair_with"
+      ],
+      "status": "selected",
+      "families": "Functor; Filterable, Monad or FunctorFilter where required",
+      "callbacks": "Native closures and thin pointers; library callable contracts retain receiver modes.",
+      "ownership": "Transforms consume payloads; predicates and observers borrow them.",
+      "errors": "Exact family/callback error; stored errors retain their family.",
+      "timing": "Family-controlled, including deferred execution.",
+      "owner": [
+        "src/fp/algebra/operations.mojo",
+        "src/fp/algebra/filtering.mojo",
+        "src/fp/callables/_transforms.mojo"
+      ],
+      "evidence": [
+        "tests/runtime/test_context_observers_families.mojo",
+        "tests/runtime/test_context_family_contract.mojo",
+        "tests/ownership/test_context_observers_ownership.mojo"
+      ]
+    },
+    {
+      "name": "Whole-value stages",
+      "methods": [
+        "then",
+        "tap"
+      ],
+      "status": "selected",
+      "families": "Whole carrier; then selects its output Functor",
+      "callbacks": "Native or library callbacks; tap uses BorrowCallable.",
+      "ownership": "then consumes the carrier; tap borrows and retains it.",
+      "errors": "Exact callback error, including Never.",
+      "timing": "One immediate invocation.",
+      "owner": [
+        "src/fp/callables/invoke.mojo",
+        "src/fp/callables/_transforms.mojo"
+      ],
+      "evidence": [
+        "tests/runtime/test_context_stages_transitions.mojo",
+        "tests/runtime/test_context_observers_behavior.mojo"
+      ]
+    },
+    {
+      "name": "Consuming folds",
+      "methods": [
+        "fold_left",
+        "fold_until",
+        "reduce_optional"
+      ],
+      "status": "selected",
+      "families": "Supported consuming iterable sources",
+      "callbacks": "Native or shared Binary callback.",
+      "ownership": "Consumes the source and accumulator.",
+      "errors": "Exact step error.",
+      "timing": "Immediate; fold_until stops at Break.",
+      "owner": [
+        "src/fp/iteration/folds.mojo"
+      ],
+      "evidence": [
+        "tests/runtime/test_context_stages_folds.mojo",
+        "tests/ownership/test_context_stages_ownership.mojo"
+      ]
+    },
+    {
+      "name": "Applicative combination",
+      "methods": [
+        "map2",
+        "product",
+        "map_n",
+        "product_n"
+      ],
+      "status": "selected",
+      "families": "Selected Applicative",
+      "callbacks": "Native separate operands; library tuple/binary contracts.",
+      "ownership": "Consumes evaluated carriers; Cartesian output may require copies.",
+      "errors": "Family policy keeps or accumulates stored errors; native errors stay raised.",
+      "timing": "Family-controlled; target selection is unchanged.",
+      "owner": [
+        "src/fp/algebra/_derived.mojo",
+        "src/fp/algebra/_nary.mojo"
+      ],
+      "evidence": [
+        "tests/runtime/test_context_stages_combinations.mojo"
+      ]
+    },
+    {
+      "name": "Traversal",
+      "methods": [
+        "traverse",
+        "sequence",
+        "traverse_tap",
+        "filter_effect"
+      ],
+      "status": "selected",
+      "families": "Traversable source; Applicative target; filtering also requires FunctorFilter",
+      "callbacks": "Consuming transform or borrowing retention callback; single-use where the source permits.",
+      "ownership": "Original move-only values retained when the target does not duplicate them.",
+      "errors": "Source errors, target failures and raised errors stay distinct.",
+      "timing": "Selects target family; Reader defers callbacks and compaction.",
+      "owner": [
+        "src/fp/algebra/_traversal.mojo",
+        "src/fp/algebra/_sequencing.mojo"
+      ],
+      "evidence": [
+        "tests/runtime/test_context_traversal_behavior.mojo",
+        "tests/runtime/test_context_traversal_generic.mojo",
+        "tests/runtime/test_context_traversal_origins.mojo",
+        "tests/ownership/test_context_traversal_ownership.mojo"
+      ]
+    },
+    {
+      "name": "Result operations",
+      "methods": [
+        "attempt_tap",
+        "before",
+        "ensure",
+        "flat_pair_with",
+        "flat_tap",
+        "flat_tap_err",
+        "followed_by",
+        "map_both",
+        "map_err",
+        "or_else",
+        "or_else_if",
+        "recover",
+        "recover_if",
+        "redeem",
+        "redeem_with",
+        "tap_err"
+      ],
+      "status": "result_only",
+      "families": "Result carriers; broader family capability admission still requires migration",
+      "callbacks": "Native or library callback; branch and receiver contracts follow Result.",
+      "ownership": "Runs the selected branch; handlers consume values while observers borrow.",
+      "errors": "Stored-error changes select a new ResultFamily; native raised errors retain their type.",
+      "timing": "Immediate Result branch selection.",
+      "owner": [
+        "src/fp/data/_result.mojo"
+      ],
+      "evidence": [
+        "tests/runtime/test_context_result_recover.mojo",
+        "tests/runtime/test_context_result_redeem_with.mojo",
+        "tests/runtime/test_context_result_ensure.mojo"
+      ]
+    }
+  ],
+  "legacy_methods": [
+    "all_effect",
+    "any_effect",
+    "ap",
+    "attempt_tap",
+    "before",
+    "combine_all",
+    "compact",
+    "ensure",
+    "fill",
+    "filter",
+    "filter_effect",
+    "filter_map",
+    "filter_not",
+    "find_effect",
+    "find_map",
+    "find_map_effect",
+    "flat_map",
+    "flat_pair_with",
+    "flat_sequence",
+    "flat_tap",
+    "flat_tap_err",
+    "flat_traverse",
+    "flatten",
+    "fold_effect",
+    "fold_left",
+    "fold_map",
+    "fold_map_effect",
+    "followed_by",
+    "get",
+    "if_effect",
+    "map",
+    "map2",
+    "map_both",
+    "map_err",
+    "map_n",
+    "max_by",
+    "min_by",
+    "or_else",
+    "or_else_if",
+    "pair_with",
+    "par_map_n",
+    "par_product_n",
+    "par_sequence",
+    "par_traverse",
+    "product",
+    "product_n",
+    "recover",
+    "recover_if",
+    "redeem",
+    "redeem_with",
+    "replace",
+    "sequence",
+    "sequence_filter",
+    "sequence_void",
+    "sum",
+    "sum_by",
+    "tap",
+    "tap_each",
+    "tap_err",
+    "then",
+    "traverse",
+    "traverse_filter",
+    "traverse_tap",
+    "traverse_void",
+    "tuple_left",
+    "tuple_right",
+    "void"
+  ],
+  "migration": [
+    {
+      "name": "Effectful queries and reductions",
+      "methods": [
+        "all_effect",
+        "any_effect",
+        "find_effect",
+        "find_map_effect",
+        "fold_effect",
+        "fold_map_effect"
+      ],
+      "contract": "Shared dependent fold/search; Monad targets, precise stopping and deferred execution."
+    },
+    {
+      "name": "Traversal composition",
+      "methods": [
+        "traverse_filter",
+        "sequence_filter",
+        "flat_traverse",
+        "flat_sequence",
+        "traverse_void",
+        "sequence_void"
+      ],
+      "contract": "Existing traversal, compaction, flattening and discard policies; source errors stay nested."
+    },
+    {
+      "name": "Pure reductions",
+      "methods": [
+        "find_map",
+        "fold_map",
+        "combine_all",
+        "sum",
+        "sum_by",
+        "max_by",
+        "min_by"
+      ],
+      "contract": "Existing consuming folds, monoids and terminal drivers; stable order and cleanup."
+    },
+    {
+      "name": "Structural conveniences",
+      "methods": [
+        "ap",
+        "compact",
+        "flatten",
+        "fill",
+        "replace",
+        "tuple_left",
+        "tuple_right",
+        "void"
+      ],
+      "contract": "Selected family primitives and shared callable transforms; no new per-container execution."
+    },
+    {
+      "name": "Conditional and accumulating policies",
+      "methods": [
+        "if_effect",
+        "par_map_n",
+        "par_product_n",
+        "par_sequence",
+        "par_traverse"
+      ],
+      "contract": "Monad branch factories or Validation policy; accumulation does not mean concurrent execution."
+    }
+  ],
+  "legacy_diagnostic_controls": [
+    "tests/compile_fail/attempt_adapter_wrong_convention.mojo",
+    "tests/compile_fail/callable_pipeline_inferred_no_unpack.mojo",
+    "tests/compile_fail/callable_pipeline_no_unpack.mojo",
+    "tests/compile_fail/combinator_expansion_pair_owned.mojo",
+    "tests/compile_fail/conditional_error_predicate_owned.mojo",
+    "tests/compile_fail/effect_combinator_predicate_owned.mojo",
+    "tests/compile_fail/error_observation_owned.mojo",
+    "tests/compile_fail/fluent_nary_arity.mojo",
+    "tests/compile_fail/piped_filter_mut_payload.mojo",
+    "tests/compile_fail/piped_filter_not_mut_payload.mojo",
+    "tests/compile_fail/piped_filter_not_owned_payload.mojo",
+    "tests/compile_fail/piped_filter_owned_payload.mojo",
+    "tests/compile_fail/result_combinator_owned_projection.mojo",
+    "tests/compile_fail/result_outcome_observer_owned.mojo",
+    "tests/compile_fail/result_selective_observer_owned.mojo",
+    "tests/compile_fail/result_selective_predicate_owned.mojo",
+    "tests/compile_fail/sequencing_owned_projection.mojo",
+    "tests/compile_fail/sequencing_pair_owned_projection.mojo",
+    "tests/compile_fail/shared_outcomes_attempt_owned.mojo",
+    "tests/compile_fail/shared_outcomes_ensure_factory_owned.mojo",
+    "tests/compile_fail/traversal_expansion_owned.mojo",
+    "tests/compile_fail/traversal_tap_owned.mojo"
+  ]
+}

@@ -28,6 +28,7 @@ def on_pre_build(config):
 def on_files(files, config):
     # Theme assets are static files of the custom theme directory; MkDocs copies them.
     sources = list((ROOT / 'src/fp').rglob('*.mojo')) + list(EXAMPLES.rglob('*.mojo'))
+    sources += [ROOT / 'docs/compatibility.json']
     for path in sorted(sources):
         files.append(File.generated(config, 'downloads/' + path.relative_to(ROOT).as_posix(), abs_src_path=str(path)))
     return files
