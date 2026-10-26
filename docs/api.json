@@ -808,6 +808,61 @@
    "summary": "Map a native Array's elements, preserving its length and order.",
    "traits": []
   },
+  "algebra.BindContract": {
+   "aliases": [
+    {
+     "description": "Exact payload equality, including embedded origins.",
+     "name": "InputCompatible"
+    },
+    {
+     "description": "The family's binding admission.",
+     "name": "FamilyCompatible"
+    },
+    {
+     "description": "The complete checked flat_map admission.",
+     "name": "Compatible"
+    },
+    {
+     "description": "The exact carrier produced by the family.",
+     "name": "Out"
+    },
+    {
+     "description": "The exact native error raised when constructing the bound carrier.",
+     "name": "Error"
+    }
+   ],
+   "description": "Forward `Compatible` in generic wrappers and use `Out` and `Error` for\ntheir return and raised types. The family decides which carrier\nrepresentations it admits, including deferred computations.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected Monad family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad",
+     "variadic": false
+    },
+    {
+     "description": "The complete source carrier type, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The library callback producing the next carrier.",
+     "inferred": false,
+     "name": "F",
+     "type": "UnaryContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/contracts",
+   "signature": "struct BindContract[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]",
+   "summary": "The admission, result and error of flat_map with a library callable.",
+   "traits": []
+  },
   "algebra.DequeFamily": {
    "aliases": [],
    "description": "Select with `pipeline[DequeFamily](values^)`. Mapping and filter_map can change\nthe element type. Callbacks are repeatable and elements are moved. The family\nimplements Functor, Filterable and FunctorFilter, without Applicative or Monad.",
@@ -2400,6 +2455,61 @@
     "Monoid",
     "Semigroup"
    ]
+  },
+  "algebra.MapContract": {
+   "aliases": [
+    {
+     "description": "Exact payload equality, including embedded origins.",
+     "name": "InputCompatible"
+    },
+    {
+     "description": "The family's admission without forcing input equality again.",
+     "name": "FamilyCompatible"
+    },
+    {
+     "description": "The complete checked map admission.",
+     "name": "Compatible"
+    },
+    {
+     "description": "The exact carrier produced by the family.",
+     "name": "Out"
+    },
+    {
+     "description": "The exact native error raised when constructing the mapped carrier.",
+     "name": "Error"
+    }
+   ],
+   "description": "A generic wrapper can return `MapContract[I, V, F].Out`, raise its `Error`\nand forward `where MapContract[I, V, F].Compatible`. Native callbacks first\nuse their existing admission adapters; the contract does not infer native\nsignatures. Family primitives retain their receiver and evaluation rules.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected Functor family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Functor",
+     "variadic": false
+    },
+    {
+     "description": "The complete source carrier type, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The library callback type, including its receiver and error.",
+     "inferred": false,
+     "name": "F",
+     "type": "UnaryContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/contracts",
+   "signature": "struct MapContract[I: Functor, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]",
+   "summary": "The admission, result and error of mapping a library callable.",
+   "traits": []
   },
   "algebra.Monad": {
    "aliases": [
@@ -4009,6 +4119,80 @@
     "Functor"
    ]
   },
+  "algebra.TraverseContract": {
+   "aliases": [
+    {
+     "description": "Exact source-element equality, including embedded origins.",
+     "name": "InputCompatible"
+    },
+    {
+     "description": "The source family's traversal admission, independent of map.",
+     "name": "SourceCompatible"
+    },
+    {
+     "description": "The target family's collection admission.",
+     "name": "CollectCompatible"
+    },
+    {
+     "description": "The callback's output belongs to the target family.",
+     "name": "CarrierCompatible"
+    },
+    {
+     "description": "Source and target admission without repeating input equality.",
+     "name": "FamilyCompatible"
+    },
+    {
+     "description": "The complete checked traversal admission.",
+     "name": "Compatible"
+    },
+    {
+     "description": "The exact traversal result, retaining source shape and target effect.",
+     "name": "Out"
+    },
+    {
+     "description": "The exact native error raised when constructing the traversal.",
+     "name": "Error"
+    }
+   ],
+   "description": "`Compatible` combines input equality, source traversal admission, target\ncollection admission and callback-output membership. Generic wrappers\nforward that one predicate and use `Out` and `Error`. Source traversal is\nintentionally distinct from source mapping: a family can traverse more\nsource representations than it maps.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The source Traversable family.",
+     "inferred": false,
+     "name": "S",
+     "type": "Traversable",
+     "variadic": false
+    },
+    {
+     "description": "The target Applicative family.",
+     "inferred": false,
+     "name": "G",
+     "type": "Applicative",
+     "variadic": false
+    },
+    {
+     "description": "The complete consumed source type, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The library callback producing target-family carriers.",
+     "inferred": false,
+     "name": "F",
+     "type": "UnaryContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/contracts",
+   "signature": "struct TraverseContract[S: Traversable, G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]",
+   "summary": "The joint source and target contract of traversal with a library callable.",
+   "traits": []
+  },
   "algebra.ValidationFamily": {
    "aliases": [
     {
@@ -5195,7 +5379,7 @@
       }
      ],
      "description": "",
-     "error": "I.BindError[V, F._View[o]]",
+     "error": "BindContract[I, V, F._View[o]].Error",
      "parameters": [
       {
        "description": "",
@@ -5230,9 +5414,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "I.Bound[V, F._View[o]]"
+      "type": "BindContract[I, V, F._View[o]].Out"
      },
-     "signature": "def flat_map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Monad](ref[o] f: F, var value: V) raises I.BindError[V, F._View[o]] -> I.Bound[V, F._View[o]] where I.Element[V] == F._View[o].Arg and _BindCompatible[I, V, F._View[o]]",
+     "signature": "def flat_map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Monad](ref[o] f: F, var value: V) raises BindContract[I, V, F._View[o]].Error -> BindContract[I, V, F._View[o]].Out where BindContract[I, V, F._View[o]].Compatible",
      "summary": "Borrow an origin-dependent callable through its internal shared view."
     },
     {
@@ -5253,7 +5437,7 @@
       }
      ],
      "description": "An absent `Optional`, a failed `Result` or an empty `List` skips the\ncallback.\n\nAnother overload takes a native function or closure directly, for every\ninstance: `flat_map[OptionalFamily](halve, value^)`. It is borrowed, not moved:\nan eager instance calls it before returning, and a deferred computation\nkeeps the borrow until it runs, so keep the callback alive and unmoved\nuntil then, or move it in with `as_unary(f^)`. Its parameter type must\nequal the carrier's element type, origins included. Generic code that\nforwards a raising native callback names its error with `X=`.",
-     "error": "I.BindError[V, F]",
+     "error": "BindContract[I, V, F].Error",
      "parameters": [
       {
        "description": "The carrier's type.",
@@ -5281,9 +5465,9 @@
      "raises_doc": "`I.BindError[V, F]`: the callback's error, unchanged.",
      "returns": {
       "doc": "`I.Bound[V, F]`, the carrier the callback returned.",
-      "type": "I.Bound[V, F]"
+      "type": "BindContract[I, V, F].Out"
      },
-     "signature": "def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Monad](var f: F, var value: V) raises I.BindError[V, F] -> I.Bound[V, F] where I.Element[V] == F.Arg and _BindCompatible[I, V, F]",
+     "signature": "def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Monad](var f: F, var value: V) raises BindContract[I, V, F].Error -> BindContract[I, V, F].Out where BindContract[I, V, F].Compatible",
      "summary": "Let `f` choose the next carrier of the same family from the payload of `value`: the `Monad` operation."
     },
     {
@@ -6381,7 +6565,7 @@
       }
      ],
      "description": "",
-     "error": "I.MapError[V, F._View[o]]",
+     "error": "MapContract[I, V, F._View[o]].Error",
      "parameters": [
       {
        "description": "",
@@ -6416,9 +6600,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "I.Mapped[V, F._View[o]]"
+      "type": "MapContract[I, V, F._View[o]].Out"
      },
-     "signature": "def map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Functor](ref[o] f: F, var value: V) raises I.MapError[V, F._View[o]] -> I.Mapped[V, F._View[o]] where I.Element[V] == F._View[o].Arg and _MapCompatible[I, V, F._View[o]]",
+     "signature": "def map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Functor](ref[o] f: F, var value: V) raises MapContract[I, V, F._View[o]].Error -> MapContract[I, V, F._View[o]].Out where MapContract[I, V, F._View[o]].Compatible",
      "summary": "Borrow an origin-dependent callable through its internal shared view."
     },
     {
@@ -6439,7 +6623,7 @@
       }
      ],
      "description": "Another overload takes a native function or closure directly, for every\ninstance: `map[OptionalFamily](twice, value^)`. It is borrowed, not moved:\nan eager instance calls it before returning, and a deferred computation\nkeeps the borrow until it runs, so keep the callback alive and unmoved\nuntil then, or move it in with `as_unary(f^)`. Its parameter type must\nequal the carrier's element type, origins included. Generic code that\nforwards a raising native callback names its error with `X=`.",
-     "error": "I.MapError[V, F]",
+     "error": "MapContract[I, V, F].Error",
      "parameters": [
       {
        "description": "The carrier's type.",
@@ -6467,9 +6651,9 @@
      "raises_doc": "`I.MapError[V, F]`: the callback's error, unchanged.",
      "returns": {
       "doc": "The carrier of the callback's results, `I.Mapped[V, F]`.",
-      "type": "I.Mapped[V, F]"
+      "type": "MapContract[I, V, F].Out"
      },
-     "signature": "def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Functor](var f: F, var value: V) raises I.MapError[V, F] -> I.Mapped[V, F] where I.Element[V] == F.Arg and _MapCompatible[I, V, F]",
+     "signature": "def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Functor](var f: F, var value: V) raises MapContract[I, V, F].Error -> MapContract[I, V, F].Out where MapContract[I, V, F].Compatible",
      "summary": "Apply `f` to the payload of `value`, keeping the carrier's context: the `Functor` operation."
     },
     {
@@ -6958,7 +7142,7 @@
       }
      ],
      "description": "",
-     "error": "S.TraverseError[G, V, F._View[o]]",
+     "error": "TraverseContract[S, G, V, F._View[o]].Error",
      "parameters": [
       {
        "description": "",
@@ -7000,9 +7184,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "S.Traversed[G, V, F._View[o]]"
+      "type": "TraverseContract[S, G, V, F._View[o]].Out"
      },
-     "signature": "def traverse[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, S: Traversable, G: Applicative](ref[o] f: F, var source: V) raises S.TraverseError[G, V, F._View[o]] -> S.Traversed[G, V, F._View[o]] where S.Element[V] == F._View[o].Arg and _CollectCompatible[G, V, F._View[o]]",
+     "signature": "def traverse[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, S: Traversable, G: Applicative](ref[o] f: F, var source: V) raises TraverseContract[S, G, V, F._View[o]].Error -> TraverseContract[S, G, V, F._View[o]].Out where TraverseContract[S, G, V, F._View[o]].InputCompatible and TraverseContract[S, G, V, F._View[o]].CollectCompatible",
      "summary": "Borrow an origin-dependent callable through its internal shared view."
     },
     {
@@ -7023,7 +7207,7 @@
       }
      ],
      "description": "The source keeps its shape. Once `G` has failed (an absent `Optional`, a\nfailed `Result`), no further element is pulled and the callback is not\ncalled again. A `List` source is gathered by `G.collect`; any owned\niterable or iterator can be the source. Another overload takes a native\nfunction or closure directly.",
-     "error": "S.TraverseError[G, V, F]",
+     "error": "TraverseContract[S, G, V, F].Error",
      "parameters": [
       {
        "description": "The source's type.",
@@ -7058,9 +7242,9 @@
      "raises_doc": "`S.TraverseError[G, V, F]`: the callback's error, and any error `G` adds.",
      "returns": {
       "doc": "`S.Traversed[G, V, F]`, `G`'s carrier of the results in source shape.",
-      "type": "S.Traversed[G, V, F]"
+      "type": "TraverseContract[S, G, V, F].Out"
      },
-     "signature": "def traverse[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, S: Traversable, G: Applicative](var f: F, var source: V) raises S.TraverseError[G, V, F] -> S.Traversed[G, V, F] where S.Element[V] == F.Arg and _CollectCompatible[G, V, F]",
+     "signature": "def traverse[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, S: Traversable, G: Applicative](var f: F, var source: V) raises TraverseContract[S, G, V, F].Error -> TraverseContract[S, G, V, F].Out where TraverseContract[S, G, V, F].InputCompatible and TraverseContract[S, G, V, F].CollectCompatible",
      "summary": "Call an effectful `f` on each element of `source`, in order, and gather the results in one `G` carrier."
     },
     {
@@ -101352,7 +101536,7 @@
        }
       ],
       "description": "",
-      "error": "_Binding[Self.I].BindError[Self.V, C]",
+      "error": "BindContract[_Binding[Self.I], Self.V, C].Error",
       "parameters": [
        {
         "description": "The first library callback type, retaining its receiver and origins.",
@@ -101366,9 +101550,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, C], Self.E]"
+       "type": "Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, C].Out, Self.E]"
       },
-      "signature": "def flat_map[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises _Binding[Self.I].BindError[Self.V, C] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, C], Self.E] where conforms_to(Self.I, Monad) and C.Arg == Self.I.Element[Self.V] and _BindCompatible[_Binding[Self.I], Self.V, C]",
+      "signature": "def flat_map[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises BindContract[_Binding[Self.I], Self.V, C].Error -> Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, C].Out, Self.E] where conforms_to(Self.I, Monad) and C.Arg == Self.I.Element[Self.V] and BindContract[_Binding[Self.I], Self.V, C].FamilyCompatible",
       "summary": "Apply flat_map through the selected family's Monad capability."
      },
      {
@@ -101382,7 +101566,7 @@
        }
       ],
       "description": "",
-      "error": "_Binding[Self.I].BindError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]",
+      "error": "BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -101410,9 +101594,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], Self.E]"
+       "type": "Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E]"
       },
-      "signature": "def flat_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], Self.E] where conforms_to(Self.I, Monad) and _BindCompatible[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]",
+      "signature": "def flat_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error -> Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, Monad) and BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].FamilyCompatible",
       "summary": "Apply flat_map through the selected family's Monad capability."
      },
      {
@@ -101426,7 +101610,7 @@
        }
       ],
       "description": "",
-      "error": "_Binding[Self.I].BindError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]",
+      "error": "BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -101454,9 +101638,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], Self.E]"
+       "type": "Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Out, Self.E]"
       },
-      "signature": "def flat_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], Self.E] where conforms_to(Self.I, Monad) and _BindCompatible[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]",
+      "signature": "def flat_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, Monad) and BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].FamilyCompatible",
       "summary": "Apply flat_map through the selected family's Monad capability."
      },
      {
@@ -101470,7 +101654,7 @@
        }
       ],
       "description": "",
-      "error": "_Binding[Self.I].BindError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]]",
+      "error": "BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -101498,9 +101682,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], Self.E]"
+       "type": "Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Out, Self.E]"
       },
-      "signature": "def flat_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], Self.E] where conforms_to(Self.I, Monad) and Self.E != Never and _BindCompatible[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]]",
+      "signature": "def flat_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Error -> Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, Monad) and Self.E != Never and BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].FamilyCompatible",
       "summary": "Apply flat_map through the selected family's Monad capability."
      },
      {
@@ -101514,7 +101698,7 @@
        }
       ],
       "description": "",
-      "error": "_Binding[Self.I].BindError[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]",
+      "error": "BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -101528,9 +101712,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E]"
+       "type": "Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def flat_map[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises _Binding[Self.I].BindError[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E] where conforms_to(Self.I, Monad) and not conforms_to(R, RegisterPassable) and _BindCompatible[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]",
+      "signature": "def flat_map[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error -> Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Monad) and not conforms_to(R, RegisterPassable) and BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].FamilyCompatible",
       "summary": "Apply flat_map through the selected family's Monad capability."
      },
      {
@@ -101544,7 +101728,7 @@
        }
       ],
       "description": "",
-      "error": "_Binding[Self.I].BindError[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]",
+      "error": "BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -101558,9 +101742,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E]"
+       "type": "Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def flat_map[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises _Binding[Self.I].BindError[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E] where conforms_to(Self.I, Monad) and _BindCompatible[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]",
+      "signature": "def flat_map[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error -> Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Monad) and BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].FamilyCompatible",
       "summary": "Apply flat_map through the selected family's Monad capability."
      },
      {
@@ -101574,7 +101758,7 @@
        }
       ],
       "description": "",
-      "error": "_Binding[Self.I].BindError[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]",
+      "error": "BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -101595,9 +101779,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E]"
+       "type": "Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def flat_map[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises _Binding[Self.I].BindError[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and _BindCompatible[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]",
+      "signature": "def flat_map[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].FamilyCompatible",
       "summary": "Apply flat_map through the selected family's Monad capability."
      },
      {
@@ -101611,7 +101795,7 @@
        }
       ],
       "description": "",
-      "error": "_Binding[Self.I].BindError[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]",
+      "error": "BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -101632,9 +101816,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E]"
+       "type": "Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def flat_map[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises _Binding[Self.I].BindError[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and _BindCompatible[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]",
+      "signature": "def flat_map[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].FamilyCompatible",
       "summary": "Apply flat_map through the selected family's Monad capability."
      }
     ],
@@ -109054,7 +109238,7 @@
        }
       ],
       "description": "",
-      "error": "Self.I.MapError[Self.V, C]",
+      "error": "MapContract[Self.I, Self.V, C].Error",
       "parameters": [
        {
         "description": "The first library callback type, retaining its receiver and origins.",
@@ -109068,9 +109252,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[Self.I, Self.I.Mapped[Self.V, C], Self.E]"
+       "type": "Pipeline[Self.I, MapContract[Self.I, Self.V, C].Out, Self.E]"
       },
-      "signature": "def map[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises Self.I.MapError[Self.V, C] -> Pipeline[Self.I, Self.I.Mapped[Self.V, C], Self.E] where conforms_to(Self.I, Functor) and C.Arg == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, C]",
+      "signature": "def map[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises MapContract[Self.I, Self.V, C].Error -> Pipeline[Self.I, MapContract[Self.I, Self.V, C].Out, Self.E] where conforms_to(Self.I, Functor) and C.Arg == Self.I.Element[Self.V] and MapContract[Self.I, Self.V, C].FamilyCompatible",
       "summary": "Apply map through the selected family's Functor capability."
      },
      {
@@ -109084,7 +109268,7 @@
        }
       ],
       "description": "",
-      "error": "Self.I.MapError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]",
+      "error": "MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -109112,9 +109296,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, Self.I.Mapped[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], Self.E]"
+       "type": "Pipeline[Self.I, MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E]"
       },
-      "signature": "def map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises Self.I.MapError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], Self.E] where conforms_to(Self.I, Functor) and _MapCompatible[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]",
+      "signature": "def map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error -> Pipeline[Self.I, MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, Functor) and MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].FamilyCompatible",
       "summary": "Apply map through the selected family's Functor capability."
      },
      {
@@ -109128,7 +109312,7 @@
        }
       ],
       "description": "",
-      "error": "Self.I.MapError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]",
+      "error": "MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -109156,9 +109340,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, Self.I.Mapped[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], Self.E]"
+       "type": "Pipeline[Self.I, MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Out, Self.E]"
       },
-      "signature": "def map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises Self.I.MapError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], Self.E] where conforms_to(Self.I, Functor) and _MapCompatible[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]",
+      "signature": "def map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[Self.I, MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, Functor) and MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].FamilyCompatible",
       "summary": "Apply map through the selected family's Functor capability."
      },
      {
@@ -109172,7 +109356,7 @@
        }
       ],
       "description": "",
-      "error": "Self.I.MapError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]]",
+      "error": "MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -109200,9 +109384,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, Self.I.Mapped[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], Self.E]"
+       "type": "Pipeline[Self.I, MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Out, Self.E]"
       },
-      "signature": "def map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises Self.I.MapError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], Self.E] where conforms_to(Self.I, Functor) and Self.E != Never and _MapCompatible[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]]",
+      "signature": "def map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Error -> Pipeline[Self.I, MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, Functor) and Self.E != Never and MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].FamilyCompatible",
       "summary": "Apply map through the selected family's Functor capability."
      },
      {
@@ -109216,7 +109400,7 @@
        }
       ],
       "description": "",
-      "error": "Self.I.MapError[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]",
+      "error": "MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -109230,9 +109414,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, Self.I.Mapped[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E]"
+       "type": "Pipeline[Self.I, MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def map[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises Self.I.MapError[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E] where conforms_to(Self.I, Functor) and not conforms_to(R, RegisterPassable) and _MapCompatible[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]",
+      "signature": "def map[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error -> Pipeline[Self.I, MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Functor) and not conforms_to(R, RegisterPassable) and MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].FamilyCompatible",
       "summary": "Apply map through the selected family's Functor capability."
      },
      {
@@ -109246,7 +109430,7 @@
        }
       ],
       "description": "",
-      "error": "Self.I.MapError[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]",
+      "error": "MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -109260,9 +109444,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, Self.I.Mapped[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E]"
+       "type": "Pipeline[Self.I, MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def map[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises Self.I.MapError[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E] where conforms_to(Self.I, Functor) and _MapCompatible[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]",
+      "signature": "def map[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error -> Pipeline[Self.I, MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Functor) and MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].FamilyCompatible",
       "summary": "Apply map through the selected family's Functor capability."
      },
      {
@@ -109276,7 +109460,7 @@
        }
       ],
       "description": "",
-      "error": "Self.I.MapError[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]",
+      "error": "MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -109297,9 +109481,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, Self.I.Mapped[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E]"
+       "type": "Pipeline[Self.I, MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def map[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises Self.I.MapError[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Functor) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and _MapCompatible[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]",
+      "signature": "def map[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[Self.I, MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Functor) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].FamilyCompatible",
       "summary": "Apply map through the selected family's Functor capability."
      },
      {
@@ -109313,7 +109497,7 @@
        }
       ],
       "description": "",
-      "error": "Self.I.MapError[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]",
+      "error": "MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -109334,9 +109518,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, Self.I.Mapped[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E]"
+       "type": "Pipeline[Self.I, MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def map[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises Self.I.MapError[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Functor) and _ErrorCompatible[Self.E, X] and _MapCompatible[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]",
+      "signature": "def map[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[Self.I, MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Functor) and _ErrorCompatible[Self.E, X] and MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].FamilyCompatible",
       "summary": "Apply map through the selected family's Functor capability."
      }
     ],
@@ -150204,7 +150388,7 @@
        }
       ],
       "description": "",
-      "error": "_Traversing[Self.I].TraverseError[J, Self.V, C]",
+      "error": "TraverseContract[_Traversing[Self.I], J, Self.V, C].Error",
       "parameters": [
        {
         "description": "The first library callback type, retaining its receiver and origins.",
@@ -150225,9 +150409,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, C], Self.E]"
+       "type": "Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, C].Out, Self.E]"
       },
-      "signature": "def traverse[C: UnaryContract & Movable & Deinitable, //, J: Applicative](deinit self, var function: C) raises _Traversing[Self.I].TraverseError[J, Self.V, C] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, C], Self.E] where conforms_to(Self.I, Traversable) and C.Arg == Self.I.Element[Self.V] and _TraverseCompatible[_Traversing[Self.I], Self.V, C] and _CollectCompatible[J, Self.V, C] and _CarrierCompatible[J, C.Out]",
+      "signature": "def traverse[C: UnaryContract & Movable & Deinitable, //, J: Applicative](deinit self, var function: C) raises TraverseContract[_Traversing[Self.I], J, Self.V, C].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, C].Out, Self.E] where conforms_to(Self.I, Traversable) and C.Arg == Self.I.Element[Self.V] and TraverseContract[_Traversing[Self.I], J, Self.V, C].FamilyCompatible",
       "summary": "Traverse into the selected target effect and continue in that family."
      },
      {
@@ -150241,7 +150425,7 @@
        }
       ],
       "description": "",
-      "error": "_Traversing[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]",
+      "error": "TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -150276,9 +150460,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], Self.E]"
+       "type": "Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E]"
       },
-      "signature": "def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative, C: def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises _Traversing[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], Self.E] where conforms_to(Self.I, Traversable) and _TraverseCompatible[_Traversing[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]] and _CollectCompatible[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]] and _CarrierCompatible[J, R]",
+      "signature": "def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative, C: def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].FamilyCompatible",
       "summary": "Traverse into the selected target effect and continue in that family."
      },
      {
@@ -150292,7 +150476,7 @@
        }
       ],
       "description": "",
-      "error": "_Traversing[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]",
+      "error": "TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -150327,9 +150511,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], Self.E]"
+       "type": "Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Out, Self.E]"
       },
-      "signature": "def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative, C: def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _Traversing[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], Self.E] where conforms_to(Self.I, Traversable) and _TraverseCompatible[_Traversing[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]] and _CollectCompatible[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]] and _CarrierCompatible[J, R]",
+      "signature": "def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative, C: def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].FamilyCompatible",
       "summary": "Traverse into the selected target effect and continue in that family."
      },
      {
@@ -150343,7 +150527,7 @@
        }
       ],
       "description": "",
-      "error": "_Traversing[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]]",
+      "error": "TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -150378,9 +150562,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], Self.E]"
+       "type": "Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Out, Self.E]"
       },
-      "signature": "def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative, C: def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _Traversing[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], Self.E] where conforms_to(Self.I, Traversable) and Self.E != Never and _TraverseCompatible[_Traversing[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]] and _CollectCompatible[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]] and _CarrierCompatible[J, R]",
+      "signature": "def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative, C: def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and Self.E != Never and TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].FamilyCompatible",
       "summary": "Traverse into the selected target effect and continue in that family."
      },
      {
@@ -150394,7 +150578,7 @@
        }
       ],
       "description": "",
-      "error": "_Traversing[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]",
+      "error": "TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -150415,9 +150599,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E]"
+       "type": "Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def traverse[R: Movable & Deinitable, //, J: Applicative](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises _Traversing[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E] where conforms_to(Self.I, Traversable) and not conforms_to(R, RegisterPassable) and _TraverseCompatible[_Traversing[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] and _CollectCompatible[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] and _CarrierCompatible[J, R]",
+      "signature": "def traverse[R: Movable & Deinitable, //, J: Applicative](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Traversable) and not conforms_to(R, RegisterPassable) and TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].FamilyCompatible",
       "summary": "Traverse into the selected target effect and continue in that family."
      },
      {
@@ -150431,7 +150615,7 @@
        }
       ],
       "description": "",
-      "error": "_Traversing[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]",
+      "error": "TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -150452,9 +150636,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E]"
+       "type": "Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def traverse[R: RegisterPassable & Deinitable, //, J: Applicative](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises _Traversing[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E] where conforms_to(Self.I, Traversable) and _TraverseCompatible[_Traversing[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] and _CollectCompatible[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] and _CarrierCompatible[J, R]",
+      "signature": "def traverse[R: RegisterPassable & Deinitable, //, J: Applicative](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Traversable) and TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].FamilyCompatible",
       "summary": "Traverse into the selected target effect and continue in that family."
      },
      {
@@ -150468,7 +150652,7 @@
        }
       ],
       "description": "",
-      "error": "_Traversing[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]",
+      "error": "TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -150496,9 +150680,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E]"
+       "type": "Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def traverse[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Applicative](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises _Traversing[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Traversable) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and _TraverseCompatible[_Traversing[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] and _CollectCompatible[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] and _CarrierCompatible[J, R]",
+      "signature": "def traverse[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Applicative](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Traversable) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].FamilyCompatible",
       "summary": "Traverse into the selected target effect and continue in that family."
      },
      {
@@ -150512,7 +150696,7 @@
        }
       ],
       "description": "",
-      "error": "_Traversing[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]",
+      "error": "TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -150540,9 +150724,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E]"
+       "type": "Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def traverse[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Applicative](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises _Traversing[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Traversable) and _ErrorCompatible[Self.E, X] and _TraverseCompatible[_Traversing[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] and _CollectCompatible[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] and _CarrierCompatible[J, R]",
+      "signature": "def traverse[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Applicative](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Traversable) and _ErrorCompatible[Self.E, X] and TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].FamilyCompatible",
       "summary": "Traverse into the selected target effect and continue in that family."
      }
     ],

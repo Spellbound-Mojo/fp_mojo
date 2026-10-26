@@ -1,10 +1,11 @@
 """Signature constraints preserving nominal carriers and embedded origins."""
 from fp.algebra.protocols import Functor, Applicative, Monad, Traversable
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract
+from .contracts import MapContract, BindContract
 
 # Public family predicates let generic forwarders state their preconditions.
-comptime _MapCompatible[I: Functor, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = I.MapCompatible[V, F]
-comptime _BindCompatible[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = I.BindCompatible[V, F]
+comptime _MapCompatible[I: Functor, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = MapContract[I, V, F].FamilyCompatible
+comptime _BindCompatible[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = BindContract[I, V, F].FamilyCompatible
 comptime _CombineCompatible[I: Applicative, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = I.CombineCompatible[V, F, R]
 comptime _CollectCompatible[I: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = I.CollectCompatible[V, F]
 

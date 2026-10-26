@@ -5330,36 +5330,36 @@
         ],
         "traverse": [
           {
-            "signature": "def traverse[C: UnaryContract & Movable & Deinitable, //, J: Applicative](deinit self, var function: C) raises _Traversing[Self.I].TraverseError[J, Self.V, C] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, C], Self.E] where conforms_to(Self.I, Traversable) and C.Arg == Self.I.Element[Self.V] and _TraverseCompatible[_Traversing[Self.I], Self.V, C] and _CollectCompatible[J, Self.V, C] and _CarrierCompatible[J, C.Out]:",
-            "sha256": "fc8631f6ed4667df7f0f1f2b80e21fe4ab7dc6167391cb4cd43f57fcd4bcef5c"
+            "signature": "def traverse[C: UnaryContract & Movable & Deinitable, //, J: Applicative](deinit self, var function: C) raises TraverseContract[_Traversing[Self.I], J, Self.V, C].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, C].Out, Self.E] where conforms_to(Self.I, Traversable) and C.Arg == Self.I.Element[Self.V] and TraverseContract[_Traversing[Self.I], J, Self.V, C].FamilyCompatible:",
+            "sha256": "415516f8676eee4a379234845867ccf81a06b7e959af89b10db8d2238ece7f31"
           },
           {
-            "signature": "def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative, C: def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises _Traversing[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], Self.E] where conforms_to(Self.I, Traversable) and _TraverseCompatible[_Traversing[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]] and _CollectCompatible[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]] and _CarrierCompatible[J, R]:",
-            "sha256": "ca882edb3a5b665e3c6de06d3523fd97a7b29a9fb60e716e72f4357fd1dedd14"
+            "signature": "def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative, C: def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].FamilyCompatible:",
+            "sha256": "903fbbb4c794b8926d52dfdddda111c9e7abffd2a5731bc7957ea9cee77e8787"
           },
           {
-            "signature": "def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative, C: def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _Traversing[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], Self.E] where conforms_to(Self.I, Traversable) and _TraverseCompatible[_Traversing[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]] and _CollectCompatible[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]] and _CarrierCompatible[J, R]:",
-            "sha256": "8518c905d70128e6820845b496868f17c8a1847b8c948b601e0b12186efcb7f5"
+            "signature": "def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative, C: def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].FamilyCompatible:",
+            "sha256": "d9a6922c00fa9e1e738a6c03e07ea3d00180bb73d33f8699f59b2b1a50bfa716"
           },
           {
-            "signature": "def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative, C: def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _Traversing[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], Self.E] where conforms_to(Self.I, Traversable) and Self.E != Never and _TraverseCompatible[_Traversing[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]] and _CollectCompatible[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]] and _CarrierCompatible[J, R]:",
-            "sha256": "a4527f803763d8e605e7d32c0ca92e9b67356ca10b633bfc515344bf9a70a75f"
+            "signature": "def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative, C: def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and Self.E != Never and TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].FamilyCompatible:",
+            "sha256": "82b8819e92d480f21e1873d60b1c1f2f26d98ea677e43528781b1aa8c2b96602"
           },
           {
-            "signature": "def traverse[R: Movable & Deinitable, //, J: Applicative](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises _Traversing[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E] where conforms_to(Self.I, Traversable) and not conforms_to(R, RegisterPassable) and _TraverseCompatible[_Traversing[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] and _CollectCompatible[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] and _CarrierCompatible[J, R]:",
-            "sha256": "2fe7dc64628278374fffd66aca3781efecf2df0dc70fe16e5ef3060a51978100"
+            "signature": "def traverse[R: Movable & Deinitable, //, J: Applicative](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Traversable) and not conforms_to(R, RegisterPassable) and TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].FamilyCompatible:",
+            "sha256": "177a0af1a8ed72379744cf553ee2fb3071ce437cf68d75c7f0fac16461a40c8e"
           },
           {
-            "signature": "def traverse[R: RegisterPassable & Deinitable, //, J: Applicative](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises _Traversing[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E] where conforms_to(Self.I, Traversable) and _TraverseCompatible[_Traversing[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] and _CollectCompatible[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] and _CarrierCompatible[J, R]:",
-            "sha256": "bbf7b8a6d102d4892a9f8d31163957eca9b18e935b245bd276d9d14607a28e6a"
+            "signature": "def traverse[R: RegisterPassable & Deinitable, //, J: Applicative](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Traversable) and TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].FamilyCompatible:",
+            "sha256": "f29ce2d7f8676d58eb2cc91ffabdff8594ea382200d580ffc0b79b4dff892eff"
           },
           {
-            "signature": "def traverse[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Applicative](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises _Traversing[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Traversable) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and _TraverseCompatible[_Traversing[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] and _CollectCompatible[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] and _CarrierCompatible[J, R]:",
-            "sha256": "ad2c5d5dff01eebe6d97e1ced1c00798dfcf93aeda7d82286ba93a2d6f70e427"
+            "signature": "def traverse[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Applicative](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Traversable) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].FamilyCompatible:",
+            "sha256": "bb44c0131e887ea536c3d769187b230419150705cb04128abcb7789032a4b651"
           },
           {
-            "signature": "def traverse[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Applicative](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises _Traversing[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Traversable) and _ErrorCompatible[Self.E, X] and _TraverseCompatible[_Traversing[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] and _CollectCompatible[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] and _CarrierCompatible[J, R]:",
-            "sha256": "efb1523f321dc7e690fe1e495e7bfdb05cdd3f07e4cc7a6fb5e6ce15e8854217"
+            "signature": "def traverse[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Applicative](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Traversable) and _ErrorCompatible[Self.E, X] and TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].FamilyCompatible:",
+            "sha256": "3bb7715f56ec1c6ea98a7fa238c442e834fc9121760b5ee0e3b2e17a615488a9"
           }
         ],
         "traverse_tap": [
@@ -5902,36 +5902,36 @@
         ],
         "map": [
           {
-            "signature": "def map[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises Self.I.MapError[Self.V, C] -> Pipeline[Self.I, Self.I.Mapped[Self.V, C], Self.E] where conforms_to(Self.I, Functor) and C.Arg == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, C]:",
-            "sha256": "1cf90f6027857a9f80fa18b95a3842c14da8ec2aedcc25c014ebe11500dc8225"
+            "signature": "def map[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises MapContract[Self.I, Self.V, C].Error -> Pipeline[Self.I, MapContract[Self.I, Self.V, C].Out, Self.E] where conforms_to(Self.I, Functor) and C.Arg == Self.I.Element[Self.V] and MapContract[Self.I, Self.V, C].FamilyCompatible:",
+            "sha256": "d2f4a8ee6f0ecb5dbab7b6d5179e8799c5284d338b39c5d9bf4570a8f8a3f108"
           },
           {
-            "signature": "def map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises Self.I.MapError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], Self.E] where conforms_to(Self.I, Functor) and _MapCompatible[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]:",
-            "sha256": "534ce55f841fe36259b54c094cc973dcbfbd5c31bcde42f080210f8f8b007602"
+            "signature": "def map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error -> Pipeline[Self.I, MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, Functor) and MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].FamilyCompatible:",
+            "sha256": "19ce35b7bb618d42f487d83325aeb98e2a5ca81bbf1279f029e2e69c5915b1f2"
           },
           {
-            "signature": "def map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises Self.I.MapError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], Self.E] where conforms_to(Self.I, Functor) and _MapCompatible[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]:",
-            "sha256": "8df1d5502c6c5399f63d5ecef1f12cd011e6c52b6a4c1e0fbc5bc2ed050806d0"
+            "signature": "def map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[Self.I, MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, Functor) and MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].FamilyCompatible:",
+            "sha256": "e0b7b901469d44b0432ed848cc619c79d6d013aaa0c62a0945957a2eb35e1ba0"
           },
           {
-            "signature": "def map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises Self.I.MapError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], Self.E] where conforms_to(Self.I, Functor) and Self.E != Never and _MapCompatible[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]]:",
-            "sha256": "c017f161c2791cd4452322c0b84dce0ca66b8ca416378c99e31192c36b7ffa5e"
+            "signature": "def map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Error -> Pipeline[Self.I, MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, Functor) and Self.E != Never and MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].FamilyCompatible:",
+            "sha256": "f75fed7d013488d9d621af413d1a1d4a9ba0596c3980f50e15e7f2a29e80c779"
           },
           {
-            "signature": "def map[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises Self.I.MapError[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E] where conforms_to(Self.I, Functor) and not conforms_to(R, RegisterPassable) and _MapCompatible[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]:",
-            "sha256": "333e206d84062523d856b3192e24fdc99e7f59a5ba962920562ee73f73cfc93e"
+            "signature": "def map[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error -> Pipeline[Self.I, MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Functor) and not conforms_to(R, RegisterPassable) and MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].FamilyCompatible:",
+            "sha256": "e5cd9ce6e0cc08337c1774ff7519b1264af2a883735efc01c7dbdd65cc1db180"
           },
           {
-            "signature": "def map[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises Self.I.MapError[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E] where conforms_to(Self.I, Functor) and _MapCompatible[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]:",
-            "sha256": "a210f8d6572c727d39f06da1fe7e63d939e517ccb8cd4dd2125c5221e549aa2f"
+            "signature": "def map[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error -> Pipeline[Self.I, MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Functor) and MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].FamilyCompatible:",
+            "sha256": "ca37978b567fa2ff65afd4ae0949a580007eb8044470fc336c9591f9ce6a204a"
           },
           {
-            "signature": "def map[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises Self.I.MapError[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Functor) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and _MapCompatible[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]:",
-            "sha256": "b7f8dc6346b7bcad36cea46cb5508510c8cdd68752dbb340e0849f123dbea014"
+            "signature": "def map[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[Self.I, MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Functor) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].FamilyCompatible:",
+            "sha256": "61deb8115ff48962594c3bc2850cfade8c42cef6ffab1205855be09b43a6c384"
           },
           {
-            "signature": "def map[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises Self.I.MapError[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] -> Pipeline[Self.I, Self.I.Mapped[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Functor) and _ErrorCompatible[Self.E, X] and _MapCompatible[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]:",
-            "sha256": "a3a42cbdb0b0f8d5ff9831ae3400a0243c5709740b7e698145260f4f241cb2f4"
+            "signature": "def map[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[Self.I, MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Functor) and _ErrorCompatible[Self.E, X] and MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].FamilyCompatible:",
+            "sha256": "e0a287e3a4595e9f42aa236a322de272efc52e097659c78d5f79088c56c3a718"
           }
         ],
         "filter": [
@@ -6036,36 +6036,36 @@
         ],
         "flat_map": [
           {
-            "signature": "def flat_map[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises _Binding[Self.I].BindError[Self.V, C] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, C], Self.E] where conforms_to(Self.I, Monad) and C.Arg == Self.I.Element[Self.V] and _BindCompatible[_Binding[Self.I], Self.V, C]:",
-            "sha256": "dffd7b90996b90ba4f5b468eadd81829c408ae997521b5337808b7f6f3054a3d"
+            "signature": "def flat_map[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises BindContract[_Binding[Self.I], Self.V, C].Error -> Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, C].Out, Self.E] where conforms_to(Self.I, Monad) and C.Arg == Self.I.Element[Self.V] and BindContract[_Binding[Self.I], Self.V, C].FamilyCompatible:",
+            "sha256": "278d792388368bb06bed2c794073a62d30e58f099a0f78931b58dea4aa79a486"
           },
           {
-            "signature": "def flat_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], Self.E] where conforms_to(Self.I, Monad) and _BindCompatible[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]:",
-            "sha256": "9964d7dc0d076ed633e05aa098adf85fd83f55058217b6e46ef3b04492bd1d98"
+            "signature": "def flat_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error -> Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, Monad) and BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].FamilyCompatible:",
+            "sha256": "8e8626d6f1124db55aebc3929435d60f6881abf609da06b696fb3a71ef1c9cd0"
           },
           {
-            "signature": "def flat_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], Self.E] where conforms_to(Self.I, Monad) and _BindCompatible[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]:",
-            "sha256": "c30ca001ffded3dee19541033433964a98facc6afaee04da4ef56d9daf6157d8"
+            "signature": "def flat_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, Monad) and BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].FamilyCompatible:",
+            "sha256": "908c6ef7bf7c9e24fbbeead7df8db8467fb1dfcd10a9aa0e633147426a9613c7"
           },
           {
-            "signature": "def flat_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], Self.E] where conforms_to(Self.I, Monad) and Self.E != Never and _BindCompatible[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]]:",
-            "sha256": "e717b384220825a74386d4bfdd640572c3bdb5efbabb903e0992026cc1914b8e"
+            "signature": "def flat_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Error -> Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, Monad) and Self.E != Never and BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].FamilyCompatible:",
+            "sha256": "afb140c855f63400191e1c82212c03697f198d74e93bc1752bcba5cd816e4a3b"
           },
           {
-            "signature": "def flat_map[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises _Binding[Self.I].BindError[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E] where conforms_to(Self.I, Monad) and not conforms_to(R, RegisterPassable) and _BindCompatible[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]:",
-            "sha256": "b014b1257fefa7b35172aced569b453cf04174a6eaa21c8bf83024cfe79f1439"
+            "signature": "def flat_map[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error -> Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Monad) and not conforms_to(R, RegisterPassable) and BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].FamilyCompatible:",
+            "sha256": "e9ca851f8d013ed1517daf37665da61463cb350e841bf42206ca07c9c5fdcd9a"
           },
           {
-            "signature": "def flat_map[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises _Binding[Self.I].BindError[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E] where conforms_to(Self.I, Monad) and _BindCompatible[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]:",
-            "sha256": "e98c824a5093b8677b265108740f39628a5c40dbee855c4a08924e9d8944449b"
+            "signature": "def flat_map[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error -> Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Monad) and BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].FamilyCompatible:",
+            "sha256": "0bb8d0a071d90ecfd2a232caf676d93167289c132123ddc590d76065f5c3ba6c"
           },
           {
-            "signature": "def flat_map[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises _Binding[Self.I].BindError[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and _BindCompatible[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]:",
-            "sha256": "371ea9e7330625513f7df3a72a9f358e3af73e3d2601460fc9daab355b46c831"
+            "signature": "def flat_map[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].FamilyCompatible:",
+            "sha256": "bc2ff67134fb218d86ab7259a5049eaff774a6bd1897c5dde0d962b198cd01f4"
           },
           {
-            "signature": "def flat_map[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises _Binding[Self.I].BindError[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and _BindCompatible[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]:",
-            "sha256": "5d663f1ee4c158faf8216ceee2d121e99ebbd5c8716ec4d94933bc70b4bdecc5"
+            "signature": "def flat_map[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and BindContract[_Binding[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].FamilyCompatible:",
+            "sha256": "abf7d3a537ae2abb59ad9a1c0032e030b0df1491352b792749a18f6c3939c1f2"
           }
         ],
         "filter_map": [
@@ -10359,6 +10359,27 @@
       ],
       "provider": "algebra/collections"
     },
+    "algebra.MapContract": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct MapContract[I: Functor, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]:"
+      ],
+      "provider": "algebra/contracts"
+    },
+    "algebra.BindContract": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct BindContract[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]:"
+      ],
+      "provider": "algebra/contracts"
+    },
+    "algebra.TraverseContract": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct TraverseContract[S: Traversable, G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]:"
+      ],
+      "provider": "algebra/contracts"
+    },
     "algebra.StringMonoid": {
       "kind": "type or alias",
       "declarations": [
@@ -13736,12 +13757,12 @@
       "kind": "function",
       "overloads": [
         {
-          "signature": "def map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Functor]( ref[o] f: F, var value: V ) raises I.MapError[V, F._View[o]] -> I.Mapped[V, F._View[o]] where I.Element[V] == F._View[o].Arg and _MapCompatible[I, V, F._View[o]]:",
-          "sha256": "4d4c63585bad239f8a6245eef6d500bf273c841b9b65f4d4e9b2388d6171db03"
+          "signature": "def map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Functor]( ref[o] f: F, var value: V ) raises MapContract[I, V, F._View[o]].Error -> MapContract[I, V, F._View[o]].Out where MapContract[I, V, F._View[o]].Compatible:",
+          "sha256": "6888533dedb561b5c10e90201e6582b36b3af0c8d9fd8296d582e46238676075"
         },
         {
-          "signature": "def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Functor](var f: F, var value: V ) raises I.MapError[V, F] -> I.Mapped[V, F] where I.Element[V] == F.Arg and _MapCompatible[I, V, F]:",
-          "sha256": "7e2e1dedf1aa7d80622e06922fd60d82c34c357df9dd5a0a2f869c72a14825a3"
+          "signature": "def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Functor](var f: F, var value: V ) raises MapContract[I, V, F].Error -> MapContract[I, V, F].Out where MapContract[I, V, F].Compatible:",
+          "sha256": "4c454c61a77b6134b258c3de2993890d78afc1d890088b214c832713e54efd73"
         },
         {
           "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: _Unary[A, R]](ref[o] f: F, var value: V ) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _MapCompatible[I, V, _ErrorProbe[A, R, Never]]:",
@@ -13778,12 +13799,12 @@
       "kind": "function",
       "overloads": [
         {
-          "signature": "def flat_map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Monad]( ref[o] f: F, var value: V ) raises I.BindError[V, F._View[o]] -> I.Bound[V, F._View[o]] where I.Element[V] == F._View[o].Arg and _BindCompatible[I, V, F._View[o]]:",
-          "sha256": "22ac7033900b0a6fa506a48d3bceb77316614ef077963c184c330e7c4a8fe2c7"
+          "signature": "def flat_map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Monad]( ref[o] f: F, var value: V ) raises BindContract[I, V, F._View[o]].Error -> BindContract[I, V, F._View[o]].Out where BindContract[I, V, F._View[o]].Compatible:",
+          "sha256": "9d2e4098c2f2290592f7b96f562086a4c371a938ea354235fdf7a8dd4d2551c8"
         },
         {
-          "signature": "def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Monad](var f: F, var value: V ) raises I.BindError[V, F] -> I.Bound[V, F] where I.Element[V] == F.Arg and _BindCompatible[I, V, F]:",
-          "sha256": "395ec467f3197f7db3f5cebf38f2b9e7411db9918b4ba35ea543d686a8d8a10b"
+          "signature": "def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Monad](var f: F, var value: V ) raises BindContract[I, V, F].Error -> BindContract[I, V, F].Out where BindContract[I, V, F].Compatible:",
+          "sha256": "676ee4855a6781b29138b2db72b9115c17164b8f81677e56484b9691fc1e2abb"
         },
         {
           "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad, F: _Unary[A, R]](ref[o] f: F, var value: V ) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _BindCompatible[I, V, _ErrorProbe[A, R, Never]]:",
@@ -13800,12 +13821,12 @@
       "kind": "function",
       "overloads": [
         {
-          "signature": "def traverse[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, S: Traversable, G: Applicative]( ref[o] f: F, var source: V ) raises S.TraverseError[G, V, F._View[o]] -> S.Traversed[G, V, F._View[o]] where S.Element[V] == F._View[o].Arg and _CollectCompatible[G, V, F._View[o]]:",
-          "sha256": "a723af4abb3db168672de44d2d6a11a2db38b6c8144ea10001fc84d421b76731"
+          "signature": "def traverse[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, S: Traversable, G: Applicative]( ref[o] f: F, var source: V ) raises TraverseContract[S, G, V, F._View[o]].Error -> TraverseContract[S, G, V, F._View[o]].Out where TraverseContract[S, G, V, F._View[o]].InputCompatible and TraverseContract[S, G, V, F._View[o]].CollectCompatible:",
+          "sha256": "f1a65f2e7b4419fac8e2ad4595ca357d27ee594298a95f4e9ff777692afbde97"
         },
         {
-          "signature": "def traverse[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, S: Traversable, G: Applicative]( var f: F, var source: V ) raises S.TraverseError[G, V, F] -> S.Traversed[G, V, F] where S.Element[V] == F.Arg and _CollectCompatible[G, V, F]:",
-          "sha256": "58deaf9d9e4c7126f10eb28e55fb5c0a738c85777e01813b973ce5f9242f306e"
+          "signature": "def traverse[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, S: Traversable, G: Applicative]( var f: F, var source: V ) raises TraverseContract[S, G, V, F].Error -> TraverseContract[S, G, V, F].Out where TraverseContract[S, G, V, F].InputCompatible and TraverseContract[S, G, V, F].CollectCompatible:",
+          "sha256": "93b07e5c0e8edb9d410fd473fcde0802886d91aecb27bdbbf5f9e915c2c47e30"
         },
         {
           "signature": "def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, S: Traversable, G: Applicative, F: _Unary[A, R]](ref[o] f: F, var source: V ) raises S.TraverseError[G, V, _ErrorProbe[A, R, Never]] -> S.Traversed[G, V, _NativeUnaryRef[A, R, Never, F, False, o]] where S.Element[V] == A and _CollectCompatible[G, V, _ErrorProbe[A, R, Never]]:",

@@ -12,17 +12,18 @@ from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract
 from fp.callables.native import _NativeUnaryRef, _Unary, _RaisingUnary
 from fp._internal.errors import _ErrorCompatible, _propagate_error
 from .protocols import Functor, Applicative, Monad, Traversable, Monoid, Semigroup
+from .contracts import MapContract, BindContract, TraverseContract
 
 
 def map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Functor](
     ref[o] f: F, var value: V
-) raises I.MapError[V, F._View[o]] -> I.Mapped[V, F._View[o]] where I.Element[V] == F._View[o].Arg and _MapCompatible[I, V, F._View[o]]:
+) raises MapContract[I, V, F._View[o]].Error -> MapContract[I, V, F._View[o]].Out where MapContract[I, V, F._View[o]].Compatible:
     """Borrow an origin-dependent callable through its internal shared view."""
     return map[I](f._unary_view(), value^)
 
 
 def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Functor](var f: F, var value: V
-) raises I.MapError[V, F] -> I.Mapped[V, F] where I.Element[V] == F.Arg and _MapCompatible[I, V, F]:
+) raises MapContract[I, V, F].Error -> MapContract[I, V, F].Out where MapContract[I, V, F].Compatible:
     """Apply `f` to the payload of `value`, keeping the carrier's context: the `Functor` operation.
 
     Another overload takes a native function or closure directly, for every
@@ -97,13 +98,13 @@ def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable,
 
 def flat_map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Monad](
     ref[o] f: F, var value: V
-) raises I.BindError[V, F._View[o]] -> I.Bound[V, F._View[o]] where I.Element[V] == F._View[o].Arg and _BindCompatible[I, V, F._View[o]]:
+) raises BindContract[I, V, F._View[o]].Error -> BindContract[I, V, F._View[o]].Out where BindContract[I, V, F._View[o]].Compatible:
     """Borrow an origin-dependent callable through its internal shared view."""
     return flat_map[I](f._unary_view(), value^)
 
 
 def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Monad](var f: F, var value: V
-) raises I.BindError[V, F] -> I.Bound[V, F] where I.Element[V] == F.Arg and _BindCompatible[I, V, F]:
+) raises BindContract[I, V, F].Error -> BindContract[I, V, F].Out where BindContract[I, V, F].Compatible:
     """Let `f` choose the next carrier of the same family from the payload of `value`: the `Monad` operation.
 
     An absent `Optional`, a failed `Result` or an empty `List` skips the
@@ -137,14 +138,14 @@ def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, /
 
 def traverse[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, S: Traversable, G: Applicative](
     ref[o] f: F, var source: V
-) raises S.TraverseError[G, V, F._View[o]] -> S.Traversed[G, V, F._View[o]] where S.Element[V] == F._View[o].Arg and _CollectCompatible[G, V, F._View[o]]:
+) raises TraverseContract[S, G, V, F._View[o]].Error -> TraverseContract[S, G, V, F._View[o]].Out where TraverseContract[S, G, V, F._View[o]].InputCompatible and TraverseContract[S, G, V, F._View[o]].CollectCompatible:
     """Borrow an origin-dependent callable through its internal shared view."""
     return traverse[S, G](f._unary_view(), source^)
 
 
 def traverse[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, S: Traversable, G: Applicative](
     var f: F, var source: V
-) raises S.TraverseError[G, V, F] -> S.Traversed[G, V, F] where S.Element[V] == F.Arg and _CollectCompatible[G, V, F]:
+) raises TraverseContract[S, G, V, F].Error -> TraverseContract[S, G, V, F].Out where TraverseContract[S, G, V, F].InputCompatible and TraverseContract[S, G, V, F].CollectCompatible:
     """Call an effectful `f` on each element of `source`, in order, and gather the results in one `G` carrier.
 
     The source keeps its shape. Once `G` has failed (an absent `Optional`, a

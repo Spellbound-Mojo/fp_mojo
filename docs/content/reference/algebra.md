@@ -10,6 +10,22 @@ The [algebra tutorial](../tutorial/algebra.md) explains when to use `map`,
 `map2`, `ap`, `flat_map`, `traverse` and `sequence` through optional order values.
 
 Generic extensions can state admission using public family predicates.
+`MapContract[I, V, F]`, `BindContract[I, V, F]` and
+`TraverseContract[S, G, V, F]` group an operation's `Compatible`, `Out` and
+`Error` projections. A generic selected-traversal wrapper can forward one
+`where TraverseContract[S, G, V, F].Compatible` instead of separately spelling
+input equality and three family predicates. These compile-time descriptors
+store nothing and delegate execution to the same families. They describe
+library callbacks; native callbacks keep their existing admission syntax.
+
+<!-- example: docs/examples/operation_contracts.mojo -->
+
+The component predicates remain available for generic implementations that
+already know the input type. In particular, `FamilyCompatible` excludes the
+input-equality check. Existing family predicates and generic forwarding syntax
+continue to work; the legacy free-traversal boundary retains its existing
+input and target-collection requirements.
+
 `Applicative.CarrierCompatible[V]` checks a produced carrier, including its
 stored-error type and origins. `Traversable.TraverseCompatible[V, F]` checks a
 source and callback. A selected traversal forwards these predicates together

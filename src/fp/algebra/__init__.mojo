@@ -57,6 +57,7 @@ from .filtering import filter, filter_not, filter_map, compact
 from .operations import map, pure, flat_map, map2_lazy, traverse, empty, combine
 from .instances import IdentityFamily, OptionalFamily, ResultFamily, ListFamily
 from .collections import ArrayFamily, DequeFamily, LinkedListFamily
+from .contracts import MapContract, BindContract, TraverseContract
 
 from ._derived import map2, product, ap, flatten, sequence
 from .monoids import StringMonoid, ListMonoid

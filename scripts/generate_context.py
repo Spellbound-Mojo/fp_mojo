@@ -472,14 +472,10 @@ def methods(*, fold_stage=False):
             params += ["//"]
         params.insert(params.index("//") + 1, "J: Applicative")
         family = "_Traversing[Self.I]"
-        result = f"{family}.Traversed[J, Self.V, {cb['adapter_type']}]"
-        error = f"{family}.TraverseError[J, Self.V, {cb['adapter_type']}]"
+        contract = f"TraverseContract[{family}, J, Self.V, {cb['adapter_type']}]"
+        result, error = contract + ".Out", contract + ".Error"
         conditions = ["conforms_to(Self.I, Traversable)"] + cb["conditions"]
-        conditions += [
-            f"_TraverseCompatible[{family}, Self.V, {cb['adapter_type']}]",
-            f"_CollectCompatible[J, Self.V, {cb['adapter_type']}]",
-            f"_CarrierCompatible[J, {cb['result']}]",
-        ]
+        conditions += [contract + ".FamilyCompatible"]
         emit(
             "traverse",
             cb,
@@ -733,14 +729,15 @@ def methods(*, fold_stage=False):
             conditions = [f"conforms_to(Self.I, {trait})"] + cb["conditions"]
             if filtering:
                 conditions.append(cb["result"] + " == Bool")
-            if name == "map":
-                conditions.append(f"_MapCompatible[Self.I, Self.V, {cbtype}]")
-            if name == "flat_map":
-                conditions.append(f"_BindCompatible[{family}, Self.V, {cbtype}]")
+            contract = None
+            if name in ("map", "flat_map"):
+                operation = "MapContract" if name == "map" else "BindContract"
+                contract = f"{operation}[{family}, Self.V, {cbtype}]"
+                conditions.append(contract + ".FamilyCompatible")
             if name == "filter_not":
                 cbtype = f"_FilterPredicate[{cbtype}, True]"
-            result = f"{family}.{result_alias}[Self.V, {cbtype}]"
-            error = f"{family}.{error_alias}[Self.V, {cbtype}]"
+            result = contract + ".Out" if contract else f"{family}.{result_alias}[Self.V, {cbtype}]"
+            error = contract + ".Error" if contract else f"{family}.{error_alias}[Self.V, {cbtype}]"
             output_family = (f"downcast[{family}.FilteredFamily, Functor]" if filtering else
                              f"{family}.MapFilteredFamily" if name == "filter_map" else "Self.I")
             if filtering:

@@ -2,7 +2,7 @@
 from algebra_support.applicative_traversal import ResultApplicative
 from algebra_support.external import PublicMonad
 from fp.functions import pipeline,Identity
-from fp.algebra import Functor,Applicative,Traversable,ListFamily,OptionalFamily,ResultFamily
+from fp.algebra import Functor,Applicative,Traversable,ListFamily,OptionalFamily,ResultFamily,TraverseContract
 from fp.callables import Unary,UnaryContract
 from fp.data import Result,Ok
 from std.collections import Array
@@ -29,10 +29,10 @@ struct Present[T:Movable & Deinitable](Unary):
     comptime Out=Optional[Self.T]
     def call(self,var value:Self.T)->Self.Out: return Optional(value^)
 
-def traverse_public[S:Traversable,G:Applicative,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable](var value:V,var function:F) raises S.TraverseError[G,V,F] -> S.Traversed[G,V,F] where S.Element[V]==F.Arg and S.TraverseCompatible[V,F] and G.CollectCompatible[V,F] and G.CarrierCompatible[F.Out]:
+def traverse_public[S:Traversable,G:Applicative,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable](var value:V,var function:F) raises TraverseContract[S,G,V,F].Error -> TraverseContract[S,G,V,F].Out where TraverseContract[S,G,V,F].Compatible:
     return pipeline[S](value^).traverse[G](function^).get()
 
-def sequence_public[S:Traversable,G:Applicative,V:Movable & Deinitable](var value:V) raises S.TraverseError[G,V,Identity[S.Element[V]]] -> S.Traversed[G,V,Identity[S.Element[V]]] where S.TraverseCompatible[V,Identity[S.Element[V]]] and G.CollectCompatible[V,Identity[S.Element[V]]] and G.CarrierCompatible[S.Element[V]]:
+def sequence_public[S:Traversable,G:Applicative,V:Movable & Deinitable](var value:V) raises TraverseContract[S,G,V,Identity[S.Element[V]]].Error -> TraverseContract[S,G,V,Identity[S.Element[V]]].Out where TraverseContract[S,G,V,Identity[S.Element[V]]].Compatible:
     return pipeline[S](value^).sequence[G]().get()
 
 def origins(owner:List[Int]) raises:

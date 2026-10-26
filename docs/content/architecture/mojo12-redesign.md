@@ -82,6 +82,16 @@ avoid that premature expansion; concrete callers still infer the ordinary
 call shape. Input equality and carrier membership have separate owners and
 must not be repeated in ways that prematurely reduce dependent projections.
 
+MapContract, BindContract and TraverseContract in `algebra.contracts` own the
+checked operation's compatibility, output and exact construction-error
+projections. Selected map, flat_map and traverse use these descriptors, and
+generic clients can forward their complete `Compatible` predicate. Component
+predicates remain separate so native admission can supply input equality while
+family checks stay opaque. Family primitives still own invocation and deferred
+evaluation; no operation object, storage box or extra function-valued dispatch
+layer is introduced. Existing free-traversal admission is preserved through
+the contract's individual input and collection projections.
+
 ## Native signatures and storage
 
 Native family recognition requires only Functor; Applicative entry points
