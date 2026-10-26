@@ -1,5 +1,5 @@
 """Mixed sums preserve earlier Writer and State effects on either failure."""
-from algebra_support.nested import Base, Logged, Stack, Next, Endpoint, Emit, endpoint, finish, assert_payload
+from algebra_support.nested import FinishCompatible, Base, Logged, Stack, Next, Endpoint, Emit, endpoint, finish, assert_payload
 from fp.algebra import flat_map
 from fp.effects import Reader, State, run, run_writer
 from fp._internal.errors import _propagate_error
@@ -8,7 +8,7 @@ from std.builtin.rebind import rebind, rebind_var
 from std.testing import assert_equal
 
 
-def check[optional_first:Bool,stateful:Bool]() raises where Stack[optional_first,stateful].Element[Endpoint[optional_first,stateful]] == Next[optional_first,stateful].Arg and Stack[optional_first,stateful].BindCompatible[Endpoint[optional_first,stateful],Next[optional_first,stateful]]:
+def check[optional_first:Bool,stateful:Bool,o:ImmOrigin](ref[o] environment:Int=10) raises where Stack[optional_first,stateful].Element[Endpoint[optional_first,stateful]] == Next[optional_first,stateful].Arg and Stack[optional_first,stateful].BindCompatible[Endpoint[optional_first,stateful],Next[optional_first,stateful]] and FinishCompatible[stateful,Stack[optional_first,stateful].Bound[Endpoint[optional_first,stateful],Next[optional_first,stateful]],o]:
     for source_failure in [0,1,2,4]:
         for next_failure in range(5):
             var trace=ArcPointer(List[Int]())
@@ -21,7 +21,6 @@ def check[optional_first:Bool,stateful:Bool]() raises where Stack[optional_first
                 _propagate_error[Never](error^)
             assert_equal(len(trace[]),0)
             var caught=0
-            var environment=10
             var result=Optional[Emit[optional_first,stateful].Output]()
             try:
                 result=Optional(finish[optional_first,stateful](value^,environment))

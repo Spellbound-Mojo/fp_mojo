@@ -34,10 +34,13 @@ struct Step[retain:Bool](OnceUnary):
                 return rebind_var[Self.Output](Result[Tuple[Int,Int],Int](Err(self.marker)))
             return rebind_var[Self.Output](Result[Tuple[Int,Int],Int](Ok(Tuple(state,state))))
 
-comptime Endpoint[retain:Bool] = type_of(action[Base[retain],Result[Int,Int] if retain else Int](Step[retain](ArcPointer(List[Int]()),0,0,0)))
+comptime Endpoint[retain:Bool] = Base[retain].Endpoint[Result[Int,Int] if retain else Int, Step[retain]]
 
 def step[retain:Bool](trace:ArcPointer[List[Int]],marker:Int,delta:Int,failure:Int=0)->Endpoint[retain]:
-    return action[Base[retain],Result[Int,Int] if retain else Int](Step[retain](trace,marker,delta,failure))
+    comptime if retain:
+        return rebind_var[Endpoint[retain]](action[Base[True],Result[Int,Int]](Step[True](trace,marker,delta,failure)))
+    else:
+        return rebind_var[Endpoint[retain]](action[Base[False],Int](Step[False](trace,marker,delta,failure)))
 
 @fieldwise_init
 struct Next[retain:Bool](OnceUnary):

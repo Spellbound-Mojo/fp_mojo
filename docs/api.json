@@ -31665,6 +31665,32 @@
     "_Computation"
    ]
   },
+  "effects.ReaderFamily": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Environment"
+    },
+    {
+     "description": "",
+     "name": "RunCompatible"
+    }
+   ],
+   "description": "Generic runners retain this family parameter and forward RunCompatible\nwith the actual environment origin. EndpointCompatible admits action.",
+   "fields": [],
+   "kind": "trait",
+   "methods": {},
+   "parameters": [],
+   "provider": "effects/protocols",
+   "signature": "trait ReaderFamily(_Acting)",
+   "summary": "A Monad whose computations run with a borrowed Environment.",
+   "traits": [
+    "Applicative",
+    "Functor",
+    "Monad",
+    "_Acting"
+   ]
+  },
   "effects.ReaderT": {
    "aliases": [
     {
@@ -31725,7 +31751,35 @@
     },
     {
      "description": "",
+     "name": "EndpointCompatible"
+    },
+    {
+     "description": "",
+     "name": "RunCompatible"
+    },
+    {
+     "description": "",
      "name": "Element"
+    },
+    {
+     "description": "",
+     "name": "CarrierCompatible"
+    },
+    {
+     "description": "",
+     "name": "MapCompatible"
+    },
+    {
+     "description": "",
+     "name": "BindCompatible"
+    },
+    {
+     "description": "",
+     "name": "CombineCompatible"
+    },
+    {
+     "description": "",
+     "name": "CollectCompatible"
     },
     {
      "description": "",
@@ -31768,32 +31822,12 @@
      "name": "LiftError"
     },
     {
-     "description": "Preserve fixed native Result admission for existing custom dictionaries. Families with other carrier shapes override this public predicate.\nDeferred representations need not equal Pure.",
-     "name": "CarrierCompatible"
-    },
-    {
-     "description": "Admission for combination, including family-specific carrier and error origins.",
-     "name": "CombineCompatible"
-    },
-    {
-     "description": "Admission for collection into this family; generic traversal forwards this predicate.",
-     "name": "CollectCompatible"
-    },
-    {
      "description": "The carrier `collect` returns: this family's carrier of a `List`.",
      "name": "Collected"
     },
     {
      "description": "The error `collect` raises.",
      "name": "CollectError"
-    },
-    {
-     "description": "Additional admission for map; generic forwarders preserve this in their where clause.",
-     "name": "MapCompatible"
-    },
-    {
-     "description": "Additional admission for bind, including callback-result and native-error origins.",
-     "name": "BindCompatible"
     }
    ],
    "description": "Every operation returns a concrete computation that stores its inputs; a\ncomposed computation's type is the tree of its operations, and nothing runs\nuntil `run`. Constructing a computation does not raise; its run raises the\nexact common error of the stages it executes. On Mojo 1.1 that error cannot\npropagate from a function declared with a plain `raises`; handle it with\n`try`/`except`, where it keeps its exact type. The base is used only through\nits Monad methods and, for recovery, its optional ApplicativeError capability.\nAny Monad, including another Reader or State, can be\nthe base. Traversal delegates to the base's `collect`, whose callback runs\neach produced computation with the borrowed environment.",
@@ -32213,7 +32247,7 @@
     }
    ],
    "provider": "effects/reader",
-   "signature": "struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, Local, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError))",
+   "signature": "struct ReaderT[M: Monad, R: AnyType](ReaderFamily, Local, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError))",
    "summary": "Reader over the base Monad `M`: a computation borrows an environment `R` when run and returns an `M` carrier.",
    "traits": [
     "Applicative",
@@ -32222,12 +32256,12 @@
     "Functor",
     "Local",
     "Monad",
+    "ReaderFamily",
     "_Acting",
     "_CapabilityLifting",
     "_Hoisting",
     "_Lifting",
-    "_LocalLifting",
-    "_ReaderFamily"
+    "_LocalLifting"
    ]
   },
   "effects.ResultT": {
@@ -32329,6 +32363,28 @@
     "_Computation"
    ]
   },
+  "effects.StateFamily": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "StateType"
+    }
+   ],
+   "description": "Generic runners forward CarrierCompatible; EndpointCompatible admits action.",
+   "fields": [],
+   "kind": "trait",
+   "methods": {},
+   "parameters": [],
+   "provider": "effects/protocols",
+   "signature": "trait StateFamily(_Acting)",
+   "summary": "A Monad whose computations consume StateType when run.",
+   "traits": [
+    "Applicative",
+    "Functor",
+    "Monad",
+    "_Acting"
+   ]
+  },
   "effects.StateT": {
    "aliases": [
     {
@@ -32389,7 +32445,31 @@
     },
     {
      "description": "",
+     "name": "EndpointCompatible"
+    },
+    {
+     "description": "",
      "name": "Element"
+    },
+    {
+     "description": "",
+     "name": "CarrierCompatible"
+    },
+    {
+     "description": "",
+     "name": "MapCompatible"
+    },
+    {
+     "description": "",
+     "name": "BindCompatible"
+    },
+    {
+     "description": "",
+     "name": "CombineCompatible"
+    },
+    {
+     "description": "",
+     "name": "CollectCompatible"
     },
     {
      "description": "",
@@ -32432,32 +32512,12 @@
      "name": "LiftError"
     },
     {
-     "description": "Preserve fixed native Result admission for existing custom dictionaries. Families with other carrier shapes override this public predicate.\nDeferred representations need not equal Pure.",
-     "name": "CarrierCompatible"
-    },
-    {
-     "description": "Admission for combination, including family-specific carrier and error origins.",
-     "name": "CombineCompatible"
-    },
-    {
-     "description": "Admission for collection into this family; generic traversal forwards this predicate.",
-     "name": "CollectCompatible"
-    },
-    {
      "description": "The carrier `collect` returns: this family's carrier of a `List`.",
      "name": "Collected"
     },
     {
      "description": "The error `collect` raises.",
      "name": "CollectError"
-    },
-    {
-     "description": "Additional admission for map; generic forwarders preserve this in their where clause.",
-     "name": "MapCompatible"
-    },
-    {
-     "description": "Additional admission for bind, including callback-result and native-error origins.",
-     "name": "BindCompatible"
     }
    ],
    "description": "Computations are built as for `ReaderT` and run with `run`. Traversal is one\nloop: it checks that the base carrier still has a live branch, pulls one\nitem, calls the producer once, and binds the prepared computation across\nthe live branches, each on its own state. A failed, absent or empty carrier\nstops producer calls and source pulls. The base carrier's type must stay\nthe same across steps, as it does for Identity, Optional, Result and List;\na deferred base is a compile error there.\n\nStored-error recovery is available when M implements ApplicativeError\nand S is Copyable. Ordinary State operations still accept move-only state.",
@@ -32863,20 +32923,20 @@
     }
    ],
    "provider": "effects/state",
-   "signature": "struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, Stateful, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable))",
+   "signature": "struct StateT[M: Monad, S: Movable & Deinitable](StateFamily, Stateful, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable))",
    "summary": "State over the base Monad `M`: a computation consumes a state `S` when run and returns an `M` carrier of `(value, state)`.",
    "traits": [
     "Applicative",
     "ApplicativeError",
     "Functor",
     "Monad",
+    "StateFamily",
     "Stateful",
     "_Acting",
     "_CapabilityLifting",
     "_Hoisting",
     "_Lifting",
-    "_LocalLifting",
-    "_StateFamily"
+    "_LocalLifting"
    ]
   },
   "effects.Stateful": {
@@ -33051,6 +33111,68 @@
    "summary": "Writer over the bare value: a value is `(log, payload)`.",
    "traits": []
   },
+  "effects.WriterFamily": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Base"
+    },
+    {
+     "description": "",
+     "name": "Log"
+    },
+    {
+     "description": "",
+     "name": "Unwrapped"
+    }
+   ],
+   "description": "Unwrapped names the exact base carrier, including origins. Generic runners\nforward CarrierCompatible and return Unwrapped without private projections.",
+   "fields": [],
+   "kind": "trait",
+   "methods": {
+    "unwrap": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The Writer computation, consumed.",
+        "name": "value",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A carrier admitted by CarrierCompatible.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The exact base carrier, preserving its payload and origins.",
+       "type": "Self.Unwrapped[V]"
+      },
+      "signature": "def unwrap[V: Movable & Deinitable](var value: V) -> Self.Unwrapped[V]",
+      "summary": "Remove an admitted Writer layer through its dictionary primitive."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "effects/protocols",
+   "signature": "trait WriterFamily(Monad)",
+   "summary": "A Monad carrying a Log with its payload in a Base computation.",
+   "traits": [
+    "Applicative",
+    "Functor",
+    "Monad"
+   ]
+  },
   "effects.WriterT": {
    "aliases": [
     {
@@ -33126,6 +33248,30 @@
      "name": "Element"
     },
     {
+     "description": "The exact base carrier returned by run_writer, including its origins.",
+     "name": "Unwrapped"
+    },
+    {
+     "description": "",
+     "name": "CarrierCompatible"
+    },
+    {
+     "description": "",
+     "name": "MapCompatible"
+    },
+    {
+     "description": "",
+     "name": "BindCompatible"
+    },
+    {
+     "description": "",
+     "name": "CombineCompatible"
+    },
+    {
+     "description": "",
+     "name": "CollectCompatible"
+    },
+    {
      "description": "",
      "name": "Mapped"
     },
@@ -33162,32 +33308,12 @@
      "name": "LiftError"
     },
     {
-     "description": "Preserve fixed native Result admission for existing custom dictionaries. Families with other carrier shapes override this public predicate.\nDeferred representations need not equal Pure.",
-     "name": "CarrierCompatible"
-    },
-    {
-     "description": "Admission for combination, including family-specific carrier and error origins.",
-     "name": "CombineCompatible"
-    },
-    {
-     "description": "Admission for collection into this family; generic traversal forwards this predicate.",
-     "name": "CollectCompatible"
-    },
-    {
      "description": "The carrier `collect` returns: this family's carrier of a `List`.",
      "name": "Collected"
     },
     {
      "description": "The error `collect` raises.",
      "name": "CollectError"
-    },
-    {
-     "description": "Additional admission for map; generic forwarders preserve this in their where clause.",
-     "name": "MapCompatible"
-    },
-    {
-     "description": "Additional admission for bind, including callback-result and native-error origins.",
-     "name": "BindCompatible"
     }
    ],
    "description": "Operations use the base's own `map`, `flat_map` and `map2_lazy`, so over a\ndeferred base a Writer value stays deferred; logs combine in execution\norder. `pure` requires a monoid whose `empty` does not raise.",
@@ -33589,6 +33715,38 @@
       "signature": "def tell(var log: Self.Log.Value) -> Self.Told",
       "summary": "Record this layer's log without constructing an empty log."
      }
+    ],
+    "unwrap": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The computation, consumed.",
+        "name": "value",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The admitted Writer value type.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The exact base carrier; a deferred base remains unrun.",
+       "type": "Self.Unwrapped[V]"
+      },
+      "signature": "def unwrap[V: Movable & Deinitable](var value: V) -> Self.Unwrapped[V]",
+      "summary": "Remove an admitted Writer layer, preserving the base carrier."
+     }
     ]
    },
    "parameters": [
@@ -33608,7 +33766,7 @@
     }
    ],
    "provider": "effects/writer",
-   "signature": "struct WriterT[M: Monad, W: Monoid](_WriterFamily, Censor, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError))",
+   "signature": "struct WriterT[M: Monad, W: Monoid](WriterFamily, Censor, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError))",
    "summary": "Writer over the base Monad `M`: a value is `M`'s carrier of `(log, payload)`, and the monoid `W` accumulates the log.",
    "traits": [
     "Applicative",
@@ -33618,11 +33776,11 @@
     "Listen",
     "Monad",
     "Tell",
+    "WriterFamily",
     "_CapabilityLifting",
     "_Hoisting",
     "_Lifting",
-    "_LocalLifting",
-    "_WriterFamily"
+    "_LocalLifting"
    ]
   },
   "effects.WriterValue": {
@@ -33672,7 +33830,7 @@
      "description": "The Writer family.",
      "inferred": false,
      "name": "I",
-     "type": "_WriterFamily",
+     "type": "WriterFamily",
      "variadic": false
     },
     {
@@ -33691,7 +33849,7 @@
     }
    ],
    "provider": "effects/writer",
-   "signature": "struct WriterValue[I: _WriterFamily, T: Movable & Deinitable, C: Movable & Deinitable](_WriterType, Copyable where conforms_to(C, Copyable))",
+   "signature": "struct WriterValue[I: WriterFamily, T: Movable & Deinitable, C: Movable & Deinitable](_WriterType, Copyable where conforms_to(C, Copyable))",
    "summary": "A Writer value of family `I`: the base carrier `C` of `(log, T)`.",
    "traits": [
     "Copyable",
@@ -33744,7 +33902,7 @@
       "doc": "The computation; nothing runs now.",
       "type": "I.Endpoint[T, F]"
      },
-     "signature": "def action[F: Movable & Deinitable, //, I: _Acting, T: Movable & Deinitable](var f: F) -> I.Endpoint[T, F]",
+     "signature": "def action[F: Movable & Deinitable, //, I: _Acting, T: Movable & Deinitable](var f: F) -> I.Endpoint[T, F] where I.EndpointCompatible[T, F]",
      "summary": "A computation of family `I` with payload `T` from a native endpoint callback."
     }
    ],
@@ -34527,7 +34685,7 @@
        "description": "The Reader family.",
        "inferred": false,
        "name": "I",
-       "type": "_ReaderFamily",
+       "type": "ReaderFamily",
        "variadic": false
       }
      ],
@@ -34537,7 +34695,7 @@
       "doc": "The base carrier of the payload.",
       "type": "_Reader[V].Out[o]"
      },
-     "signature": "def run[V: Movable & Deinitable, o: ImmOrigin, //, I: _ReaderFamily](var action: V, ref[o] env: I.Environment) raises _Reader[V].Error[o] -> _Reader[V].Out[o]",
+     "signature": "def run[V: Movable & Deinitable, o: ImmOrigin, //, I: ReaderFamily](var action: V, ref[o] env: I.Environment) raises _Reader[V].Error[o] -> _Reader[V].Out[o] where I.RunCompatible[V, o]",
      "summary": "Run a Reader computation of family `I` with a borrowed environment."
     },
     {
@@ -34571,7 +34729,7 @@
        "description": "",
        "inferred": false,
        "name": "I",
-       "type": "_StateFamily",
+       "type": "StateFamily",
        "variadic": false
       }
      ],
@@ -34581,7 +34739,7 @@
       "doc": "",
       "type": "_State[V].Out"
      },
-     "signature": "def run[V: Movable & Deinitable, //, I: _StateFamily](var action: V, var state: I.StateType) raises _State[V].Error -> _State[V].Out",
+     "signature": "def run[V: Movable & Deinitable, //, I: StateFamily](var action: V, var state: I.StateType) raises _State[V].Error -> _State[V].Out where I.CarrierCompatible[V]",
      "summary": "Run a State computation of family `I`, consuming the initial state."
     }
    ],
@@ -34616,7 +34774,7 @@
        "description": "The Writer family.",
        "inferred": false,
        "name": "I",
-       "type": "_WriterFamily",
+       "type": "WriterFamily",
        "variadic": false
       }
      ],
@@ -34624,9 +34782,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "The base carrier.",
-      "type": "_Value[V].Storage"
+      "type": "I.Unwrapped[V]"
      },
-     "signature": "def run_writer[V: Movable & Deinitable, //, I: _WriterFamily](var value: V) -> _Value[V].Storage",
+     "signature": "def run_writer[V: Movable & Deinitable, //, I: WriterFamily](var value: V) -> I.Unwrapped[V] where I.CarrierCompatible[V]",
      "summary": "Remove the Writer layer and return the base carrier of `(log, value)`; a deferred base is returned unrun."
     }
    ],
@@ -34699,7 +34857,7 @@
        "description": "The Writer family.",
        "inferred": false,
        "name": "I",
-       "type": "_WriterFamily",
+       "type": "WriterFamily",
        "variadic": false
       },
       {
@@ -34716,7 +34874,7 @@
       "doc": "The Writer value.",
       "type": "WriterValue[I, T, C]"
      },
-     "signature": "def writer[C: Movable & Deinitable, //, I: _WriterFamily, T: Movable & Deinitable](var carrier: C) -> WriterValue[I, T, C]",
+     "signature": "def writer[C: Movable & Deinitable, //, I: WriterFamily, T: Movable & Deinitable](var carrier: C) -> WriterValue[I, T, C] where I.CarrierCompatible[WriterValue[I, T, C]]",
      "summary": "Make a Writer value from a base carrier whose payload is exactly `(log, value)`."
     }
    ],

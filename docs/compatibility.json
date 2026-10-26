@@ -116,7 +116,7 @@
     },
     "algebra": {
       "scope": "Family primitives, laws, shared traversal, sequential and accumulating policies.",
-      "restrictions": "Public carrier and operation predicates are the generic extension contract. Native Optional, List, Result, Validation and NonEmptyList admission is covered; deferred-family admission remains a planned pass.",
+      "restrictions": "Public carrier and operation predicates are the generic extension contract. Native and deferred family admission preserve exact carrier, stored-error and origin requirements.",
       "evidence": [
         "docs/examples/algebra_core.mojo",
         "docs/examples/algebra_traversal.mojo",
@@ -127,12 +127,16 @@
     },
     "effects": {
       "scope": "Reader, State, Writer and transformer capabilities.",
-      "restrictions": "Deferred computations retain callback borrows. Carrier stability and Writer identity restrictions remain documented.",
+      "restrictions": "Deferred computations retain callback borrows and alternative representations. Public carrier predicates validate each layer; Reader result admission uses the actual run origin. Carrier stability and Writer identity restrictions remain documented.",
       "evidence": [
         "docs/examples/environment_capabilities.mojo",
         "docs/examples/stateful_capabilities.mojo",
         "docs/examples/writer_capabilities.mojo",
-        "docs/examples/transformer_recovery.mojo"
+        "docs/examples/transformer_recovery.mojo",
+        "tests/runtime/test_context_deferred_admission.mojo",
+        "tests/runtime/test_context_deferred_admission_endpoints.mojo",
+        "tests/runtime/test_context_deferred_admission_origins.mojo",
+        "tests/ownership/test_context_deferred_admission_ownership.mojo"
       ]
     },
     "matching": {

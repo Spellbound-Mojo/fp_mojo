@@ -269,7 +269,7 @@ trait _LocalLifting(_Hoisting):
         ...
 
 
-comptime _FAMILY_MISMATCH = "run: computation belongs to a different effect family"
+comptime _FAMILY_MISMATCH = "run: computation belongs to a different effect family or has an incompatible native carrier"
 comptime _CHOICE_FAMILY = "choice: branches belong to different effect families"
 comptime _CHOICE_VALUE = "choice: branch payload types must agree"
 
@@ -335,37 +335,62 @@ trait StateAction(_Computation):
         ...
 
 
+comptime _EndpointCompatible[M: Monad, Expected: Movable & Deinitable, Out: Movable & Deinitable] = M.CarrierCompatible[Out] and M.Element[Out] == Expected
+
+
 trait _Acting(Monad):
     """A deferred family that adapts a native endpoint callback. Reader and
     State share it, so generic code can name either family's endpoint."""
     comptime Base: Monad
+    comptime EndpointCompatible[T: Movable & Deinitable, F: Movable & Deinitable]: Bool
     comptime Endpoint[T: Movable & Deinitable, F: Movable & Deinitable]: Movable & Deinitable
     @staticmethod
     def endpoint[T: Movable & Deinitable, F: Movable & Deinitable](var f: F) -> Self.Endpoint[T, F]:
         ...
 
 
-trait _ReaderFamily(_Acting):
+trait ReaderFamily(_Acting):
+    """A Monad whose computations run with a borrowed Environment.
+
+    Generic runners retain this family parameter and forward RunCompatible
+    with the actual environment origin. EndpointCompatible admits action.
+    """
     comptime Environment: AnyType
+    comptime RunCompatible[V: Movable & Deinitable, o: ImmOrigin]: Bool
 
 
-trait _StateFamily(_Acting):
+trait StateFamily(_Acting):
+    """A Monad whose computations consume StateType when run.
+
+    Generic runners forward CarrierCompatible; EndpointCompatible admits action.
+    """
     comptime StateType: Movable & Deinitable
 
 
-def _admit_endpoint[M: Monad, Expected: Movable & Deinitable, Out: Movable & Deinitable]():
-    # A native carrier must be exactly the base's carrier of the declared
-    # payload; a deferred base's computation or a Writer value must belong to
-    # that base.
-    comptime if conforms_to(Out, _Computation):
-        comptime assert downcast[Out, _Computation].Family == M and downcast[Out, _Computation].Value == Expected, "action: native result differs from declared carrier"
-    else:
-        comptime assert Out == M.Pure[Expected], "action: native result differs from declared carrier"
 
+trait WriterFamily(Monad):
+    """A Monad carrying a Log with its payload in a Base computation.
 
-trait _WriterFamily(Monad):
+    Unwrapped names the exact base carrier, including origins. Generic runners
+    forward CarrierCompatible and return Unwrapped without private projections.
+    """
     comptime Base: Monad
     comptime Log: Monoid
+    comptime Unwrapped[V: Movable & Deinitable]: Movable & Deinitable
+    @staticmethod
+    def unwrap[V: Movable & Deinitable](var value: V) -> Self.Unwrapped[V]:
+        """Remove an admitted Writer layer through its dictionary primitive.
+
+        Parameters:
+            V: A carrier admitted by CarrierCompatible.
+
+        Args:
+            value: The Writer computation, consumed.
+
+        Returns:
+            The exact base carrier, preserving its payload and origins.
+        """
+        ...
 
 
 trait _WriterType(_Computation):

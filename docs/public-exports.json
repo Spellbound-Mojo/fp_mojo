@@ -10653,10 +10653,39 @@
       },
       "provider": "effects/protocols"
     },
+    "effects.ReaderFamily": {
+      "kind": "type or alias",
+      "declarations": [
+        "trait ReaderFamily(_Acting):"
+      ],
+      "provider": "effects/protocols"
+    },
+    "effects.StateFamily": {
+      "kind": "type or alias",
+      "declarations": [
+        "trait StateFamily(_Acting):"
+      ],
+      "provider": "effects/protocols"
+    },
+    "effects.WriterFamily": {
+      "kind": "type or alias",
+      "declarations": [
+        "trait WriterFamily(Monad):"
+      ],
+      "methods": {
+        "unwrap": [
+          {
+            "signature": "def unwrap[V: Movable & Deinitable](var value: V) -> Self.Unwrapped[V]:",
+            "sha256": "8ae39b8a4f1641baab9f2cc96e981c65f0899485fc9825f171befc022995d36c"
+          }
+        ]
+      },
+      "provider": "effects/protocols"
+    },
     "effects.ReaderT": {
       "kind": "type or alias",
       "declarations": [
-        "struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, Local, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError)):"
+        "struct ReaderT[M: Monad, R: AnyType](ReaderFamily, Local, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError)):"
       ],
       "methods": {
         "ask": [
@@ -10732,7 +10761,7 @@
     "effects.StateT": {
       "kind": "type or alias",
       "declarations": [
-        "struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, Stateful, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable)):"
+        "struct StateT[M: Monad, S: Movable & Deinitable](StateFamily, Stateful, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable)):"
       ],
       "methods": {
         "get": [
@@ -10808,7 +10837,7 @@
     "effects.WriterValue": {
       "kind": "type or alias",
       "declarations": [
-        "struct WriterValue[I: _WriterFamily, T: Movable & Deinitable, C: Movable & Deinitable]("
+        "struct WriterValue[I: WriterFamily, T: Movable & Deinitable, C: Movable & Deinitable]("
       ],
       "methods": {
         "into_base": [
@@ -10823,7 +10852,7 @@
     "effects.WriterT": {
       "kind": "type or alias",
       "declarations": [
-        "struct WriterT[M: Monad, W: Monoid](_WriterFamily, Censor, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError)):"
+        "struct WriterT[M: Monad, W: Monoid](WriterFamily, Censor, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError)):"
       ],
       "methods": {
         "tell": [
@@ -10854,6 +10883,12 @@
           {
             "signature": "def or_else[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V) raises Self.HandleError[V, H] -> Self.Handled[V, H]:",
             "sha256": "996233f576e9c99dfc8a8a71cba4b4b924eadbe73874a435bfbbd55bacb2586e"
+          }
+        ],
+        "unwrap": [
+          {
+            "signature": "def unwrap[V: Movable & Deinitable](var value: V) -> Self.Unwrapped[V]:",
+            "sha256": "8ae39b8a4f1641baab9f2cc96e981c65f0899485fc9825f171befc022995d36c"
           }
         ],
         "map": [
@@ -13868,8 +13903,8 @@
       "kind": "function",
       "overloads": [
         {
-          "signature": "def writer[C: Movable & Deinitable, //, I: _WriterFamily, T: Movable & Deinitable](var carrier: C) -> WriterValue[I, T, C]:",
-          "sha256": "78dacc5217e5e7be21d5aa69e9137d3d65240d633140c911c7e3c41e37dc38d6"
+          "signature": "def writer[C: Movable & Deinitable, //, I: WriterFamily, T: Movable & Deinitable](var carrier: C) -> WriterValue[I, T, C] where I.CarrierCompatible[WriterValue[I, T, C]]:",
+          "sha256": "8510a71d6eb7aedd863a8ee5a81a009cdc74b2eeb7de1d03d7831e8114992ce8"
         }
       ],
       "provider": "effects/writer"
@@ -13878,8 +13913,8 @@
       "kind": "function",
       "overloads": [
         {
-          "signature": "def run_writer[V: Movable & Deinitable, //, I: _WriterFamily](var value: V) -> _Value[V].Storage:",
-          "sha256": "f2ec7f98fda14d1f1d914bec992d8d9bd534c684a71cf19f8cd2d5911a494c83"
+          "signature": "def run_writer[V: Movable & Deinitable, //, I: WriterFamily](var value: V) -> I.Unwrapped[V] where I.CarrierCompatible[V]:",
+          "sha256": "6672bea72a5ef527153d5261725897dd22b7682a0262215dbdffdfd731211116"
         }
       ],
       "provider": "effects/writer"
@@ -13888,12 +13923,12 @@
       "kind": "function",
       "overloads": [
         {
-          "signature": "def run[V: Movable & Deinitable, o: ImmOrigin, //, I: _ReaderFamily](var action: V, ref[o] env: I.Environment ) raises _Reader[V].Error[o] -> _Reader[V].Out[o]:",
-          "sha256": "854c70b66568981e5f4ee40d4c5c32a9b73037d7852d1e2e184681aa8d4655ac"
+          "signature": "def run[V: Movable & Deinitable, o: ImmOrigin, //, I: ReaderFamily](var action: V, ref[o] env: I.Environment ) raises _Reader[V].Error[o] -> _Reader[V].Out[o] where I.RunCompatible[V, o]:",
+          "sha256": "0f58f27e5c81aa157d4f8a5f9611b444d7ef1719010d1d29cd7222cf898406aa"
         },
         {
-          "signature": "def run[V: Movable & Deinitable, //, I: _StateFamily](var action: V, var state: I.StateType ) raises _State[V].Error -> _State[V].Out:",
-          "sha256": "9e500714d4584cf63e1a2304497879331521e7f5a74cdf71836e0362ffb48d53"
+          "signature": "def run[V: Movable & Deinitable, //, I: StateFamily](var action: V, var state: I.StateType ) raises _State[V].Error -> _State[V].Out where I.CarrierCompatible[V]:",
+          "sha256": "3ca45462ae1471d4a85f37856425eacded2a4d67a4d7fec3be2851c3a20f46c5"
         }
       ],
       "provider": "effects/operations"
@@ -13902,8 +13937,8 @@
       "kind": "function",
       "overloads": [
         {
-          "signature": "def action[F: Movable & Deinitable, //, I: _Acting, T: Movable & Deinitable](var f: F) -> I.Endpoint[T, F]:",
-          "sha256": "e3c4907423859ea7c719a28a525c27a5be1183f516f429d1f33259a5105edc55"
+          "signature": "def action[F: Movable & Deinitable, //, I: _Acting, T: Movable & Deinitable](var f: F) -> I.Endpoint[T, F] where I.EndpointCompatible[T, F]:",
+          "sha256": "14de7c044f27f5c158db603de17b1c22d841a1ae0308d7846c823e9d11a013a4"
         }
       ],
       "provider": "effects/operations"

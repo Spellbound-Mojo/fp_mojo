@@ -1,4 +1,4 @@
-# error: transformer: different inner family or error type
+# error: invalid call to 'map2_lazy': violated constraint
 from fp.algebra import pure, map2_lazy
 from fp.effects import State, ResultT
 from fp.callables import Binary, OnceThunk

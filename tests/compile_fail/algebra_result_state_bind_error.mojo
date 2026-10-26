@@ -1,4 +1,4 @@
-# error: transformer bind: different inner family or error type
+# error: no matching function in call to 'flat_map'
 from fp.algebra import pure, flat_map
 from fp.effects import ResultT, State
 from fp.callables import as_unary

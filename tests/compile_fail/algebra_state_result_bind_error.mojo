@@ -1,4 +1,4 @@
-# error: run: computation belongs to a different effect family
+# error: no matching function in call to 'flat_map'
 from fp.algebra import pure, flat_map, ResultFamily
 from fp.effects import StateT, run
 from fp.callables import as_unary

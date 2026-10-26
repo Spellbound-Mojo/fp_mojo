@@ -1,4 +1,4 @@
-# error: transformer: different inner family or error type
+# error: no matching function in call to 'map'
 from fp.algebra import pure, map
 from fp.effects import State, ResultT
 from fp.callables import as_unary

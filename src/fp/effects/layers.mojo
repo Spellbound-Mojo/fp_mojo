@@ -7,9 +7,9 @@ and the right operand, keeping the base's earlier effects. The right operand is
 produced at most once. Over IdentityFamily the aliases are the native Optional
 and Result families.
 """
+from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, rebind, downcast
 from fp.algebra.protocols import (Monad, Applicative, ApplicativeError, _Lifting, _Accumulate, _Present, _BindFirst, _Lazy, _UnaryView)
-from fp.algebra._admission import _CarrierCompatible
 from fp.algebra.instances import IdentityFamily, OptionalFamily, ResultFamily, _OkOf
 from fp.callables.protocols import BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, OnceUnary, MutableUnary
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary
@@ -238,7 +238,7 @@ struct _ResultAcc[K: _Accumulate, E: Movable & Deinitable](_Accumulate):
 
 struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError)):
     """OptionalT over a base other than Identity: a value is M's carrier of Optional[A]."""
-    comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = H.Compatible[V] and Self.M.Element[V] == Optional[Self.Element[V]]
+    comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = Self.CarrierCompatible[V] and H.Compatible[V]
     comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = H.Applied[V]
     comptime _HoistError[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = H.Error[V]
     comptime _Listening[C: Listen, A: Movable & Deinitable] = _ListenMapped[C, Optional[A], _ListenSum[OptionalFamily, A, C.Log.Value]]
@@ -246,7 +246,7 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
     def _hoist[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp](var op: H, var value: V) raises Self._HoistError[A, V, H] -> Self._Hoisted[A, V, H]:
         return op^.apply(value^)
 
-    comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = C.LocalCompatible[V] and Self.M.Element[V] == Optional[Self.Element[V]]
+    comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = Self.CarrierCompatible[V] and C.LocalCompatible[V]
     comptime _Scoped[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Self._Hoisted[Self.Element[V], V, _LocalOp[C, F]]
     comptime _ScopeError[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = C.LocalError[V, F]
     @staticmethod
@@ -256,7 +256,7 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
 
     comptime _Errors = downcast[Self.M, ApplicativeError]
     comptime Failure = Self._Errors.Failure
-    comptime _ErrorCarrier[V: Movable & Deinitable] = Self._Errors._ErrorCarrier[V] and Self.M.Element[V] == Optional[Self.Element[V]]
+    comptime _ErrorCarrier[V: Movable & Deinitable] = Self.CarrierCompatible[V] and Self._Errors._ErrorCarrier[V]
     comptime Failed[A: Movable & Deinitable] = Self._Errors.Failed[Optional[A]]
     comptime FailError[A: Movable & Deinitable] = Self._Errors.FailError[Optional[A]]
     comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self._Errors.Handled[V, H]
@@ -273,6 +273,11 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
 
     comptime Base = Self.M
     comptime Element[V: Movable & Deinitable] = OptionalFamily.Element[Self.M.Element[V]]
+    comptime CarrierCompatible[V: Movable & Deinitable] = Self.M.CarrierCompatible[V] and OptionalFamily.CarrierCompatible[Self.M.Element[V]]
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[V]
+    comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _CarrierBind[Self, V, F]
+    comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable] = _CarrierCombine[Self, V, F, G]
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out]
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.Mapped[V, _InnerMap[OptionalFamily, F]]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.MapError[V, _InnerMap[OptionalFamily, F]]
     comptime Pure[A: Movable & Deinitable] = Self.M.Pure[Optional[A]]
@@ -291,7 +296,7 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
     @staticmethod
     def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V
     ) raises Self.MapError[V, F] -> Self.Mapped[V, F]:
-        comptime assert Self.M.Element[V] == Optional[F.Arg], _LAYER
+        comptime assert Self.MapCompatible[V, F], _LAYER
         return Self.M.map(_InnerMap[OptionalFamily, F](f^), value^)
 
     @staticmethod
@@ -302,14 +307,13 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
     def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable](
         var f: F, var left: V, var right: G
     ) raises Self.CombineError[V, F, G] -> Self.Combined[V, F, G]:
-        comptime assert Self.M.Element[V] == Optional[F.First] and Self.M.Element[G.Out] == Optional[F.Second], _LAYER
+        comptime assert Self.CombineCompatible[V, F, G], _LAYER
         return Self.M.flat_map(_OptionalCombine[Self.M, F, G](f^, _Lazy[G](right^)), left^)
 
     @staticmethod
     def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V
     ) raises Self.BindError[V, F] -> Self.Bound[V, F]:
-        comptime assert Self.M.Element[V] == Optional[F.Arg], _LAYER
-        comptime assert Self.M.Element[F.Out] == Optional[OptionalFamily.Element[Self.M.Element[F.Out]]], _LAYER_BIND
+        comptime assert Self.BindCompatible[V, F], _LAYER_BIND
         return Self.M.flat_map(_OptionalGuard[Self.M, F](f^), value^)
 
     @staticmethod
@@ -332,7 +336,7 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
 
 struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, _LocalLifting):
     """ResultT over a base other than Identity: a value is M's carrier of Result[A, E]."""
-    comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = H.Compatible[V] and Self.M.Element[V] == Result[Self.Element[V], Self.E]
+    comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = Self.CarrierCompatible[V] and H.Compatible[V]
     comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = H.Applied[V]
     comptime _HoistError[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = H.Error[V]
     comptime _Listening[C: Listen, A: Movable & Deinitable] = _ListenMapped[C, Result[A, Self.E], _ListenSum[ResultFamily[Self.E], A, C.Log.Value]]
@@ -340,7 +344,7 @@ struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, _Loc
     def _hoist[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp](var op: H, var value: V) raises Self._HoistError[A, V, H] -> Self._Hoisted[A, V, H]:
         return op^.apply(value^)
 
-    comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = C.LocalCompatible[V] and Self.M.Element[V] == Result[Self.Element[V], Self.E]
+    comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = Self.CarrierCompatible[V] and C.LocalCompatible[V]
     comptime _Scoped[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Self._Hoisted[Self.Element[V], V, _LocalOp[C, F]]
     comptime _ScopeError[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = C.LocalError[V, F]
     @staticmethod
@@ -349,7 +353,7 @@ struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, _Loc
         return Self._hoist[Self.Element[V]](_LocalOp[C, F](f^), value^)
 
     comptime Failure = Self.E
-    comptime _ErrorCarrier[V: Movable & Deinitable] = _CarrierCompatible[Self.M, V] and Self.M.Element[V] == Result[Self.Element[V], Self.E]
+    comptime _ErrorCarrier[V: Movable & Deinitable] = Self.CarrierCompatible[V]
     comptime Failed[A: Movable & Deinitable] = Self.M.Pure[Result[A, Self.E]]
     comptime FailError[A: Movable & Deinitable] = Never
     comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self.M.Bound[V, _ResultGuard[Self.M, Self.E, H, False]]
@@ -367,6 +371,11 @@ struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, _Loc
 
     comptime Base = Self.M
     comptime Element[V: Movable & Deinitable] = ResultFamily[Self.E].Element[Self.M.Element[V]]
+    comptime CarrierCompatible[V: Movable & Deinitable] = Self.M.CarrierCompatible[V] and ResultFamily[Self.E].CarrierCompatible[Self.M.Element[V]]
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[V]
+    comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _CarrierBind[Self, V, F]
+    comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable] = _CarrierCombine[Self, V, F, G]
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out]
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.Mapped[V, _InnerMap[ResultFamily[Self.E], F]]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.MapError[V, _InnerMap[ResultFamily[Self.E], F]]
     comptime Pure[A: Movable & Deinitable] = Self.M.Pure[Result[A, Self.E]]
@@ -385,7 +394,7 @@ struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, _Loc
     @staticmethod
     def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V
     ) raises Self.MapError[V, F] -> Self.Mapped[V, F]:
-        comptime assert Self.M.Element[V] == Result[F.Arg, Self.E], _LAYER
+        comptime assert Self.MapCompatible[V, F], _LAYER
         return Self.M.map(_InnerMap[ResultFamily[Self.E], F](f^), value^)
 
     @staticmethod
@@ -396,14 +405,13 @@ struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, _Loc
     def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable](
         var f: F, var left: V, var right: G
     ) raises Self.CombineError[V, F, G] -> Self.Combined[V, F, G]:
-        comptime assert Self.M.Element[V] == Result[F.First, Self.E] and Self.M.Element[G.Out] == Result[F.Second, Self.E], _LAYER
+        comptime assert Self.CombineCompatible[V, F, G], _LAYER
         return Self.M.flat_map(_ResultCombine[Self.M, Self.E, F, G](f^, _Lazy[G](right^)), left^)
 
     @staticmethod
     def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V
     ) raises Self.BindError[V, F] -> Self.Bound[V, F]:
-        comptime assert Self.M.Element[V] == Result[F.Arg, Self.E], _LAYER
-        comptime assert Self.M.Element[F.Out] == Result[ResultFamily[Self.E].Element[Self.M.Element[F.Out]], Self.E], _LAYER_BIND
+        comptime assert Self.BindCompatible[V, F], _LAYER_BIND
         return Self.M.flat_map(_ResultGuard[Self.M, Self.E, F](f^), value^)
 
     @staticmethod

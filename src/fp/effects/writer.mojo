@@ -5,6 +5,7 @@ Operations use M's own map, flat_map and map2_lazy, so over a deferred base the
 result stays deferred; `run_writer` unwraps the base carrier without running
 it. Logs combine in execution order.
 """
+from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, rebind, downcast
 from fp.algebra.protocols import ApplicativeError, Monad, Monoid, _Accumulate, _start_as, _combine_as
 from fp.algebra.instances import IdentityFamily
@@ -15,18 +16,17 @@ from fp.callables._receiver import _unary_once_as, _binary_once_as
 from std.memory import MaybeUninit
 from fp.callables.products import _take_pair
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from .protocols import Local, Listen, Censor, _CarrierOp, _LocalLifting, _WriterFamily, _WriterType
+from .protocols import Local, Listen, Censor, _CarrierOp, _LocalLifting, WriterFamily, _WriterType
 from ._adapt import _map_as
 from ._transport import _LocalOp, _ListenMapped, _ListenPair
-from fp.algebra._admission import _CarrierCompatible
 
 
 comptime _Value[V: Movable & Deinitable] = downcast[V, _WriterType]
-comptime _WRITER_FAMILY = "writer: value belongs to a different writer family"
+comptime _WRITER_FAMILY = "writer: value belongs to a different writer family or has incompatible base storage"
 
 
 @fieldwise_init
-struct WriterValue[I: _WriterFamily, T: Movable & Deinitable, C: Movable & Deinitable](
+struct WriterValue[I: WriterFamily, T: Movable & Deinitable, C: Movable & Deinitable](
     _WriterType, Copyable where conforms_to(C, Copyable)
 ):
     """A Writer value of family `I`: the base carrier `C` of `(log, T)`.
@@ -130,7 +130,7 @@ struct _Prepend[W: Monoid, T: Movable & Deinitable](
 
 
 @fieldwise_init
-struct _WriterStep[I: _WriterFamily, F: UnaryContract & Movable & Deinitable](
+struct _WriterStep[I: WriterFamily, F: UnaryContract & Movable & Deinitable](
     OnceUnary, MutableUnary where RepeatableUnary[F] and conforms_to(I.Log.Value, Copyable),
     Copyable where conforms_to(F, Copyable)
 ):
@@ -231,7 +231,7 @@ struct _Unwrap[G: ThunkContract & Movable & Deinitable](OnceThunk, Copyable wher
 
 
 @fieldwise_init
-struct _UnwrapResult[I: _WriterFamily, F: UnaryContract & Movable & Deinitable](
+struct _UnwrapResult[I: WriterFamily, F: UnaryContract & Movable & Deinitable](
     OnceUnary, MutableUnary where RepeatableUnary[F], Copyable where conforms_to(F, Copyable)
 ):
     """Call F, then expose the base carrier of the Writer value it returns."""
@@ -327,7 +327,7 @@ struct _WriterAcc[W: Monoid, K: _Accumulate](_Accumulate):
         return Tuple(log^, _combine_as[Self.Error, Self.K](acc_part^, item_part^))
 
 
-struct WriterT[M: Monad, W: Monoid](_WriterFamily, Censor, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError)):
+struct WriterT[M: Monad, W: Monoid](WriterFamily, Censor, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError)):
     """Writer over the base Monad `M`: a value is `M`'s carrier of `(log, payload)`, and the monoid `W` accumulates the log.
 
     Operations use the base's own `map`, `flat_map` and `map2_lazy`, so over a
@@ -342,7 +342,7 @@ struct WriterT[M: Monad, W: Monoid](_WriterFamily, Censor, _LocalLifting, Applic
     comptime TellAvailable = True
     comptime Told = WriterValue[Self, NoneType, Self.M.Pure[Tuple[Self.W.Value, NoneType]]]
     comptime TellError = Never
-    comptime _LogCarrier[V: Movable & Deinitable] = _Value[V].Family == Self and _CarrierCompatible[Self.M, _Value[V].Storage] and Self.M.Element[_Value[V].Storage] == Tuple[Self.W.Value, Self.Element[V]]
+    comptime _LogCarrier[V: Movable & Deinitable] = Self.CarrierCompatible[V]
     comptime ListenCompatible[V: Movable & Deinitable] = Self._LogCarrier[V] and conforms_to(Self.W.Value, Copyable) and Self.M.MapCompatible[_Value[V].Storage, _Listen[Self.W, Self.Element[V]]]
     comptime Listened[V: Movable & Deinitable] = WriterValue[Self, Tuple[Self.Element[V], Self.W.Value], Self.M.Mapped[_Value[V].Storage, _Listen[Self.W, Self.Element[V]]]]
     comptime ListenError[V: Movable & Deinitable] = Self.M.MapError[_Value[V].Storage, _Listen[Self.W, Self.Element[V]]]
@@ -403,7 +403,7 @@ struct WriterT[M: Monad, W: Monoid](_WriterFamily, Censor, _LocalLifting, Applic
         comptime assert Self.CensorCompatible[V, F]
         return Self.Censored[V, F](Self.M.map(_Censor[F, Self.Element[V]](f^), rebind_var[_Value[V]](value^).into_base()))
 
-    comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = _Value[V].Family == Self and H.Compatible[_Value[V].Storage] and Self.M.Element[_Value[V].Storage] == Tuple[Self.W.Value, Self.Element[V]]
+    comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = Self.CarrierCompatible[V] and H.Compatible[_Value[V].Storage]
     comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = WriterValue[Self, A, H.Applied[_Value[V].Storage]]
     comptime _HoistError[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = H.Error[_Value[V].Storage]
     comptime _Listening[C: Listen, A: Movable & Deinitable] = _ListenMapped[C, Tuple[Self.W.Value, A], _ListenPair[Self.W.Value, A, C.Log.Value, True]]
@@ -412,7 +412,7 @@ struct WriterT[M: Monad, W: Monoid](_WriterFamily, Censor, _LocalLifting, Applic
         var base = rebind_var[_Value[V]](value^).into_base()
         return Self._Hoisted[A, V, H](op^.apply(base^))
 
-    comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = _Value[V].Family == Self and C.LocalCompatible[_Value[V].Storage] and Self.M.Element[_Value[V].Storage] == Tuple[Self.W.Value, Self.Element[V]]
+    comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = Self.CarrierCompatible[V] and C.LocalCompatible[_Value[V].Storage]
     comptime _Scoped[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Self._Hoisted[Self.Element[V], V, _LocalOp[C, F]]
     comptime _ScopeError[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = C.LocalError[_Value[V].Storage, F]
 
@@ -440,7 +440,7 @@ struct WriterT[M: Monad, W: Monoid](_WriterFamily, Censor, _LocalLifting, Applic
 
     comptime _Errors = downcast[Self.M, ApplicativeError]
     comptime Failure = Self._Errors.Failure
-    comptime _ErrorCarrier[V: Movable & Deinitable] = _Value[V].Family == Self and Self._Errors._ErrorCarrier[_Value[V].Storage] and Self.M.Element[_Value[V].Storage] == Tuple[Self.W.Value, Self.Element[V]]
+    comptime _ErrorCarrier[V: Movable & Deinitable] = Self.CarrierCompatible[V] and Self._Errors._ErrorCarrier[_Value[V].Storage]
     comptime Failed[A: Movable & Deinitable] = WriterValue[Self, A, Self._Errors.Failed[Tuple[Self.W.Value, A]]]
     comptime FailError[A: Movable & Deinitable] = Self._Errors.FailError[Tuple[Self.W.Value, A]]
     comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = WriterValue[Self, Self.Element[V], Self._Errors.Handled[_Value[V].Storage, _UnwrapResult[Self, H]]]
@@ -490,6 +490,29 @@ struct WriterT[M: Monad, W: Monoid](_WriterFamily, Censor, _LocalLifting, Applic
     comptime Base = Self.M
     comptime Log = Self.W
     comptime Element[V: Movable & Deinitable] = _Value[V].Value
+    comptime Unwrapped[V: Movable & Deinitable] = _Value[V].Storage
+    """The exact base carrier returned by run_writer, including its origins."""
+    @staticmethod
+    def unwrap[V: Movable & Deinitable](var value: V) -> Self.Unwrapped[V]:
+        """Remove an admitted Writer layer, preserving the base carrier.
+
+        Parameters:
+            V: The admitted Writer value type.
+
+        Args:
+            value: The computation, consumed.
+
+        Returns:
+            The exact base carrier; a deferred base remains unrun.
+        """
+        comptime assert Self.CarrierCompatible[V], _WRITER_FAMILY
+        return rebind_var[_Value[V]](value^).into_base()
+
+    comptime CarrierCompatible[V: Movable & Deinitable] = (_Value[V].Family == Self and Self.M.CarrierCompatible[_Value[V].Storage] and Self.M.Element[_Value[V].Storage] == Tuple[Self.W.Value, Self.Element[V]]) if conforms_to(V, _WriterType) else False
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[V]
+    comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _CarrierBind[Self, V, F]
+    comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable] = _CarrierCombine[Self, V, F, G]
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out]
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = WriterValue[
         Self, F.Out, Self.M.Mapped[_Value[V].Storage, _MapValue[Self.W.Value, F]]]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.MapError[
@@ -532,7 +555,7 @@ struct WriterT[M: Monad, W: Monoid](_WriterFamily, Censor, _LocalLifting, Applic
         Raises:
             The base's `map` error, which includes the callback's.
         """
-        comptime assert _Value[V].Family == Self, _WRITER_FAMILY
+        comptime assert Self.MapCompatible[V, F], _WRITER_FAMILY
         var base = rebind_var[_Value[V]](value^).into_base()
         return Self.Mapped[V, F](Self.M.map(_MapValue[Self.W.Value, F](f^), base^))
 
@@ -579,7 +602,7 @@ struct WriterT[M: Monad, W: Monoid](_WriterFamily, Censor, _LocalLifting, Applic
         Raises:
             The base's combination error, which includes the combiner's, the thunk's and the monoid's.
         """
-        comptime assert _Value[V].Family == Self and _Value[G.Out].Family == Self, _WRITER_FAMILY
+        comptime assert Self.CombineCompatible[V, F, G], _WRITER_FAMILY
         var base = rebind_var[_Value[V]](left^).into_base()
         return Self.Combined[V, F, G](Self.M.map2_lazy(_WriterCombine[Self.W, F](f^), base^, _Unwrap[G](right^)))
 
@@ -602,7 +625,7 @@ struct WriterT[M: Monad, W: Monoid](_WriterFamily, Censor, _LocalLifting, Applic
         Raises:
             The base's bind error, which includes the callback's and the monoid's.
         """
-        comptime assert _Value[V].Family == Self and _Value[F.Out].Family == Self, _WRITER_FAMILY
+        comptime assert Self.BindCompatible[V, F], _WRITER_FAMILY
         var base = rebind_var[_Value[V]](value^).into_base()
         return Self.Bound[V, F](Self.M.flat_map(_WriterStep[Self, F](f^), base^))
 
@@ -654,7 +677,7 @@ Parameters:
 """
 
 
-def writer[C: Movable & Deinitable, //, I: _WriterFamily, T: Movable & Deinitable](var carrier: C) -> WriterValue[I, T, C]:
+def writer[C: Movable & Deinitable, //, I: WriterFamily, T: Movable & Deinitable](var carrier: C) -> WriterValue[I, T, C] where I.CarrierCompatible[WriterValue[I, T, C]]:
     """Make a Writer value from a base carrier whose payload is exactly `(log, value)`.
 
     Parameters:
@@ -668,13 +691,13 @@ def writer[C: Movable & Deinitable, //, I: _WriterFamily, T: Movable & Deinitabl
     Returns:
         The Writer value.
     """
-    comptime assert I.Base.Element[C] == Tuple[I.Log.Value, T], "writer: base payload must be (log, value)"
+    comptime assert I.CarrierCompatible[WriterValue[I, T, C]], "writer: base payload must be (log, value)"
     return WriterValue[I, T, C](carrier^)
 
 
 # Like `run`, these entries admit a value named through a family's aliases in
 # generic code, which is only known to be Movable & Deinitable.
-def run_writer[V: Movable & Deinitable, //, I: _WriterFamily](var value: V) -> _Value[V].Storage:
+def run_writer[V: Movable & Deinitable, //, I: WriterFamily](var value: V) -> I.Unwrapped[V] where I.CarrierCompatible[V]:
     """Remove the Writer layer and return the base carrier of `(log, value)`; a deferred base is returned unrun.
 
     Parameters:
@@ -687,8 +710,7 @@ def run_writer[V: Movable & Deinitable, //, I: _WriterFamily](var value: V) -> _
     Returns:
         The base carrier.
     """
-    comptime assert _Value[V].Family == I, "run_writer: value belongs to a different writer family"
-    return rebind_var[_Value[V]](value^).into_base()
+    return I.unwrap(value^)
 
 
 # Preserve the original import paths; capabilities owns the checked entries.

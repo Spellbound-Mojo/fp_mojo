@@ -3,6 +3,7 @@
 A run consumes the state and returns the base carrier of Tuple[value, state].
 Each operation is one struct whose run delegates to the base family.
 """
+from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, rebind, downcast
 from std.utils import Variant
 from fp.algebra.errors import _Continue
@@ -14,7 +15,7 @@ from fp.callables._receiver import _binary_repeated_as, _unary_once_as
 from std.memory import MaybeUninit
 from fp.callables.products import _take_pair, _WithSecond as _WithState
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from .protocols import Stateful, Local, Listen, _CarrierOp, _LocalLifting, StateAction, _StateFamily, _admit_endpoint, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
+from .protocols import Stateful, Local, Listen, _CarrierOp, _LocalLifting, StateAction, StateFamily, _EndpointCompatible, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
 from ._adapt import _op_as, _state_run_as, _map_as, _flat_map_as
 
 from ._transport import _LocalOp, _ListenOp, _ListenMapped, _ListenPair
@@ -469,7 +470,7 @@ struct _StateHoist[A: Movable & Deinitable, S: StateAction, H: _CarrierOp](
         return _op_as[E](self.operation^, base^)
 
 
-struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, Stateful, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable)):
+struct StateT[M: Monad, S: Movable & Deinitable](StateFamily, Stateful, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable)):
     """State over the base Monad `M`: a computation consumes a state `S` when run and returns an `M` carrier of `(value, state)`.
 
     Computations are built as for `ReaderT` and run with `run`. Traversal is one
@@ -521,7 +522,7 @@ struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, Stateful, _LocalL
         comptime assert Self.ModifyCompatible[F], "modify: the callback must map the state to a new state"
         return Self.Modified[F](f^)
 
-    comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = _Action[V].Family == Self and _Action[V].State == Self.S and H.Compatible[_Action[V].Out] and _ErrorCompatible[_CommonError[_Action[V].Error, H.Error[_Action[V].Out]], H.Error[_Action[V].Out]]
+    comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = Self.CarrierCompatible[V] and H.Compatible[_Action[V].Out] and _ErrorCompatible[_CommonError[_Action[V].Error, H.Error[_Action[V].Out]], H.Error[_Action[V].Out]]
     comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = _StateHoist[A, _Action[V], H]
     comptime _HoistError[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = Never
     comptime _Listening[C: Listen, A: Movable & Deinitable] = _ListenMapped[C, Tuple[A, Self.S], _ListenPair[Self.S, A, C.Log.Value, False]]
@@ -529,7 +530,7 @@ struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, Stateful, _LocalL
     def _hoist[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp](var op: H, var value: V) -> Self._Hoisted[A, V, H]:
         return Self._Hoisted[A, V, H](rebind_var[_Action[V]](value^), op^)
 
-    comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = _Action[V].Family == Self and _Action[V].State == Self.S and C.LocalCompatible[_Action[V].Out]
+    comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = Self.CarrierCompatible[V] and C.LocalCompatible[_Action[V].Out]
     comptime _Scoped[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Self._Hoisted[Self.Element[V], V, _LocalOp[C, F]]
     comptime _ScopeError[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Never
 
@@ -554,7 +555,7 @@ struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, Stateful, _LocalL
 
     comptime _Errors = downcast[Self.M, ApplicativeError]
     comptime Failure = Self._Errors.Failure
-    comptime _ErrorCarrier[V: Movable & Deinitable] = _Action[V].Family == Self and _Action[V].State == Self.S and Self._Errors._ErrorCarrier[_Action[V].Out] and Self.M.Element[_Action[V].Out] == Tuple[Self.Element[V], Self.S]
+    comptime _ErrorCarrier[V: Movable & Deinitable] = Self.CarrierCompatible[V] and Self._Errors._ErrorCarrier[_Action[V].Out]
     comptime Failed[A: Movable & Deinitable] = _StateFail[Self.M, Self.S, A]
     comptime FailError[A: Movable & Deinitable] = Never
     comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = _StateBind[Self.M, Self.S, _Action[V], H, True]
@@ -599,7 +600,16 @@ struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, Stateful, _LocalL
 
     comptime Base = Self.M
     comptime StateType = Self.S
+    comptime EndpointCompatible[T: Movable & Deinitable, F: Movable & Deinitable] = (
+        downcast[F, UnaryContract].Arg == Self.S and
+        _EndpointCompatible[Self.M, Tuple[T, Self.S], downcast[F, UnaryContract].Out]
+    ) if conforms_to(F, UnaryContract) else False
     comptime Element[V: Movable & Deinitable] = _Action[V].Value
+    comptime CarrierCompatible[V: Movable & Deinitable] = (_Action[V].Family == Self and _Action[V].State == Self.S and Self.M.CarrierCompatible[_Action[V].Out] and Self.M.Element[_Action[V].Out] == Tuple[Self.Element[V], Self.S]) if conforms_to(V, StateAction) else False
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[V]
+    comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _CarrierBind[Self, V, F]
+    comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable] = _CarrierCombine[Self, V, F, G]
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out]
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _StateMap[Self.M, Self.S, _Action[V], F]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Never
     comptime Pure[A: Movable & Deinitable] = _StatePure[Self.M, Self.S, A]
@@ -635,7 +645,7 @@ struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, Stateful, _LocalL
         Returns:
             The mapping computation; nothing runs now.
         """
-        comptime assert _Action[V].Family == Self, _FAMILY_MISMATCH
+        comptime assert Self.MapCompatible[V, F], _FAMILY_MISMATCH
         return Self.Mapped[V, F](rebind_var[_Action[V]](value^), f^)
 
     @staticmethod
@@ -672,7 +682,7 @@ struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, Stateful, _LocalL
         Returns:
             The combining computation; nothing runs now.
         """
-        comptime assert _Action[V].Family == Self, _FAMILY_MISMATCH
+        comptime assert Self.CombineCompatible[V, F, G], _FAMILY_MISMATCH
         return Self.Combined[V, F, G](rebind_var[_Action[V]](left^), f^, right^)
 
     @staticmethod
@@ -690,7 +700,7 @@ struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, Stateful, _LocalL
         Returns:
             The bound computation; nothing runs now.
         """
-        comptime assert _Action[V].Family == Self, _FAMILY_MISMATCH
+        comptime assert Self.BindCompatible[V, F], _FAMILY_MISMATCH
         return Self.Bound[V, F](rebind_var[_Action[V]](value^), f^)
 
     @staticmethod
@@ -739,7 +749,7 @@ struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, Stateful, _LocalL
         """
         comptime assert conforms_to(F, UnaryContract), "action: a State endpoint must be a unary callback consuming the state"
         comptime D = downcast[F, UnaryContract & Movable & Deinitable]
-        _admit_endpoint[Self.M, Tuple[T, Self.S], D.Out]()
+        comptime assert Self.EndpointCompatible[T, F], "action: native result differs from declared carrier"
         return Self.Endpoint[T, F](rebind_var[D](f^))
 
 

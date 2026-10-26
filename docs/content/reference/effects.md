@@ -9,6 +9,35 @@ whether a failed computation returns its final state.
 Start with the [effects tutorial](../tutorial/effects.md) for standalone Reader,
 State and Writer programs, deferred evaluation and callback ownership.
 
+Each transformer owns a public `CarrierCompatible[V]` predicate and its
+`MapCompatible`, `BindCompatible`, `CombineCompatible` and `CollectCompatible`
+operation contracts. Generic wrappers forward these predicates as described
+in [algebra admission](algebra.md). Mapped, bound and conditional computations
+remain valid carriers even when their concrete types differ from `Pure[A]`.
+
+State checks its base carrier of `(payload, state)`, Writer checks its base
+carrier of `(log, payload)`, and OptionalT/ResultT check both the base and inner
+carrier. Reader checks its family and environment at construction; `run`
+validates the base result using the actual environment origin. These checks do
+not execute deferred computations or replace their native raised errors.
+Endpoint construction uses the base's carrier predicate, so a transformer over
+Reader or State can accept the base's alternative computation representations.
+
+Generic execution wrappers use `I: ReaderFamily`, `I: StateFamily`, or
+`I: WriterFamily`. Reader wrappers forward `I.RunCompatible[V, o]` with the
+actual borrowed environment origin; State and Writer wrappers forward
+`I.CarrierCompatible[V]`. Writer's `I.Unwrapped[V]` names the exact base type
+returned by `run_writer`. Endpoint wrappers forward
+`I.EndpointCompatible[T, F]`. Keep `I` as a type parameter: substituting a
+concrete ReaderT expression inside a generic origin constraint can expand its
+projections before Mojo has selected the family's complete contract.
+
+For a type alias that selects among families with a compile-time condition,
+name `Family.Endpoint[T, F]` directly. `type_of(action(...))` also checks the
+call's preconditions, which may be unresolved until that condition is chosen.
+Ordinary `action[Family, T](callback)` and `run[Family](value, context)` calls
+retain their existing syntax.
+
 <!-- api: effects -->
 
 ## Choose whether a failure keeps its state

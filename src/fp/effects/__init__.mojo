@@ -48,7 +48,7 @@ eager, deferred and third-party bases. A deferred computation can be copied or
 replayed only when its stored inputs and callbacks support it; copying an owner
 does not make a consuming callback reusable.
 """
-from .protocols import Ask, Local, Stateful, Tell, Listen, Censor, ReaderAction, StateAction
+from .protocols import Ask, Local, Stateful, Tell, Listen, Censor, ReaderAction, StateAction, ReaderFamily, StateFamily, WriterFamily
 from .reader import ReaderT, Reader
 from .capabilities import LiftAsk, LiftLocal, LiftStateful, LiftTell, LiftListen, LiftCensor, ask, local, get, put, modify, tell, listen, censor
 from .state import StateT, State

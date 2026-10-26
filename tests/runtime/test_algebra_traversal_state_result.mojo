@@ -25,13 +25,13 @@ struct Produce[retain:Bool](Unary):
             raise Error("native producer failure")
         return step[Self.retain](self.trace,item,item,self.failure if item==3 else 0)
 
-def check[retain:Bool]() raises:
+def check[retain:Bool, o:MutOrigin](ref[o] pulls:Int) raises where Base[retain].CarrierCompatible[Stack[retain].Collected[Counted[o],Produce[retain]]]:
     comptime I=Stack[retain]
     comptime Data=Result[List[Int],Int]
     comptime Out=Tuple[Data,Int] if retain else Result[Tuple[List[Int],Int],Int]
     for count in [0,2,5]:
         for failure in range(4):
-            var pulls=0
+            pulls=0
             var trace=ArcPointer(List[Int]())
             comptime assert I.CollectCompatible[Counted[origin_of(pulls)],Produce[retain]]
             var computation:type_of(traverse[ListFamily,I](Produce[retain](trace,failure),Counted(Pointer(to=pulls),0,count)))
@@ -95,6 +95,7 @@ def check[retain:Bool]() raises:
                     assert_equal(values.value(),List[Int]() if count==0 else ints(11,13) if count==2 else ints(11,13,16,20,25))
 
 def main() raises:
-    check[True]()
-    check[False]()
+    var pulls = 0
+    check[True](pulls)
+    check[False](pulls)
     print("State/Result traversal: deferred pulls, retained/discarded state, producer/action failures")

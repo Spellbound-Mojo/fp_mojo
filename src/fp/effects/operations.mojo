@@ -1,7 +1,7 @@
 """Run, endpoint and lifting entries shared by the effect families."""
 from std.builtin.rebind import downcast, rebind, rebind_var
 from fp.algebra.protocols import _Lifting
-from .protocols import ReaderAction, StateAction, _Acting, _ReaderFamily, _StateFamily, _FAMILY_MISMATCH
+from .protocols import ReaderAction, StateAction, _Acting, ReaderFamily, StateFamily, _FAMILY_MISMATCH
 
 
 # The family parameter selects the overload. A computation type named through
@@ -11,8 +11,8 @@ comptime _Reader[V: Movable & Deinitable] = downcast[V, ReaderAction]
 comptime _State[V: Movable & Deinitable] = downcast[V, StateAction]
 
 
-def run[V: Movable & Deinitable, o: ImmOrigin, //, I: _ReaderFamily](var action: V, ref[o] env: I.Environment
-) raises _Reader[V].Error[o] -> _Reader[V].Out[o]:
+def run[V: Movable & Deinitable, o: ImmOrigin, //, I: ReaderFamily](var action: V, ref[o] env: I.Environment
+) raises _Reader[V].Error[o] -> _Reader[V].Out[o] where I.RunCompatible[V, o]:
     """Run a Reader computation of family `I` with a borrowed environment.
 
     Another overload runs a State computation with an initial state.
@@ -32,18 +32,18 @@ def run[V: Movable & Deinitable, o: ImmOrigin, //, I: _ReaderFamily](var action:
     Raises:
         The common error of the stages the run executes.
     """
-    comptime assert _Reader[V].Family == I, _FAMILY_MISMATCH
+    comptime assert I.RunCompatible[V, o], _FAMILY_MISMATCH
     return rebind_var[_Reader[V]](action^).run(rebind[_Reader[V].Env](env))
 
 
-def run[V: Movable & Deinitable, //, I: _StateFamily](var action: V, var state: I.StateType
-) raises _State[V].Error -> _State[V].Out:
+def run[V: Movable & Deinitable, //, I: StateFamily](var action: V, var state: I.StateType
+) raises _State[V].Error -> _State[V].Out where I.CarrierCompatible[V]:
     """Run a State computation of family `I`, consuming the initial state."""
-    comptime assert _State[V].Family == I, _FAMILY_MISMATCH
+    comptime assert I.CarrierCompatible[V], _FAMILY_MISMATCH
     return rebind_var[_State[V]](action^).run(rebind_var[_State[V].State](state^))
 
 
-def action[F: Movable & Deinitable, //, I: _Acting, T: Movable & Deinitable](var f: F) -> I.Endpoint[T, F]:
+def action[F: Movable & Deinitable, //, I: _Acting, T: Movable & Deinitable](var f: F) -> I.Endpoint[T, F] where I.EndpointCompatible[T, F]:
     """A computation of family `I` with payload `T` from a native endpoint callback.
 
     For Reader, `f` borrows the environment (a `BorrowCallable` or

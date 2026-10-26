@@ -1,8 +1,9 @@
 """A deferred traversal consumes source items, capture, state and errors once."""
 from fp.algebra import traverse, ListFamily, ResultFamily, Monad
-from fp.effects import StateT, action, run
+from fp.effects import StateT, StateFamily, action, run
 from fp.callables import MutableUnary, OnceUnary
 from fp.data import Result, Ok, Err
+from fp._internal.errors import _propagate_error
 from std.builtin.rebind import rebind_var
 from std.memory import ArcPointer
 from std.testing import assert_equal
@@ -26,39 +27,42 @@ struct Step(OnceUnary):
                 raise Token[3](203,self.item.trace)
         return Data(Ok(Tuple(state.value,state^)))
 
-comptime Endpoint[M:Monad]=type_of(action[StateT[M,Token[1]],Int](Step(Token[0](0,ArcPointer(Trace(0,SIMD[DType.int64,4](0)))),0)))
+comptime Endpoint[I:StateFamily]=I.Endpoint[Int,Step]
 
 @fieldwise_init
-struct Produce[M:Monad](MutableUnary):
-    comptime I=StateT[Self.M,Token[1]]
+struct Produce[I:StateFamily](MutableUnary):
     var capture:Token[2]
     var failure:Int
     comptime Arg=Token[0]
-    comptime Out=Endpoint[Self.M]
+    comptime Out=Endpoint[Self.I]
     comptime Error=Token[3]
-    def call_mut(mut self,var item:Token[0]) raises Token[3] ->Endpoint[Self.M]:
+    def call_mut(mut self,var item:Token[0]) raises Token[3] ->Endpoint[Self.I]:
         self.capture.trace[].calls+=1
         if item.value==3 and self.failure==3:
             raise Token[3](103,item.trace)
+        comptime assert Self.I.EndpointCompatible[Int,Step]
         return action[Self.I,Int](Step(item^,self.failure))
 
-def check_traversal_ownership[M:Monad]() raises:
-    comptime I=StateT[M,Token[1]]
+def check_traversal_ownership[I:StateFamily]() raises where I.StateType == Token[1] and I.EndpointCompatible[Int,Step] and I.CollectCompatible[List[Token[0]],Produce[I]] and I.CarrierCompatible[I.Collected[List[Token[0]],Produce[I]]]:
     for failure in range(4):
         var trace=ArcPointer(Trace(0,SIMD[DType.int64,4](0)))
         var items=List[Token[0]]()
         for item in range(1,6):
             items.append(Token[0](item,trace))
-        comptime assert ListFamily.TraverseError[I,List[Token[0]],Produce[M]]==Never
-        var computation:ListFamily.Traversed[I,List[Token[0]],Produce[M]]
-        computation=traverse[ListFamily,I](Produce[M](Token[2](0,trace),failure),items^)
+        comptime assert ListFamily.TraverseError[I,List[Token[0]],Produce[I]]==Never
+        var computation:ListFamily.Traversed[I,List[Token[0]],Produce[I]]
+        try:
+            computation=traverse[ListFamily,I](Produce[I](Token[2](0,trace),failure),items^)
+        except error:
+            comptime assert type_of(error)==Never
+            _propagate_error[Never](error^)
         assert_equal(trace[].calls,0)
         for index in range(4):
             assert_equal(trace[].drops[index],0)
         var output=Optional[Result[Tuple[List[Int],Token[1]],Token[3]]]()
         var native_code=0
         try:
-            var value=run[I](computation^,Token[1](10,trace))
+            var value=run[I](computation^,rebind_var[I.StateType](Token[1](10,trace)))
             comptime assert type_of(value)==Result[Tuple[List[Int],Token[1]],Token[3]]
             output=Optional(rebind_var[Result[Tuple[List[Int],Token[1]],Token[3]]](value^))
         except error:
@@ -91,4 +95,4 @@ def check_traversal_ownership[M:Monad]() raises:
 
 
 def main() raises:
-    check_traversal_ownership[ResultFamily[Token[3]]]()
+    check_traversal_ownership[StateT[ResultFamily[Token[3]],Token[1]]]()

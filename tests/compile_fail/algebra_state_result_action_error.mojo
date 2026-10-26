@@ -1,4 +1,4 @@
-# error: action: native result differs from declared carrier
+# error: invalid call to 'action': violated constraint
 from fp.algebra import ResultFamily
 from fp.effects import StateT, action, run
 from fp.callables import as_unary

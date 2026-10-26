@@ -1,10 +1,10 @@
 """Shared public endpoints for mixed sums over deferred Writer computations."""
 from fp.algebra import StringMonoid
-from fp.effects import Reader, State, WriterT, OptionalT, ResultT, action, writer, run, run_writer
+from fp.effects import ReaderFamily, StateFamily, WriterFamily, WriterValue, Reader, State, WriterT, OptionalT, ResultT, action, writer, run, run_writer
 from fp._internal.errors import _propagate_error
 from fp.callables import OnceUnary, BorrowOnceCallable
 from fp.data import Result, Ok, Err
-from std.builtin.rebind import rebind_var
+from std.builtin.rebind import rebind, rebind_var
 from std.memory import ArcPointer
 from std.testing import assert_equal
 
@@ -56,28 +56,39 @@ struct Emit[optional_first:Bool,stateful:Bool](OnceUnary,BorrowOnceCallable):
             return rebind_var[Self.Output](pair^)
 
 
-comptime Endpoint[optional_first:Bool,stateful:Bool]=type_of(writer[Logged[stateful],Payload[optional_first]](action[Base[stateful],Tuple[String,Payload[optional_first]]](Emit[optional_first,stateful](ArcPointer(List[Int]()),0,0,0))))
+comptime Endpoint[optional_first:Bool,stateful:Bool]=WriterValue[Logged[stateful],Payload[optional_first],Base[stateful].Endpoint[Tuple[String,Payload[optional_first]],Emit[optional_first,stateful]]]
 
 
 def endpoint[optional_first:Bool,stateful:Bool](trace:ArcPointer[List[Int]],marker:Int,delta:Int,failure:Int)->Endpoint[optional_first,stateful]:
-    return writer[Logged[stateful],Payload[optional_first]](action[Base[stateful],Tuple[String,Payload[optional_first]]](Emit[optional_first,stateful](trace,marker,delta,failure)))
+    comptime if stateful:
+        var value = action[Base[True],Tuple[String,Payload[optional_first]]](Emit[optional_first,True](trace,marker,delta,failure))
+        return rebind_var[Endpoint[optional_first,stateful]](writer[Logged[True],Payload[optional_first]](value^))
+    else:
+        var value = action[Base[False],Tuple[String,Payload[optional_first]]](Emit[optional_first,False](trace,marker,delta,failure))
+        return rebind_var[Endpoint[optional_first,stateful]](writer[Logged[False],Payload[optional_first]](value^))
 
 
-def finish[optional_first:Bool,stateful:Bool,V:Movable & Deinitable](var value:V,environment:Int) raises Int ->Emit[optional_first,stateful].Output:
+comptime FinishCompatible[stateful:Bool,V:Movable & Deinitable,o:ImmOrigin] = Logged[stateful].CarrierCompatible[V] and (State[Int].CarrierCompatible[Logged[stateful].Unwrapped[V]] if stateful else Reader[Int].RunCompatible[Logged[stateful].Unwrapped[V],o])
+
+
+def finish[optional_first:Bool,stateful:Bool,V:Movable & Deinitable,o:ImmOrigin,W:WriterFamily=Logged[stateful],R:ReaderFamily=Reader[Int],S:StateFamily=State[Int]](var value:V,ref[o] environment:Int) raises Int ->Emit[optional_first,stateful].Output where W.CarrierCompatible[V] and R.Environment == Int and S.StateType == Int and (S.CarrierCompatible[W.Unwrapped[V]] if stateful else R.RunCompatible[W.Unwrapped[V],o]):
     # Adapt the two native frame signatures; each opaque run error is proved
     # independently before crossing this common test assertion boundary.
-    var context=environment
     comptime if stateful:
+        # FinishCompatible checks this branch at the public signature. Refine
+        # that conditional proof for the concrete native run overload.
+        comptime assert S.CarrierCompatible[W.Unwrapped[V]]
         try:
-            var output=run[State[Int]](run_writer[Logged[stateful]](value^),context)
+            var output=run[S](run_writer[W](value^),rebind_var[S.StateType](Int(environment)))
             comptime assert type_of(output)==Emit[optional_first,stateful].Output
             return rebind_var[Emit[optional_first,stateful].Output](output^)
         except error:
             comptime assert type_of(error)==Int
             _propagate_error[Int](error^)
     else:
+        comptime assert R.RunCompatible[W.Unwrapped[V],o]
         try:
-            var output=run[Reader[Int]](run_writer[Logged[stateful]](value^),context)
+            var output=run[R](run_writer[W](value^),rebind[R.Environment](environment))
             comptime assert type_of(output)==Emit[optional_first,stateful].Output
             return rebind_var[Emit[optional_first,stateful].Output](output^)
         except error:

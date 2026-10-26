@@ -14,3 +14,12 @@ comptime _CollectCompatible[I: Applicative, V: Movable & Deinitable, F: UnaryCon
 # different embedded origins on Mojo 1.1. Deferred carriers need not equal Pure.
 comptime _CarrierCompatible[I: Applicative, V: Movable & Deinitable] = I.CarrierCompatible[V]
 comptime _TraverseCompatible[I: Traversable, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = I.TraverseCompatible[V, F]
+
+
+# Shared shape rules for families with multiple concrete representations.
+# Each family owns CarrierCompatible; these helpers never infer a family from
+# a native value or require a deferred computation to have its Pure type.
+# Checked operations own exact callback input equality. Repeating that equality
+# inside a family predicate makes lifted Listen projections reduce too early.
+comptime _CarrierBind[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = I.MapCompatible[V, F] and I.CarrierCompatible[F.Out]
+comptime _CarrierCombine[I: Applicative, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable] = I.CarrierCompatible[V] and I.CarrierCompatible[G.Out] and I.Element[V] == F.First and I.Element[G.Out] == F.Second

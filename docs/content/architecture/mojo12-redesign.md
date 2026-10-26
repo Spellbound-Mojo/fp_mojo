@@ -846,3 +846,56 @@ carrier equality; it does not always infer the nominal iterable conformance
 used by carrier projection. The integration clients state these public
 preconditions explicitly and preserve their existing positional bindings,
 borrowed origins and native errors. Concrete user calls need no extra bindings.
+
+## Deferred family admission
+
+ReaderT, StateT, WriterT, OptionalT and ResultT own `CarrierCompatible`.
+Map admission reuses carrier membership; bind and combination share shape rules
+in algebra admission helpers. Collection checks the produced carrier through
+the same predicate.
+Capability scope, hoist, log and stored-error checks reuse this source admission;
+they no longer independently repeat family and storage recognition.
+
+Reader construction checks its nominal family and environment. Its result is
+origin-indexed, so the public `run` boundary validates the base carrier and
+payload using the actual environment origin. This does not treat a finite set
+of witness origins as proof of all possible Reader outputs. State checks the
+base carrier of `(Value, State)`; Writer checks `(Log.Value, Value)`. OptionalT
+and ResultT delegate admission to the base and the inner native family, keeping
+stored-error origins exact. Source projections are guarded when the required
+nominal protocol is absent.
+
+The canonical endpoint check now asks the base's public predicate and verifies
+its payload. Previously it compared a computation's nominal Family directly to
+the selected base. That rejects valid OptionalT/ResultT over Reader: their
+concrete computation records the deeper Reader as its Family. The new rule
+admits those endpoints and validates them through ordinary nested execution.
+Writer construction and public run entries reuse the same carrier contracts.
+
+These checks belong in signatures. A body-only Reader output check accepted a
+custom action whose stored error borrowed a different owner. The maintained
+Reader/State run, Reader endpoint and Writer-construction origin negatives
+exercise the public constraints without explicit callback bindings.
+`ReaderFamily`, `StateFamily` and `WriterFamily` expose the previously private
+execution contracts so generic runners can retain an abstract family type
+parameter. Reader's `RunCompatible[V, o]` checks the actual run origin;
+`EndpointCompatible[T, F]` checks native endpoint shape. Writer's `Unwrapped[V]`
+and `unwrap` dictionary primitive keep the returned base type abstract for
+generic forwarding while delegating ownership transfer to WriterValue.
+Concrete endpoint and run predicates live on their implementing dictionaries:
+inherited default expansions triggered compiler failures in valid clients.
+
+The maintained `context_deferred_admission` clients cover public generic bind,
+mapped alternatives, heterogeneous choices, map2, traversal, nested endpoints,
+exact borrowed payload/error origins, and destruction of skipped or abandoned
+callbacks. Invalid family, environment, state, storage and inner-error shapes
+reject through ordinary calls without explicit callback-type hints. No loop,
+storage representation, native error conversion or execution timing changes.
+
+Family carrier predicates and callback input equality have separate owners.
+Deferred MapCompatible checks the carrier structure; checked free/fluent
+operations already require the exact callback input, including origins.
+Repeating that equality inside MapCompatible makes Mojo 1.2 prematurely reduce
+Element[Listened[V]] in generic lifted Writer capabilities. Keeping the
+existing operation contract avoids that compiler failure without accepting
+incompatible callbacks or relaxing carrier checks.

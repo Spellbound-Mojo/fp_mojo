@@ -23,6 +23,10 @@ NonEmptyListFamily mapping and traversal require a NonEmptyList; filtering
 continues to produce a possibly empty List. Custom families can override the
 public predicates to describe their own representations.
 
+ReaderT, StateT, WriterT, OptionalT and ResultT also implement these predicates.
+Their carriers may have several concrete representations; membership does not
+require equality with `Pure[A]`. See [effect admission](effects.md).
+
 Generic wrappers with an abstract callback return type `R` must forward the
 target proof, such as `where OptionalFamily.CarrierCompatible[R]`. This also
 applies to legacy sequencing, effect searches and folds. Mojo 1.2 does not

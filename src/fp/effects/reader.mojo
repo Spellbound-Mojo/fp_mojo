@@ -4,6 +4,7 @@ Each operation is one struct whose run delegates to the base family. A result
 that retains the environment, such as a bind over a deferred base, carries the
 environment origin in its type.
 """
+from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, downcast
 from std.utils import Variant
 from fp.algebra.errors import _Continue
@@ -14,7 +15,7 @@ from fp.callables.protocols import (UnaryContract, BinaryContract, ThunkContract
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
 from fp.callables._receiver import _borrow_once_as, _binary_repeated_as, _unary_once_as, _thunk_once_as
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from .protocols import Local, Listen, _CarrierOp, _LocalLifting, ReaderAction, _ReaderFamily, _admit_endpoint, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
+from .protocols import Local, Listen, _CarrierOp, _LocalLifting, ReaderAction, ReaderFamily, _EndpointCompatible, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
 from ._adapt import _op_as, _reader_run_as, _map_as, _flat_map_as, _map2_lazy_as
 
 from ._transport import _LocalOp, _ListenOp, _ListenMapped, _ListenPair
@@ -321,7 +322,7 @@ struct _ReaderHoist[A: Movable & Deinitable, S: ReaderAction, H: _CarrierOp](
         return _op_as[E](self.operation^, base^)
 
 
-struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, Local, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError)):
+struct ReaderT[M: Monad, R: AnyType](ReaderFamily, Local, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError)):
     """Reader over the base Monad `M`: a computation borrows an environment `R` when run and returns an `M` carrier.
 
     Every operation returns a concrete computation that stores its inputs; a
@@ -343,10 +344,10 @@ struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, Local, _LocalLifting, Applic
     comptime AskAvailable = conforms_to(Self.R, Copyable)
     comptime Asked = _ReaderAsk[Self.M, downcast[Self.R, Copyable & Deinitable]]
     comptime AskError = Never
-    comptime LocalCompatible[V: Movable & Deinitable] = _Action[V].Family == Self and _Action[V].Env == Self.R and _LocalIndependent[_Action[V]]
+    comptime LocalCompatible[V: Movable & Deinitable] = Self.CarrierCompatible[V] and _LocalIndependent[_Action[V]]
     comptime Localized[V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = _ReaderLocal[Self.M, downcast[Self.R, Movable & Deinitable], _Action[V], F]
     comptime LocalError[V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Never
-    comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = _Action[V].Family == Self and _Action[V].Env == Self.R and H.Compatible[_Action[V].Out[ImmUntrackedOrigin]] and H.Compatible[_Action[V].Out[ImmutAnyOrigin]] and _ErrorCompatible[_CommonError[_Action[V].Error[ImmUntrackedOrigin], H.Error[_Action[V].Out[ImmUntrackedOrigin]]], H.Error[_Action[V].Out[ImmUntrackedOrigin]]] and _ErrorCompatible[_CommonError[_Action[V].Error[ImmutAnyOrigin], H.Error[_Action[V].Out[ImmutAnyOrigin]]], H.Error[_Action[V].Out[ImmutAnyOrigin]]]
+    comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = Self.CarrierCompatible[V] and H.Compatible[_Action[V].Out[ImmUntrackedOrigin]] and H.Compatible[_Action[V].Out[ImmutAnyOrigin]] and _ErrorCompatible[_CommonError[_Action[V].Error[ImmUntrackedOrigin], H.Error[_Action[V].Out[ImmUntrackedOrigin]]], H.Error[_Action[V].Out[ImmUntrackedOrigin]]] and _ErrorCompatible[_CommonError[_Action[V].Error[ImmutAnyOrigin], H.Error[_Action[V].Out[ImmutAnyOrigin]]], H.Error[_Action[V].Out[ImmutAnyOrigin]]]
     comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = _ReaderHoist[A, _Action[V], H]
     comptime _HoistError[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = Never
     comptime _Listening[C: Listen, A: Movable & Deinitable] = _ListenOp[C]
@@ -354,7 +355,7 @@ struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, Local, _LocalLifting, Applic
     def _hoist[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp](var op: H, var value: V) -> Self._Hoisted[A, V, H]:
         return Self._Hoisted[A, V, H](rebind_var[_Action[V]](value^), op^)
 
-    comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = _Action[V].Family == Self and _Action[V].Env == Self.R and C.LocalCompatible[_Action[V].Out[ImmUntrackedOrigin]] and C.LocalCompatible[_Action[V].Out[ImmutAnyOrigin]]
+    comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = Self.CarrierCompatible[V] and C.LocalCompatible[_Action[V].Out[ImmUntrackedOrigin]] and C.LocalCompatible[_Action[V].Out[ImmutAnyOrigin]]
     comptime _Scoped[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Self._Hoisted[Self.Element[V], V, _LocalOp[C, F]]
     comptime _ScopeError[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Never
 
@@ -407,7 +408,7 @@ struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, Local, _LocalLifting, Applic
 
     comptime _Errors = downcast[Self.M, ApplicativeError]
     comptime Failure = Self._Errors.Failure
-    comptime _ErrorCarrier[V: Movable & Deinitable] = _Action[V].Family == Self and _Action[V].Env == Self.R
+    comptime _ErrorCarrier[V: Movable & Deinitable] = Self.CarrierCompatible[V]
     comptime Failed[A: Movable & Deinitable] = _ReaderFail[Self.M, Self.R, A]
     comptime FailError[A: Movable & Deinitable] = Never
     comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = _ReaderBind[Self.M, Self.R, _Action[V], H, True]
@@ -449,7 +450,20 @@ struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, Local, _LocalLifting, Applic
 
     comptime Base = Self.M
     comptime Environment = Self.R
+    comptime EndpointCompatible[T: Movable & Deinitable, F: Movable & Deinitable] = (
+        downcast[F, BorrowCallContract].Payload == Self.R and
+        _EndpointCompatible[Self.M, T, downcast[F, BorrowCallContract].Result]
+    ) if conforms_to(F, BorrowCallContract) else False
+    comptime RunCompatible[V: Movable & Deinitable, o: ImmOrigin] = (
+        Self.CarrierCompatible[V] and
+        _EndpointCompatible[Self.M, Self.Element[V], _Action[V].Out[o]]
+    )
     comptime Element[V: Movable & Deinitable] = _Action[V].Value
+    comptime CarrierCompatible[V: Movable & Deinitable] = (_Action[V].Family == Self and _Action[V].Env == Self.R) if conforms_to(V, ReaderAction) else False
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[V]
+    comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _CarrierBind[Self, V, F]
+    comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable] = _CarrierCombine[Self, V, F, G]
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out]
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _ReaderMap[Self.M, Self.R, _Action[V], F]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Never
     comptime Pure[A: Movable & Deinitable] = _ReaderPure[Self.M, Self.R, A]
@@ -485,7 +499,7 @@ struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, Local, _LocalLifting, Applic
         Returns:
             The mapping computation; nothing runs now.
         """
-        comptime assert _Action[V].Family == Self, _FAMILY_MISMATCH
+        comptime assert Self.MapCompatible[V, F], _FAMILY_MISMATCH
         return Self.Mapped[V, F](rebind_var[_Action[V]](value^), f^)
 
     @staticmethod
@@ -522,7 +536,7 @@ struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, Local, _LocalLifting, Applic
         Returns:
             The combining computation; nothing runs now.
         """
-        comptime assert _Action[V].Family == Self, _FAMILY_MISMATCH
+        comptime assert Self.CombineCompatible[V, F, G], _FAMILY_MISMATCH
         return Self.Combined[V, F, G](rebind_var[_Action[V]](left^), f^, right^)
 
     @staticmethod
@@ -540,7 +554,7 @@ struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, Local, _LocalLifting, Applic
         Returns:
             The bound computation; nothing runs now.
         """
-        comptime assert _Action[V].Family == Self, _FAMILY_MISMATCH
+        comptime assert Self.BindCompatible[V, F], _FAMILY_MISMATCH
         return Self.Bound[V, F](rebind_var[_Action[V]](value^), f^)
 
     @staticmethod
@@ -589,7 +603,7 @@ struct ReaderT[M: Monad, R: AnyType](_ReaderFamily, Local, _LocalLifting, Applic
         """
         comptime assert conforms_to(F, BorrowCallContract), "action: a Reader endpoint must borrow the environment"
         comptime D = downcast[F, BorrowCallContract & Movable & Deinitable]
-        _admit_endpoint[Self.M, T, D.Result]()
+        comptime assert Self.EndpointCompatible[T, F], "action: native result differs from declared carrier"
         return Self.Endpoint[T, F](rebind_var[D](f^))
 
 
