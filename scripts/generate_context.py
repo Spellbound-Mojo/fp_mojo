@@ -9,6 +9,7 @@ from generate_result_syntax import DOCS, OUTCOMES
 from generate_plain_overloads import splice_source
 from generate_nary_syntax import MAX
 from generate_pipeline_syntax import TRANSFORMS
+from operation_specs import TERMINALS, TRAVERSALS
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "src/fp/functions/context.mojo"
@@ -369,7 +370,8 @@ def methods(*, fold_stage=False):
     # Pure reductions select their result family after one canonical source pass.
     element = "_FoldElement[Self.V]"
     for name in ("find_map", "fold_map", "sum_by", "min_by", "max_by"):
-        borrowed = name in ("min_by", "max_by")
+        operation = TERMINALS[name]
+        borrowed = operation.borrowing
         for numeric in (("int", "simd") if name == "sum_by" else (None,)):
             callbacks = borrowing_callbacks(element, "function") if borrowed else owning_callbacks("owned", element, "function")
             for cb in callbacks:
@@ -379,21 +381,21 @@ def methods(*, fold_stage=False):
                 if "//" not in params: params += ["//"]
                 if borrowed:
                     conditions += [f"conforms_to({result}, Comparable & Movable & Deinitable)"]
-                    result = f"Optional[{element}]"
-                    expr = f"_extremum[Self.V, {element}, {c}, {name == 'min_by'}]({cb['build']}, self.value^)"
+                    result = operation.result(element, result, "")
+                    expr = operation.invoke(f"Self.V, {element}, {c}, {operation.smallest}", cb["build"], "self.value^")
                 elif name == "find_map":
                     conditions += [f"{result} == Optional[_ListElement[{result}]]", f"RepeatableUnary[{c}]"]
-                    expr = f"_find_map({cb['build']}, self.value^)"
+                    expr = operation.invoke("", cb["build"], "self.value^")
                 else:
                     monoid = "M" if name == "fold_map" else ("_IntSum" if numeric == "int" else "_SIMDSum[dtype, size]")
                     if name == "fold_map": params.insert(params.index("//") + 1, "M: Monoid")
                     if numeric == "simd": params[params.index("//") + 1:params.index("//") + 1] = ["dtype: DType", "size: SIMDLength"]
                     conditions += [f"{result} == {monoid}.Value", f"RepeatableUnary[{c}]"]
                     if numeric == "simd": conditions += [f"{monoid}.Admitted"]
-                    error = f"_CommonError[{error}, {monoid}.Error]"
+                    error = operation.error(error, f"{monoid}.Error")
                     conditions += [f"_ErrorCompatible[{error}, {monoid}.Error]", f"_ErrorCompatible[{error}, {cb['error']}]"]
-                    result = f"{monoid}.Value"
-                    expr = f"_fold_map[Self.V, {c}, {monoid}, {error}]({cb['build']}, self.value^)"
+                    result = operation.result(element, result, f"{monoid}.Value")
+                    expr = operation.invoke(f"Self.V, {c}, {monoid}, {error}", cb["build"], "self.value^")
                 emit(name, cb, params, cb["argument"], result, error, f"_NativeFamily[{result}]", conditions, expr,
                      "Reduce the consumed source in order through the canonical terminal driver.")
     for name, monoid, params in (("combine_all", "M", ["M: Monoid"]), ("sum", "_IntSum", []),
@@ -401,7 +403,7 @@ def methods(*, fold_stage=False):
         result = f"{monoid}.Value"
         emit(name, {}, params, "", result, f"{monoid}.Error", f"_NativeFamily[{result}]",
              [f"{element} == {result}"] + ([f"{monoid}.Admitted"] if monoid.startswith("_SIMDSum") else []),
-             f"_fold_map[M={monoid}, E={monoid}.Error](Identity[{result}](), self.value^)",
+             TERMINALS[name].invoke(f"M={monoid}, E={monoid}.Error", f"Identity[{result}]()", "self.value^"),
              "Combine source elements in order, returning the identity for empty input.")
 
     # Effectful terminals consume the native source, independently of its
@@ -492,14 +494,15 @@ def methods(*, fold_stage=False):
     # Retention and compaction are the existing traversal policies. Source and
     # target carrier admission precede any body assertion or origin rebind.
     for name in ("traverse_tap", "filter_effect"):
-        filtering = name == "filter_effect"
-        family = "_SelectingTraversal[Self.I]" if filtering else "_Traversing[Self.I]"
+        operation = TRAVERSALS[name]
+        filtering = operation.filtering
+        family = f"{operation.selected_family}[Self.I]"
         for cb in borrowing_callbacks("Self.I.Element[Self.V]", "function", repeatable=False):
             params = list(cb["params"])
             if "//" not in params:
                 params += ["//"]
             params.insert(params.index("//") + 1, "J: Applicative")
-            retained = f"_TraverseTap[Self.I.Element[Self.V], J, {cb['adapter_type']}, {filtering}]"
+            retained = operation.retained("Self.I.Element[Self.V]", "J", cb["adapter_type"], explicit=True)
             built = f"{retained}({cb['build']})"
             traversed = f"{family}.Traversed[J, Self.V, {retained}]"
             before = f"{family}.TraverseError[J, Self.V, {retained}]"
@@ -513,25 +516,23 @@ def methods(*, fold_stage=False):
             expr = f"_traverse_as[{family}, J, Self.V, {retained}, {error}]({built}, self.value^)"
             summary = "Traverse borrowed effects and retain each original payload on success."
             if filtering:
-                finish = f"_CompactAfter[{family}, J.Element[{traversed}]]"
-                after = f"J.MapError[{traversed}, {finish}]"
-                error = f"_CommonError[{before}, {after}]"
-                result = f"J.Mapped[{traversed}, {finish}]"
+                plan = operation.postprocess(family, "J", "Self.V", retained)
+                finish, error, result = plan.finish, plan.error, plan.result
                 conditions += [
                     "conforms_to(Self.I, FunctorFilter)",
                     f"J.Element[{cb['result']}] == Bool",
                     f"J.Element[{retained}.Out] == Optional[Self.I.Element[Self.V]]",
                     f"_MapCompatible[J, {traversed}, {finish}]",
                 ]
-                expr = f"_traverse_then[{family}, J, Self.V, {retained}, {finish}, {error}]({built}, self.value^, {finish}())"
+                expr = plan.invoke(family, "J", "Self.V", retained, error, built, "self.value^")
                 summary = "Traverse borrowing Bool effects and retain accepted original payloads."
             emit(name, cb, params, cb["argument"], result, error, "J", conditions, expr, summary)
 
     # Traversal postprocessing stays inside the target effect.
     for name in ("traverse_filter", "sequence_filter", "flat_traverse", "flat_sequence"):
-        sequence = name in ("sequence_filter", "flat_sequence")
-        compact = name in ("traverse_filter", "sequence_filter")
-        family = "_SelectingTraversal[Self.I]" if compact else "_FlatteningTraversal[Self.I]"
+        operation = TRAVERSALS[name]
+        sequence, compact = operation.sequence, operation.compact
+        family = f"{operation.selected_family}[Self.I]"
         element = "Self.I.Element[Self.V]"
         identity = f"Identity[{element}]"
         callbacks = ([dict(params=[],argument="",adapter_type=identity,build=f"{identity}()",result=element,error="Never",conditions=[])]
@@ -541,11 +542,10 @@ def methods(*, fold_stage=False):
             if "//" not in params: params += ["//"]
             params.insert(params.index("//") + 1, "J: Applicative")
             c, result = cb["adapter_type"], cb["result"]
-            traversed = f"{family}.Traversed[J, Self.V, {c}]"
-            finish = f"{'_CompactAfter' if compact else '_FlattenAfter'}[{family}, J.Element[{traversed}]]"
-            error = f"_CommonError[{family}.TraverseError[J, Self.V, {c}], J.MapError[{traversed}, {finish}]]"
+            plan = operation.postprocess(family, "J", "Self.V", c)
+            traversed, finish, error = plan.traversed, plan.finish, plan.error
             conditions = ["conforms_to(Self.I, Traversable)",
-                          "conforms_to(Self.I, FunctorFilter)" if compact else "conforms_to(Self.I, Monad)"] + cb["conditions"]
+                          f"conforms_to(Self.I, {operation.source_capability})"] + cb["conditions"]
             conditions += [f"_TraverseCompatible[{family}, Self.V, {c}]",
                            f"_CollectCompatible[J, Self.V, {c}]", f"_CarrierCompatible[J, {result}]",
                            f"_MapCompatible[J, {traversed}, {finish}]"]
@@ -554,18 +554,19 @@ def methods(*, fold_stage=False):
             else:
                 conditions += [f"_CarrierCompatible[{family}, J.Element[{result}]]",
                                f"_BindCompatible[{family}, J.Element[{traversed}], Identity[{family}.Element[J.Element[{traversed}]]]]"]
-            expr = f"_traverse_then[{family}, J, Self.V, {c}, {finish}, {error}]({cb['build']}, self.value^, {finish}())"
-            emit(name, cb, params, cb["argument"], f"J.Mapped[{traversed}, {finish}]", error,
+            expr = plan.invoke(family, "J", "Self.V", c, error, cb["build"], "self.value^")
+            emit(name, cb, params, cb["argument"], plan.result, error,
                  "J", conditions, expr, "Traverse and finish inside the selected target effect.")
 
     # Native sources discard successful output; Result traversal retains its
     # source error layer through the existing composition/void policy.
     for name in ("traverse_void", "sequence_void"):
+        operation = TRAVERSALS[name]
         for retained_error in (False, True):
             element = "Self.I.Element[Self.V]" if retained_error else "_FoldElement[Self.V]"
             identity = f"Identity[{element}]"
             callbacks = ([dict(params=[],argument="",adapter_type=identity,build=f"{identity}()",result=element,error="Never",conditions=[])]
-                         if name == "sequence_void" else owning_callbacks("owned", element, "function"))
+                         if operation.sequence else owning_callbacks("owned", element, "function"))
             for cb in callbacks:
                 params = list(cb["params"])
                 if "//" not in params: params += ["//"]

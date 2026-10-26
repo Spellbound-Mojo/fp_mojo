@@ -93,6 +93,14 @@ evaluation; no operation object, storage box or extra function-valued dispatch
 layer is introduced. Existing free-traversal admission is preserved through
 the contract's individual input and collection projections.
 
+Terminal and traversal syntax share `scripts/operation_specs.py`. It owns
+callback mode, retention and postprocessing choices, associated result/error
+expressions, and existing execution targets. Selected Pipeline and legacy
+free/Piped/Iter emitters keep their own inference barriers, parameter order
+and admission strength. Sharing an operation policy must not add a selected
+constraint to a legacy generic forward. This extraction preserves every
+generated Mojo byte; the existing generator-parity checks cover both surfaces.
+
 ## Native signatures and storage
 
 Native family recognition requires only Functor; Applicative entry points

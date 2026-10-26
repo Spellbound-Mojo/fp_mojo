@@ -1,5 +1,6 @@
 """Thin terminal admission signatures shared by free functions and fluent APIs."""
 from combinator_docs import document_first_methods
+from operation_specs import TERMINALS
 from native_signatures import MD, callable_protocol, native_adapter
 
 START = '# --- terminal syntax (generated) ---\n'
@@ -15,10 +16,11 @@ def terminal_methods(mode, carrier=None):
                   ('min_by', None), ('max_by', None),
                   ('sum', 'Int'), ('sum', 'SIMD'), ('sum_by', 'Int'), ('sum_by', 'SIMD')]
     for name, numeric in operations:
-        callback_arg = name not in {'sum', 'combine_all'}
+        operation = TERMINALS[name]
+        callback_arg = operation.callback
         for kind in (('pure', 'raising', 'library') if callback_arg else ('none',)):
             native = kind in {'pure', 'raising'}
-            borrowing = name in {'min_by', 'max_by'}
+            borrowing = operation.borrowing
             params, explicit = [], []
             numeric_type = 'Int' if numeric == 'Int' else 'SIMD[dtype, size]'
             if numeric == 'SIMD': params += ['dtype: DType', 'size: SIMDLength']
@@ -61,18 +63,19 @@ def terminal_methods(mode, carrier=None):
             if numeric and callback_arg: condition += f' and {callback_result} == {numeric_type}'
             if borrowing: condition += f' and conforms_to({callback_result}, Comparable & {MD})'
             if name == 'find_map':
-                result, raised, call = callback_result, error, f'_find_map({build}, {source})'
-                run = f'_FindMapRun[{cb}]'
+                result, raised = operation.result(element, callback_result, ''), error
+                call = operation.invoke('', build, source)
+                run = operation.runner(element, cb, '', raised)
             elif borrowing:
-                result, raised = f'Optional[{element}]', error
-                call = f'_extremum[T={element}, C={cb}, smallest={str(name == "min_by")}]({build}, {source})'
-                run = f'_ExtremumRun[{element}, {cb}, {str(name == "min_by")}]'
+                result, raised = operation.result(element, callback_result, ''), error
+                call = operation.invoke(f'T={element}, C={cb}, smallest={operation.smallest}', build, source)
+                run = operation.runner(element, cb, '', raised)
             else:
                 monoid = '_IntSum' if numeric == 'Int' else '_SIMDSum[dtype, size]' if numeric else 'M'
-                result = numeric_type if numeric else 'M.Value'
-                raised = error if numeric else f'_CommonError[{error}, M.Error]'
-                call = f'_fold_map[M={monoid}' + (f', E={error}' if numeric else '') + f']({build}, {source})'
-                run = f'_FoldMapRun[{cb}, {monoid}, {raised}]'
+                result = operation.result(element, callback_result, numeric_type if numeric else 'M.Value')
+                raised = operation.error(error, None if numeric else 'M.Error')
+                call = operation.invoke(f'M={monoid}' + (f', E={error}' if numeric else ''), build, source)
+                run = operation.runner(element, cb, monoid, raised)
             if mode == 'piped':
                 boundary = {'Dict': '_dict_terminal', 'StringDict': '_string_dict_terminal',
                             'Array': '_array_terminal'}.get(carrier.name, '_run_terminal')
@@ -80,15 +83,7 @@ def terminal_methods(mode, carrier=None):
             args = ([arg] if arg else []) + (['var source: V'] if mode == 'free' else [])
             if mode != 'free': args.insert(0,'deinit self')
             indent = '' if mode == 'free' else '    '
-            doc = {
-                'find_map':'Return the first present transformed result, stopping without another pull.',
-                'fold_map':'Project and combine in order with a monoid; empty input returns its identity.',
-                'combine_all':'Combine in order with a monoid; empty input returns its identity.',
-                'min_by':'Return the element with the smallest key; empty input is absent and ties keep the first.',
-                'max_by':'Return the element with the largest key; empty input is absent and ties keep the first.',
-                'sum':'Add in order from zero, preserving the numeric type and SIMD lanes.',
-                'sum_by':'Project and add in one pass from zero, without an intermediate collection.',
-            }[name]
+            doc = operation.summary
             param_text = '['+', '.join(params)+']' if params else ''
             out.append(f'\n{indent}def {name}{param_text}({", ".join(args)}) raises {raised} -> {result} where {condition}:\n')
             out.append(f'{indent}    """{doc}"""\n')
