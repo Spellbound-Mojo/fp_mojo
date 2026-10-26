@@ -123,6 +123,15 @@ and admission strength. Sharing an operation policy must not add a selected
 constraint to a legacy generic forward. This extraction preserves every
 generated Mojo byte; the existing generator-parity checks cover both surfaces.
 
+Result, legacy Piped and selected Pipeline also share ResultOperation descriptors
+in `operation_specs.py`: callback ownership, payload/argument roles, conditional
+continuation results, output carriers and native error combination spelling.
+Each emitter retains the native evidence available at its boundary, including
+when literal Never can simplify a generic error. Result-specific inference
+exceptions and positional bindings stay local; the descriptor never adds a
+selected constraint to a legacy overload. The catalog extraction preserves all
+generated Mojo bytes and is covered by generated-source parity checks.
+
 ## Native signatures and storage
 
 Native family recognition requires only Functor; Applicative entry points

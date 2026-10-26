@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from itertools import product
 from native_signatures import callable_protocol, native_adapter
+from operation_specs import RESULT_DOCS as DOCS, RESULT_OUTCOMES as OUTCOMES, RESULT_OPERATIONS
 
 MD = 'Movable & Deinitable'
 START = '    # --- Result combinators (generated) ---\n'
@@ -40,21 +41,6 @@ def callback(mode, kind, arg='function', second=False):
     return Callback(params, explicit, f'ref[{o}] {arg}: {f}', typ, f'{typ}(Pointer(to={arg}))', p, r, error, mode)
 
 
-DOCS = {
-    'flat_tap': ('Sequence a borrowed Result projection and retain the original success value.', 'The projection runs only on Ok. Its Err replaces the success; its Ok payload is discarded. The original payload is moved, never copied.'),
-    'flat_pair_with': ('Sequence a borrowed Result projection and retain both success values.', 'The projection runs only on Ok. Its Err replaces the success; its Ok payload is paired with the moved original. Neither payload needs Copyable.'),
-    'followed_by': ('On success, call a zero-argument factory and return its Result.', 'The factory runs at most once and is skipped on Err. The preceding success payload is discarded.'),
-    'before': ('On success, call a zero-argument factory and retain the original value.', 'The factory runs at most once and is skipped on Err. Its Err replaces the success; its Ok payload is discarded. The original payload is moved, never copied.'),
-    'ensure': ('Keep an accepted success or construct a stored error from its borrowed value.', 'The predicate runs only on Ok; the error factory runs only when the predicate returns False. Both borrow the success payload. The original Err passes through unchanged.'),
-    'recover': ('Recover a stored error as a success, retaining the Result error type.', 'The callback consumes the error and returns the original success type. Ok passes through unchanged. This returns Result[T, E], not an unwrapped value.'),
-    'tap_err': ('Inspect a borrowed stored error and retain the Result.', 'The inspector runs only on Err. Its return value is discarded; the error is moved back unchanged. Ok passes through without inspection.'),
-    'recover_if': ('Recover a matching stored error as a success.', 'Only Err runs the borrowing predicate. On True, the recovery consumes the error and returns the success type. On False, the original error remains. The stored error type stays unchanged.'),
-    'or_else_if': ('Continue a matching stored error with a Result.', 'Only Err runs the borrowing predicate. On True, the recovery consumes the error and returns Result[T, E]; on False, the original error remains. Both success and stored error types stay unchanged.'),
-    'flat_tap_err': ('Sequence a borrowed error projection and retain the original error on success.', 'The projection runs only on Err and must return Result[U, E]. Its Ok payload is discarded and the original error is retained; its Err replaces that error. Ok passes through unchanged.'),
-    'attempt_tap': ('Sequence an observer of the whole Result and retain its outcome on observer success.', 'The observer borrows the entire Result, runs once on either branch and returns Result[U, E]. Its Ok payload is discarded and the original Result is retained; its Err replaces the original outcome. Native raised errors remain raised.'),
-    'map_err': ('Transform the stored error of a Result.', 'This forwards to Result.map_err, including changes to the stored error type. Ok passes through unchanged.'),
-    'or_else': ('Continue a failed Result with the callback Result.', 'This forwards to Result.or_else, including changes to the stored error type. The success type stays the same; Ok passes through unchanged.'),
-}
 
 
 def methods(piped=False):
@@ -62,18 +48,19 @@ def methods(piped=False):
     t, e = ('T', 'Failure') if piped else ('Self.T', 'Self.E')
     source = f'Result[{t}, {e}]'
     for name, (summary, detail) in DOCS.items():
-        if piped and name in ('flat_tap', 'flat_pair_with', 'followed_by', 'before'):
+        operation = RESULT_OPERATIONS[name]
+        primary = operation.callbacks[0]
+        if piped and operation.sequence:
             continue
         if not piped and name in ('map_err', 'or_else'):
             continue
-        conditional = name in ('ensure', 'recover_if', 'or_else_if')
-        selective = name in ('recover_if', 'or_else_if')
-        mode = 'owned' if name in ('recover', 'map_err', 'or_else') else 'thunk' if name in ('followed_by', 'before') else 'borrow'
+        conditional, selective = operation.conditional, operation.selective
+        mode = primary.mode
         kinds = ('library', 'pure', 'raising')
         combinations = product(kinds, kinds) if conditional else ((k, None) for k in kinds)
         for kind, other in combinations:
             t, e = ('T', 'Failure') if piped else ('Self.T', 'Self.E')
-            cb = callback(mode, kind, 'predicate' if conditional else 'function')
+            cb = callback(mode, kind, primary.argument)
             if piped and name == 'or_else' and kind != 'library':
                 cb.explicit.append(f'U: {MD} = downcast[R, _ResultType].Error')
             inferred_recovery = piped and name == 'recover' and kind != 'library'
@@ -93,36 +80,28 @@ def methods(piped=False):
                 cb.build = f'{cb.type}(Pointer(to=function))'
             cbs = [cb]
             if other is not None:
-                cbs.append(callback('owned' if selective else 'borrow', other, 'function' if selective else 'make_error', second=True))
+                secondary = operation.callbacks[1]
+                cbs.append(callback(secondary.mode, other, secondary.argument, second=True))
             params = ([f'T: {MD}', f'Failure: {MD}'] if piped and not inferred_recovery else []) + sum((c.parameters for c in cbs), [])
             explicit = sum((c.explicit for c in cbs), [])
             if explicit:
                 params += ['//', *explicit]
             conditions = ([f'Self.Value == {source}'] if piped else [])
             if mode != 'thunk' and not (name in ('attempt_tap', 'flat_tap_err') and kind != 'library'):
-                conditions.append(f'{cb.payload} == '+(source if name == 'attempt_tap' else e if name in ('recover', 'map_err', 'or_else', 'tap_err', 'flat_tap_err', 'recover_if', 'or_else_if') else t))
+                conditions.append(f'{cb.payload} == '+primary.input(t, e))
             if piped and name == 'or_else' and kind != 'library':
                 conditions.append('R == Result[T, U]')
-            if name == 'recover': conditions.append(f'{cb.result} == {t}')
-            if name == 'flat_tap_err':
-                conditions.append(f'{cb.result} == Result[downcast[{cb.result}, _ResultType].Value, {e}]')
-            if name == 'attempt_tap':
-                # Origins must be checked at admission: a late body assertion
-                # cannot distinguish all embedded origins on Mojo 1.1.
-                conditions.append(f'{cb.result} == Result[downcast[{cb.result}, _ResultType].Value, {e}]')
+            conditions += operation.first_constraints(t, e, cb.result,
+                value=lambda r: f'downcast[{r}, _ResultType].Value',
+                failure=lambda r: f'downcast[{r}, _ResultType].Error')
             if name in ('flat_tap_err', 'attempt_tap') and kind != 'library':
                 conditions.append('U == downcast[R, _ResultType].Value')
             if conditional:
-                expected = (t if name == 'recover_if' else source) if selective else e
-                conditions += [f'{cb.result} == Bool', f'{cbs[1].payload} == '+(e if selective else t), f'{cbs[1].result} == {expected}']
-            result = source
-            if name == 'flat_pair_with': result = f'Result[Tuple[{t}, downcast[{cb.result}, _ResultType].Value], {e}]'
-            elif name in ('followed_by', 'or_else'): result = cb.result
-            elif name == 'map_err': result = f'Result[{t}, {cb.result}]'
-            error = cb.error if not conditional else f'_CommonError[{cb.error}, {cbs[1].error}]'
-            # A native pure continuation supplies exact Never evidence here.
-            # Keep a symbolic predicate error exact for generic forwarders.
-            if selective and other == 'pure': error = cb.error
+                expected = operation.second_result(t, e)
+                conditions += [f'{cb.result} == Bool', f'{cbs[1].payload} == '+operation.callbacks[1].input(t, e), f'{cbs[1].result} == {expected}']
+            result = operation.result(t, e, cb.result, value=lambda r: f'downcast[{r}, _ResultType].Value')
+            error = operation.native_error(cb.error, cbs[1].error if conditional else None,
+                pure_second=selective and other == 'pure')
             prelude = ''
             builds = ', '.join(c.build for c in cbs)
             if piped:
@@ -205,11 +184,6 @@ def methods(piped=False):
     return ''.join(out)+'\n'
 
 
-OUTCOMES = {
-    'map_both': ('Transform either payload, preserving its Result constructor.', 'The selected handler consumes its payload. The success and stored error types may both change.'),
-    'redeem': ('Turn either branch into a success with a common value type.', 'Both handlers return the same value type. The selected result is wrapped in Ok, retaining the original stored error type.'),
-    'redeem_with': ('Continue either branch with the selected handler Result.', 'Both handlers return the same Result type, which may change both success and stored error types. Only the original branch selects a handler; a returned Err never invokes the other handler.'),
-}
 
 
 def outcome_methods(piped=False):
@@ -218,9 +192,11 @@ def outcome_methods(piped=False):
     t, e = ('T', 'Failure') if piped else ('Self.T', 'Self.E')
     source = f'Result[{t}, {e}]'
     for name, (summary, detail) in OUTCOMES.items():
+        operation = RESULT_OPERATIONS[name]
+        primary, secondary = operation.callbacks
         for first, second in product(('library', 'pure', 'raising'), repeat=2):
-            ok = callback('owned', first, 'on_ok')
-            err = callback('owned', second, 'on_err', second=True)
+            ok = callback(primary.mode, first, primary.argument)
+            err = callback(secondary.mode, second, secondary.argument, second=True)
             # Infer native results independently before constraining equality.
             # Unifying them inside the native signature crashes Mojo 1.2 when
             # a positional family binding considers these Result overloads.
@@ -246,9 +222,9 @@ def outcome_methods(piped=False):
             if second == 'library': where.append(f'{err.payload} == {e}')
             if name != 'map_both': where.append(f'{ok.result} == {err.result}')
             if first != 'pure' and second != 'pure':
-                where.append(f'({ok.error} == Never or {err.error} == Never or {ok.error} == {err.error})')
-            error = err.error if first == 'pure' else ok.error if second == 'pure' else f'_CommonError[{ok.error}, {err.error}]'
-            result = f'Result[{ok.result}, {err.result}]' if name == 'map_both' else f'Result[{ok.result}, {e}]' if name == 'redeem' else ok.result
+                where.append(operation.error_constraint(ok.error, err.error))
+            error = operation.native_error(ok.error, err.error, pure_first=first == 'pure', pure_second=second == 'pure')
+            result = operation.result(t, e, ok.result, err.result, value=lambda r: f'downcast[{r}, _ResultType].Value')
             prelude = ''
             if piped:
                 effects = (['X=X'] if first == 'raising' else []) + (['Y=Y'] if second == 'raising' else [])

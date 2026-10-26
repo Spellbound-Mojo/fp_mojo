@@ -5,7 +5,7 @@ from itertools import product
 from native_signatures import Operand, variants, argument as native_argument, callable_protocol, native_adapter
 import re
 from api_docs import parse_signature
-from generate_result_syntax import DOCS, OUTCOMES
+from operation_specs import RESULT_OPERATIONS
 from generate_plain_overloads import splice_source
 from generate_nary_syntax import MAX
 from generate_pipeline_syntax import TRANSFORMS
@@ -778,25 +778,15 @@ def methods(*, fold_stage=False):
             emit(name, cb, cb["params"], cb["argument"], result, error, "Self.I", conditions,
                  f"_flat_map_as[{error}, {family}, Self.V, {continuation}]({continuation}({built}), self.value^)", summary)
 
-    for name, (summary, detail) in (DOCS | OUTCOMES).items():
-        if name in ("flat_tap", "flat_pair_with", "before", "followed_by"): continue
-        two = name in ("ensure", "recover_if", "or_else_if") or name in OUTCOMES
-        mode = (
-            "owned"
-            if name in ("recover", "map_err", "or_else") or name in OUTCOMES
-            else "borrow"
-        )
-        payload = (
-            T
-            if name == "ensure" or name in OUTCOMES
-            else Source if name == "attempt_tap" else Err
-        )
-        arg = "on_ok" if name in OUTCOMES else "predicate" if two else "function"
-        left = list(native_callbacks(mode, payload, arg))
+    for name, operation in RESULT_OPERATIONS.items():
+        if operation.sequence: continue
+        summary, detail = operation.documentation
+        two = len(operation.callbacks) == 2
+        primary = operation.callbacks[0]
+        left = list(native_callbacks(primary.mode, primary.input(T, Err), primary.argument))
         if two:
-            mode2 = "borrow" if name == "ensure" else "owned"
-            arg2 = "on_err" if name in OUTCOMES else "make_error" if name == "ensure" else "function"
-            right = native_callbacks(mode2, T if name == "ensure" else Err, arg2, second=True)
+            secondary = operation.callbacks[1]
+            right = native_callbacks(secondary.mode, secondary.input(T, Err), secondary.argument, second=True)
             combinations = product(left, right)
         else:
             combinations = ((cb, None) for cb in left)
@@ -806,40 +796,22 @@ def methods(*, fold_stage=False):
                 (c["conditions"] for c in callbacks), []
             )
             R = a["result"]
-            result = Source
-            if name == "recover":
-                conditions += [f"{R} == {T}"]
-            if name in ("flat_tap_err", "attempt_tap"):
-                conditions += [f"{R} == Result[_Success[{R}], {Err}]"]
-            if name == "map_err":
-                result = f"Result[{T}, {R}]"
-            if name == "or_else":
-                conditions += [f"{R} == Result[{T}, _Failure[{R}]]"]
-                result = R
+            result = operation.result(T, Err, R, b["result"] if two else "", value=lambda r: f"_Success[{r}]")
+            conditions += operation.first_constraints(T, Err, R,
+                value=lambda r: f"_Success[{r}]", failure=lambda r: f"_Failure[{r}]", continuation=True)
             if two:
                 S = callbacks[1]["result"]
                 ex = a["error"]
                 ey = callbacks[1]["error"]
-                if name in OUTCOMES:
-                    if name == "map_both":
-                        result = f"Result[{R}, {S}]"
-                    else:
+                if operation.outcome:
+                    if operation.output != "both":
                         conditions += [f"{R} == {S}"]
-                        result = R if name == "redeem_with" else f"Result[{R}, {Err}]"
                     if name == "redeem_with":
                         conditions += [f"{R} == Result[_Success[{R}], _Failure[{R}]]"]
                 else:
-                    conditions += [
-                        f"{R} == Bool",
-                        f"{S} == "
-                        + (Err if name == "ensure" else T if name == "recover_if" else Source),
-                    ]
-                conditions += [f"({ex} == Never or {ey} == Never or {ex} == {ey})"]
-                effect = (
-                    ey
-                    if ex == "Never"
-                    else ex if ey == "Never" else f"_CommonError[{ex}, {ey}]"
-                )
+                    conditions += [f"{R} == Bool", f"{S} == " + operation.second_result(T, Err)]
+                conditions += [operation.error_constraint(ex, ey)]
+                effect = operation.native_error(ex, ey, pure_first=ex == "Never", pure_second=ey == "Never")
             else:
                 effect = a["error"]
             params = []
