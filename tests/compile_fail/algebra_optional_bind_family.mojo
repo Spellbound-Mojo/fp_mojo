@@ -1,4 +1,5 @@
-# error: flat_map: Optional callback required
+# error: no matching function
+# error: BindCompatible
 from fp.algebra import flat_map, OptionalFamily
 from fp.callables import as_unary
 

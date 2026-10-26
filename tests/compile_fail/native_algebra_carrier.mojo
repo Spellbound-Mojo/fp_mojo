@@ -1,4 +1,5 @@
-# error: algebra: Optional carrier required
+# error: no matching function
+# error: MapCompatible
 from fp.algebra import map, OptionalFamily
 
 def twice(value: Int) -> Int:

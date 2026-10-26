@@ -1,8 +1,6 @@
 """Signature constraints preserving nominal carriers and embedded origins."""
-from fp.algebra.protocols import Functor, Applicative, Monad
+from fp.algebra.protocols import Functor, Applicative, Monad, Traversable
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract
-from fp.data._result import _ResultType
-from fp.functions.composition import Identity
 
 # Public family predicates let generic forwarders state their preconditions.
 comptime _MapCompatible[I: Functor, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = I.MapCompatible[V, F]
@@ -14,7 +12,5 @@ comptime _CollectCompatible[I: Applicative, V: Movable & Deinitable, F: UnaryCon
 # Fixed-carrier and family checks are shared by traversal and conditional admission. Keeping
 # it in a signature matters: a body-level rebind/identity assertion can accept
 # different embedded origins on Mojo 1.1. Deferred carriers need not equal Pure.
-comptime _CarrierCompatible[I: Applicative, V: Movable & Deinitable] = (
-    _MapCompatible[I, V, Identity[I.Element[V]]] and
-    (V == I.Pure[I.Element[V]] if conforms_to(I.Pure[NoneType], _ResultType) else True)
-)
+comptime _CarrierCompatible[I: Applicative, V: Movable & Deinitable] = I.CarrierCompatible[V]
+comptime _TraverseCompatible[I: Traversable, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = I.TraverseCompatible[V, F]

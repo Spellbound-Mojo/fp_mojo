@@ -9,6 +9,27 @@ as `Result.map`.
 The [algebra tutorial](../tutorial/algebra.md) explains when to use `map`,
 `map2`, `ap`, `flat_map`, `traverse` and `sequence` through optional order values.
 
+Generic extensions can state admission using public family predicates.
+`Applicative.CarrierCompatible[V]` checks a produced carrier, including its
+stored-error type and origins. `Traversable.TraverseCompatible[V, F]` checks a
+source and callback. A selected traversal forwards these predicates together
+with `S.Element[V] == F.Arg` and the target's `CollectCompatible[V, F]`.
+
+ListFamily mapping requires a native List, while ListFamily traversal also
+accepts an owned iterable or an existing iterator. For example,
+`pipeline[ListFamily](array^).traverse[OptionalFamily](check)` collects an Array
+through the same source driver. An iterator resumes at its current position.
+NonEmptyListFamily mapping and traversal require a NonEmptyList; filtering
+continues to produce a possibly empty List. Custom families can override the
+public predicates to describe their own representations.
+
+Generic wrappers with an abstract callback return type `R` must forward the
+target proof, such as `where OptionalFamily.CarrierCompatible[R]`. This also
+applies to legacy sequencing, effect searches and folds. Mojo 1.2 does not
+always derive the full carrier proof from an equality like `R == Optional[A]`;
+use the public predicate alongside the operation's payload and error constraints.
+Ordinary calls infer their concrete carrier types as before.
+
 `filter[ListFamily](predicate, values^)` and
 `filter[OptionalFamily](predicate, value^)` retain accepted original payloads.
 `filter_not[Family](predicate, value^)` retains rejected payloads through the

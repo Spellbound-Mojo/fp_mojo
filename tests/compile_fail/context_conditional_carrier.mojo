@@ -1,4 +1,5 @@
-# error: branches of an eager family must have one carrier type
+# error: no matching method
+# error: CarrierCompatible
 from fp.functions import pipeline
 from fp.data import Result,Ok,Err
 from fp.effects import Reader,run

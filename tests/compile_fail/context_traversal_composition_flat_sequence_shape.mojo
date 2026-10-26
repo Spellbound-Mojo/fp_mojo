@@ -1,4 +1,5 @@
-# error: List callback required
+# error: invalid call to 'flat_sequence': violated constraint
+# error: CarrierCompatible
 from fp.functions import pipeline
 from fp.algebra import OptionalFamily, ResultFamily
 from fp.data import Result, Ok

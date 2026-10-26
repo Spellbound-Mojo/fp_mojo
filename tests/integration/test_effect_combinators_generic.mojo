@@ -8,17 +8,17 @@ from std.testing import assert_equal, assert_true
 
 
 def efg_fold[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //,
-             F: def(var A, var B) raises X -> R](ref function: F, var initial: A, var values: List[B]) raises X -> Optional[A] where R == Optional[A] and OptionalFamily.Element[R] == A:
+             F: def(var A, var B) raises X -> R](ref function: F, var initial: A, var values: List[B]) raises X -> Optional[A] where R == Optional[A] and OptionalFamily.Element[R] == A and OptionalFamily.CarrierCompatible[R]:
     return piped(values^).fold_effect[G=OptionalFamily, A=A, B=B, R=R, X=X, Z=X](function,initial^).get()
 
 
 def efg_any[P: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(P) raises E -> R](ref function: F, var values: List[P]) raises E -> Optional[Bool] where R == Optional[Bool] and OptionalFamily.Element[R] == Bool:
+            F: def(P) raises E -> R](ref function: F, var values: List[P]) raises E -> Optional[Bool] where R == Optional[Bool] and OptionalFamily.Element[R] == Bool and OptionalFamily.CarrierCompatible[R]:
     return iterated(values^).any_effect[G=OptionalFamily, P=P, R=R, E=E, X=E](function)
 
 
 def efg_choose[U: Movable & Deinitable, W: Movable & Deinitable, Y: Movable & Deinitable, //,
-               L: def() raises Y -> U, R: def() -> W](ref on_true: L, ref on_false: R, var condition: Optional[Bool]) raises Y -> U where W == U and U == Optional[Int] and OptionalFamily.Element[U] == OptionalFamily.Element[W]:
+               L: def() raises Y -> U, R: def() -> W](ref on_true: L, ref on_false: R, var condition: Optional[Bool]) raises Y -> U where W == U and U == Optional[Int] and OptionalFamily.Element[U] == OptionalFamily.Element[W] and OptionalFamily.CarrierCompatible[U] and OptionalFamily.CarrierCompatible[W]:
     return if_effect[G=OptionalFamily, U=U, W=W, Y=Y, X=Y](on_true,on_false,condition^)
 
 

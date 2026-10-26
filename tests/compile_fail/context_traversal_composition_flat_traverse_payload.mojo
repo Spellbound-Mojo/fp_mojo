@@ -1,4 +1,5 @@
-# error: List callback required
+# error: no matching method
+# error: CarrierCompatible
 from fp.functions import pipeline
 from fp.algebra import OptionalFamily, ResultFamily
 from fp.data import Result, Ok

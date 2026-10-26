@@ -116,11 +116,13 @@
     },
     "algebra": {
       "scope": "Family primitives, laws, shared traversal, sequential and accumulating policies.",
-      "restrictions": "Public admission predicates are the generic extension contract. Audit coverage beyond Result/Validation and Ior remains a planned pass.",
+      "restrictions": "Public carrier and operation predicates are the generic extension contract. Native Optional, List, Result, Validation and NonEmptyList admission is covered; deferred-family admission remains a planned pass.",
       "evidence": [
         "docs/examples/algebra_core.mojo",
         "docs/examples/algebra_traversal.mojo",
-        "docs/examples/parallel_validation.mojo"
+        "docs/examples/parallel_validation.mojo",
+        "tests/runtime/test_context_family_admission_generic.mojo",
+        "tests/ownership/test_context_family_admission_ownership.mojo"
       ]
     },
     "effects": {
@@ -283,7 +285,9 @@
         "tests/runtime/test_context_traversal_behavior.mojo",
         "tests/runtime/test_context_traversal_generic.mojo",
         "tests/runtime/test_context_traversal_origins.mojo",
-        "tests/ownership/test_context_traversal_ownership.mojo"
+        "tests/ownership/test_context_traversal_ownership.mojo",
+        "tests/runtime/test_context_family_admission.mojo",
+        "tests/runtime/test_context_family_admission_generic.mojo"
       ]
     },
     {

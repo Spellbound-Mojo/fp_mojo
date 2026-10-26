@@ -29,6 +29,7 @@ struct ValidationFamily[S: Semigroup](ApplicativeError):
     """
     comptime Element[V: Movable & Deinitable] = ResultFamily[Self.S.Value].Element[V]
     comptime Failure = Self.S.Value
+    comptime CarrierCompatible[V: Movable & Deinitable] = ResultFamily[Self.S.Value].CarrierCompatible[V]
     comptime _ErrorCarrier[V: Movable & Deinitable] = ResultFamily[Self.S.Value]._ErrorCarrier[V]
     # Validation changes error accumulation, not the native Result carrier.
     comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = ResultFamily[Self.S.Value].MapCompatible[V, F]

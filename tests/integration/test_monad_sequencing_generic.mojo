@@ -2,13 +2,13 @@
 from fp.functions import piped
 from fp.iteration import iterated
 from fp.data import Result, Ok
-from fp.algebra import ResultFamily, OptionalFamily
+from fp.algebra import ResultFamily, OptionalFamily, ListFamily
 from std.testing import assert_equal
 
 
 def msg_optional[P: Movable & Deinitable,R: Movable & Deinitable,X: Movable & Deinitable,
                  C: def(P) raises X -> R](var value: Optional[P],ref function: C
-) raises X -> Optional[P]:
+) raises X -> Optional[P] where OptionalFamily.CarrierCompatible[R]:
     return piped(value^).flat_tap[P=P,R=R,X=X](function).get()
 
 
@@ -20,7 +20,7 @@ def msg_result[P: Movable & Deinitable,R: Movable & Deinitable,E: Movable & Dein
 
 def msg_pair[P: Movable & Deinitable,R: Movable & Deinitable,X: Movable & Deinitable,
              C: def(P) raises X -> R](var value: Optional[P],ref function: C
-) raises X -> Optional[Tuple[P,OptionalFamily.Element[R]]]:
+) raises X -> Optional[Tuple[P,OptionalFamily.Element[R]]] where OptionalFamily.CarrierCompatible[R]:
     return piped(value^).flat_pair_with[P=P,R=R,X=X](function).get()
 
 
@@ -32,13 +32,13 @@ def msg_result_pair[P: Movable & Deinitable,R: Movable & Deinitable,E: Movable &
 
 def msg_before[T: Movable & Deinitable,R: Movable & Deinitable,X: Movable & Deinitable,
                C: def() raises X -> R](var value: List[T],ref function: C
-) raises X -> List[T] where conforms_to(T,Copyable):
+) raises X -> List[T] where conforms_to(T,Copyable) and ListFamily.CarrierCompatible[R]:
     return piped(value^).before[R=R,X=X](function).get()
 
 
 def msg_after[T: Movable & Deinitable,R: Movable & Deinitable,X: Movable & Deinitable,
               C: def() raises X -> R](var value: List[T],ref function: C
-) raises X -> R:
+) raises X -> R where ListFamily.CarrierCompatible[R]:
     return piped(value^).followed_by[R=R,X=X](function).get()
 
 

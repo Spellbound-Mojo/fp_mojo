@@ -1,4 +1,5 @@
-# error: does not have witness table
+# error: no matching method
+# error: CarrierCompatible
 from fp.iteration import iterated
 from fp.algebra import OptionalFamily
 from fp.data import Result, Ok

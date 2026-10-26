@@ -5,7 +5,7 @@ from fp.algebra import OptionalFamily, StringMonoid, ListMonoid
 from std.testing import assert_equal
 
 
-def i6g_find[P:Movable & Deinitable,R:Movable & Deinitable,E:Movable & Deinitable,//,F:def(P) raises E -> R](ref function:F,var values:List[P]) raises E ->Optional[Optional[P]] where R==Optional[Bool] and OptionalFamily.Element[R]==Bool:
+def i6g_find[P:Movable & Deinitable,R:Movable & Deinitable,E:Movable & Deinitable,//,F:def(P) raises E -> R](ref function:F,var values:List[P]) raises E ->Optional[Optional[P]] where R==Optional[Bool] and OptionalFamily.Element[R]==Bool and OptionalFamily.CarrierCompatible[R]:
     return iterated(values^).find_effect[G=OptionalFamily,P=P,R=R,E=E,X=E](function)
 
 
@@ -13,7 +13,7 @@ def i6g_map[A:Movable & Deinitable,B:Movable & Deinitable,E:Movable & Deinitable
     return find_map_effect[G=OptionalFamily,A=A,E=E,X=E](function,values^)
 
 
-def i6g_fold[A:Movable & Deinitable,R:Movable & Deinitable,E:Movable & Deinitable,//,F:def(var A) raises E -> R](ref function:F,var values:List[A]) raises E ->Optional[String] where R==Optional[String] and OptionalFamily.Element[R]==String:
+def i6g_fold[A:Movable & Deinitable,R:Movable & Deinitable,E:Movable & Deinitable,//,F:def(var A) raises E -> R](ref function:F,var values:List[A]) raises E ->Optional[String] where R==Optional[String] and OptionalFamily.Element[R]==String and OptionalFamily.CarrierCompatible[R]:
     return piped(values^).fold_map_effect[G=OptionalFamily,M=StringMonoid,A=A,R=R,E=E,X=E](function).get()
 
 

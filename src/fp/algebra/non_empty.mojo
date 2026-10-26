@@ -1,5 +1,6 @@
 """Shape-preserving NonEmptyList operations through native List machinery."""
 from std.builtin.rebind import rebind_var
+from std.iter import IterableOwned
 from fp.data.non_empty_list import NonEmptyList
 from fp.callables.protocols import Unary, UnaryContract, BorrowCallable
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
@@ -61,6 +62,8 @@ struct NonEmptyListFamily(Traversable, Filterable, FunctorFilter):
     Applicative retains its failure, branching, evaluation and error policies.
     This family does not introduce a second collection loop.
     """
+    comptime CarrierCompatible[V: Movable & Deinitable] = V == NonEmptyList[Self.Element[V]] if conforms_to(V, IterableOwned) else False
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == NonEmptyList[F.Arg]
     comptime Element[V: Movable & Deinitable] = _ListElement[V]
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = NonEmptyList[F.Out]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
@@ -90,7 +93,7 @@ struct NonEmptyListFamily(Traversable, Filterable, FunctorFilter):
         Raises:
             The exact callback error; owned inputs and partial outputs are destroyed.
         """
-        comptime assert V == NonEmptyList[F.Arg], "map: NonEmptyList carrier required"
+        comptime assert Self.MapCompatible[V, F], "map: NonEmptyList carrier required"
         var mapped = ListFamily.map(f^, rebind_var[NonEmptyList[F.Arg]](value^).into_list())
         return _NonEmptyAfter[F.Out]().call(mapped^)
 
@@ -114,7 +117,7 @@ struct NonEmptyListFamily(Traversable, Filterable, FunctorFilter):
             The predicate's exact native error.
         """
         comptime T = Self.Element[V]
-        comptime assert V == NonEmptyList[T]
+        comptime assert Self.CarrierCompatible[V]
         return ListFamily.filter(predicate^, rebind_var[NonEmptyList[T]](value^).into_list())
 
     @staticmethod
@@ -136,7 +139,7 @@ struct NonEmptyListFamily(Traversable, Filterable, FunctorFilter):
         Raises:
             The callback's exact native error.
         """
-        comptime assert V == NonEmptyList[F.Arg], "filter_map: NonEmptyList carrier required"
+        comptime assert Self.MapCompatible[V, F], "filter_map: NonEmptyList carrier required"
         return ListFamily.filter_map(f^, rebind_var[NonEmptyList[F.Arg]](value^).into_list())
 
     @staticmethod
@@ -159,7 +162,7 @@ struct NonEmptyListFamily(Traversable, Filterable, FunctorFilter):
         Raises:
             The exact compatible callback and target errors; native errors stay raised.
         """
-        comptime assert V == NonEmptyList[F.Arg], "traverse: NonEmptyList source required"
+        comptime assert Self.TraverseCompatible[V, F], "traverse: NonEmptyList source required"
         comptime X = Self.TraverseError[G, V, F]
         var collected: G.Collected[List[F.Arg], F]
         try:

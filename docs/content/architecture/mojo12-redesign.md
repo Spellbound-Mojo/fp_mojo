@@ -808,3 +808,41 @@ before releasing a consumed input; directly tail-returning that borrow corrupts
 register payloads at O0 on Mojo 1.2. Both fixes belong to the shared native or
 projection adapters and preserve their existing ownership and error contracts.
 The maintained Result client exercises these cases through ordinary calls.
+
+## Public carrier and traversal-source admission
+
+`Applicative.CarrierCompatible` owns target-carrier admission. Internal
+conditional, combination and traversal helpers delegate that public predicate,
+so generic extensions can carry the complete proof without private imports.
+Its default preserves the existing map-identity check and exact native Result
+carrier rule for third-party dictionaries. Native Optional and List instances
+provide exact shape checks; Result and Validation delegate their established
+stored-error and origin predicates. Deferred carriers are not required to equal
+the family's Pure representation.
+
+`Traversable.TraverseCompatible` is separate from mapping admission. Its
+default uses MapCompatible; ListFamily admits native owned iterables and
+iterators for traversal while mapping requires a List. Selected traversal,
+sequence, retention, postprocessing and validation operations forward the
+actual continuation into this source predicate. The canonical source driver
+still owns Array buffering and iterator advancement.
+
+Native mapping, bind, combination and collection checks share the family
+predicates with their execution assertions. NonEmptyList mapping and traversal
+retain the non-empty carrier requirement. This pass adds no execution loop,
+carrier wrapper or error conversion. It does not yet extend deferred-family
+admission or change the output-family contract of filtering.
+
+The `context_family_admission` clients cover public generic traversal and
+sequence, an external source dictionary, retained defaults for custom
+Result-backed Applicatives, borrowed payload/error origins, current iterator
+positions and move-only Array cleanup. Ordinary invalid calls reject before
+execution without callback-type hints.
+
+Admission is a signature contract for generic forwarding too. Wrappers with an
+abstract callback return type forward `Family.CarrierCompatible[R]`, including
+legacy syntax. The compiler may require that proof even alongside a concrete
+carrier equality; it does not always infer the nominal iterable conformance
+used by carrier projection. The integration clients state these public
+preconditions explicitly and preserve their existing positional bindings,
+borrowed origins and native errors. Concrete user calls need no extra bindings.

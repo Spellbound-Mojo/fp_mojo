@@ -1,4 +1,5 @@
-# error: List callback required
+# error: invalid call to 'flatten': violated constraint
+# error: CarrierCompatible
 from fp.functions import pipeline
 from fp.data import Result,Ok,Err
 from fp.algebra import ValidationFamily,ListMonoid

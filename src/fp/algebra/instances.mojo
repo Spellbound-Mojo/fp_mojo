@@ -4,7 +4,7 @@ Identity is the bare value; Optional, Result and List keep their own storage.
 Result transformations use the owned transformation of the Result methods.
 """
 from std.builtin.rebind import rebind_var, rebind, downcast
-from std.iter import IterableOwned
+from std.iter import IterableOwned, Iterator
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, Unary, BorrowCallable
 from fp.callables.invoke import RepeatableUnary, RepeatableBinary, call_once, call_repeated
 from fp.callables._receiver import _unary_once_as, _binary_once_as, _binary_repeated_as, _thunk_once_as
@@ -175,6 +175,11 @@ struct IdentityFamily(Monad, Traversable):
 
 struct OptionalFamily(Monad, Traversable, Filterable, FunctorFilter, _Lifting):
     """The standard `Optional` as a carrier: an absent value skips callbacks and right operands."""
+    comptime CarrierCompatible[V: Movable & Deinitable] = V == Optional[Self.Element[V]] if conforms_to(V, IterableOwned) else False
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == Optional[F.Arg]
+    comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.MapCompatible[V, F] and Self.CarrierCompatible[F.Out]
+    comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = V == Optional[F.First] and R.Out == Optional[F.Second]
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out]
     comptime Element[V: Movable & Deinitable] = _ListElement[V]
     comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = V
     comptime FilterError[V: Movable & Deinitable, P: BorrowCallable] = P.Failure
@@ -237,7 +242,7 @@ struct OptionalFamily(Monad, Traversable, Filterable, FunctorFilter, _Lifting):
             The predicate's exact error; failure destroys all owned values.
         """
         comptime T = Self.Element[V]
-        comptime assert V == Optional[T] and P.Payload == T and P.Result == Bool
+        comptime assert Self.CarrierCompatible[V] and P.Payload == T and P.Result == Bool
         return rebind_var[V](Self.filter_map(_Select[T, P](predicate^), value^))
 
     @staticmethod
@@ -259,7 +264,7 @@ struct OptionalFamily(Monad, Traversable, Filterable, FunctorFilter, _Lifting):
         Raises:
             The callback's error, unchanged.
         """
-        comptime assert V == Optional[F.Arg], "algebra: Optional carrier required"
+        comptime assert Self.MapCompatible[V, F], "algebra: Optional carrier required"
         var present = rebind_var[Optional[F.Arg]](value^)
         if present:
             return Optional(call_once(f^, present.unsafe_take()))
@@ -302,7 +307,7 @@ struct OptionalFamily(Monad, Traversable, Filterable, FunctorFilter, _Lifting):
         Raises:
             The combiner's or the thunk's error.
         """
-        comptime assert V == Optional[F.First] and R.Out == Optional[F.Second], "map2: same family required"
+        comptime assert Self.CombineCompatible[V, F, R], "map2: same family required"
         comptime E = Self.CombineError[V, F, R]
         comptime assert _ErrorCompatible[E, F.Error] and _ErrorCompatible[E, R.Error], "map2: incompatible native errors"
         var first = rebind_var[Optional[F.First]](left^)
@@ -332,8 +337,8 @@ struct OptionalFamily(Monad, Traversable, Filterable, FunctorFilter, _Lifting):
         Raises:
             The callback's error, unchanged.
         """
-        comptime assert V == Optional[F.Arg], "algebra: Optional carrier required"
-        comptime assert F.Out == Optional[_ListElement[F.Out]], "flat_map: Optional callback required"
+        comptime assert Self.MapCompatible[V, F], "algebra: Optional carrier required"
+        comptime assert Self.CarrierCompatible[F.Out], "flat_map: Optional callback required"
         var present = rebind_var[Optional[F.Arg]](value^)
         if present:
             return call_once(f^, present.unsafe_take())
@@ -361,7 +366,7 @@ struct OptionalFamily(Monad, Traversable, Filterable, FunctorFilter, _Lifting):
         """
         comptime B = G.Element[F.Out]
         comptime E = Self.TraverseError[G, V, F]
-        comptime assert V == Optional[F.Arg], "traverse: Optional source required"
+        comptime assert Self.TraverseCompatible[V, F], "traverse: Optional source required"
         comptime assert G.Pure[Optional[B]] == Self.Traversed[G, V, F], "traverse: target must represent absence and presence with one type"
         comptime assert _ErrorCompatible[E, F.Error] and _ErrorCompatible[E, G.MapError[F.Out, _Present[B]]]
         var present = rebind_var[Optional[F.Arg]](source^)
@@ -432,6 +437,7 @@ struct ResultFamily[E: Movable & Deinitable](Monad, ApplicativeError, Traversabl
     # Keep exact nominal equality as the proof generic forwarders provide.
     # A separate conforms_to premise is redundant and Mojo 1.2 cannot always
     # derive it from that equality before selecting a generic overload.
+    comptime CarrierCompatible[V: Movable & Deinitable] = Self._ErrorCarrier[V]
     comptime _ErrorCarrier[V: Movable & Deinitable] = V == Result[Self.Element[V], Self.E]
     # These signature predicates are the Result family's single admission
     # contract. Body assertions run after origins may have been erased.
@@ -654,6 +660,12 @@ struct ListFamily(Monad, Traversable, Filterable, FunctorFilter):
     exclusive receiver.
     """
     # Traversal also accepts an existing iterator, without restarting it.
+    comptime CarrierCompatible[V: Movable & Deinitable] = V == List[Self.Element[V]] if conforms_to(V, IterableOwned) else False
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == List[F.Arg]
+    comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.MapCompatible[V, F] and Self.CarrierCompatible[F.Out]
+    comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = V == List[F.First] and R.Out == List[F.Second]
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out]
+    comptime TraverseCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.Element[V] == F.Arg if conforms_to(V, Iterator) or conforms_to(V, IterableOwned) else False
     comptime Element[V: Movable & Deinitable] = _Item[V]
     comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = V
     comptime FilterError[V: Movable & Deinitable, P: BorrowCallable] = P.Failure
@@ -692,7 +704,7 @@ struct ListFamily(Monad, Traversable, Filterable, FunctorFilter):
         """
         comptime U = _ListElement[F.Out]
         comptime assert F.Out == Optional[U], "filter_map: Optional result required"
-        comptime assert V == List[F.Arg], "filter_map: List carrier required"
+        comptime assert Self.MapCompatible[V, F], "filter_map: List carrier required"
         return _map_accumulate[V, F, _Keep[_Append[U]], F.Error](f^, value^, List[U]())
 
     @staticmethod
@@ -715,7 +727,7 @@ struct ListFamily(Monad, Traversable, Filterable, FunctorFilter):
             The predicate's exact error; failure destroys all owned values.
         """
         comptime T = Self.Element[V]
-        comptime assert V == List[T] and P.Payload == T and P.Result == Bool
+        comptime assert Self.CarrierCompatible[V] and P.Payload == T and P.Result == Bool
         return rebind_var[V](Self.filter_map(_Select[T, P](predicate^), value^))
 
     @staticmethod
@@ -737,7 +749,7 @@ struct ListFamily(Monad, Traversable, Filterable, FunctorFilter):
         Raises:
             The callback's error, unchanged.
         """
-        comptime assert V == List[F.Arg], "algebra: List carrier required"
+        comptime assert Self.MapCompatible[V, F], "algebra: List carrier required"
         comptime assert RepeatableUnary[F], "List callbacks must be repeatable"
         return _map_accumulate[List[F.Arg], F, _Append[F.Out], F.Error](
             f^, rebind_var[List[F.Arg]](value^), List[F.Out]())
@@ -785,7 +797,7 @@ struct ListFamily(Monad, Traversable, Filterable, FunctorFilter):
         Raises:
             The combiner's or the thunk's error.
         """
-        comptime assert V == List[F.First] and R.Out == List[F.Second], "map2: same family required"
+        comptime assert Self.CombineCompatible[V, F, R], "map2: same family required"
         comptime assert RepeatableBinary[F], "List combination requires a repeatable callback"
         comptime assert conforms_to(F.First, Copyable) and conforms_to(F.Second, Copyable), "List combination copies each element into every pair"
         comptime E = Self.CombineError[V, F, R]
@@ -824,8 +836,8 @@ struct ListFamily(Monad, Traversable, Filterable, FunctorFilter):
             The callback's error, unchanged.
         """
         comptime U = _ListElement[F.Out]
-        comptime assert V == List[F.Arg], "algebra: List carrier required"
-        comptime assert F.Out == List[U], "flat_map: List callback required"
+        comptime assert Self.MapCompatible[V, F], "algebra: List carrier required"
+        comptime assert Self.CarrierCompatible[F.Out], "flat_map: List callback required"
         comptime assert RepeatableUnary[F], "List callbacks must be repeatable"
         var source = iter(rebind_var[List[F.Arg]](value^))
         var result = List[U]()

@@ -18,6 +18,8 @@ from fp.callables._receiver import _unary_repeated_as, _thunk_once_as
 from fp.iteration._advance import _next_optional, _Source, _source
 from fp.iteration._terminal import _append
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
+from fp.functions.composition import Identity
+from fp.data._result import _ResultType
 from fp.callables._receiver import _binary_repeated_as
 
 
@@ -156,6 +158,15 @@ trait Applicative(Functor):
     def _join_right[L: Movable & Deinitable, R: Movable & Deinitable](var value: R) -> Self._Joined[L, R]:
         comptime assert L == R, "choice: branches of an eager family must have one carrier type"
         return rebind_var[Self._Joined[L, R]](value^)
+    comptime CarrierCompatible[V: Movable & Deinitable]: Bool = (
+        Self.MapCompatible[V, Identity[Self.Element[V]]] and
+        (V == Self.Pure[Self.Element[V]] if conforms_to(Self.Pure[NoneType], _ResultType) else True)
+    )
+    """Preserve fixed native Result admission for existing custom dictionaries.
+
+    Families with other carrier shapes override this public predicate.
+    Deferred representations need not equal Pure.
+    """
     comptime Pure[A: Movable & Deinitable]: Movable & Deinitable
     """The carrier `pure` returns for a payload `A`."""
     comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable]: Bool = True
@@ -404,6 +415,8 @@ trait Monad(Applicative):
 
 trait Traversable(Functor):
     """A source shape whose elements can be visited with an effectful callback, keeping the shape: `traverse`."""
+    comptime TraverseCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Bool = Self.MapCompatible[V, F]
+    """Source admission for traversal; may accept more than materialized carriers."""
     comptime Traversed[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Movable & Deinitable
     """The carrier `traverse` returns: `G`'s carrier of this shape."""
     comptime TraverseError[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Movable & Deinitable

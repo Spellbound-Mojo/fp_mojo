@@ -19,7 +19,7 @@ def tg_void[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deini
 def tg_result_void[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable,
                    S: Movable & Deinitable, //, F: def(var A) raises E -> R](
     ref function: F, var value: Result[A, S]
-) raises E -> Optional[Result[NoneType, S]]:
+) raises E -> Optional[Result[NoneType, S]] where OptionalFamily.CarrierCompatible[R]:
     return piped(value^).traverse_void[G=OptionalFamily, A=A, R=R, Failure=S, E=E, X=E](function).get()
 
 
