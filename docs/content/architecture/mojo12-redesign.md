@@ -133,6 +133,21 @@ exact original family for ordinary Functors and only expands WithElement when
 implemented. MapContract.Family is the public projection for generic fluent
 return types; execution remains in the original family primitive.
 
+Capture's existing static factories can also be called through a reusable
+`Capture[E]()` value. This gives direct, argument-bound and stateful calls one
+consistent entry syntax, without another adapter or additional storage.
+The context is stateless and copyable; argument bundles retain their original
+consuming receivers, origins and exact native errors.
+
+Partial's finite native prefix signatures, invocation branches and factory
+overloads are emitted by `generate_partial.py`. It shares convention spelling
+with `native_signatures.py`, while its single copy emitter keeps construction
+and repeated calls consistent. Partial retains its native read-pack tail and
+copies its bound prefix on each call. Capture's consumed bundles remain a
+separate storage owner because replacing Partial's copies with moves would
+change repeatability and lifetime semantics. Public Partial parameters and
+argument order are unchanged; generated-source parity checks cover all arities.
+
 `generate_context.py`, `generate_capture.py` and
 `generate_native_conventions.py` share `scripts/native_signatures.py`.
 Known consumed operands use `_NativeOwnedArg`;

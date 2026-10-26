@@ -4,6 +4,7 @@ import sys
 import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]/'scripts'))
 from fp_tools.runtime import ROOT
+import generate_partial as partial
 import generate_capture as capture
 import generate_context as context
 import generate_native_conventions as native
@@ -19,6 +20,9 @@ import generate_sequencing_syntax as sequencing
 class GeneratedOverloadTests(unittest.TestCase):
     def test_selected_context_matches_the_generator(self):
         self.assertEqual(context.OUTPUT.read_text(), context.source())
+
+    def test_partial_arities_match_the_generator(self):
+        self.assertEqual(partial.OUTPUT.read_text(), partial.source())
 
     def test_capture_signatures_match_the_generator(self):
         self.assertEqual(capture.OUTPUT.read_text(), capture.source())

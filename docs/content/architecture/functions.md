@@ -181,6 +181,12 @@ binder, dictionary or callable box. At O3, `partial(scale, 3)(x)` compiles to th
 same instructions as `scale(3, x)`. A client that uses `partial` builds cold in
 about three seconds.
 
+The finite signatures, invocation branches and factory overloads are generated
+from one prefix-arity definition in `scripts/generate_partial.py`. It shares
+native convention spelling with the other syntax generators and centralizes
+the copy policy. Generated-source parity and the Mojo 1.2 runtime/rejection
+suite cover all supported bound counts and the retained ownership contract.
+
 ### Why the limits exist
 
 The limits follow directly from Mojo 1.1.0 (8189361e), checked against the

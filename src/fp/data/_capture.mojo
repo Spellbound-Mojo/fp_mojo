@@ -2451,7 +2451,10 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
     An unused bundle destroys its owned arguments without calling anything.
 
     Construct `Capture[E]()` before direct `run` or `stateful` admission.
-    This fixes E before a native callback is matched.
+    This fixes E before a native callback is matched. A reusable context such
+    as `var capture = Capture[E]()` also provides `capture.args(...)`,
+    `capture.borrow(...)`, `capture.mutable(...)`, `capture.take(...)` and
+    `capture.kwargs(...)`; it stores no arguments and is reusable after errors.
 
     Pure functions produce `Result[R, Never]`; raising functions retain E.
     No-value callbacks return `Result[None, E]`. Native callbacks are borrowed

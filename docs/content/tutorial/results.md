@@ -148,6 +148,9 @@ For a zero-argument callback use `Capture().run(callback)` or
 `Capture[Failure]().run(callback)`. Construction fixes the context before the
 callback is matched. `Capture.args().run(callback)` is the equivalent empty
 argument bundle. Direct `run` and `stateful` calls require a context instance.
+For consistent syntax across all forms, save `var capture = Capture[E]()` and
+reuse `capture.run(...)`, `capture.mutable(...)`, `capture.args(...)` and the
+other factories. The context stays reusable after a failure.
 
 `Capture[E]` selects the native error type before callback inference. `args`
 binds zero, one or two consumed operands; `borrow`, `mutable` and `take` bind

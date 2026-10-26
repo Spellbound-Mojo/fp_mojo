@@ -9,6 +9,18 @@ complete program.
 
 <!-- api: data -->
 
+## Reuse an error context
+
+Construct `var capture = Capture[E]()` once, then use `capture.run(callback)`,
+`capture.args(...)`, `capture.borrow(...)`, `capture.mutable(...)`,
+`capture.take(...)`, `capture.kwargs(...)` and `capture.stateful(step, state)`.
+The context stores no arguments or callback state. Reuse it after successes
+and failures; each argument bundle still runs once, while stateful owns its
+repeated-call state. Pure callbacks retain Never even when E is another type.
+Type-level factories such as `Capture[E].args(...)` remain available.
+
+<!-- example: docs/examples/capture_context.mojo -->
+
 ## Select a native argument convention
 
 This section documents the retained compatibility entry points. Prefer
