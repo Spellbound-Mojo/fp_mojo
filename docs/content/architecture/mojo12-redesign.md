@@ -412,6 +412,24 @@ behavior. A generic wrapper over an entirely unknown family must project
 returns the handler's native Result and raises only the handler's error.
 Ordinary canonical Result calls keep their existing type-changing behavior.
 
+### Selected error observation
+
+Selected `tap_err` and `flat_tap_err` delegate to `_ObserveError` and the
+selected family's recovery primitive. The existing `_ObserveFailure` finisher
+owns effectful observation: Result replaces a failure with the observer's
+failure, Validation accumulates observer-before-original, and empty observer
+effects remain empty. Plain observation discards its callback output and
+reintroduces the original error using the family's failure constructor.
+
+`TapErrContract` and `FlatTapErrContract` expose the existing admission and
+result/error projections through one private metadata owner in `algebra.errors`.
+They add no invocation or storage layer. Source and callback origins, custom
+construction errors, deferred execution and receiver/copy requirements remain
+with their existing owners. Error-capable families control observation even
+when their native storage is Result. Intrinsic Result overloads remain for
+non-error families, with disjoint capability guards preserving generic native
+forwarding. No caller chooses an overload based on error-type equality.
+
 ### Generic sequencing metadata
 
 The four public sequencing contracts name the existing selected Monad

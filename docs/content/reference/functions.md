@@ -64,6 +64,23 @@ without importing a private adapter or assuming the result has native storage.
 
 <!-- example: docs/examples/selected_recovery.mojo -->
 
+`tap_err(observer)` borrows a selected stored error and discards the observer's
+result, including a returned stored failure. The original error is then
+reintroduced through the family's failure constructor. `flat_tap_err(observer)`
+instead sequences the observer's effect: successful branches retain the
+original error, empty effects remain empty, and failed observers follow the
+family's combination policy. Result keeps the observer error; Validation
+accumulates it before the original error.
+
+Both methods honor `ApplicativeError` families and preserve fluent continuation.
+Success skips the observer. Native closures remain borrowed until execution;
+stored thin pointers are owned, and library observers retain their receiver
+mode. Deferred families keep observation deferred. Family construction errors
+and native observer errors retain their exact types. See the algebra reference
+for `TapErrContract` and `FlatTapErrContract` generic-wrapper metadata.
+
+<!-- example: docs/examples/selected_error_observation.mojo -->
+
 `flat_tap(callback)` sequences a borrowing effect and keeps each original
 payload. `flat_pair_with(callback)` pairs each original with every successful
 projection. `before(factory)` sequences a zero-argument effect and keeps

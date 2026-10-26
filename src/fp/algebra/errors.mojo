@@ -215,3 +215,54 @@ struct _ObserveError[I: ApplicativeError, A: Movable & Deinitable, C: BorrowCall
         comptime assert _RepeatableBorrow[Self.C], "error observation: branching requires a repeatable callback"
         var callback = _MutableBorrowRef(Pointer(to=self.function))
         return _ObserveError[Self.I, Self.A, type_of(callback), Self.effect](callback^).call_once(arg^)
+
+
+struct _ErrorObserverContract[I: ApplicativeError, V: Movable & Deinitable,
+                              C: BorrowCallContract & Movable & Deinitable,
+                              effect: Bool]:
+    """One metadata owner for the existing borrowed-error continuations."""
+    comptime InputCompatible = Self.C.Payload == Self.I.Failure
+    comptime CarrierCompatible = Self.I._ErrorCarrier[Self.V]
+    comptime OutputCompatible = Self.I._ErrorCarrier[Self.C.Result] if Self.effect else True
+    comptime FamilyCompatible = Self.CarrierCompatible and Self.OutputCompatible
+    comptime Compatible = Self.InputCompatible and Self.FamilyCompatible
+    comptime Family = Self.I
+    comptime Handler = _ObserveError[Self.I, Self.I.Element[Self.V], Self.C, Self.effect]
+    comptime Out = Self.I.Handled[Self.V, Self.Handler]
+    comptime Error = Self.I.HandleError[Self.V, Self.Handler]
+
+
+comptime TapErrContract[I: ApplicativeError, V: Movable & Deinitable,
+                         C: BorrowCallContract & Movable & Deinitable] = _ErrorObserverContract[I,V,C,False]
+"""Admission, output family and construction error of selected tap_err.
+
+Forward Compatible in generic selected-pipeline wrappers and project Family,
+Out and Error. InputCompatible checks exact stored-error payload equality,
+including origins; CarrierCompatible checks the source's selected error layer.
+OutputCompatible is True because the observer result is discarded. Family
+receiver validation remains with the existing observation continuation.
+Native errors propagate; deferred callback errors remain in the run contract.
+
+Parameters:
+    I: The selected error family, preserving its construction and execution rules.
+    V: The complete source carrier, including origins.
+    C: The borrowed-error observer, including receiver and native error types.
+"""
+
+
+comptime FlatTapErrContract[I: ApplicativeError, V: Movable & Deinitable,
+                             C: BorrowCallContract & Movable & Deinitable] = _ErrorObserverContract[I,V,C,True]
+"""Admission, output family and construction error of selected flat_tap_err.
+
+Forward Compatible in generic selected-pipeline wrappers and project Family,
+Out and Error. InputCompatible checks exact stored-error payload equality;
+CarrierCompatible checks the source and OutputCompatible checks the observer's
+returned carrier against the selected error layer. Its success payload may be
+any type and is discarded. FamilyCompatible combines both carrier predicates.
+The family owns receiver checks, accumulation, branching and deferred timing.
+
+Parameters:
+    I: The selected error family, including its error-combination policy.
+    V: The complete source carrier, including origins.
+    C: The borrowed-error observer returning a carrier in I.
+"""

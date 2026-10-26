@@ -424,18 +424,38 @@
       ]
     },
     {
+      "name": "Error observation",
+      "methods": [
+        "tap_err",
+        "flat_tap_err"
+      ],
+      "status": "selected",
+      "families": "Selected ApplicativeError, including Validation, custom and deferred families; intrinsic Result calls remain available under non-error families",
+      "callbacks": "Borrowing observers; native closures borrowed, stored thin pointers owned, library receiver modes preserved",
+      "ownership": "Success skips the observer; branching retains errors under the existing family copy rules; ordinary observation discards callback output",
+      "errors": "Exact construction and deferred native errors; Result observer failures replace the original, Validation accumulates observer-before-original",
+      "timing": "Selected family owns observation, failure reconstruction and combination; deferred effects remain deferred",
+      "owner": [
+        "src/fp/algebra/errors.mojo",
+        "src/fp/algebra/protocols.mojo"
+      ],
+      "evidence": [
+        "docs/examples/selected_error_observation.mojo",
+        "tests/runtime/test_context_family_observation.mojo",
+        "tests/runtime/test_context_scope_generic.mojo"
+      ]
+    },
+    {
       "name": "Result operations",
       "methods": [
         "attempt_tap",
         "ensure",
-        "flat_tap_err",
         "map_both",
         "map_err",
         "or_else_if",
         "recover_if",
         "redeem",
-        "redeem_with",
-        "tap_err"
+        "redeem_with"
       ],
       "status": "result_only",
       "families": "Result carriers; broader family capability admission still requires migration",

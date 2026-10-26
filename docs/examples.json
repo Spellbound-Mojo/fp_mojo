@@ -162,6 +162,9 @@
     "docs/examples/results.mojo": {
       "stdout": "ok: 42\ndomain: expected a positive value\nraised: callback failed\n"
     },
+    "docs/examples/selected_error_observation.mojo": {
+      "stdout": "before run: 0\ndeferred: 24 ; observed: 1\nResult observer: audit\nValidation observer: audit original\n"
+    },
     "docs/examples/selected_pipeline.mojo": {
       "stdout": "accepted: 8\nrecovered: 6\nraised: 90\n"
     },

@@ -124,13 +124,25 @@ For a generic `I: Applicative` with conditional error capability, forward
 Using different family witnesses can leave their dependent construction-error
 types unrelated to the compiler. No private family alias is needed.
 
-Use `piped(value).recover[I](handler)` for this generic capability boundary.
-Selected Pipeline recovery retains its documented Result-specific scope.
+Both `piped(value).recover[I](handler)` and
+`pipeline[I](value).recover(handler)` expose this generic capability boundary.
 The descriptor's `Error` is the family's construction error: a deferred
 ResultT/Reader recovery can construct without raising and later raise the
 handler's exact error when run. Stored errors remain data throughout.
 
 <!-- example: docs/examples/recovery_contract.mojo -->
+
+`TapErrContract[I, V, C]` and `FlatTapErrContract[I, V, C]` describe borrowing
+error observation through an `ApplicativeError` family. A generic selected
+wrapper forwards `Compatible` and projects `Family`, `Out` and `Error` without
+importing the private observation continuation. Input equality includes the
+stored error's origins; source-carrier membership is checked in both cases,
+and effectful observation also checks the observer's output carrier.
+The family still validates receiver repeatability and retained-error copying.
+Construction errors include the family's own recovery policy; deferred
+callback and failure-constructor errors remain in the action's run contract.
+
+<!-- example: docs/examples/selected_error_observation.mojo -->
 
 
 `FlatTapContract`, `FlatPairWithContract`, `BeforeContract` and

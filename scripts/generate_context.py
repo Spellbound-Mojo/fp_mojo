@@ -783,6 +783,24 @@ def methods(*, fold_stage=False):
              f"_or_else_as[{error}, {family}, Self.V, {handler}]({built}, self.value^)",
              "Recover the selected family's stored errors, preserving its timing and carrier.")
 
+    # Observation preserves the selected error family, including native Result
+    # storage under a custom family. Intrinsic Result calls under non-error
+    # families retain their disjoint native and library boundaries below.
+    for operation in error_operations("observation"):
+        contract_name = "FlatTapErrContract" if operation.effect else "TapErrContract"
+        primary = operation.callbacks[0]
+        payload = primary.input("Self.I.Element[Self.V]", family + ".Failure")
+        for cb in native_callbacks(primary.mode, payload, primary.argument):
+            contract = f"{contract_name}[{family}, Self.V, {cb['adapter_type']}]"
+            conditions = ["conforms_to(Self.I, ApplicativeError)"]
+            if cb["adapter_type"] != "C": conditions += cb["conditions"]
+            conditions += [contract + ".Compatible"]
+            cb["prelude"] = cb.get("prelude", "") + f"        comptime assert {family}._Handles[Self.V, {contract}.Handler]\n"
+            emit(operation.name, cb, cb["params"], cb["argument"], contract + ".Out", contract + ".Error",
+                 "Self.I", conditions,
+                 f"_or_else_as[{contract}.Error, {family}, Self.V, {contract}.Handler]({contract}.Handler({cb['build']}), self.value^)",
+                 "Observe the selected stored-error layer using its family's timing and error policy.")
+
     for name, operation in RESULT_OPERATIONS.items():
         if operation.sequence: continue
         summary, detail = operation.documentation
@@ -800,7 +818,7 @@ def methods(*, fold_stage=False):
             conditions = [f"conforms_to(Self.V, _ResultType)", f"Self.V == {Source}"] + sum(
                 (c["conditions"] for c in callbacks), []
             )
-            if name in ("recover", "or_else"):
+            if name in ("recover", "or_else", "tap_err", "flat_tap_err"):
                 conditions += ["not conforms_to(Self.I, ApplicativeError)"]
             R = a["result"]
             result = operation.result(T, Err, R, b["result"] if two else "", value=lambda r: f"_Success[{r}]")
