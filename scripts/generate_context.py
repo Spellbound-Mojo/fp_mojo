@@ -390,7 +390,7 @@ def methods(*, fold_stage=False):
         if name == "compact": conditions += [f"{element} == Optional[_ListElement[{element}]]"]
         else: conditions += [f"_CarrierCompatible[{family}, {element}]", f"_BindCompatible[{family}, Self.V, {identity}]"]
         result, error = f"{family}.{result_alias}[Self.V, {identity}]", f"{family}.{error_alias}[Self.V, {identity}]"
-        emit(name, {}, [], "", result, error, "Self.I", conditions,
+        emit(name, {}, [], "", result, error, f"{family}.MapFilteredFamily" if name == "compact" else "Self.I", conditions,
              f"_context_{name}[{family}](self.value^)", "Remove one admitted inner layer through the selected source family.")
     family = "_Combining[Self.I]"
     function = f"_Function[{family}, Self.V]"
@@ -779,7 +779,11 @@ def methods(*, fold_stage=False):
                 cbtype = f"_FilterPredicate[{cbtype}, True]"
             result = f"{family}.{result_alias}[Self.V, {cbtype}]"
             error = f"{family}.{error_alias}[Self.V, {cbtype}]"
-            target = f"Pipeline[Self.I, {result}, Self.E]"
+            output_family = (f"downcast[{family}.FilteredFamily, Functor]" if filtering else
+                             f"{family}.MapFilteredFamily" if name == "filter_map" else "Self.I")
+            if filtering:
+                conditions.append(f"conforms_to({family}.FilteredFamily, Functor)")
+            target = f"Pipeline[{output_family}, {result}, Self.E]"
             expr = f"{family}.{name}({cb['build']}, self.value^)"
             if name == "filter_not":
                 expr = f"_filter_with[Self.V, {cb['adapter_type']}, {family}, True]({cb['build']}, self.value^)"
@@ -788,16 +792,43 @@ def methods(*, fold_stage=False):
                 f"\n    @always_inline\n    def {name}{('[' + ', '.join(params) + ']') if params else ''}(deinit self, {cb['argument']}) raises {error} -> {target} where {' and '.join(conditions)}:\n        \"\"\"Apply {name} through the selected family's {trait} capability.\"\"\"\n{prelude}        return {target}({expr})\n"
             )
 
+    # Selected sequencing uses the same bind continuations as legacy syntax.
+    family = "_Binding[Self.I]"
+    element = "Self.I.Element[Self.V]"
+    for name in ("flat_tap", "flat_pair_with", "before", "followed_by"):
+        factory = name in ("before", "followed_by")
+        for cb in native_callbacks("thunk" if factory else "borrow", element, "function"):
+            adapter = cb["adapter_type"]
+            built = cb["build"]
+            if factory:
+                adapter = f"_IgnoreInput[{element}, {adapter}]"
+                built = f"{adapter}({built})"
+            extra = ", False, True" if name == "flat_pair_with" else ""
+            continuation = (f"_BorrowedUnary[{element}, {adapter}]" if name == "followed_by"
+                            else f"_EffectRetain[{element}, {family}, {adapter}{extra}]")
+            result = f"{family}.Bound[Self.V, {continuation}]"
+            error = f"{family}.BindError[Self.V, {continuation}]"
+            conditions = ["conforms_to(Self.I, Monad)"] + cb["conditions"]
+            conditions += [f"_CarrierCompatible[{family}, {cb['result']}]",
+                           f"_BindCompatible[{family}, Self.V, {continuation}]"]
+            summary = {"flat_tap": "Sequence a borrowing effect and retain each original payload.",
+                       "flat_pair_with": "Sequence a borrowing effect and pair each original with each successful projection.",
+                       "before": "Sequence a factory and retain each original payload.",
+                       "followed_by": "Sequence a factory and keep its produced payloads."}[name]
+            emit(name, cb, cb["params"], cb["argument"], result, error, "Self.I", conditions,
+                 f"_flat_map_as[{error}, {family}, Self.V, {continuation}]({continuation}({built}), self.value^)", summary)
+
     for name, (summary, detail) in (DOCS | OUTCOMES).items():
+        if name in ("flat_tap", "flat_pair_with", "before", "followed_by"): continue
         two = name in ("ensure", "recover_if", "or_else_if") or name in OUTCOMES
         mode = (
             "owned"
             if name in ("recover", "map_err", "or_else") or name in OUTCOMES
-            else "thunk" if name in ("before", "followed_by") else "borrow"
+            else "borrow"
         )
         payload = (
             T
-            if name in ("flat_tap", "flat_pair_with", "ensure") or name in OUTCOMES
+            if name == "ensure" or name in OUTCOMES
             else Source if name == "attempt_tap" else Err
         )
         arg = "on_ok" if name in OUTCOMES else "predicate" if two else "function"
@@ -818,19 +849,8 @@ def methods(*, fold_stage=False):
             result = Source
             if name == "recover":
                 conditions += [f"{R} == {T}"]
-            if name in (
-                "flat_tap",
-                "flat_pair_with",
-                "flat_tap_err",
-                "attempt_tap",
-                "before",
-                "followed_by",
-            ):
+            if name in ("flat_tap_err", "attempt_tap"):
                 conditions += [f"{R} == Result[_Success[{R}], {Err}]"]
-            if name == "flat_pair_with":
-                result = f"Result[Tuple[{T}, _Success[{R}]], {Err}]"
-            if name == "followed_by":
-                result = R
             if name == "map_err":
                 result = f"Result[{T}, {R}]"
             if name == "or_else":

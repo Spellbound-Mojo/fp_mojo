@@ -101,7 +101,8 @@ consuming iteration transfer the existing buffer without copying elements.
 Choose `NonEmptyListFamily` explicitly for `map` and `traverse`, or for fluent
 methods on `piped(values^)`. Mapping and every successful traversal retain the
 non-empty shape. `filter` and `filter_map` return ordinary Lists because all
-elements may be removed. The target Applicative determines short-circuiting,
+elements may be removed. Selected `pipeline[NonEmptyListFamily](values)` chains
+continue in ListFamily after filtering or compaction. The target Applicative determines short-circuiting,
 accumulation, branching and deferred execution.
 
 `NonEmptyListSemigroup[E]` concatenates errors in order and admits move-only

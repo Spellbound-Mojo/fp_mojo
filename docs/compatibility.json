@@ -370,15 +370,37 @@
       ]
     },
     {
+      "name": "Monad sequencing",
+      "methods": [
+        "flat_tap",
+        "flat_pair_with",
+        "before",
+        "followed_by"
+      ],
+      "status": "selected",
+      "families": "Selected Monad, including native, custom and deferred families; Validation requires explicit sequential Result selection",
+      "callbacks": "Borrowing effect callbacks or zero-argument factories; native closures borrowed, stored thin pointers owned, library receivers preserved",
+      "ownership": "Single-use effects move retained originals; branching effects require copyable retained originals and move projections",
+      "errors": "Exact family BindError at construction; deferred native errors stay deferred and remain distinct from stored failures",
+      "timing": "Selected Monad owns skipping, branching and deferral",
+      "owner": [
+        "src/fp/algebra/_sequencing.mojo",
+        "src/fp/callables/_transforms.mojo",
+        "src/fp/algebra/_adapt.mojo"
+      ],
+      "evidence": [
+        "tests/runtime/test_context_capability_sequencing.mojo",
+        "tests/runtime/test_context_capability_native.mojo",
+        "tests/runtime/test_context_capability_generic.mojo",
+        "tests/ownership/test_context_capability_ownership.mojo"
+      ]
+    },
+    {
       "name": "Result operations",
       "methods": [
         "attempt_tap",
-        "before",
         "ensure",
-        "flat_pair_with",
-        "flat_tap",
         "flat_tap_err",
-        "followed_by",
         "map_both",
         "map_err",
         "or_else",
@@ -447,7 +469,7 @@
         "void"
       ],
       "status": "selected",
-      "families": "Selected Functor, FunctorFilter, Monad or Applicative as required",
+      "families": "Selected Functor, FunctorFilter, Monad or Applicative as required; compact follows MapFilteredFamily",
       "callbacks": "ap consumes stored library callables; other methods use shared internal transforms",
       "ownership": "Move source payloads; copied constants require Copyable. Branching application requires copyable operands.",
       "errors": "Exact family and stored callable errors; source and target Result errors retain embedded origins",
@@ -461,7 +483,9 @@
         "tests/runtime/test_context_structural_behavior.mojo",
         "tests/runtime/test_context_structural_generic.mojo",
         "tests/runtime/test_context_structural_effects.mojo",
-        "tests/ownership/test_context_structural_ownership.mojo"
+        "tests/ownership/test_context_structural_ownership.mojo",
+        "tests/runtime/test_context_capability_filtering.mojo",
+        "tests/runtime/test_context_capability_custom.mojo"
       ]
     },
     {

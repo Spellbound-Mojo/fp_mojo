@@ -42,6 +42,24 @@ Pure and Never callbacks retain Never. Custom families retain their own
 execution errors and deferred callback lifetimes. `get()` only extracts the
 carrier.
 
+`flat_tap(callback)` sequences a borrowing effect and keeps each original
+payload. `flat_pair_with(callback)` pairs each original with every successful
+projection. `before(factory)` sequences a zero-argument effect and keeps
+originals; `followed_by(factory)` keeps the produced payloads. All four use the
+selected Monad, including List, Optional, Result, custom families and deferred
+stacks. Empty or failed carriers skip callbacks. Branching effects require
+copyable retained originals; single-use effects move them. Construction raises
+the family's exact `BindError`; deferred callback exceptions occur when run.
+
+A Validation selection does not support Monad sequencing. Select
+`pipeline[ResultFamily[ErrorType]](value)` for sequential Result behavior.
+Legacy `piped` bindings remain available.
+
+`filter`, `filter_not`, `filter_map` and `compact` continue in the output family
+declared by the filtering capability. Defaults preserve custom families.
+NonEmptyListFamily selects ListFamily because filtering can remove every
+element, so a subsequent `.map(...)` works without selecting a family again.
+
 `tap(observer)` borrows the whole value once, immediately, including an empty
 container or Result's Err. `tap_each(observer)` borrows each payload using the
 selected family's map rules; empty List, absent Optional and Result's Err skip
@@ -84,7 +102,7 @@ repeatable library callables, including mutable state; borrowing keys use
 must agree when both can raise. These eager reductions select the result's
 native family and preserve the selected native error for subsequent stages.
 
-Structural methods keep the selected family. `fill(value)` copies a constant
+Structural mapping methods keep the selected family. `fill(value)` copies a constant
 into each payload position; `replace(old, new)` copies `new` into positions
 equal to `old` and moves other payloads unchanged. `tuple_left(value)` and
 `tuple_right(value)` pair each payload with a copy of the constant. `void()`

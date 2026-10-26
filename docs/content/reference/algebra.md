@@ -23,6 +23,15 @@ NonEmptyListFamily mapping and traversal require a NonEmptyList; filtering
 continues to produce a possibly empty List. Custom families can override the
 public predicates to describe their own representations.
 
+`Filterable.FilteredFamily` and `FunctorFilter.MapFilteredFamily` name the
+family returned by filtering and compaction. Both default to the implementing
+family; NonEmptyListFamily selects ListFamily. Selected pipelines follow this
+metadata instead of inferring semantics from native storage. Filterable remains
+independent of Functor for standalone filtering. Fluent continuation requires
+the resulting family to implement Functor.
+Generic fluent filtering wrappers forward that requirement with
+`where conforms_to(I.FilteredFamily, Functor)` when `I` is abstract.
+
 ReaderT, StateT, WriterT, OptionalT and ResultT also implement these predicates.
 Their carriers may have several concrete representations; membership does not
 require equality with `Pure[A]`. See [effect admission](effects.md).

@@ -67,6 +67,8 @@ struct NonEmptyListFamily(Traversable, Filterable, FunctorFilter):
     comptime Element[V: Movable & Deinitable] = _ListElement[V]
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = NonEmptyList[F.Out]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
+    comptime FilteredFamily = ListFamily
+    comptime MapFilteredFamily = ListFamily
     comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = List[Self.Element[V]]
     comptime FilterError[V: Movable & Deinitable, P: BorrowCallable] = P.Failure
     comptime MapFiltered[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = List[_ListElement[F.Out]]

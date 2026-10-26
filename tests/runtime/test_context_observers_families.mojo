@@ -14,7 +14,7 @@ def forward[T: Movable & Deinitable, R: Movable & Deinitable, F: def(T) -> R](re
 def forward_family[I: Functor, V: Movable & Deinitable, C: BorrowCallable](var input: V, var project: C) raises I.MapError[V, _Observe[I.Element[V], C, True]] -> I.Mapped[V, _Observe[I.Element[V], C, True]] where C.Payload == I.Element[V] and I.MapCompatible[V, _Observe[I.Element[V], C, True]]:
     return pipeline[I](input^).pair_with(project^).get()
 
-def forward_filter[I: Functor & Filterable, V: Movable & Deinitable, C: BorrowCallable](var input: V, var predicate: C) raises I.FilterError[V, _FilterPredicate[C, True]] -> I.Filtered[V, _FilterPredicate[C, True]] where C.Payload == I.Element[V] and C.Result == Bool:
+def forward_filter[I: Functor & Filterable, V: Movable & Deinitable, C: BorrowCallable](var input: V, var predicate: C) raises I.FilterError[V, _FilterPredicate[C, True]] -> I.Filtered[V, _FilterPredicate[C, True]] where C.Payload == I.Element[V] and C.Result == Bool and conforms_to(I.FilteredFamily, Functor):
     return pipeline[I](input^).filter_not(predicate^).get()
 
 @fieldwise_init

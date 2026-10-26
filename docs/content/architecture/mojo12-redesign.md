@@ -899,3 +899,24 @@ Repeating that equality inside MapCompatible makes Mojo 1.2 prematurely reduce
 Element[Listened[V]] in generic lifted Writer capabilities. Keeping the
 existing operation contract avoids that compiler failure without accepting
 incompatible callbacks or relaxing carrier checks.
+
+## Sequencing and filtering capabilities
+
+Selected sequencing uses the chosen Monad for flat_tap, flat_pair_with, before,
+and followed_by. Its bind owns short-circuiting, branching, construction errors,
+and deferred execution. These methods reuse the same retention and invocation
+continuations as legacy piped syntax. Native closure borrows, owned thin function
+pointers, and consumed library callbacks retain their exact error/origin contracts.
+
+A selected family is semantic context. A Result representation selected as
+Validation does not acquire Monad sequencing merely because its storage is a
+Result. Select ResultFamily explicitly for sequential behavior; existing legacy
+Piped bindings remain available.
+
+Filtering can lose a source invariant. Filterable.FilteredFamily and
+FunctorFilter.MapFilteredFamily name the resulting dictionary explicitly.
+Defaults retain the existing family, including custom families; NonEmptyListFamily
+selects ListFamily because every element may be discarded. filter, filter_not,
+filter_map, and compact continue in that output family. This does not guess
+semantics from native storage. Filterable remains independent of Functor for
+standalone operations; selected continuation requires a Functor output family.

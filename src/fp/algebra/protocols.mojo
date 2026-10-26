@@ -71,6 +71,8 @@ trait Filterable:
     """
     comptime Element[V: Movable & Deinitable]: Movable & Deinitable
     """The payload type of a carrier of this family."""
+    comptime FilteredFamily: AnyType = Self
+    """Family of the filtered carrier; fluent continuation requires a Functor."""
     comptime Filtered[V: Movable & Deinitable, P: BorrowCallable]: Movable & Deinitable
     """The carrier returned by filtering; deferred families may change its concrete type."""
     comptime FilterError[V: Movable & Deinitable, P: BorrowCallable]: Movable & Deinitable
@@ -104,6 +106,8 @@ trait FunctorFilter(Functor):
     or nonempty carriers need not implement it. Deferred instances keep their
     own evaluation, error and origin semantics.
     """
+    comptime MapFilteredFamily: Functor = Self
+    """Family of the compacted carrier; may differ when filtering loses shape."""
     comptime MapFiltered[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Movable & Deinitable
     """The carrier of present transformed payloads."""
     comptime MapFilterError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Movable & Deinitable

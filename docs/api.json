@@ -795,6 +795,10 @@
      "name": "Element"
     },
     {
+     "description": "Family of the filtered carrier; fluent continuation requires a Functor.",
+     "name": "FilteredFamily"
+    },
+    {
      "description": "The carrier returned by filtering; deferred families may change its concrete type.",
      "name": "Filtered"
     },
@@ -938,6 +942,10 @@
   },
   "algebra.FunctorFilter": {
    "aliases": [
+    {
+     "description": "Family of the compacted carrier; may differ when filtering loses shape.",
+     "name": "MapFilteredFamily"
+    },
     {
      "description": "The carrier of present transformed payloads.",
      "name": "MapFiltered"
@@ -1912,6 +1920,14 @@
     {
      "description": "The error `collect` raises.",
      "name": "CollectError"
+    },
+    {
+     "description": "Family of the filtered carrier; fluent continuation requires a Functor.",
+     "name": "FilteredFamily"
+    },
+    {
+     "description": "Family of the compacted carrier; may differ when filtering loses shape.",
+     "name": "MapFilteredFamily"
     }
    ],
    "description": "Callbacks run once per element, so they must be repeatable: a shared or\nexclusive receiver.",
@@ -2471,6 +2487,14 @@
     },
     {
      "description": "",
+     "name": "FilteredFamily"
+    },
+    {
+     "description": "",
+     "name": "MapFilteredFamily"
+    },
+    {
+     "description": "",
      "name": "Filtered"
     },
     {
@@ -2861,6 +2885,14 @@
     {
      "description": "The error `collect` raises.",
      "name": "CollectError"
+    },
+    {
+     "description": "Family of the filtered carrier; fluent continuation requires a Functor.",
+     "name": "FilteredFamily"
+    },
+    {
+     "description": "Family of the compacted carrier; may differ when filtering loses shape.",
+     "name": "MapFilteredFamily"
     },
     {
      "description": "Source admission for traversal; may accept more than materialized carriers.",
@@ -86726,7 +86758,7 @@
   },
   "functions.Pipeline": {
    "aliases": [],
-   "description": "Start with `pipeline(value)` for List, Optional, Result or a bare value, or\n`pipeline[Family](value)` for an explicit Functor. Select a native error\nonce with `raising[E]()`. Pure callbacks keep Never; library callbacks\nkeep their declared errors. `get()` extracts the value. Map, flat_map,\nfilter and filter_map delegate to the family's evaluation and ownership\nrules, including deferred execution and retained callback borrows.\n\n`tap` borrows the whole value once now, including empty carriers and Err.\n`tap_each` borrows each payload through the family's map; `pair_with`\nretains each original beside its projection. Observer results are\ndiscarded for both tap forms. `filter_not` retains payloads rejected by\na borrowing Bool predicate. These operations consume a library\nBorrowCallable or borrow a native closure; stored thin pointers are\ncopied. They preserve the selected family and native error context.\n\n`then` consumes the whole value once. It selects the returned List,\nOptional or Result family, or Identity for other values; `then[Family]`\nselects an explicit output family. Folds consume a native source and\nselect the accumulator's family by the same rule. Traversal selects its\ntarget effect family. `traverse_tap[TargetFamily]` borrows each payload,\nruns its effect and retains the original. `filter_effect[TargetFamily]`\nretains originals whose borrowing effect returns True; the source must\nalso support FunctorFilter. Both preserve the target's short-circuiting,\naccumulation, branching and deferred timing. Single-use library callbacks\nwork where traversal calls them at most once. Branching targets may require\ncopyable payloads. Combinations retain the current Applicative family.\n\n`traverse_filter` and `sequence_filter` compact Optional payloads inside\nthe target effect using the source's FunctorFilter. `flat_traverse` and\n`flat_sequence` flatten one source layer using its Monad. `traverse_void`\nand `sequence_void` discard successful outputs from native sources;\nResult traversal retains its source error layer inside the target.\n\nEffectful queries consume a native source into a target Monad.\n`all_effect`, `any_effect` and `find_effect` borrow each item;\n`find_map_effect` and `fold_map_effect` consume it. Bind a fold accumulator\nbefore its callback with `fold_effect[TargetFamily](initial).run(step)`.\nThe target controls stopping, branching and deferral. Monoid identity\nconstruction happens immediately; callback and combination timing follows\nthe target. Array sources move through temporary List storage.\n\nPure reductions consume sources immediately. `find_map` stops at the\nfirst present projection. `fold_map[Monoid]` and `combine_all[Monoid]`\ncombine in source order; `sum` and `sum_by` infer numeric types and SIMD\nlanes. `min_by` and `max_by` borrow each item for its key, preserving the\nfirst item on ties. Reduction results select their native family.\n\nStructural methods retain the selected family. `fill`, `replace`, `void`\nand tuple pairing use its map; copied constants must be Copyable.\n`compact` requires FunctorFilter, `flatten` requires Monad, and `ap`\napplies stored library callables through Applicative combination.\n\n`if_effect(on_true, on_false)` uses the selected Monad's Bool condition.\nA failed or absent condition skips both factories. Native closures remain\nborrowed; thin pointers and library factories are owned. Repeated sources\nrequire repeatable factories. Deferred families retain their invocation\ntiming and can join distinct carrier representations with one payload type.\n\n`par_map_n`, `par_product_n`, `par_traverse` and `par_sequence` use ordered\nValidation accumulation for stored Result errors. Native raises stop\nimmediately. List-valued errors infer concatenation; an explicit Semigroup\nselects another error policy. N-ary methods retain the selected source\nfamily; accumulating traversal continues in the resulting Result family.\n\nResult-specific methods delegate to Result and update ResultFamily when\nthe stored error type changes. Native raised errors remain raised;\nuse Capture to store them. Existing Piped and piped remain available.",
+   "description": "Start with `pipeline(value)` for List, Optional, Result or a bare value, or\n`pipeline[Family](value)` for an explicit Functor. Select a native error\nonce with `raising[E]()`. Pure callbacks keep Never; library callbacks\nkeep their declared errors. `get()` extracts the value. Map, flat_map,\nfilter and filter_map delegate to the family's evaluation and ownership\nrules, including deferred execution and retained callback borrows.\n\n`tap` borrows the whole value once now, including empty carriers and Err.\n`tap_each` borrows each payload through the family's map; `pair_with`\nretains each original beside its projection. Observer results are\ndiscarded for both tap forms. `filter_not` retains payloads rejected by\na borrowing Bool predicate. These operations consume a library\nBorrowCallable or borrow a native closure; stored thin pointers are\ncopied. Observation preserves the selected family and native error context.\nFiltering follows FilteredFamily or MapFilteredFamily; NonEmptyList filtering\ncontinues as List because it may discard every element.\n\n`flat_tap` and `flat_pair_with` sequence borrowing effects through the\nselected Monad, retaining originals or pairing them with each projection.\n`before` sequences a factory and keeps originals; `followed_by` keeps its\nproduced payloads. The family owns skipping, branching and deferred timing.\nRetained originals need Copyable only when successful effects duplicate them.\n\n`then` consumes the whole value once. It selects the returned List,\nOptional or Result family, or Identity for other values; `then[Family]`\nselects an explicit output family. Folds consume a native source and\nselect the accumulator's family by the same rule. Traversal selects its\ntarget effect family. `traverse_tap[TargetFamily]` borrows each payload,\nruns its effect and retains the original. `filter_effect[TargetFamily]`\nretains originals whose borrowing effect returns True; the source must\nalso support FunctorFilter. Both preserve the target's short-circuiting,\naccumulation, branching and deferred timing. Single-use library callbacks\nwork where traversal calls them at most once. Branching targets may require\ncopyable payloads. Combinations retain the current Applicative family.\n\n`traverse_filter` and `sequence_filter` compact Optional payloads inside\nthe target effect using the source's FunctorFilter. `flat_traverse` and\n`flat_sequence` flatten one source layer using its Monad. `traverse_void`\nand `sequence_void` discard successful outputs from native sources;\nResult traversal retains its source error layer inside the target.\n\nEffectful queries consume a native source into a target Monad.\n`all_effect`, `any_effect` and `find_effect` borrow each item;\n`find_map_effect` and `fold_map_effect` consume it. Bind a fold accumulator\nbefore its callback with `fold_effect[TargetFamily](initial).run(step)`.\nThe target controls stopping, branching and deferral. Monoid identity\nconstruction happens immediately; callback and combination timing follows\nthe target. Array sources move through temporary List storage.\n\nPure reductions consume sources immediately. `find_map` stops at the\nfirst present projection. `fold_map[Monoid]` and `combine_all[Monoid]`\ncombine in source order; `sum` and `sum_by` infer numeric types and SIMD\nlanes. `min_by` and `max_by` borrow each item for its key, preserving the\nfirst item on ties. Reduction results select their native family.\n\nMapping conveniences retain the selected family. `fill`, `replace`, `void`\nand tuple pairing use its map; copied constants must be Copyable.\n`compact` requires FunctorFilter, `flatten` requires Monad, and `ap`\napplies stored library callables through Applicative combination.\n\n`if_effect(on_true, on_false)` uses the selected Monad's Bool condition.\nA failed or absent condition skips both factories. Native closures remain\nborrowed; thin pointers and library factories are owned. Repeated sources\nrequire repeatable factories. Deferred families retain their invocation\ntiming and can join distinct carrier representations with one payload type.\n\n`par_map_n`, `par_product_n`, `par_traverse` and `par_sequence` use ordered\nValidation accumulation for stored Result errors. Native raises stop\nimmediately. List-valued errors infer concatenation; an explicit Semigroup\nselects another error policy. N-ary methods retain the selected source\nfamily; accumulating traversal continues in the resulting Result family.\n\nResult-specific methods delegate to Result and update ResultFamily when\nthe stored error type changes. Native raised errors remain raised;\nuse Capture to store them. Existing Piped and piped remain available.",
    "fields": [
     {
      "description": "The carrier owned by this pipeline.",
@@ -88328,7 +88360,7 @@
        }
       ],
       "description": "",
-      "error": "C.Error",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], C]]]",
       "parameters": [
        {
         "description": "The first library callback type, retaining its receiver and origins.",
@@ -88342,10 +88374,10 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], C]]], Self.E]"
       },
-      "signature": "def before[C: ThunkContract & Movable & Deinitable](deinit self, var function: C) raises C.Error -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Out == Result[_Success[C.Out], _Failure[Self.V]]",
-      "summary": "On success, call a zero-argument factory and retain the original value."
+      "signature": "def before[C: ThunkContract & Movable & Deinitable](deinit self, var function: C) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], C]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], C]]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], C.Out] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], C]]]",
+      "summary": "Sequence a factory and retain each original payload."
      },
      {
       "args": [
@@ -88358,7 +88390,7 @@
        }
       ],
       "description": "",
-      "error": "Never",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, False, o]]]]",
       "parameters": [
        {
         "description": "",
@@ -88386,10 +88418,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, False, o]]]], Self.E]"
       },
-      "signature": "def before[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "On success, call a zero-argument factory and retain the original value."
+      "signature": "def before[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, False, o]]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, False, o]]]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, False, o]]]]",
+      "summary": "Sequence a factory and retain each original payload."
      },
      {
       "args": [
@@ -88402,7 +88434,7 @@
        }
       ],
       "description": "",
-      "error": "Self.E",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Self.E, C, True, o]]]]",
       "parameters": [
        {
         "description": "",
@@ -88430,10 +88462,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Self.E, C, True, o]]]], Self.E]"
       },
-      "signature": "def before[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Self.E -> R](deinit self, ref[o] function: C) raises Self.E -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "On success, call a zero-argument factory and retain the original value."
+      "signature": "def before[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Self.E -> R](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Self.E, C, True, o]]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Self.E, C, True, o]]]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Self.E, C, True, o]]]]",
+      "summary": "Sequence a factory and retain each original payload."
      },
      {
       "args": [
@@ -88446,7 +88478,7 @@
        }
       ],
       "description": "",
-      "error": "Never",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, True, o]]]]",
       "parameters": [
        {
         "description": "",
@@ -88474,10 +88506,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, True, o]]]], Self.E]"
       },
-      "signature": "def before[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Never -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "On success, call a zero-argument factory and retain the original value."
+      "signature": "def before[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Never -> R](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, True, o]]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, True, o]]]], Self.E] where conforms_to(Self.I, Monad) and Self.E != Never and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, True, o]]]]",
+      "summary": "Sequence a factory and retain each original payload."
      },
      {
       "args": [
@@ -88490,11 +88522,11 @@
        }
       ],
       "description": "",
-      "error": "Never",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]]]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "Movable & Deinitable",
         "variadic": false
@@ -88504,10 +88536,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]]]], Self.E]"
       },
-      "signature": "def before[R: Movable & Deinitable](deinit self, function: def() thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "On success, call a zero-argument factory and retain the original value."
+      "signature": "def before[R: Movable & Deinitable, //](deinit self, function: def() thin -> R) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]]]], Self.E] where conforms_to(Self.I, Monad) and not conforms_to(R, RegisterPassable) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]]]]",
+      "summary": "Sequence a factory and retain each original payload."
      },
      {
       "args": [
@@ -88520,11 +88552,11 @@
        }
       ],
       "description": "",
-      "error": "Never",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]]]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "RegisterPassable & Deinitable",
         "variadic": false
@@ -88534,10 +88566,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]]]], Self.E]"
       },
-      "signature": "def before[R: RegisterPassable & Deinitable](deinit self, function: def() thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "On success, call a zero-argument factory and retain the original value."
+      "signature": "def before[R: RegisterPassable & Deinitable, //](deinit self, function: def() thin -> R) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]]]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]]]]",
+      "summary": "Sequence a factory and retain each original payload."
      },
      {
       "args": [
@@ -88550,18 +88582,18 @@
        }
       ],
       "description": "",
-      "error": "X",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "Movable & Deinitable",
         "variadic": false
        },
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "X",
         "type": "Movable & Deinitable",
         "variadic": false
@@ -88571,10 +88603,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]], Self.E]"
       },
-      "signature": "def before[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, function: def() raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "On success, call a zero-argument factory and retain the original value."
+      "signature": "def before[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def() raises X thin -> R) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]], Self.E] where conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]]",
+      "summary": "Sequence a factory and retain each original payload."
      },
      {
       "args": [
@@ -88587,18 +88619,18 @@
        }
       ],
       "description": "",
-      "error": "X",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "RegisterPassable & Deinitable",
         "variadic": false
        },
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "X",
         "type": "Movable & Deinitable",
         "variadic": false
@@ -88608,10 +88640,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]], Self.E]"
       },
-      "signature": "def before[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, function: def() raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "On success, call a zero-argument factory and retain the original value."
+      "signature": "def before[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def() raises X thin -> R) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]], Self.E] where conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]]",
+      "summary": "Sequence a factory and retain each original payload."
      }
     ],
     "combine_all": [
@@ -88648,9 +88680,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, Identity[Self.I.Element[Self.V]]], Self.E]"
+       "type": "Pipeline[_Compacting[Self.I].MapFilteredFamily, _Compacting[Self.I].MapFiltered[Self.V, Identity[Self.I.Element[Self.V]]], Self.E]"
       },
-      "signature": "def compact(deinit self) raises _Compacting[Self.I].MapFilterError[Self.V, Identity[Self.I.Element[Self.V]]] -> Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, Identity[Self.I.Element[Self.V]]], Self.E] where conforms_to(Self.I, FunctorFilter) and _MapCompatible[Self.I, Self.V, Identity[Self.I.Element[Self.V]]] and Self.I.Element[Self.V] == Optional[_ListElement[Self.I.Element[Self.V]]]",
+      "signature": "def compact(deinit self) raises _Compacting[Self.I].MapFilterError[Self.V, Identity[Self.I.Element[Self.V]]] -> Pipeline[_Compacting[Self.I].MapFilteredFamily, _Compacting[Self.I].MapFiltered[Self.V, Identity[Self.I.Element[Self.V]]], Self.E] where conforms_to(Self.I, FunctorFilter) and _MapCompatible[Self.I, Self.V, Identity[Self.I.Element[Self.V]]] and Self.I.Element[Self.V] == Optional[_ListElement[Self.I.Element[Self.V]]]",
       "summary": "Remove one admitted inner layer through the selected source family."
      }
     ],
@@ -97409,9 +97441,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, C], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, C], Self.E]"
       },
-      "signature": "def filter[C: BorrowCallable](deinit self, var predicate: C) raises _Filtering[Self.I].FilterError[Self.V, C] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, C], Self.E] where conforms_to(Self.I, Filterable) and C.Payload == Self.I.Element[Self.V] and C.Result == Bool",
+      "signature": "def filter[C: BorrowCallable](deinit self, var predicate: C) raises _Filtering[Self.I].FilterError[Self.V, C] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, C], Self.E] where conforms_to(Self.I, Filterable) and C.Payload == Self.I.Element[Self.V] and C.Result == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -97453,9 +97485,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]], Self.E]"
       },
-      "signature": "def filter[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] predicate: C) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]], Self.E] where conforms_to(Self.I, Filterable) and R == Bool",
+      "signature": "def filter[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] predicate: C) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]], Self.E] where conforms_to(Self.I, Filterable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -97497,9 +97529,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], Self.E]"
       },
-      "signature": "def filter[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] predicate: C) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], Self.E] where conforms_to(Self.I, Filterable) and R == Bool",
+      "signature": "def filter[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] predicate: C) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], Self.E] where conforms_to(Self.I, Filterable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -97541,9 +97573,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]], Self.E]"
       },
-      "signature": "def filter[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] predicate: C) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]], Self.E] where conforms_to(Self.I, Filterable) and Self.E != Never and R == Bool",
+      "signature": "def filter[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] predicate: C) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]], Self.E] where conforms_to(Self.I, Filterable) and Self.E != Never and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -97571,9 +97603,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]], Self.E]"
       },
-      "signature": "def filter[R: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]], Self.E] where conforms_to(Self.I, Filterable) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Bool",
+      "signature": "def filter[R: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]], Self.E] where conforms_to(Self.I, Filterable) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -97601,9 +97633,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]], Self.E]"
       },
-      "signature": "def filter[R: RegisterPassable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]], Self.E] where conforms_to(Self.I, Filterable) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and R == Bool",
+      "signature": "def filter[R: RegisterPassable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]], Self.E] where conforms_to(Self.I, Filterable) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -97638,9 +97670,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]], Self.E]"
       },
-      "signature": "def filter[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, predicate: def(P) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]], Self.E] where conforms_to(Self.I, Filterable) and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and R == Bool",
+      "signature": "def filter[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, predicate: def(P) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]], Self.E] where conforms_to(Self.I, Filterable) and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -97675,9 +97707,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]], Self.E]"
       },
-      "signature": "def filter[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, predicate: def(P) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]], Self.E] where conforms_to(Self.I, Filterable) and P == Self.I.Element[Self.V] and R == Bool",
+      "signature": "def filter[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, predicate: def(P) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]], Self.E] where conforms_to(Self.I, Filterable) and P == Self.I.Element[Self.V] and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -97712,9 +97744,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]], Self.E]"
       },
-      "signature": "def filter[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Bool",
+      "signature": "def filter[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -97749,9 +97781,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]], Self.E]"
       },
-      "signature": "def filter[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and R == Bool",
+      "signature": "def filter[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -97793,9 +97825,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], Self.E]"
       },
-      "signature": "def filter[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(P) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and R == Bool",
+      "signature": "def filter[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(P) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      },
      {
@@ -97837,9 +97869,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], Self.E]"
       },
-      "signature": "def filter[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(P) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and R == Bool",
+      "signature": "def filter[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(P) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter through the selected family's Filterable capability."
      }
     ],
@@ -98413,9 +98445,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, C], Self.E]"
+       "type": "Pipeline[_Compacting[Self.I].MapFilteredFamily, _Compacting[Self.I].MapFiltered[Self.V, C], Self.E]"
       },
-      "signature": "def filter_map[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises _Compacting[Self.I].MapFilterError[Self.V, C] -> Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, C], Self.E] where conforms_to(Self.I, FunctorFilter) and C.Arg == Self.I.Element[Self.V]",
+      "signature": "def filter_map[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises _Compacting[Self.I].MapFilterError[Self.V, C] -> Pipeline[_Compacting[Self.I].MapFilteredFamily, _Compacting[Self.I].MapFiltered[Self.V, C], Self.E] where conforms_to(Self.I, FunctorFilter) and C.Arg == Self.I.Element[Self.V]",
       "summary": "Apply filter_map through the selected family's FunctorFilter capability."
      },
      {
@@ -98457,9 +98489,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], Self.E]"
+       "type": "Pipeline[_Compacting[Self.I].MapFilteredFamily, _Compacting[Self.I].MapFiltered[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], Self.E]"
       },
-      "signature": "def filter_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises _Compacting[Self.I].MapFilterError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]] -> Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], Self.E] where conforms_to(Self.I, FunctorFilter)",
+      "signature": "def filter_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises _Compacting[Self.I].MapFilterError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]] -> Pipeline[_Compacting[Self.I].MapFilteredFamily, _Compacting[Self.I].MapFiltered[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], Self.E] where conforms_to(Self.I, FunctorFilter)",
       "summary": "Apply filter_map through the selected family's FunctorFilter capability."
      },
      {
@@ -98501,9 +98533,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], Self.E]"
+       "type": "Pipeline[_Compacting[Self.I].MapFilteredFamily, _Compacting[Self.I].MapFiltered[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], Self.E]"
       },
-      "signature": "def filter_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _Compacting[Self.I].MapFilterError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]] -> Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], Self.E] where conforms_to(Self.I, FunctorFilter)",
+      "signature": "def filter_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _Compacting[Self.I].MapFilterError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]] -> Pipeline[_Compacting[Self.I].MapFilteredFamily, _Compacting[Self.I].MapFiltered[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], Self.E] where conforms_to(Self.I, FunctorFilter)",
       "summary": "Apply filter_map through the selected family's FunctorFilter capability."
      },
      {
@@ -98545,9 +98577,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], Self.E]"
+       "type": "Pipeline[_Compacting[Self.I].MapFilteredFamily, _Compacting[Self.I].MapFiltered[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], Self.E]"
       },
-      "signature": "def filter_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _Compacting[Self.I].MapFilterError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]] -> Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], Self.E] where conforms_to(Self.I, FunctorFilter) and Self.E != Never",
+      "signature": "def filter_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _Compacting[Self.I].MapFilterError[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]] -> Pipeline[_Compacting[Self.I].MapFilteredFamily, _Compacting[Self.I].MapFiltered[Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], Self.E] where conforms_to(Self.I, FunctorFilter) and Self.E != Never",
       "summary": "Apply filter_map through the selected family's FunctorFilter capability."
      },
      {
@@ -98575,9 +98607,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E]"
+       "type": "Pipeline[_Compacting[Self.I].MapFilteredFamily, _Compacting[Self.I].MapFiltered[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E]"
       },
-      "signature": "def filter_map[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises _Compacting[Self.I].MapFilterError[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] -> Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E] where conforms_to(Self.I, FunctorFilter) and not conforms_to(R, RegisterPassable)",
+      "signature": "def filter_map[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises _Compacting[Self.I].MapFilterError[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] -> Pipeline[_Compacting[Self.I].MapFilteredFamily, _Compacting[Self.I].MapFiltered[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E] where conforms_to(Self.I, FunctorFilter) and not conforms_to(R, RegisterPassable)",
       "summary": "Apply filter_map through the selected family's FunctorFilter capability."
      },
      {
@@ -98605,9 +98637,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E]"
+       "type": "Pipeline[_Compacting[Self.I].MapFilteredFamily, _Compacting[Self.I].MapFiltered[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E]"
       },
-      "signature": "def filter_map[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises _Compacting[Self.I].MapFilterError[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] -> Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E] where conforms_to(Self.I, FunctorFilter)",
+      "signature": "def filter_map[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises _Compacting[Self.I].MapFilterError[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] -> Pipeline[_Compacting[Self.I].MapFilteredFamily, _Compacting[Self.I].MapFiltered[Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], Self.E] where conforms_to(Self.I, FunctorFilter)",
       "summary": "Apply filter_map through the selected family's FunctorFilter capability."
      },
      {
@@ -98642,9 +98674,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E]"
+       "type": "Pipeline[_Compacting[Self.I].MapFilteredFamily, _Compacting[Self.I].MapFiltered[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E]"
       },
-      "signature": "def filter_map[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises _Compacting[Self.I].MapFilterError[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] -> Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, FunctorFilter) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable)",
+      "signature": "def filter_map[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises _Compacting[Self.I].MapFilterError[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] -> Pipeline[_Compacting[Self.I].MapFilteredFamily, _Compacting[Self.I].MapFiltered[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, FunctorFilter) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable)",
       "summary": "Apply filter_map through the selected family's FunctorFilter capability."
      },
      {
@@ -98679,9 +98711,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E]"
+       "type": "Pipeline[_Compacting[Self.I].MapFilteredFamily, _Compacting[Self.I].MapFiltered[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E]"
       },
-      "signature": "def filter_map[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises _Compacting[Self.I].MapFilterError[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] -> Pipeline[Self.I, _Compacting[Self.I].MapFiltered[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, FunctorFilter) and _ErrorCompatible[Self.E, X]",
+      "signature": "def filter_map[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises _Compacting[Self.I].MapFilterError[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] -> Pipeline[_Compacting[Self.I].MapFilteredFamily, _Compacting[Self.I].MapFiltered[Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, FunctorFilter) and _ErrorCompatible[Self.E, X]",
       "summary": "Apply filter_map through the selected family's FunctorFilter capability."
      }
     ],
@@ -98711,9 +98743,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[C, True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[C, True]], Self.E]"
       },
-      "signature": "def filter_not[C: BorrowCallable](deinit self, var predicate: C) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[C, True]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[C, True]], Self.E] where conforms_to(Self.I, Filterable) and C.Payload == Self.I.Element[Self.V] and C.Result == Bool",
+      "signature": "def filter_not[C: BorrowCallable](deinit self, var predicate: C) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[C, True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[C, True]], Self.E] where conforms_to(Self.I, Filterable) and C.Payload == Self.I.Element[Self.V] and C.Result == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -98755,9 +98787,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]], Self.E]"
       },
-      "signature": "def filter_not[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] predicate: C) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]], Self.E] where conforms_to(Self.I, Filterable) and R == Bool",
+      "signature": "def filter_not[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] predicate: C) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]], Self.E] where conforms_to(Self.I, Filterable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -98799,9 +98831,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], True]], Self.E]"
       },
-      "signature": "def filter_not[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] predicate: C) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], True]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], True]], Self.E] where conforms_to(Self.I, Filterable) and R == Bool",
+      "signature": "def filter_not[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] predicate: C) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], True]], Self.E] where conforms_to(Self.I, Filterable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -98843,9 +98875,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], True]], Self.E]"
       },
-      "signature": "def filter_not[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] predicate: C) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], True]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], True]], Self.E] where conforms_to(Self.I, Filterable) and Self.E != Never and R == Bool",
+      "signature": "def filter_not[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] predicate: C) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], True]], Self.E] where conforms_to(Self.I, Filterable) and Self.E != Never and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -98873,9 +98905,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True]], Self.E]"
       },
-      "signature": "def filter_not[R: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True]], Self.E] where conforms_to(Self.I, Filterable) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Bool",
+      "signature": "def filter_not[R: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True]], Self.E] where conforms_to(Self.I, Filterable) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -98903,9 +98935,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True]], Self.E]"
       },
-      "signature": "def filter_not[R: RegisterPassable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True]], Self.E] where conforms_to(Self.I, Filterable) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and R == Bool",
+      "signature": "def filter_not[R: RegisterPassable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], True]], Self.E] where conforms_to(Self.I, Filterable) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -98940,9 +98972,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, Never, def(P) thin -> R, False], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, Never, def(P) thin -> R, False], True]], Self.E]"
       },
-      "signature": "def filter_not[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, predicate: def(P) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[P, R, Never, def(P) thin -> R, False], True]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, Never, def(P) thin -> R, False], True]], Self.E] where conforms_to(Self.I, Filterable) and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and R == Bool",
+      "signature": "def filter_not[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, predicate: def(P) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[P, R, Never, def(P) thin -> R, False], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, Never, def(P) thin -> R, False], True]], Self.E] where conforms_to(Self.I, Filterable) and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -98977,9 +99009,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, Never, def(P) thin -> R, False], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, Never, def(P) thin -> R, False], True]], Self.E]"
       },
-      "signature": "def filter_not[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, predicate: def(P) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[P, R, Never, def(P) thin -> R, False], True]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, Never, def(P) thin -> R, False], True]], Self.E] where conforms_to(Self.I, Filterable) and P == Self.I.Element[Self.V] and R == Bool",
+      "signature": "def filter_not[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, predicate: def(P) thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[P, R, Never, def(P) thin -> R, False], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, Never, def(P) thin -> R, False], True]], Self.E] where conforms_to(Self.I, Filterable) and P == Self.I.Element[Self.V] and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -99014,9 +99046,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True]], Self.E]"
       },
-      "signature": "def filter_not[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Bool",
+      "signature": "def filter_not[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -99051,9 +99083,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True]], Self.E]"
       },
-      "signature": "def filter_not[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and R == Bool",
+      "signature": "def filter_not[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(Self.I.Element[Self.V]) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -99095,9 +99127,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True]], Self.E]"
       },
-      "signature": "def filter_not[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(P) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and R == Bool",
+      "signature": "def filter_not[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(P) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      },
      {
@@ -99139,9 +99171,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True]], Self.E]"
+       "type": "Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True]], Self.E]"
       },
-      "signature": "def filter_not[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(P) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True]] -> Pipeline[Self.I, _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and R == Bool",
+      "signature": "def filter_not[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, predicate: def(P) raises X thin -> R) raises _Filtering[Self.I].FilterError[Self.V, _FilterPredicate[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True]] -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], _Filtering[Self.I].Filtered[Self.V, _FilterPredicate[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True]], Self.E] where conforms_to(Self.I, Filterable) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor)",
       "summary": "Apply filter_not through the selected family's Filterable capability."
      }
     ],
@@ -100651,7 +100683,7 @@
        }
       ],
       "description": "",
-      "error": "C.Failure",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], C, False, True]]",
       "parameters": [
        {
         "description": "The first library callback type, retaining its receiver and origins.",
@@ -100665,10 +100697,10 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[C.Result]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[C.Result]], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], C, False, True]], Self.E]"
       },
-      "signature": "def flat_pair_with[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[C.Result]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[C.Result]], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Success[Self.V] and C.Result == Result[_Success[C.Result], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain both success values."
+      "signature": "def flat_pair_with[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], C, False, True]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], C, False, True]], Self.E] where conforms_to(Self.I, Monad) and C.Payload == Self.I.Element[Self.V] and _CarrierCompatible[_Binding[Self.I], C.Result] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], C, False, True]]",
+      "summary": "Sequence a borrowing effect and pair each original with each successful projection."
      },
      {
       "args": [
@@ -100681,7 +100713,7 @@
        }
       ],
       "description": "",
-      "error": "Never",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False, True]]",
       "parameters": [
        {
         "description": "",
@@ -100701,7 +100733,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "def(_Success[Self.V]) -> R",
+        "type": "def(Self.I.Element[Self.V]) -> R",
         "variadic": false
        }
       ],
@@ -100709,10 +100741,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False, True]], Self.E]"
       },
-      "signature": "def flat_pair_with[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_Success[Self.V]) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain both success values."
+      "signature": "def flat_pair_with[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False, True]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False, True]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False, True]]",
+      "summary": "Sequence a borrowing effect and pair each original with each successful projection."
      },
      {
       "args": [
@@ -100725,7 +100757,7 @@
        }
       ],
       "description": "",
-      "error": "Self.E",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], False, True]]",
       "parameters": [
        {
         "description": "",
@@ -100745,7 +100777,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "def(_Success[Self.V]) raises Self.E -> R",
+        "type": "def(Self.I.Element[Self.V]) raises Self.E -> R",
         "variadic": false
        }
       ],
@@ -100753,10 +100785,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], False, True]], Self.E]"
       },
-      "signature": "def flat_pair_with[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_Success[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises Self.E -> Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain both success values."
+      "signature": "def flat_pair_with[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], False, True]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], False, True]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], False, True]]",
+      "summary": "Sequence a borrowing effect and pair each original with each successful projection."
      },
      {
       "args": [
@@ -100769,7 +100801,7 @@
        }
       ],
       "description": "",
-      "error": "Never",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], False, True]]",
       "parameters": [
        {
         "description": "",
@@ -100789,7 +100821,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "def(_Success[Self.V]) raises Never -> R",
+        "type": "def(Self.I.Element[Self.V]) raises Never -> R",
         "variadic": false
        }
       ],
@@ -100797,10 +100829,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], False, True]], Self.E]"
       },
-      "signature": "def flat_pair_with[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_Success[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain both success values."
+      "signature": "def flat_pair_with[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], False, True]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], False, True]], Self.E] where conforms_to(Self.I, Monad) and Self.E != Never and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], False, True]]",
+      "summary": "Sequence a borrowing effect and pair each original with each successful projection."
      },
      {
       "args": [
@@ -100808,16 +100840,16 @@
         "convention": "",
         "description": "",
         "name": "function",
-        "type": "def(_Success[Self.V]) thin -> R",
+        "type": "def(Self.I.Element[Self.V]) thin -> R",
         "variadic": false
        }
       ],
       "description": "",
-      "error": "Never",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False, True]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "Movable & Deinitable",
         "variadic": false
@@ -100827,10 +100859,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False, True]], Self.E]"
       },
-      "signature": "def flat_pair_with[R: Movable & Deinitable](deinit self, function: def(_Success[Self.V]) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain both success values."
+      "signature": "def flat_pair_with[R: Movable & Deinitable, //](deinit self, function: def(Self.I.Element[Self.V]) thin -> R) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False, True]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False, True]], Self.E] where conforms_to(Self.I, Monad) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False, True]]",
+      "summary": "Sequence a borrowing effect and pair each original with each successful projection."
      },
      {
       "args": [
@@ -100838,16 +100870,16 @@
         "convention": "",
         "description": "",
         "name": "function",
-        "type": "def(_Success[Self.V]) thin -> R",
+        "type": "def(Self.I.Element[Self.V]) thin -> R",
         "variadic": false
        }
       ],
       "description": "",
-      "error": "Never",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False, True]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "RegisterPassable & Deinitable",
         "variadic": false
@@ -100857,10 +100889,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False, True]], Self.E]"
       },
-      "signature": "def flat_pair_with[R: RegisterPassable & Deinitable](deinit self, function: def(_Success[Self.V]) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain both success values."
+      "signature": "def flat_pair_with[R: RegisterPassable & Deinitable, //](deinit self, function: def(Self.I.Element[Self.V]) thin -> R) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False, True]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False, True]], Self.E] where conforms_to(Self.I, Monad) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False, True]]",
+      "summary": "Sequence a borrowing effect and pair each original with each successful projection."
      },
      {
       "args": [
@@ -100873,18 +100905,18 @@
        }
       ],
       "description": "",
-      "error": "Never",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, Never, def(P) thin -> R, False], False, True]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "P",
         "type": "TrivialRegisterPassable",
         "variadic": false
        },
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "Movable & Deinitable",
         "variadic": false
@@ -100894,10 +100926,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, Never, def(P) thin -> R, False], False, True]], Self.E]"
       },
-      "signature": "def flat_pair_with[P: TrivialRegisterPassable, R: Movable & Deinitable](deinit self, function: def(P) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain both success values."
+      "signature": "def flat_pair_with[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, function: def(P) thin -> R) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, Never, def(P) thin -> R, False], False, True]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, Never, def(P) thin -> R, False], False, True]], Self.E] where conforms_to(Self.I, Monad) and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, Never, def(P) thin -> R, False], False, True]]",
+      "summary": "Sequence a borrowing effect and pair each original with each successful projection."
      },
      {
       "args": [
@@ -100910,18 +100942,18 @@
        }
       ],
       "description": "",
-      "error": "Never",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, Never, def(P) thin -> R, False], False, True]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "P",
         "type": "TrivialRegisterPassable",
         "variadic": false
        },
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "RegisterPassable & Deinitable",
         "variadic": false
@@ -100931,10 +100963,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, Never, def(P) thin -> R, False], False, True]], Self.E]"
       },
-      "signature": "def flat_pair_with[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable](deinit self, function: def(P) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain both success values."
+      "signature": "def flat_pair_with[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, function: def(P) thin -> R) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, Never, def(P) thin -> R, False], False, True]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, Never, def(P) thin -> R, False], False, True]], Self.E] where conforms_to(Self.I, Monad) and P == Self.I.Element[Self.V] and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, Never, def(P) thin -> R, False], False, True]]",
+      "summary": "Sequence a borrowing effect and pair each original with each successful projection."
      },
      {
       "args": [
@@ -100942,23 +100974,23 @@
         "convention": "",
         "description": "",
         "name": "function",
-        "type": "def(_Success[Self.V]) raises X thin -> R",
+        "type": "def(Self.I.Element[Self.V]) raises X thin -> R",
         "variadic": false
        }
       ],
       "description": "",
-      "error": "X",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False, True]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "Movable & Deinitable",
         "variadic": false
        },
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "X",
         "type": "Movable & Deinitable",
         "variadic": false
@@ -100968,10 +101000,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False, True]], Self.E]"
       },
-      "signature": "def flat_pair_with[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, function: def(_Success[Self.V]) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain both success values."
+      "signature": "def flat_pair_with[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.I.Element[Self.V]) raises X thin -> R) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False, True]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False, True]], Self.E] where conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False, True]]",
+      "summary": "Sequence a borrowing effect and pair each original with each successful projection."
      },
      {
       "args": [
@@ -100979,23 +101011,23 @@
         "convention": "",
         "description": "",
         "name": "function",
-        "type": "def(_Success[Self.V]) raises X thin -> R",
+        "type": "def(Self.I.Element[Self.V]) raises X thin -> R",
         "variadic": false
        }
       ],
       "description": "",
-      "error": "X",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False, True]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "RegisterPassable & Deinitable",
         "variadic": false
        },
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "X",
         "type": "Movable & Deinitable",
         "variadic": false
@@ -101005,10 +101037,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False, True]], Self.E]"
       },
-      "signature": "def flat_pair_with[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, function: def(_Success[Self.V]) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain both success values."
+      "signature": "def flat_pair_with[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.I.Element[Self.V]) raises X thin -> R) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False, True]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False, True]], Self.E] where conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False, True]]",
+      "summary": "Sequence a borrowing effect and pair each original with each successful projection."
      },
      {
       "args": [
@@ -101021,25 +101053,25 @@
        }
       ],
       "description": "",
-      "error": "X",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False, True]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "P",
         "type": "TrivialRegisterPassable",
         "variadic": false
        },
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "Movable & Deinitable",
         "variadic": false
        },
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "X",
         "type": "Movable & Deinitable",
         "variadic": false
@@ -101049,10 +101081,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False, True]], Self.E]"
       },
-      "signature": "def flat_pair_with[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable](deinit self, function: def(P) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain both success values."
+      "signature": "def flat_pair_with[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> R) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False, True]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False, True]], Self.E] where conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False, True]]",
+      "summary": "Sequence a borrowing effect and pair each original with each successful projection."
      },
      {
       "args": [
@@ -101065,25 +101097,25 @@
        }
       ],
       "description": "",
-      "error": "X",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False, True]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "P",
         "type": "TrivialRegisterPassable",
         "variadic": false
        },
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "RegisterPassable & Deinitable",
         "variadic": false
        },
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "X",
         "type": "Movable & Deinitable",
         "variadic": false
@@ -101093,10 +101125,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False, True]], Self.E]"
       },
-      "signature": "def flat_pair_with[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, function: def(P) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]]]], Result[Tuple[_Success[Self.V], _Success[R]], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain both success values."
+      "signature": "def flat_pair_with[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> R) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False, True]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False, True]], Self.E] where conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False, True]]",
+      "summary": "Sequence a borrowing effect and pair each original with each successful projection."
      }
     ],
     "flat_sequence": [
@@ -101135,7 +101167,7 @@
        }
       ],
       "description": "",
-      "error": "C.Failure",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], C]]",
       "parameters": [
        {
         "description": "The first library callback type, retaining its receiver and origins.",
@@ -101149,10 +101181,10 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], C]], Self.E]"
       },
-      "signature": "def flat_tap[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Success[Self.V] and C.Result == Result[_Success[C.Result], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain the original success value."
+      "signature": "def flat_tap[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], C]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], C]], Self.E] where conforms_to(Self.I, Monad) and C.Payload == Self.I.Element[Self.V] and _CarrierCompatible[_Binding[Self.I], C.Result] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], C]]",
+      "summary": "Sequence a borrowing effect and retain each original payload."
      },
      {
       "args": [
@@ -101165,7 +101197,7 @@
        }
       ],
       "description": "",
-      "error": "Never",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]]]",
       "parameters": [
        {
         "description": "",
@@ -101185,7 +101217,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "def(_Success[Self.V]) -> R",
+        "type": "def(Self.I.Element[Self.V]) -> R",
         "variadic": false
        }
       ],
@@ -101193,10 +101225,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]]], Self.E]"
       },
-      "signature": "def flat_tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_Success[Self.V]) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain the original success value."
+      "signature": "def flat_tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]]]",
+      "summary": "Sequence a borrowing effect and retain each original payload."
      },
      {
       "args": [
@@ -101209,7 +101241,7 @@
        }
       ],
       "description": "",
-      "error": "Self.E",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]]",
       "parameters": [
        {
         "description": "",
@@ -101229,7 +101261,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "def(_Success[Self.V]) raises Self.E -> R",
+        "type": "def(Self.I.Element[Self.V]) raises Self.E -> R",
         "variadic": false
        }
       ],
@@ -101237,10 +101269,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]], Self.E]"
       },
-      "signature": "def flat_tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_Success[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises Self.E -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain the original success value."
+      "signature": "def flat_tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]]",
+      "summary": "Sequence a borrowing effect and retain each original payload."
      },
      {
       "args": [
@@ -101253,7 +101285,7 @@
        }
       ],
       "description": "",
-      "error": "Never",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]]]",
       "parameters": [
        {
         "description": "",
@@ -101273,7 +101305,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "def(_Success[Self.V]) raises Never -> R",
+        "type": "def(Self.I.Element[Self.V]) raises Never -> R",
         "variadic": false
        }
       ],
@@ -101281,10 +101313,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]]], Self.E]"
       },
-      "signature": "def flat_tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_Success[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain the original success value."
+      "signature": "def flat_tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]]], Self.E] where conforms_to(Self.I, Monad) and Self.E != Never and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]]]",
+      "summary": "Sequence a borrowing effect and retain each original payload."
      },
      {
       "args": [
@@ -101292,16 +101324,16 @@
         "convention": "",
         "description": "",
         "name": "function",
-        "type": "def(_Success[Self.V]) thin -> R",
+        "type": "def(Self.I.Element[Self.V]) thin -> R",
         "variadic": false
        }
       ],
       "description": "",
-      "error": "Never",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "Movable & Deinitable",
         "variadic": false
@@ -101311,10 +101343,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]]], Self.E]"
       },
-      "signature": "def flat_tap[R: Movable & Deinitable](deinit self, function: def(_Success[Self.V]) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain the original success value."
+      "signature": "def flat_tap[R: Movable & Deinitable, //](deinit self, function: def(Self.I.Element[Self.V]) thin -> R) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]]], Self.E] where conforms_to(Self.I, Monad) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]]]",
+      "summary": "Sequence a borrowing effect and retain each original payload."
      },
      {
       "args": [
@@ -101322,16 +101354,16 @@
         "convention": "",
         "description": "",
         "name": "function",
-        "type": "def(_Success[Self.V]) thin -> R",
+        "type": "def(Self.I.Element[Self.V]) thin -> R",
         "variadic": false
        }
       ],
       "description": "",
-      "error": "Never",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "RegisterPassable & Deinitable",
         "variadic": false
@@ -101341,10 +101373,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]]], Self.E]"
       },
-      "signature": "def flat_tap[R: RegisterPassable & Deinitable](deinit self, function: def(_Success[Self.V]) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain the original success value."
+      "signature": "def flat_tap[R: RegisterPassable & Deinitable, //](deinit self, function: def(Self.I.Element[Self.V]) thin -> R) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]]], Self.E] where conforms_to(Self.I, Monad) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]]]",
+      "summary": "Sequence a borrowing effect and retain each original payload."
      },
      {
       "args": [
@@ -101357,18 +101389,18 @@
        }
       ],
       "description": "",
-      "error": "Never",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, Never, def(P) thin -> R, False]]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "P",
         "type": "TrivialRegisterPassable",
         "variadic": false
        },
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "Movable & Deinitable",
         "variadic": false
@@ -101378,10 +101410,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, Never, def(P) thin -> R, False]]], Self.E]"
       },
-      "signature": "def flat_tap[P: TrivialRegisterPassable, R: Movable & Deinitable](deinit self, function: def(P) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain the original success value."
+      "signature": "def flat_tap[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, function: def(P) thin -> R) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, Never, def(P) thin -> R, False]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, Never, def(P) thin -> R, False]]], Self.E] where conforms_to(Self.I, Monad) and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, Never, def(P) thin -> R, False]]]",
+      "summary": "Sequence a borrowing effect and retain each original payload."
      },
      {
       "args": [
@@ -101394,18 +101426,18 @@
        }
       ],
       "description": "",
-      "error": "Never",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, Never, def(P) thin -> R, False]]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "P",
         "type": "TrivialRegisterPassable",
         "variadic": false
        },
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "RegisterPassable & Deinitable",
         "variadic": false
@@ -101415,10 +101447,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, Never, def(P) thin -> R, False]]], Self.E]"
       },
-      "signature": "def flat_tap[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable](deinit self, function: def(P) thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain the original success value."
+      "signature": "def flat_tap[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, function: def(P) thin -> R) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, Never, def(P) thin -> R, False]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, Never, def(P) thin -> R, False]]], Self.E] where conforms_to(Self.I, Monad) and P == Self.I.Element[Self.V] and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, Never, def(P) thin -> R, False]]]",
+      "summary": "Sequence a borrowing effect and retain each original payload."
      },
      {
       "args": [
@@ -101426,23 +101458,23 @@
         "convention": "",
         "description": "",
         "name": "function",
-        "type": "def(_Success[Self.V]) raises X thin -> R",
+        "type": "def(Self.I.Element[Self.V]) raises X thin -> R",
         "variadic": false
        }
       ],
       "description": "",
-      "error": "X",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "Movable & Deinitable",
         "variadic": false
        },
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "X",
         "type": "Movable & Deinitable",
         "variadic": false
@@ -101452,10 +101484,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]]], Self.E]"
       },
-      "signature": "def flat_tap[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, function: def(_Success[Self.V]) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain the original success value."
+      "signature": "def flat_tap[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.I.Element[Self.V]) raises X thin -> R) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]]], Self.E] where conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]]]",
+      "summary": "Sequence a borrowing effect and retain each original payload."
      },
      {
       "args": [
@@ -101463,23 +101495,23 @@
         "convention": "",
         "description": "",
         "name": "function",
-        "type": "def(_Success[Self.V]) raises X thin -> R",
+        "type": "def(Self.I.Element[Self.V]) raises X thin -> R",
         "variadic": false
        }
       ],
       "description": "",
-      "error": "X",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "RegisterPassable & Deinitable",
         "variadic": false
        },
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "X",
         "type": "Movable & Deinitable",
         "variadic": false
@@ -101489,10 +101521,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]]], Self.E]"
       },
-      "signature": "def flat_tap[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, function: def(_Success[Self.V]) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain the original success value."
+      "signature": "def flat_tap[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.I.Element[Self.V]) raises X thin -> R) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]]], Self.E] where conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]]]",
+      "summary": "Sequence a borrowing effect and retain each original payload."
      },
      {
       "args": [
@@ -101505,25 +101537,25 @@
        }
       ],
       "description": "",
-      "error": "X",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "P",
         "type": "TrivialRegisterPassable",
         "variadic": false
        },
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "Movable & Deinitable",
         "variadic": false
        },
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "X",
         "type": "Movable & Deinitable",
         "variadic": false
@@ -101533,10 +101565,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]], Self.E]"
       },
-      "signature": "def flat_tap[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable](deinit self, function: def(P) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain the original success value."
+      "signature": "def flat_tap[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> R) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]], Self.E] where conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]]",
+      "summary": "Sequence a borrowing effect and retain each original payload."
      },
      {
       "args": [
@@ -101549,25 +101581,25 @@
        }
       ],
       "description": "",
-      "error": "X",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "P",
         "type": "TrivialRegisterPassable",
         "variadic": false
        },
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "RegisterPassable & Deinitable",
         "variadic": false
        },
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "X",
         "type": "Movable & Deinitable",
         "variadic": false
@@ -101577,10 +101609,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]], Self.E]"
       },
-      "signature": "def flat_tap[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, function: def(P) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "Sequence a borrowed Result projection and retain the original success value."
+      "signature": "def flat_tap[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> R) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]], Self.E] where conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]]",
+      "summary": "Sequence a borrowing effect and retain each original payload."
      }
     ],
     "flat_tap_err": [
@@ -104027,7 +104059,7 @@
        }
       ],
       "description": "",
-      "error": "C.Error",
+      "error": "_Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], C]]]",
       "parameters": [
        {
         "description": "The first library callback type, retaining its receiver and origins.",
@@ -104041,10 +104073,10 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[ResultFamily[_Failure[C.Out]], C.Out, Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], C]]], Self.E]"
       },
-      "signature": "def followed_by[C: ThunkContract & Movable & Deinitable](deinit self, var function: C) raises C.Error -> Pipeline[ResultFamily[_Failure[C.Out]], C.Out, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Out == Result[_Success[C.Out], _Failure[Self.V]]",
-      "summary": "On success, call a zero-argument factory and return its Result."
+      "signature": "def followed_by[C: ThunkContract & Movable & Deinitable](deinit self, var function: C) raises _Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], C]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], C]]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], C.Out] and _BindCompatible[_Binding[Self.I], Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], C]]]",
+      "summary": "Sequence a factory and keep its produced payloads."
      },
      {
       "args": [
@@ -104057,7 +104089,7 @@
        }
       ],
       "description": "",
-      "error": "Never",
+      "error": "_Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, False, o]]]]",
       "parameters": [
        {
         "description": "",
@@ -104085,10 +104117,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[R]], R, Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, False, o]]]], Self.E]"
       },
-      "signature": "def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "On success, call a zero-argument factory and return its Result."
+      "signature": "def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, False, o]]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, False, o]]]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, False, o]]]]",
+      "summary": "Sequence a factory and keep its produced payloads."
      },
      {
       "args": [
@@ -104101,7 +104133,7 @@
        }
       ],
       "description": "",
-      "error": "Self.E",
+      "error": "_Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Self.E, C, True, o]]]]",
       "parameters": [
        {
         "description": "",
@@ -104129,10 +104161,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[R]], R, Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Self.E, C, True, o]]]], Self.E]"
       },
-      "signature": "def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Self.E -> R](deinit self, ref[o] function: C) raises Self.E -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "On success, call a zero-argument factory and return its Result."
+      "signature": "def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Self.E -> R](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Self.E, C, True, o]]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Self.E, C, True, o]]]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Self.E, C, True, o]]]]",
+      "summary": "Sequence a factory and keep its produced payloads."
      },
      {
       "args": [
@@ -104145,7 +104177,7 @@
        }
       ],
       "description": "",
-      "error": "Never",
+      "error": "_Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, True, o]]]]",
       "parameters": [
        {
         "description": "",
@@ -104173,10 +104205,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[R]], R, Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, True, o]]]], Self.E]"
       },
-      "signature": "def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Never -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "On success, call a zero-argument factory and return its Result."
+      "signature": "def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Never -> R](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, True, o]]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, True, o]]]], Self.E] where conforms_to(Self.I, Monad) and Self.E != Never and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, True, o]]]]",
+      "summary": "Sequence a factory and keep its produced payloads."
      },
      {
       "args": [
@@ -104189,11 +104221,11 @@
        }
       ],
       "description": "",
-      "error": "Never",
+      "error": "_Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]]]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "Movable & Deinitable",
         "variadic": false
@@ -104203,10 +104235,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[R]], R, Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]]]], Self.E]"
       },
-      "signature": "def followed_by[R: Movable & Deinitable](deinit self, function: def() thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "On success, call a zero-argument factory and return its Result."
+      "signature": "def followed_by[R: Movable & Deinitable, //](deinit self, function: def() thin -> R) raises _Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]]]], Self.E] where conforms_to(Self.I, Monad) and not conforms_to(R, RegisterPassable) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]]]]",
+      "summary": "Sequence a factory and keep its produced payloads."
      },
      {
       "args": [
@@ -104219,11 +104251,11 @@
        }
       ],
       "description": "",
-      "error": "Never",
+      "error": "_Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]]]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "RegisterPassable & Deinitable",
         "variadic": false
@@ -104233,10 +104265,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[R]], R, Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]]]], Self.E]"
       },
-      "signature": "def followed_by[R: RegisterPassable & Deinitable](deinit self, function: def() thin -> R) raises Never -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "On success, call a zero-argument factory and return its Result."
+      "signature": "def followed_by[R: RegisterPassable & Deinitable, //](deinit self, function: def() thin -> R) raises _Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]]]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]]]]",
+      "summary": "Sequence a factory and keep its produced payloads."
      },
      {
       "args": [
@@ -104249,18 +104281,18 @@
        }
       ],
       "description": "",
-      "error": "X",
+      "error": "_Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "Movable & Deinitable",
         "variadic": false
        },
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "X",
         "type": "Movable & Deinitable",
         "variadic": false
@@ -104270,10 +104302,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[R]], R, Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]], Self.E]"
       },
-      "signature": "def followed_by[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, function: def() raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "On success, call a zero-argument factory and return its Result."
+      "signature": "def followed_by[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def() raises X thin -> R) raises _Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]], Self.E] where conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]]",
+      "summary": "Sequence a factory and keep its produced payloads."
      },
      {
       "args": [
@@ -104286,18 +104318,18 @@
        }
       ],
       "description": "",
-      "error": "X",
+      "error": "_Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]]",
       "parameters": [
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "R",
         "type": "RegisterPassable & Deinitable",
         "variadic": false
        },
        {
         "description": "",
-        "inferred": false,
+        "inferred": true,
         "name": "X",
         "type": "Movable & Deinitable",
         "variadic": false
@@ -104307,10 +104339,10 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[ResultFamily[_Failure[R]], R, Self.E]"
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]], Self.E]"
       },
-      "signature": "def followed_by[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, function: def() raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[R]], R, Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and R == Result[_Success[R], _Failure[Self.V]]",
-      "summary": "On success, call a zero-argument factory and return its Result."
+      "signature": "def followed_by[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def() raises X thin -> R) raises _Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]], Self.E] where conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]]",
+      "summary": "Sequence a factory and keep its produced payloads."
      }
     ],
     "get": [

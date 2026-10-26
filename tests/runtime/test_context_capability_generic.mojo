@@ -1,0 +1,85 @@
+"""Imported native forwarding preserves borrowed origins and raised errors."""
+from fp.functions import pipeline
+from fp.data import Result, Ok
+from fp.algebra import ResultFamily, OptionalFamily, ListFamily
+from std.testing import assert_equal
+
+
+def msg_optional[P: Movable & Deinitable,R: Movable & Deinitable,X: Movable & Deinitable,
+                 C: def(P) raises X -> R](var value: Optional[P],ref function: C
+) raises X -> Optional[P] where OptionalFamily.CarrierCompatible[R]:
+    return pipeline(value^).raising[X]().flat_tap(function).get()
+
+
+def msg_result[P: Movable & Deinitable,R: Movable & Deinitable,E: Movable & Deinitable,X: Movable & Deinitable,
+               C: def(P) raises X -> R](var value: Result[P,E],ref function: C
+) raises X -> Result[P,E] where R == Result[ResultFamily[E].Element[R],E]:
+    return pipeline(value^).raising[X]().flat_tap(function).get()
+
+
+def msg_pair[P: Movable & Deinitable,R: Movable & Deinitable,X: Movable & Deinitable,
+             C: def(P) raises X -> R](var value: Optional[P],ref function: C
+) raises X -> Optional[Tuple[P,OptionalFamily.Element[R]]] where OptionalFamily.CarrierCompatible[R]:
+    return pipeline(value^).raising[X]().flat_pair_with(function).get()
+
+
+def msg_result_pair[P: Movable & Deinitable,R: Movable & Deinitable,E: Movable & Deinitable,X: Movable & Deinitable,
+                    C: def(P) raises X -> R](var value: Result[P,E],ref function: C
+) raises X -> Result[Tuple[P,ResultFamily[E].Element[R]],E] where R == Result[ResultFamily[E].Element[R],E]:
+    return pipeline(value^).raising[X]().flat_pair_with(function).get()
+
+
+def msg_before[T: Movable & Deinitable,R: Movable & Deinitable,X: Movable & Deinitable,
+               C: def() raises X -> R](var value: List[T],ref function: C
+) raises X -> List[T] where conforms_to(T,Copyable) and ListFamily.CarrierCompatible[R]:
+    return pipeline(value^).raising[X]().before(function).get()
+
+
+def msg_after[T: Movable & Deinitable,R: Movable & Deinitable,X: Movable & Deinitable,
+              C: def() raises X -> R](var value: List[T],ref function: C
+) raises X -> R where ListFamily.CarrierCompatible[R]:
+    return pipeline(value^).raising[X]().followed_by(function).get()
+
+
+def msg_origins(values: List[Int]) raises:
+    var view = Span(values)
+    comptime V = type_of(view)
+    def observe(value: V) raises String -> Optional[Int]: return Optional(value[0])
+    def result(value: V) raises String -> Result[Int,String]: return Ok(value[0])
+    def branches() raises String -> List[Int]: return List[Int]([1,2])
+    var retained = msg_optional(Optional(view),observe)
+    comptime assert type_of(retained) == Optional[V]
+    assert_equal(retained.value()[1],8)
+    assert_equal(msg_result(Result[V,String](Ok(view)),result)._ok().value[1],8)
+    def projection(value: V) raises String -> Optional[V]: return Optional(value)
+    var paired = msg_pair(Optional(view),projection)
+    comptime assert type_of(paired) == Optional[Tuple[V,V]]
+    assert_equal(paired.value()[0][0],7)
+    assert_equal(paired.value()[1][1],8)
+    def result_projection(value: V) raises String -> Result[V,V]: return Ok(value)
+    var result_pair = msg_result_pair(Result[V,V](Ok(view)),result_projection)
+    comptime assert type_of(result_pair) == Result[Tuple[V,V],V]
+    assert_equal(result_pair._ok().value[1][1],8)
+    var copied = msg_before(List[V]([view]),branches)
+    assert_equal(copied[1][0],7)
+    assert_equal(msg_after(List[V]([view]),branches),[1,2])
+    def failed(value: V) raises V -> Optional[Int]: raise value
+    var code = 0
+    try:
+        _ = msg_optional(Optional(view),failed)
+    except error:
+        comptime assert type_of(error) == V
+        code = error[1]
+    assert_equal(code,8)
+    code = 0
+    try:
+        _ = msg_pair(Optional(view),failed)
+    except error:
+        comptime assert type_of(error) == V
+        code = error[1]
+    assert_equal(code,8)
+
+
+def main() raises:
+    msg_origins([7,8])
+    print('monad sequencing generic: ok')
