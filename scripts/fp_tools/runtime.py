@@ -110,21 +110,37 @@ def timed_argv(argv):
     return [executable, '-l' if system == 'Darwin' else '-v', *map(str, argv)]
 
 
-def _linux_tree_rss(pid):
-    """Sample this command's descendants only; never inspect unrelated jobs."""
+def _linux_tree_rss(pid, proc_root=Path('/proc')):
+    """Sum a process tree from a parent-PID snapshot, including threaded spawns.
+
+    Some Linux proc mounts omit task/*/children; even when present, a leader's
+    children file omits children created by its other threads. Status PPid is
+    available on both mounts. Only this command and its descendants contribute
+    to the memory total; unrelated entries reconstruct the parent-PID index.
+    """
+    children, resident = {}, {}
+    for entry in proc_root.iterdir():
+        if not entry.name.isdecimal():
+            continue
+        try:
+            status = (entry / 'status').read_text()
+        except (FileNotFoundError, ProcessLookupError, PermissionError):
+            continue
+        parent = re.search(r'^PPid:\s+(\d+)', status, re.M)
+        if parent is None:
+            continue
+        child = int(entry.name)
+        children.setdefault(int(parent[1]), []).append(child)
+        match = re.search(r'^VmRSS:\s+(\d+)\s+kB', status, re.M)
+        resident[child] = int(match[1]) * 1024 if match else 0
     pending, seen, total = [pid], set(), 0
     while pending:
         child = pending.pop()
         if child in seen:
             continue
         seen.add(child)
-        try:
-            status = Path(f'/proc/{child}/status').read_text()
-            match = re.search(r'^VmRSS:\s+(\d+)\s+kB', status, re.M)
-            total += int(match[1]) * 1024 if match else 0
-            pending.extend(map(int, Path(f'/proc/{child}/task/{child}/children').read_text().split()))
-        except (FileNotFoundError, ProcessLookupError):
-            pass  # A child can finish between the two reads.
+        total += resident.get(child, 0)
+        pending.extend(children.get(child, ()))
     return total
 
 

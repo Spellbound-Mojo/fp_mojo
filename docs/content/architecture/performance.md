@@ -129,6 +129,55 @@ pixi run measure-compilation \
   --output .cache/mojo12-architecture/measure-prototype-1
 ```
 
+## Mojo 1.2 Capture qualification
+
+The Capture signature change in `51e0ef4` was compared with `3bf6041` on
+October 26, 2026, using Mojo 1.2.0 (2016d0cd), Linux x86-64 and an AMD EPYC
+9V74 host. Each compilation used a fresh Mojo cache, two compiler threads,
+`--Werror`, a 180-second timeout and a 4-GiB sampled process-tree RSS limit.
+Builds ran serially without other Mojo jobs. These are single observations
+per client and route, not medians or evidence of a general speedup.
+
+| Client and import route | Before, seconds | After, seconds | After peak RSS, MiB |
+|---|---:|---:|---:|
+| Capture tutorial, source | 4.15 | 3.77 | 256.7 |
+| Selected workflow, source | 7.63 | 7.33 | 306.8 |
+| Capture tutorial, precompiled | 3.84 | 4.31 | 256.1 |
+| Selected workflow, precompiled | 5.59 | 6.37 | 327.8 |
+
+The new stored-pointer convention and ownership clients also passed through
+source and precompiled imports at O0 and O3. Those eight cold builds took
+4.05–11.16 seconds and 271.2–437.8 MiB native-timer peak RSS. The maximum
+sampled process-tree RSS was 448.6 MiB; it is a separate measurement from the
+native timer. All sixteen builds executed successfully with unchanged input
+and library hashes.
+
+The generated Capture module grew from 156,455 to 390,299 bytes and from 218
+to 551 `run` declarations, including private argument-bundle methods. The
+Context module remained byte-identical. The finite signatures come from one
+shared descriptor; they retain the explicit two-positional-operand limit.
+The measured clients remain within the verification budget. These results do
+not justify weakening ownership or error admission to reduce the overload count.
+
+Reports are under `.cache/roadmap/resource-accounting/qualification/`, in
+`{baseline,current}-{source,package}-O3` and `native-{source,package}-O{0,3}`.
+The compiler, target, commands, client hashes, library hashes and cache policy
+are recorded in each report. Reproduce a current client with:
+
+```sh
+pixi run measure-compilation tests/runtime/test_capture_native_abi_register.mojo \
+  --include src --level 0 --threads 2
+```
+
+Independent source and precompiled installations also passed sixteen clients:
+the Capture tutorial, selected workflow, stored stateful pointers and move-only
+Capture ownership, each at O0 and O3 through both delivery formats. Compilation
+used copied artifacts and an empty working directory outside the checkout;
+executables then checked their assertions or reviewed tutorial output.
+The install report is `qualification/install/report.json` under the same
+workspace folder. This establishes those Linux host clients, not macOS or GPU
+qualification, and does not publish a release.
+
 ## SIMD
 
 One algorithm serves scalar, SIMD and non-numeric operations: `fold_left` over

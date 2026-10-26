@@ -79,8 +79,8 @@ clause.
 ## Runner guarantees
 
 `scripts/fp_tools` reserves a fresh output directory for every run, gives each
-executable a unique path, bounds every command in time and memory, and serializes
-a report. A compiler crash or timeout is always a failure, including for an
+executable a unique path, applies its declared time and optional memory budgets,
+and serializes a report. A compiler crash or timeout is always a failure, including for an
 expected rejection. The runner hashes every input file (sources, tests, scripts,
 documentation, benchmarks, `README.md`, `pixi.toml`, `pixi.lock`, `mkdocs.yml`)
 and fails the run if any of them changes before it completes. The suite's report
