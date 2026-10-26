@@ -90,7 +90,7 @@ def methods(*, fold_stage=False):
             conditions=["Self.E != Never"] if kind == "never" else [f"_ErrorCompatible[Self.E, {E}]"] if kind == "thin_raising" else [],
         )
 
-    def native_callbacks(mode, payload, arg, *, second=False, repeatable=False, library=True):
+    def native_callbacks(mode, payload, arg, *, second=False, repeatable=False, library=True, result_register=None):
         # Known operands project their exact native convention; only the result
         # needs separate register/memory bounds during callback inference.
         # Closure borrows and owned thin-pointer storage keep the same adapters.
@@ -106,7 +106,7 @@ def methods(*, fold_stage=False):
                             read_parameter="Q" if second else "P") for p in payloads]
         result = "S" if second else "R"
         for kind in ("thin_pure", "thin_raising"):
-            for abi in variants(operands, result):
+            for abi in variants(operands, result, result_register=result_register):
                 selected = abi.payloads if mode in ("binary", "nary") else abi.payloads[0] if payloads else ""
                 cb = callback(mode, kind, selected, arg, second=second)
                 bounds = dict(abi.parameters)
@@ -771,7 +771,10 @@ def methods(*, fold_stage=False):
     operation = RESULT_OPERATIONS["ensure"]
     primary, secondary = operation.callbacks
     element = "Self.I.Element[Self.V]"
-    left = list(native_callbacks(primary.mode, primary.input(element, family + ".Failure"), primary.argument))
+    # Ensure requires Bool. Keep the inferred R parameter and every input ABI,
+    # but do not emit thin alternatives requiring both R == Bool and a
+    # non-register result. Library/native closure boundaries are unchanged.
+    left = list(native_callbacks(primary.mode, primary.input(element, family + ".Failure"), primary.argument, result_register=True))
     right = list(native_callbacks(secondary.mode, secondary.input(element, family + ".Failure"), secondary.argument, second=True))
     for p, g in product(left, right):
         contract = f"EnsureContract[{family}, Self.V, {p['adapter_type']}, {g['adapter_type']}]"
@@ -843,7 +846,7 @@ def methods(*, fold_stage=False):
     # error family is selected before either native callback is admitted.
     for operation in error_operations("conditional"):
         primary, secondary = operation.callbacks
-        predicates = native_callbacks(primary.mode, primary.input("Self.I.Element[Self.V]", family + ".Failure"), primary.argument)
+        predicates = native_callbacks(primary.mode, primary.input("Self.I.Element[Self.V]", family + ".Failure"), primary.argument, result_register=True)
         handlers = list(native_callbacks(secondary.mode, secondary.input("Self.I.Element[Self.V]", family + ".Failure"), secondary.argument, second=True))
         for p, h in product(predicates, handlers):
             contract_name = "OrElseIfContract" if operation.effect else "RecoverIfContract"
@@ -873,7 +876,7 @@ def methods(*, fold_stage=False):
         summary, detail = operation.documentation
         two = len(operation.callbacks) == 2
         primary = operation.callbacks[0]
-        left = list(native_callbacks(primary.mode, primary.input(T, Err, whole=Source), primary.argument, library=name != "or_else"))
+        left = list(native_callbacks(primary.mode, primary.input(T, Err, whole=Source), primary.argument, library=name != "or_else", result_register=True if operation.conditional else None))
         if two:
             secondary = operation.callbacks[1]
             right = native_callbacks(secondary.mode, secondary.input(T, Err, whole=Source), secondary.argument, second=True)

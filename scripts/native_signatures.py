@@ -200,8 +200,13 @@ def argument(type_, convention, *, thin=False, known=True):
     return "var " + (f"_NativeOwnedArg[{type_}]" if thin and known else type_)
 
 
-def variants(operands, result="R"):
-    """Disjoint input/return ABI evidence; a known consumed type is projected."""
+def variants(operands, result="R", *, result_register=None):
+    """Disjoint ABI evidence, retaining inferred parameter positions.
+
+    An operation may fix the result ABI without fixing its inferred parameter:
+    a Bool predicate cannot satisfy the non-register result alternative. The
+    operation still owns result equality and every input convention remains.
+    """
     choices = []
     for op in operands:
         if op.convention == "r":
@@ -233,11 +238,14 @@ def variants(operands, result="R"):
             )
         else:
             choices.append(((op.type, (), ()),))
+    result_choices = (False, True) if result_register is None else (result_register,)
+    if not result:
+        result_choices = (False,)
     for selected in product(*choices):
         payloads = tuple(x[0] for x in selected)
         params = sum((x[1] for x in selected), ())
         conditions = sum((x[2] for x in selected), ())
-        for register_result in ((False, True) if result else (False,)):
+        for register_result in result_choices:
             bound = "RegisterPassable & Deinitable" if register_result else MD
             yield ThinABI(
                 payloads,

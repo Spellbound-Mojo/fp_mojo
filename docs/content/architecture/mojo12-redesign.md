@@ -166,6 +166,30 @@ latter. Ordered component lists and the shared native adapter descriptions are
 sufficient; this assembly introduces no general source transformation layer.
 Generated-source parity preserves every existing Mojo declaration and body.
 
+### Predicate result ABI admission
+
+Selected `ensure`, `recover_if` and `or_else_if` require predicates returning
+native Bool. Their inferred result parameter remains part of the public
+signature, but Bool's register representation rules out every thin overload
+that also requires a non-register result. The shared native ABI generator
+accepts optional result-representation evidence; these predicate roles select
+the register alternatives while retaining every input convention.
+
+This removes 224 impossible overloads, including intrinsic Result fallbacks,
+without changing any retained declaration, parameter position, body, callback
+storage or error policy. Native closures and library callbacks retain their
+existing admission. Generic thin forwarding still needs the register evidence
+required to declare its native function type; equality to Bool alone did not
+supply that evidence on the baseline compiler. Maintained generic and rejection
+fixtures cover explicit bindings, memory-passed inputs and invalid predicates
+returning a memory-passed value.
+
+A small serial cold comparison on Mojo 1.2.0/Linux, with one compiler thread
+and two samples per revision, reduced the sampled invalid `ensure` call from
+1.54 s to 1.19 s. Complete-workflow samples were too variable to establish a
+general compilation speedup. Executable sizes were unchanged. The structural
+benefit is removing unreachable candidates; this is not a runtime optimization.
+
 ### Recovery signature witnesses
 
 Legacy recovery builds its exact family witnesses before rendering. Error
