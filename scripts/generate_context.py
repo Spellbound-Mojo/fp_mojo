@@ -318,7 +318,7 @@ def methods(*, fold_stage=False):
             result = f"{source}.Traversed[{family}, Self.V, {c}]"
             error = f"{source}.TraverseError[{family}, Self.V, {c}]"
             conditions = ["conforms_to(Self.I, Traversable)", f"_TraverseCompatible[{source}, Self.V, {c}]",
-                          f"_CollectCompatible[{family}, Self.V, {c}]", f"_CarrierCompatible[{family}, {cb['result']}]"] + cb["conditions"]
+                          f"{source}.TargetCompatible[{family}, Self.V, {c}]", f"_CarrierCompatible[{family}, {cb['result']}]"] + cb["conditions"]
             emit("par_sequence" if sequence else "par_traverse", cb, params, cb["argument"], result, error, "ResultFamily[S.Value]", conditions,
                  f"_traverse_as[{source}, {family}, Self.V, {c}, {error}]({cb['build']}, self.value^)",
                  "Traverse with ordered Validation accumulation and continue with the resulting Result.")
@@ -508,7 +508,7 @@ def methods(*, fold_stage=False):
             conditions += [
                 f"_TraverseCompatible[{family}, Self.V, {retained}]",
                 f"_CarrierCompatible[J, {cb['result']}]",
-                f"_CollectCompatible[J, Self.V, {retained}]",
+                f"{family}.TargetCompatible[J, Self.V, {retained}]",
             ]
             expr = f"_traverse_as[{family}, J, Self.V, {retained}, {error}]({built}, self.value^)"
             summary = "Traverse borrowed effects and retain each original payload on success."
@@ -544,7 +544,7 @@ def methods(*, fold_stage=False):
             conditions = ["conforms_to(Self.I, Traversable)",
                           f"conforms_to(Self.I, {operation.source_capability})"] + cb["conditions"]
             conditions += [f"_TraverseCompatible[{family}, Self.V, {c}]",
-                           f"_CollectCompatible[J, Self.V, {c}]", f"_CarrierCompatible[J, {result}]",
+                           f"{family}.TargetCompatible[J, Self.V, {c}]", f"_CarrierCompatible[J, {result}]",
                            f"_MapCompatible[J, {traversed}, {finish}]"]
             if compact:
                 conditions += [f"J.Element[{result}] == Optional[_ListElement[J.Element[{result}]]]"]
@@ -586,14 +586,14 @@ def methods(*, fold_stage=False):
                     error = f"(ResultFamily[_Failure[Self.V]].TraverseError[J, Self.V, {probe}] if Self.I == ResultFamily[_Failure[Self.V]] else {error})"
                     conditions += ["conforms_to(Self.I, Traversable)",
                                    f"_TraverseCompatible[{family}, Self.V, {composed}]",
-                                   f"_CollectCompatible[J, Self.V, {composed}]",
+                                   f"{family}.TargetCompatible[J, Self.V, {composed}]",
                                    f"_MapCompatible[J, {result}, _Fill[J.Element[{result}], NoneType]]"]
                     expr = f"_traverse_as[{family}, J, Self.V, {composed}, {error}]({composed}({cb['build']}, {discard}()), self.value^)"
                 else:
                     policy = f"_Discard[J.Element[{result}]]"
                     out = f"J._Looped[Self.V, {c}, {policy}]"
                     error = f"J._LoopError[Self.V, {c}, {policy}]"
-                    conditions += [f"RepeatableUnary[{c}]", f"_CollectCompatible[J, Self.V, {c}]"]
+                    conditions += [f"RepeatableUnary[{c}]", f"J._LoopCompatible[Self.V, {c}, {policy}]"]
                     expr = f"_traverse_void[Self.V, {c}, J, {error}]({cb['build']}, self.value^)"
                 emit(name, cb, params, cb["argument"], out, error, "J", conditions, expr,
                      "Traverse effects and discard successful payloads, retaining source Result errors.")
@@ -646,7 +646,7 @@ def methods(*, fold_stage=False):
     result, error = f"{family}.Traversed[{types}]", f"{family}.TraverseError[{types}]"
     target = f"Pipeline[J, {result}, Self.E]"
     body.append(
-        f"\n    def sequence[J: Applicative](deinit self) raises {error} -> {target} where conforms_to(Self.I, Traversable) and _TraverseCompatible[{family}, Self.V, {identity}] and _CollectCompatible[J, Self.V, {identity}] and _CarrierCompatible[J, Self.I.Element[Self.V]]:\n"
+        f"\n    def sequence[J: Applicative](deinit self) raises {error} -> {target} where conforms_to(Self.I, Traversable) and _TraverseCompatible[{family}, Self.V, {identity}] and {family}.TargetCompatible[J, Self.V, {identity}] and _CarrierCompatible[J, Self.I.Element[Self.V]]:\n"
         f'        """Sequence existing effects and continue in the target family."""\n'
         f"        return {target}({family}.traverse[J]({identity}(), self.value^))\n"
     )

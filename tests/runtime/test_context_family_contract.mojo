@@ -31,7 +31,7 @@ def forward_map[I: Functor, V: Movable & Deinitable, F: UnaryContract & Movable 
     return pipeline[I](source^).map(f^).get()
 def forward_pair[I: Applicative, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var f: F, var left: V, var right: R) raises I.CombineError[V,F,R] -> I.Combined[V,F,R] where I.CombineCompatible[V,F,R]:
     return map2_lazy[I](f^, left^, right^)
-def forward_traverse[S: Traversable, G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var source: V) raises S.TraverseError[G,V,F] -> S.Traversed[G,V,F] where S.Element[V] == F.Arg and G.CollectCompatible[V,F]:
+def forward_traverse[S: Traversable, G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var source: V) raises S.TraverseError[G,V,F] -> S.Traversed[G,V,F] where S.Element[V] == F.Arg and S.TargetCompatible[G,V,F]:
     return traverse[S,G](f^, source^)
 def forward_result[T: Movable & Deinitable, E: Movable & Deinitable, F: OnceUnary](var source: Result[T,E], var f: F) raises F.Error -> Result[F.Out,E] where F.Arg == T:
     return map[ResultFamily[E]](f^, source^)

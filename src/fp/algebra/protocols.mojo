@@ -246,11 +246,13 @@ trait Applicative(Functor):
     comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable]: Bool = True
     """Admission for combination, including family-specific carrier and error origins."""
     comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Bool = True
-    """Admission for collection into this family; generic traversal forwards this predicate."""
+    """Admission for collection into this family; collecting source traversals forward this predicate."""
     comptime Combined[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable]: Movable & Deinitable
     """The carrier `map2_lazy` returns."""
     comptime CombineError[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable]: Movable & Deinitable
     """The error `map2_lazy` raises."""
+    # Private policy admission is opt-in for existing custom dictionaries.
+    comptime _LoopCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate]: Bool = True
     comptime _Looped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate]: Movable & Deinitable = Self.Pure[K.Acc]
     comptime _LoopError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate]: Movable & Deinitable = _CommonError[
         K.Error, Self.CombineError[Self.Pure[K.Acc], _FoldShape[K],
@@ -497,6 +499,8 @@ trait Traversable(Functor):
     """A source shape whose elements can be visited with an effectful callback, keeping the shape: `traverse`."""
     comptime TraverseCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Bool = Self.MapCompatible[V, F]
     """Source admission for traversal; may accept more than materialized carriers."""
+    comptime TargetCompatible[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Bool = G.CollectCompatible[V, F]
+    """Target operations used by this source traversal; collection by default."""
     comptime Traversed[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Movable & Deinitable
     """The carrier `traverse` returns: `G`'s carrier of this shape."""
     comptime TraverseError[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Movable & Deinitable

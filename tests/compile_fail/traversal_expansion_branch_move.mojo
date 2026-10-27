@@ -1,4 +1,4 @@
-# error: copies accumulators
+# error: no matching method in call to 'filter_effect'
 from fp.functions import piped
 from fp.algebra import OptionalFamily, ListFamily
 @fieldwise_init

@@ -55,13 +55,30 @@ move-only values.
 The component predicates remain available for generic implementations that
 already know the input type. In particular, `FamilyCompatible` excludes the
 input-equality check. Existing family predicates and generic forwarding syntax
-continue to work; the legacy free-traversal boundary retains its existing
-input and target-collection requirements.
+continue to work; the legacy free-traversal boundary retains its input
+requirement and checks the target operations chosen by the source.
 
 `Applicative.CarrierCompatible[V]` checks a produced carrier, including its
 stored-error type and origins. `Traversable.TraverseCompatible[V, F]` checks a
-source and callback. A selected traversal forwards these predicates together
-with `S.Element[V] == F.Arg` and the target's `CollectCompatible[V, F]`.
+source and callback. A selected traversal also checks `S.Element[V] == F.Arg`
+and the source's `TargetCompatible[G, V, F]`.
+
+Traversal checks the target operations chosen by its source family through
+`S.TargetCompatible[G, V, F]`. A List source collects multiple effects; Optional
+and Result sources call the producer at most once and map a wrapper over its
+output. Consequently, traversing a single Optional into List supports consuming
+callbacks and move-only results even though Cartesian collection does not.
+`TraverseContract.TargetCompatible` exposes that decision. Its
+`CollectCompatible` projection still describes direct target collection and may
+be false for a valid single-value traversal.
+
+Generic wrappers abstract over both families should forward
+`TraverseContract[S, G, V, F].Compatible`. Existing wrappers that spell component
+predicates replace `G.CollectCompatible[V, F]` with
+`S.TargetCompatible[G, V, F]`. Custom sources whose traversal does not collect
+can override `TargetCompatible` with the requirements of their actual operations.
+
+<!-- example: docs/examples/single_value_traversal.mojo -->
 
 ListFamily mapping requires a native List, while ListFamily traversal also
 accepts an owned iterable or an existing iterator. For example,

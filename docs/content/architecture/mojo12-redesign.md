@@ -1390,6 +1390,64 @@ generic fluent calls are maintained controls. The first rejection run found two
 legacy diagnostic regressions, now fixed in their assertion owners; its raw
 report remains alongside final evidence in `.cache/quality-cycle14/`.
 
+### Source-aware traversal and loop admission
+
+Traversal and collection have separate admission responsibilities. A source's
+`TargetCompatible[G, V, F]` describes the target operations its traversal uses.
+The default retains the historical target collection predicate for custom
+source families. Identity invokes the producer once; Optional and Result invoke
+it at most once and map a shape wrapper over its result. They do not inherit
+Cartesian collection's copy or repeatability requirements. NonEmptyList checks
+collection of its transferred List and the map that restores nonempty shape.
+
+`TraverseContract.TargetCompatible` forwards this source-owned decision.
+`CollectCompatible` retains its direct collection meaning; `Compatible` and
+`FamilyCompatible` use the target operations selected by the source. A wrapper
+abstract over both source and target must forward `S.TargetCompatible[G, V, F]`
+in place of `G.CollectCompatible[V, F]`, or forward the combined public contract.
+Ordinary calls and explicit positional bindings keep their syntax.
+
+The private `_LoopCompatible[V, F, K]` belongs to the accumulator loop owner.
+Its permissive default preserves custom dictionary behavior; List declares its
+actual repeatable producer, copyable accumulator/item and compatible native
+error requirements. OptionalT and ResultT forward the exact wrapped accumulator
+to the base loop. Collection selects append; discarded traversal selects discard.
+The source's payload need not be copyable, and the producer's captures are not
+copied. Deferred construction errors and later execution errors remain separate.
+
+Native entry points admit the actual callback adapter. Error-only probes still
+project errors and do not claim callable receiver conformances. Free iterable,
+iterator, legacy fluent and selected methods forward the same operation policies;
+their bodies still delegate to the existing source traversal or target loop.
+
+This pass exposes the existing loop requirements without changing copying,
+pulling, short-circuiting or branching algorithms. Other custom loop owners may
+override `_LoopCompatible` to describe additional prerequisites.
+
+Single-value source admission also retains the existing requirement that the
+target's pure and mapped branches have the same carrier type. Targets with
+different deferred representations reject at the checked boundary. Supporting
+those targets through the existing family branch join is a separate extension;
+this pass keeps traversal output types and branch execution unchanged.
+
+Mojo 1.2 generic admission also needs the final carrier/error type equalities
+to use eager Boolean conjunction. Receiver, carrier and map checks guard those
+projections first. Both free and selected wrappers can forward the combined
+contract when the producer type itself depends on the target dictionary;
+ordinary invalid output shapes still return false metadata.
+
+Qualification passed all 693 packaged suite programs (691 checked clients and
+two benchmarks), all 1,596 rejection fixtures, and 88 source/package O0/O3
+boundary checks. A final generic-proof refinement and added metadata controls
+then passed a fresh 84-check traversal matrix and all 127 traversal rejection
+fixtures. These final runs had unchanged inputs/packages and no audit failures.
+The full suite and rejection run precede that Boolean-only refinement; traversal
+execution is unchanged. Tooling passed all 46 tests after updating the reviewed
+example count, and documentation covers 318 exports and 79 executable examples.
+Evidence is retained in `.cache/quality-cycle15/qualified2/` and
+`.cache/quality-cycle15/final/`; the earlier interrupted documentation run is
+marked incomplete rather than counted as qualification.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

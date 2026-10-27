@@ -138,14 +138,14 @@ def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, /
 
 def traverse[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, S: Traversable, G: Applicative](
     ref[o] f: F, var source: V
-) raises TraverseContract[S, G, V, F._View[o]].Error -> TraverseContract[S, G, V, F._View[o]].Out where TraverseContract[S, G, V, F._View[o]].InputCompatible and TraverseContract[S, G, V, F._View[o]].CollectCompatible:
+) raises TraverseContract[S, G, V, F._View[o]].Error -> TraverseContract[S, G, V, F._View[o]].Out where TraverseContract[S, G, V, F._View[o]].InputCompatible and TraverseContract[S, G, V, F._View[o]].TargetCompatible:
     """Borrow an origin-dependent callable through its internal shared view."""
     return traverse[S, G](f._unary_view(), source^)
 
 
 def traverse[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, S: Traversable, G: Applicative](
     var f: F, var source: V
-) raises TraverseContract[S, G, V, F].Error -> TraverseContract[S, G, V, F].Out where TraverseContract[S, G, V, F].InputCompatible and TraverseContract[S, G, V, F].CollectCompatible:
+) raises TraverseContract[S, G, V, F].Error -> TraverseContract[S, G, V, F].Out where TraverseContract[S, G, V, F].InputCompatible and TraverseContract[S, G, V, F].TargetCompatible:
     """Call an effectful `f` on each element of `source`, in order, and gather the results in one `G` carrier.
 
     The source keeps its shape. Once `G` has failed (an absent `Optional`, a
@@ -302,7 +302,7 @@ def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Dein
 
 def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //,
              S: Traversable, G: Applicative, F: _Unary[A, R]](ref[o] f: F, var source: V
-) raises S.TraverseError[G, V, _ErrorProbe[A, R, Never]] -> S.Traversed[G, V, _NativeUnaryRef[A, R, Never, F, False, o]] where S.Element[V] == A and _CollectCompatible[G, V, _ErrorProbe[A, R, Never]]:
+) raises S.TraverseError[G, V, _ErrorProbe[A, R, Never]] -> S.Traversed[G, V, _NativeUnaryRef[A, R, Never, F, False, o]] where S.Element[V] == A and S.TargetCompatible[G, V, _NativeUnaryRef[A, R, Never, F, False, o]]:
     """Traverse with a native function or closure."""
     comptime D = _NativeUnaryRef[A, R, Never, F, False, o]
     comptime Raised = S.TraverseError[G, V, _ErrorProbe[A, R, Never]]
@@ -316,7 +316,7 @@ def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Dein
 
 def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //,
              S: Traversable, G: Applicative, F: _RaisingUnary[A, R, E]](ref[o] f: F, var source: V
-) raises S.TraverseError[G, V, _ErrorProbe[A, R, E]] -> S.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]] where S.Element[V] == A and _CollectCompatible[G, V, _ErrorProbe[A, R, E]]:
+) raises S.TraverseError[G, V, _ErrorProbe[A, R, E]] -> S.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]] where S.Element[V] == A and S.TargetCompatible[G, V, _NativeUnaryRef[A, R, E, F, True, o]]:
     """Traverse with a raising native callback; its error type is kept."""
     comptime D = _NativeUnaryRef[A, R, E, F, True, o]
     comptime Raised = S.TraverseError[G, V, _ErrorProbe[A, R, E]]

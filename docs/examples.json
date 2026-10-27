@@ -213,6 +213,9 @@
     "docs/examples/shared_outcomes.mojo": {
       "stdout": "observed failure: False\nobserved failure: True\nobserved failure: True\nvalue=8\nfailed: nonpositive\nvalue=0\n"
     },
+    "docs/examples/single_value_traversal.mojo": {
+      "stdout": "single traversal: ticket=7; absent=True\n"
+    },
     "docs/examples/state_result.mojo": {
       "stdout": "ResultT[State]: failed, returned state = 15\nStateT[Result]: failed, no state payload\n"
     },

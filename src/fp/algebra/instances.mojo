@@ -6,7 +6,7 @@ Result transformations use the owned transformation of the Result methods.
 from std.builtin.rebind import rebind_var, rebind, downcast
 from std.iter import IterableOwned, Iterator
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, Unary, BorrowCallable
-from fp.callables.invoke import RepeatableUnary, RepeatableBinary, _OnceThunkAvailable, call_once, call_repeated
+from fp.callables.invoke import RepeatableUnary, RepeatableBinary, _OnceUnaryAvailable, _OnceThunkAvailable, call_once, call_repeated
 from fp.callables._receiver import _unary_once_as, _binary_once_as, _binary_repeated_as, _thunk_once_as
 from fp.data._result import Result, Ok, Err, _ResultType, _transform_result_owned
 from fp.iteration._advance import _next_optional
@@ -20,6 +20,18 @@ from .protocols import (Functor, Applicative, ApplicativeError, ErrorMapping, Mo
 
 
 comptime _ListElement[V: Movable & Deinitable] = downcast[downcast[V, IterableOwned].IteratorOwnedType.Element, Movable & Deinitable]
+
+
+# Single-value sources map a wrapper and introduce an empty/error branch.
+# They do not collect, copy payloads, or require a repeatable producer.
+# Guard family projections, then preserve symbolic evidence for total type
+# equalities with eager Boolean conjunction.
+comptime _WrappedTraversalCompatible[G: Applicative, F: UnaryContract & Movable & Deinitable,
+                                    W: UnaryContract & Movable & Deinitable] = (
+    (G.Pure[W.Out] == G.Mapped[F.Out, W]) &
+    _CommonErrorCompatible[F.Error, G.MapError[F.Out, W]]
+) if _OnceUnaryAvailable[F] and G.CarrierCompatible[F.Out] and G.MapCompatible[F.Out, W] else False
+
 
 # Native carrier recognition has one owner. Guard iterable projection before
 # inspecting its element; scalar and custom values use the caller's fallback.
@@ -50,6 +62,7 @@ struct IdentityFamily(Monad, Traversable):
     comptime CombineError[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = _CommonError[F.Error, R.Error]
     comptime Bound[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Out
     comptime BindError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
+    comptime TargetCompatible[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _OnceUnaryAvailable[F] and G.CarrierCompatible[F.Out]
     comptime Traversed[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Out
     comptime TraverseError[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
     comptime _Looped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = K.Acc
@@ -191,6 +204,7 @@ struct OptionalFamily(Monad, Traversable, Filterable, FunctorFilter, _Lifting):
     comptime CombineError[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = _CommonError[F.Error, R.Error]
     comptime Bound[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Out
     comptime BindError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
+    comptime TargetCompatible[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _WrappedTraversalCompatible[G, F, _Present[G.Element[F.Out]]]
     comptime Traversed[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = G.Mapped[F.Out, _Present[G.Element[F.Out]]]
     comptime TraverseError[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _CommonError[F.Error, G.MapError[F.Out, _Present[G.Element[F.Out]]]]
     comptime _Looped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Optional[K.Acc]
@@ -477,6 +491,7 @@ struct ResultFamily[E: Movable & Deinitable](Monad, ApplicativeError, ErrorMappi
     """Require the callback to return a Result with the same stored error and origins."""
     comptime Bound[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Out
     comptime BindError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
+    comptime TargetCompatible[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _WrappedTraversalCompatible[G, F, _OkOf[G.Element[F.Out], Self.E]]
     comptime Traversed[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = G.Mapped[F.Out, _OkOf[G.Element[F.Out], Self.E]]
     comptime TraverseError[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _CommonError[F.Error, G.MapError[F.Out, _OkOf[G.Element[F.Out], Self.E]]]
     comptime _Looped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Result[K.Acc, Self.E]
@@ -705,7 +720,12 @@ struct ListFamily(Monad, Traversable, Filterable, FunctorFilter):
         conforms_to(F.First, Copyable) and conforms_to(F.Second, Copyable) and
         _OnceThunkAvailable[R] and _CommonErrorCompatible[F.Error,R.Error]
     )
-    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out]
+    comptime _LoopCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = (
+        F.Out == List[K.Item] and RepeatableUnary[F] and
+        conforms_to(K.Acc, Copyable) and conforms_to(K.Item, Copyable) and
+        _CommonErrorCompatible[F.Error, K.Error]
+    )
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self._LoopCompatible[V, F, _Append[Self.Element[F.Out]]] if Self.CarrierCompatible[F.Out] else False
     comptime TraverseCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.Element[V] == F.Arg if conforms_to(V, Iterator) or conforms_to(V, IterableOwned) else False
     comptime Element[V: Movable & Deinitable] = _Item[V]
     comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = V

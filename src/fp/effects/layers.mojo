@@ -9,7 +9,7 @@ and Result families.
 """
 from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, rebind, downcast
-from fp.algebra.protocols import (Monad, Applicative, ApplicativeError, ErrorMapping, _CALLBACK_ADMISSION, _RecoveryShape, _MappedFamily, _Lifting, _Accumulate, _Present, _BindFirst, _Lazy, _UnaryView)
+from fp.algebra.protocols import (Monad, Applicative, ApplicativeError, ErrorMapping, _CALLBACK_ADMISSION, _RecoveryShape, _MappedFamily, _Lifting, _Accumulate, _Append, _Present, _BindFirst, _Lazy, _UnaryView)
 from fp.algebra.contracts import MapContract
 from fp.algebra.error_mapping import MapBothContract
 from fp.algebra.instances import IdentityFamily, OptionalFamily, ResultFamily, _OkOf
@@ -293,7 +293,7 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
     comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable] = (
         _LayerRight[Self.M,OptionalFamily,F,G].Compatible and Self.M.BindCompatible[V,_OptionalCombine[Self.M,F,G]]
     ) if _CarrierCombine[Self,V,F,G] else False
-    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out]
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self._LoopCompatible[V, F, _Append[Self.Element[F.Out]]] if Self.CarrierCompatible[F.Out] else False
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.Mapped[V, _InnerMap[OptionalFamily, F]]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.MapError[V, _InnerMap[OptionalFamily, F]]
     comptime Pure[A: Movable & Deinitable] = Self.M.Pure[Optional[A]]
@@ -303,6 +303,7 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
         V, _OptionalCombine[Self.M, F, G]]
     comptime Bound[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.Bound[V, _OptionalGuard[Self.M, F]]
     comptime BindError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.BindError[V, _OptionalGuard[Self.M, F]]
+    comptime _LoopCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Self.M._LoopCompatible[V, F, _OptionalAcc[K]]
     comptime _Looped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Self.M._Looped[V, F, _OptionalAcc[K]]
     comptime _LoopError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Self.M._LoopError[V, F, _OptionalAcc[K]]
     comptime _Joined[L: Movable & Deinitable, Q: Movable & Deinitable] = Self.M._Joined[L, Q]
@@ -417,7 +418,7 @@ struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, Erro
     comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable] = (
         _LayerRight[Self.M,ResultFamily[Self.E],F,G].Compatible and Self.M.BindCompatible[V,_ResultCombine[Self.M,Self.E,F,G]]
     ) if _CarrierCombine[Self,V,F,G] else False
-    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out]
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self._LoopCompatible[V, F, _Append[Self.Element[F.Out]]] if Self.CarrierCompatible[F.Out] else False
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.Mapped[V, _InnerMap[ResultFamily[Self.E], F]]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.MapError[V, _InnerMap[ResultFamily[Self.E], F]]
     comptime Pure[A: Movable & Deinitable] = Self.M.Pure[Result[A, Self.E]]
@@ -427,6 +428,7 @@ struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, Erro
         V, _ResultCombine[Self.M, Self.E, F, G]]
     comptime Bound[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.Bound[V, _ResultGuard[Self.M, Self.E, F]]
     comptime BindError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.BindError[V, _ResultGuard[Self.M, Self.E, F]]
+    comptime _LoopCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Self.M._LoopCompatible[V, F, _ResultAcc[K, Self.E]]
     comptime _Looped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Self.M._Looped[V, F, _ResultAcc[K, Self.E]]
     comptime _LoopError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Self.M._LoopError[V, F, _ResultAcc[K, Self.E]]
     comptime _Joined[L: Movable & Deinitable, Q: Movable & Deinitable] = Self.M._Joined[L, Q]

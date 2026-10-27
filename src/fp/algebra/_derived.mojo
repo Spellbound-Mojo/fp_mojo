@@ -97,7 +97,7 @@ def flatten[V: Movable & Deinitable, //, I: Monad](var nested: V
 
 
 def sequence[V: Movable & Deinitable, //, S: Traversable, G: Applicative](var source: V
-) raises S.TraverseError[G, V, _Same[S.Element[V]]] -> S.Traversed[G, V, _Same[S.Element[V]]] where _CollectCompatible[G, V, _Same[S.Element[V]]]:
+) raises S.TraverseError[G, V, _Same[S.Element[V]]] -> S.Traversed[G, V, _Same[S.Element[V]]] where S.TargetCompatible[G, V, _Same[S.Element[V]]]:
     """Turn a source of `G` carriers into one `G` carrier of the source: `traverse` with the identity.
 
     Parameters:

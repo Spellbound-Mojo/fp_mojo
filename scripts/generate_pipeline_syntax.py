@@ -280,7 +280,7 @@ def algebra_methods(carrier=None, *, iteration=False):
             if operation == 'flat_map' and not carrier:
                 condition += f' and _BindCompatible[{family}, {source}, {callback}]'
             if operation == 'traverse':
-                condition += f' and _CollectCompatible[{target_family}, {source}, {callback}]'
+                condition += f' and {family}.TargetCompatible[{target_family}, {source}, {callback}]'
             if parallel: condition += f' and _CarrierCompatible[{target_family}, {target}]'
             nominal = f'        comptime assert Self.Value == {source}\n' if carrier else ''
             value = f'rebind_var[{source}](self.value^)' if carrier else 'self._iterator^' if iteration else 'self.value^'
@@ -319,7 +319,7 @@ def algebra_methods(carrier=None, *, iteration=False):
         if operation == 'flat_map' and not carrier:
             condition += (' and ' if condition else ' where ') + f'_BindCompatible[{family}, {source}, {cb}]'
         if operation == 'traverse':
-            condition += (' and ' if condition else ' where ') + f'_CollectCompatible[{target_family}, {source}, {cb}]'
+            condition += (' and ' if condition else ' where ') + f'{family}.TargetCompatible[{target_family}, {source}, {cb}]'
         if parallel: condition += f' and _CarrierCompatible[{target_family}, {elem}]'
         nominal = f'        comptime assert Self.Value == {source}\n' if carrier else ''
         value = f'rebind_var[{source}](self.value^)' if carrier else 'self._iterator^' if iteration else 'self.value^'

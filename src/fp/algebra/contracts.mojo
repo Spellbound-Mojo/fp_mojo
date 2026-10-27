@@ -94,8 +94,8 @@ struct BindContract[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movabl
 struct TraverseContract[S: Traversable, G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]:
     """The joint source and target contract of traversal with a library callable.
 
-    `Compatible` combines input equality, source traversal admission, target
-    collection admission and callback-output membership. Generic wrappers
+    `Compatible` combines input equality, source traversal admission, the target
+    operations selected by that source and callback-output membership. Generic wrappers
     forward that one predicate and use `Out` and `Error`. Source traversal is
     intentionally distinct from source mapping: a family can traverse more
     source representations than it maps.
@@ -110,11 +110,13 @@ struct TraverseContract[S: Traversable, G: Applicative, V: Movable & Deinitable,
     """Exact source-element equality, including embedded origins."""
     comptime SourceCompatible = Self.S.TraverseCompatible[Self.V, Self.F]
     """The source family's traversal admission, independent of map."""
+    comptime TargetCompatible = Self.S.TargetCompatible[Self.G, Self.V, Self.F]
+    """Admission for the target operations selected by this source traversal."""
     comptime CollectCompatible = Self.G.CollectCompatible[Self.V, Self.F]
-    """The target family's collection admission."""
+    """Direct collection admission; a single-value source may not collect."""
     comptime CarrierCompatible = Self.G.CarrierCompatible[Self.F.Out]
     """The callback's output belongs to the target family."""
-    comptime FamilyCompatible = Self.SourceCompatible and Self.CollectCompatible and Self.CarrierCompatible
+    comptime FamilyCompatible = Self.SourceCompatible and Self.TargetCompatible and Self.CarrierCompatible
     """Source and target admission without repeating input equality."""
     comptime Compatible = Self.InputCompatible and Self.FamilyCompatible
     """The complete checked traversal admission."""

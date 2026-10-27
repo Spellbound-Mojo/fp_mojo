@@ -112,6 +112,10 @@ def methods(mode, carrier=None):
             # require a generic callback's opaque return type to be resolved.
             effect='R' if native else f'{cb}.Result' if borrowing else f'{cb}.Out'
             condition += f' and _CarrierCompatible[G, {effect}]'
+            if discard and not retained_error:
+                condition += f' and G._LoopCompatible[{source}, {cb}, {rule}]'
+            else:
+                condition += f' and {family}.TargetCompatible[G, {source}, {callback}]'
             if mode=='piped': result=f'Piped[{result}]';call=f'Piped({call})'
             indent='' if mode=='free' else '    '
             args=', '.join(x for x in ((arg, 'var source: V') if mode=='free' else ('deinit self', arg)) if x)
