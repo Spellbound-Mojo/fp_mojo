@@ -1,4 +1,4 @@
-# error: repeatable
+# error: no matching method in call to 'attempt_tap'
 from fp.algebra import ListFamily
 from fp.effects import ResultT
 from fp.callables import BorrowOnceCallable

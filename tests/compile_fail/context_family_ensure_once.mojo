@@ -1,4 +1,4 @@
-# error: repeatable
+# error: no matching method in call to 'ensure'
 from fp.functions import pipeline
 from fp.data import Result, Ok
 from fp.algebra import ResultFamily

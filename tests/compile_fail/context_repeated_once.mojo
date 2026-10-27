@@ -1,4 +1,4 @@
-# error: List callbacks must be repeatable
+# error: no matching method in call to 'map'
 from fp.functions import pipeline as piped
 from fp.callables import OnceUnary
 

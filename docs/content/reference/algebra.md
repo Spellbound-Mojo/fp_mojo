@@ -18,6 +18,20 @@ input equality and three family predicates. These compile-time descriptors
 store nothing and delegate execution to the same families. They describe
 library callbacks; native callbacks keep their existing admission syntax.
 
+List mapping and binding require repeatable callbacks: shared or mutable
+receivers. Their public family predicates now include that requirement.
+OptionalT and ResultT propagate the admission of the actual base map, bind or
+recovery primitive, so consuming callbacks reject at the checked boundary when
+the base branches. Deferred bases that execute the callback once still admit
+consuming receivers; move-only payloads remain supported. Generic wrappers
+forwarding `Compatible` inherit these requirements without extra annotations.
+
+Carrier membership is separate from operation eligibility. A custom family
+that admits binding while rejecting mapping should define `CarrierCompatible`
+explicitly; its legacy default derives membership from an identity map.
+Transformer binding uses carrier membership and the base's bind predicate,
+not the base's map predicate.
+
 <!-- example: docs/examples/operation_contracts.mojo -->
 
 `FilterContract[I, V, P]` does the same for `filter`; pass `True` as the

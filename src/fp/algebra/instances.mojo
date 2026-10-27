@@ -698,7 +698,7 @@ struct ListFamily(Monad, Traversable, Filterable, FunctorFilter):
     """
     # Traversal also accepts an existing iterator, without restarting it.
     comptime CarrierCompatible[V: Movable & Deinitable] = V == List[Self.Element[V]] if conforms_to(V, IterableOwned) else False
-    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == List[F.Arg]
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == List[F.Arg] and RepeatableUnary[F]
     comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.MapCompatible[V, F] and Self.CarrierCompatible[F.Out]
     comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = V == List[F.First] and R.Out == List[F.Second]
     comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out]
@@ -741,7 +741,7 @@ struct ListFamily(Monad, Traversable, Filterable, FunctorFilter):
         """
         comptime U = _ListElement[F.Out]
         comptime assert F.Out == Optional[U], "filter_map: Optional result required"
-        comptime assert Self.MapCompatible[V, F], "filter_map: List carrier required"
+        comptime assert Self.MapCompatible[V, F], "filter_map: List carrier and repeatable callback required"
         return _map_accumulate[V, F, _Keep[_Append[U]], F.Error](f^, value^, List[U]())
 
     @staticmethod
@@ -786,8 +786,8 @@ struct ListFamily(Monad, Traversable, Filterable, FunctorFilter):
         Raises:
             The callback's error, unchanged.
         """
-        comptime assert Self.MapCompatible[V, F], "algebra: List carrier required"
         comptime assert RepeatableUnary[F], "List callbacks must be repeatable"
+        comptime assert Self.MapCompatible[V, F], "algebra: List carrier required"
         return _map_accumulate[List[F.Arg], F, _Append[F.Out], F.Error](
             f^, rebind_var[List[F.Arg]](value^), List[F.Out]())
 
@@ -873,9 +873,9 @@ struct ListFamily(Monad, Traversable, Filterable, FunctorFilter):
             The callback's error, unchanged.
         """
         comptime U = _ListElement[F.Out]
+        comptime assert RepeatableUnary[F], "List callbacks must be repeatable"
         comptime assert Self.MapCompatible[V, F], "algebra: List carrier required"
         comptime assert Self.CarrierCompatible[F.Out], "flat_map: List callback required"
-        comptime assert RepeatableUnary[F], "List callbacks must be repeatable"
         var source = iter(rebind_var[List[F.Arg]](value^))
         var result = List[U]()
         while True:

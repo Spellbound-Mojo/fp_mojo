@@ -76,7 +76,7 @@ def methods():
             out.append(f'''
     def {name}[{', '.join(params)}](deinit self, {cb.argument}) raises {raised} -> Piped[{family}.Handled[Self.Value, {continuation}]] where {condition}:
         """{doc}"""
-        comptime assert {family}._Handles[Self.Value, {continuation}]
+        comptime assert {family}._Handles[Self.Value, {continuation}], _CALLBACK_ADMISSION
         comptime assert _ErrorCompatible[{raised}, {family}.HandleError[Self.Value, {continuation}]]
         return Piped(_or_else_as[{raised}, {family}, Self.Value, {continuation}]({value}, self.value^))
 ''')
@@ -138,7 +138,7 @@ def conditional_methods():
             out.append(f'''
     def {name}[{', '.join(params)}](deinit self, {p.argument}, {h.argument}) raises {raised} -> Piped[{family}.Handled[Self.Value, {continuation}]] where {' and '.join(conditions)}:
         """{doc}"""
-        comptime assert {family}._Handles[Self.Value, {continuation}]
+        comptime assert {family}._Handles[Self.Value, {continuation}], _CALLBACK_ADMISSION
         comptime assert _ErrorCompatible[{raised}, {family}.HandleError[Self.Value, {continuation}]]
         return Piped(_or_else_as[{raised}, {family}, Self.Value, {continuation}]({continuation}({p.build}, {build}), self.value^))
 ''')
@@ -200,7 +200,7 @@ def observation_methods():
             out.append(f'''
     def {name}[{", ".join(params)}](deinit self, {cb.argument}) raises {raised} -> Piped[{family}.Handled[Self.Value, {continuation}]] where {" and ".join(conditions)}:
         """{doc}"""
-        comptime assert {family}._Handles[Self.Value, {continuation}]
+        comptime assert {family}._Handles[Self.Value, {continuation}], _CALLBACK_ADMISSION
         comptime assert _ErrorCompatible[{raised}, {family}.HandleError[Self.Value, {continuation}]]
         return Piped(_or_else_as[{raised}, {family}, Self.Value, {continuation}]({continuation}({cb.build}), self.value^))
 ''')

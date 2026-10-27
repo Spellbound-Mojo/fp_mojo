@@ -1,4 +1,4 @@
-# error: List callbacks must be repeatable
+# error: no matching method in call to 'if_effect'
 from fp.functions import pipeline
 from fp.data import Result,Ok,Err
 from fp.effects import Reader,run

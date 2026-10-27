@@ -20,7 +20,8 @@ comptime _TraverseCompatible[I: Traversable, V: Movable & Deinitable, F: UnaryCo
 # Shared shape rules for families with multiple concrete representations.
 # Each family owns CarrierCompatible; these helpers never infer a family from
 # a native value or require a deferred computation to have its Pure type.
+# Bind shape must not inherit prerequisites of an unrelated map operation.
 # Checked operations own exact callback input equality. Repeating that equality
 # inside a family predicate makes lifted Listen projections reduce too early.
-comptime _CarrierBind[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = I.MapCompatible[V, F] and I.CarrierCompatible[F.Out]
+comptime _CarrierBind[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = I.CarrierCompatible[V] and I.CarrierCompatible[F.Out]
 comptime _CarrierCombine[I: Applicative, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable] = I.CarrierCompatible[V] and I.CarrierCompatible[G.Out] and I.Element[V] == F.First and I.Element[G.Out] == F.Second

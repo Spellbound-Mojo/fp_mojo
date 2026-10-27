@@ -25,6 +25,9 @@ def main() raises:
     comptime assert not OrElseContract[Blocked,R,Effect[String,String]].Compatible
     comptime assert not RecoverIfContract[Blocked,R,Predicate[String],Value[String]].Compatible
     comptime assert not OrElseIfContract[Blocked,R,Predicate[String],Effect[String,String]].Compatible
+    comptime assert not OrElseIfContract[Allowed,R,BorrowValue[String],Effect[String,String]].PredicateCompatible
+    comptime assert not OrElseIfContract[Allowed,R,BorrowValue[String],Effect[String,String]].Compatible
+    comptime assert not RecoverIfContract[Allowed,R,BorrowValue[String],Value[String]].Compatible
     comptime assert not TapErrContract[Blocked,R,BorrowValue[String]].Compatible
     comptime assert not FlatTapErrContract[Policy[True,False,1],R,BorrowEffect[String]].Compatible
     comptime assert not FlatTapErrContract[Policy[True,False,2],R,BorrowEffect[String]].Compatible

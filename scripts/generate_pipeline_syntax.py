@@ -75,10 +75,17 @@ def map_methods(carrier):
                            operation, 'function', f'Map {carrier.name} payloads immediately, preserving the native container.',
                            'E' if raising else ''))
     source, result, family = carrier.value('F.Arg'), carrier.value('F.Out'), carrier.instance('F.Arg')
+    admission = f'Self.Value == {source}'
+    operation = f'_family_map[{family}]'
+    if carrier.name == 'List':
+        # This signature fixes the exact carrier/payload and receiver mode.
+        # Forward to its primitive without re-projecting generic input types.
+        admission += ' and RepeatableUnary[F]'
+        operation = f'{family}.map'
     out.append(forward('map', [f'F: {callable_protocol("owned")} & {MD}', *carrier.parameters],
-                       'var function: F', result, source, f'_family_map[{family}]', 'function^',
+                       'var function: F', result, source, operation, 'function^',
                        f'Map {carrier.name} payloads with an owned library callback.', 'F.Error',
-                       f'Self.Value == {source}'))
+                       admission))
     source, result, family = carrier.value('F._View[o].Arg'), carrier.value('F._View[o].Out'), carrier.instance('F._View[o].Arg')
     out.append(forward('map', ['F: _UnaryViewable', 'o: ImmOrigin', *carrier.parameters],
                        'ref[o] function: F', result, source, f'_family_map[{family}]', 'function._unary_view()',

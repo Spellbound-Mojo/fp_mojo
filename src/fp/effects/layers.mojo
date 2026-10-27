@@ -9,7 +9,7 @@ and Result families.
 """
 from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, rebind, downcast
-from fp.algebra.protocols import (Monad, Applicative, ApplicativeError, ErrorMapping, _MappedFamily, _Lifting, _Accumulate, _Present, _BindFirst, _Lazy, _UnaryView)
+from fp.algebra.protocols import (Monad, Applicative, ApplicativeError, ErrorMapping, _CALLBACK_ADMISSION, _RecoveryShape, _MappedFamily, _Lifting, _Accumulate, _Present, _BindFirst, _Lazy, _UnaryView)
 from fp.algebra.contracts import MapContract
 from fp.algebra.error_mapping import MapBothContract
 from fp.algebra.instances import IdentityFamily, OptionalFamily, ResultFamily, _OkOf
@@ -22,8 +22,8 @@ from ._adapt import _map_as
 from ._transport import _LocalOp, _ListenMapped, _ListenSum
 
 
-comptime _LAYER = "transformer: different inner family or error type"
-comptime _LAYER_BIND = "transformer bind: different inner family or error type"
+comptime _LAYER = _CALLBACK_ADMISSION
+comptime _LAYER_BIND = _CALLBACK_ADMISSION
 
 
 @fieldwise_init
@@ -306,6 +306,7 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
     comptime _Errors = downcast[Self.M, ApplicativeError]
     comptime Failure = Self._Mapping.Failure if conforms_to(Self.M,ErrorMapping) else Self._Errors.Failure
     comptime _ErrorCarrier[V: Movable & Deinitable] = Self.CarrierCompatible[V] and Self._Errors._ErrorCarrier[V]
+    comptime _Handles[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable]: Bool = (Self._Errors._Handles[V,H] if _RecoveryShape[Self,Self.Failure,V,H,Self._ErrorCarrier[V],Self._ErrorCarrier[H.Out]] else False) if conforms_to(Self.M,ApplicativeError) else False
     comptime Failed[A: Movable & Deinitable] = Self._Errors.Failed[Optional[A]]
     comptime FailError[A: Movable & Deinitable] = Self._Errors.FailError[Optional[A]]
     comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self._Errors.Handled[V, H]
@@ -324,8 +325,8 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
     comptime Base = Self.M
     comptime Element[V: Movable & Deinitable] = OptionalFamily.Element[Self.M.Element[V]]
     comptime CarrierCompatible[V: Movable & Deinitable] = Self.M.CarrierCompatible[V] and OptionalFamily.CarrierCompatible[Self.M.Element[V]]
-    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[V]
-    comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _CarrierBind[Self, V, F]
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.MapCompatible[V,_InnerMap[OptionalFamily,F]] if Self.CarrierCompatible[V] else False
+    comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.BindCompatible[V,_OptionalGuard[Self.M,F]] if _CarrierBind[Self,V,F] else False
     comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable] = _CarrierCombine[Self, V, F, G]
     comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out]
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.Mapped[V, _InnerMap[OptionalFamily, F]]
@@ -427,6 +428,7 @@ struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, Erro
 
     comptime Failure = Self.E
     comptime _ErrorCarrier[V: Movable & Deinitable] = Self.CarrierCompatible[V]
+    comptime _Handles[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable]: Bool = Self.M.BindCompatible[V,_ResultGuard[Self.M,Self.E,H,False]] if _RecoveryShape[Self,Self.Failure,V,H,Self._ErrorCarrier[V],Self._ErrorCarrier[H.Out]] else False
     comptime Failed[A: Movable & Deinitable] = Self.M.Pure[Result[A, Self.E]]
     comptime FailError[A: Movable & Deinitable] = Never
     comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self.M.Bound[V, _ResultGuard[Self.M, Self.E, H, False]]
@@ -445,8 +447,8 @@ struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, Erro
     comptime Base = Self.M
     comptime Element[V: Movable & Deinitable] = ResultFamily[Self.E].Element[Self.M.Element[V]]
     comptime CarrierCompatible[V: Movable & Deinitable] = Self.M.CarrierCompatible[V] and ResultFamily[Self.E].CarrierCompatible[Self.M.Element[V]]
-    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[V]
-    comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _CarrierBind[Self, V, F]
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.MapCompatible[V,_InnerMap[ResultFamily[Self.E],F]] if Self.CarrierCompatible[V] else False
+    comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.BindCompatible[V,_ResultGuard[Self.M,Self.E,F]] if _CarrierBind[Self,V,F] else False
     comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable] = _CarrierCombine[Self, V, F, G]
     comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out]
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.Mapped[V, _InnerMap[ResultFamily[Self.E], F]]

@@ -881,12 +881,12 @@
         ],
         "map": [
           {
-            "signature": "def map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: _Unary[A, R]]( deinit self, ref[o] function: F ) raises I.MapError[Self.Value, _ErrorProbe[A, R, Never]] -> Piped[I.Mapped[Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]] where I.Element[Self.Value] == A and _MapCompatible[I, Self.Value, _ErrorProbe[A, R, Never]]:",
-            "sha256": "65d86ebf84ea5383ce1b119001314e5a10097b34ffba39f0db1d8fa8683a28d9"
+            "signature": "def map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: _Unary[A, R]]( deinit self, ref[o] function: F ) raises I.MapError[Self.Value, _ErrorProbe[A, R, Never]] -> Piped[I.Mapped[Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]] where I.Element[Self.Value] == A and _MapCompatible[I, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]:",
+            "sha256": "0cc182a2e989d77555f5635e14327c3c85b1d45a9d0ecc33ccb1cd766afec88e"
           },
           {
-            "signature": "def map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]]( deinit self, ref[o] function: F ) raises I.MapError[Self.Value, _ErrorProbe[A, R, E]] -> Piped[I.Mapped[Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]] where I.Element[Self.Value] == A and _MapCompatible[I, Self.Value, _ErrorProbe[A, R, E]]:",
-            "sha256": "610eaa63c2ade485f85bb19835a13df71016794d2ce6648632a94396c5f91af9"
+            "signature": "def map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]]( deinit self, ref[o] function: F ) raises I.MapError[Self.Value, _ErrorProbe[A, R, E]] -> Piped[I.Mapped[Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]] where I.Element[Self.Value] == A and _MapCompatible[I, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]:",
+            "sha256": "7756d893e8608d1348148589183192f75f10a2bc5fe78f0b8ba699fc3d975f9b"
           },
           {
             "signature": "def map[F: _UnaryViewable, o: ImmOrigin, //, I: Functor]( deinit self, ref[o] function: F ) raises I.MapError[Self.Value, F._View[o]] -> Piped[I.Mapped[Self.Value, F._View[o]]] where I.Element[Self.Value] == F._View[o].Arg and _MapCompatible[I, Self.Value, F._View[o]]:",
@@ -905,8 +905,8 @@
             "sha256": "f1fcb1fa04d72e59be72ff70e6da1389fa1e0025fc9d1c124b9ff8ae8d22f40c"
           },
           {
-            "signature": "def map[F: UnaryContract & Movable & Deinitable]( deinit self, var function: F ) raises F.Error -> Piped[List[F.Out]] where Self.Value == List[F.Arg]:",
-            "sha256": "c10746bce60eb90ca016b0757603df13e81d1ee910915f0c935282f0776decc7"
+            "signature": "def map[F: UnaryContract & Movable & Deinitable]( deinit self, var function: F ) raises F.Error -> Piped[List[F.Out]] where Self.Value == List[F.Arg] and RepeatableUnary[F]:",
+            "sha256": "6233442a78ec858d54347d03e04b17d5db2813347ffbc11806415ebfba46221a"
           },
           {
             "signature": "def map[F: _UnaryViewable, o: ImmOrigin]( deinit self, ref[o] function: F ) raises F._View[o].Error -> Piped[List[F._View[o].Out]] where Self.Value == List[F._View[o].Arg]:",
@@ -15448,12 +15448,12 @@
           "sha256": "4c454c61a77b6134b258c3de2993890d78afc1d890088b214c832713e54efd73"
         },
         {
-          "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: _Unary[A, R]](ref[o] f: F, var value: V ) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _MapCompatible[I, V, _ErrorProbe[A, R, Never]]:",
-          "sha256": "bd6de4fa4f2d8e9a50bec2f0556f583c9282584fe38598813331e1386bf66a78"
+          "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: _Unary[A, R]](ref[o] f: F, var value: V ) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _MapCompatible[I, V, _NativeUnaryRef[A, R, Never, F, False, o]]:",
+          "sha256": "b86ee43c4bd595d0596422ec5fc07be839c684490f85624a52c26b206de99931"
         },
         {
-          "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] f: F, var value: V ) raises _EntryError[X, I.MapError[V, _ErrorProbe[A, R, E]]] -> I.Mapped[V, _NativeUnaryRef[A, R, E, F, True, o]] where ( I.Element[V] == A and _MapCompatible[I, V, _ErrorProbe[A, R, E]] and (X == _InferError or X == E)):",
-          "sha256": "c2ce1db5e2e84ca33cafebef96f63557088a9e5f97dd2ec030258b7de47af611"
+          "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] f: F, var value: V ) raises _EntryError[X, I.MapError[V, _ErrorProbe[A, R, E]]] -> I.Mapped[V, _NativeUnaryRef[A, R, E, F, True, o]] where ( I.Element[V] == A and _MapCompatible[I, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E)):",
+          "sha256": "3fc8072bde62044c0832422685ad0db4daafef256b4fed62987ce103306a5b0e"
         }
       ],
       "provider": "algebra/operations"
@@ -15490,12 +15490,12 @@
           "sha256": "676ee4855a6781b29138b2db72b9115c17164b8f81677e56484b9691fc1e2abb"
         },
         {
-          "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad, F: _Unary[A, R]](ref[o] f: F, var value: V ) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _BindCompatible[I, V, _ErrorProbe[A, R, Never]]:",
-          "sha256": "2721bf514c3e5def14a33045fe1572e8fb873d1cf5bd1ef45df0f6a88cf20385"
+          "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad, F: _Unary[A, R]](ref[o] f: F, var value: V ) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _BindCompatible[I, V, _NativeUnaryRef[A, R, Never, F, False, o]]:",
+          "sha256": "b44393c7edaba6a147f175ee387e04f6114428130e66c7329001bef79cde7469"
         },
         {
-          "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //, I: Monad, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] f: F, var value: V ) raises _EntryError[X, I.BindError[V, _ErrorProbe[A, R, E]]] -> I.Bound[V, _NativeUnaryRef[A, R, E, F, True, o]] where ( I.Element[V] == A and _BindCompatible[I, V, _ErrorProbe[A, R, E]] and (X == _InferError or X == E)):",
-          "sha256": "c76a6a3f3dc529eb29810e5bbb1178d392e32e3b6c2f455cd226e5ced5e1e6e1"
+          "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //, I: Monad, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] f: F, var value: V ) raises _EntryError[X, I.BindError[V, _ErrorProbe[A, R, E]]] -> I.Bound[V, _NativeUnaryRef[A, R, E, F, True, o]] where ( I.Element[V] == A and _BindCompatible[I, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E)):",
+          "sha256": "50c480f7f9768e35788999f4a14af471020259d61a4854af9b0c6f1b47ea1915"
         }
       ],
       "provider": "algebra/operations"

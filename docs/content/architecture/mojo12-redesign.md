@@ -1288,6 +1288,71 @@ to +4.5%. The rejection cost increased by about 0.10 seconds in this small sampl
 these observations do not establish a general performance trend. Artifacts are
 in `.cache/quality-cycle12/` (final qualification under `qualified/`).
 
+### Branch receiver admission through transformer primitives
+
+`ListFamily.MapCompatible` includes the existing `RepeatableUnary` requirement;
+its bind predicate inherits that rule. OptionalT and ResultT map/bind predicates
+now forward admission of the exact adapted callback to the base primitive they
+invoke. ResultT recovery forwards base bind admission for `_ResultGuard`, and
+OptionalT recovery forwards the selected base error family's `_Handles`.
+Consuming handlers and observers therefore reject through the public contracts
+when those primitives branch, including mapping-only State observation over a
+branching base. No new callable mode or runtime dispatch was added.
+
+The shared `_RecoveryShape` rule owns the existing recovery membership and
+payload checks for both the protocol default and transformer extensions. Its
+Functor bound needs only element projections; stored-error and membership
+evidence are passed separately, avoiding recursive error-capability conformance
+while a transformer defines its recovery predicate.
+`_CarrierBind` now checks source/result membership directly instead of borrowing
+map's operation predicate. Once layer mapping admits its actual base operation,
+reusing that predicate for bind would incorrectly reject a family that admits
+binding but rejects mapping. A custom dictionary can keep those policies
+independent by declaring `CarrierCompatible`; the legacy protocol default still
+derives membership from an identity map.
+
+Native map/bind admission now checks the actual borrowed callback adapter,
+which supplies a repeatable receiver. The metadata-only error probe remains in
+raised-type projections; it cannot represent receiver capabilities. List
+`Piped.map` states the exact List representation and repeatable receiver in its
+signature and forwards directly to the existing family primitive. This avoids
+re-projecting generic element types through another checked entry. Generic
+wrappers forward the same representation and receiver predicates.
+
+Execution remains in the existing collection and transformer implementations.
+Tests distinguish consuming from shared/mutable receivers, preserve move-only
+payloads, keep consuming callbacks valid for Reader-based single execution,
+and exercise a dictionary that rejects map while permitting bind and recovery.
+The full-suite check also exposed a pre-existing generic conditional-recovery
+failure, reproduced against the previous commit. `OrElseIfContract` now keeps
+predicate-result equality in complete entry admission without repeating it in
+the guard for carrier projection. That projection does not depend on Bool.
+This preserves generic native wrappers with `R == Bool` and their positional
+callback bindings, while non-Bool predicates remain rejected by `Compatible`.
+
+Earlier family admission also changes where invalid consuming callbacks fail.
+Checked entries reject at their signatures; legacy Piped and deferred execution
+boundaries retain their established admission policy and use one shared message
+for incompatible carriers and callback receivers. The message explicitly states
+that branching callbacks must be repeatable. Rejection fixtures retain ordinary
+invalid calls and expect the earlier diagnostic; no extra type bindings were
+introduced to make the tests pass.
+
+The scope is map, bind and delegated recovery admission; Cartesian combination
+and traversal copying prerequisites remain separate follow-up work.
+
+Qualification passed the full packaged suite: 683 checked programs and both
+benchmark programs, with no audit failures. This run preceded the final
+message-only diagnostic refresh. The final source and package passed 232 O0/O3
+boundary checks, all 1,563 rejection fixtures, 46 tooling tests, generated-source
+checks and strict docs (318 exports, 78 examples). Final reports have unchanged
+inputs/packages and no audit failures. The full sweep identified 20 obsolete
+diagnostic expectations: ten now fail at signatures, and ten legacy paths retain
+an explicit repeatability explanation through the shared admission message.
+Public declaration changes are limited to native map/bind admission and
+`Piped.map`; parameter ordering and ordinary call syntax are preserved. Reports
+and retained failed investigations are in `.cache/quality-cycle13/`.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

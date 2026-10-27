@@ -23,6 +23,9 @@ from fp.data._result import _ResultType
 from fp.callables._receiver import _binary_repeated_as
 
 
+# Shared wording for family admission that includes receiver requirements.
+comptime _CALLBACK_ADMISSION = "family operation requires compatible carriers and callback receivers; branching callbacks must be repeatable"
+
 trait Functor:
     """A carrier family whose payload can be transformed without changing its context: `map`.
 
@@ -366,6 +369,15 @@ trait Applicative(Functor):
         return rebind_var[Self._Looped[V, F, K]](result^)
 
 
+# Only Functor projections are needed for shape admission. Passing the stored
+# error and membership evidence separately avoids recursive ApplicativeError
+# conformance while a transformer's _Handles is itself being defined.
+comptime _RecoveryShape[I: Functor, E: Movable & Deinitable, V: Movable & Deinitable,
+                       H: UnaryContract & Movable & Deinitable, source: Bool, target: Bool]: Bool = (
+    source and target and H.Arg == E and I.Element[V] == I.Element[H.Out]
+)
+
+
 trait ApplicativeError(Applicative):
     """An Applicative with one selected stored-error channel.
 
@@ -388,10 +400,7 @@ trait ApplicativeError(Applicative):
     # erase distinctions between embedded origins on Mojo 1.1. Deferred carrier
     # types need not equal Pure; each instance validates its own native shape.
     comptime _ErrorCarrier[V: Movable & Deinitable]: Bool = True
-    comptime _Handles[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = (
-        Self._ErrorCarrier[V] and Self._ErrorCarrier[H.Out] and
-        H.Arg == Self.Failure and Self.Element[V] == Self.Element[H.Out]
-    )
+    comptime _Handles[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable]: Bool = _RecoveryShape[Self,Self.Failure,V,H,Self._ErrorCarrier[V],Self._ErrorCarrier[H.Out]]
 
     @staticmethod
     def fail[A: Movable & Deinitable](var error: Self.Failure) raises Self.FailError[A] -> Self.Failed[A]:

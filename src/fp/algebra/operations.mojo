@@ -237,7 +237,7 @@ struct _ErrorProbe[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable 
 @always_inline
 def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //,
         I: Functor, F: _Unary[A, R]](ref[o] f: F, var value: V
-) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _MapCompatible[I, V, _ErrorProbe[A, R, Never]]:
+) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _MapCompatible[I, V, _NativeUnaryRef[A, R, Never, F, False, o]]:
     """Apply a native function or closure to each element of `value`."""
     return _map_native[V, A, R, Never, I, F, False, o](f, value^)
 
@@ -246,7 +246,7 @@ def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitabl
 def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //,
         I: Functor, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] f: F, var value: V
 ) raises _EntryError[X, I.MapError[V, _ErrorProbe[A, R, E]]] -> I.Mapped[V, _NativeUnaryRef[A, R, E, F, True, o]] where (
-        I.Element[V] == A and _MapCompatible[I, V, _ErrorProbe[A, R, E]] and (X == _InferError or X == E)):
+        I.Element[V] == A and _MapCompatible[I, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E)):
     """Apply a raising native callback; its error type is kept."""
     return _map_native[V, A, R, E, I, F, True, o,
         _EntryError[X, I.MapError[V, _ErrorProbe[A, R, E]]]](f, value^)
@@ -272,7 +272,7 @@ def _map_native[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & D
 @always_inline
 def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //,
              I: Monad, F: _Unary[A, R]](ref[o] f: F, var value: V
-) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _BindCompatible[I, V, _ErrorProbe[A, R, Never]]:
+) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _BindCompatible[I, V, _NativeUnaryRef[A, R, Never, F, False, o]]:
     """Let a native function or closure choose the next carrier."""
     comptime D = _NativeUnaryRef[A, R, Never, F, False, o]
     comptime Raised = I.BindError[V, _ErrorProbe[A, R, Never]]
@@ -288,7 +288,7 @@ def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Dein
 def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //,
              I: Monad, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] f: F, var value: V
 ) raises _EntryError[X, I.BindError[V, _ErrorProbe[A, R, E]]] -> I.Bound[V, _NativeUnaryRef[A, R, E, F, True, o]] where (
-        I.Element[V] == A and _BindCompatible[I, V, _ErrorProbe[A, R, E]] and (X == _InferError or X == E)):
+        I.Element[V] == A and _BindCompatible[I, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E)):
     """Raising form of the native flat_map; its error type is kept."""
     comptime D = _NativeUnaryRef[A, R, E, F, True, o]
     comptime Raised = _EntryError[X, I.BindError[V, _ErrorProbe[A, R, E]]]

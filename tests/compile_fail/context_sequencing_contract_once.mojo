@@ -1,4 +1,4 @@
-# error: repeatable
+# error: invalid call to 'kept': violated constraint
 from fp.algebra import Monad, BeforeContract, OptionalFamily, ListFamily
 from fp.callables import ThunkContract, Thunk, OnceThunk
 from fp.functions import pipeline

@@ -6884,7 +6884,7 @@
       "doc": "",
       "type": "I.Bound[V, _NativeUnaryRef[A, R, Never, F, False, o]]"
      },
-     "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad, F: _Unary[A, R]](ref[o] f: F, var value: V) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _BindCompatible[I, V, _ErrorProbe[A, R, Never]]",
+     "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad, F: _Unary[A, R]](ref[o] f: F, var value: V) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _BindCompatible[I, V, _NativeUnaryRef[A, R, Never, F, False, o]]",
      "summary": "Let a native function or closure choose the next carrier."
     },
     {
@@ -6970,7 +6970,7 @@
       "doc": "",
       "type": "I.Bound[V, _NativeUnaryRef[A, R, E, F, True, o]]"
      },
-     "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //, I: Monad, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] f: F, var value: V) raises _EntryError[X, I.BindError[V, _ErrorProbe[A, R, E]]] -> I.Bound[V, _NativeUnaryRef[A, R, E, F, True, o]] where (I.Element[V] == A and _BindCompatible[I, V, _ErrorProbe[A, R, E]] and (X == _InferError or X == E))",
+     "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //, I: Monad, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] f: F, var value: V) raises _EntryError[X, I.BindError[V, _ErrorProbe[A, R, E]]] -> I.Bound[V, _NativeUnaryRef[A, R, E, F, True, o]] where (I.Element[V] == A and _BindCompatible[I, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E))",
      "summary": "Raising form of the native flat_map; its error type is kept."
     }
    ],
@@ -8070,7 +8070,7 @@
       "doc": "",
       "type": "I.Mapped[V, _NativeUnaryRef[A, R, Never, F, False, o]]"
      },
-     "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: _Unary[A, R]](ref[o] f: F, var value: V) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _MapCompatible[I, V, _ErrorProbe[A, R, Never]]",
+     "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: _Unary[A, R]](ref[o] f: F, var value: V) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _MapCompatible[I, V, _NativeUnaryRef[A, R, Never, F, False, o]]",
      "summary": "Apply a native function or closure to each element of `value`."
     },
     {
@@ -8156,7 +8156,7 @@
       "doc": "",
       "type": "I.Mapped[V, _NativeUnaryRef[A, R, E, F, True, o]]"
      },
-     "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] f: F, var value: V) raises _EntryError[X, I.MapError[V, _ErrorProbe[A, R, E]]] -> I.Mapped[V, _NativeUnaryRef[A, R, E, F, True, o]] where (I.Element[V] == A and _MapCompatible[I, V, _ErrorProbe[A, R, E]] and (X == _InferError or X == E))",
+     "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] f: F, var value: V) raises _EntryError[X, I.MapError[V, _ErrorProbe[A, R, E]]] -> I.Mapped[V, _NativeUnaryRef[A, R, E, F, True, o]] where (I.Element[V] == A and _MapCompatible[I, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E))",
      "summary": "Apply a raising native callback; its error type is kept."
     }
    ],
@@ -58393,7 +58393,7 @@
        "doc": "A pipeline holding the family's mapped carrier.",
        "type": "Piped[I.Mapped[Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]]"
       },
-      "signature": "def map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: _Unary[A, R]](deinit self, ref[o] function: F) raises I.MapError[Self.Value, _ErrorProbe[A, R, Never]] -> Piped[I.Mapped[Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]] where I.Element[Self.Value] == A and _MapCompatible[I, Self.Value, _ErrorProbe[A, R, Never]]",
+      "signature": "def map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: _Unary[A, R]](deinit self, ref[o] function: F) raises I.MapError[Self.Value, _ErrorProbe[A, R, Never]] -> Piped[I.Mapped[Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]] where I.Element[Self.Value] == A and _MapCompatible[I, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]",
       "summary": "Map through an explicit family, including third-party containers."
      },
      {
@@ -58458,7 +58458,7 @@
        "doc": "",
        "type": "Piped[I.Mapped[Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]]"
       },
-      "signature": "def map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises I.MapError[Self.Value, _ErrorProbe[A, R, E]] -> Piped[I.Mapped[Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]] where I.Element[Self.Value] == A and _MapCompatible[I, Self.Value, _ErrorProbe[A, R, E]]",
+      "signature": "def map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](deinit self, ref[o] function: F) raises I.MapError[Self.Value, _ErrorProbe[A, R, E]] -> Piped[I.Mapped[Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]] where I.Element[Self.Value] == A and _MapCompatible[I, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]",
       "summary": "Map a raising native callback through an explicit family."
      },
      {
@@ -58664,7 +58664,7 @@
        "doc": "",
        "type": "Piped[List[F.Out]]"
       },
-      "signature": "def map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) raises F.Error -> Piped[List[F.Out]] where Self.Value == List[F.Arg]",
+      "signature": "def map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) raises F.Error -> Piped[List[F.Out]] where Self.Value == List[F.Arg] and RepeatableUnary[F]",
       "summary": "Map List payloads with an owned library callback."
      },
      {

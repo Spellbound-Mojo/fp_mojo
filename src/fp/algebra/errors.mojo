@@ -1,5 +1,5 @@
 """Stored failures and recovery derived from the selected family's capability."""
-from .protocols import Functor, Applicative, ApplicativeError, ErrorMapping, Monad
+from .protocols import _CALLBACK_ADMISSION, Functor, Applicative, ApplicativeError, ErrorMapping, Monad
 from .error_mapping import MapErrContract, _map_err
 from .instances import ResultFamily
 from fp.data._result import Result, _ResultType
@@ -111,7 +111,7 @@ struct _Continue[M: Monad, recover: Bool]:
     ) raises E -> Self.Out[V, H] where _ErrorCompatible[E, Self.Error[V, H]]:
         comptime if Self.recover:
             comptime assert _ErrorCompatible[E, Self.Errors.HandleError[V, H]]
-            comptime assert Self.Errors._Handles[V, H], "or_else: base carrier or handler mismatch"
+            comptime assert Self.Errors._Handles[V, H], _CALLBACK_ADMISSION
             return rebind_var[Self.Out[V, H]](_or_else_as[E, Self.Errors](handler^, source^))
         else:
             comptime assert _ErrorCompatible[E, Self.M.BindError[V, H]]
@@ -176,7 +176,10 @@ struct OrElseIfContract[I: ApplicativeError, V: Movable & Deinitable,
     """Callbacks and unmatched-error construction share an exact native error."""
     comptime ReceiverCompatible = _OnceBorrowAvailable[Self.P] and _OnceUnaryAvailable[Self.H]
     """Both callbacks supply an invocable receiver; family branching adds its own rules."""
-    comptime OperationCompatible = Self.I._Handles[Self.V, Self.Continuation] if Self.InputCompatible and Self.PredicateCompatible and Self.CarrierCompatible and Self.OutputCompatible and Self.NativeErrorsCompatible and Self.ReceiverCompatible else False
+    # Predicate result equality belongs to entry admission, not to projecting
+    # the continuation's carrier. Keeping it out of this conditional lets
+    # native generic wrappers forward a symbolic R == Bool proof unchanged.
+    comptime OperationCompatible = Self.I._Handles[Self.V, Self.Continuation] if Self.InputCompatible and Self.CarrierCompatible and Self.OutputCompatible and Self.NativeErrorsCompatible and Self.ReceiverCompatible else False
     """The family's declared admission of the conditional continuation."""
     comptime Compatible = Self.InputCompatible and Self.PredicateCompatible and Self.CarrierCompatible and Self.OutputCompatible and Self.NativeErrorsCompatible and Self.ReceiverCompatible and Self.OperationCompatible
     """Complete selected conditional recovery admission."""
