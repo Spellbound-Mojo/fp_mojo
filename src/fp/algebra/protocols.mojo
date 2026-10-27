@@ -386,11 +386,8 @@ trait Applicative(Functor):
             comptime Step = type_of(pull)
             comptime assert Self.Combined[Acc, Folding, Step] == Acc, "traverse: target accumulator type must not change between steps"
             comptime assert Self.CombineError[Acc, Folding, Step] == Self.CombineError[Acc, _FoldShape[K], Shape], "traverse: target combination error must depend only on the operand's result and error"
-            try:
-                result = rebind_var[Acc](Self.map2_lazy(fold^, result^, pull^))
-            except error:
-                comptime assert _ErrorCompatible[E, type_of(error)]
-                _propagate_error[E](error^)
+            comptime assert _ErrorCompatible[E, Self.CombineError[Acc, Folding, Step]]
+            result = rebind_var[Acc](_map2_lazy_as[E, Self](fold^, result^, pull^))
             if ended:
                 break
         return rebind_var[Self._Looped[V, F, K]](result^)
@@ -678,6 +675,34 @@ struct _Append[B: Movable & Deinitable](_Accumulate):
         return _append[Self.B](acc^, item^, Tuple())
 
 
+def _map_as[E: Movable & Deinitable, M: Functor, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
+    var f: F, var value: V
+) raises E -> M.Mapped[V, F] where _ErrorCompatible[E, M.MapError[V, F]]:
+    try:
+        return M.map(f^, value^)
+    except error:
+        _propagate_error[E](error^)
+
+
+def _flat_map_as[E: Movable & Deinitable, M: Monad, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
+    var f: F, var value: V
+) raises E -> M.Bound[V, F] where _ErrorCompatible[E, M.BindError[V, F]]:
+    try:
+        return M.flat_map(f^, value^)
+    except error:
+        _propagate_error[E](error^)
+
+
+def _map2_lazy_as[E: Movable & Deinitable, M: Applicative, V: Movable & Deinitable,
+                  F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](
+    var f: F, var left: V, var right: R
+) raises E -> M.Combined[V, F, R] where _ErrorCompatible[E, M.CombineError[V, F, R]]:
+    try:
+        return M.map2_lazy(f^, left^, right^)
+    except error:
+        _propagate_error[E](error^)
+
+
 def _start_as[E: Movable & Deinitable, K: _Accumulate]() raises E -> K.Acc where _ErrorCompatible[E, K.Error]:
     try:
         return K.start()
@@ -834,10 +859,7 @@ struct _Pull[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable
         comptime assert _ErrorCompatible[Self.Error, Self.F.Error] and _ErrorCompatible[Self.Error, ME]
         # The exhaustion branch above returned; the item is present here.
         var produced = _unary_repeated_as[Self.Error](self.function[], rebind_var[Self.F.Arg](item.unsafe_take()))
-        try:
-            return Self.G.map(_Present[Self.B](), produced^)
-        except error:
-            _propagate_error[Self.Error](error^)
+        return _map_as[Self.Error, Self.G](_Present[Self.B](), produced^)
 
 
 # Monad default dependent accumulation.
@@ -917,11 +939,8 @@ def _bind_loop[M: Monad, V: Movable & Deinitable, P: UnaryContract & Movable & D
         comptime Probe = _Probe[K, origin_of(live)]
         comptime assert M.Mapped[Acc, Probe] == Acc, "fold_effect: eager carrier must keep one type across steps"
         comptime assert M.MapError[Acc, Probe] == M.MapError[Acc, _ProbeShape[K]]
-        try:
-            result = rebind_var[Acc](M.map(Probe(Pointer(to=live)), result^))
-        except error:
-            comptime assert _ErrorCompatible[E, type_of(error)]
-            _propagate_error[E](error^)
+        comptime assert _ErrorCompatible[E, M.MapError[Acc, Probe]]
+        result = rebind_var[Acc](_map_as[E, M](Probe(Pointer(to=live)), result^))
         if not live:
             return result^
         var item = _next_item[V](iterator)
@@ -931,8 +950,5 @@ def _bind_loop[M: Monad, V: Movable & Deinitable, P: UnaryContract & Movable & D
         comptime Step = _Step[M, F, K, origin_of(step)]
         comptime assert M.Bound[Acc, Step] == Acc, "fold_effect: eager carrier must keep one type across steps"
         comptime assert M.BindError[Acc, Step] == M.BindError[Acc, _StepShape[M, F, K]]
-        try:
-            result = rebind_var[Acc](M.flat_map(Step(Pointer(to=step), rebind_var[F.Second](prepared^)), result^))
-        except error:
-            comptime assert _ErrorCompatible[E, type_of(error)]
-            _propagate_error[E](error^)
+        comptime assert _ErrorCompatible[E, M.BindError[Acc, Step]]
+        result = rebind_var[Acc](_flat_map_as[E, M](Step(Pointer(to=step), rebind_var[F.Second](prepared^)), result^))

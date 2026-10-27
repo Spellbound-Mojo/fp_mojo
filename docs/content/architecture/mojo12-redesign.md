@@ -1634,6 +1634,25 @@ example raises the reviewed documentation inventory to 81 examples; its old
 Evidence is in `.cache/quality-cycle21/qualified-main2/`, with the corrected
 tooling and final documentation checks alongside it.
 
+### Primitive operation error forwarding
+
+The fundamental protocol module now owns `_map_as`, `_flat_map_as`, and
+`_map2_lazy_as`. Its default applicative and monadic loops use those same
+adapters as derived operations and effect layers; `_adapt` retains compatible
+internal imports. Each adapter forwards one native operation and widens only
+`Never` to the caller's declared error. Existing compatibility proofs remain
+at each call site, including the loops' exact carrier-type assertions.
+
+This removes four parallel try/propagate implementations without introducing
+another operation protocol. Loop order, lazy pulls, liveness checks, ownership,
+and public signatures remain the responsibility of their existing owners.
+
+Qualification passes all 232 source/package checks at O0/O3, 39 packaged
+algebra programs, all 48 tooling tests, and the generated-signature check.
+The compiler reports retain unchanged inputs and no audit failures. Strict
+documentation checks retain 318 exports and 81 examples. Evidence is in
+`.cache/quality-cycle22/qualified-main/`.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.
