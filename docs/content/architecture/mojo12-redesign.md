@@ -2247,6 +2247,25 @@ changes updated the documentation tooling's reviewed counts to 320 exports and
 values. Generated sources, all 48 tooling tests and strict documentation checks
 passed.
 
+### Mapped accumulation uses the semigroup callable directly
+
+The mapped-fold step now binds its accumulator directly to `_SemigroupBinary[M]`.
+This replaces `_AccumulatePair[_Combine[M]]`, which only forwarded to that same
+callable. `_Combine[M]` remains the owner of monoid initialization and ordinary
+accumulation policy. The first-argument binder still moves a single-use
+accumulator and copies it only when the selected family branches.
+
+The public contract and call syntax are unchanged. Sixteen baseline/candidate
+traces match exactly across Identity, Optional, Result, a third-party Box family,
+and Reader. They cover success, producer exceptions, combination exceptions,
+owned errors, unvisited input cleanup and abandoning a deferred computation.
+Five existing focused O0 programs passed. Qualification passed 32 source/package
+O0/O3 checks, five effect-query, four effect-search, two effect-combinator and
+134 generic programs. Six contract, 53 effect-query and 16 effect-search rejection
+fixtures passed; categories overlap. Executable reports retained unchanged inputs
+and no audit failures. Generated sources, all 48 tooling tests and strict
+documentation checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.
