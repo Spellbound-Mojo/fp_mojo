@@ -40,6 +40,13 @@ requires copyable items because each prepared item may enter several branches.
 All four require a repeatable step. Custom families keep their existing fold
 contract unless they declare additional admission requirements.
 
+Selected `fold_effect(initial).run(step)` projects the same `FoldContract`
+result and construction error. It retains the staged API's additional requirement
+that the step is repeatable, and requires the bound seed to have exactly the
+step's first-argument type, including origins. A generic staged wrapper forwards
+`FoldContract.Compatible` and `RepeatableBinary[F]`; custom families retain the
+free fold's existing admission. The example demonstrates both forms.
+
 <!-- example: docs/examples/fold_contracts.mojo -->
 
 `FoldMapContract[I, M, V, F]` describes `fold_map_effect`: produce effects

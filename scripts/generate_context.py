@@ -442,14 +442,18 @@ def methods(*, fold_stage=False):
             # Source equality remains admission, not another plan projection.
             plan_element = f"downcast[{c}.Payload, {MD}]" if name == "find_effect" else element
             plan = operation.bind("J", "Self.V", plan_element, c, cb["build"], result,
-                                  accumulator="Self.A", initial="self.initial^",
+                                  accumulator=f"{c}.First" if folding else "Self.A",
+                                  initial=f"rebind_var[{c}.First](self.initial^)" if folding else "self.initial^",
                                   monoid="M" if mapped_fold else "",
                                   retained=f"_TraverseTap[{plan_element}, J, {c}, True]" if borrowing else "")
-            # Seeded folds retain their existing staged declaration. Other
-            # checked terminals share the contract selected by the operation.
-            if plan.contract and not folding:
+            # Every reduction projects the public operation contract. Seeded
+            # stages additionally retain exact seed binding and their existing
+            # repeatable-step requirement, independent of custom fold policy.
+            if plan.contract:
                 contract = plan.contract
                 admission = cb["conditions"]
+                if folding:
+                    admission += [f"RepeatableBinary[{c}]"]
                 if borrowing:
                     # The public proof owns this equality; retain all native
                     # signature and explicit-error conditions independently.

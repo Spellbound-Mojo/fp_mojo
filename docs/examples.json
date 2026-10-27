@@ -91,7 +91,7 @@
       "stdout": "combined: 7\npaired: 3 4\napplied: 18\ncombined three: 12\nflat tuple: (3, 4, 5)\nretained: [1, 2, 3]\nall checked: True\nsource error preserved: True\n"
     },
     "docs/examples/fold_contracts.mojo": {
-      "stdout": "folded: 13\n"
+      "stdout": "folded: 13\nstaged: 13\n"
     },
     "docs/examples/fold_map_contracts.mojo": {
       "stdout": "mapped fold: 12\n"

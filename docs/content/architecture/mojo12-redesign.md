@@ -2376,6 +2376,35 @@ The public example passed its four source/package O0/O3 checks. Reports retained
 unchanged inputs and no audit failures. Generated sources, all 48 tooling tests
 and strict documentation checks passed.
 
+### Staged folds project the public fold contract
+
+A selected `.fold_effect[I](initial^).run(step^)` now projects its result,
+construction error and family admission from `FoldContract[I, V, F]`. Generic
+wrappers can name the same metadata as free folds. The stage still requires its
+exact seed type and a repeatable step; custom families retain the free fold's
+existing receiver policy.
+
+The execution plan uses `F.First` as its accumulator, matching the contract's
+projection. The stage rebinds its seed only after the existing signature proves
+`F.First == A`, including embedded origins. This avoids asking Mojo 1.2 to equate
+two differently spelled dependent fold plans. It changes neither the seed's
+representation nor the family loop, ownership, callback convention or native
+error type. Wrong seed types and unrelated seed origins remain ordinary
+constraint diagnostics.
+
+Twelve baseline/candidate traces match exactly across immediate and deferred
+folds, mutable callback state, move-only seeds and inputs, native failure,
+unvisited-input cleanup, abandoned Reader computations and abandoned stages.
+Maintained generic clients cover native and third-party families, branching
+copy requirements and exact result/error origins.
+
+All 28 source/package O0/O3 boundary checks passed. A full-library checkpoint
+passed all 736 non-benchmark programs, ran both benchmarks successfully, and
+rejected all 1,652 negative fixtures as declared. The fold example passed its
+four source/package O0/O3 checks. Reports retained unchanged inputs and no audit
+failures. Generated-source checks, all 48 tooling tests and strict documentation
+checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.
