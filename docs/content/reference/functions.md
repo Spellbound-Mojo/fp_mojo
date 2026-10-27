@@ -26,7 +26,8 @@ available. Generic wrappers over an unknown value type select a family
 explicitly; use `pipeline[IdentityFamily](value)` for a whole-value stage.
 `map`, `filter`, `flat_map` and `filter_map` use the selected family's
 capabilities. Result combinators use their existing branch and ownership rules.
-The result of `map_err` or `map_both` selects the new Result error family.
+`map_err` and `map_both` use the selected family's `ErrorMapping` capability.
+Result infers a new `ResultFamily` from the transformed stored-error type.
 
 Stored thin native pointers can be passed directly to these selected operations,
 including Result handlers and the existing `fold_left(step, initial)` and
@@ -41,6 +42,26 @@ errors, catch exceptions, or restrict the errors declared by library callables.
 Pure and Never callbacks retain Never. Custom families retain their own
 execution errors and deferred callback lifetimes. `get()` only extracts the
 carrier.
+
+`map_err(transform)` changes the selected stored error; `map_both(on_ok,
+on_err)` maps the original branch once. Result calls infer their destination.
+Validation retains its accumulation policy when the error type stays the same;
+a changed error type requires an explicit destination such as
+`map_err[Target=ValidationFamily[Messages]](format_errors)`. An explicit target
+can also select a different accumulation policy over the same error type.
+Subsequent fluent operations use that destination family. Mapping itself does
+not combine errors or invoke the other callback after a native raise.
+
+<!-- example: docs/examples/selected_error_mapping.mojo -->
+
+Custom families implement `ErrorMapping` to admit their own target policies and
+exact construction errors. A custom `ApplicativeError` family without this
+capability cannot use Result storage to bypass its policy. Transformer
+implementations remain future work. Intrinsic Result calls under a family with
+neither error capability remain supported; generic intrinsic wrappers must
+prove both `not conforms_to(I, ApplicativeError)` and
+`not conforms_to(I, ErrorMapping)`. Existing positional callback bindings retain
+their meaning; use the trailing `Target` binding by name when needed.
 
 `recover(handler)` replaces a stored failure with a payload; `or_else(handler)`
 replaces it with another effect. Both honor the selected `ApplicativeError`

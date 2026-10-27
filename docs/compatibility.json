@@ -541,24 +541,29 @@
       ]
     },
     {
-      "name": "Result operations",
+      "name": "Stored-error mapping",
       "methods": [
         "map_both",
         "map_err"
       ],
-      "status": "result_only",
-      "families": "Result carriers; broader family capability admission still requires migration",
-      "callbacks": "Native closures or stored thin pointers, including mixed argument/result conventions; library callbacks retain their receiver and branch contracts.",
-      "ownership": "Runs the selected branch; handlers consume values while observers borrow.",
-      "errors": "Stored-error changes select a new ResultFamily; native raised errors retain their type.",
-      "timing": "Immediate Result branch selection.",
+      "status": "selected",
+      "families": "Selected ErrorMapping: ResultFamily, ValidationFamily and custom families; transformers not yet implemented; intrinsic Result remains under families with neither ErrorMapping nor ApplicativeError",
+      "callbacks": "Consuming branch callbacks; native closures borrowed, stored thin pointers owned, library receivers preserved; optional Target follows existing bindings",
+      "ownership": "One original branch consumes its payload and invokes its callback; unused owners are destroyed; exact payload/error origins remain in the destination",
+      "errors": "Exact family construction and callback errors remain native; stored error type changes select an admitted destination",
+      "timing": "One two-arm family primitive; no second traversal, recovery or accumulation during mapping",
       "owner": [
+        "src/fp/algebra/error_mapping.mojo",
+        "src/fp/algebra/instances.mojo",
+        "src/fp/algebra/validation.mojo",
         "src/fp/data/_result.mojo"
       ],
       "evidence": [
+        "docs/examples/selected_error_mapping.mojo",
+        "tests/runtime/test_context_error_mapping_native.mojo",
+        "tests/ownership/test_context_error_mapping_ownership.mojo",
         "tests/runtime/test_context_result_map_err.mojo",
-        "tests/runtime/test_context_result_map_both.mojo",
-        "tests/runtime/test_context_native_signatures_results.mojo"
+        "tests/runtime/test_context_result_map_both.mojo"
       ]
     },
     {

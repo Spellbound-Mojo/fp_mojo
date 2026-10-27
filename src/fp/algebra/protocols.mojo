@@ -78,6 +78,57 @@ comptime _MappedFamily[I: Functor, A: Movable & Deinitable] = (
 )
 
 
+trait ErrorMapping(Functor):
+    """Map the success and one selected stored-error channel in one operation.
+
+    This capability is independent of failure construction and recovery.
+    A family also implementing ApplicativeError uses the same exact Failure.
+    Checked contracts admit source, callbacks and destination before invoking
+    bimap; the primitive preserves branch order, ownership and native errors.
+    """
+    comptime Failure: Movable & Deinitable
+    """The selected stored-error type, including its origins."""
+    comptime ErrorCarrierCompatible[V: Movable & Deinitable]: Bool
+    """Whether V belongs to this family's selected stored-error channel."""
+    comptime DefaultErrorTarget[A: Movable & Deinitable, E: Movable & Deinitable]: ErrorMapping
+    """The candidate destination for payload A and stored error E; use Self for a fixed policy.
+
+    This projection is explicit: Mojo 1.2 leaves an inherited parameterized
+    Self default opaque during ordinary callback inference. Declaring the
+    policy in its dictionary preserves inferred end-user calls.
+    """
+    comptime BimapCompatible[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable]: Bool
+    """The source family's admission of this operation and policy transition."""
+    comptime Bimapped[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable]: Movable & Deinitable
+    """The exact destination carrier produced by the primitive."""
+    comptime BimapError[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable]: Movable & Deinitable
+    """The exact native construction error; deferred run errors stay in the carrier."""
+    @staticmethod
+    def bimap[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](
+        var on_ok: F, var on_err: G, var source: V
+    ) raises Self.BimapError[Target,V,F,G] -> Self.Bimapped[Target,V,F,G]:
+        """Transform one original outcome through the admitted destination policy.
+
+        Parameters:
+            Target: The destination family, including its error policy.
+            V: The source carrier type.
+            F: The success callback type.
+            G: The stored-error callback type.
+
+        Args:
+            on_ok: The consuming success callback.
+            on_err: The consuming stored-error callback.
+            source: The complete source carrier, consumed once.
+
+        Returns:
+            The mapped carrier belonging to Target.
+
+        Raises:
+            The exact family construction error, including callback errors.
+        """
+        ...
+
+
 trait Filterable:
     """A carrier family that can discard payloads while keeping its context.
 

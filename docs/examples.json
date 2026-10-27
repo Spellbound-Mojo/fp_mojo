@@ -165,6 +165,9 @@
     "docs/examples/selected_conditional_recovery.mojo": {
       "stdout": "before run: 0\nrecovered: 14\npreserved: denied ; handled: 1\nretried: 9\n"
     },
+    "docs/examples/selected_error_mapping.mojo": {
+      "stdout": "error code: 7\nvalidation: name missing; age invalid\n"
+    },
     "docs/examples/selected_error_observation.mojo": {
       "stdout": "before run: 0\ndeferred: 24 ; observed: 1\nResult observer: audit\nValidation observer: audit original\n"
     },

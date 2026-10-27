@@ -15,7 +15,7 @@ from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
 from fp.callables._receiver import _unary_repeated_as
 from ._result_accumulation import _result_map2, _result_loop, _FirstError
 from .filtering import _Select, _Keep
-from .protocols import (Functor, Applicative, ApplicativeError, Monad, Traversable, Filterable, FunctorFilter, _Lifting, _Accumulate, _Present, _Item, _iterator,
+from .protocols import (Functor, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Filterable, FunctorFilter, _Lifting, _Accumulate, _Present, _Item, _iterator,
                         _next_item, _start_as, _combine_as, _map_accumulate, _Append)
 
 
@@ -424,7 +424,7 @@ struct _OkOf[B: Movable & Deinitable, E: Movable & Deinitable](Unary, Copyable, 
         return Result[Self.B, Self.E](Ok(arg^))
 
 
-struct ResultFamily[E: Movable & Deinitable](Monad, ApplicativeError, Traversable, _Lifting):
+struct ResultFamily[E: Movable & Deinitable](Monad, ApplicativeError, ErrorMapping, Traversable, _Lifting):
     """`Result[A, E]` as a carrier for a fixed stored error type `E`: a stored error skips callbacks and stays data.
 
     Its operations are the `Result` methods. A native error a callback raises
@@ -440,6 +440,15 @@ struct ResultFamily[E: Movable & Deinitable](Monad, ApplicativeError, Traversabl
     # derive it from that equality before selecting a generic overload.
     comptime CarrierCompatible[V: Movable & Deinitable] = Self._ErrorCarrier[V]
     comptime _ErrorCarrier[V: Movable & Deinitable] = V == Result[Self.Element[V], Self.E]
+    comptime ErrorCarrierCompatible[V: Movable & Deinitable] = Self._ErrorCarrier[V]
+    comptime DefaultErrorTarget[A: Movable & Deinitable, U: Movable & Deinitable] = ResultFamily[U]
+    # These total type equalities use eager OR: short-circuit conditionals hide
+    # equal-X and pure/X evidence during generic native overload selection.
+    comptime BimapCompatible[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = (
+        Target == ResultFamily[G.Out] and ((F.Error == G.Error) | (F.Error == Never) | (G.Error == Never))
+    )
+    comptime Bimapped[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Result[F.Out,G.Out]
+    comptime BimapError[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = _CommonError[F.Error,G.Error]
     # These signature predicates are the Result family's single admission
     # contract. Body assertions run after origins may have been erased.
     comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self._ErrorCarrier[V]
@@ -474,6 +483,33 @@ struct ResultFamily[E: Movable & Deinitable](Monad, ApplicativeError, Traversabl
     comptime _LoopError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = _CommonError[F.Error, K.Error]
     comptime Lifted[V: Movable & Deinitable] = Result[V, Self.E]
     comptime LiftError[V: Movable & Deinitable] = Never
+
+    @staticmethod
+    def bimap[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](
+        var on_ok: F, var on_err: G, var source: V
+    ) raises Self.BimapError[Target,V,F,G] -> Self.Bimapped[Target,V,F,G]:
+        """Transform the original branch through Result's existing owned fold.
+
+        Parameters:
+            Target: The admitted ResultFamily with the transformed error type.
+            V: The source Result type.
+            F: The consuming success callback type.
+            G: The consuming stored-error callback type.
+
+        Args:
+            on_ok: The callback selected by an original success.
+            on_err: The callback selected by an original stored error.
+            source: The consumed Result; exactly one callback runs.
+
+        Returns:
+            The original Result constructor with its transformed payload.
+
+        Raises:
+            The selected callback's exact native error.
+        """
+        comptime assert V == Result[F.Arg,Self.E] and G.Arg == Self.E
+        comptime assert F.Error == G.Error or F.Error == Never or G.Error == Never
+        return rebind_var[Result[F.Arg,Self.E]](source^).map_both(on_ok^,on_err^)
 
     @staticmethod
     def fail[A: Movable & Deinitable](var error: Self.Failure) -> Self.Failed[A]:

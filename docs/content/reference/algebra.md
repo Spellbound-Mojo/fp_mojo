@@ -260,6 +260,33 @@ base Monad, with copyable state required for StateT recovery. Native raised
 errors stay separate. See
 [selected-layer recovery](combinators.md#recover-a-selected-error-layer).
 
+`ErrorMapping` is an optional Functor capability independent of
+`ApplicativeError`. Its `bimap` primitive transforms success and the selected
+stored error in one traversal. The source family admits an exact destination
+through `BimapCompatible`; the destination also implements `ErrorMapping`.
+`DefaultErrorTarget` is a required dictionary projection naming a candidate.
+A fixed policy declares `DefaultErrorTarget[A,E] = Self`; Result declares the
+new Result error family. Validation uses an explicit target
+when the error type or accumulation policy changes. Neither native Result
+storage nor equal payload types authorize replacing a custom family.
+
+`MapBothContract[I,V,F,G,Target]` names the source, input, target, output and
+operation predicates. Generic wrappers forward `Compatible` or all five
+components and project `Family`, `Out` and `Error`. The latter describes
+construction; deferred execution retains the output carrier's own contract.
+`MapErrContract[I,V,G,Target]` derives the same contract using the existing
+consuming Identity callback on success. Conditional wrappers use the same
+public `downcast[I, ErrorMapping]` witness throughout. Native raises remain
+native, callback receivers retain their ownership rules, and all payload/error
+equalities include origins.
+
+ResultFamily and ValidationFamily implement this capability. Custom families
+can adopt it independently of recovery. Transformer implementations are not yet
+provided; the [stored-error design](../architecture/mojo12-redesign.md#proposed-stored-error-rebinding)
+defines their remaining requirements.
+
+<!-- example: docs/examples/selected_error_mapping.mojo -->
+
 <!-- api: algebra -->
 
 ## Use one set of operations over four carriers

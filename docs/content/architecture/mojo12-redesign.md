@@ -577,6 +577,24 @@ Executable sizes were unchanged for all three successful clients. These small
 samples are a baseline for further admission work, not a broad performance
 claim or a substitute for semantic qualification.
 
+The stored-error mapping core was compared separately with `fc9b645`, using
+four unchanged clients and the same serial O3, two-thread, empty-cache,
+baseline/current/current/baseline method (16 checked compilations):
+
+| Client | Before | Mapping core |
+|---|---:|---:|
+| `docs/examples/selected_pipeline.mojo` | 10.50 s | 10.53 s |
+| `tests/runtime/test_context_result_map_both.mojo` | 5.64 s | 6.89 s |
+| `tests/runtime/test_context_result_map_err.mojo` | 4.40 s | 4.54 s |
+| `tests/compile_fail/context_reject_result_map_both_input.mojo` | 0.58 s | 0.96 s |
+
+Executable sizes were unchanged. The richer mapping admission costs more in
+these `map_both` probes; the broader selected-pipeline sample is effectively
+unchanged. Two samples per variant do not establish general build performance.
+Core semantic qualification passed 76 source/package O0/O3 checks, 37 existing
+rejection regressions, seven regression/example programs, tooling and strict
+documentation checks.
+
 ### Generic sequencing metadata
 
 The four public sequencing contracts name the existing selected Monad
@@ -609,9 +627,10 @@ and retained move-only payloads in branching effects.
 ## Further migration
 
 Every legacy Piped method now has a selected counterpart in the inventory.
-Equal method names do not imply equal capability coverage: intrinsically
-Result-specific operations remain classified separately, and extension
-contracts still matter for custom dictionaries and deferred families.
+Equal method names do not imply equal capability coverage: stored-error mapping
+supports Result, Validation and custom ErrorMapping dictionaries; transformer
+instances remain future work. Extension contracts still matter for custom
+dictionaries and deferred families.
 
 Future work should start with executable user examples and evaluate annotation
 burden, diagnostics, ownership, and cold compilation cost. Keep legacy bindings
@@ -650,32 +669,43 @@ Qualify and commit each complete pass separately. No CI work is part of this
 sequence. Resource scopes and fallible source advancement remain later design
 work, after these improvements to the existing API.
 
-The designs below are not implemented public APIs. They need explicit
-contracts before implementation. Qualify normal and invalid user calls at
-O0/O3 through source and packages, then promote one complete contract at a
-time. The stored-error proposal is a design decision for the current API
-quality work; resource scopes and source advancement remain later work.
+Stored-error mapping now has a qualified core for Result, Validation and
+custom dictionaries. Transformer implementations remain planned below, along
+with resource scopes and source advancement. Qualify normal and invalid user
+calls at O0/O3 through source and packages before promoting each extension.
 
 ### Proposed stored-error rebinding
 
-**Design only.** The capability, contracts and call spellings in this section
-are proposed, not implemented or compiler-qualified. The recommendation is
-one optional `ErrorMapping` capability with a two-arm primitive, an explicit
-destination family when policy cannot be inferred, and ordinary inferred
-calls for Result and uniquely rebindable transformers. This pass changes no
-public API or execution path.
+**Core implemented; transformer extensions planned.** `ErrorMapping`,
+`MapBothContract` and `MapErrContract` support selected `map_err` and `map_both`
+for ResultFamily, ValidationFamily and custom dictionaries. One two-arm
+primitive owns mapping. Ordinary Result calls infer their destination;
+Validation requires an explicit target when the stored-error type changes.
+Existing positional callback bindings retain their meaning. The target is a
+trailing defaulted binding, conventionally supplied as `Target=...`.
 
-Today, selected `map_err` and `map_both` recognize native Result storage and
-return a `ResultFamily`. They do not describe how to change a selected custom
-family's stored-error type. `ApplicativeError` cannot supply this operation:
-its failure and recovery primitives intentionally preserve one selected error
-type. `RebindingFunctor.WithElement` only updates payload-dependent selection
-metadata; it neither transforms a carrier nor declares an error channel.
-Changing either alias alone would mislabel the original carrier.
+A dictionary explicitly declares `DefaultErrorTarget[A,E]`; fixed policies
+use `Self`. Mojo 1.2 evaluates an inherited generic alias default of `Self`
+correctly in body assertions but keeps it opaque during ordinary overload
+selection. Requiring the policy declaration makes the destination visible
+without adding normalization machinery or caller annotations. Result supplies
+its deterministic new-error target; Validation supplies itself. The schematic
+protocol below reflects this qualified change from the initial design.
+
+Selected custom families own mapping even when their storage is native
+Result. A family with ApplicativeError but without ErrorMapping rejects these
+operations normally. The intrinsic Result fallback requires neither
+capability; generic wrappers must forward both negative capability proofs.
+`ApplicativeError` cannot supply error rebinding: its failure and recovery
+primitives intentionally preserve one selected error type.
+`RebindingFunctor.WithElement` changes selection metadata, not a carrier or
+error channel. Changing an alias alone would mislabel the original carrier.
+
+<!-- example: docs/examples/selected_error_mapping.mojo -->
 
 #### One execution primitive
 
-The primitive should map both success and selected failure in one traversal.
+The primitive maps both success and selected failure in one traversal.
 `map_err(g)` derives from it using the existing consuming `Identity` callback
 on success. `map_both(f, g)` must not generally expand to `map(f).map_err(g)`
 or the reverse. For `ResultT[ListFamily, E]` containing
@@ -688,11 +718,11 @@ construction failure and another deferred stage.
 The new primitive is an algebraic boundary, not another Result dispatcher.
 `ResultFamily` delegates to existing `Result.map_both`, whose owned fold
 already owns branch selection, payload movement and unused callback cleanup.
-Transformer adapters delegate to that owner or to their base family's
+Planned transformer adapters delegate to that owner or to their base family's
 primitive. Existing `Functor.map` remains its own operation; adopting this
 capability does not replace all mapping with two-arm machinery.
 
-`ErrorMapping` should extend `Functor` independently of `ApplicativeError`.
+`ErrorMapping` extends `Functor` independently of `ApplicativeError`.
 Mapping a stored error does not require failure construction or recovery.
 For example, State recovery currently requires copyable state because it
 restarts a handler with saved input state. Mapping the error after one State
@@ -701,17 +731,17 @@ Validation remains eligible without acquiring Monad.
 
 #### Capability and exact admission
 
-The proposed full protocol is below in schematic notation. `Value` means
-`Movable & Deinitable`; `Callback` means
-`UnaryContract & Movable & Deinitable`. These abbreviations are only for this
-design. This is not a tested Mojo declaration.
+The implemented core protocol is summarized below in schematic notation.
+`Value` means `Movable & Deinitable`; `Callback` means
+`UnaryContract & Movable & Deinitable`. These abbreviations keep the summary
+readable; the source declarations are the compiler-qualified interface.
 
 ```text
 trait ErrorMapping(Functor):
     Failure: Value
     ErrorCarrierCompatible[V: Value]: Bool
 
-    DefaultErrorTarget[NewValue: Value, NewFailure: Value]: ErrorMapping = Self
+    DefaultErrorTarget[NewValue: Value, NewFailure: Value]: ErrorMapping
 
     BimapCompatible[Target: ErrorMapping, V: Value,
                     F: Callback, G: Callback]: Bool
@@ -740,10 +770,10 @@ separate public channel-descriptor capability. Implementers consequently
 promise a coherent mapping interface on the destination, although any
 particular next operation can still be rejected by its admission predicates.
 
-`DefaultErrorTarget` is a candidate, not an unconditional conversion. Its
-conservative default is `Self`; exact target checks reject a changed error
-when no destination policy has been specified. Deterministic families
-override it. A family whose selection depends on the success type must also
+`DefaultErrorTarget` is a required candidate projection, not an unconditional
+conversion. Fixed-policy dictionaries declare `Self`; exact target checks
+reject a changed error when no destination policy has been specified.
+Deterministic families declare their new destination. A family whose selection depends on the success type must also
 reselect that metadata, reusing `RebindingFunctor.WithElement` when available
 and proving that the selected result implements `ErrorMapping`. The existing
 `WithElement: Functor` bound alone does not prove this. No unsupported-target
@@ -757,9 +787,9 @@ an unrelated one. Families may add construction or execution errors, but
 must expose their exact types. Neither callback's native exception becomes a
 stored failure.
 
-Public metadata should eliminate private transformer adapters from generic
-clients. The proposed `MapBothContract` has these parameters, projections
-and component predicates:
+Public metadata keeps private execution adapters out of generic clients.
+`MapBothContract` has these parameters, projections and component predicates
+(the source additionally guards rejected output projections):
 
 ```text
 MapBothContract[
@@ -800,8 +830,12 @@ receiver/ownership requirements. A generic wrapper forwards either
 `Compatible` or **all five** component predicates; the previous intrinsic
 Result input predicates alone do not establish this new family contract.
 The native boundary additionally keeps the existing selected native-error
-admission. These predicates must be demonstrated equivalent for forwarding
-before publishing aliases; boolean spelling alone is not a compiler proof.
+admission. Maintained generic clients qualify combined and component forwarding in
+both directions; boolean spelling alone is not a compiler proof.
+Result's native-error compatibility uses eager Boolean `|` for total type
+equalities. Short-circuit `or` hides symbolic equal-error and pure/error
+proofs from Mojo 1.2 overload selection. Policy downcasts and potentially
+invalid projections retain their conditional guards.
 
 Input and target admission must not require constructing an invalid output
 alias merely to report an error. Projection order and safe rejected
@@ -810,6 +844,9 @@ or a requirement to spell ordinary callback types would fail the design's
 usability goal, not qualify as acceptable rejections.
 
 #### Family-specific destinations and owners
+
+Result and Validation are implemented; transformer rows specify planned
+extensions and their required execution owners.
 
 | Source family | Recommended destination policy | Execution owner |
 |---|---|---|
@@ -915,7 +952,8 @@ family, environment/state witnesses and origin-indexed outputs.
 
 #### User calls and generic clients
 
-The intended call shapes are schematic, not executable documentation yet:
+The core Result and Validation call shapes are executable in the example
+above. The Reader call below remains a planned transformer extension:
 
 ```text
 pipeline(result).map_err(to_message)
@@ -926,11 +964,11 @@ pipeline[ValidationFamily[ParseErrors]](validation)
     .map_err[Target=ValidationFamily[DisplayErrors]](format_errors)
 ```
 
-The first three calls infer an unambiguous destination. The last supplies
-the policy that the error value's type cannot determine. `Target` should be
-an optional named binding appended after existing explicit type bindings;
-existing positional callback and native-error bindings must keep their
-meaning. This is not a request to force named bindings on existing APIs.
+The Result calls infer an unambiguous destination. Reader is intended to do
+the same once its transformer instance is qualified. Validation supplies the
+policy that the error value's type cannot determine. `Target` is a trailing
+defaulted binding, supplied by name in examples; existing positional callback
+and native-error bindings keep their meaning.
 
 A generic selected wrapper should name
 `C = MapBothContract[I, V, F, G, Target]`, require `C.Compatible`, and return
@@ -968,24 +1006,23 @@ stored pointers and adapters without extra caller type hints.
   another owner's origin. Incompatible inhabited native errors require an
   explicit user mapping, as elsewhere in the library.
 
-The first item deliberately changes selected custom-family behavior that
-currently drops the selected policy. It must be documented and approved
-with implementation scope. The recommendation also makes the same-error
-Validation policy transition available only through an explicit target.
-These are user-visible decisions; capability/parameter names and the exact
-Mojo encoding remain subject to the qualification below.
+The core implementation rejects selected custom-family calls that previously
+discarded their policy. Such dictionaries adopt ErrorMapping explicitly.
+A same-error Validation policy transition also requires an explicit target.
+These compatibility decisions are documented with the selected API; remaining
+transformer behavior is subject to the qualification below.
 
 #### Adoption sequence and acceptance gates
 
-1. Agree on the single capability, two-arm semantics, exact target contract
-   and the two compatibility decisions above. This document completes only
-   that design step; it does not establish compiler viability.
-2. Prototype the smallest Result/custom-family/Validation slice. Prove
-   ordinary invalid carrier, target, origin, receiver and error calls reject
-   normally. Qualify combined and expanded generic proofs, conditional
-   witnesses, explicit positional bindings, and deterministic target defaults
-   before promoting a public protocol. Preserve existing canonical and
-   proven intrinsic Result generic forwards.
+1. **Complete:** define one capability, two-arm semantics, exact target
+   admission and the compatibility decisions above.
+2. **Complete:** qualify the Result/custom-family/Validation core. Maintained
+   fixtures cover ordinary invalid carriers, target policies and projections,
+   origins, receivers and errors; combined/component generic proofs;
+   conditional witnesses; positional bindings; default destinations; and
+   one-shot cleanup. Canonical and proven intrinsic Result generic forwarding
+   remain supported. Required explicit default-policy declarations replace
+   the compiler-opaque inherited default.
 3. Add ResultT and OptionalT through existing inner adapters and base owners.
    Test the interleaved branch-order example, outer failure/empty skipping,
    exact additional base errors, nested selected channels and branching
@@ -995,8 +1032,8 @@ Mojo encoding remain subject to the qualification below.
    move-only state/log cleanup, unopened-action disposal and joins. Mapping
    must not acquire rollback or new copying requirements. Recheck existing
    transport consumers, including local, listen and censor.
-5. Integrate selected admission and maintained generic/user examples; record
-   new custom-family obligations. Run source/package O0/O3 boundaries and
+5. For each transformer extension, add maintained generic/user examples and
+   document family obligations. Run source/package O0/O3 boundaries and
    bounded cold-compilation comparisons, then publish complete passes
    separately. No CI or compiler work is part of this sequence.
 

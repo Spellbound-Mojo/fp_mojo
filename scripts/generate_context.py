@@ -911,6 +911,42 @@ def methods(*, fold_stage=False):
                  f"_selected_redeem[Self.I, Self.V, {a['adapter_type']}, {b['adapter_type']}, {operation.effect}](self.value^, {a['build']}, {b['build']})",
                  "Consume the original outcome with its selected handler, preserving the selected family's execution policy.")
 
+    # Stored-error rebinding belongs to the selected dictionary, even when its
+    # carrier is a native Result. Target follows every existing positional
+    # callback binding and is admitted by the same checked family contract.
+    family = "_MappingErrors[Self.I]"
+    for name in ("map_err", "map_both"):
+        operation = RESULT_OPERATIONS[name]
+        two = len(operation.callbacks) == 2
+        primary = operation.callbacks[0]
+        left = native_callbacks(primary.mode, primary.input("Self.I.Element[Self.V]", family + ".Failure"), primary.argument)
+        if two:
+            secondary = operation.callbacks[1]
+            right = list(native_callbacks(secondary.mode, secondary.input("Self.I.Element[Self.V]", family + ".Failure"), secondary.argument, second=True))
+            combinations = product(left, right)
+        else:
+            combinations = ((cb, None) for cb in left)
+        for a, b in combinations:
+            callbacks = [a] + ([b] if two else [])
+            success = a["result"] if two else "Self.I.Element[Self.V]"
+            failure = b["result"] if two else a["result"]
+            params = callback_parameters(callbacks)
+            params += [f"Target: ErrorMapping = {family}.DefaultErrorTarget[{success}, {failure}]"]
+            contract_name = "MapBothContract" if two else "MapErrContract"
+            types = ", ".join(cb["adapter_type"] for cb in callbacks)
+            contract = f"{contract_name}[{family}, Self.V, {types}, Target]"
+            conditions = ["conforms_to(Self.I, ErrorMapping)", contract + ".Compatible"]
+            for cb in callbacks:
+                if cb["adapter_type"] not in ("C", "G"):
+                    conditions += cb["conditions"]
+            prelude = "".join(cb.get("prelude", "") for cb in callbacks)
+            built = ", ".join(cb["build"] for cb in callbacks)
+            emit(name, {"prelude": prelude}, params,
+                 ", ".join(cb["argument"] for cb in callbacks),
+                 contract + ".Out", contract + ".Error", contract + ".Family", conditions,
+                 f"_{name}[{family}, Self.V, {types}, Target]({built}, self.value^)",
+                 "Map the selected stored-error channel through its family's admitted destination policy.")
+
     for name, operation in RESULT_OPERATIONS.items():
         if operation.sequence: continue
         summary, detail = operation.documentation
@@ -932,6 +968,8 @@ def methods(*, fold_stage=False):
             )
             if name in ("recover", "or_else", "tap_err", "flat_tap_err", "recover_if", "or_else_if", "ensure", "redeem", "redeem_with", "attempt_tap"):
                 conditions += ["not conforms_to(Self.I, ApplicativeError)"]
+            if name in ("map_err", "map_both"):
+                conditions += ["not conforms_to(Self.I, ApplicativeError)", "not conforms_to(Self.I, ErrorMapping)"]
             R = a["result"]
             result = operation.result(T, Err, R, b["result"] if two else "", value=lambda r: f"_Success[{r}]")
             conditions += operation.first_constraints(T, Err, R,
@@ -953,6 +991,10 @@ def methods(*, fold_stage=False):
                 effect = a["error"]
             params = callback_parameters(callbacks)
             family = f"ResultFamily[_Failure[{result}]]"
+            if name in ("map_err", "map_both"):
+                params += [f"Target: ErrorMapping = {family}"]
+                conditions += [f"Target == {family}"]
+                family = "Target"
             target = f"Pipeline[{family}, {result}, Self.E]"
             expr = (
                 f"rebind_var[{Source}](self.value^).{name}("
@@ -997,6 +1039,7 @@ def documented(source):
         "o": "The first callback origin, inferred from the borrowed callback.",
         "q": "The second callback origin, inferred from the borrowed callback.",
         "J": "The output family; inferred for whole-value stages, explicit for traversal.",
+        "Target": "The destination stored-error family; defaults to the source family's candidate.",
         "W": "The second carrier type, including its origins.",
         "B": "The early termination payload, including its origins.",
         "Ws": "The additional carrier types, including their origins; at most seven.",

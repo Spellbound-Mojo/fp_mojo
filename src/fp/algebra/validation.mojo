@@ -1,6 +1,6 @@
 """Accumulating Result validation using the existing Applicative machinery."""
 from std.builtin.rebind import downcast, rebind_var
-from .protocols import Semigroup, ApplicativeError, _Accumulate
+from .protocols import Semigroup, ApplicativeError, ErrorMapping, _Accumulate
 from .instances import ResultFamily, _ListElement
 from .monoids import ListMonoid
 from ._result_accumulation import _result_map2, _AccumulatingErrors, _result_loop
@@ -15,7 +15,11 @@ from fp._internal.errors import _CommonError
 comptime _ListErrors[V: Movable & Deinitable] = ListMonoid[_ListElement[downcast[V, _ResultType].Error]]
 
 
-struct ValidationFamily[S: Semigroup](ApplicativeError):
+trait _ValidationPolicy:
+    comptime _ErrorSemigroup: Semigroup
+
+
+struct ValidationFamily[S: Semigroup](ApplicativeError, ErrorMapping, _ValidationPolicy):
     """Native Result with ordered error accumulation for independent operations.
 
     Both failed operands combine their stored errors with S. Native raises
@@ -27,6 +31,15 @@ struct ValidationFamily[S: Semigroup](ApplicativeError):
         S: The associative error combiner; its Value is the exact stored error
             type. ListMonoid concatenates list errors in input order.
     """
+    comptime _ErrorSemigroup = Self.S
+    comptime DefaultErrorTarget[A: Movable & Deinitable, E: Movable & Deinitable] = Self
+    comptime ErrorCarrierCompatible[V: Movable & Deinitable] = ResultFamily[Self.S.Value].ErrorCarrierCompatible[V]
+    comptime BimapCompatible[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = (
+        (Target == ValidationFamily[downcast[Target,_ValidationPolicy]._ErrorSemigroup] and ResultFamily[Self.S.Value].BimapCompatible[ResultFamily[G.Out],V,F,G])
+        if conforms_to(Target,_ValidationPolicy) else False
+    )
+    comptime Bimapped[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = ResultFamily[Self.S.Value].Bimapped[ResultFamily[G.Out],V,F,G]
+    comptime BimapError[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = ResultFamily[Self.S.Value].BimapError[ResultFamily[G.Out],V,F,G]
     comptime Element[V: Movable & Deinitable] = ResultFamily[Self.S.Value].Element[V]
     comptime Failure = Self.S.Value
     comptime CarrierCompatible[V: Movable & Deinitable] = ResultFamily[Self.S.Value].CarrierCompatible[V]
@@ -51,6 +64,31 @@ struct ValidationFamily[S: Semigroup](ApplicativeError):
     comptime CombineError[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = _CommonError[Self.S.Error, _CommonError[F.Error, R.Error]]
     comptime _Looped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Result[K.Acc, Self.S.Value]
     comptime _LoopError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = _CommonError[Self.S.Error, _CommonError[F.Error, K.Error]]
+
+    @staticmethod
+    def bimap[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](
+        var on_ok: F, var on_err: G, var source: V
+    ) raises Self.BimapError[Target,V,F,G] -> Self.Bimapped[Target,V,F,G]:
+        """Map the accumulated error once, preserving the chosen target policy.
+
+        Parameters:
+            Target: The admitted ValidationFamily and destination Semigroup.
+            V: The source Result type.
+            F: The consuming success callback type.
+            G: The consuming accumulated-error callback type.
+
+        Args:
+            on_ok: The callback selected by an original success.
+            on_err: The callback selected by an original accumulated error.
+            source: The validation carrier, consumed once.
+
+        Returns:
+            The transformed Result; no Semigroup combine operation runs.
+
+        Raises:
+            The selected callback's exact native error.
+        """
+        return ResultFamily[Self.S.Value].bimap[ResultFamily[G.Out]](on_ok^,on_err^,source^)
 
     @staticmethod
     def fail[A: Movable & Deinitable](var error: Self.Failure) -> Self.Failed[A]:
