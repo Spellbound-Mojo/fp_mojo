@@ -1,5 +1,5 @@
 """Select native errors once; stored Result errors remain independent."""
-from fp.functions import pipeline, identity
+from fp.functions import pipeline
 from fp.algebra import OptionalFamily, ResultFamily
 from fp.data import Result, Ok, Err
 from std.testing import assert_equal
@@ -65,10 +65,8 @@ def main() raises:
     def validate(var value: Int) -> Result[Int,List[String]]:
         if value < 0: return Err(List[String]([String(value)]))
         return Ok(value)
-    var validation = pipeline(List[Int]([-1,2,-3])).par_traverse(validate).get()
-    def no_errors(var values: List[Int]) -> List[String]: return List[String]()
-    var errors = validation^.fold_owned(no_errors, identity[List[String]])
-    assert_equal(errors, List[String](["-1","-3"]))
+    var errors = pipeline(List[Int]([-1,2,-3])).par_traverse(validate).swap().to_optional()
+    assert_equal(errors.value(), List[String](["-1","-3"]))
 
     var checked: Int
     try:

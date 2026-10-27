@@ -18,6 +18,10 @@ These Cats-inspired operations are also terminal methods on `pipeline(result)`;
 they return the value directly. See [finishing with a value](../tutorial/results.md#finish-with-a-value)
 for lazy defaults, ownership and native error selection.
 
+`swap()` exchanges Ok and Err and returns `Result[E, T]`. It also chains on
+`pipeline(result^)`, retaining the native error setting. Combine it with
+`to_optional()` to keep only the error; see [working with the error as a value](../tutorial/results.md#work-with-the-error-as-a-value).
+
 ## Reuse an error context
 
 Construct `var capture = Capture[E]()` once, then use `capture.run(callback)`,

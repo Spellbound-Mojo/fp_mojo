@@ -785,6 +785,28 @@
         "tests/ownership/test_context_elements_ownership.mojo",
         "tests/compile_fail/context_elements_array_filter.mojo"
       ]
+    },
+    {
+      "name": "Result case exchange",
+      "methods": [
+        "swap"
+      ],
+      "status": "result_only",
+      "families": "A native Result carrier; selects the exchanged ResultFamily",
+      "callbacks": "No callback",
+      "ownership": "Consumes the Result and moves its active payload without copying; origins are retained.",
+      "errors": "Stored success/error types exchange; the selected native error is unchanged.",
+      "timing": "Immediate case exchange; it never raises a stored error.",
+      "owner": [
+        "src/fp/data/_result.mojo",
+        "src/fp/functions/context.mojo"
+      ],
+      "evidence": [
+        "docs/examples/result_values.mojo",
+        "tests/runtime/test_result_swap.mojo",
+        "tests/ownership/test_result_swap_ownership.mojo",
+        "tests/compile_fail/result_swap_origin.mojo"
+      ]
     }
   ],
   "legacy_methods": [

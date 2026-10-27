@@ -10225,6 +10225,12 @@
             "signature": "def to_optional(deinit self) -> Optional[_Success[Self.V]] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]:",
             "sha256": "28d77ec17bcc84a58ce868888e0b5ff70874c1c939a920a989c977682362331e"
           }
+        ],
+        "swap": [
+          {
+            "signature": "def swap(deinit self) -> Pipeline[ResultFamily[_Success[Self.V]], Result[_Failure[Self.V], _Success[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]:",
+            "sha256": "bcafeb5bd2f2e3d68ad0f61c1af7203a83521b66de9eac5c85e6b08e888b16b5"
+          }
         ]
       },
       "provider": "functions/context"
@@ -13056,6 +13062,12 @@
           {
             "signature": "def get_or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> Self.T where R == Self.T:",
             "sha256": "1dd40241f1e79751d7a6333d614c4cd4902c3a22e536dd5048135bbbe8376ce5"
+          }
+        ],
+        "swap": [
+          {
+            "signature": "def swap(deinit self) -> Result[Self.E, Self.T]:",
+            "sha256": "14614083b9b3d6428858cd3cbc84cded81ea9fa7f833784aca5764fad6ca092a"
           }
         ],
         "to_optional": [

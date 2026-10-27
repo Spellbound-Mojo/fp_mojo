@@ -34,3 +34,9 @@ def main() raises:
     var optional = checked(5).to_optional()
     if optional: print("optional:", optional.value())
     assert_equal(Bool(checked(-1).to_optional()), False)
+
+    # Swapping makes the stored error available to ordinary success operations.
+    var reason = pipeline(checked(-1)).swap().to_optional()
+    assert_equal(reason.value(), "negative count")
+    print("reason:", reason.value())
+    assert_equal(Bool(checked(5).swap().to_optional()), False)

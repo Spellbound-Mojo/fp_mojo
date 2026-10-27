@@ -3356,3 +3356,17 @@ including no-value closures and explicit Never effects. Known owned operands
 still project their ABI through `_NativeOwnedArg`; they do not enumerate
 register combinations. Argument owners are cleaned up on success, failure and
 abandonment; borrowed origins inside moved values remain part of their types.
+
+### Result case exchange
+
+`Result.swap()` consumes the active payload and exchanges its constructor and
+type position. It delegates to the existing owned fold, so the fold remains
+the only branch selection and extraction implementation. No conversion, copy,
+error raising or independent tag dispatch is introduced. Identical payload
+types retain distinct Ok/Err constructors, and swapping twice restores the
+original type and case.
+
+`Pipeline.swap()` is a native Result operation that forwards to Result and
+selects `ResultFamily` for the new stored error. It keeps the selected native
+error independently. This permits `.swap().to_optional()` for error extraction
+and ordinary success combinators on the former error channel.

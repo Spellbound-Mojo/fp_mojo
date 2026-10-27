@@ -239,6 +239,22 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """
         return self^.value_or(_IgnoreInput[Self.E, C](make_default^))
 
+    def swap(deinit self) -> Result[Self.E, Self.T]:
+        """Exchange success and stored failure, moving the active payload.
+
+        Like Cats Either/EitherT's `swap`, Ok becomes Err and Err becomes Ok.
+        Calling swap twice restores the original case, payload and type.
+        This neither raises a stored error nor changes the payload's origins.
+
+        Returns:
+            A Result with the success and error types exchanged, without copying.
+        """
+        def failure(var value: Self.T) -> Result[Self.E, Self.T]:
+            return Err(value^)
+        def success(var error: Self.E) -> Result[Self.E, Self.T]:
+            return Ok(error^)
+        return self^.fold_owned(failure, success)
+
     def to_optional(deinit self) -> Optional[Self.T]:
         """Consume the Result, keeping its success in a native Optional.
 

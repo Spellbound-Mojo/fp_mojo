@@ -973,6 +973,10 @@ def methods(*, fold_stage=False):
     body.append(f'\n    def to_optional(deinit self) -> Optional[{T}] where {" and ".join(result_conditions)}:\n'
                 '        """Consume the native Result carrier, retaining only its success in an Optional."""\n'
                 f'        return rebind_var[{Source}](self.value^).to_optional()\n')
+    swapped = f"Result[{Err}, {T}]"
+    body.append(f'\n    def swap(deinit self) -> Pipeline[ResultFamily[{T}], {swapped}, Self.E] where {" and ".join(result_conditions)}:\n'
+                '        """Exchange native Result success and stored failure, retaining the selected native error."""\n'
+                f'        return Pipeline[ResultFamily[{T}], {swapped}, Self.E](rebind_var[{Source}](self.value^).swap())\n')
 
     for name, operation in RESULT_OPERATIONS.items():
         if operation.sequence: continue

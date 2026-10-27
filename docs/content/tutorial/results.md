@@ -39,6 +39,23 @@ of the stored `E`. Library callables keep their declared error automatically.
 Selecting a closure's error first also lets incompatible callbacks receive
 normal diagnostics on Mojo 1.2.
 
+## Work with the error as a value
+
+`swap()` exchanges the two Result cases: `Ok(value)` becomes `Err(value)` and
+`Err(error)` becomes `Ok(error)`. The type changes from `Result[T, E]` to
+`Result[E, T]`. This follows [Cats EitherT's `swap`](https://github.com/typelevel/cats/blob/main/core/src/main/scala/cats/data/EitherT.scala#L104)
+and its underlying Either operation.
+
+Use `.swap().to_optional()` to extract only the error, as the example above
+does, or `.swap().map(transform).swap()` to work through the success API on
+the error side. For a simple error transformation, `map_err` remains shorter.
+Swapping twice restores the original case and type. Payloads move without
+copies, including move-only errors and values that retain borrowed origins.
+
+`pipeline(result^).swap()` selects the exchanged Result family, so subsequent
+`map` and `flat_map` operate on the former error channel. Its native error
+selection stays unchanged: a stored error is never raised by `swap`.
+
 ## Transform only the active branch
 
 <!-- example: docs/examples/results.mojo -->

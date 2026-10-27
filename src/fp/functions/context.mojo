@@ -6705,6 +6705,14 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         """
         return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).to_optional()
 
+    def swap(deinit self) -> Pipeline[ResultFamily[_Success[Self.V]], Result[_Failure[Self.V], _Success[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]:
+        """Exchange native Result success and stored failure, retaining the selected native error.
+
+        Returns:
+            The pipeline containing the operation result, retaining its selected native error.
+        """
+        return Pipeline[ResultFamily[_Success[Self.V]], Result[_Failure[Self.V], _Success[Self.V]], Self.E](rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).swap())
+
     def ensure[C: BorrowCallContract & Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C, var make_error: G) raises _CommonError[C.Failure, G.Failure] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Success[Self.V] and G.Payload == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C.Result == Bool and G.Result == _Failure[Self.V] and (C.Failure == Never or G.Failure == Never or C.Failure == G.Failure):
         """Keep an accepted success or construct a stored error from its borrowed value."""
         return Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E](rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).ensure(predicate^, make_error^))

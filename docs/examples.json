@@ -199,7 +199,7 @@
       "stdout": "accepted\nnotice 107\nraised 90\n"
     },
     "docs/examples/result_values.mojo": {
-      "stdout": "value: 42\nusing zero: negative count\nfallback: 0\npipeline: 8\ndefault: 7\noptional: 5\n"
+      "stdout": "value: 42\nusing zero: negative count\nfallback: 0\npipeline: 8\ndefault: 7\noptional: 5\nreason: negative count\n"
     },
     "docs/examples/results.mojo": {
       "stdout": "ok: 42\ndomain: expected a positive value\nraised: callback failed\n"

@@ -29185,6 +29185,22 @@
       "summary": "Continue either branch with the selected handler Result."
      }
     ],
+    "swap": [
+     {
+      "args": [],
+      "description": "Like Cats Either/EitherT's `swap`, Ok becomes Err and Err becomes Ok.\nCalling swap twice restores the original case, payload and type.\nThis neither raises a stored error nor changes the payload's origins.",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A Result with the success and error types exchanged, without copying.",
+       "type": "Result[Self.E, Self.T]"
+      },
+      "signature": "def swap(deinit self) -> Result[Self.E, Self.T]",
+      "summary": "Exchange success and stored failure, moving the active payload."
+     }
+    ],
     "tap_err": [
      {
       "args": [
@@ -173257,6 +173273,22 @@
       },
       "signature": "def sum_by[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises _CommonError[X, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where _ErrorCompatible[Self.E, X] and R == _SIMDSum[dtype, size].Value and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[X, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[X, _SIMDSum[dtype, size].Error], X]",
       "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     }
+    ],
+    "swap": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[ResultFamily[_Success[Self.V]], Result[_Failure[Self.V], _Success[Self.V]], Self.E]"
+      },
+      "signature": "def swap(deinit self) -> Pipeline[ResultFamily[_Success[Self.V]], Result[_Failure[Self.V], _Success[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]",
+      "summary": "Exchange native Result success and stored failure, retaining the selected native error."
      }
     ],
     "tap": [
