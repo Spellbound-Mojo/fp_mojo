@@ -3013,6 +3013,23 @@ source/package checks at O0 and O3; 14 mapping and 142 generic programs; and all
 failures. Generator parity, 49 tooling tests, API generation and strict
 documentation validation also passed.
 
+### Native operand spelling has one renderer
+
+Capture signature assembly and finite tuple signatures now use the existing
+native argument renderer for borrowed, mutable and consumed conventions. The
+shared invocation catalog likewise obtains passed arguments from the existing
+call-argument renderer, including consumed-value markers and keyword-pack
+transfer. ABI projection remains controlled by that renderer's original flag.
+
+The catalog selects the existing invocation owner; the renderers own its
+signature and argument spelling. Native adapters retain their distinct storage,
+reference origins and error boundaries. All 107 Mojo sources remain byte-identical,
+and the maintained parity tests cover both declarations and invocation bodies.
+
+Qualification passed generator parity, all 49 tooling tests and strict
+documentation validation. Verified source hashes match the preceding pass
+for every Mojo module.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

@@ -1,5 +1,5 @@
 """Native n-argument boundaries and bounded type inference; execution is shared."""
-from native_signatures import thin_dispatch, native_invocation
+from native_signatures import thin_dispatch, native_invocation, argument
 
 MD = 'Movable & Deinitable'
 MAX = 8
@@ -57,7 +57,7 @@ from .native import _NativeOwnedArg, _call_native, _call_native_binary, _Unary, 
     for n in range(1,MAX+1):
         names=[f'A{i}' for i in range(n)]
         params=', '.join(f'{a}: {MD}' for a in names)
-        args=', '.join('var '+a for a in names)
+        args=', '.join(argument(a, 'o') for a in names)
         ts=', '.join(names)
         pure_sig = f'_Unary[{ts}, R]' if n == 1 else f'_Binary[{ts}, R]' if n == 2 else f'def({args}) -> R'
         raising_sig = f'_RaisingUnary[{ts}, R, X]' if n == 1 else f'_RaisingBinary[{ts}, R, X]' if n == 2 else f'def({args}) raises X -> R'

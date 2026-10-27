@@ -195,10 +195,7 @@ def native_invocation(shape, payloads, values, *, keyword=None, keyword_value="v
     assert len(payloads) == len(values) == len(shape)
     parameters = [*payloads, *([keyword] if keyword is not None else []),
                   result, error, function_type, raising]
-    arguments = [value + ("^" if mode == "o" else "")
-                 for value, mode in zip(values, shape)]
-    if keyword is not None:
-        arguments.append(f"**{keyword_value}^")
+    _, arguments = _call_arguments(shape, payloads, values, keyword, keyword_value)
     if owner.view:
         parameters.append(f"origin_of({function})")
         adapter = owner.owner + "[" + ", ".join(parameters) + "]"

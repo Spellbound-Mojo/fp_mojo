@@ -90,10 +90,7 @@ def fields(shape, kw=False):
 
 
 def sig(shape, kw=False, prefix=""):
-    p = [
-        ("" if m == "r" else "mut " if m == "m" else "var ") + prefix + c
-        for c, m in zip("AB", shape)
-    ]
+    p = [argument(prefix + c, m) for c, m in zip("AB", shape)]
     if kw:
         if p:
             p += ["/"]
