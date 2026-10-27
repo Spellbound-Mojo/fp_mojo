@@ -13,6 +13,7 @@ from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract,
 from fp.callables._predicates import _FilterPredicate
 from .protocols import Monoid, _AllLive, _LiveAccumulator
 from ._accumulation import _FoldMappedStep, _SearchStep, _FirstPresent
+from ._sequencing import _EffectRetain
 from fp.callables.invoke import RepeatableUnary
 from fp._internal.errors import _CommonError, _ErrorCompatible
 from fp.callables._identity import Identity
@@ -300,5 +301,38 @@ struct FindMapContract[I: Monad, V: Movable & Deinitable, F: UnaryContract & Mov
     """Complete first-match admission with the inferred construction error."""
     comptime Out = Self._Plan.Out
     """The exact folded carrier, including deferred computation types."""
+    comptime Error = Self._Plan.Error
+    """The native construction error; deferred execution retains its own errors."""
+
+
+struct FindContract[I: Monad, V: Movable & Deinitable, C: BorrowCallable]:
+    """Admission, result and construction error of an effectful borrowing search.
+
+    Generic wrappers forward `Compatible`, return `Out` and raise `Error`.
+    The predicate borrows each visited element and produces an effectful Bool.
+    Each branch retains its first accepted original element without copying it
+    unless the selected family branches. Families own execution and stopping.
+
+    Parameters:
+        I: The target Monad family.
+        V: The consumed source type, including native origins.
+        C: The repeatable borrowing predicate, including receiver and error.
+    """
+    comptime _Element = downcast[Self.C.Payload, Movable & Deinitable]
+    comptime _Retained = _EffectRetain[Self._Element, Self.I, Self.C, True]
+    comptime _Step = _SearchStep[Self._Element, Self._Retained]
+    comptime _Plan = _EffectFold[Self.I, Self.V, Self._Step, _FirstPresent[Self._Element]]
+    comptime InputCompatible = _Source[Self.V].Element == Self._Element
+    """The predicate borrows the exact source element, including origins."""
+    comptime OutputCompatible = Self.I.CarrierCompatible[Self.C.Result] and Self.I.Element[Self.C.Result] == Bool
+    """The predicate returns this family's carrier of a Bool."""
+    comptime ReceiverCompatible = RepeatableUnary[Self._Retained]
+    """The retention callback can visit each required source element."""
+    comptime FamilyCompatible = Self._Plan.Compatible
+    """Requirements declared by the family's dependent fold."""
+    comptime Compatible = Self.InputCompatible and Self.OutputCompatible and Self.ReceiverCompatible and Self.FamilyCompatible
+    """Complete borrowing-search admission with the inferred construction error."""
+    comptime Out = Self._Plan.Out
+    """The exact folded carrier of original elements, including deferred computations."""
     comptime Error = Self._Plan.Error
     """The native construction error; deferred execution retains its own errors."""

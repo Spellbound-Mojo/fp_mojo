@@ -2297,6 +2297,35 @@ API metadata finished updating after startup. That report is retained. The
 qualification rerun used unchanged inputs and had no audit failures. Generated
 sources, all 48 tooling tests and strict documentation checks passed.
 
+### Borrowing searches share one retained-type projection
+
+`FindContract[I, V, C]` gives generic `find_effect` wrappers a public `Compatible`
+proof and exact `Out` and `Error` projections. It checks the source/predicate
+input, an effectful Bool result, the repeated retention receiver and dependent
+fold admission. Free, piped, iterator and selected-pipeline calls share that
+contract. Native callback conventions and explicit-error conditions remain at
+their existing admission boundaries.
+
+Previously, the free entry formed its retained type from the predicate payload,
+while the selected pipeline formed it from the source element. Mojo 1.2 could
+not connect those nested projections in a fully generic selected wrapper. Both
+routes now use the predicate-derived retained type; source equality is a single
+admission proof. This preserves the native ownership and origin checks without
+requiring callers to add annotations or duplicate constraints.
+
+The prototype retained the initial generic-selection failure, then passed all
+four forwarding routes and six focused existing O0 programs. Maintained controls
+cover move-only original values and predicate captures, first-match stopping,
+branch order, separate result/error origins and deferred execution or abandonment.
+Five negative clients require ordinary input, output, receiver, copying or
+stored-error diagnostics without explicit callback bindings. All 24 source/package
+O0/O3 checks passed, together with five effect-query, four effect-search, two
+effect-combinator and 136 generic programs. Five new, 53 effect-query and 16
+effect-search rejection fixtures passed; categories overlap. The example passed
+all four source/package O0/O3 checks. Reports retained unchanged inputs and no
+audit failures. Generated sources, all 48 tooling tests and strict documentation
+checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

@@ -69,6 +69,20 @@ exact, and successful linear searches retain move-only selected values.
 
 <!-- example: docs/examples/find_map_contracts.mojo -->
 
+`FindContract[I, V, C]` describes `find_effect`, whose predicate borrows each
+visited source element and returns an effectful Bool. The selected original
+value remains owned by the search and is moved into its result. Its public
+`Compatible`, `Out` and `Error` projections support the same four forwarding
+routes as `FindMapContract`, including generic selected pipelines.
+
+Borrowing searches use one predicate-derived retained type across these routes.
+This lets Mojo 1.2 check generic wrappers without additional annotations relating
+source-element and predicate-payload projections. Native callbacks keep their
+existing signature and error admission; branching families keep their copying
+requirements, while linear searches support move-only retained values.
+
+<!-- example: docs/examples/find_contracts.mojo -->
+
 <!-- example: docs/examples/operation_contracts.mojo -->
 
 `FilterContract[I, V, P]` does the same for `filter`; pass `True` as the

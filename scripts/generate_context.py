@@ -437,14 +437,25 @@ def methods(*, fold_stage=False):
                 )
             c, result = cb["adapter_type"], cb["result"]
             conditions = cb["conditions"] + [f"_CarrierCompatible[J, {result}]"]
-            plan = operation.bind("J", "Self.V", element, c, cb["build"], result,
+            # Borrowing search uses the predicate's exact payload as its
+            # retention type, matching the free entry and public contract.
+            # Source equality remains admission, not another plan projection.
+            plan_element = f"downcast[{c}.Payload, {MD}]" if name == "find_effect" else element
+            plan = operation.bind("J", "Self.V", plan_element, c, cb["build"], result,
                                   accumulator="Self.A", initial="self.initial^",
                                   monoid="M" if mapped_fold else "",
-                                  retained=f"_TraverseTap[{element}, J, {c}, True]" if borrowing else "")
-            if mapped_fold or name == "find_map_effect":
+                                  retained=f"_TraverseTap[{plan_element}, J, {c}, True]" if borrowing else "")
+            if mapped_fold or operation.searching:
                 contract = (f"FoldMapContract[J, M, Self.V, {c}]" if mapped_fold else
-                            f"FindMapContract[J, Self.V, {c}]")
-                conditions = cb["conditions"] + [contract + ".Compatible"]
+                            f"FindMapContract[J, Self.V, {c}]" if name == "find_map_effect" else
+                            f"FindContract[J, Self.V, {c}]")
+                admission = cb["conditions"]
+                if name == "find_effect":
+                    # The public proof owns this equality; retain all native
+                    # signature and explicit-error conditions independently.
+                    admission = [condition for condition in admission
+                                 if condition != f"{c}.Payload == {element}"]
+                conditions = admission + [contract + ".Compatible"]
                 result, error = contract + ".Out", contract + ".Error"
             else:
                 conditions += [f"J.Element[{result}] == {plan.payload}", f"{plan.types}.Compatible"]

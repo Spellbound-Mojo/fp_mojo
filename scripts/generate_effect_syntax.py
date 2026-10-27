@@ -163,7 +163,8 @@ def searches(mode, array=False):
                                   monoid='M' if folding else '',
                                   retained=f'_EffectRetain[{elem}, G, {cb}, True]' if borrowing else '')
             contract = (f'FoldMapContract[G, M, {source}, {cb}]' if folding else
-                        f'FindMapContract[G, {source}, {cb}]' if name == 'find_map_effect' else None)
+                        f'FindMapContract[G, {source}, {cb}]' if name == 'find_map_effect' else
+                        f'FindContract[G, {source}, {cb}]')
             actual = contract + '.Error' if contract else plan.error
             raised=f'_EntryError[X, {actual}]'
             if contract:
