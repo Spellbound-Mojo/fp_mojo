@@ -20,19 +20,42 @@ class CallbackShape:
     repeatable: str
     borrowed: str
     owned: str
+    inputs: tuple[str, ...] = ("Arg",)
+    result: str = "Out"
+    error: str = "Error"
 
 
 CALLBACK_SHAPES = {
     "owned": CallbackShape("UnaryContract", "Unary", "_NativeUnaryRef", "NativeUnary"),
     "borrow": CallbackShape(
-        "BorrowCallContract", "BorrowCallable", "_NativeBorrowRef", "_NativeBorrow"
+        "BorrowCallContract", "BorrowCallable", "_NativeBorrowRef", "_NativeBorrow",
+        ("Payload",), "Result", "Failure",
     ),
-    "thunk": CallbackShape("ThunkContract", "Thunk", "_NativeThunkRef", "_NativeThunk"),
+    "thunk": CallbackShape("ThunkContract", "Thunk", "_NativeThunkRef", "_NativeThunk", ()),
     "binary": CallbackShape(
-        "BinaryContract", "Binary", "_NativeBinaryRef", "_NativeBinary"
+        "BinaryContract", "Binary", "_NativeBinaryRef", "_NativeBinary", ("First", "Second")
     ),
     "nary": CallbackShape("UnaryContract", "Unary", "_NativeNary", "_OwnedNativeNary"),
 }
+
+
+@dataclass(frozen=True)
+class CallableMetadata:
+    """Associated types projected from an existing library callback."""
+
+    inputs: tuple[str, ...]
+    result: str
+    error: str
+
+
+def callable_metadata(mode, owner):
+    """Use the shape's protocol members without choosing invocation policy."""
+    shape = CALLBACK_SHAPES[mode]
+    return CallableMetadata(
+        tuple(owner + "." + field for field in shape.inputs),
+        owner + "." + shape.result,
+        owner + "." + shape.error,
+    )
 
 
 def callable_protocol(mode, *, repeatable=False):
@@ -114,15 +137,16 @@ def callback(mode, kind, arg="function", second=False):
     )
     if kind == "library":
         trait = callable_protocol(mode)
+        metadata = callable_metadata(mode, f)
         return Callback(
             [f"{f}: {trait} & {MD}"],
             [],
             f"var {arg}: {f}",
             f,
             arg + "^",
-            f + ".Payload" if mode == "borrow" else f + ".Arg",
-            f + ".Result" if mode == "borrow" else f + ".Out",
-            f + ".Failure" if mode == "borrow" else f + ".Error",
+            metadata.inputs[0] if metadata.inputs else "",
+            metadata.result,
+            metadata.error,
             mode,
         )
     params = (

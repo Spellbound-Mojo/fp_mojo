@@ -1,7 +1,7 @@
 """Native boundaries for shared effectful folds and conditional composition."""
 from itertools import product
 from combinator_docs import document_first_methods
-from native_signatures import MD, callable_protocol, native_adapter
+from native_signatures import MD, callable_protocol, callable_metadata, native_adapter
 from operation_specs import EFFECT_REDUCTIONS, EffectChoice
 
 START = '# --- effect syntax (generated) ---\n'
@@ -28,10 +28,11 @@ def folds(mode, array=False):
             else:
                 params = [f'F: {callable_protocol("binary")} & {MD}' if fold else f'C: {callable_protocol("borrow", repeatable=True)}']
                 cb = 'F' if fold else 'C'
-                elem = 'F.Second' if fold else f'downcast[C.Payload, {MD}]'
+                metadata = callable_metadata(operation.mode, cb)
+                elem = metadata.inputs[1] if fold else f'downcast[{metadata.inputs[0]}, {MD}]'
                 build, arg = 'function^', f'var function: {cb}'
-                effect = 'F.Out' if fold else 'C.Result'
-            acc = ('A' if native else 'F.First') if fold else 'Bool'
+                effect = metadata.result
+            acc = ('A' if native else metadata.inputs[0]) if fold else 'Bool'
             if mode == 'free': params += [f'V: {MD}']
             if array: params += ['N: Int']
             params += ['//', 'G: Monad']
@@ -147,9 +148,10 @@ def searches(mode, array=False):
                 build=f'{cb}(Pointer(to=function))';arg='ref[o] function: F';effect='R';fe=error
             else:
                 params=[f'C: {callable_protocol("borrow", repeatable=True)}'] if borrowing else [f'F: {callable_protocol("owned")} & {MD}']
-                elem=f'downcast[C.Payload, {MD}]' if borrowing else 'F.Arg'
                 cb='C' if borrowing else 'F';build='function^';arg=f'var function: {cb}'
-                effect='C.Result' if borrowing else 'F.Out';fe='C.Failure' if borrowing else 'F.Error'
+                metadata=callable_metadata(operation.mode, cb)
+                elem=f'downcast[{metadata.inputs[0]}, {MD}]' if borrowing else metadata.inputs[0]
+                effect=metadata.result;fe=metadata.error
             if mode=='free':params+=[f'V: {MD}']
             if array:params+=['N: Int']
             params+=['//','G: Monad']+(['M: Monoid'] if folding else [])

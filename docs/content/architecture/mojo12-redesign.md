@@ -3105,6 +3105,23 @@ test programs, 11 selected rejection fixtures and all four builds/runs of the
 maintained example. Generator parity, all 49 tooling tests, API generation
 and strict documentation validation passed with unchanged prototype inputs.
 
+### Callback generators share protocol metadata names
+
+The existing callback-shape catalog now names each protocol's input, result
+and native-error members alongside its trait and adapter names. A shared
+projection provides those associated types to selected-context, legacy,
+traversal, effect-fold/search, collection-terminal and iterator generation. Each surface retains
+its own admission, native ABI, ownership and inference-barrier policy.
+
+Selected callbacks compare the projected inputs against their operation's
+expected payloads. Binary operands and the unary tuple used by n-ary callbacks
+remain distinct; thunks project no nonexistent argument member. This removes
+repeated Payload/Arg, Result/Out and Failure/Error selection from consumers.
+
+Qualification passed generator parity, all 49 tooling tests and strict
+documentation validation. All 107 Mojo source files remain byte-identical to
+the preceding qualified candidate; no public or native signature changes.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

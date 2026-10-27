@@ -1,7 +1,7 @@
 """Thin terminal admission signatures shared by free functions and fluent APIs."""
 from combinator_docs import document_first_methods
 from operation_specs import TERMINALS
-from native_signatures import MD, callable_protocol, native_adapter
+from native_signatures import MD, callable_protocol, callable_metadata, native_adapter
 
 START = '# --- terminal syntax (generated) ---\n'
 END = '# --- end terminal syntax ---\n'
@@ -30,8 +30,9 @@ def terminal_methods(mode, carrier=None):
                 callback_result = 'R'
             elif kind == 'library':
                 params += [f'C: {callable_protocol("borrow", repeatable=True)}' if borrowing else f'F: {callable_protocol("owned")} & {MD}']
-                element = f'downcast[C.Payload, {MD}]' if borrowing else 'F.Arg'
-                callback_result = 'C.Result' if borrowing else 'F.Out'
+                metadata = callable_metadata('borrow' if borrowing else 'owned', 'C' if borrowing else 'F')
+                element = f'downcast[{metadata.inputs[0]}, {MD}]' if borrowing else metadata.inputs[0]
+                callback_result = metadata.result
             else:
                 element = numeric_type if name == 'sum' else 'M.Value'
                 callback_result = element
@@ -46,7 +47,7 @@ def terminal_methods(mode, carrier=None):
                 cb = native_adapter('borrow' if borrowing else 'owned', ['P' if borrowing else 'A'], 'R', error, 'F', kind == 'raising', origin='o')
                 build, arg = f'{cb}(Pointer(to=function))', 'ref[o] function: F'
             elif kind == 'library':
-                error, cb = ('C.Failure','C') if borrowing else ('F.Error','F')
+                error, cb = metadata.error, 'C' if borrowing else 'F'
                 build, arg = 'function^', f'var function: {cb}'
             else:
                 error, cb, build, arg = 'Never', f'_Same[{element}]', f'_Same[{element}]()', ''
