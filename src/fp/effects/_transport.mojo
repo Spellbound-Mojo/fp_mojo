@@ -6,6 +6,7 @@ carrier is reached. No operation here runs a Reader or threads a State.
 from std.builtin.rebind import rebind_var
 from std.memory import MaybeUninit
 from fp.algebra.protocols import Monad, ErrorMapping
+from fp.algebra.contracts import MapContract
 from fp.algebra.error_mapping import MapBothContract, _map_both
 from fp.callables.protocols import BorrowCallContract, UnaryContract, Unary
 from fp.callables.products import _take_pair, _WithSecond, _MapPair, _map_pair
@@ -72,15 +73,16 @@ struct _CensorOp[C: Censor, F: UnaryContract & Movable & Deinitable](
 struct _ListenMapped[C: Listen, P: Movable & Deinitable, F: UnaryContract & Movable & Deinitable & Defaultable](_CarrierOp, Copyable, Defaultable):
     """Listen once, then rearrange only the layer's payload structure."""
     comptime M = Self.C.Family
-    comptime Applied[V: Movable & Deinitable] = Self.M.Mapped[Self.C.Listened[V], Self.F]
-    comptime Error[V: Movable & Deinitable] = _CommonError[Self.C.ListenError[V], Self.M.MapError[Self.C.Listened[V], Self.F]]
+    comptime _Map[V: Movable & Deinitable] = MapContract[Self.M,Self.C.Listened[V],Self.F]
+    comptime Applied[V: Movable & Deinitable] = Self._Map[V].Out
+    comptime Error[V: Movable & Deinitable] = _CommonError[Self.C.ListenError[V], Self._Map[V].Error]
     comptime _SourceCompatible[V: Movable & Deinitable] = Self.C.ListenCompatible[V]
     # Check the original payload separately: Mojo 1.1 cannot reliably reduce
     # Element[Listened[V]] inside this generic admission predicate. Listen
     # supplies (P, Log.Value) by contract; no runtime origin is relabeled.
     comptime _InputCompatible[V: Movable & Deinitable] = Self.M.Element[V] == Self.P and Self.F.Arg == Tuple[Self.P, Self.C.Log.Value]
-    comptime _MapCompatible[V: Movable & Deinitable] = Self.M.MapCompatible[Self.C.Listened[V], Self.F]
-    comptime _ErrorsCompatible[V: Movable & Deinitable] = _ErrorCompatible[Self.Error[V], Self.M.MapError[Self.C.Listened[V], Self.F]]
+    comptime _MapCompatible[V: Movable & Deinitable] = Self._Map[V].FamilyCompatible
+    comptime _ErrorsCompatible[V: Movable & Deinitable] = _ErrorCompatible[Self.Error[V], Self._Map[V].Error]
     comptime Compatible[V: Movable & Deinitable] = Self._SourceCompatible[V] and Self._InputCompatible[V] and Self._MapCompatible[V] and Self._ErrorsCompatible[V]
     def apply[V: Movable & Deinitable](deinit self, var value: V) raises Self.Error[V] -> Self.Applied[V]:
         comptime assert Self.Compatible[V]
@@ -115,8 +117,9 @@ struct _ListenSum[N: Monad, A: Movable & Deinitable, L: Movable & Deinitable](Un
     """Move the observed log into a present/Ok payload via the sum's own map."""
     comptime Arg = Tuple[Self.N.Pure[Self.A], Self.L]
     comptime Pair = _WithSecond[Self.A, Self.L]
-    comptime Out = Self.N.Mapped[Self.N.Pure[Self.A], Self.Pair]
-    comptime Error = Self.N.MapError[Self.N.Pure[Self.A], Self.Pair]
+    comptime _Map = MapContract[Self.N,Self.N.Pure[Self.A],Self.Pair]
+    comptime Out = Self._Map.Out
+    comptime Error = Self._Map.Error
     def call(self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         var value_slot = MaybeUninit[Self.N.Pure[Self.A]]()
         var log_slot = MaybeUninit[Self.L]()

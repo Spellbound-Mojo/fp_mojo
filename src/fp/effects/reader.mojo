@@ -6,6 +6,7 @@ environment origin in its type.
 """
 
 from fp.algebra._admission import _CarrierBind, _CarrierCombine
+from fp.algebra.contracts import MapContract, CombineContract
 from std.builtin.rebind import rebind_var, downcast
 from std.utils import Variant
 from fp.algebra.errors import _Continue
@@ -156,11 +157,12 @@ struct _ReaderMap[M: Monad, R: AnyType, S: ReaderAction, F: UnaryContract & Mova
     comptime Family = ReaderT[Self.M, Self.R]
     comptime Env = Self.R
     comptime Value = Self.F.Out
-    comptime Out[o: ImmOrigin] = Self.M.Mapped[Self.S.Out[o], Self.F]
-    comptime Error[o: ImmOrigin] = _CommonError[Self.S.Error[o], Self.M.MapError[Self.S.Out[o], Self.F]]
+    comptime _BaseOp[o: ImmOrigin] = MapContract[Self.M, Self.S.Out[o], Self.F]
+    comptime Out[o: ImmOrigin] = Self._BaseOp[o].Out
+    comptime Error[o: ImmOrigin] = _CommonError[Self.S.Error[o], Self._BaseOp[o].Error]
     comptime _RunCompatible[o: ImmOrigin] = (
-        Self.S._RunCompatible[o] & Self.M.MapCompatible[Self.S.Out[o], Self.F] &
-        _CommonErrorCompatible[Self.S.Error[o], Self.M.MapError[Self.S.Out[o], Self.F]]
+        Self.S._RunCompatible[o] & Self._BaseOp[o].FamilyCompatible &
+        _CommonErrorCompatible[Self.S.Error[o], Self._BaseOp[o].Error]
     )
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Self.Out[o]:
         comptime assert Self._RunCompatible[o], "run: incompatible Reader recipe at this environment origin"
@@ -215,12 +217,13 @@ struct _ReaderCombine[M: Monad, R: AnyType, S: ReaderAction, F: BinaryContract &
     comptime Env = Self.R
     comptime Value = Self.F.Out
     comptime Right[o: ImmOrigin] = _ReaderRight[Self.Family, Self.G, Self.R, o]
-    comptime Out[o: ImmOrigin] = Self.M.Combined[Self.S.Out[o], Self.F, Self.Right[o]]
-    comptime Error[o: ImmOrigin] = _CommonError[Self.S.Error[o], Self.M.CombineError[Self.S.Out[o], Self.F, Self.Right[o]]]
+    comptime _BaseOp[o: ImmOrigin] = CombineContract[Self.M, Self.S.Out[o], Self.F, Self.Right[o]]
+    comptime Out[o: ImmOrigin] = Self._BaseOp[o].Out
+    comptime Error[o: ImmOrigin] = _CommonError[Self.S.Error[o], Self._BaseOp[o].Error]
     comptime _RunCompatible[o: ImmOrigin] = (
         Self.S._RunCompatible[o] & Self.Right[o]._RunCompatible &
-        Self.M.CombineCompatible[Self.S.Out[o], Self.F, Self.Right[o]] &
-        _CommonErrorCompatible[Self.S.Error[o], Self.M.CombineError[Self.S.Out[o], Self.F, Self.Right[o]]]
+        Self._BaseOp[o].OperationCompatible &
+        _CommonErrorCompatible[Self.S.Error[o], Self._BaseOp[o].Error]
     )
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Self.Out[o]:
         comptime assert Self._RunCompatible[o], "run: incompatible Reader recipe at this environment origin"

@@ -2755,6 +2755,31 @@ current API snapshot, generated-source checks, all 48 tooling tests and strict
 documentation checks passed. The generated metadata block is 23% smaller while
 its shared execution prefix and native call boundaries remain identical.
 
+### Reader and listening metadata share origin-preserving operation descriptors
+
+Reader mapping and combination select their base contract at the exact borrowed
+environment origin. Result, native error and run admission project that same
+operation. Mapping forwards `FamilyCompatible`; combination forwards
+`OperationCompatible`, preserving its original base predicate without adding
+carrier constraints. Child-run requirements and native common-error evidence
+remain unchanged.
+
+Listening's payload rearrangement and inner sum mapping likewise project one
+`MapContract`. Their separate source, input and native-error proofs remain in
+place; the family-only predicate avoids forcing the opaque listened payload's
+input equality. The change adds no public API or runtime invocation boundary.
+All 35 Reader and seven transport function bodies are unchanged.
+
+Focused controls qualify environment origins, receiver ownership, generic
+capabilities and Writer listening before the full regression checkpoint.
+
+Qualification passed 24 Reader-origin/receiver and 48 capability source/package
+checks at O0/O3, all 757 test programs and both benchmark programs, and all 1,688
+declared rejection fixtures with zero audit failures. The full checkpoint
+includes the preceding conditional, sequencing, layer, State and n-ary changes.
+All inputs remained unchanged. The API snapshot, generated sources, all 48
+tooling tests and strict documentation checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.
