@@ -113112,7 +113112,7 @@
       "raises": true,
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
-       "doc": "The moved success value or computed fallback, without a pipeline wrapper.",
+       "doc": "The moved payload or fallback, without a pipeline wrapper.",
        "type": "_Success[Self.V]"
       },
       "signature": "def get_or_else[C: ThunkContract & Movable & Deinitable](deinit self, var make_default: C) raises C.Error -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Out == _Success[Self.V]",
@@ -178642,7 +178642,7 @@
       "raises": true,
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
-       "doc": "The moved success value or computed fallback, without a pipeline wrapper.",
+       "doc": "The moved payload or fallback, without a pipeline wrapper.",
        "type": "_Success[Self.V]"
       },
       "signature": "def value_or[C: UnaryContract & Movable & Deinitable](deinit self, var on_err: C) raises C.Error -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Failure[Self.V] and C.Out == _Success[Self.V]",

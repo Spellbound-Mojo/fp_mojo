@@ -19,7 +19,6 @@ def recover(var code: Int) -> Result[Int, String]: return Ok(code)
 def double(var value: Int) -> Int: return value * 2
 def even(value: Int) -> Bool: return value % 2 == 0
 def as_text(value: Int) -> String: return String(value)
-def default_count() -> Int: return 0
 
 def main() raises:
     # A stored native pointer uses the same selected call syntax.
@@ -40,7 +39,7 @@ def main() raises:
     assert_equal(audited.value(), List[Int]([1, 2, 3, 4]))
     def available(value: Int) -> Result[Bool, String]: return Ok(value % 2 == 0)
     def count(var values: List[Int]) -> Int: return len(values)
-    var selected = pipeline(audited.take()).filter_effect[ResultFamily[String]](available).map(count).get_or_else(default_count)
+    var selected = pipeline(audited.take()).filter_effect[ResultFamily[String]](available).map(count).get_or(0)
     assert_equal(selected, 2)
 
     # Transform optional values inside the effect, then compact the source.
@@ -70,13 +69,13 @@ def main() raises:
 
     var checked: Int
     try:
-        checked = pipeline(ok[String](4)).raising[PipelineProcessingFailure]().map(process).ensure(accepted, invalid).get_or_else(default_count)
+        checked = pipeline(ok[String](4)).raising[PipelineProcessingFailure]().map(process).ensure(accepted, invalid).get_or(0)
     except _: raise Error("unexpected processing failure")
     assert_equal(checked, 8)
     print("accepted:", checked)
 
     # Changing the stored error also updates the selected Result family.
-    var recovered = pipeline(err[Int]("bad")).map_err(length).or_else(recover).map(double).get_or_else(default_count)
+    var recovered = pipeline(err[Int]("bad")).map_err(length).or_else(recover).map(double).get_or(0)
     assert_equal(recovered, 6)
     print("recovered:", recovered)
 

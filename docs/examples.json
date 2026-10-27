@@ -285,6 +285,9 @@
     "docs/examples/traversal_composition.mojo": {
       "stdout": "kept: [10, 2, 20, 30]\nselected: [20]\nsequenced: [1, 10, 2, 20]\neffects succeeded: True\n"
     },
+    "docs/examples/value_defaults.mojo": {
+      "stdout": "count: 0\nhost: localhost\ndefaults computed: 1\n"
+    },
     "docs/examples/writer_capabilities.mojo": {
       "stdout": "output: [saved] ; observed: [saved]\nnested output: [nested] ; observed: [nested] ; state: 42\nfailed: True ; retained output: [attempted]\n"
     }

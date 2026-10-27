@@ -73,9 +73,24 @@ same `PriceError`. Library callables retain their declared error types.
 
 A stored `Result.Err` is separate from a raised error. Result mapping and bind
 skip a stored failure; a whole-value `.then(...)` can inspect it. Finish a Result
-with `.value_or(on_err)` for error-dependent recovery, `.get_or_else(factory)`
-for a lazy default, or `.to_optional()` to retain only success. These return the
+with `.value_or(on_err)` for error-dependent recovery, `.get_or(value)` for an
+available default, `.get_or_else(factory)` for a lazy default, or `.to_optional()` to retain only success. These return the
 plain value or Optional directly. See [Results and recovery](results.md).
+
+## Choose a constant or lazy default
+
+Use `.get_or(value)` to finish an Optional or Result pipeline with an already
+available default: `.get_or(0)` needs no callback or type arguments. The payload
+type guides literal conversion, so a Float64 payload can also use `.get_or(0)`.
+Both the carrier and the supplied default are consumed, including destruction
+of an unused default. The returned payload retains its exact type and origins.
+
+<!-- example: docs/examples/value_defaults.mojo -->
+
+Mojo evaluates ordinary argument expressions before calling the method.
+`get_or(compute_default())` therefore computes a default even when the payload
+is present. Use `get_or_else(compute_default)` when that computation should
+run only on absence or failure. Result values also expose both methods directly.
 
 ## Finish an Optional with a lazy default
 

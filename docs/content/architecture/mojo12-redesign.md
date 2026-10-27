@@ -3412,3 +3412,18 @@ storage, ownership, error handling or conversion semantics are introduced.
 The inferred type retains nominal identity and origins, and the value moves
 without copying. Uppercase Ok/Err constructors still support typed returns and
 case matching.
+
+### Already evaluated default values
+
+`Result.get_or(value)` and the native Result/Optional Pipeline methods consume
+an already evaluated default. They put that value in the existing `_ValueThunk`
+and delegate to the lazy terminal. The owned Result fold and `_optional_choose`
+remain the only owners of branching, extraction and skipped-owner destruction.
+No callback admission or invocation mechanism is added.
+
+The two native Pipeline receiver signatures use their carrier's exact payload
+type on the default parameter. This gives literals an expected type, allowing
+`.get_or(0)` for Float64 payloads without inferring an unrelated Int type first.
+Normal Mojo conversions apply to value arguments; nominal identity and origins
+are preserved. Argument expressions are eager by Mojo's ordinary call semantics;
+`get_or_else(factory)` remains the explicit lazy form.

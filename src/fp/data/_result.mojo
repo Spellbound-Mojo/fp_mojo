@@ -16,7 +16,7 @@ from fp.callables.protocols import BorrowCallContract, ThunkContract
 from fp.callables.native import (_call_native, _call_native_borrow, _Unary, _RaisingUnary, _Borrowing, _RaisingBorrowing,
                                  _NativeBorrowRef, _NativeUnaryRef, _Thunk, _RaisingThunk)
 from fp.callables._receiver import _borrow_once_as, _thunk_once_as, _unary_once_as
-from fp.callables._transforms import _IgnoreInput, _BorrowedUnary
+from fp.callables._transforms import _IgnoreInput, _BorrowedUnary, _ValueThunk
 
 
 trait _ResultType:
@@ -210,6 +210,21 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         return _fold_result_owned[Self.T, Self.E, Self.T, C.Error, Never, C.Error,
             Identity[Self.T], C, _call_transform[Self.T, Identity[Self.T]],
             _call_transform[Self.E, C, Self.T]](self^, Identity[Self.T](), on_err^)
+
+    def get_or(deinit self, var default_value: Self.T) -> Self.T:
+        """Return the success value or an already evaluated default.
+
+        Both the Result and the default are consumed. On Ok, the unused default
+        is destroyed. Argument expressions evaluate normally before this call;
+        use `get_or_else(factory)` to construct a default only on Err.
+
+        Args:
+            default_value: The fallback value, with the exact success type and origins.
+
+        Returns:
+            The success value or default, moved out without copying.
+        """
+        return self^.get_or_else(_ValueThunk[Self.T](default_value^))
 
     def get_or_else[C: ThunkContract & Movable & Deinitable](
         deinit self, var make_default: C

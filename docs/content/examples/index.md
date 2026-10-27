@@ -17,6 +17,7 @@ compile them through source and precompiled package imports at O0 and O3 with
 |---|---|---|
 | `pipeline_quickstart.mojo` | A first fluent pipeline on the Mojo 1.2 nightly checkout | [First program](../index.md#run-a-first-program) |
 | `optional_default.mojo` | Finish an Optional with the same lazy-default syntax as Result | [Pipelines tutorial](../tutorial/pipelines.md#finish-an-optional-with-a-lazy-default) |
+| `value_defaults.mojo` | Use constants directly and choose when default computation runs | [Pipelines tutorial](../tutorial/pipelines.md#choose-a-constant-or-lazy-default) |
 | `combinators.mojo` | Shared iterator stages in eager and lazy chains, without wrapper lambdas or type aliases | [Pipelines tutorial](../tutorial/pipelines.md#use-combinators-for-collection-stages) |
 | `chained_pipeline.mojo` | A ten-stage chain with `pipeline(...).raising[E]().then(...)`: plain functions, closures and partials | [fp.functions](../reference/functions.md#chain-ten-stages-with-pipeline) |
 | `kleisli.mojo` | Reusable effectful functions with clean eager and lazy callback syntax | [fp.functions](../reference/functions.md#compose-effectful-functions) |

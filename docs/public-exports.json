@@ -10252,6 +10252,16 @@
             "sha256": "9282d2ec94f524ad4bd16308a1c8c32f97de210d3aa21c2b758b5d5470342a2a"
           }
         ],
+        "get_or": [
+          {
+            "signature": "def get_or(deinit self, var default_value: _Success[Self.V]) -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]:",
+            "sha256": "66654d29cb7b17f70daa7c8a08d6fa966bfd13af1762388025308c318a3b1ee9"
+          },
+          {
+            "signature": "def get_or(deinit self, var default_value: OptionalFamily.Element[Self.V]) -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V]:",
+            "sha256": "d30853864d02c17612f692dfdcb16717091837232e1f7c44c9e229b37192da9e"
+          }
+        ],
         "to_result": [
           {
             "signature": "def to_result[C: ThunkContract & Movable & Deinitable](deinit self, var make_error: C) raises C.Error -> Pipeline[ResultFamily[C.Out], Result[OptionalFamily.Element[Self.V], C.Out], Self.E] where OptionalFamily.CarrierCompatible[Self.V]:",
@@ -13102,6 +13112,12 @@
           {
             "signature": "def value_or[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises X -> Self.T where R == Self.T:",
             "sha256": "c9526f67d6f210b39d2b2e29649ca27ab4da5344365e84520303838dd1f562c2"
+          }
+        ],
+        "get_or": [
+          {
+            "signature": "def get_or(deinit self, var default_value: Self.T) -> Self.T:",
+            "sha256": "875bde932757542de525fcdaa5229408c5b51c9797ba2d26f9a55dc5cd60c8e6"
           }
         ],
         "get_or_else": [

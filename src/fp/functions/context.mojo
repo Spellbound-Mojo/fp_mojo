@@ -6603,7 +6603,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             on_err: The error handler, consuming the stored error payload.
 
         Returns:
-            The moved success value or computed fallback, without a pipeline wrapper.
+            The moved payload or fallback, without a pipeline wrapper.
 
         Raises:
             The exact callback or family error; it never becomes a stored Result error.
@@ -6656,7 +6656,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             make_default: The zero-argument default factory, invoked only on Err.
 
         Returns:
-            The moved success value or computed fallback, without a pipeline wrapper.
+            The moved payload or fallback, without a pipeline wrapper.
 
         Raises:
             The exact callback or family error; it never becomes a stored Result error.
@@ -6697,6 +6697,23 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
     def get_or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and R == _Success[Self.V]:
         """Return the success value or invoke a default factory only on Err."""
         return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).get_or_else(_NativeThunk[R, X, def() raises X thin -> R, True](make_default))
+
+    @always_inline
+    def get_or(deinit self, var default_value: _Success[Self.V]) -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]:
+        """Return the present payload or an already evaluated default; consume both inputs.
+
+        Args:
+            default_value: The already evaluated fallback; consumed even when the payload is present. Use get_or_else for lazy construction.
+
+        Returns:
+            The moved payload or fallback, without a pipeline wrapper.
+        """
+        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).get_or(default_value^)
+
+    @always_inline
+    def get_or(deinit self, var default_value: OptionalFamily.Element[Self.V]) -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V]:
+        """Return the present payload or an already evaluated default; consume both inputs."""
+        return _optional_get_or_else[_ValueThunk[OptionalFamily.Element[Self.V]]](rebind_var[Optional[OptionalFamily.Element[Self.V]]](self.value^), _ValueThunk[OptionalFamily.Element[Self.V]](default_value^))
 
     @always_inline
     def get_or_else[C: ThunkContract & Movable & Deinitable](deinit self, var make_default: C) raises C.Error -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and C.Out == OptionalFamily.Element[Self.V]:

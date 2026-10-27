@@ -7,7 +7,7 @@ The [pipeline tutorial](../tutorial/pipelines.md) starts with a complete program
 
 Use `.map(transform)` for selected payloads and `.then(stage)` for the whole
 value. Native collection operations execute immediately, and `.get()` extracts
-the stored carrier. Value terminals `value_or`, `get_or_else` and `to_optional`
+the stored carrier. Value terminals `value_or`, `get_or`, `get_or_else` and `to_optional`
 return their final value directly. For a reusable generic wrapper, follow the
 [contract-forwarding guide](../guides/generic-wrappers.md).
 
@@ -462,6 +462,10 @@ the factory. The factory runs only on absence; native errors propagate and
 retain their selected context. See [optional input to Result](../tutorial/results.md#turn-optional-input-into-a-result).
 
 ## Finish an Optional with a lazy default
+
+For an already available default, use `pipeline(optional^).get_or(value)` or
+the same method on a Result pipeline. It consumes the default even when unused.
+See [choosing a constant or lazy default](../tutorial/pipelines.md#choose-a-constant-or-lazy-default).
 
 `pipeline(optional^).get_or_else(make_default)` returns the present payload or
 calls the zero-argument factory on absence. The same spelling finishes a Result

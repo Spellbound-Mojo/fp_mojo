@@ -973,6 +973,17 @@ def methods(*, fold_stage=False):
         value_terminal(name, mode, arg, summary, Err if mode == "owned" else "", T,
                        result_conditions, lambda cb: f'rebind_var[{Source}](self.value^).{name}({cb["build"]})')
     element = "OptionalFamily.Element[Self.V]"
+    # Eager values use the existing consuming thunk, so branch evaluation and
+    # skipped-owner cleanup stay with the same canonical lazy terminals.
+    # Separate receiver boundaries retain literal conversion to the payload.
+    for payload, conditions, invoke in (
+        (T, result_conditions, f'rebind_var[{Source}](self.value^).get_or(default_value^)'),
+        (element, ["OptionalFamily.CarrierCompatible[Self.V]"],
+         f'_optional_get_or_else[_ValueThunk[{element}]](rebind_var[Optional[{element}]](self.value^), _ValueThunk[{element}](default_value^))'),
+    ):
+        body.append(f'\n    @always_inline\n    def get_or(deinit self, var default_value: {payload}) -> {payload} where {" and ".join(conditions)}:\n'
+                    '        """Return the present payload or an already evaluated default; consume both inputs."""\n'
+                    f'        return {invoke}\n')
     value_terminal("get_or_else", "thunk", "make_default",
                    "Return the present Optional value or invoke a default factory only on absence.",
                    "", element, ["OptionalFamily.CarrierCompatible[Self.V]"],
@@ -1095,6 +1106,7 @@ def documented(source):
         "predicate": "The borrowing Bool predicate.",
         "make_error": "The borrowed-payload factory of a stored Result error.",
         "make_default": "The zero-argument default factory, invoked only on Err.",
+        "default_value": "The already evaluated fallback; consumed even when the payload is present. Use get_or_else for lazy construction.",
         "on_true": "The factory invoked only for a true payload; native closures are borrowed.",
         "on_false": "The factory invoked only for a false payload; native closures are borrowed.",
         "on_ok": "The success handler, consuming the success payload.",
@@ -1175,7 +1187,7 @@ def documented(source):
             + "Returns:\n"
             + indent
             + ("    An owning fold stage; run(step) returns the target pipeline.\n" if name == "fold_effect" else
-               "    The moved success value or computed fallback, without a pipeline wrapper.\n" if name in ("value_or", "get_or_else") else
+               "    The moved payload or fallback, without a pipeline wrapper.\n" if name in ("value_or", "get_or", "get_or_else") else
                "    A native Optional containing the moved success, or empty on Err.\n" if name == "to_optional" else
                "    The pipeline containing the operation result, retaining its selected native error.\n")
         ]

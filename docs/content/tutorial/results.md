@@ -50,21 +50,25 @@ subsequent callbacks.
 
 ## Finish with a value
 
-Use `value_or(on_err)` when the fallback depends on the error, or
-`get_or_else(make_default)` when it does not. Both return a plain success value.
-The callback runs only on `Err`; passing a factory keeps the default lazy.
+Use `get_or(value)` for an already available default, `get_or_else(make_default)`
+to compute one lazily, or `value_or(on_err)` when the fallback depends on the
+error. All return a plain success value. Callbacks run only on `Err`;
+`get_or(value)` evaluates its argument normally before the call.
 Use `to_optional()` when you want to discard error information and keep only
 the success in Mojo's native `Optional`.
 
 <!-- example: docs/examples/result_values.mojo -->
 
 The same methods finish a `pipeline` directly: no `.get()` or private payload
-access is needed. All three consume their Result, so use `result^` for a named
+access is needed. Each consumes its Result, so use `result^` for a named
 local. Move-only payloads work without copying. A skipped library callback is
 destroyed; a captured native callback remains borrowed and can be reused.
 
 These operations follow [Cats Either's `valueOr`, `getOrElse` and `toOption`](https://github.com/typelevel/cats/blob/main/core/src/main/scala/cats/syntax/either.scala).
 Mojo uses snake_case and an explicit zero-argument factory for a lazy default.
+For constants, `get_or(0)` avoids a factory. It consumes the supplied default
+even on success; an unused default is destroyed. See the
+[eager and lazy default example](pipelines.md#choose-a-constant-or-lazy-default).
 The callback must return exactly `T`, including its origins; the library does
 not widen the success type. Unlike `recover`, `value_or` returns `T` rather
 than `Result[T, E]`. `raise_on_err()` remains the way to return `T` or raise

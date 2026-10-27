@@ -809,16 +809,17 @@
       ]
     },
     {
-      "name": "Lazy default extraction",
+      "name": "Default extraction",
       "methods": [
+        "get_or",
         "get_or_else"
       ],
       "status": "selected",
       "families": "Native Optional or Result carriers",
-      "callbacks": "Zero-argument native closures and thin pointers; shared, mutable or consuming library factories",
-      "ownership": "Consumes the carrier and library factory, including skipped factory owners; native closures are borrowed. Returns the exact payload type.",
+      "callbacks": "Zero-argument native closures and thin pointers; shared, mutable or consuming library factories; get_or accepts an already evaluated payload instead of a callback",
+      "ownership": "Consumes the carrier and library factory, including skipped factory owners; native closures are borrowed. Returns the exact payload type. An unused get_or default is also destroyed.",
       "errors": "Selected native error for native callbacks; exact declared library error. A stored Result error is discarded by its existing owned fold.",
-      "timing": "Returns a present/successful payload directly; calls the factory only on absence or Err.",
+      "timing": "Returns a present/successful payload directly; calls the factory only on absence or Err. get_or arguments evaluate normally before the call; get_or itself is pure.",
       "owner": [
         "src/fp/algebra/_branches.mojo",
         "src/fp/data/_result.mojo",
@@ -828,7 +829,11 @@
         "docs/examples/optional_default.mojo",
         "tests/runtime/test_optional_default.mojo",
         "tests/ownership/test_optional_default_ownership.mojo",
-        "tests/compile_fail/optional_default_origin.mojo"
+        "tests/compile_fail/optional_default_origin.mojo",
+        "docs/examples/value_defaults.mojo",
+        "tests/runtime/test_get_or.mojo",
+        "tests/ownership/test_get_or_ownership.mojo",
+        "tests/compile_fail/get_or_optional_origin.mojo"
       ]
     },
     {

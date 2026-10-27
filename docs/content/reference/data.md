@@ -22,6 +22,7 @@ pattern matching. Their existing implicit conversions are unchanged.
 ## Extract a Result value
 
 `value_or(on_err)` consumes an error to compute a plain `T`.
+`get_or(default_value)` uses an already evaluated default, consuming it even on success.
 `get_or_else(make_default)` calls its zero-argument factory only on `Err`.
 `to_optional()` moves a success into native `Optional[T]`, discarding errors.
 These Cats-inspired operations are also terminal methods on `pipeline(result)`;
