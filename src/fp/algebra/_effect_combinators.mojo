@@ -5,9 +5,8 @@ from fp.callables.invoke import invoke_borrowed, RepeatableThunk, RepeatableUnar
 from fp.callables._receiver import _ThunkView, _thunk_once_as, _unary_repeated_as
 from fp.callables._identity import Identity
 from fp._internal.errors import _CommonError, _ErrorCompatible
-from .protocols import Monad, _LiveAccumulator, Monoid, _AccumulatePair, _BindFirst, _start_as, _map_as, _flat_map_as, _fold_as
-from ._accumulation import _Combine
-from ._admission import _MapCompatible
+from .protocols import Monad, _LiveAccumulator, Monoid, _start_as, _flat_map_as, _fold_as
+from ._accumulation import _Combine, _FoldMappedStep
 from .contracts import _EffectFold
 from .protocols import _AllLive
 
@@ -88,26 +87,6 @@ struct _SearchStep[A: Movable & Deinitable, F: UnaryContract & Movable & Deinita
         # branches are retained by that driver without evaluating this step.
         comptime assert RepeatableUnary[Self.F]
         return _unary_repeated_as[Self.Error](self.function, item^)
-
-
-@fieldwise_init
-struct _FoldMappedStep[G: Monad, M: Monoid, F: UnaryContract & Movable & Deinitable](MutableBinary):
-    var function: Self.F
-    comptime First = Self.M.Value
-    comptime Second = Self.F.Arg
-    comptime Combine = _BindFirst[_AccumulatePair[_Combine[Self.M]]]
-    comptime Out = Self.G.Mapped[Self.F.Out, Self.Combine]
-    comptime Error = _CommonError[Self.F.Error, Self.G.MapError[Self.F.Out, Self.Combine]]
-    def call_mut(mut self, var first: Self.First, var item: Self.Second) raises Self.Error -> Self.Out:
-        comptime assert RepeatableUnary[Self.F]
-        comptime assert Self.G.Element[Self.F.Out] == Self.M.Value
-        comptime assert _MapCompatible[Self.G, Self.F.Out, Self.Combine]
-        comptime assert _ErrorCompatible[Self.Error, Self.F.Error] and _ErrorCompatible[Self.Error, Self.G.MapError[Self.F.Out, Self.Combine]], "fold_map_effect: incompatible native errors"
-        var produced = _unary_repeated_as[Self.Error](self.function, item^)
-        # The canonical owned partial copies the accumulator only when the
-        # selected family requires repeated branches; single-use maps move it.
-        var combine = Self.Combine(_AccumulatePair[_Combine[Self.M]](), first^)
-        return _map_as[Self.Error, Self.G](combine^, produced^)
 
 
 def _fold_map_effect[G: Monad, M: Monoid, V: Movable & Deinitable,

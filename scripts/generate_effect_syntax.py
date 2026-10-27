@@ -162,21 +162,22 @@ def searches(mode, array=False):
             plan = operation.bind('G', source, elem, cb, build, effect,
                                   monoid='M' if folding else '',
                                   retained=f'_EffectRetain[{elem}, G, {cb}, True]' if borrowing else '')
-            actual = plan.error
+            contract = f'FoldMapContract[G, M, {source}, {cb}]' if folding else None
+            actual = contract + '.Error' if folding else plan.error
             raised=f'_EntryError[X, {actual}]'
-            condition+=f' and G.Element[{effect}] == {plan.payload}'
-            condition+=f' and _CarrierCompatible[G, {effect}] and RepeatableUnary[{plan.callback}]'
-            condition+=f' and {plan.types}.Compatible'
+            if folding:
+                condition = (condition + ' and ' if array else '') + contract + '.Compatible'
+            else:
+                condition+=f' and G.Element[{effect}] == {plan.payload}'
+                condition+=f' and _CarrierCompatible[G, {effect}] and RepeatableUnary[{plan.callback}]'
+                condition+=f' and {plan.types}.Compatible'
             # Generic forwarding can prove the native callback error directly;
             # deferred families instead admit their construction error. The
             # shared fold boundary checks every actual family error.
             condition+=f' and (_ErrorCompatible[{raised}, {fe}] or _ErrorCompatible[{raised}, {actual}])'
             if folding: condition+=f' and _ErrorCompatible[{raised}, M.Error]'
-            if folding:
-                combine='_BindFirst[_AccumulatePair[_Combine[M]]]'
-                condition+=f' and _MapCompatible[G, {effect}, {combine}] and _ErrorCompatible[_CommonError[{fe}, M.Error], M.Error]'
             call = plan.invoke(raised, value)
-            result = plan.result
+            result = contract + '.Out' if folding else plan.result
             args=[arg]+(['var source: V'] if mode=='free' else [])
             if mode!='free':args.insert(0,'deinit self')
             if mode=='piped':result=f'Piped[{result}]';call=f'Piped({call})'

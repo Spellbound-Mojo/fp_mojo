@@ -441,19 +441,20 @@ def methods(*, fold_stage=False):
                                   accumulator="Self.A", initial="self.initial^",
                                   monoid="M" if mapped_fold else "",
                                   retained=f"_TraverseTap[{element}, J, {c}, True]" if borrowing else "")
-            conditions += [f"J.Element[{result}] == {plan.payload}", f"{plan.types}.Compatible"]
-            if operation.searching:
-                conditions += [f"RepeatableUnary[{plan.callback}]"]
-            elif folding:
-                conditions += [f"RepeatableBinary[{c}]"]
-            elif mapped_fold:
-                conditions += [f"RepeatableUnary[{c}]",
-                               f"_MapCompatible[J, {result}, _BindFirst[_AccumulatePair[_Combine[M]]]]",
-                               f"_ErrorCompatible[_CommonError[{cb['error']}, M.Error], M.Error]"]
-            error = plan.error
+            if mapped_fold:
+                contract = f"FoldMapContract[J, M, Self.V, {c}]"
+                conditions = cb["conditions"] + [contract + ".Compatible"]
+                result, error = contract + ".Out", contract + ".Error"
+            else:
+                conditions += [f"J.Element[{result}] == {plan.payload}", f"{plan.types}.Compatible"]
+                if operation.searching:
+                    conditions += [f"RepeatableUnary[{plan.callback}]"]
+                elif folding:
+                    conditions += [f"RepeatableBinary[{c}]"]
+                result, error = plan.result, plan.error
             expr = plan.invoke(error, "self.value^")
             emit("run" if folding else name, cb, params, cb["argument"],
-                 plan.result, error, "J", conditions, expr,
+                 result, error, "J", conditions, expr,
                  "Consume the source through the target Monad's ordered effectful reduction.")
             if folding:
                 fold_body.append(re.sub(r"\bJ\b", "Self.J", body.pop()))

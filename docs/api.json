@@ -1633,6 +1633,88 @@
    "summary": "Admission, output and error for an effectful fold with a library callable.",
    "traits": []
   },
+  "algebra.FoldMapContract": {
+   "aliases": [
+    {
+     "description": "The producer accepts the exact source element, including origins.",
+     "name": "InputCompatible"
+    },
+    {
+     "description": "The producer returns the selected family's carrier of monoid values.",
+     "name": "OutputCompatible"
+    },
+    {
+     "description": "The producer can be called for each visited source element.",
+     "name": "ReceiverCompatible"
+    },
+    {
+     "description": "Family admission of combination, including branch copying requirements.",
+     "name": "MapCompatible"
+    },
+    {
+     "description": "Producer and monoid errors share an exact native error type.",
+     "name": "ErrorsCompatible"
+    },
+    {
+     "description": "Requirements declared by the family's dependent fold.",
+     "name": "FamilyCompatible"
+    },
+    {
+     "description": "Explicit native evidence that the construction error includes initialization.",
+     "name": "InitializerErrorCompatible"
+    },
+    {
+     "description": "Complete mapped-fold admission with the inferred construction error.",
+     "name": "Compatible"
+    },
+    {
+     "description": "The exact folded carrier, including deferred computation types.",
+     "name": "Out"
+    },
+    {
+     "description": "The native construction error, including eager monoid initialization.",
+     "name": "Error"
+    }
+   ],
+   "description": "Generic wrappers forward `Compatible`, return `Out` and raise `Error`.\nThe family owns sequencing; the monoid supplies the initial value and\nordered combination. Its initial value is constructed before a deferred\nfamily is returned, while callback execution follows the family's timing.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The target Monad family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad",
+     "variadic": false
+    },
+    {
+     "description": "The Monoid combining produced payloads in source order.",
+     "inferred": false,
+     "name": "M",
+     "type": "Monoid",
+     "variadic": false
+    },
+    {
+     "description": "The consumed source type, including native origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The repeatable unary producer, including its receiver and error.",
+     "inferred": false,
+     "name": "F",
+     "type": "UnaryContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/contracts",
+   "signature": "struct FoldMapContract[I: Monad, M: Monoid, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]",
+   "summary": "Admission, result and construction error of an effectful mapped fold.",
+   "traits": []
+  },
   "algebra.FollowedByContract": {
    "aliases": [],
    "description": "Project `Family`, `Out` and `Error` and forward `Compatible` in generic selected\nwrappers. Component predicates have the same meaning as BeforeContract.\nNo original payload is copied for retention. The family owns branching,\ncallback repeatability, deferred execution and native construction errors.",
@@ -13812,7 +13894,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]]",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, F].Error]",
      "parameters": [
       {
        "description": "The callback type, retaining its receiver, captures and error contract.",
@@ -13854,9 +13936,9 @@
      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
      "returns": {
       "doc": "The target effect of ordered monoid combination. Identity is constructed before source binding, including for deferred targets; callbacks and combinations follow the target timing.",
-      "type": "_EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Out"
+      "type": "FoldMapContract[G, M, V, F].Out"
      },
-     "signature": "def fold_map_effect[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](var function: F, var source: V) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]] -> _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Out where _Source[V].Element == F.Arg and G.Element[F.Out] == M.Value and _CarrierCompatible[G, F.Out] and RepeatableUnary[F] and _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Compatible and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], F.Error] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, F.Out, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[F.Error, M.Error], M.Error]",
+     "signature": "def fold_map_effect[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](var function: F, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, F].Error] -> FoldMapContract[G, M, V, F].Out where FoldMapContract[G, M, V, F].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, F].Error], F.Error] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, F].Error], FoldMapContract[G, M, V, F].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, F].Error], M.Error]",
      "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
     },
     {
@@ -13877,7 +13959,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]]",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error]",
      "parameters": [
       {
        "description": "",
@@ -13940,9 +14022,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Out"
+      "type": "FoldMapContract[G, M, V, _NativeUnaryRef[A, R, Never, F, False, o]].Out"
      },
-     "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, M: Monoid, F: _Unary[A, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]] -> _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Out where _Source[V].Element == A and G.Element[R] == M.Value and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, Never, F, False, o]] and _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Compatible and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], Never] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error]",
+     "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, M: Monoid, F: _Unary[A, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error] -> FoldMapContract[G, M, V, _NativeUnaryRef[A, R, Never, F, False, o]].Out where FoldMapContract[G, M, V, _NativeUnaryRef[A, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error], FoldMapContract[G, M, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error], M.Error]",
      "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
     },
     {
@@ -13963,7 +14045,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]]",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error]",
      "parameters": [
       {
        "description": "",
@@ -14033,9 +14115,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Out"
+      "type": "FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Out"
      },
-     "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]] -> _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Out where _Source[V].Element == A and G.Element[R] == M.Value and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, E, F, True, o]] and _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Compatible and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], E] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[E, M.Error], M.Error]",
+     "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error] -> FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Out where FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error], FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error], M.Error]",
      "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
     }
    ],
@@ -54590,7 +54672,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]]",
+      "error": "_EntryError[X, FoldMapContract[G, M, Self.Value, F].Error]",
       "parameters": [
        {
         "description": "The callback type, retaining its receiver, captures and error contract.",
@@ -54625,9 +54707,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The target effect of ordered monoid combination. Identity is constructed before source binding, including for deferred targets; callbacks and combinations follow the target timing.",
-       "type": "Piped[_EffectFold[G, Self.Value, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Out]"
+       "type": "Piped[FoldMapContract[G, M, Self.Value, F].Out]"
       },
-      "signature": "def fold_map_effect[F: UnaryContract & Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]] -> Piped[_EffectFold[G, Self.Value, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Out] where _Source[Self.Value].Element == F.Arg and G.Element[F.Out] == M.Value and _CarrierCompatible[G, F.Out] and RepeatableUnary[F] and _EffectFold[G, Self.Value, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Compatible and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], F.Error] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, F.Out, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[F.Error, M.Error], M.Error]",
+      "signature": "def fold_map_effect[F: UnaryContract & Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, FoldMapContract[G, M, Self.Value, F].Error] -> Piped[FoldMapContract[G, M, Self.Value, F].Out] where FoldMapContract[G, M, Self.Value, F].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, F].Error], F.Error] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, F].Error], FoldMapContract[G, M, Self.Value, F].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, F].Error], M.Error]",
       "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
      },
      {
@@ -54641,7 +54723,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]]",
+      "error": "_EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -54697,9 +54779,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Piped[_EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Out]"
+       "type": "Piped[FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Out]"
       },
-      "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, M: Monoid, F: _Unary[A, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]] -> Piped[_EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Out] where _Source[Self.Value].Element == A and G.Element[R] == M.Value and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, Never, F, False, o]] and _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Compatible and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], Never] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error]",
+      "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, M: Monoid, F: _Unary[A, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error] -> Piped[FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Out] where FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error], FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error], M.Error]",
       "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
      },
      {
@@ -54713,7 +54795,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]]",
+      "error": "_EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -54776,9 +54858,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Piped[_EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Out]"
+       "type": "Piped[FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Out]"
       },
-      "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]] -> Piped[_EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Out] where _Source[Self.Value].Element == A and G.Element[R] == M.Value and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, E, F, True, o]] and _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Compatible and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], E] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.Value, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[E, M.Error], M.Error]",
+      "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error] -> Piped[FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Out] where FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error], FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error], M.Error]",
       "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
      },
      {
@@ -54792,7 +54874,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[F.Arg], _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]]",
+      "error": "_EntryError[X, FoldMapContract[G, M, List[F.Arg], F].Error]",
       "parameters": [
        {
         "description": "The callback type, retaining its receiver, captures and error contract.",
@@ -54834,9 +54916,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The target effect of ordered monoid combination. Identity is constructed before source binding, including for deferred targets; callbacks and combinations follow the target timing.",
-       "type": "Piped[_EffectFold[G, List[F.Arg], _FoldMappedStep[G, M, F], _AllLive[M.Value]].Out]"
+       "type": "Piped[FoldMapContract[G, M, List[F.Arg], F].Out]"
       },
-      "signature": "def fold_map_effect[F: UnaryContract & Movable & Deinitable, N: Int, //, G: Monad, M: Monoid, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, List[F.Arg], _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]] -> Piped[_EffectFold[G, List[F.Arg], _FoldMappedStep[G, M, F], _AllLive[M.Value]].Out] where Self.Value == Array[F.Arg, N] and G.Element[F.Out] == M.Value and _CarrierCompatible[G, F.Out] and RepeatableUnary[F] and _EffectFold[G, List[F.Arg], _FoldMappedStep[G, M, F], _AllLive[M.Value]].Compatible and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[F.Arg], _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], F.Error] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[F.Arg], _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, List[F.Arg], _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[F.Arg], _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, F.Out, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[F.Error, M.Error], M.Error]",
+      "signature": "def fold_map_effect[F: UnaryContract & Movable & Deinitable, N: Int, //, G: Monad, M: Monoid, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, FoldMapContract[G, M, List[F.Arg], F].Error] -> Piped[FoldMapContract[G, M, List[F.Arg], F].Out] where Self.Value == Array[F.Arg, N] and FoldMapContract[G, M, List[F.Arg], F].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[F.Arg], F].Error], F.Error] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[F.Arg], F].Error], FoldMapContract[G, M, List[F.Arg], F].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[F.Arg], F].Error], M.Error]",
       "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
      },
      {
@@ -54850,7 +54932,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]]",
+      "error": "_EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -54913,9 +54995,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Piped[_EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Out]"
+       "type": "Piped[FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Out]"
       },
-      "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, M: Monoid, F: _Unary[A, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]] -> Piped[_EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Out] where Self.Value == Array[A, N] and G.Element[R] == M.Value and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, Never, F, False, o]] and _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Compatible and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], Never] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error]",
+      "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, M: Monoid, F: _Unary[A, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error] -> Piped[FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Out] where Self.Value == Array[A, N] and FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error], FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error], M.Error]",
       "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
      },
      {
@@ -54929,7 +55011,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]]",
+      "error": "_EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -54999,9 +55081,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Piped[_EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Out]"
+       "type": "Piped[FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Out]"
       },
-      "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]] -> Piped[_EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Out] where Self.Value == Array[A, N] and G.Element[R] == M.Value and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, E, F, True, o]] and _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Compatible and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], E] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, List[A], _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[E, M.Error], M.Error]",
+      "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error] -> Piped[FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Out] where Self.Value == Array[A, N] and FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error], FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error], M.Error]",
       "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
      }
     ],
@@ -110086,7 +110168,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[M.Error, _EffectFold[J, Self.V, _FoldMappedStep[J, M, C], _AllLive[M.Value]].Error]",
+      "error": "FoldMapContract[J, M, Self.V, C].Error",
       "parameters": [
        {
         "description": "The first library callback type, retaining its receiver and origins.",
@@ -110114,9 +110196,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _FoldMappedStep[J, M, C], _AllLive[M.Value]].Out, Self.E]"
+       "type": "Pipeline[J, FoldMapContract[J, M, Self.V, C].Out, Self.E]"
       },
-      "signature": "def fold_map_effect[C: UnaryContract & Movable & Deinitable, //, J: Monad, M: Monoid](deinit self, var function: C) raises _CommonError[M.Error, _EffectFold[J, Self.V, _FoldMappedStep[J, M, C], _AllLive[M.Value]].Error] -> Pipeline[J, _EffectFold[J, Self.V, _FoldMappedStep[J, M, C], _AllLive[M.Value]].Out, Self.E] where C.Arg == _FoldElement[Self.V] and _CarrierCompatible[J, C.Out] and J.Element[C.Out] == M.Value and _EffectFold[J, Self.V, _FoldMappedStep[J, M, C], _AllLive[M.Value]].Compatible and RepeatableUnary[C] and _MapCompatible[J, C.Out, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[C.Error, M.Error], M.Error]",
+      "signature": "def fold_map_effect[C: UnaryContract & Movable & Deinitable, //, J: Monad, M: Monoid](deinit self, var function: C) raises FoldMapContract[J, M, Self.V, C].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, C].Out, Self.E] where C.Arg == _FoldElement[Self.V] and FoldMapContract[J, M, Self.V, C].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -110130,7 +110212,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[M.Error, _EffectFold[J, Self.V, _FoldMappedStep[J, M, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]], _AllLive[M.Value]].Error]",
+      "error": "FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -110172,9 +110254,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _FoldMappedStep[J, M, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]], _AllLive[M.Value]].Out, Self.E]"
+       "type": "Pipeline[J, FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E]"
       },
-      "signature": "def fold_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, M: Monoid, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises _CommonError[M.Error, _EffectFold[J, Self.V, _FoldMappedStep[J, M, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]], _AllLive[M.Value]].Error] -> Pipeline[J, _EffectFold[J, Self.V, _FoldMappedStep[J, M, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]], _AllLive[M.Value]].Out, Self.E] where _CarrierCompatible[J, R] and J.Element[R] == M.Value and _EffectFold[J, Self.V, _FoldMappedStep[J, M, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]], _AllLive[M.Value]].Compatible and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]] and _MapCompatible[J, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error]",
+      "signature": "def fold_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, M: Monoid, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -110188,7 +110270,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[M.Error, _EffectFold[J, Self.V, _FoldMappedStep[J, M, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]], _AllLive[M.Value]].Error]",
+      "error": "FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -110230,9 +110312,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _FoldMappedStep[J, M, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]], _AllLive[M.Value]].Out, Self.E]"
+       "type": "Pipeline[J, FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E]"
       },
-      "signature": "def fold_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, M: Monoid, C: def(var _FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _CommonError[M.Error, _EffectFold[J, Self.V, _FoldMappedStep[J, M, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]], _AllLive[M.Value]].Error] -> Pipeline[J, _EffectFold[J, Self.V, _FoldMappedStep[J, M, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]], _AllLive[M.Value]].Out, Self.E] where _CarrierCompatible[J, R] and J.Element[R] == M.Value and _EffectFold[J, Self.V, _FoldMappedStep[J, M, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]], _AllLive[M.Value]].Compatible and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]] and _MapCompatible[J, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[Self.E, M.Error], M.Error]",
+      "signature": "def fold_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, M: Monoid, C: def(var _FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E] where FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -110246,7 +110328,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[M.Error, _EffectFold[J, Self.V, _FoldMappedStep[J, M, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]], _AllLive[M.Value]].Error]",
+      "error": "FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -110288,9 +110370,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _FoldMappedStep[J, M, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]], _AllLive[M.Value]].Out, Self.E]"
+       "type": "Pipeline[J, FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E]"
       },
-      "signature": "def fold_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, M: Monoid, C: def(var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _CommonError[M.Error, _EffectFold[J, Self.V, _FoldMappedStep[J, M, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]], _AllLive[M.Value]].Error] -> Pipeline[J, _EffectFold[J, Self.V, _FoldMappedStep[J, M, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]], _AllLive[M.Value]].Out, Self.E] where Self.E != Never and _CarrierCompatible[J, R] and J.Element[R] == M.Value and _EffectFold[J, Self.V, _FoldMappedStep[J, M, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]], _AllLive[M.Value]].Compatible and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]] and _MapCompatible[J, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error]",
+      "signature": "def fold_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, M: Monoid, C: def(var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E] where Self.E != Never and FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -110304,7 +110386,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[M.Error, _EffectFold[J, Self.V, _FoldMappedStep[J, M, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]], _AllLive[M.Value]].Error]",
+      "error": "FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -110332,9 +110414,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _FoldMappedStep[J, M, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]], _AllLive[M.Value]].Out, Self.E]"
+       "type": "Pipeline[J, FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def fold_map_effect[R: Movable & Deinitable, //, J: Monad, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R) raises _CommonError[M.Error, _EffectFold[J, Self.V, _FoldMappedStep[J, M, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]], _AllLive[M.Value]].Error] -> Pipeline[J, _EffectFold[J, Self.V, _FoldMappedStep[J, M, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]], _AllLive[M.Value]].Out, Self.E] where not conforms_to(R, RegisterPassable) and _CarrierCompatible[J, R] and J.Element[R] == M.Value and _EffectFold[J, Self.V, _FoldMappedStep[J, M, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]], _AllLive[M.Value]].Compatible and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]] and _MapCompatible[J, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error]",
+      "signature": "def fold_map_effect[R: Movable & Deinitable, //, J: Monad, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R) raises FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E] where not conforms_to(R, RegisterPassable) and FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -110348,7 +110430,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[M.Error, _EffectFold[J, Self.V, _FoldMappedStep[J, M, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]], _AllLive[M.Value]].Error]",
+      "error": "FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -110376,9 +110458,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _FoldMappedStep[J, M, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]], _AllLive[M.Value]].Out, Self.E]"
+       "type": "Pipeline[J, FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def fold_map_effect[R: RegisterPassable & Deinitable, //, J: Monad, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R) raises _CommonError[M.Error, _EffectFold[J, Self.V, _FoldMappedStep[J, M, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]], _AllLive[M.Value]].Error] -> Pipeline[J, _EffectFold[J, Self.V, _FoldMappedStep[J, M, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]], _AllLive[M.Value]].Out, Self.E] where _CarrierCompatible[J, R] and J.Element[R] == M.Value and _EffectFold[J, Self.V, _FoldMappedStep[J, M, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]], _AllLive[M.Value]].Compatible and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]] and _MapCompatible[J, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error]",
+      "signature": "def fold_map_effect[R: RegisterPassable & Deinitable, //, J: Monad, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R) raises FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E] where FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -110392,7 +110474,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[M.Error, _EffectFold[J, Self.V, _FoldMappedStep[J, M, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]], _AllLive[M.Value]].Error]",
+      "error": "FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -110427,9 +110509,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _FoldMappedStep[J, M, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]], _AllLive[M.Value]].Out, Self.E]"
+       "type": "Pipeline[J, FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def fold_map_effect[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises _CommonError[M.Error, _EffectFold[J, Self.V, _FoldMappedStep[J, M, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]], _AllLive[M.Value]].Error] -> Pipeline[J, _EffectFold[J, Self.V, _FoldMappedStep[J, M, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]], _AllLive[M.Value]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and _CarrierCompatible[J, R] and J.Element[R] == M.Value and _EffectFold[J, Self.V, _FoldMappedStep[J, M, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]], _AllLive[M.Value]].Compatible and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]] and _MapCompatible[J, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[X, M.Error], M.Error]",
+      "signature": "def fold_map_effect[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -110443,7 +110525,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[M.Error, _EffectFold[J, Self.V, _FoldMappedStep[J, M, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]], _AllLive[M.Value]].Error]",
+      "error": "FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -110478,9 +110560,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _FoldMappedStep[J, M, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]], _AllLive[M.Value]].Out, Self.E]"
+       "type": "Pipeline[J, FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def fold_map_effect[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises _CommonError[M.Error, _EffectFold[J, Self.V, _FoldMappedStep[J, M, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]], _AllLive[M.Value]].Error] -> Pipeline[J, _EffectFold[J, Self.V, _FoldMappedStep[J, M, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]], _AllLive[M.Value]].Out, Self.E] where _ErrorCompatible[Self.E, X] and _CarrierCompatible[J, R] and J.Element[R] == M.Value and _EffectFold[J, Self.V, _FoldMappedStep[J, M, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]], _AllLive[M.Value]].Compatible and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]] and _MapCompatible[J, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[X, M.Error], M.Error]",
+      "signature": "def fold_map_effect[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      }
     ],
@@ -190606,7 +190688,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]]",
+      "error": "_EntryError[X, FoldMapContract[G, M, Self.I, F].Error]",
       "parameters": [
        {
         "description": "The callback type, retaining its receiver, captures and error contract.",
@@ -190641,9 +190723,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The target effect of ordered monoid combination. Identity is constructed before source binding, including for deferred targets; callbacks and combinations follow the target timing.",
-       "type": "_EffectFold[G, Self.I, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Out"
+       "type": "FoldMapContract[G, M, Self.I, F].Out"
       },
-      "signature": "def fold_map_effect[F: UnaryContract & Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]] -> _EffectFold[G, Self.I, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Out where _Source[Self.I].Element == F.Arg and G.Element[F.Out] == M.Value and _CarrierCompatible[G, F.Out] and RepeatableUnary[F] and _EffectFold[G, Self.I, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Compatible and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], F.Error] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, F.Out, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[F.Error, M.Error], M.Error]",
+      "signature": "def fold_map_effect[F: UnaryContract & Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, FoldMapContract[G, M, Self.I, F].Error] -> FoldMapContract[G, M, Self.I, F].Out where FoldMapContract[G, M, Self.I, F].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, F].Error], F.Error] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, F].Error], FoldMapContract[G, M, Self.I, F].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, F].Error], M.Error]",
       "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
      },
      {
@@ -190657,7 +190739,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]]",
+      "error": "_EntryError[X, FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -190713,9 +190795,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "_EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Out"
+       "type": "FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Out"
       },
-      "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, M: Monoid, F: _Unary[A, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]] -> _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Out where _Source[Self.I].Element == A and G.Element[R] == M.Value and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, Never, F, False, o]] and _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Compatible and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], Never] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error]",
+      "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, M: Monoid, F: _Unary[A, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error] -> FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Out where FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error], FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error], M.Error]",
       "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
      },
      {
@@ -190729,7 +190811,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]]",
+      "error": "_EntryError[X, FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -190792,9 +190874,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "_EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Out"
+       "type": "FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Out"
       },
-      "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]] -> _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Out where _Source[Self.I].Element == A and G.Element[R] == M.Value and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, E, F, True, o]] and _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Compatible and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], E] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, Self.I, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[E, M.Error], M.Error]",
+      "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Error] -> FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Out where FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Error], FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Error], M.Error]",
       "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
      }
     ],
@@ -200535,7 +200617,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]]",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, F].Error]",
      "parameters": [
       {
        "description": "The callback type, retaining its receiver, captures and error contract.",
@@ -200577,9 +200659,9 @@
      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
      "returns": {
       "doc": "The target effect of ordered monoid combination. Identity is constructed before source binding, including for deferred targets; callbacks and combinations follow the target timing.",
-      "type": "_EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Out"
+      "type": "FoldMapContract[G, M, V, F].Out"
      },
-     "signature": "def fold_map_effect[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](var function: F, var source: V) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]] -> _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Out where _Source[V].Element == F.Arg and G.Element[F.Out] == M.Value and _CarrierCompatible[G, F.Out] and RepeatableUnary[F] and _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Compatible and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], F.Error] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, F], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, F.Out, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[F.Error, M.Error], M.Error]",
+     "signature": "def fold_map_effect[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](var function: F, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, F].Error] -> FoldMapContract[G, M, V, F].Out where FoldMapContract[G, M, V, F].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, F].Error], F.Error] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, F].Error], FoldMapContract[G, M, V, F].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, F].Error], M.Error]",
      "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
     },
     {
@@ -200600,7 +200682,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]]",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error]",
      "parameters": [
       {
        "description": "",
@@ -200663,9 +200745,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Out"
+      "type": "FoldMapContract[G, M, V, _NativeUnaryRef[A, R, Never, F, False, o]].Out"
      },
-     "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, M: Monoid, F: _Unary[A, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]] -> _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Out where _Source[V].Element == A and G.Element[R] == M.Value and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, Never, F, False, o]] and _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Compatible and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], Never] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, Never, F, False, o]], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error]",
+     "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, M: Monoid, F: _Unary[A, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error] -> FoldMapContract[G, M, V, _NativeUnaryRef[A, R, Never, F, False, o]].Out where FoldMapContract[G, M, V, _NativeUnaryRef[A, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error], FoldMapContract[G, M, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error], M.Error]",
      "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
     },
     {
@@ -200686,7 +200768,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]]",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error]",
      "parameters": [
       {
        "description": "",
@@ -200756,9 +200838,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Out"
+      "type": "FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Out"
      },
-     "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]] -> _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Out where _Source[V].Element == A and G.Element[R] == M.Value and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, E, F, True, o]] and _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Compatible and (_ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], E] or _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]]) and _ErrorCompatible[_EntryError[X, _CommonError[M.Error, _EffectFold[G, V, _FoldMappedStep[G, M, _NativeUnaryRef[A, R, E, F, True, o]], _AllLive[M.Value]].Error]], M.Error] and _MapCompatible[G, R, _BindFirst[_AccumulatePair[_Combine[M]]]] and _ErrorCompatible[_CommonError[E, M.Error], M.Error]",
+     "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error] -> FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Out where FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error], FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error], M.Error]",
      "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
     }
    ],

@@ -2212,6 +2212,41 @@ fixtures. Categories overlap. Reports retained unchanged inputs and no audit
 failures. Generated sources, all 48 tooling tests and strict documentation
 checks passed.
 
+### Public admission for effectful mapped folds
+
+`FoldMapContract[I, M, V, F]` gives generic `fold_map_effect` wrappers one public
+`Compatible` proof and exact `Out` and `Error` projections. Free, piped,
+iterator and selected-pipeline signatures now share that descriptor. Ordinary
+calls, positional bindings, explicit native-error bindings and Array buffering
+retain their existing behavior. The mapped binary step lives beside the
+accumulation policies it uses, avoiding a dependency from contracts back into
+runtime entry points.
+
+The descriptor exposes exact input and output shape, repeatable receiver
+admission, family mapping and dependent-fold requirements, and native error
+compatibility. Monoid initialization remains eager even for deferred families;
+producer calls and combinations retain the family's execution timing. Its
+initializer-error projection supplies explicit evidence at Mojo 1.2's native
+error boundary. It does not convert or erase errors.
+
+The maintained generic client covers all four public routes, Identity, Optional,
+Result and List, move-only input and accumulator values, mutable receiver state,
+branch order, borrowed result/error origins, and Reader initialization versus
+execution errors. Six negative clients omit explicit callback type bindings and
+require a normal violated-constraint diagnostic naming the public proof. Their
+source/package O0/O3 matrix passed all 28 checks. Five effect-query, four
+effect-search, two effect-combinator and 134 generic programs passed. The six
+new, 53 effect-query and 16 effect-search rejection fixtures passed; categories
+overlap. The public example passed all four source/package O0/O3 checks.
+
+Initial negative checks exposed a missing shared fixture link, then an incorrect
+expected diagnostic. Those reports are retained; all corrected executable
+checks used unchanged inputs and had no audit failures. Subsequent non-executable
+changes updated the documentation tooling's reviewed counts to 320 exports and
+83 examples and restored export-inventory formatting without changing its JSON
+values. Generated sources, all 48 tooling tests and strict documentation checks
+passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

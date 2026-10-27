@@ -42,6 +42,20 @@ contract unless they declare additional admission requirements.
 
 <!-- example: docs/examples/fold_contracts.mojo -->
 
+`FoldMapContract[I, M, V, F]` describes `fold_map_effect`: produce effects
+with a repeatable unary callback and combine their payloads using monoid `M`.
+Its `Compatible`, `Out` and `Error` projections work with free, piped, iterator
+and selected-pipeline calls. This removes private fold-step types from generic
+wrappers. Ordinary calls and positional type arguments retain their syntax.
+
+The contract preserves family-specific ownership: Identity, Optional and Result
+accept move-only inputs and accumulators; List requires copying where values
+enter multiple branches. `Error` describes construction, including the eager
+call to `M.empty()`. A deferred family still runs producers and combinations
+when the resulting computation runs, with their exact native errors and origins.
+
+<!-- example: docs/examples/fold_map_contracts.mojo -->
+
 <!-- example: docs/examples/operation_contracts.mojo -->
 
 `FilterContract[I, V, P]` does the same for `filter`; pass `True` as the

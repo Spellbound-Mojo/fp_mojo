@@ -1,5 +1,9 @@
 """Accumulation policies shared by pure and effectful terminals."""
-from .protocols import Semigroup, Monoid, _Accumulate, _SemigroupBinary
+from .protocols import Semigroup, Monoid, Monad, _Accumulate, _SemigroupBinary, _AccumulatePair, _BindFirst, _map_as
+from fp.callables.protocols import UnaryContract, MutableBinary
+from fp.callables.invoke import RepeatableUnary
+from fp.callables._receiver import _unary_repeated_as
+from fp._internal.errors import _CommonError, _ErrorCompatible
 
 
 struct _Combine[M: Monoid](_Accumulate):
@@ -43,3 +47,23 @@ struct _OptionalCombine[S: Semigroup](_Accumulate):
     def combine(var acc: Self.Acc, var item: Self.Item) raises Self.Error -> Self.Acc:
         if not acc: return Optional(item^)
         return Optional(_SemigroupBinary[Self.S]().call(acc.unsafe_take(), item^))
+
+
+@fieldwise_init
+struct _FoldMappedStep[G: Monad, M: Monoid, F: UnaryContract & Movable & Deinitable](MutableBinary):
+    var function: Self.F
+    comptime First = Self.M.Value
+    comptime Second = Self.F.Arg
+    comptime Combine = _BindFirst[_AccumulatePair[_Combine[Self.M]]]
+    comptime Out = Self.G.Mapped[Self.F.Out, Self.Combine]
+    comptime Error = _CommonError[Self.F.Error, Self.G.MapError[Self.F.Out, Self.Combine]]
+    def call_mut(mut self, var first: Self.First, var item: Self.Second) raises Self.Error -> Self.Out:
+        comptime assert RepeatableUnary[Self.F]
+        comptime assert Self.G.Element[Self.F.Out] == Self.M.Value
+        comptime assert Self.G.MapCompatible[Self.F.Out, Self.Combine]
+        comptime assert _ErrorCompatible[Self.Error, Self.F.Error] and _ErrorCompatible[Self.Error, Self.G.MapError[Self.F.Out, Self.Combine]], "fold_map_effect: incompatible native errors"
+        var produced = _unary_repeated_as[Self.Error](self.function, item^)
+        # The canonical owned partial copies the accumulator only when the
+        # selected family requires repeated branches; single-use maps move it.
+        var combine = Self.Combine(_AccumulatePair[_Combine[Self.M]](), first^)
+        return _map_as[Self.Error, Self.G](combine^, produced^)

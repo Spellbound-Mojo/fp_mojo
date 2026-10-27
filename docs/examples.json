@@ -84,6 +84,9 @@
     "docs/examples/fold_contracts.mojo": {
       "stdout": "folded: 13\n"
     },
+    "docs/examples/fold_map_contracts.mojo": {
+      "stdout": "mapped fold: 12\n"
+    },
     "docs/examples/foundations.mojo": {
       "stdout": "fold = 15 ; match = 22 ; callbacks = 5\n"
     },

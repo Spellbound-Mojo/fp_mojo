@@ -11,7 +11,10 @@ from .protocols import _MappedFamily, Functor, Monad, Traversable, Applicative, 
 from fp.iteration._advance import _OwnedElement
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallable
 from fp.callables._predicates import _FilterPredicate
-from .protocols import _AllLive, _LiveAccumulator
+from .protocols import Monoid, _AllLive, _LiveAccumulator
+from ._accumulation import _FoldMappedStep
+from fp.callables.invoke import RepeatableUnary
+from fp._internal.errors import _CommonError, _ErrorCompatible
 from fp.callables._identity import Identity
 from fp.iteration._advance import _Source
 
@@ -229,3 +232,41 @@ struct FoldContract[I: Monad, V: Movable & Deinitable, F: BinaryContract & Movab
     """The exact family result, including deferred computations."""
     comptime Error = Self._Plan.Error
     """The exact native error raised while constructing the fold result."""
+
+
+struct FoldMapContract[I: Monad, M: Monoid, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]:
+    """Admission, result and construction error of an effectful mapped fold.
+
+    Generic wrappers forward `Compatible`, return `Out` and raise `Error`.
+    The family owns sequencing; the monoid supplies the initial value and
+    ordered combination. Its initial value is constructed before a deferred
+    family is returned, while callback execution follows the family's timing.
+
+    Parameters:
+        I: The target Monad family.
+        M: The Monoid combining produced payloads in source order.
+        V: The consumed source type, including native origins.
+        F: The repeatable unary producer, including its receiver and error.
+    """
+    comptime _Step = _FoldMappedStep[Self.I, Self.M, Self.F]
+    comptime _Plan = _EffectFold[Self.I, Self.V, Self._Step, _AllLive[Self.M.Value]]
+    comptime InputCompatible = _Source[Self.V].Element == Self.F.Arg
+    """The producer accepts the exact source element, including origins."""
+    comptime OutputCompatible = Self.I.CarrierCompatible[Self.F.Out] and Self.I.Element[Self.F.Out] == Self.M.Value
+    """The producer returns the selected family's carrier of monoid values."""
+    comptime ReceiverCompatible = RepeatableUnary[Self.F]
+    """The producer can be called for each visited source element."""
+    comptime MapCompatible = Self.I.MapCompatible[Self.F.Out, Self._Step.Combine]
+    """Family admission of combination, including branch copying requirements."""
+    comptime ErrorsCompatible = _ErrorCompatible[_CommonError[Self.F.Error, Self.M.Error], Self.M.Error]
+    """Producer and monoid errors share an exact native error type."""
+    comptime FamilyCompatible = Self._Plan.Compatible
+    """Requirements declared by the family's dependent fold."""
+    comptime InitializerErrorCompatible = _ErrorCompatible[Self.Error, Self.M.Error]
+    """Explicit native evidence that the construction error includes initialization."""
+    comptime Compatible = Self.InputCompatible and Self.OutputCompatible and Self.ReceiverCompatible and Self.MapCompatible and Self.ErrorsCompatible and Self.FamilyCompatible and Self.InitializerErrorCompatible
+    """Complete mapped-fold admission with the inferred construction error."""
+    comptime Out = Self._Plan.Out
+    """The exact folded carrier, including deferred computation types."""
+    comptime Error = _CommonError[Self.M.Error, Self._Plan.Error]
+    """The native construction error, including eager monoid initialization."""
