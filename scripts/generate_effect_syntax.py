@@ -51,7 +51,6 @@ def folds(mode, array=False):
             plan = operation.bind('G', source, elem, cb, build, effect,
                                   accumulator=acc, initial='initial^')
             contract = plan.contract
-            assert contract, "Effectful folds require a public operation contract"
             error = f'{contract}.Error'
             raised = f'_EntryError[{hint}, {error}]'
             condition = (condition + ' and ' if array else '') + f'{contract}.Compatible'
@@ -159,7 +158,6 @@ def searches(mode, array=False):
                                   monoid='M' if folding else '',
                                   retained=f'_EffectRetain[{elem}, G, {cb}, True]' if borrowing else '')
             contract = plan.contract
-            assert contract, "Effectful searches require a public operation contract"
             actual = contract + '.Error'
             raised=f'_EntryError[X, {actual}]'
             condition = (condition + ' and ' if array else '') + contract + '.Compatible'

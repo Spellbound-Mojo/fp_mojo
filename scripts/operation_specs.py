@@ -201,8 +201,8 @@ class EffectReduction:
     name: str
     mode: str
     accumulation: str
+    contract_name: str
     all_values: bool = False
-    contract_name: str = ""
 
     @property
     def borrowing(self):
@@ -226,8 +226,7 @@ class EffectReduction:
         # may then wrap it for retention or accumulation without changing that
         # admission identity.
         contract_arguments = [family, *([monoid] if self.mapped else []), source, callback]
-        contract = (f"{self.contract_name}[{', '.join(contract_arguments)}]"
-                    if self.contract_name else None)
+        contract = f"{self.contract_name}[{', '.join(contract_arguments)}]"
         # The caller supplies the exact retention alias used by its admission
         # surface. Both aliases delegate to the same existing runtime owner.
         if self.accumulation == "bool":
@@ -271,7 +270,7 @@ class EffectReductionPlan:
     build: str
     payload: str
     monoid: str
-    contract: str | None
+    contract: str
 
     @property
     def types(self):

@@ -2405,6 +2405,20 @@ four source/package O0/O3 checks. Reports retained unchanged inputs and no audit
 failures. Generated-source checks, all 48 tooling tests and strict documentation
 checks passed.
 
+### Every effect reduction names its public contract
+
+The operation descriptions now require a public contract for every effectful
+reduction. Both syntax generators project its admission, output and error;
+the selected generator no longer has a fallback that independently reconstructs
+those rules. Runtime step construction, explicit native error evidence and the
+staged fold's exact seed and repeatable-step requirements remain separate.
+
+This removes the migration-era alternative representation after all six
+operations adopted their contracts. Regenerating both legacy and selected syntax
+left all 106 library Mojo source files byte-for-byte unchanged. Generated-source
+checks and all 48 tooling tests passed. This pass changes generator structure,
+not public signatures or runtime execution.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

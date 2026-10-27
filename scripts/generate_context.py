@@ -436,7 +436,6 @@ def methods(*, fold_stage=False):
                     ["J: Monad", "M: Monoid"] if mapped_fold else ["J: Monad"]
                 )
             c, result = cb["adapter_type"], cb["result"]
-            conditions = cb["conditions"] + [f"_CarrierCompatible[J, {result}]"]
             # Borrowing search uses the predicate's exact payload as its
             # retention type, matching the free entry and public contract.
             # Source equality remains admission, not another plan projection.
@@ -449,23 +448,17 @@ def methods(*, fold_stage=False):
             # Every reduction projects the public operation contract. Seeded
             # stages additionally retain exact seed binding and their existing
             # repeatable-step requirement, independent of custom fold policy.
-            if plan.contract:
-                contract = plan.contract
-                admission = cb["conditions"]
-                if folding:
-                    admission += [f"RepeatableBinary[{c}]"]
-                if borrowing:
-                    # The public proof owns this equality; retain all native
-                    # signature and explicit-error conditions independently.
-                    admission = [condition for condition in admission
-                                 if condition != f"{c}.Payload == {element}"]
-                conditions = admission + [contract + ".Compatible"]
-                result, error = contract + ".Out", contract + ".Error"
-            else:
-                conditions += [f"J.Element[{result}] == {plan.payload}", f"{plan.types}.Compatible"]
-                if folding:
-                    conditions += [f"RepeatableBinary[{c}]"]
-                result, error = plan.result, plan.error
+            contract = plan.contract
+            admission = cb["conditions"]
+            if folding:
+                admission += [f"RepeatableBinary[{c}]"]
+            if borrowing:
+                # The public proof owns this equality; retain all native
+                # signature and explicit-error conditions independently.
+                admission = [condition for condition in admission
+                             if condition != f"{c}.Payload == {element}"]
+            conditions = admission + [contract + ".Compatible"]
+            result, error = contract + ".Out", contract + ".Error"
             expr = plan.invoke(error, "self.value^")
             emit("run" if folding else name, cb, params, cb["argument"],
                  result, error, "J", conditions, expr,
