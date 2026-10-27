@@ -7,8 +7,9 @@ it. Logs combine in execution order.
 """
 from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, rebind, downcast
-from fp.algebra.protocols import ApplicativeError, ErrorMapping, Monad, Monoid, _Accumulate, _AccumulatePair, _Append, _pure, _start_as
+from fp.algebra.protocols import ApplicativeError, ErrorMapping, Monad, Monoid, _Accumulate, _AccumulatePair, _Append, _BindFirst, _pure, _start_as, _combine_as
 from fp.algebra.instances import IdentityFamily
+from fp.algebra._accumulation import _Combine
 from fp.callables.protocols import (BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, Unary, OnceUnary, MutableUnary,
                                     OnceBinary, MutableBinary, OnceThunk)
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
@@ -51,18 +52,12 @@ struct WriterValue[I: WriterFamily, T: Movable & Deinitable, C: Movable & Deinit
 
 
 def _empty_as[E: Movable & Deinitable, W: Monoid]() raises E -> W.Value where _ErrorCompatible[E, W.Error]:
-    try:
-        return W.empty()
-    except error:
-        _propagate_error[E](error^)
+    return _start_as[E, _Combine[W]]()
 
 
 def _append_log_as[E: Movable & Deinitable, W: Monoid](var left: W.Value, var right: W.Value
 ) raises E -> W.Value where _ErrorCompatible[E, W.Error]:
-    try:
-        return W.combine(left^, right^)
-    except error:
-        _propagate_error[E](error^)
+    return _combine_as[E, _Combine[W]](left^, right^)
 
 
 @fieldwise_init
@@ -90,13 +85,8 @@ struct _Prepend[W: Monoid, T: Movable & Deinitable](
     comptime Error = Self.W.Error
     @staticmethod
     def _prepend(var prefix: Self.W.Value, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        var log_slot = MaybeUninit[Self.W.Value]()
-        var value_slot = MaybeUninit[Self.T]()
-        _take_pair(arg^, log_slot, value_slot)
-        var log_part = log_slot^.unsafe_assume_init()
-        var value_part = value_slot^.unsafe_assume_init()
-        var log = _append_log_as[Self.Error, Self.W](prefix^, log_part^)
-        return Tuple(log^, value_part^)
+        comptime F = _BindFirst[_AccumulatePair[_Combine[Self.W]]]
+        return call_once(_MapPair[F, Self.T, True](F(_AccumulatePair[_Combine[Self.W]](), prefix^)), arg^)
     def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         return Self._prepend(self.log^, arg^)
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:

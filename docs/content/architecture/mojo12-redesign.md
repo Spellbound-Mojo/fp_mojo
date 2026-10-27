@@ -1740,6 +1740,25 @@ reports retain unchanged inputs and no audit failures. Regenerating the API
 metadata produces no changes; strict documentation checks retain 318 exports
 and 81 examples. Evidence is in `.cache/quality-cycle26/qualified-main/`.
 
+### Writer log operations use the monoid accumulator
+
+Writer's empty-log and log-combination adapters now reuse `_start_as` and
+`_combine_as` through the existing `_Combine[W]` monoid accumulator. Prefixing
+a log uses the same bound accumulator and native product mapper as other
+product operations. The prefix wrapper retains its field, receiver modes, and
+copyability, including the original copy point before a repeated invocation.
+
+Twenty-two old/new traces match across Writer binding, combination, and direct
+prefixing. The maintained prefix control checks consuming move-only logs,
+consuming copyable logs without copying, and exactly one copy per repeated
+call. Native failure codes and destruction order are unchanged on each path.
+
+Qualification passes four source/package checks at O0/O3, 17 Writer programs,
+34 traversal programs, all 48 tooling tests, and the generated-signature check.
+Reports retain unchanged inputs and no audit failures. Strict documentation
+checks retain 318 exports and 81 examples. Evidence is in
+`.cache/quality-cycle27/qualified-main/`.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.
