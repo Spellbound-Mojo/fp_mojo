@@ -1,6 +1,7 @@
 """Effectful function composition, lowered to the ordinary composition engine."""
 from std.builtin.rebind import downcast, rebind_var
 from fp.algebra.protocols import Monad
+from fp.algebra._primitive_contracts import MapContract, BindContract
 from fp.algebra._admission import _CarrierCompatible
 from fp.callables._views import _UnaryViewable
 from fp.callables.protocols import UnaryContract, Unary, MutableUnary, OnceUnary
@@ -68,8 +69,10 @@ struct _EffectStage[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movabl
     """Adapt a payload callback to a carrier stage; the family owns execution."""
     var function: Self.F
     comptime Arg = Self.V
-    comptime Out = Self.I.Bound[Self.V, Self.F] if Self.bind else Self.I.Mapped[Self.V, Self.F]
-    comptime Error = Self.I.BindError[Self.V, Self.F] if Self.bind else Self.I.MapError[Self.V, Self.F]
+    comptime _Map = MapContract[Self.I,Self.V,Self.F]
+    comptime _Bind = BindContract[Self.I,Self.V,Self.F]
+    comptime Out = Self._Bind.Out if Self.bind else Self._Map.Out
+    comptime Error = Self._Bind.Error if Self.bind else Self._Map.Error
     def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime if Self.bind:
             comptime assert Self.Out == Self.I.Bound[Self.V, Self.F] and _ErrorCompatible[Self.Error, Self.I.BindError[Self.V, Self.F]]

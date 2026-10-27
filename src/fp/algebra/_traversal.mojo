@@ -1,4 +1,5 @@
 """Derived traversal policies over the canonical family traversal and loop."""
+from ._primitive_contracts import BindContract, MapContract
 from fp.algebra._admission import _BindCompatible
 from std.builtin.rebind import downcast, rebind, rebind_var
 from fp.callables.protocols import Unary, UnaryContract, BorrowCallContract
@@ -34,8 +35,9 @@ def _traverse_void[V: Movable & Deinitable, F: UnaryContract & Movable & Deinita
 struct _FlattenAfter[S: Monad, V: Movable & Deinitable](Unary, Copyable, Defaultable):
     """Remove one source-family layer after traversal, inside the target effect."""
     comptime Arg = Self.V
-    comptime Out = Self.S.Bound[Self.V, Identity[Self.S.Element[Self.V]]]
-    comptime Error = Self.S.BindError[Self.V, Identity[Self.S.Element[Self.V]]]
+    comptime _Operation = BindContract[Self.S, Self.V, Identity[Self.S.Element[Self.V]]]
+    comptime Out = Self._Operation.Out
+    comptime Error = Self._Operation.Error
     def call(self, var value: Self.V) raises Self.Error -> Self.Out:
         comptime assert _BindCompatible[Self.S, Self.V, Identity[Self.S.Element[Self.V]]]
         return flatten[Self.S](value^)
@@ -68,8 +70,9 @@ struct _EffectVoid[G: Applicative, V: Movable & Deinitable](Unary, Copyable, Def
     """Discard one effect's payload; source Result errors stay with traversal."""
     comptime Arg = Self.V
     comptime Discard = _Fill[Self.G.Element[Self.V], NoneType]
-    comptime Out = Self.G.Mapped[Self.V, Self.Discard]
-    comptime Error = Self.G.MapError[Self.V, Self.Discard]
+    comptime _Operation = MapContract[Self.G, Self.V, Self.Discard]
+    comptime Out = Self._Operation.Out
+    comptime Error = Self._Operation.Error
     def call(self, var value: Self.V) raises Self.Error -> Self.Out:
         return Self.G.map(Self.Discard(None), value^)
 

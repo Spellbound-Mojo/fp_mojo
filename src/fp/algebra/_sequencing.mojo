@@ -1,4 +1,5 @@
 """Sequencing continuations shared by bind, traversal and lazy iteration."""
+from ._primitive_contracts import MapContract
 from std.builtin.rebind import downcast, rebind, rebind_var
 from fp.callables.protocols import Unary, OnceUnary, MutableUnary, BorrowCallContract, BorrowCallable, Binary, ThunkContract
 from fp.callables.invoke import invoke_borrowed, RepeatableThunk
@@ -16,8 +17,9 @@ struct _MapRetained[T: Movable & Deinitable, G: Functor, V: Movable & Deinitable
     comptime First = Self.T
     comptime Second = Self.V
     comptime Keep = _Retained[Self.T, Self.G.Element[Self.V], Self.paired, Self.selected]
-    comptime Out = Self.G.Mapped[Self.V, Self.Keep]
-    comptime Error = Self.G.MapError[Self.V, Self.Keep]
+    comptime _Operation = MapContract[Self.G, Self.V, Self.Keep]
+    comptime Out = Self._Operation.Out
+    comptime Error = Self._Operation.Error
     def call(self, var value: Self.T, var produced: Self.V) raises Self.Error -> Self.Out:
         return Self.G.map(Self.Keep(value^), produced^)
 

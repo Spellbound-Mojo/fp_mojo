@@ -2836,6 +2836,30 @@ programs, 14 rejection cases and the four operation-contract example builds.
 All input snapshots remained unchanged. Generator checks, all 49 tooling tests,
 API inventory generation and strict documentation validation also passed.
 
+### Lower continuations reuse primitive operation metadata
+
+Sequencing retention, single-value traversal wrapping, mapped-fold combination,
+post-traversal flattening and effect discarding now select the primitive map or
+bind contract for their result and native error projections. The lower contract
+owner makes this reuse possible without importing the derived algebra module
+back into its own continuations.
+
+Kleisli's effect stage likewise names its concrete map and bind descriptors and
+conditionally projects their types. Keeping the descriptors concrete avoids the
+common-type member loss seen with conditional descriptor selection. The same
+runtime branch, native error evidence and callback storage remain in place.
+
+All 67 function bodies across the five changed modules are byte-identical.
+Public signatures and exports are unchanged. Focused sequencing, traversal,
+mapped-fold ownership, Kleisli and Kleisli ownership controls passed before the
+source/package qualification.
+
+Qualification passed 128 traversal-composition, 32 mapped-fold and 56 sequencing
+source/package checks across O0 and O3; 142 generic, four Kleisli, five sequencing
+and three mapped-fold programs; and 49 rejection cases. All input snapshots
+remained unchanged with no audit failures. Generator parity, 49 tooling tests,
+API freshness and strict documentation validation also passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

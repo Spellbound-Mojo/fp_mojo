@@ -1,5 +1,6 @@
 """Branch selection shared by single-value traversal and transformers."""
 
+from ._primitive_contracts import MapContract
 from std.builtin.rebind import rebind_var, downcast
 from fp.algebra.protocols import _pure, Applicative, _UnaryView
 from fp.callables.protocols import UnaryContract, OnceUnary, MutableUnary
@@ -86,8 +87,9 @@ struct _TraverseBranch[G: Applicative, F: UnaryContract & Movable & Deinitable,
     var function: Self.F
     var wrap: Self.W
     comptime Arg = Self.F.Arg
-    comptime Out = Self.G.Mapped[Self.F.Out, Self.W]
-    comptime Error = _CommonError[Self.F.Error, Self.G.MapError[Self.F.Out, Self.W]]
+    comptime _Operation = MapContract[Self.G, Self.F.Out, Self.W]
+    comptime Out = Self._Operation.Out
+    comptime Error = _CommonError[Self.F.Error, Self._Operation.Error]
     def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert _ErrorCompatible[Self.Error, Self.F.Error]
         comptime assert _ErrorCompatible[Self.Error, Self.G.MapError[Self.F.Out, Self.W]]

@@ -1,4 +1,5 @@
 """Accumulation policies shared by pure and effectful terminals."""
+from ._primitive_contracts import MapContract
 from .protocols import Semigroup, Monoid, Monad, _Accumulate, _SemigroupBinary, _BindFirst, _map_as, _LiveAccumulator
 from fp.callables.protocols import UnaryContract, MutableBinary, Binary, BorrowCallable
 from fp.callables.invoke import RepeatableUnary, invoke_borrowed
@@ -56,8 +57,9 @@ struct _FoldMappedStep[G: Monad, M: Monoid, F: UnaryContract & Movable & Deinita
     comptime First = Self.M.Value
     comptime Second = Self.F.Arg
     comptime Combine = _BindFirst[_SemigroupBinary[Self.M]]
-    comptime Out = Self.G.Mapped[Self.F.Out, Self.Combine]
-    comptime Error = _CommonError[Self.F.Error, Self.G.MapError[Self.F.Out, Self.Combine]]
+    comptime _Operation = MapContract[Self.G, Self.F.Out, Self.Combine]
+    comptime Out = Self._Operation.Out
+    comptime Error = _CommonError[Self.F.Error, Self._Operation.Error]
     def call_mut(mut self, var first: Self.First, var item: Self.Second) raises Self.Error -> Self.Out:
         comptime assert RepeatableUnary[Self.F]
         comptime assert Self.G.Element[Self.F.Out] == Self.M.Value
