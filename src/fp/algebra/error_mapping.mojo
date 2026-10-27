@@ -1,6 +1,7 @@
 """Checked stored-error mapping; each family owns one two-arm operation."""
 from .protocols import ErrorMapping
 from fp.callables.protocols import UnaryContract
+from fp.callables.invoke import _OnceUnaryAvailable
 from fp.callables._identity import Identity
 
 
@@ -45,6 +46,10 @@ struct MapBothContract[I: ErrorMapping, V: Movable & Deinitable,
     """The admitted output belongs to Target with the exact success payload."""
     comptime Compatible = Self.SourceCompatible and Self.InputCompatible and Self.TargetCompatible and Self.OutputCompatible and Self.OperationCompatible
     """Complete checked admission, including both channel origins."""
+    comptime ReceiverCompatible = _OnceUnaryAvailable[Self.F] and _OnceUnaryAvailable[Self.G]
+    """Both mapping callbacks have a shared, mutable or consuming receiver."""
+    comptime InvocationCompatible = Self.Compatible and Self.ReceiverCompatible
+    """Existing admission plus receiver availability for new wrapper boundaries."""
 
 
 comptime MapErrContract[I: ErrorMapping, V: Movable & Deinitable,
@@ -55,6 +60,8 @@ comptime MapErrContract[I: ErrorMapping, V: Movable & Deinitable,
 Forward Compatible and project Family, Out and Error in generic wrappers.
 The existing consuming Identity callback preserves successes through the same
 family two-arm primitive; no second mapping traversal or execution owner exists.
+ReceiverCompatible checks the error callback; InvocationCompatible combines
+receiver availability with the unchanged Compatible proof for new wrappers.
 
 Parameters:
     I: The selected source family supporting stored-error mapping.

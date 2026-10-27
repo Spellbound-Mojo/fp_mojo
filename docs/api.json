@@ -3743,6 +3743,14 @@
     {
      "description": "Complete checked admission, including both channel origins.",
      "name": "Compatible"
+    },
+    {
+     "description": "Both mapping callbacks have a shared, mutable or consuming receiver.",
+     "name": "ReceiverCompatible"
+    },
+    {
+     "description": "Existing admission plus receiver availability for new wrapper boundaries.",
+     "name": "InvocationCompatible"
     }
    ],
    "description": "Forward Compatible or all five component predicates in generic wrappers.\nThe source dictionary admits the destination policy, which owns subsequent\noperations. Native callback errors stay separate from stored failures.",
@@ -3860,7 +3868,7 @@
   },
   "algebra.MapErrContract": {
    "aliases": [],
-   "description": "Forward Compatible and project Family, Out and Error in generic wrappers.\nThe existing consuming Identity callback preserves successes through the same\nfamily two-arm primitive; no second mapping traversal or execution owner exists.",
+   "description": "Forward Compatible and project Family, Out and Error in generic wrappers.\nThe existing consuming Identity callback preserves successes through the same\nfamily two-arm primitive; no second mapping traversal or execution owner exists.\nReceiverCompatible checks the error callback; InvocationCompatible combines\nreceiver availability with the unchanged Compatible proof for new wrappers.",
    "fields": [],
    "kind": "alias",
    "methods": {},

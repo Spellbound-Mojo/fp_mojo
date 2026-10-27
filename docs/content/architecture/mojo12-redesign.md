@@ -2988,6 +2988,31 @@ and five shared-outcome programs; and nine selected rejection cases. Input
 snapshots remained unchanged with no audit failures. Generator parity, all 49
 tooling tests, API generation and strict documentation validation passed.
 
+### Stored-error mapping inherits one checked receiver contract
+
+MapBothContract now exposes ReceiverCompatible and InvocationCompatible while
+preserving its existing Compatible expression and five component predicates.
+Receiver availability checks both original mapping callbacks for a shared,
+mutable or consuming receiver. The selected source and destination families
+retain their carrier, operation, repeatability and copying requirements.
+
+MapErrContract inherits these fields through its existing Identity specialization.
+The canonical success callback supplies its receiver, so error-only mapping
+needs no second admission implementation. New wrappers can forward the stronger
+optional predicate without changing ordinary calls or legacy generic proofs.
+
+The maintained checked wrappers cover default and explicit target selection,
+custom mapping families, mutable handlers, owned deferred callbacks, disposal
+without execution and exact borrowed output/error origins. Three ordinary
+rejection cases cover either map_both handler and map_err without explicit
+callback-type bindings. Existing generic layer and transport controls remain.
+
+Qualification passed 16 focused receiver, 76 direct mapping and 76 layer mapping
+source/package checks at O0 and O3; 14 mapping and 142 generic programs; and all
+46 selected rejection cases. Input snapshots remained unchanged with no audit
+failures. Generator parity, 49 tooling tests, API generation and strict
+documentation validation also passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

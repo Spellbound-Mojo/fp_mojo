@@ -468,6 +468,11 @@ consuming Identity callback on success. Conditional wrappers use the same
 public `downcast[I, ErrorMapping]` witness throughout. Native raises remain
 native, callback receivers retain their ownership rules, and all payload/error
 equalities include origins.
+Both descriptors also expose `ReceiverCompatible` and `InvocationCompatible`.
+New wrappers can forward the latter to reject missing callback receivers at
+admission. The former accepts shared, mutable or consuming handlers; MapErr's
+success Identity already supplies a receiver. Existing `Compatible` and expanded
+proofs remain unchanged, and families retain repeatability and copying checks.
 
 ResultFamily, ValidationFamily and all five transformer families support
 this capability. `ResultT[M, E]` maps the inner Result through one `M.map`;
