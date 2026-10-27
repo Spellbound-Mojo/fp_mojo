@@ -60,11 +60,19 @@ class ResourceTreeTests(unittest.TestCase):
                 self.assertGreater(
                     record["sampled_tree_peak_rss_bytes"], 64 * 1024 * 1024
                 )
-                reaped, status = os.waitpid(child, 0)
+                self.assertEqual(record["exit_code"], -9)
+                try:
+                    reaped, status = os.waitpid(child, 0)
+                except ChildProcessError:
+                    # The timer may reap its child before the group kill takes
+                    # effect on the timer itself. No child is then adopted by
+                    # this subreaper; it must already have disappeared.
+                    self.assertFalse(Path(f"/proc/{child}").exists())
+                else:
+                    self.assertEqual(reaped, int(record["stdout"].strip()))
+                    self.assertTrue(os.WIFSIGNALED(status))
+                    self.assertEqual(os.WTERMSIG(status), 9)
                 child = None
-                self.assertEqual(reaped, int(record["stdout"].strip()))
-                self.assertTrue(os.WIFSIGNALED(status))
-                self.assertEqual(os.WTERMSIG(status), 9)
         finally:
             if child is not None:
                 try:

@@ -59,6 +59,10 @@ several times longer to build and up to about 5 GB each, so pass `--jobs 2` on a
 `--output <dir>` names the report folder (a fresh one under `.cache/` by
 default). `build` bounds the client with a 60-second compile limit, two compiler
 threads and a 4 GiB memory limit on Linux.
+The Linux resource test checks the whole timed process group. It accepts a killed
+child reaped by the timer or by the test's subreaper, while requiring that the
+child is gone. Reaping ownership is a scheduling detail, not the memory-limit
+contract. The correction passed 20 repeated runs of the resource checks.
 
 The suite keeps every program standalone: each still has its own `main` and can
 be run alone with `pixi run mojo run -I src <path>`. `scripts/suite.py`
