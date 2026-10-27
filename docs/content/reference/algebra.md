@@ -536,3 +536,21 @@ forward `Compatible` for the complete proof. Native callback inference and
 existing positional bindings are unchanged.
 
 <!-- example: docs/examples/map2_contracts.mojo -->
+
+`ProductContract[I, V, W]` specializes `Map2Contract` with the existing pair
+callback. It provides the same result, error and admission metadata for `product`
+without requiring generic wrappers to import either private adapter.
+
+Both operands already exist when `product` is called. List pairing preserves
+left-major Cartesian order and its copying requirements; optional and result
+families preserve short-circuiting and cleanup of both owned operands. Deferred
+families retain execution errors in the returned computation. For example,
+Writer pairing may raise while combining logs, whereas pairing Reader-backed
+Writers constructs a deferred computation. `Error` describes construction.
+
+Free and generic piped calls retain `OperationCompatible`; selected pipelines
+retain `FamilyCompatible`. A new wrapper can forward `Compatible` to express
+the complete contract. Origins of the two payloads remain independent in the
+resulting tuple, and existing positional family bindings still work.
+
+<!-- example: docs/examples/product_contracts.mojo -->

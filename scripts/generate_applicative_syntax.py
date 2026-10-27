@@ -63,8 +63,9 @@ def methods(carrier=None, result=False):
         left=carrier.value('T') if carrier else 'Self.Value';right=carrier.value('U') if carrier else 'W'
         family=carrier.instance('T') if carrier else 'I'
         cb=f'_Pair[{family}.Element[{left}], {family}.Element[{right}]]'
-        output='Piped['+(carrier.value('Tuple[T, U]') if carrier else f'I.Combined[{left}, {cb}, _ValueThunk[{right}]]')+']'
-        where=f' where Self.Value == {left}' if carrier else f' where _CombineCompatible[I, {left}, {cb}, _ValueThunk[{right}]]'
+        contract = f'ProductContract[I, {left}, {right}]' if not carrier else None
+        output='Piped['+(carrier.value('Tuple[T, U]') if carrier else contract + '.Out')+']'
+        where=f' where Self.Value == {left}' if carrier else f' where {contract}.OperationCompatible'
         if carrier and carrier.name == 'List':
             where += f' and _CombineCompatible[{family}, {left}, {cb}, _ValueThunk[{right}]]'
         value=f'rebind_var[{left}](self.value^)' if carrier else 'self.value^'
@@ -72,7 +73,7 @@ def methods(carrier=None, result=False):
         if carrier and carrier.name == 'List':
             # Fixed native result/error types use the same checked bridge as map2.
             body=f'return Piped(_map2_as[{family}, X=Never]({cb}(), {value}, other^))'
-        raised='' if carrier else f' raises I.CombineError[{left}, {cb}, _ValueThunk[{right}]]'
+        raised='' if carrier else f' raises {contract}.Error'
     out.append(f'''
     def product[{', '.join(params)}](deinit self, var other: {right}){raised} -> {output}{where}:
         """Combine two already evaluated carriers into pairs, following their Applicative semantics."""

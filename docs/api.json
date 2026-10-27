@@ -4792,6 +4792,40 @@
    "summary": "Admission, output and construction error of conditional effect recovery.",
    "traits": []
   },
+  "algebra.ProductContract": {
+   "aliases": [],
+   "description": "This specializes Map2Contract with the canonical pair callback. Generic code\ncan forward Compatible and name Out and Error without private adapter types.\nOperationCompatible preserves the legacy free and piped admission, while\nFamilyCompatible additionally supplies selected-pipeline carrier checks.\nThe family retains its ordering, copying, failure and deferral semantics.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected Applicative family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Applicative",
+     "variadic": false
+    },
+    {
+     "description": "The complete left carrier type, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The complete already evaluated right carrier type, including origins.",
+     "inferred": false,
+     "name": "W",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/contracts",
+   "signature": "comptime ProductContract[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable] = Map2Contract[I, V, W, _Pair[I.Element[V], I.Element[W]]]",
+   "summary": "The exact contract of pairing two already evaluated carriers.",
+   "traits": []
+  },
   "algebra.RebindingFunctor": {
    "aliases": [
     {
@@ -8817,7 +8851,7 @@
       }
      ],
      "description": "",
-     "error": "I.CombineError[V, _Pair[I.Element[V], I.Element[W]], _Value[W]]",
+     "error": "ProductContract[I, V, W].Error",
      "parameters": [
       {
        "description": "The left carrier type, including origins.",
@@ -8845,9 +8879,9 @@
      "raises_doc": "The family's combination error, unchanged.",
      "returns": {
       "doc": "The carrier of pairs. Lists form a Cartesian product in left-major order.",
-      "type": "I.Combined[V, _Pair[I.Element[V], I.Element[W]], _Value[W]]"
+      "type": "ProductContract[I, V, W].Out"
      },
-     "signature": "def product[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W) raises I.CombineError[V, _Pair[I.Element[V], I.Element[W]], _Value[W]] -> I.Combined[V, _Pair[I.Element[V], I.Element[W]], _Value[W]] where _CombineCompatible[I, V, _Pair[I.Element[V], I.Element[W]], _Value[W]]",
+     "signature": "def product[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W) raises ProductContract[I, V, W].Error -> ProductContract[I, V, W].Out where ProductContract[I, V, W].OperationCompatible",
      "summary": "Combine already computed operands into pairs through map2."
     }
    ],
@@ -74510,7 +74544,7 @@
        }
       ],
       "description": "",
-      "error": "I.CombineError[Self.Value, _Pair[I.Element[Self.Value], I.Element[W]], _ValueThunk[W]]",
+      "error": "ProductContract[I, Self.Value, W].Error",
       "parameters": [
        {
         "description": "The second carrier type, including its origins.",
@@ -74531,9 +74565,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The carrier of pairs. List copies elements for its Cartesian product; Result and Optional move their payloads without copying.",
-       "type": "Piped[I.Combined[Self.Value, _Pair[I.Element[Self.Value], I.Element[W]], _ValueThunk[W]]]"
+       "type": "Piped[ProductContract[I, Self.Value, W].Out]"
       },
-      "signature": "def product[W: Movable & Deinitable, //, I: Applicative](deinit self, var other: W) raises I.CombineError[Self.Value, _Pair[I.Element[Self.Value], I.Element[W]], _ValueThunk[W]] -> Piped[I.Combined[Self.Value, _Pair[I.Element[Self.Value], I.Element[W]], _ValueThunk[W]]] where _CombineCompatible[I, Self.Value, _Pair[I.Element[Self.Value], I.Element[W]], _ValueThunk[W]]",
+      "signature": "def product[W: Movable & Deinitable, //, I: Applicative](deinit self, var other: W) raises ProductContract[I, Self.Value, W].Error -> Piped[ProductContract[I, Self.Value, W].Out] where ProductContract[I, Self.Value, W].OperationCompatible",
       "summary": "Combine two already evaluated carriers into pairs, following their Applicative semantics."
      },
      {
@@ -147328,7 +147362,7 @@
        }
       ],
       "description": "",
-      "error": "_Combining[Self.I].CombineError[Self.V, _Pair[Self.I.Element[Self.V], Self.I.Element[W]], _ValueThunk[W]]",
+      "error": "ProductContract[_Combining[Self.I], Self.V, W].Error",
       "parameters": [
        {
         "description": "The second carrier type, including its origins.",
@@ -147342,9 +147376,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _Pair[Self.I.Element[Self.V], Self.I.Element[W]], _ValueThunk[W]], Self.E]"
+       "type": "Pipeline[Self.I, ProductContract[_Combining[Self.I], Self.V, W].Out, Self.E]"
       },
-      "signature": "def product[W: Movable & Deinitable](deinit self, var other: W) raises _Combining[Self.I].CombineError[Self.V, _Pair[Self.I.Element[Self.V], Self.I.Element[W]], _ValueThunk[W]] -> Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _Pair[Self.I.Element[Self.V], Self.I.Element[W]], _ValueThunk[W]], Self.E] where conforms_to(Self.I, Applicative) and _CombineCompatible[_Combining[Self.I], Self.V, _Pair[Self.I.Element[Self.V], Self.I.Element[W]], _ValueThunk[W]] and _CarrierCompatible[_Combining[Self.I], Self.V] and _CarrierCompatible[_Combining[Self.I], W]",
+      "signature": "def product[W: Movable & Deinitable](deinit self, var other: W) raises ProductContract[_Combining[Self.I], Self.V, W].Error -> Pipeline[Self.I, ProductContract[_Combining[Self.I], Self.V, W].Out, Self.E] where conforms_to(Self.I, Applicative) and ProductContract[_Combining[Self.I], Self.V, W].FamilyCompatible",
       "summary": "Combine two evaluated carriers into pairs using the selected family."
      }
     ],

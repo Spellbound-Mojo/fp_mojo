@@ -629,9 +629,9 @@ def methods(*, fold_stage=False):
         )
 
     family = "_Combining[Self.I]"
-    pair = "_Pair[Self.I.Element[Self.V], Self.I.Element[W]]"
-    types = f"Self.V, {pair}, _ValueThunk[W]"
-    error, result = f"{family}.CombineError[{types}]", f"{family}.Combined[{types}]"
+    pair = f"_Pair[{family}.Element[Self.V], {family}.Element[W]]"
+    contract = f"ProductContract[{family}, Self.V, W]"
+    error, result = contract + ".Error", contract + ".Out"
     emit(
         "product",
         {},
@@ -642,9 +642,7 @@ def methods(*, fold_stage=False):
         "Self.I",
         [
             "conforms_to(Self.I, Applicative)",
-            f"_CombineCompatible[{family}, {types}]",
-            f"_CarrierCompatible[{family}, Self.V]",
-            f"_CarrierCompatible[{family}, W]",
+            contract + ".FamilyCompatible",
         ],
         f"_map2_as[{family}, X={error}]({pair}(), self.value^, other^)",
         "Combine two evaluated carriers into pairs using the selected family.",

@@ -165,6 +165,9 @@
     "docs/examples/partial.mojo": {
       "stdout": "8\n8\n15\n18\n"
     },
+    "docs/examples/product_contracts.mojo": {
+      "stdout": "paired: 3 four\n"
+    },
     "docs/examples/pure_construction.mojo": {
       "stdout": "pure construction: direct=7; deferred=11\n"
     },

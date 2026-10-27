@@ -2523,6 +2523,32 @@ targeted rejection groups passed with ordinary diagnostics. Reports retained
 unchanged inputs and no audit failures. Generated-source checks, all 48 tooling
 tests and strict documentation checks passed.
 
+### Pairing evaluated carriers uses the shared combination contract
+
+`ProductContract[I, V, W]` specializes `Map2Contract` with the existing pair
+callback. Generic wrappers can name the result, construction error and complete
+admission without private adapters. Free and generic piped declarations retain
+operation-only admission; selected declarations retain carrier admission.
+Existing positional family bindings and family execution remain unchanged.
+
+The selected generator constructs the pair with the same family projection as
+the contract. This preserves the exact payload types and their independent
+origins without adding casts, copying or an invocation boundary. List Cartesian
+ordering, short-circuiting and ownership remain family responsibilities.
+
+Maintained controls cover heterogeneous payloads, native and third-party
+families, generic and legacy forwarding, independent borrowed output origins,
+Writer log errors and deferred Writer/Reader errors. Ten baseline/candidate
+ownership traces match, including skipped operands and abandoned computations.
+Five invalid clients require ordinary copying, stored-error, carrier or output
+origin diagnostics.
+
+All 36 new and 76 existing combination source/package O0/O3 checks passed,
+together with eight combination and 141 generic programs. The four additional
+fluent-combination rejection fixtures and the example's four source/package
+O0/O3 checks passed. Reports retained unchanged inputs and no audit failures.
+Generated sources, all 48 tooling tests and strict documentation checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

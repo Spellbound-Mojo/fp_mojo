@@ -2473,8 +2473,8 @@
         ],
         "product": [
           {
-            "signature": "def product[W: Movable & Deinitable, //, I: Applicative](deinit self, var other: W) raises I.CombineError[Self.Value, _Pair[I.Element[Self.Value], I.Element[W]], _ValueThunk[W]] -> Piped[I.Combined[Self.Value, _Pair[I.Element[Self.Value], I.Element[W]], _ValueThunk[W]]] where _CombineCompatible[I, Self.Value, _Pair[I.Element[Self.Value], I.Element[W]], _ValueThunk[W]]:",
-            "sha256": "6fe7aed4c7c1f5b7c51588a9243d1663e2fbbaa4f6bf10ff230a3244147742b2"
+            "signature": "def product[W: Movable & Deinitable, //, I: Applicative](deinit self, var other: W) raises ProductContract[I, Self.Value, W].Error -> Piped[ProductContract[I, Self.Value, W].Out] where ProductContract[I, Self.Value, W].OperationCompatible:",
+            "sha256": "463a074c34048870246f7957488410a16de50e9631b6610457dc6c3ba1b3c17e"
           },
           {
             "signature": "def product[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var other: List[U]) -> Piped[List[Tuple[T, U]]] where Self.Value == List[T] and _CombineCompatible[ListFamily, List[T], _Pair[ListFamily.Element[List[T]], ListFamily.Element[List[U]]], _ValueThunk[List[U]]]:",
@@ -5654,8 +5654,8 @@
         ],
         "product": [
           {
-            "signature": "def product[W: Movable & Deinitable](deinit self, var other: W) raises _Combining[Self.I].CombineError[Self.V, _Pair[Self.I.Element[Self.V], Self.I.Element[W]], _ValueThunk[W]] -> Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _Pair[Self.I.Element[Self.V], Self.I.Element[W]], _ValueThunk[W]], Self.E] where conforms_to(Self.I, Applicative) and _CombineCompatible[_Combining[Self.I], Self.V, _Pair[Self.I.Element[Self.V], Self.I.Element[W]], _ValueThunk[W]] and _CarrierCompatible[_Combining[Self.I], Self.V] and _CarrierCompatible[_Combining[Self.I], W]:",
-            "sha256": "63a74c93ef763640d80eec37859a5a102bec841d8cdfda6e3b9cf14f8ba8cd46"
+            "signature": "def product[W: Movable & Deinitable](deinit self, var other: W) raises ProductContract[_Combining[Self.I], Self.V, W].Error -> Pipeline[Self.I, ProductContract[_Combining[Self.I], Self.V, W].Out, Self.E] where conforms_to(Self.I, Applicative) and ProductContract[_Combining[Self.I], Self.V, W].FamilyCompatible:",
+            "sha256": "06e58329e9a9a181f63c6a276e71646544c1e62ef5fd7dcc16acb537869f00b0"
           }
         ],
         "sequence": [
@@ -11990,6 +11990,13 @@
       ],
       "provider": "algebra/contracts"
     },
+    "algebra.ProductContract": {
+      "kind": "type or alias",
+      "declarations": [
+        "comptime ProductContract[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable] = Map2Contract[I, V, W, _Pair[I.Element[V], I.Element[W]]]"
+      ],
+      "provider": "algebra/contracts"
+    },
     "algebra.FoldContract": {
       "kind": "type or alias",
       "declarations": [
@@ -15758,8 +15765,8 @@
       "kind": "function",
       "overloads": [
         {
-          "signature": "def product[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W ) raises I.CombineError[V, _Pair[I.Element[V], I.Element[W]], _Value[W]] -> I.Combined[V, _Pair[I.Element[V], I.Element[W]], _Value[W]] where _CombineCompatible[I, V, _Pair[I.Element[V], I.Element[W]], _Value[W]]:",
-          "sha256": "8c02b80788d2958e233f29a4c9c553669eee3cafa2b4c96a73f0ae4aa8e76e37"
+          "signature": "def product[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W ) raises ProductContract[I, V, W].Error -> ProductContract[I, V, W].Out where ProductContract[I, V, W].OperationCompatible:",
+          "sha256": "26b7622c4e79337dd1789c2eadb3bbd178d83674b7918710652d9049861d2f79"
         }
       ],
       "provider": "algebra/_derived"

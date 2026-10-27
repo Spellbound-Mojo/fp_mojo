@@ -4,7 +4,7 @@ from std.builtin.rebind import downcast
 from fp.callables.protocols import UnaryContract, BinaryContract
 from fp.callables._identity import Identity
 from fp.callables._transforms import _ValueThunk as _Value, _Pair, _Apply
-from .contracts import Map2Contract
+from .contracts import ProductContract, Map2Contract
 from .protocols import Applicative, Monad, Traversable, _map2_lazy_as
 from fp._internal.errors import _ErrorCompatible
 
@@ -117,7 +117,7 @@ def sequence[V: Movable & Deinitable, //, S: Traversable, G: Applicative](var so
 
 
 def product[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W
-) raises I.CombineError[V, _Pair[I.Element[V], I.Element[W]], _Value[W]] -> I.Combined[V, _Pair[I.Element[V], I.Element[W]], _Value[W]] where _CombineCompatible[I, V, _Pair[I.Element[V], I.Element[W]], _Value[W]]:
+) raises ProductContract[I, V, W].Error -> ProductContract[I, V, W].Out where ProductContract[I, V, W].OperationCompatible:
     """Combine already computed operands into pairs through map2.
 
     Parameters:

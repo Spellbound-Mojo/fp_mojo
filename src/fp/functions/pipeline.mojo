@@ -5,7 +5,7 @@ library value such as a `Partial` or a `Composition`. Each stage's own contract
 fixes its types. `piped(value).then(f)` chains stages one call at a time, with no
 stage limit and no promotion.
 """
-from fp.algebra.contracts import Map2Contract, IfContract
+from fp.algebra.contracts import ProductContract, Map2Contract, IfContract
 from fp.algebra.contracts import AnyContract, AllContract, FindContract, FindMapContract, FoldMapContract, FoldContract
 from fp.algebra._admission import _MapCompatible, _BindCompatible, _CombineCompatible, _CollectCompatible
 from fp.algebra.validation import ValidationFamily, _ListErrors
@@ -3490,7 +3490,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Combine two already evaluated carriers, following their Applicative semantics."""
         return Piped(_map2_as[I, X=I.CombineError[Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _ValueThunk[W]]](_NativeBinaryRef[A, B, R, X, F, True, o](Pointer(to=function)), self.value^, other^))
 
-    def product[W: Movable & Deinitable, //, I: Applicative](deinit self, var other: W) raises I.CombineError[Self.Value, _Pair[I.Element[Self.Value], I.Element[W]], _ValueThunk[W]] -> Piped[I.Combined[Self.Value, _Pair[I.Element[Self.Value], I.Element[W]], _ValueThunk[W]]] where _CombineCompatible[I, Self.Value, _Pair[I.Element[Self.Value], I.Element[W]], _ValueThunk[W]]:
+    def product[W: Movable & Deinitable, //, I: Applicative](deinit self, var other: W) raises ProductContract[I, Self.Value, W].Error -> Piped[ProductContract[I, Self.Value, W].Out] where ProductContract[I, Self.Value, W].OperationCompatible:
         """Combine two already evaluated carriers into pairs, following their Applicative semantics.
 
         Parameters:

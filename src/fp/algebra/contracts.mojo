@@ -11,7 +11,7 @@ from .protocols import _MappedFamily, Functor, Monad, Traversable, Applicative, 
 from fp.iteration._advance import _OwnedElement
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallable, _ErrorProbe
 from fp.callables._predicates import _FilterPredicate
-from fp.callables._transforms import _ValueThunk
+from fp.callables._transforms import _ValueThunk, _Pair
 from .protocols import Monoid, _AllLive, _LiveAccumulator
 from ._accumulation import _FoldMappedStep, _SearchStep, _FirstPresent, _BoolLive, _PredicateStep
 from ._sequencing import _EffectRetain, _IfEffect
@@ -216,6 +216,22 @@ Parameters:
     V: The complete left carrier type, including origins.
     W: The complete already evaluated right carrier type, including origins.
     F: The library binary callback, including its receiver and native error.
+"""
+
+
+comptime ProductContract[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable] = Map2Contract[I, V, W, _Pair[I.Element[V], I.Element[W]]]
+"""The exact contract of pairing two already evaluated carriers.
+
+This specializes Map2Contract with the canonical pair callback. Generic code
+can forward Compatible and name Out and Error without private adapter types.
+OperationCompatible preserves the legacy free and piped admission, while
+FamilyCompatible additionally supplies selected-pipeline carrier checks.
+The family retains its ordering, copying, failure and deferral semantics.
+
+Parameters:
+    I: The selected Applicative family.
+    V: The complete left carrier type, including origins.
+    W: The complete already evaluated right carrier type, including origins.
 """
 
 
