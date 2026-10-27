@@ -1,7 +1,7 @@
 """Select native errors once; stored Result errors remain independent."""
 from fp.functions import pipeline
 from fp.algebra import OptionalFamily, ResultFamily
-from fp.data import Result, Ok, Err
+from fp.data import Result, Ok, Err, ok, err
 from std.testing import assert_equal
 
 @fieldwise_init
@@ -70,19 +70,19 @@ def main() raises:
 
     var checked: Int
     try:
-        checked = pipeline(Result[Int, String](Ok(4))).raising[PipelineProcessingFailure]().map(process).ensure(accepted, invalid).get_or_else(default_count)
+        checked = pipeline(ok[String](4)).raising[PipelineProcessingFailure]().map(process).ensure(accepted, invalid).get_or_else(default_count)
     except _: raise Error("unexpected processing failure")
     assert_equal(checked, 8)
     print("accepted:", checked)
 
     # Changing the stored error also updates the selected Result family.
-    var recovered = pipeline(Result[Int, String](Err(String("bad")))).map_err(length).or_else(recover).map(double).get_or_else(default_count)
+    var recovered = pipeline(err[Int]("bad")).map_err(length).or_else(recover).map(double).get_or_else(default_count)
     assert_equal(recovered, 6)
     print("recovered:", recovered)
 
     var code = 0
     try:
-        _ = pipeline(Result[Int, String](Ok(-1))).raising[PipelineProcessingFailure]().map(process).get()
+        _ = pipeline(ok[String](-1)).raising[PipelineProcessingFailure]().map(process).get()
     except error: code = error.code
     assert_equal(code, 90)
     print("raised:", code)

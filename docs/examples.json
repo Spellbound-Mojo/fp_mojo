@@ -195,6 +195,9 @@
     "docs/examples/result_combinators.mojo": {
       "stdout": "checked: 8\n8\nrejected -2\n0\n"
     },
+    "docs/examples/result_constructors.mojo": {
+      "stdout": "accepted: 42\nfallback: 7\n"
+    },
     "docs/examples/result_once.mojo": {
       "stdout": "used once: value 12\n"
     },

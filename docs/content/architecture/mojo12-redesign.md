@@ -3401,3 +3401,14 @@ native error. Default extraction delegates to the canonical Identity callable;
 Result conversion delegates to Result's existing constructors. Factory invocation
 uses the shared receiver dispatcher, without introducing capture copies or
 another native callback inference path.
+
+### Inferring one side of Result construction
+
+`ok[E](value)` and `err[T](error)` make the missing side explicit while inferring
+the side supplied as a value, following Cats' asRight/asLeft convention. The
+factories are ordinary functions with one input and no callback overloads.
+They forward to the existing `_keep_ok` and `_keep_err` constructors; no new
+storage, ownership, error handling or conversion semantics are introduced.
+The inferred type retains nominal identity and origins, and the value moves
+without copying. Uppercase Ok/Err constructors still support typed returns and
+case matching.

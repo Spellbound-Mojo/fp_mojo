@@ -16192,6 +16192,26 @@
       ],
       "provider": "effects/capabilities"
     },
+    "data.ok": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def ok[T: Movable & Deinitable, //, E: Movable & Deinitable](var value: T) -> Result[T, E]:",
+          "sha256": "9061a4ca3788d266c7f1db262d8d5487c0cefbea86c16b8734624eb91841da04"
+        }
+      ],
+      "provider": "data/_result"
+    },
+    "data.err": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def err[E: Movable & Deinitable, //, T: Movable & Deinitable](var error: E) -> Result[T, E]:",
+          "sha256": "f8c3b9cd60e374c8e6e52cfd7b37d59d625c45ae01d10f4a7525d9605fe1c48a"
+        }
+      ],
+      "provider": "data/_result"
+    },
     "data.raise_on_err": {
       "kind": "function",
       "overloads": [

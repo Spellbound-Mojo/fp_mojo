@@ -1,7 +1,7 @@
 """Parse, collect, total and combine with one native error selection."""
 from fp.functions import pipeline
 from fp.algebra import ResultFamily
-from fp.data import Result, Ok, Err
+from fp.data import Result, Ok, Err, ok
 from std.testing import assert_equal
 
 @fieldwise_init
@@ -31,7 +31,7 @@ def checkout_fold(var amounts: List[String]) raises WorkflowTransportFailure -> 
     return (pipeline(amounts^)
         .raising[WorkflowTransportFailure]()
         .fold_effect[ResultFamily[String]](0).run(add_parsed)
-        .map_n((Result[Int, String](Ok(5)), Result[Int, String](Ok(2))), receipt)
+        .map_n((ok[String](5), ok[String](2)), receipt)
         .get())
 
 def checkout(var amounts: List[String]) raises WorkflowTransportFailure -> Result[String, String]:
@@ -39,7 +39,7 @@ def checkout(var amounts: List[String]) raises WorkflowTransportFailure -> Resul
         .raising[WorkflowTransportFailure]()
         .traverse[ResultFamily[String]](parse)
         .map(total)
-        .map_n((Result[Int, String](Ok(5)), Result[Int, String](Ok(2))), receipt)
+        .map_n((ok[String](5), ok[String](2)), receipt)
         .get())
 
 def main() raises:

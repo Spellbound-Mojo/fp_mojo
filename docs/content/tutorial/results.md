@@ -8,6 +8,24 @@ sequences computations that can themselves return an `Err`.
 Stored failures and raised errors are separate. If a callback raises, its
 error propagates to the caller. Use `Capture[E]` to catch it in a `Result`.
 
+## Construct a Result with one type argument
+
+Use `ok[ErrorType](value)` to infer the success type from the value, or
+`err[ValueType](error)` to infer the error type. Each creates a complete Result
+and consumes its payload. This follows [Cats' `asRight` and `asLeft`](https://github.com/typelevel/cats/blob/main/core/src/main/scala/cats/syntax/either.scala#L473):
+you only name the side that has no value to infer from.
+
+<!-- example: docs/examples/result_constructors.mojo -->
+
+Both factories infer `Result[Int, String]` in the example, and those values
+enter `pipeline` directly. Literals, move-only values and borrowed origins
+retain their native types. Supply the missing side's type explicitly; the
+factories do not choose an arbitrary default.
+
+When a function already declares `-> Result[T, E]`, returning `Ok(value)` or
+`Err(error)` remains the concise form. Those uppercase constructors describe
+one case; the lowercase factories return the complete Result immediately.
+
 ## Turn optional input into a Result
 
 Use `pipeline(optional^).to_result(make_error)` when absence should become a

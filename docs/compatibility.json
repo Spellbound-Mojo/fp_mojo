@@ -98,7 +98,8 @@
         "tests/runtime/test_capture_native_abi_register.mojo",
         "tests/runtime/test_capture_native_abi_state.mojo",
         "tests/ownership/test_capture_native_abi_ownership.mojo",
-        "docs/examples/result_values.mojo"
+        "docs/examples/result_values.mojo",
+        "docs/examples/result_constructors.mojo"
       ]
     },
     "iteration": {

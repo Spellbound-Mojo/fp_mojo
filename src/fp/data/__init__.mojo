@@ -1,6 +1,7 @@
 """Typed results, early termination and bridges between raised and stored errors.
 
-`Result[T, E]` holds a success value `Ok[T]` or a stored failure `Err[E]`;
+`Result[T, E]` holds a success value `Ok[T]` or a stored failure `Err[E]`.
+`ok[E](value)` and `err[T](error)` infer the type of the payload they receive.
 `ControlFlow[B, C]` holds `Break[B]` or `Continue[C]`. `Ior[E, A]` holds
 `Left[E]`, `Right[A]` or `Both[E, A]` for values with diagnostics. These are stored in place
 and matched by `fp.match`. Mojo's typed native errors are efficient; `Result`
@@ -21,6 +22,8 @@ from ._result import (
     Err,
     Ok,
     Result,
+    ok,
+    err,
     raise_on_err,
 )
 

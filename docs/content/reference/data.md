@@ -9,6 +9,16 @@ complete program.
 
 <!-- api: data -->
 
+## Construct a Result
+
+`ok[E](value)` infers T and returns `Result[T, E]`; `err[T](error)` infers E
+and returns the same complete type. Both consume the payload without copying
+or raising it. The other side's type is explicit. See the
+[constructor example](../tutorial/results.md#construct-a-result-with-one-type-argument).
+
+`Ok(value)` and `Err(error)` remain the case constructors for typed returns and
+pattern matching. Their existing implicit conversions are unchanged.
+
 ## Extract a Result value
 
 `value_or(on_err)` consumes an error to compute a plain `T`.

@@ -34468,6 +34468,51 @@
    "provider": "data/_attempt",
    "summary": ""
   },
+  "data.err": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The stored error payload, consumed.",
+       "name": "error",
+       "type": "E",
+       "variadic": false
+      }
+     ],
+     "description": "`err[MyValue](error)` supplies only the missing success type, like Cats'\n`asLeft`. The error moves into Err without being raised, copied or changing\nits origins. Ok and Err constructors remain available for typed returns.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The stored error type, inferred from the consumed error.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The success type, supplied explicitly.",
+       "inferred": false,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A complete Result[T, E] containing Err(error).",
+      "type": "Result[T, E]"
+     },
+     "signature": "def err[E: Movable & Deinitable, //, T: Movable & Deinitable](var error: E) -> Result[T, E]",
+     "summary": "Create a failed Result, inferring the error type from its value."
+    }
+   ],
+   "provider": "data/_result",
+   "summary": ""
+  },
   "data.mut_owned": {
    "description": "",
    "kind": "function",
@@ -34859,6 +34904,51 @@
     }
    ],
    "provider": "data/_attempt",
+   "summary": ""
+  },
+  "data.ok": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The success payload, consumed.",
+       "name": "value",
+       "type": "T",
+       "variadic": false
+      }
+     ],
+     "description": "`ok[MyError](value)` supplies only the missing error type, like Cats'\n`asRight`. The value moves into Ok without copying or changing its origins.\nOk and Err constructors still convert directly when a Result type is known.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The success type, inferred from the consumed value.",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The stored error type, supplied explicitly.",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A complete Result[T, E] containing Ok(value).",
+      "type": "Result[T, E]"
+     },
+     "signature": "def ok[T: Movable & Deinitable, //, E: Movable & Deinitable](var value: T) -> Result[T, E]",
+     "summary": "Create a successful Result, inferring the payload type from its value."
+    }
+   ],
+   "provider": "data/_result",
    "summary": ""
   },
   "data.raise_on_err": {
@@ -235367,7 +235457,7 @@
    "summary": "Functional loops and scans over native Mojo values: `while_loop`, `fori_loop` and `scan`."
   },
   "data": {
-   "description": "`Result[T, E]` holds a success value `Ok[T]` or a stored failure `Err[E]`;\n`ControlFlow[B, C]` holds `Break[B]` or `Continue[C]`. `Ior[E, A]` holds\n`Left[E]`, `Right[A]` or `Both[E, A]` for values with diagnostics. These are stored in place\nand matched by `fp.match`. Mojo's typed native errors are efficient; `Result`\nis for failures that must be stored, collected or passed along as values, not\na replacement for `raises`.\n\nThe bridges: `attempt`, `attempt_kwargs` and `attempt_once` turn a raising call into a `Result`,\n`raise_on_err` turns it back, each with the original error type, and\n`collect_results` collects a source of Results into one.",
+   "description": "`Result[T, E]` holds a success value `Ok[T]` or a stored failure `Err[E]`.\n`ok[E](value)` and `err[T](error)` infer the type of the payload they receive.\n`ControlFlow[B, C]` holds `Break[B]` or `Continue[C]`. `Ior[E, A]` holds\n`Left[E]`, `Right[A]` or `Both[E, A]` for values with diagnostics. These are stored in place\nand matched by `fp.match`. Mojo's typed native errors are efficient; `Result`\nis for failures that must be stored, collected or passed along as values, not\na replacement for `raises`.\n\nThe bridges: `attempt`, `attempt_kwargs` and `attempt_once` turn a raising call into a `Result`,\n`raise_on_err` turns it back, each with the original error type, and\n`collect_results` collects a source of Results into one.",
    "summary": "Typed results, early termination and bridges between raised and stored errors."
   },
   "effects": {

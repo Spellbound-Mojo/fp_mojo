@@ -44,6 +44,7 @@ compile them through source and precompiled package imports at O0 and O3 with
 |---|---|---|
 | `capture_arguments.mojo` | Bind several owned arguments without a wrapper closure | [Results tutorial](../tutorial/results.md#bind-arguments-before-the-callback) |
 | `optional_result.mojo` | Convert absent optional input to a lazily constructed stored error | [Results tutorial](../tutorial/results.md#turn-optional-input-into-a-result) |
+| `result_constructors.mojo` | Infer one side of Result construction with `ok[E]` and `err[T]` | [Results tutorial](../tutorial/results.md#construct-a-result-with-one-type-argument) |
 | `results.mojo` | Stored domain errors versus raised callback failures | [Results tutorial](../tutorial/results.md#transform-only-the-active-branch) |
 | `result_transform_generic.mojo` | Generic Result transformations | [Results tutorial](../tutorial/results.md#generic-transformations) |
 | `attempt_adapters.mojo` | Select a native callback argument convention with a borrowed adapter | [fp.data](../reference/data.md#select-a-native-argument-convention) |

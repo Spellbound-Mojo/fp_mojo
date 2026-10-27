@@ -1344,6 +1344,46 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
     # --- end Result combinators ---
 
 
+def ok[T: Movable & Deinitable, //, E: Movable & Deinitable](var value: T) -> Result[T, E]:
+    """Create a successful Result, inferring the payload type from its value.
+
+    `ok[MyError](value)` supplies only the missing error type, like Cats'
+    `asRight`. The value moves into Ok without copying or changing its origins.
+    Ok and Err constructors still convert directly when a Result type is known.
+
+    Parameters:
+        T: The success type, inferred from the consumed value.
+        E: The stored error type, supplied explicitly.
+
+    Args:
+        value: The success payload, consumed.
+
+    Returns:
+        A complete Result[T, E] containing Ok(value).
+    """
+    return _keep_ok[T, E](value^)
+
+
+def err[E: Movable & Deinitable, //, T: Movable & Deinitable](var error: E) -> Result[T, E]:
+    """Create a failed Result, inferring the error type from its value.
+
+    `err[MyValue](error)` supplies only the missing success type, like Cats'
+    `asLeft`. The error moves into Err without being raised, copied or changing
+    its origins. Ok and Err constructors remain available for typed returns.
+
+    Parameters:
+        E: The stored error type, inferred from the consumed error.
+        T: The success type, supplied explicitly.
+
+    Args:
+        error: The stored error payload, consumed.
+
+    Returns:
+        A complete Result[T, E] containing Err(error).
+    """
+    return _keep_err[T, E](error^)
+
+
 def raise_on_err[T: Movable & Deinitable, E: Movable & Deinitable](
     var result: Result[T, E]
 ) raises E -> T:
