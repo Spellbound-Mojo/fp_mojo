@@ -211,6 +211,8 @@ trait Applicative(Functor):
     of two computations with the same payload. Eager families share one carrier
     type; deferred families override the join to retain the selected computation.
     Transformers and conditional recovery share this boundary without needing bind.
+    `_JoinCompatible[L, R]` describes construction admission for that choice;
+    deferred execution still validates its actual environment or state at run.
 
     `collect` gathers every payload a callback produces over a source into a
     `List`, and list traversal into this family uses it. It is the private
@@ -223,6 +225,7 @@ trait Applicative(Functor):
     """
     # Joining alternative carriers needs no bind. Conditional error recovery
     # uses it for ApplicativeError families such as Validation as well.
+    comptime _JoinCompatible[L: Movable & Deinitable, R: Movable & Deinitable]: Bool = L == R
     comptime _Joined[L: Movable & Deinitable, R: Movable & Deinitable]: Movable & Deinitable = L
     @staticmethod
     def _join_left[L: Movable & Deinitable, R: Movable & Deinitable](var value: L) -> Self._Joined[L, R]:

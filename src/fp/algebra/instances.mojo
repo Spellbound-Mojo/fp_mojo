@@ -13,6 +13,7 @@ from fp.iteration._advance import _next_optional
 from fp.iteration._terminal import _append
 from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible, _propagate_error
 from fp.callables._receiver import _unary_repeated_as
+from ._branches import _OptionalGuard, _ResultGuard, _TraverseBranch
 from ._result_accumulation import _result_map2, _result_loop, _FirstError
 from .filtering import _Select, _Keep
 from .protocols import (Functor, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Filterable, FunctorFilter, _Lifting, _Accumulate, _Present, _Item, _iterator,
@@ -24,11 +25,11 @@ comptime _ListElement[V: Movable & Deinitable] = downcast[downcast[V, IterableOw
 
 # Single-value sources map a wrapper and introduce an empty/error branch.
 # They do not collect, copy payloads, or require a repeatable producer.
-# Guard family projections, then preserve symbolic evidence for total type
-# equalities with eager Boolean conjunction.
+# Guard family projections, then preserve symbolic join and native-error
+# evidence with eager Boolean conjunction.
 comptime _WrappedTraversalCompatible[G: Applicative, F: UnaryContract & Movable & Deinitable,
                                     W: UnaryContract & Movable & Deinitable] = (
-    (G.Pure[W.Out] == G.Mapped[F.Out, W]) &
+    G._JoinCompatible[G.Pure[W.Out], G.Mapped[F.Out, W]] &
     _CommonErrorCompatible[F.Error, G.MapError[F.Out, W]]
 ) if _OnceUnaryAvailable[F] and G.CarrierCompatible[F.Out] and G.MapCompatible[F.Out, W] else False
 
@@ -205,7 +206,7 @@ struct OptionalFamily(Monad, Traversable, Filterable, FunctorFilter, _Lifting):
     comptime Bound[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Out
     comptime BindError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
     comptime TargetCompatible[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _WrappedTraversalCompatible[G, F, _Present[G.Element[F.Out]]]
-    comptime Traversed[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = G.Mapped[F.Out, _Present[G.Element[F.Out]]]
+    comptime Traversed[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _OptionalGuard[G, _TraverseBranch[G, F, _Present[G.Element[F.Out]]]].Out
     comptime TraverseError[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _CommonError[F.Error, G.MapError[F.Out, _Present[G.Element[F.Out]]]]
     comptime _Looped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Optional[K.Acc]
     comptime _LoopError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = _CommonError[F.Error, K.Error]
@@ -379,19 +380,10 @@ struct OptionalFamily(Monad, Traversable, Filterable, FunctorFilter, _Lifting):
         Raises:
             The callback's error, and any error `G` adds.
         """
-        comptime B = G.Element[F.Out]
-        comptime E = Self.TraverseError[G, V, F]
         comptime assert Self.TraverseCompatible[V, F], "traverse: Optional source required"
-        comptime assert G.Pure[Optional[B]] == Self.Traversed[G, V, F], "traverse: target must represent absence and presence with one type"
-        comptime assert _ErrorCompatible[E, F.Error] and _ErrorCompatible[E, G.MapError[F.Out, _Present[B]]]
-        var present = rebind_var[Optional[F.Arg]](source^)
-        if not present:
-            return rebind_var[Self.Traversed[G, V, F]](G.pure(Optional[B]()))
-        var produced = _unary_once_as[E](f^, present.unsafe_take())
-        try:
-            return G.map(_Present[B](), produced^)
-        except error:
-            _propagate_error[E](error^)
+        comptime B = G.Element[F.Out]
+        comptime Step = _TraverseBranch[G, F, _Present[B]]
+        return _OptionalGuard[G, Step](Step(f^, _Present[B]())).call_once(rebind_var[Optional[F.Arg]](source^))
 
     @staticmethod
     def _loop[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate](var f: F, var source: V
@@ -492,7 +484,7 @@ struct ResultFamily[E: Movable & Deinitable](Monad, ApplicativeError, ErrorMappi
     comptime Bound[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Out
     comptime BindError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
     comptime TargetCompatible[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _WrappedTraversalCompatible[G, F, _OkOf[G.Element[F.Out], Self.E]]
-    comptime Traversed[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = G.Mapped[F.Out, _OkOf[G.Element[F.Out], Self.E]]
+    comptime Traversed[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _ResultGuard[G, Self.E, _TraverseBranch[G, F, _OkOf[G.Element[F.Out], Self.E]]].Out
     comptime TraverseError[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _CommonError[F.Error, G.MapError[F.Out, _OkOf[G.Element[F.Out], Self.E]]]
     comptime _Looped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Result[K.Acc, Self.E]
     comptime _LoopError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = _CommonError[F.Error, K.Error]
@@ -669,20 +661,10 @@ struct ResultFamily[E: Movable & Deinitable](Monad, ApplicativeError, ErrorMappi
         Raises:
             The callback's error, and any error `G` adds.
         """
-        comptime B = G.Element[F.Out]
-        comptime X = Self.TraverseError[G, V, F]
         comptime assert V == Result[F.Arg, Self.E], "traverse: Result source required"
-        comptime assert G.Pure[Result[B, Self.E]] == Self.Traversed[G, V, F], "traverse: target must represent both Result cases with one type"
-        var value = rebind_var[Result[F.Arg, Self.E]](source^)
-        if value.is_err():
-            var stored = value^._take_err()
-            return rebind_var[Self.Traversed[G, V, F]](G.pure(Result[B, Self.E](Err(rebind_var[Self.E](stored^)))))
-        comptime assert _ErrorCompatible[X, F.Error] and _ErrorCompatible[X, G.MapError[F.Out, _OkOf[B, Self.E]]]
-        var produced = _unary_once_as[X](f^, rebind_var[F.Arg](value^._take_ok()))
-        try:
-            return G.map(_OkOf[B, Self.E](), produced^)
-        except error:
-            _propagate_error[X](error^)
+        comptime B = G.Element[F.Out]
+        comptime Step = _TraverseBranch[G, F, _OkOf[B, Self.E]]
+        return _ResultGuard[G, Self.E, Step](Step(f^, _OkOf[B, Self.E]())).call_once(rebind_var[Result[F.Arg, Self.E]](source^))
 
     @staticmethod
     def _loop[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate](var f: F, var source: V

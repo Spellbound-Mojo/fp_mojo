@@ -58,8 +58,8 @@ def main():
     comptime assert not TraverseContract[ResultFamily[String],ListFamily,ResultFamily[String].Pure[Int],StatefulMap].Compatible
     comptime assert not TraverseContract[NonEmptyListFamily,ListFamily,NonEmptyList[Int],StatefulMap].Compatible
     comptime I=Reader[Int]
-    comptime assert not TraverseContract[OptionalFamily,I,Optional[Int],Next[I]].Compatible
-    comptime assert not TraverseContract[ResultFamily[String],I,ResultFamily[String].Pure[Int],Next[I]].Compatible
+    comptime assert TraverseContract[OptionalFamily,I,Optional[Int],Next[I]].Compatible
+    comptime assert TraverseContract[ResultFamily[String],I,ResultFamily[String].Pure[Int],Next[I]].Compatible
     comptime assert not ListFamily._LoopCompatible[List[Int],Next[ListFamily],MoveAccumulator]
     comptime assert not ListFamily._LoopCompatible[List[Int],OwnedProducer,MoveItem]
     comptime assert not ListFamily._LoopCompatible[List[Int],IntProducer,StringAccumulator]

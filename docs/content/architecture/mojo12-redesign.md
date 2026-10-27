@@ -1479,6 +1479,50 @@ that suite and is covered by two additional regressions, all 48 tooling tests,
 and strict documentation validation for 318 exports and 79 examples. Evidence
 is retained in `.cache/quality-cycle16/qualified/`.
 
+### Shared applicative branches for single-value traversal
+
+Optional and Result traversal now use the same branch guards as transformer
+bind and recovery. Those guards live in `algebra/_branches` and require only
+Applicative: selecting a branch needs `pure` and the family's existing join,
+not monadic bind. Result still owns the consuming fold, and the continuation
+invokes the producer once and maps the existing shape wrapper. There is no new
+dispatch mode, traversal loop or representation for native values.
+
+The target's `_JoinCompatible` owns admission for the pure and mapped branches.
+Its default requires one carrier type. Reader and State admit their own actions
+with matching payloads; Writer and the Optional/Result layers forward the actual
+base carriers. Reader's origin-dependent run compatibility remains checked at
+the actual run origin. No synthetic origin or erased native error is substituted.
+
+This extends single-value traversal to deferred targets whose pure and mapped
+representations differ. A present/successful source calls its producer during
+construction, at most once; absence or a stored error skips it. The produced
+action remains deferred. Producer exceptions arise during construction, while
+action exceptions arise only when run, each with its exact native error type.
+Dropping a pending result consumes its captures and payloads exactly once.
+
+The earlier same-carrier limitation is therefore removed. Built-in eager target
+results retain their types. Generic wrappers should return `TraverseContract.Out`
+or the source's `Traversed` projection rather than assume the result is exactly
+`G.Mapped`: custom targets with their own branch join now control that result as
+they already do for transformer operations. Ordinary calls and positional type
+bindings keep their existing syntax; no additional callback adapter is needed.
+
+Qualification on Mojo 1.2.0 passed 104 source/package O0/O3 boundary checks, all
+699 packaged suite programs (697 checked clients and two benchmarks), all 1,597
+rejection fixtures, and 48 tooling tests. Reports retain unchanged inputs and
+packages and no audit failures. Strict documentation validation covers 318
+exports and 80 executable examples. Public export names, providers and signatures
+are unchanged.
+
+Controls cover native/free/selected calls and sequence, generic contract
+forwarding, deferred Writer logs, actual Reader error origins, nested Reader
+borrows, and 32 ownership scenarios with move-only inputs, captures, stored
+errors and state. Escaping a local borrowed payload rejects normally. The two
+former deferred-shape rejection fixtures now test a genuinely incompatible
+Reader/State target, while successful Reader traversal is a maintained runtime
+case. Evidence is retained in `.cache/quality-cycle17/qualified-main/`.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

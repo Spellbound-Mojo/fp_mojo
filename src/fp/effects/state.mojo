@@ -669,6 +669,7 @@ struct StateT[M: Monad, S: Movable & Deinitable](StateFamily, Stateful, _LocalLi
     @staticmethod
     def _fold[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator](var prepare: P, var step: F, var initial: K.Acc, var source: V) -> Self._Folded[V, P, F, K]:
         return Self._Folded[V, P, F, K](prepare^, step^, initial^, source^)
+    comptime _JoinCompatible[L: Movable & Deinitable, R: Movable & Deinitable] = Self.CarrierCompatible[L] and Self.CarrierCompatible[R] and Self.Element[L] == Self.Element[R]
     comptime _Joined[L: Movable & Deinitable, R: Movable & Deinitable] = _StateChoice[Self.M, _Action[L], _Action[R]]
     comptime Lifted[V: Movable & Deinitable] = _StateLift[Self.M, Self.S, V]
     comptime Endpoint[T: Movable & Deinitable, F: Movable & Deinitable] = _StateEndpoint[

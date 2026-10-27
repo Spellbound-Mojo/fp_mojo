@@ -575,6 +575,7 @@ struct WriterT[M: Monad, W: Monoid](WriterFamily, Censor, _LocalLifting, Applica
         Self, K.Acc, Self.M._Looped[V, _UnwrapResult[Self, F], _WriterAcc[Self.W, K]]]
     comptime _LoopError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Self.M._LoopError[
         V, _UnwrapResult[Self, F], _WriterAcc[Self.W, K]]
+    comptime _JoinCompatible[L: Movable & Deinitable, Q: Movable & Deinitable] = (Self.Element[L] == Self.Element[Q] and Self.M._JoinCompatible[_Value[L].Storage, _Value[Q].Storage]) if Self.CarrierCompatible[L] and Self.CarrierCompatible[Q] else False
     comptime _Joined[L: Movable & Deinitable, Q: Movable & Deinitable] = WriterValue[
         Self, _Value[L].Value, Self.M._Joined[_Value[L].Storage, _Value[Q].Storage]]
     comptime Lifted[V: Movable & Deinitable] = WriterValue[

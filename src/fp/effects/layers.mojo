@@ -7,6 +7,7 @@ and the right operand, keeping the base's earlier effects. The right operand is
 produced at most once. Over IdentityFamily the aliases are the native Optional
 and Result families.
 """
+from fp.algebra._branches import _OptionalGuard, _ResultGuard
 from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, rebind, downcast
 from fp.algebra.protocols import (Monad, Applicative, ApplicativeError, ErrorMapping, _CALLBACK_ADMISSION, _RecoveryShape, _MappedFamily, _Lifting, _Accumulate, _Append, _Present, _BindFirst, _Lazy, _UnaryView)
@@ -15,7 +16,7 @@ from fp.algebra.error_mapping import MapBothContract
 from fp.algebra.instances import IdentityFamily, OptionalFamily, ResultFamily, _OkOf
 from fp.callables.protocols import BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, OnceUnary, MutableUnary
 from fp.callables.invoke import _OnceBinaryAvailable, _OnceThunkAvailable, call_once, call_repeated, RepeatableUnary
-from fp.data._result import Result, Ok, Err, _fold_result_owned, _transformed
+from fp.data._result import Result, Ok, Err
 from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible, _propagate_error
 from .protocols import Local, Listen, _CarrierOp, _LocalLifting, _CapabilityLifting
 from ._adapt import _map_as
@@ -67,73 +68,6 @@ struct _InnerBimap[E: Movable & Deinitable,
         var on_ok = _UnaryView[Self.F,origin_of(self.on_ok)](Pointer(to=self.on_ok))
         var on_err = _UnaryView[Self.G,origin_of(self.on_err)](Pointer(to=self.on_err))
         return Self.Inner.bimap[Self.Target](on_ok^,on_err^,arg^)
-
-
-@fieldwise_init
-struct _OptionalGuard[M: Monad, F: UnaryContract & Movable & Deinitable](
-    OnceUnary, MutableUnary where RepeatableUnary[F], Copyable where conforms_to(F, Copyable)
-):
-    """OptionalT bind step: absence returns the base's pure absence; presence
-    calls F, whose result is the next layer value."""
-    var function: Self.F
-    comptime B = OptionalFamily.Element[Self.M.Element[Self.F.Out]]
-    comptime Absent = Self.M.Pure[Optional[Self.B]]
-    comptime Arg = Optional[Self.F.Arg]
-    comptime Out = Self.M._Joined[Self.Absent, Self.F.Out]
-    comptime Error = Self.F.Error
-    def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        if not arg:
-            return Self.M._join_left[Self.Absent, Self.F.Out](Self.M.pure(Optional[Self.B]()))
-        return Self.M._join_right[Self.Absent, Self.F.Out](call_once(self.function^, arg.unsafe_take()))
-    def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        comptime assert RepeatableUnary[Self.F]
-        if not arg:
-            return Self.M._join_left[Self.Absent, Self.F.Out](Self.M.pure(Optional[Self.B]()))
-        return Self.M._join_right[Self.Absent, Self.F.Out](call_repeated(self.function, arg.unsafe_take()))
-
-
-@fieldwise_init
-struct _ResultGuard[M: Monad, E: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, success: Bool = True](
-    OnceUnary, MutableUnary where RepeatableUnary[F], Copyable where conforms_to(F, Copyable)
-):
-    """Bind or recover one ResultT branch through Result's consuming fold.
-
-    The unselected branch is lifted through pure; the selected branch returns
-    the callback's base effect. Base joins retain concrete deferred actions.
-    """
-    var function: Self.F
-    comptime B = ResultFamily[Self.E].Element[Self.M.Element[Self.F.Out]]
-    comptime A = Self.F.Arg if Self.success else Self.B
-    comptime Absent = Self.M.Pure[Result[Self.B, Self.E]]
-    comptime Arg = Result[Self.A, Self.E]
-    comptime Out = Self.M._Joined[Self.Absent, Self.F.Out]
-    comptime Error = Self.F.Error
-
-    @staticmethod
-    def _preserve[P: Movable & Deinitable](var payload: P, var unused: NoneType) capturing -> Self.Out:
-        return Self.M._join_left[Self.Absent, Self.F.Out](Self.M.pure(
-            _transformed[Self.B, Self.E, P, not Self.success, True](payload^)))
-
-    @staticmethod
-    def _continue[P: Movable & Deinitable](var payload: P, var function: Self.F) raises Self.Error capturing -> Self.Out:
-        comptime assert P == Self.F.Arg
-        return Self.M._join_right[Self.Absent, Self.F.Out](call_once(function^, rebind_var[Self.F.Arg](payload^)))
-
-    def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        comptime if Self.success:
-            return _fold_result_owned[Self.A, Self.E, Self.Out, Self.Error, Self.Error, Never,
-                Self.F, NoneType, Self._continue[Self.A], Self._preserve[Self.E]](arg^, self.function^, None)
-        else:
-            comptime assert Self.F.Arg == Self.E, "or_else: handler must consume the selected stored error"
-            return _fold_result_owned[Self.A, Self.E, Self.Out, Self.Error, Never, Self.Error,
-                NoneType, Self.F, Self._preserve[Self.A], Self._continue[Self.E]](arg^, None, self.function^)
-
-    def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        comptime assert RepeatableUnary[Self.F]
-        comptime View = _UnaryView[Self.F, origin_of(self.function)]
-        comptime Guard = _ResultGuard[Self.M, Self.E, View, Self.success]
-        comptime assert Guard.Arg == Self.Arg and Guard.Out == Self.Out
-        return rebind_var[Self.Out](Guard(View(Pointer(to=self.function))).call_once(rebind_var[Guard.Arg](arg^)))
 
 
 @fieldwise_init
@@ -306,6 +240,7 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
     comptime _LoopCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Self.M._LoopCompatible[V, F, _OptionalAcc[K]]
     comptime _Looped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Self.M._Looped[V, F, _OptionalAcc[K]]
     comptime _LoopError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Self.M._LoopError[V, F, _OptionalAcc[K]]
+    comptime _JoinCompatible[L: Movable & Deinitable, Q: Movable & Deinitable] = Self.CarrierCompatible[L] and Self.CarrierCompatible[Q] and Self.M._JoinCompatible[L, Q]
     comptime _Joined[L: Movable & Deinitable, Q: Movable & Deinitable] = Self.M._Joined[L, Q]
     comptime Lifted[V: Movable & Deinitable] = Self.M.Mapped[V, _Present[Self.M.Element[V]]]
     comptime LiftError[V: Movable & Deinitable] = Self.M.MapError[V, _Present[Self.M.Element[V]]]
@@ -431,6 +366,7 @@ struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, Erro
     comptime _LoopCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Self.M._LoopCompatible[V, F, _ResultAcc[K, Self.E]]
     comptime _Looped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Self.M._Looped[V, F, _ResultAcc[K, Self.E]]
     comptime _LoopError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Self.M._LoopError[V, F, _ResultAcc[K, Self.E]]
+    comptime _JoinCompatible[L: Movable & Deinitable, Q: Movable & Deinitable] = Self.CarrierCompatible[L] and Self.CarrierCompatible[Q] and Self.M._JoinCompatible[L, Q]
     comptime _Joined[L: Movable & Deinitable, Q: Movable & Deinitable] = Self.M._Joined[L, Q]
     comptime Lifted[V: Movable & Deinitable] = Self.M.Mapped[V, _OkOf[Self.M.Element[V], Self.E]]
     comptime LiftError[V: Movable & Deinitable] = Self.M.MapError[V, _OkOf[Self.M.Element[V], Self.E]]

@@ -80,6 +80,14 @@ can override `TargetCompatible` with the requirements of their actual operations
 
 <!-- example: docs/examples/single_value_traversal.mojo -->
 
+Single-value traversal also supports deferred targets such as Reader and State.
+The Optional or Result source calls the producer at construction when present or
+successful; the produced action waits until `run`. Absence and stored source
+errors skip the producer and remain in the target's result. Producer exceptions
+and later action exceptions retain their separate native error types.
+
+<!-- example: docs/examples/single_value_deferred.mojo -->
+
 ListFamily mapping requires a native List, while ListFamily traversal also
 accepts an owned iterable or an existing iterator. For example,
 `pipeline[ListFamily](array^).traverse[OptionalFamily](check)` collects an Array
