@@ -2611,6 +2611,28 @@ Reports retained unchanged inputs and no audit failures. The public API
 inventory, generated sources, all 48 tooling tests and strict documentation
 checks passed.
 
+### Layer operation metadata projects canonical contracts
+
+OptionalT and ResultT now define one map, bind and combination descriptor each
+using the existing `MapContract` and `BindContract` owners. Admission, result and
+native-error aliases project those descriptors. The existing carrier guards and
+branch/copy policies remain in place; family-only predicates preserve admission
+without introducing extra input constraints. The right-operand layer helper
+also projects its mapping metadata through `MapContract`.
+
+No execution wrapper or public API is added. A recorded comparison verifies
+37 identical function bodies and one equivalent compile-time error assertion.
+The focused deferred-admission, combination, combination-metadata, layer error
+mapping and branch-admission controls passed. Public API inventory is unchanged.
+
+Qualification passed 76 combination and 56 branch-admission source/package
+checks at O0/O3, the complete 755-program positive suite and two benchmark
+programs, and all 1,682 declared rejection fixtures with zero audit failures.
+The first rejection run exhausted regenerable compiler-cache storage; its logs
+were retained and the complete rerun passed after space recovery. Earlier
+passed reports were revalidated against unchanged inputs. Generated-source
+checks, all 48 tooling tests, the current API snapshot and strict docs passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.
