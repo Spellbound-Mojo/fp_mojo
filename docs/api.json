@@ -19986,7 +19986,7 @@
   },
   "data.Capture": {
    "aliases": [],
-   "description": "`Capture[E].mutable(state).take(value^).run(callback)` fixes the error type,\nargument types and ownership before callback inference. Use `borrow` for\nshared access, `mutable` for exclusive access, and `take` for consumption.\nUp to two positional operands can be followed by `kwargs`. `args` binds\nzero, one or two consumed operands. The bundle is movable and runs once.\nAn unused bundle destroys its owned arguments without calling anything.\n\nConstruct `Capture[E]()` before direct `run` or `stateful` admission.\nThis fixes E before a native callback is matched. A reusable context such\nas `var capture = Capture[E]()` also provides `capture.args(...)`,\n`capture.borrow(...)`, `capture.mutable(...)`, `capture.take(...)` and\n`capture.kwargs(...)`; it stores no arguments and is reusable after errors.\n\nPure functions produce `Result[R, Never]`; raising functions retain E.\nNo-value callbacks return `Result[None, E]`. Native callbacks are borrowed\nfor the call; OnceThunk owners are consumed and retain their own error.\nEmpty keyword packs require K or a typed dictionary. `stateful` owns an\nexplicit state value for repeated calls through a plain native function.\nExisting `attempt` entry points remain available for compatibility.",
+   "description": "`Capture[E].mutable(state).take(value^).run(callback)` fixes the error type,\nargument types and ownership before callback inference. Use `borrow` for\nshared access, `mutable` for exclusive access, and `take` for consumption.\nUp to two positional operands can be followed by `kwargs`. `args` binds\nzero to eight consumed operands, or extend an owned bundle with `take`. The bundle is movable and runs once.\nAn unused bundle destroys its owned arguments without calling anything.\n\nConstruct `Capture[E]()` before direct `run` or `stateful` admission.\nThis fixes E before a native callback is matched. A reusable context such\nas `var capture = Capture[E]()` also provides `capture.args(...)`,\n`capture.borrow(...)`, `capture.mutable(...)`, `capture.take(...)` and\n`capture.kwargs(...)`; it stores no arguments and is reusable after errors.\n\nPure functions produce `Result[R, Never]`; raising functions retain E.\nNo-value callbacks return `Result[None, E]`. Native callbacks are borrowed\nfor the call; OnceThunk owners are consumed and retain their own error.\nEmpty keyword packs require K or a typed dictionary. `stateful` owns an\nexplicit state value for repeated calls through a plain native function.\nExisting `attempt` entry points remain available for compatibility.",
    "fields": [],
    "kind": "struct",
    "methods": {
@@ -19999,7 +19999,7 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A consumed-once argument bundle; append arguments or keywords before run.",
+       "doc": "A consumed-once argument bundle; owned positional calls support up to eight operands. Keyword packs support at most two positional operands.",
        "type": "_ArgsZ[Self.E]"
       },
       "signature": "def args() -> _ArgsZ[Self.E]",
@@ -20029,7 +20029,7 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A consumed-once argument bundle; append arguments or keywords before run.",
+       "doc": "A consumed-once argument bundle; owned positional calls support up to eight operands. Keyword packs support at most two positional operands.",
        "type": "_ArgsO[A, Self.E]"
       },
       "signature": "def args[A: Movable & Deinitable, //](var first: A) -> _ArgsO[A, Self.E]",
@@ -20073,10 +20073,568 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A consumed-once argument bundle; append arguments or keywords before run.",
+       "doc": "A consumed-once argument bundle; owned positional calls support up to eight operands. Keyword packs support at most two positional operands.",
        "type": "_ArgsOO[A, B, Self.E]"
       },
       "signature": "def args[A: Movable & Deinitable, B: Movable & Deinitable, //](var first: A, var second: B) -> _ArgsOO[A, B, Self.E]",
+      "summary": "Bind consumed positional arguments for a single call."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The first value, consumed.",
+        "name": "first",
+        "type": "A",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The second value, consumed.",
+        "name": "second",
+        "type": "B",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The third value, consumed.",
+        "name": "third",
+        "type": "A2",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The first argument type, including its origins.",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The second argument type, including its origins.",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The third argument type, including its origins.",
+        "inferred": true,
+        "name": "A2",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A consumed-once argument bundle; owned positional calls support up to eight operands. Keyword packs support at most two positional operands.",
+       "type": "_ArgsOOO[A, B, A2, Self.E]"
+      },
+      "signature": "def args[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, //](var first: A, var second: B, var third: A2) -> _ArgsOOO[A, B, A2, Self.E]",
+      "summary": "Bind consumed positional arguments for a single call."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The first value, consumed.",
+        "name": "first",
+        "type": "A",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The second value, consumed.",
+        "name": "second",
+        "type": "B",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The third value, consumed.",
+        "name": "third",
+        "type": "A2",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The fourth value, consumed.",
+        "name": "fourth",
+        "type": "A3",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The first argument type, including its origins.",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The second argument type, including its origins.",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The third argument type, including its origins.",
+        "inferred": true,
+        "name": "A2",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The fourth argument type, including its origins.",
+        "inferred": true,
+        "name": "A3",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A consumed-once argument bundle; owned positional calls support up to eight operands. Keyword packs support at most two positional operands.",
+       "type": "_ArgsOOOO[A, B, A2, A3, Self.E]"
+      },
+      "signature": "def args[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, //](var first: A, var second: B, var third: A2, var fourth: A3) -> _ArgsOOOO[A, B, A2, A3, Self.E]",
+      "summary": "Bind consumed positional arguments for a single call."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The first value, consumed.",
+        "name": "first",
+        "type": "A",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The second value, consumed.",
+        "name": "second",
+        "type": "B",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The third value, consumed.",
+        "name": "third",
+        "type": "A2",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The fourth value, consumed.",
+        "name": "fourth",
+        "type": "A3",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The fifth value, consumed.",
+        "name": "fifth",
+        "type": "A4",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The first argument type, including its origins.",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The second argument type, including its origins.",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The third argument type, including its origins.",
+        "inferred": true,
+        "name": "A2",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The fourth argument type, including its origins.",
+        "inferred": true,
+        "name": "A3",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The fifth argument type, including its origins.",
+        "inferred": true,
+        "name": "A4",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A consumed-once argument bundle; owned positional calls support up to eight operands. Keyword packs support at most two positional operands.",
+       "type": "_ArgsOOOOO[A, B, A2, A3, A4, Self.E]"
+      },
+      "signature": "def args[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, //](var first: A, var second: B, var third: A2, var fourth: A3, var fifth: A4) -> _ArgsOOOOO[A, B, A2, A3, A4, Self.E]",
+      "summary": "Bind consumed positional arguments for a single call."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The first value, consumed.",
+        "name": "first",
+        "type": "A",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The second value, consumed.",
+        "name": "second",
+        "type": "B",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The third value, consumed.",
+        "name": "third",
+        "type": "A2",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The fourth value, consumed.",
+        "name": "fourth",
+        "type": "A3",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The fifth value, consumed.",
+        "name": "fifth",
+        "type": "A4",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The sixth value, consumed.",
+        "name": "sixth",
+        "type": "A5",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The first argument type, including its origins.",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The second argument type, including its origins.",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The third argument type, including its origins.",
+        "inferred": true,
+        "name": "A2",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The fourth argument type, including its origins.",
+        "inferred": true,
+        "name": "A3",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The fifth argument type, including its origins.",
+        "inferred": true,
+        "name": "A4",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The sixth argument type, including its origins.",
+        "inferred": true,
+        "name": "A5",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A consumed-once argument bundle; owned positional calls support up to eight operands. Keyword packs support at most two positional operands.",
+       "type": "_ArgsOOOOOO[A, B, A2, A3, A4, A5, Self.E]"
+      },
+      "signature": "def args[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, //](var first: A, var second: B, var third: A2, var fourth: A3, var fifth: A4, var sixth: A5) -> _ArgsOOOOOO[A, B, A2, A3, A4, A5, Self.E]",
+      "summary": "Bind consumed positional arguments for a single call."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The first value, consumed.",
+        "name": "first",
+        "type": "A",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The second value, consumed.",
+        "name": "second",
+        "type": "B",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The third value, consumed.",
+        "name": "third",
+        "type": "A2",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The fourth value, consumed.",
+        "name": "fourth",
+        "type": "A3",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The fifth value, consumed.",
+        "name": "fifth",
+        "type": "A4",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The sixth value, consumed.",
+        "name": "sixth",
+        "type": "A5",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The seventh value, consumed.",
+        "name": "seventh",
+        "type": "A6",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The first argument type, including its origins.",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The second argument type, including its origins.",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The third argument type, including its origins.",
+        "inferred": true,
+        "name": "A2",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The fourth argument type, including its origins.",
+        "inferred": true,
+        "name": "A3",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The fifth argument type, including its origins.",
+        "inferred": true,
+        "name": "A4",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The sixth argument type, including its origins.",
+        "inferred": true,
+        "name": "A5",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The seventh argument type, including its origins.",
+        "inferred": true,
+        "name": "A6",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A consumed-once argument bundle; owned positional calls support up to eight operands. Keyword packs support at most two positional operands.",
+       "type": "_ArgsOOOOOOO[A, B, A2, A3, A4, A5, A6, Self.E]"
+      },
+      "signature": "def args[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, //](var first: A, var second: B, var third: A2, var fourth: A3, var fifth: A4, var sixth: A5, var seventh: A6) -> _ArgsOOOOOOO[A, B, A2, A3, A4, A5, A6, Self.E]",
+      "summary": "Bind consumed positional arguments for a single call."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The first value, consumed.",
+        "name": "first",
+        "type": "A",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The second value, consumed.",
+        "name": "second",
+        "type": "B",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The third value, consumed.",
+        "name": "third",
+        "type": "A2",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The fourth value, consumed.",
+        "name": "fourth",
+        "type": "A3",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The fifth value, consumed.",
+        "name": "fifth",
+        "type": "A4",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The sixth value, consumed.",
+        "name": "sixth",
+        "type": "A5",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The seventh value, consumed.",
+        "name": "seventh",
+        "type": "A6",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The eighth value, consumed.",
+        "name": "eighth",
+        "type": "A7",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The first argument type, including its origins.",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The second argument type, including its origins.",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The third argument type, including its origins.",
+        "inferred": true,
+        "name": "A2",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The fourth argument type, including its origins.",
+        "inferred": true,
+        "name": "A3",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The fifth argument type, including its origins.",
+        "inferred": true,
+        "name": "A4",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The sixth argument type, including its origins.",
+        "inferred": true,
+        "name": "A5",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The seventh argument type, including its origins.",
+        "inferred": true,
+        "name": "A6",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The eighth argument type, including its origins.",
+        "inferred": true,
+        "name": "A7",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A consumed-once argument bundle; owned positional calls support up to eight operands. Keyword packs support at most two positional operands.",
+       "type": "_ArgsOOOOOOOO[A, B, A2, A3, A4, A5, A6, A7, Self.E]"
+      },
+      "signature": "def args[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, //](var first: A, var second: B, var third: A2, var fourth: A3, var fifth: A4, var sixth: A5, var seventh: A6, var eighth: A7) -> _ArgsOOOOOOOO[A, B, A2, A3, A4, A5, A6, A7, Self.E]",
       "summary": "Bind consumed positional arguments for a single call."
      }
     ],

@@ -74,12 +74,6 @@ struct _OwnedNativeNary2[A0: Movable & Deinitable, A1: Movable & Deinitable, R: 
 comptime _Nary3[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable] = def(var A0, var A1, var A2) -> R
 comptime _RaisingNary3[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable] = def(var A0, var A1, var A2) raises X -> R
 
-def _native_nary3[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, F: _Nary3[A0, A1, A2, R]](function: F, var a0: A0, var a1: A1, var a2: A2) -> R:
-    return function(a0^, a1^, a2^)
-
-def _native_nary3_raising[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: _RaisingNary3[A0, A1, A2, R, X]](function: F, var a0: A0, var a1: A1, var a2: A2) raises X -> R:
-    return function(a0^, a1^, a2^)
-
 @fieldwise_init
 struct _NativeNary3[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin](Unary, ImplicitlyCopyable):
     comptime Arg = Tuple[Self.A0, Self.A1, Self.A2]
@@ -127,14 +121,29 @@ struct _NativeNary3[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Mova
         comptime if not Self.raising and Self.F == def(var _NativeOwnedArg[Self.A0], var _NativeOwnedArg[Self.A1], var _NativeOwnedArg[Self.A2]) thin -> Self.R:
             comptime assert Self.X == Never
             return rebind[def(var _NativeOwnedArg[Self.A0], var _NativeOwnedArg[Self.A1], var _NativeOwnedArg[Self.A2]) thin -> Self.R](self.function[])(rebind_var[_NativeOwnedArg[Self.A0]](a0^), rebind_var[_NativeOwnedArg[Self.A1]](a1^), rebind_var[_NativeOwnedArg[Self.A2]](a2^))
-        comptime if Self.raising:
-            comptime Fn = downcast[Self.F, _RaisingNary3[Self.A0, Self.A1, Self.A2, Self.R, Self.X]]
-            comptime assert conforms_to(Fn, _RaisingNary3[Self.A0, Self.A1, Self.A2, Self.R, Self.X])
-            return _native_nary3_raising[Self.A0, Self.A1, Self.A2, Self.R, Self.X, Fn](rebind[Fn](self.function[]), a0^, a1^, a2^)
-        else:
-            comptime Fn = downcast[Self.F, _Nary3[Self.A0, Self.A1, Self.A2, Self.R]]
-            comptime assert conforms_to(Fn, _Nary3[Self.A0, Self.A1, Self.A2, Self.R]) and Self.X == Never
-            return _native_nary3[Self.A0, Self.A1, Self.A2, Self.R, Fn](rebind[Fn](self.function[]), a0^, a1^, a2^)
+        comptime if Self.R == type_of(None) and Self.raising and Self.X == Never:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2) raises Never]
+            _ = rebind[Fn](self.function[])(a0^, a1^, a2^)
+            return rebind_var[Self.R](None)
+        elif Self.R == type_of(None) and Self.raising:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2) raises Self.X]
+            _ = rebind[Fn](self.function[])(a0^, a1^, a2^)
+            return rebind_var[Self.R](None)
+        elif Self.R == type_of(None) and not Self.raising:
+            comptime assert Self.X == Never
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2)]
+            _ = rebind[Fn](self.function[])(a0^, a1^, a2^)
+            return rebind_var[Self.R](None)
+        elif Self.raising and Self.X == Never:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2) raises Never -> Self.R]
+            return rebind[Fn](self.function[])(a0^, a1^, a2^)
+        elif Self.raising:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2) raises Self.X -> Self.R]
+            return rebind[Fn](self.function[])(a0^, a1^, a2^)
+        elif True:
+            comptime assert Self.X == Never
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2) -> Self.R]
+            return rebind[Fn](self.function[])(a0^, a1^, a2^)
 
 struct _OwnedNativeNary3[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](Unary, Copyable where conforms_to(F, Copyable)):
     # Deferred families retain the pointer value, never a borrow of its local
@@ -151,12 +160,6 @@ struct _OwnedNativeNary3[A0: Movable & Deinitable, A1: Movable & Deinitable, A2:
 
 comptime _Nary4[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable] = def(var A0, var A1, var A2, var A3) -> R
 comptime _RaisingNary4[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable] = def(var A0, var A1, var A2, var A3) raises X -> R
-
-def _native_nary4[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, F: _Nary4[A0, A1, A2, A3, R]](function: F, var a0: A0, var a1: A1, var a2: A2, var a3: A3) -> R:
-    return function(a0^, a1^, a2^, a3^)
-
-def _native_nary4_raising[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: _RaisingNary4[A0, A1, A2, A3, R, X]](function: F, var a0: A0, var a1: A1, var a2: A2, var a3: A3) raises X -> R:
-    return function(a0^, a1^, a2^, a3^)
 
 @fieldwise_init
 struct _NativeNary4[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin](Unary, ImplicitlyCopyable):
@@ -209,14 +212,29 @@ struct _NativeNary4[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Mova
         comptime if not Self.raising and Self.F == def(var _NativeOwnedArg[Self.A0], var _NativeOwnedArg[Self.A1], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3]) thin -> Self.R:
             comptime assert Self.X == Never
             return rebind[def(var _NativeOwnedArg[Self.A0], var _NativeOwnedArg[Self.A1], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3]) thin -> Self.R](self.function[])(rebind_var[_NativeOwnedArg[Self.A0]](a0^), rebind_var[_NativeOwnedArg[Self.A1]](a1^), rebind_var[_NativeOwnedArg[Self.A2]](a2^), rebind_var[_NativeOwnedArg[Self.A3]](a3^))
-        comptime if Self.raising:
-            comptime Fn = downcast[Self.F, _RaisingNary4[Self.A0, Self.A1, Self.A2, Self.A3, Self.R, Self.X]]
-            comptime assert conforms_to(Fn, _RaisingNary4[Self.A0, Self.A1, Self.A2, Self.A3, Self.R, Self.X])
-            return _native_nary4_raising[Self.A0, Self.A1, Self.A2, Self.A3, Self.R, Self.X, Fn](rebind[Fn](self.function[]), a0^, a1^, a2^, a3^)
-        else:
-            comptime Fn = downcast[Self.F, _Nary4[Self.A0, Self.A1, Self.A2, Self.A3, Self.R]]
-            comptime assert conforms_to(Fn, _Nary4[Self.A0, Self.A1, Self.A2, Self.A3, Self.R]) and Self.X == Never
-            return _native_nary4[Self.A0, Self.A1, Self.A2, Self.A3, Self.R, Fn](rebind[Fn](self.function[]), a0^, a1^, a2^, a3^)
+        comptime if Self.R == type_of(None) and Self.raising and Self.X == Never:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3) raises Never]
+            _ = rebind[Fn](self.function[])(a0^, a1^, a2^, a3^)
+            return rebind_var[Self.R](None)
+        elif Self.R == type_of(None) and Self.raising:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3) raises Self.X]
+            _ = rebind[Fn](self.function[])(a0^, a1^, a2^, a3^)
+            return rebind_var[Self.R](None)
+        elif Self.R == type_of(None) and not Self.raising:
+            comptime assert Self.X == Never
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3)]
+            _ = rebind[Fn](self.function[])(a0^, a1^, a2^, a3^)
+            return rebind_var[Self.R](None)
+        elif Self.raising and Self.X == Never:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3) raises Never -> Self.R]
+            return rebind[Fn](self.function[])(a0^, a1^, a2^, a3^)
+        elif Self.raising:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3) raises Self.X -> Self.R]
+            return rebind[Fn](self.function[])(a0^, a1^, a2^, a3^)
+        elif True:
+            comptime assert Self.X == Never
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3) -> Self.R]
+            return rebind[Fn](self.function[])(a0^, a1^, a2^, a3^)
 
 struct _OwnedNativeNary4[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](Unary, Copyable where conforms_to(F, Copyable)):
     # Deferred families retain the pointer value, never a borrow of its local
@@ -233,12 +251,6 @@ struct _OwnedNativeNary4[A0: Movable & Deinitable, A1: Movable & Deinitable, A2:
 
 comptime _Nary5[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable] = def(var A0, var A1, var A2, var A3, var A4) -> R
 comptime _RaisingNary5[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable] = def(var A0, var A1, var A2, var A3, var A4) raises X -> R
-
-def _native_nary5[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, F: _Nary5[A0, A1, A2, A3, A4, R]](function: F, var a0: A0, var a1: A1, var a2: A2, var a3: A3, var a4: A4) -> R:
-    return function(a0^, a1^, a2^, a3^, a4^)
-
-def _native_nary5_raising[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: _RaisingNary5[A0, A1, A2, A3, A4, R, X]](function: F, var a0: A0, var a1: A1, var a2: A2, var a3: A3, var a4: A4) raises X -> R:
-    return function(a0^, a1^, a2^, a3^, a4^)
 
 @fieldwise_init
 struct _NativeNary5[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin](Unary, ImplicitlyCopyable):
@@ -295,14 +307,29 @@ struct _NativeNary5[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Mova
         comptime if not Self.raising and Self.F == def(var _NativeOwnedArg[Self.A0], var _NativeOwnedArg[Self.A1], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4]) thin -> Self.R:
             comptime assert Self.X == Never
             return rebind[def(var _NativeOwnedArg[Self.A0], var _NativeOwnedArg[Self.A1], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4]) thin -> Self.R](self.function[])(rebind_var[_NativeOwnedArg[Self.A0]](a0^), rebind_var[_NativeOwnedArg[Self.A1]](a1^), rebind_var[_NativeOwnedArg[Self.A2]](a2^), rebind_var[_NativeOwnedArg[Self.A3]](a3^), rebind_var[_NativeOwnedArg[Self.A4]](a4^))
-        comptime if Self.raising:
-            comptime Fn = downcast[Self.F, _RaisingNary5[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.R, Self.X]]
-            comptime assert conforms_to(Fn, _RaisingNary5[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.R, Self.X])
-            return _native_nary5_raising[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.R, Self.X, Fn](rebind[Fn](self.function[]), a0^, a1^, a2^, a3^, a4^)
-        else:
-            comptime Fn = downcast[Self.F, _Nary5[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.R]]
-            comptime assert conforms_to(Fn, _Nary5[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.R]) and Self.X == Never
-            return _native_nary5[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.R, Fn](rebind[Fn](self.function[]), a0^, a1^, a2^, a3^, a4^)
+        comptime if Self.R == type_of(None) and Self.raising and Self.X == Never:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4) raises Never]
+            _ = rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^)
+            return rebind_var[Self.R](None)
+        elif Self.R == type_of(None) and Self.raising:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4) raises Self.X]
+            _ = rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^)
+            return rebind_var[Self.R](None)
+        elif Self.R == type_of(None) and not Self.raising:
+            comptime assert Self.X == Never
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4)]
+            _ = rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^)
+            return rebind_var[Self.R](None)
+        elif Self.raising and Self.X == Never:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4) raises Never -> Self.R]
+            return rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^)
+        elif Self.raising:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4) raises Self.X -> Self.R]
+            return rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^)
+        elif True:
+            comptime assert Self.X == Never
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4) -> Self.R]
+            return rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^)
 
 struct _OwnedNativeNary5[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](Unary, Copyable where conforms_to(F, Copyable)):
     # Deferred families retain the pointer value, never a borrow of its local
@@ -319,12 +346,6 @@ struct _OwnedNativeNary5[A0: Movable & Deinitable, A1: Movable & Deinitable, A2:
 
 comptime _Nary6[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable] = def(var A0, var A1, var A2, var A3, var A4, var A5) -> R
 comptime _RaisingNary6[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable] = def(var A0, var A1, var A2, var A3, var A4, var A5) raises X -> R
-
-def _native_nary6[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, F: _Nary6[A0, A1, A2, A3, A4, A5, R]](function: F, var a0: A0, var a1: A1, var a2: A2, var a3: A3, var a4: A4, var a5: A5) -> R:
-    return function(a0^, a1^, a2^, a3^, a4^, a5^)
-
-def _native_nary6_raising[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: _RaisingNary6[A0, A1, A2, A3, A4, A5, R, X]](function: F, var a0: A0, var a1: A1, var a2: A2, var a3: A3, var a4: A4, var a5: A5) raises X -> R:
-    return function(a0^, a1^, a2^, a3^, a4^, a5^)
 
 @fieldwise_init
 struct _NativeNary6[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin](Unary, ImplicitlyCopyable):
@@ -385,14 +406,29 @@ struct _NativeNary6[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Mova
         comptime if not Self.raising and Self.F == def(var _NativeOwnedArg[Self.A0], var _NativeOwnedArg[Self.A1], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5]) thin -> Self.R:
             comptime assert Self.X == Never
             return rebind[def(var _NativeOwnedArg[Self.A0], var _NativeOwnedArg[Self.A1], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5]) thin -> Self.R](self.function[])(rebind_var[_NativeOwnedArg[Self.A0]](a0^), rebind_var[_NativeOwnedArg[Self.A1]](a1^), rebind_var[_NativeOwnedArg[Self.A2]](a2^), rebind_var[_NativeOwnedArg[Self.A3]](a3^), rebind_var[_NativeOwnedArg[Self.A4]](a4^), rebind_var[_NativeOwnedArg[Self.A5]](a5^))
-        comptime if Self.raising:
-            comptime Fn = downcast[Self.F, _RaisingNary6[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.A5, Self.R, Self.X]]
-            comptime assert conforms_to(Fn, _RaisingNary6[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.A5, Self.R, Self.X])
-            return _native_nary6_raising[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.A5, Self.R, Self.X, Fn](rebind[Fn](self.function[]), a0^, a1^, a2^, a3^, a4^, a5^)
-        else:
-            comptime Fn = downcast[Self.F, _Nary6[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.A5, Self.R]]
-            comptime assert conforms_to(Fn, _Nary6[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.A5, Self.R]) and Self.X == Never
-            return _native_nary6[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.A5, Self.R, Fn](rebind[Fn](self.function[]), a0^, a1^, a2^, a3^, a4^, a5^)
+        comptime if Self.R == type_of(None) and Self.raising and Self.X == Never:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4, var Self.A5) raises Never]
+            _ = rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^, a5^)
+            return rebind_var[Self.R](None)
+        elif Self.R == type_of(None) and Self.raising:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4, var Self.A5) raises Self.X]
+            _ = rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^, a5^)
+            return rebind_var[Self.R](None)
+        elif Self.R == type_of(None) and not Self.raising:
+            comptime assert Self.X == Never
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4, var Self.A5)]
+            _ = rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^, a5^)
+            return rebind_var[Self.R](None)
+        elif Self.raising and Self.X == Never:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4, var Self.A5) raises Never -> Self.R]
+            return rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^, a5^)
+        elif Self.raising:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4, var Self.A5) raises Self.X -> Self.R]
+            return rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^, a5^)
+        elif True:
+            comptime assert Self.X == Never
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4, var Self.A5) -> Self.R]
+            return rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^, a5^)
 
 struct _OwnedNativeNary6[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](Unary, Copyable where conforms_to(F, Copyable)):
     # Deferred families retain the pointer value, never a borrow of its local
@@ -409,12 +445,6 @@ struct _OwnedNativeNary6[A0: Movable & Deinitable, A1: Movable & Deinitable, A2:
 
 comptime _Nary7[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable] = def(var A0, var A1, var A2, var A3, var A4, var A5, var A6) -> R
 comptime _RaisingNary7[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable] = def(var A0, var A1, var A2, var A3, var A4, var A5, var A6) raises X -> R
-
-def _native_nary7[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, F: _Nary7[A0, A1, A2, A3, A4, A5, A6, R]](function: F, var a0: A0, var a1: A1, var a2: A2, var a3: A3, var a4: A4, var a5: A5, var a6: A6) -> R:
-    return function(a0^, a1^, a2^, a3^, a4^, a5^, a6^)
-
-def _native_nary7_raising[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: _RaisingNary7[A0, A1, A2, A3, A4, A5, A6, R, X]](function: F, var a0: A0, var a1: A1, var a2: A2, var a3: A3, var a4: A4, var a5: A5, var a6: A6) raises X -> R:
-    return function(a0^, a1^, a2^, a3^, a4^, a5^, a6^)
 
 @fieldwise_init
 struct _NativeNary7[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin](Unary, ImplicitlyCopyable):
@@ -479,14 +509,29 @@ struct _NativeNary7[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Mova
         comptime if not Self.raising and Self.F == def(var _NativeOwnedArg[Self.A0], var _NativeOwnedArg[Self.A1], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6]) thin -> Self.R:
             comptime assert Self.X == Never
             return rebind[def(var _NativeOwnedArg[Self.A0], var _NativeOwnedArg[Self.A1], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6]) thin -> Self.R](self.function[])(rebind_var[_NativeOwnedArg[Self.A0]](a0^), rebind_var[_NativeOwnedArg[Self.A1]](a1^), rebind_var[_NativeOwnedArg[Self.A2]](a2^), rebind_var[_NativeOwnedArg[Self.A3]](a3^), rebind_var[_NativeOwnedArg[Self.A4]](a4^), rebind_var[_NativeOwnedArg[Self.A5]](a5^), rebind_var[_NativeOwnedArg[Self.A6]](a6^))
-        comptime if Self.raising:
-            comptime Fn = downcast[Self.F, _RaisingNary7[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, Self.R, Self.X]]
-            comptime assert conforms_to(Fn, _RaisingNary7[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, Self.R, Self.X])
-            return _native_nary7_raising[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, Self.R, Self.X, Fn](rebind[Fn](self.function[]), a0^, a1^, a2^, a3^, a4^, a5^, a6^)
-        else:
-            comptime Fn = downcast[Self.F, _Nary7[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, Self.R]]
-            comptime assert conforms_to(Fn, _Nary7[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, Self.R]) and Self.X == Never
-            return _native_nary7[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, Self.R, Fn](rebind[Fn](self.function[]), a0^, a1^, a2^, a3^, a4^, a5^, a6^)
+        comptime if Self.R == type_of(None) and Self.raising and Self.X == Never:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6) raises Never]
+            _ = rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^, a5^, a6^)
+            return rebind_var[Self.R](None)
+        elif Self.R == type_of(None) and Self.raising:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6) raises Self.X]
+            _ = rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^, a5^, a6^)
+            return rebind_var[Self.R](None)
+        elif Self.R == type_of(None) and not Self.raising:
+            comptime assert Self.X == Never
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6)]
+            _ = rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^, a5^, a6^)
+            return rebind_var[Self.R](None)
+        elif Self.raising and Self.X == Never:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6) raises Never -> Self.R]
+            return rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^, a5^, a6^)
+        elif Self.raising:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6) raises Self.X -> Self.R]
+            return rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^, a5^, a6^)
+        elif True:
+            comptime assert Self.X == Never
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6) -> Self.R]
+            return rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^, a5^, a6^)
 
 struct _OwnedNativeNary7[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](Unary, Copyable where conforms_to(F, Copyable)):
     # Deferred families retain the pointer value, never a borrow of its local
@@ -503,12 +548,6 @@ struct _OwnedNativeNary7[A0: Movable & Deinitable, A1: Movable & Deinitable, A2:
 
 comptime _Nary8[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable] = def(var A0, var A1, var A2, var A3, var A4, var A5, var A6, var A7) -> R
 comptime _RaisingNary8[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable] = def(var A0, var A1, var A2, var A3, var A4, var A5, var A6, var A7) raises X -> R
-
-def _native_nary8[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, F: _Nary8[A0, A1, A2, A3, A4, A5, A6, A7, R]](function: F, var a0: A0, var a1: A1, var a2: A2, var a3: A3, var a4: A4, var a5: A5, var a6: A6, var a7: A7) -> R:
-    return function(a0^, a1^, a2^, a3^, a4^, a5^, a6^, a7^)
-
-def _native_nary8_raising[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: _RaisingNary8[A0, A1, A2, A3, A4, A5, A6, A7, R, X]](function: F, var a0: A0, var a1: A1, var a2: A2, var a3: A3, var a4: A4, var a5: A5, var a6: A6, var a7: A7) raises X -> R:
-    return function(a0^, a1^, a2^, a3^, a4^, a5^, a6^, a7^)
 
 @fieldwise_init
 struct _NativeNary8[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin](Unary, ImplicitlyCopyable):
@@ -577,14 +616,29 @@ struct _NativeNary8[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Mova
         comptime if not Self.raising and Self.F == def(var _NativeOwnedArg[Self.A0], var _NativeOwnedArg[Self.A1], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6], var _NativeOwnedArg[Self.A7]) thin -> Self.R:
             comptime assert Self.X == Never
             return rebind[def(var _NativeOwnedArg[Self.A0], var _NativeOwnedArg[Self.A1], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6], var _NativeOwnedArg[Self.A7]) thin -> Self.R](self.function[])(rebind_var[_NativeOwnedArg[Self.A0]](a0^), rebind_var[_NativeOwnedArg[Self.A1]](a1^), rebind_var[_NativeOwnedArg[Self.A2]](a2^), rebind_var[_NativeOwnedArg[Self.A3]](a3^), rebind_var[_NativeOwnedArg[Self.A4]](a4^), rebind_var[_NativeOwnedArg[Self.A5]](a5^), rebind_var[_NativeOwnedArg[Self.A6]](a6^), rebind_var[_NativeOwnedArg[Self.A7]](a7^))
-        comptime if Self.raising:
-            comptime Fn = downcast[Self.F, _RaisingNary8[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, Self.A7, Self.R, Self.X]]
-            comptime assert conforms_to(Fn, _RaisingNary8[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, Self.A7, Self.R, Self.X])
-            return _native_nary8_raising[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, Self.A7, Self.R, Self.X, Fn](rebind[Fn](self.function[]), a0^, a1^, a2^, a3^, a4^, a5^, a6^, a7^)
-        else:
-            comptime Fn = downcast[Self.F, _Nary8[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, Self.A7, Self.R]]
-            comptime assert conforms_to(Fn, _Nary8[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, Self.A7, Self.R]) and Self.X == Never
-            return _native_nary8[Self.A0, Self.A1, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, Self.A7, Self.R, Fn](rebind[Fn](self.function[]), a0^, a1^, a2^, a3^, a4^, a5^, a6^, a7^)
+        comptime if Self.R == type_of(None) and Self.raising and Self.X == Never:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6, var Self.A7) raises Never]
+            _ = rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^, a5^, a6^, a7^)
+            return rebind_var[Self.R](None)
+        elif Self.R == type_of(None) and Self.raising:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6, var Self.A7) raises Self.X]
+            _ = rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^, a5^, a6^, a7^)
+            return rebind_var[Self.R](None)
+        elif Self.R == type_of(None) and not Self.raising:
+            comptime assert Self.X == Never
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6, var Self.A7)]
+            _ = rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^, a5^, a6^, a7^)
+            return rebind_var[Self.R](None)
+        elif Self.raising and Self.X == Never:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6, var Self.A7) raises Never -> Self.R]
+            return rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^, a5^, a6^, a7^)
+        elif Self.raising:
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6, var Self.A7) raises Self.X -> Self.R]
+            return rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^, a5^, a6^, a7^)
+        elif True:
+            comptime assert Self.X == Never
+            comptime Fn = downcast[Self.F, def(var Self.A0, var Self.A1, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6, var Self.A7) -> Self.R]
+            return rebind[Fn](self.function[])(a0^, a1^, a2^, a3^, a4^, a5^, a6^, a7^)
 
 struct _OwnedNativeNary8[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](Unary, Copyable where conforms_to(F, Copyable)):
     # Deferred families retain the pointer value, never a borrow of its local

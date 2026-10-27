@@ -18,7 +18,7 @@ from fp._internal.errors import _ErrorCompatible
 
 from fp.callables.products import _OptionalCell
 
-from fp.callables._arguments import _ArgumentsZ, _invoke_Z, _ArgumentsK, _invoke_K, _ArgumentsR, _invoke_R, _ArgumentsRK, _invoke_RK, _ArgumentsM, _invoke_M, _ArgumentsMK, _invoke_MK, _ArgumentsO, _invoke_O, _ArgumentsOK, _invoke_OK, _ArgumentsRR, _invoke_RR, _ArgumentsRRK, _invoke_RRK, _ArgumentsRM, _invoke_RM, _ArgumentsRMK, _invoke_RMK, _ArgumentsRO, _invoke_RO, _ArgumentsROK, _invoke_ROK, _ArgumentsMR, _invoke_MR, _ArgumentsMRK, _invoke_MRK, _ArgumentsMM, _invoke_MM, _ArgumentsMMK, _invoke_MMK, _ArgumentsMO, _invoke_MO, _ArgumentsMOK, _invoke_MOK, _ArgumentsOR, _invoke_OR, _ArgumentsORK, _invoke_ORK, _ArgumentsOM, _invoke_OM, _ArgumentsOMK, _invoke_OMK, _ArgumentsOO, _invoke_OO, _ArgumentsOOK, _invoke_OOK
+from fp.callables._arguments import _ArgumentsZ, _invoke_Z, _ArgumentsK, _invoke_K, _ArgumentsR, _invoke_R, _ArgumentsRK, _invoke_RK, _ArgumentsM, _invoke_M, _ArgumentsMK, _invoke_MK, _ArgumentsO, _invoke_O, _ArgumentsOK, _invoke_OK, _ArgumentsRR, _invoke_RR, _ArgumentsRRK, _invoke_RRK, _ArgumentsRM, _invoke_RM, _ArgumentsRMK, _invoke_RMK, _ArgumentsRO, _invoke_RO, _ArgumentsROK, _invoke_ROK, _ArgumentsMR, _invoke_MR, _ArgumentsMRK, _invoke_MRK, _ArgumentsMM, _invoke_MM, _ArgumentsMMK, _invoke_MMK, _ArgumentsMO, _invoke_MO, _ArgumentsMOK, _invoke_MOK, _ArgumentsOR, _invoke_OR, _ArgumentsORK, _invoke_ORK, _ArgumentsOM, _invoke_OM, _ArgumentsOMK, _invoke_OMK, _ArgumentsOO, _invoke_OO, _ArgumentsOOK, _invoke_OOK, _ArgumentsOOO, _invoke_OOO, _ArgumentsOOOO, _invoke_OOOO, _ArgumentsOOOOO, _invoke_OOOOO, _ArgumentsOOOOOO, _invoke_OOOOOO, _ArgumentsOOOOOOO, _invoke_OOOOOOO, _ArgumentsOOOOOOOO, _invoke_OOOOOOOO
 
 @fieldwise_init
 struct _ArgsZ[E: Movable & Deinitable](Movable):
@@ -2371,6 +2371,9 @@ struct _ArgsOO[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & De
     def kwargs[K: Movable & Deinitable, //](deinit self, /, var **values: K) -> _ArgsOOK[Self.A, Self.B, K, Self.E]:
         return _ArgsOOK[Self.A, Self.B, K, Self.E](self._arguments^.kwargs(**values^))
 
+    def take[A2: Movable & Deinitable, //](deinit self, var value: A2) -> _ArgsOOO[Self.A, Self.B, A2, Self.E]:
+        return _ArgsOOO[Self.A, Self.B, A2, Self.E](self._arguments^.take(value^))
+
 @fieldwise_init
 struct _ArgsOOK[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, E: Movable & Deinitable](Movable):
     var _arguments: _ArgumentsOOK[Self.A, Self.B, Self.K]
@@ -2440,6 +2443,429 @@ struct _ArgsOOK[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & D
         return self^._run[type_of(None), Never, type_of(function), True](function)
 
 @fieldwise_init
+struct _ArgsOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, E: Movable & Deinitable](Movable):
+    var _arguments: _ArgumentsOOO[Self.A, Self.B, Self.A2]
+    def __init__(out self, var a_value: Self.A, var b_value: Self.B, var a2_value: Self.A2):
+        self._arguments = _ArgumentsOOO[Self.A, Self.B, Self.A2](a_value^, b_value^, a2_value^)
+
+    def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
+        var arguments = self._arguments^
+        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOO[Self.A, Self.B, Self.A2, R, X, F, raising]](arguments^, Pointer(to=function)))
+
+    @always_inline
+    def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
+        return self^._run[R, Never, type_of(function), False](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2) raises Self.E -> R](deinit self, ref[q] function: F) -> Result[R, Self.E]:
+        return self^._run[R, Self.E, type_of(function), True](function)
+
+    @always_inline
+    def run[q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2)](deinit self, ref[q] function: F) -> Result[type_of(None), Never]:
+        return self^._run[type_of(None), Never, type_of(function), False](function)
+
+    @always_inline
+    def run[q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2) raises Self.E](deinit self, ref[q] function: F) -> Result[type_of(None), Self.E]:
+        return self^._run[type_of(None), Self.E, type_of(function), True](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2) raises Never -> R](deinit self, ref[q] function: F) -> Result[R, Never] where Self.E != Never:
+        return self^._run[R, Never, type_of(function), True](function)
+
+    @always_inline
+    def run[q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2) raises Never](deinit self, ref[q] function: F) -> Result[type_of(None), Never] where Self.E != Never:
+        return self^._run[type_of(None), Never, type_of(function), True](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) thin -> R) -> Result[R, Never] where not conforms_to(R, RegisterPassable):
+        return self^._run[R, Never, type_of(function), False](function)
+
+    @always_inline
+    def run[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) thin -> R) -> Result[R, Never]:
+        return self^._run[R, Never, type_of(function), False](function)
+
+    def run(deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) thin) -> Result[type_of(None), Never]:
+        return self^._run[type_of(None), Never, type_of(function), False](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+        return self^._run[R, X, type_of(function), True](function)
+
+    @always_inline
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+        return self^._run[R, X, type_of(function), True](function)
+
+    @always_inline
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+        return self^._run[type_of(None), X, type_of(function), True](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises Never thin -> R) -> Result[R, Never] where not conforms_to(R, RegisterPassable):
+        return self^._run[R, Never, type_of(function), True](function)
+
+    @always_inline
+    def run[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises Never thin -> R) -> Result[R, Never]:
+        return self^._run[R, Never, type_of(function), True](function)
+
+    def run(deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises Never thin) -> Result[type_of(None), Never]:
+        return self^._run[type_of(None), Never, type_of(function), True](function)
+
+    def take[A3: Movable & Deinitable, //](deinit self, var value: A3) -> _ArgsOOOO[Self.A, Self.B, Self.A2, A3, Self.E]:
+        return _ArgsOOOO[Self.A, Self.B, Self.A2, A3, Self.E](self._arguments^.take(value^))
+
+@fieldwise_init
+struct _ArgsOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, E: Movable & Deinitable](Movable):
+    var _arguments: _ArgumentsOOOO[Self.A, Self.B, Self.A2, Self.A3]
+    def __init__(out self, var a_value: Self.A, var b_value: Self.B, var a2_value: Self.A2, var a3_value: Self.A3):
+        self._arguments = _ArgumentsOOOO[Self.A, Self.B, Self.A2, Self.A3](a_value^, b_value^, a2_value^, a3_value^)
+
+    def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
+        var arguments = self._arguments^
+        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOOO[Self.A, Self.B, Self.A2, Self.A3, R, X, F, raising]](arguments^, Pointer(to=function)))
+
+    @always_inline
+    def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
+        return self^._run[R, Never, type_of(function), False](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3) raises Self.E -> R](deinit self, ref[q] function: F) -> Result[R, Self.E]:
+        return self^._run[R, Self.E, type_of(function), True](function)
+
+    @always_inline
+    def run[q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3)](deinit self, ref[q] function: F) -> Result[type_of(None), Never]:
+        return self^._run[type_of(None), Never, type_of(function), False](function)
+
+    @always_inline
+    def run[q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3) raises Self.E](deinit self, ref[q] function: F) -> Result[type_of(None), Self.E]:
+        return self^._run[type_of(None), Self.E, type_of(function), True](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3) raises Never -> R](deinit self, ref[q] function: F) -> Result[R, Never] where Self.E != Never:
+        return self^._run[R, Never, type_of(function), True](function)
+
+    @always_inline
+    def run[q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3) raises Never](deinit self, ref[q] function: F) -> Result[type_of(None), Never] where Self.E != Never:
+        return self^._run[type_of(None), Never, type_of(function), True](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3]) thin -> R) -> Result[R, Never] where not conforms_to(R, RegisterPassable):
+        return self^._run[R, Never, type_of(function), False](function)
+
+    @always_inline
+    def run[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3]) thin -> R) -> Result[R, Never]:
+        return self^._run[R, Never, type_of(function), False](function)
+
+    def run(deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3]) thin) -> Result[type_of(None), Never]:
+        return self^._run[type_of(None), Never, type_of(function), False](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+        return self^._run[R, X, type_of(function), True](function)
+
+    @always_inline
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3]) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+        return self^._run[R, X, type_of(function), True](function)
+
+    @always_inline
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3]) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+        return self^._run[type_of(None), X, type_of(function), True](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3]) raises Never thin -> R) -> Result[R, Never] where not conforms_to(R, RegisterPassable):
+        return self^._run[R, Never, type_of(function), True](function)
+
+    @always_inline
+    def run[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3]) raises Never thin -> R) -> Result[R, Never]:
+        return self^._run[R, Never, type_of(function), True](function)
+
+    def run(deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3]) raises Never thin) -> Result[type_of(None), Never]:
+        return self^._run[type_of(None), Never, type_of(function), True](function)
+
+    def take[A4: Movable & Deinitable, //](deinit self, var value: A4) -> _ArgsOOOOO[Self.A, Self.B, Self.A2, Self.A3, A4, Self.E]:
+        return _ArgsOOOOO[Self.A, Self.B, Self.A2, Self.A3, A4, Self.E](self._arguments^.take(value^))
+
+@fieldwise_init
+struct _ArgsOOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, E: Movable & Deinitable](Movable):
+    var _arguments: _ArgumentsOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4]
+    def __init__(out self, var a_value: Self.A, var b_value: Self.B, var a2_value: Self.A2, var a3_value: Self.A3, var a4_value: Self.A4):
+        self._arguments = _ArgumentsOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4](a_value^, b_value^, a2_value^, a3_value^, a4_value^)
+
+    def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
+        var arguments = self._arguments^
+        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, R, X, F, raising]](arguments^, Pointer(to=function)))
+
+    @always_inline
+    def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
+        return self^._run[R, Never, type_of(function), False](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4) raises Self.E -> R](deinit self, ref[q] function: F) -> Result[R, Self.E]:
+        return self^._run[R, Self.E, type_of(function), True](function)
+
+    @always_inline
+    def run[q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4)](deinit self, ref[q] function: F) -> Result[type_of(None), Never]:
+        return self^._run[type_of(None), Never, type_of(function), False](function)
+
+    @always_inline
+    def run[q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4) raises Self.E](deinit self, ref[q] function: F) -> Result[type_of(None), Self.E]:
+        return self^._run[type_of(None), Self.E, type_of(function), True](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4) raises Never -> R](deinit self, ref[q] function: F) -> Result[R, Never] where Self.E != Never:
+        return self^._run[R, Never, type_of(function), True](function)
+
+    @always_inline
+    def run[q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4) raises Never](deinit self, ref[q] function: F) -> Result[type_of(None), Never] where Self.E != Never:
+        return self^._run[type_of(None), Never, type_of(function), True](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4]) thin -> R) -> Result[R, Never] where not conforms_to(R, RegisterPassable):
+        return self^._run[R, Never, type_of(function), False](function)
+
+    @always_inline
+    def run[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4]) thin -> R) -> Result[R, Never]:
+        return self^._run[R, Never, type_of(function), False](function)
+
+    def run(deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4]) thin) -> Result[type_of(None), Never]:
+        return self^._run[type_of(None), Never, type_of(function), False](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+        return self^._run[R, X, type_of(function), True](function)
+
+    @always_inline
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4]) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+        return self^._run[R, X, type_of(function), True](function)
+
+    @always_inline
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4]) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+        return self^._run[type_of(None), X, type_of(function), True](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4]) raises Never thin -> R) -> Result[R, Never] where not conforms_to(R, RegisterPassable):
+        return self^._run[R, Never, type_of(function), True](function)
+
+    @always_inline
+    def run[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4]) raises Never thin -> R) -> Result[R, Never]:
+        return self^._run[R, Never, type_of(function), True](function)
+
+    def run(deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4]) raises Never thin) -> Result[type_of(None), Never]:
+        return self^._run[type_of(None), Never, type_of(function), True](function)
+
+    def take[A5: Movable & Deinitable, //](deinit self, var value: A5) -> _ArgsOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, A5, Self.E]:
+        return _ArgsOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, A5, Self.E](self._arguments^.take(value^))
+
+@fieldwise_init
+struct _ArgsOOOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, E: Movable & Deinitable](Movable):
+    var _arguments: _ArgumentsOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5]
+    def __init__(out self, var a_value: Self.A, var b_value: Self.B, var a2_value: Self.A2, var a3_value: Self.A3, var a4_value: Self.A4, var a5_value: Self.A5):
+        self._arguments = _ArgumentsOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5](a_value^, b_value^, a2_value^, a3_value^, a4_value^, a5_value^)
+
+    def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
+        var arguments = self._arguments^
+        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, R, X, F, raising]](arguments^, Pointer(to=function)))
+
+    @always_inline
+    def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4, var Self.A5) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
+        return self^._run[R, Never, type_of(function), False](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4, var Self.A5) raises Self.E -> R](deinit self, ref[q] function: F) -> Result[R, Self.E]:
+        return self^._run[R, Self.E, type_of(function), True](function)
+
+    @always_inline
+    def run[q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4, var Self.A5)](deinit self, ref[q] function: F) -> Result[type_of(None), Never]:
+        return self^._run[type_of(None), Never, type_of(function), False](function)
+
+    @always_inline
+    def run[q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4, var Self.A5) raises Self.E](deinit self, ref[q] function: F) -> Result[type_of(None), Self.E]:
+        return self^._run[type_of(None), Self.E, type_of(function), True](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4, var Self.A5) raises Never -> R](deinit self, ref[q] function: F) -> Result[R, Never] where Self.E != Never:
+        return self^._run[R, Never, type_of(function), True](function)
+
+    @always_inline
+    def run[q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4, var Self.A5) raises Never](deinit self, ref[q] function: F) -> Result[type_of(None), Never] where Self.E != Never:
+        return self^._run[type_of(None), Never, type_of(function), True](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5]) thin -> R) -> Result[R, Never] where not conforms_to(R, RegisterPassable):
+        return self^._run[R, Never, type_of(function), False](function)
+
+    @always_inline
+    def run[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5]) thin -> R) -> Result[R, Never]:
+        return self^._run[R, Never, type_of(function), False](function)
+
+    def run(deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5]) thin) -> Result[type_of(None), Never]:
+        return self^._run[type_of(None), Never, type_of(function), False](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+        return self^._run[R, X, type_of(function), True](function)
+
+    @always_inline
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5]) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+        return self^._run[R, X, type_of(function), True](function)
+
+    @always_inline
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5]) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+        return self^._run[type_of(None), X, type_of(function), True](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5]) raises Never thin -> R) -> Result[R, Never] where not conforms_to(R, RegisterPassable):
+        return self^._run[R, Never, type_of(function), True](function)
+
+    @always_inline
+    def run[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5]) raises Never thin -> R) -> Result[R, Never]:
+        return self^._run[R, Never, type_of(function), True](function)
+
+    def run(deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5]) raises Never thin) -> Result[type_of(None), Never]:
+        return self^._run[type_of(None), Never, type_of(function), True](function)
+
+    def take[A6: Movable & Deinitable, //](deinit self, var value: A6) -> _ArgsOOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, A6, Self.E]:
+        return _ArgsOOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, A6, Self.E](self._arguments^.take(value^))
+
+@fieldwise_init
+struct _ArgsOOOOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, E: Movable & Deinitable](Movable):
+    var _arguments: _ArgumentsOOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6]
+    def __init__(out self, var a_value: Self.A, var b_value: Self.B, var a2_value: Self.A2, var a3_value: Self.A3, var a4_value: Self.A4, var a5_value: Self.A5, var a6_value: Self.A6):
+        self._arguments = _ArgumentsOOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6](a_value^, b_value^, a2_value^, a3_value^, a4_value^, a5_value^, a6_value^)
+
+    def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
+        var arguments = self._arguments^
+        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, R, X, F, raising]](arguments^, Pointer(to=function)))
+
+    @always_inline
+    def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
+        return self^._run[R, Never, type_of(function), False](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6) raises Self.E -> R](deinit self, ref[q] function: F) -> Result[R, Self.E]:
+        return self^._run[R, Self.E, type_of(function), True](function)
+
+    @always_inline
+    def run[q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6)](deinit self, ref[q] function: F) -> Result[type_of(None), Never]:
+        return self^._run[type_of(None), Never, type_of(function), False](function)
+
+    @always_inline
+    def run[q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6) raises Self.E](deinit self, ref[q] function: F) -> Result[type_of(None), Self.E]:
+        return self^._run[type_of(None), Self.E, type_of(function), True](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6) raises Never -> R](deinit self, ref[q] function: F) -> Result[R, Never] where Self.E != Never:
+        return self^._run[R, Never, type_of(function), True](function)
+
+    @always_inline
+    def run[q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6) raises Never](deinit self, ref[q] function: F) -> Result[type_of(None), Never] where Self.E != Never:
+        return self^._run[type_of(None), Never, type_of(function), True](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6]) thin -> R) -> Result[R, Never] where not conforms_to(R, RegisterPassable):
+        return self^._run[R, Never, type_of(function), False](function)
+
+    @always_inline
+    def run[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6]) thin -> R) -> Result[R, Never]:
+        return self^._run[R, Never, type_of(function), False](function)
+
+    def run(deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6]) thin) -> Result[type_of(None), Never]:
+        return self^._run[type_of(None), Never, type_of(function), False](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+        return self^._run[R, X, type_of(function), True](function)
+
+    @always_inline
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6]) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+        return self^._run[R, X, type_of(function), True](function)
+
+    @always_inline
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6]) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+        return self^._run[type_of(None), X, type_of(function), True](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6]) raises Never thin -> R) -> Result[R, Never] where not conforms_to(R, RegisterPassable):
+        return self^._run[R, Never, type_of(function), True](function)
+
+    @always_inline
+    def run[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6]) raises Never thin -> R) -> Result[R, Never]:
+        return self^._run[R, Never, type_of(function), True](function)
+
+    def run(deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6]) raises Never thin) -> Result[type_of(None), Never]:
+        return self^._run[type_of(None), Never, type_of(function), True](function)
+
+    def take[A7: Movable & Deinitable, //](deinit self, var value: A7) -> _ArgsOOOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, A7, Self.E]:
+        return _ArgsOOOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, A7, Self.E](self._arguments^.take(value^))
+
+@fieldwise_init
+struct _ArgsOOOOOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, E: Movable & Deinitable](Movable):
+    var _arguments: _ArgumentsOOOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, Self.A7]
+    def __init__(out self, var a_value: Self.A, var b_value: Self.B, var a2_value: Self.A2, var a3_value: Self.A3, var a4_value: Self.A4, var a5_value: Self.A5, var a6_value: Self.A6, var a7_value: Self.A7):
+        self._arguments = _ArgumentsOOOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, Self.A7](a_value^, b_value^, a2_value^, a3_value^, a4_value^, a5_value^, a6_value^, a7_value^)
+
+    def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
+        var arguments = self._arguments^
+        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, Self.A7, R, X, F, raising]](arguments^, Pointer(to=function)))
+
+    @always_inline
+    def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6, var Self.A7) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
+        return self^._run[R, Never, type_of(function), False](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6, var Self.A7) raises Self.E -> R](deinit self, ref[q] function: F) -> Result[R, Self.E]:
+        return self^._run[R, Self.E, type_of(function), True](function)
+
+    @always_inline
+    def run[q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6, var Self.A7)](deinit self, ref[q] function: F) -> Result[type_of(None), Never]:
+        return self^._run[type_of(None), Never, type_of(function), False](function)
+
+    @always_inline
+    def run[q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6, var Self.A7) raises Self.E](deinit self, ref[q] function: F) -> Result[type_of(None), Self.E]:
+        return self^._run[type_of(None), Self.E, type_of(function), True](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6, var Self.A7) raises Never -> R](deinit self, ref[q] function: F) -> Result[R, Never] where Self.E != Never:
+        return self^._run[R, Never, type_of(function), True](function)
+
+    @always_inline
+    def run[q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6, var Self.A7) raises Never](deinit self, ref[q] function: F) -> Result[type_of(None), Never] where Self.E != Never:
+        return self^._run[type_of(None), Never, type_of(function), True](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6], var _NativeOwnedArg[Self.A7]) thin -> R) -> Result[R, Never] where not conforms_to(R, RegisterPassable):
+        return self^._run[R, Never, type_of(function), False](function)
+
+    @always_inline
+    def run[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6], var _NativeOwnedArg[Self.A7]) thin -> R) -> Result[R, Never]:
+        return self^._run[R, Never, type_of(function), False](function)
+
+    def run(deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6], var _NativeOwnedArg[Self.A7]) thin) -> Result[type_of(None), Never]:
+        return self^._run[type_of(None), Never, type_of(function), False](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6], var _NativeOwnedArg[Self.A7]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+        return self^._run[R, X, type_of(function), True](function)
+
+    @always_inline
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6], var _NativeOwnedArg[Self.A7]) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+        return self^._run[R, X, type_of(function), True](function)
+
+    @always_inline
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6], var _NativeOwnedArg[Self.A7]) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+        return self^._run[type_of(None), X, type_of(function), True](function)
+
+    @always_inline
+    def run[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6], var _NativeOwnedArg[Self.A7]) raises Never thin -> R) -> Result[R, Never] where not conforms_to(R, RegisterPassable):
+        return self^._run[R, Never, type_of(function), True](function)
+
+    @always_inline
+    def run[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6], var _NativeOwnedArg[Self.A7]) raises Never thin -> R) -> Result[R, Never]:
+        return self^._run[R, Never, type_of(function), True](function)
+
+    def run(deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6], var _NativeOwnedArg[Self.A7]) raises Never thin) -> Result[type_of(None), Never]:
+        return self^._run[type_of(None), Never, type_of(function), True](function)
+
+@fieldwise_init
 struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
     """Select native errors, bind arguments, and capture one call as a Result.
 
@@ -2447,7 +2873,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
     argument types and ownership before callback inference. Use `borrow` for
     shared access, `mutable` for exclusive access, and `take` for consumption.
     Up to two positional operands can be followed by `kwargs`. `args` binds
-    zero, one or two consumed operands. The bundle is movable and runs once.
+    zero to eight consumed operands, or extend an owned bundle with `take`. The bundle is movable and runs once.
     An unused bundle destroys its owned arguments without calling anything.
 
     Construct `Capture[E]()` before direct `run` or `stateful` admission.
@@ -2973,7 +3399,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
         """Bind consumed positional arguments for a single call.
 
         Returns:
-            A consumed-once argument bundle; append arguments or keywords before run.
+            A consumed-once argument bundle; owned positional calls support up to eight operands. Keyword packs support at most two positional operands.
         """
         return _ArgsZ[Self.E]()
 
@@ -2988,7 +3414,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             first: The first value, consumed.
 
         Returns:
-            A consumed-once argument bundle; append arguments or keywords before run.
+            A consumed-once argument bundle; owned positional calls support up to eight operands. Keyword packs support at most two positional operands.
         """
         return _ArgsO[A, Self.E](first^)
 
@@ -3005,9 +3431,153 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             second: The second value, consumed.
 
         Returns:
-            A consumed-once argument bundle; append arguments or keywords before run.
+            A consumed-once argument bundle; owned positional calls support up to eight operands. Keyword packs support at most two positional operands.
         """
         return _ArgsOO[A, B, Self.E](first^, second^)
+
+    @staticmethod
+    def args[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, //](var first: A, var second: B, var third: A2) -> _ArgsOOO[A, B, A2, Self.E]:
+        """Bind consumed positional arguments for a single call.
+
+        Parameters:
+            A: The first argument type, including its origins.
+            B: The second argument type, including its origins.
+            A2: The third argument type, including its origins.
+
+        Args:
+            first: The first value, consumed.
+            second: The second value, consumed.
+            third: The third value, consumed.
+
+        Returns:
+            A consumed-once argument bundle; owned positional calls support up to eight operands. Keyword packs support at most two positional operands.
+        """
+        return _ArgsOOO[A, B, A2, Self.E](first^, second^, third^)
+
+    @staticmethod
+    def args[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, //](var first: A, var second: B, var third: A2, var fourth: A3) -> _ArgsOOOO[A, B, A2, A3, Self.E]:
+        """Bind consumed positional arguments for a single call.
+
+        Parameters:
+            A: The first argument type, including its origins.
+            B: The second argument type, including its origins.
+            A2: The third argument type, including its origins.
+            A3: The fourth argument type, including its origins.
+
+        Args:
+            first: The first value, consumed.
+            second: The second value, consumed.
+            third: The third value, consumed.
+            fourth: The fourth value, consumed.
+
+        Returns:
+            A consumed-once argument bundle; owned positional calls support up to eight operands. Keyword packs support at most two positional operands.
+        """
+        return _ArgsOOOO[A, B, A2, A3, Self.E](first^, second^, third^, fourth^)
+
+    @staticmethod
+    def args[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, //](var first: A, var second: B, var third: A2, var fourth: A3, var fifth: A4) -> _ArgsOOOOO[A, B, A2, A3, A4, Self.E]:
+        """Bind consumed positional arguments for a single call.
+
+        Parameters:
+            A: The first argument type, including its origins.
+            B: The second argument type, including its origins.
+            A2: The third argument type, including its origins.
+            A3: The fourth argument type, including its origins.
+            A4: The fifth argument type, including its origins.
+
+        Args:
+            first: The first value, consumed.
+            second: The second value, consumed.
+            third: The third value, consumed.
+            fourth: The fourth value, consumed.
+            fifth: The fifth value, consumed.
+
+        Returns:
+            A consumed-once argument bundle; owned positional calls support up to eight operands. Keyword packs support at most two positional operands.
+        """
+        return _ArgsOOOOO[A, B, A2, A3, A4, Self.E](first^, second^, third^, fourth^, fifth^)
+
+    @staticmethod
+    def args[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, //](var first: A, var second: B, var third: A2, var fourth: A3, var fifth: A4, var sixth: A5) -> _ArgsOOOOOO[A, B, A2, A3, A4, A5, Self.E]:
+        """Bind consumed positional arguments for a single call.
+
+        Parameters:
+            A: The first argument type, including its origins.
+            B: The second argument type, including its origins.
+            A2: The third argument type, including its origins.
+            A3: The fourth argument type, including its origins.
+            A4: The fifth argument type, including its origins.
+            A5: The sixth argument type, including its origins.
+
+        Args:
+            first: The first value, consumed.
+            second: The second value, consumed.
+            third: The third value, consumed.
+            fourth: The fourth value, consumed.
+            fifth: The fifth value, consumed.
+            sixth: The sixth value, consumed.
+
+        Returns:
+            A consumed-once argument bundle; owned positional calls support up to eight operands. Keyword packs support at most two positional operands.
+        """
+        return _ArgsOOOOOO[A, B, A2, A3, A4, A5, Self.E](first^, second^, third^, fourth^, fifth^, sixth^)
+
+    @staticmethod
+    def args[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, //](var first: A, var second: B, var third: A2, var fourth: A3, var fifth: A4, var sixth: A5, var seventh: A6) -> _ArgsOOOOOOO[A, B, A2, A3, A4, A5, A6, Self.E]:
+        """Bind consumed positional arguments for a single call.
+
+        Parameters:
+            A: The first argument type, including its origins.
+            B: The second argument type, including its origins.
+            A2: The third argument type, including its origins.
+            A3: The fourth argument type, including its origins.
+            A4: The fifth argument type, including its origins.
+            A5: The sixth argument type, including its origins.
+            A6: The seventh argument type, including its origins.
+
+        Args:
+            first: The first value, consumed.
+            second: The second value, consumed.
+            third: The third value, consumed.
+            fourth: The fourth value, consumed.
+            fifth: The fifth value, consumed.
+            sixth: The sixth value, consumed.
+            seventh: The seventh value, consumed.
+
+        Returns:
+            A consumed-once argument bundle; owned positional calls support up to eight operands. Keyword packs support at most two positional operands.
+        """
+        return _ArgsOOOOOOO[A, B, A2, A3, A4, A5, A6, Self.E](first^, second^, third^, fourth^, fifth^, sixth^, seventh^)
+
+    @staticmethod
+    def args[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, //](var first: A, var second: B, var third: A2, var fourth: A3, var fifth: A4, var sixth: A5, var seventh: A6, var eighth: A7) -> _ArgsOOOOOOOO[A, B, A2, A3, A4, A5, A6, A7, Self.E]:
+        """Bind consumed positional arguments for a single call.
+
+        Parameters:
+            A: The first argument type, including its origins.
+            B: The second argument type, including its origins.
+            A2: The third argument type, including its origins.
+            A3: The fourth argument type, including its origins.
+            A4: The fifth argument type, including its origins.
+            A5: The sixth argument type, including its origins.
+            A6: The seventh argument type, including its origins.
+            A7: The eighth argument type, including its origins.
+
+        Args:
+            first: The first value, consumed.
+            second: The second value, consumed.
+            third: The third value, consumed.
+            fourth: The fourth value, consumed.
+            fifth: The fifth value, consumed.
+            sixth: The sixth value, consumed.
+            seventh: The seventh value, consumed.
+            eighth: The eighth value, consumed.
+
+        Returns:
+            A consumed-once argument bundle; owned positional calls support up to eight operands. Keyword packs support at most two positional operands.
+        """
+        return _ArgsOOOOOOOO[A, B, A2, A3, A4, A5, A6, A7, Self.E](first^, second^, third^, fourth^, fifth^, sixth^, seventh^, eighth^)
 
 struct _Stateful[S: Movable & Deinitable, A: Movable & Deinitable,
                 R: Movable & Deinitable, E: Movable & Deinitable,

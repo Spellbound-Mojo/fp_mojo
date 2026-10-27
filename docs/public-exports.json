@@ -13685,6 +13685,30 @@
           {
             "signature": "def args[A: Movable & Deinitable, B: Movable & Deinitable, //](var first: A, var second: B) -> _ArgsOO[A, B, Self.E]:",
             "sha256": "173c6ccaf935e73a84a5f4329e932b792d69f0546ed2f60126b8887daf23b0ee"
+          },
+          {
+            "signature": "def args[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, //](var first: A, var second: B, var third: A2) -> _ArgsOOO[A, B, A2, Self.E]:",
+            "sha256": "1a1081e5c14d0273948eae55d845dcb2122e3ae52d36d9b0f74cee91080be65f"
+          },
+          {
+            "signature": "def args[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, //](var first: A, var second: B, var third: A2, var fourth: A3) -> _ArgsOOOO[A, B, A2, A3, Self.E]:",
+            "sha256": "d2b446ec2a8a30ffc2c06c90ee726626b7d4a9a592b70052be123473e7232efd"
+          },
+          {
+            "signature": "def args[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, //](var first: A, var second: B, var third: A2, var fourth: A3, var fifth: A4) -> _ArgsOOOOO[A, B, A2, A3, A4, Self.E]:",
+            "sha256": "773d6665da5b1acfaaa0b603d8dfe8d93fbf1783e7b321b69508cde46feda73b"
+          },
+          {
+            "signature": "def args[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, //](var first: A, var second: B, var third: A2, var fourth: A3, var fifth: A4, var sixth: A5) -> _ArgsOOOOOO[A, B, A2, A3, A4, A5, Self.E]:",
+            "sha256": "b0a810f7b2f34e3de3cf5300116b2da53a4b1b68782fa270e960349a235cfdc8"
+          },
+          {
+            "signature": "def args[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, //](var first: A, var second: B, var third: A2, var fourth: A3, var fifth: A4, var sixth: A5, var seventh: A6) -> _ArgsOOOOOOO[A, B, A2, A3, A4, A5, A6, Self.E]:",
+            "sha256": "eb672f478abae9a9c4de689bf35116b241526cbee80df10ce5fc7d034e2f6110"
+          },
+          {
+            "signature": "def args[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, //](var first: A, var second: B, var third: A2, var fourth: A3, var fifth: A4, var sixth: A5, var seventh: A6, var eighth: A7) -> _ArgsOOOOOOOO[A, B, A2, A3, A4, A5, A6, A7, Self.E]:",
+            "sha256": "00cd0ed37631ca0605bbe48f328d72b9b67a279e38ba35e49fa532f387946c95"
           }
         ]
       },

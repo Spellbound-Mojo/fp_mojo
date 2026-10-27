@@ -8,6 +8,7 @@ The generator enumerates those shapes; it never generates Result handling.
 from dataclasses import dataclass
 from itertools import product
 import re
+from generate_nary_syntax import MAX as MAX_OWNED
 from native_signatures import (
     MD,
     Operand,
@@ -28,6 +29,15 @@ MODES = {
     "o": ("take", None),
 }
 SHAPES = [()] + [(x,) for x in MODES] + list(product(MODES, repeat=2))
+SHAPES += [("o",) * n for n in range(3, MAX_OWNED + 1)]
+ARGUMENT_TYPES = ("A", "B", *(f"A{i}" for i in range(2, MAX_OWNED)))
+ARGUMENT_NAMES = ("first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth")
+
+
+def keyword_shapes(shape):
+    # Keep mixed conventions and keyword packs at their established boundary.
+    # Larger owned calls reuse the native tuple adapter without a new ABI.
+    return (False, True) if len(shape) <= 2 else (False,)
 
 
 def tag(shape, kw=False):
@@ -35,8 +45,8 @@ def tag(shape, kw=False):
 
 
 def params(shape, kw=False, context=True):
-    p = [f"{c}: {MD}" for c in "AB"[: len(shape)]]
-    p += [f"{c.lower()}: {MODES[m][1]}" for c, m in zip("AB", shape) if m != "o"]
+    p = [f"{c}: {MD}" for c in ARGUMENT_TYPES[: len(shape)]]
+    p += [f"{c.lower()}: {MODES[m][1]}" for c, m in zip(ARGUMENT_TYPES, shape) if m != "o"]
     if kw:
         p += [f"K: {MD}"]
     if context:
@@ -45,7 +55,7 @@ def params(shape, kw=False, context=True):
 
 
 def names(shape, kw=False, context=True, prefix=""):
-    p = list("AB"[: len(shape)]) + [c.lower() for c, m in zip("AB", shape) if m != "o"]
+    p = list(ARGUMENT_TYPES[: len(shape)]) + [c.lower() for c, m in zip(ARGUMENT_TYPES, shape) if m != "o"]
     if kw:
         p += ["K"]
     if context:
@@ -98,7 +108,7 @@ class StorageField:
 
 def fields(shape, kw=False):
     out = []
-    for c, m in zip("AB", shape):
+    for c, m in zip(ARGUMENT_TYPES, shape):
         out.append(
             StorageField(c.lower() + "_value", c if m == "o" else f"Pointer[{c}, {c.lower()}]", m == "o")
         )
@@ -108,7 +118,7 @@ def fields(shape, kw=False):
 
 
 def sig(shape, kw=False, prefix=""):
-    p = [argument(prefix + c, m) for c, m in zip("AB", shape)]
+    p = [argument(prefix + c, m) for c, m in zip(ARGUMENT_TYPES, shape)]
     if kw:
         if p:
             p += ["/"]
@@ -126,12 +136,21 @@ def native(shape, kw):
     ]
     shape_type = storage_type(shape, kw)
     header = f'def _invoke_{nm}[{", ".join(ps)}](function: F, var arguments: {shape_type}) raises E -> R:\n'
+    if len(shape) > 2:
+        # The existing n-ary boundary owns tuple extraction and native calls.
+        # Capture only binds its arguments and adds the canonical catch boundary.
+        types = list(ARGUMENT_TYPES[: len(shape)])
+        adapter = f"_NativeNary{len(shape)}[" + ", ".join(
+            types + ["R", "E", "F", "raising", "origin_of(function)"]
+        ) + "]"
+        values = ", ".join(field.transfer("arguments.") for field in fields(shape))
+        return header + f"    return {adapter}(Pointer(to=function)).call(({values}))\n\n"
     values = [
         "arguments." + c.lower() + "_value" + ("[]" if m != "o" else "")
-        for c, m in zip("AB", shape)
+        for c, m in zip(ARGUMENT_TYPES, shape)
     ]
     delegated = native_invocation(
-        shape, list("AB"[: len(shape)]), values,
+        shape, list(ARGUMENT_TYPES[: len(shape)]), values,
         keyword="K" if kw else None, keyword_value="arguments.options",
     )
     if delegated is not None:
@@ -140,7 +159,7 @@ def native(shape, kw):
         header
         + native_dispatch(
             shape,
-            list("AB"[: len(shape)]),
+            list(ARGUMENT_TYPES[: len(shape)]),
             values,
             keyword="K" if kw else None,
             keyword_value="arguments.options",
@@ -154,18 +173,24 @@ def transitions(shape, kw, *, stored):
         return ""
     out = []
     type_name = storage_type if stored else typename
-    target = type_name(shape, True, "Self.").replace("Self.K", "K")
-    if stored:
-        values = [field.transfer("self.") for field in fields(shape)] + ["values^"]
-        construct = f"{target}({', '.join(values)})"
-    else:
-        construct = f"{target}(self._arguments^.kwargs(**values^))"
-    out += [
-        f"    def kwargs[K: {MD}, //](deinit self, /, var **values: K) -> {target}:\n        return {construct}\n\n"
-    ]
+    if len(shape) <= 2:
+        target = type_name(shape, True, "Self.").replace("Self.K", "K")
+        if stored:
+            values = [field.transfer("self.") for field in fields(shape)] + ["values^"]
+            construct = f"{target}({', '.join(values)})"
+        else:
+            construct = f"{target}(self._arguments^.kwargs(**values^))"
+        out += [
+            f"    def kwargs[K: {MD}, //](deinit self, /, var **values: K) -> {target}:\n        return {construct}\n\n"
+        ]
+    modes = {}
     if len(shape) < 2:
-        c = "AB"[len(shape)]
-        for m, (name, origin) in MODES.items():
+        modes = MODES
+    elif all(m == "o" for m in shape) and len(shape) < MAX_OWNED:
+        modes = {"o": MODES["o"]}
+    if modes:
+        c = ARGUMENT_TYPES[len(shape)]
+        for m, (name, origin) in modes.items():
             ps = (
                 [f"{c}: {MD}"] + ([f"{c.lower()}: {origin}"] if origin else []) + ["//"]
             )
@@ -246,7 +271,7 @@ def builder(shape, kw):
     # as inferred-error thin calls, including generic selected error contexts.
     operands = [
         Operand("Self." + c, m, read_parameter="P" if c == "A" else "Q")
-        for c, m in zip("AB", shape)
+        for c, m in zip(ARGUMENT_TYPES, shape)
     ]
     for native_kind in ("pure", "raising", "never"):
         raising = native_kind != "pure"
@@ -304,7 +329,7 @@ from fp._internal.errors import _ErrorCompatible
 argument_imports = [
     name
     for shape in SHAPES
-    for kw in (False, True)
+    for kw in keyword_shapes(shape)
     for name in ("_Arguments" + tag(shape, kw), "_invoke_" + tag(shape, kw))
 ]
 out = [
@@ -314,8 +339,9 @@ out = [
 argument_output = [
     '"""Consumed native argument storage and invocation, generated by generate_capture.py.\n\nNo error-selection metadata or Result dependency belongs to these bundles.\nCapture and legacy attempt share their ownership, origins and invocation.\n"""\nfrom std.builtin.rebind import rebind, rebind_var, downcast\nfrom std.collections import StringDict\nfrom .native import (_NativeOwnedArg, _call_native_binary, _call_native, _call_native_borrow, _call_native_thunk, _call_native_keywords, _NativeMutatingRef, _NativeMutOwnedRef, _NativeMutatingKeywordsRef, _NativeMutOwnedKeywordsRef)\n\n'
 ]
+argument_output += ["from ._nary import " + ", ".join(f"_NativeNary{n}" for n in range(3, MAX_OWNED + 1)) + "\n\n"]
 for shape in SHAPES:
-    for kw in (False, True):
+    for kw in keyword_shapes(shape):
         declaration = native(shape, kw)
         invoke_header, body = declaration.split("\n", 1)
         body = body.replace("arguments.", "self.")
@@ -412,10 +438,16 @@ for raising in (False, True):
             target = f"_Stateful[S, A, {result}, {err}, type_of(function), {raising}]"
             state_factory += f'    @staticmethod\n    def stateful[{", ".join(gen+['//'])}]({pointer.argument}: {typ}, var state: S) -> {target}{condition}:\n        return {target}(function, state^)\n'
 out += [state_factory]
-out += [
-    "    @staticmethod\n    def args() -> _ArgsZ[Self.E]:\n        return _ArgsZ[Self.E]()\n\n    @staticmethod\n    def args[A: Movable & Deinitable, //](var first: A) -> _ArgsO[A, Self.E]:\n        return _ArgsO[A, Self.E](first^)\n\n    @staticmethod\n    def args[A: Movable & Deinitable, B: Movable & Deinitable, //](var first: A, var second: B) -> _ArgsOO[A, B, Self.E]:\n        return _ArgsOO[A, B, Self.E](first^, second^)\n\n",
-    state_class,
-]
+for n in range(MAX_OWNED + 1):
+    shape = ("o",) * n
+    types = ARGUMENT_TYPES[:n]
+    names_ = ARGUMENT_NAMES[:n]
+    gen = "[" + ", ".join([f"{t}: {MD}" for t in types] + ["//"]) + "]" if n else ""
+    args = ", ".join(f"var {name}: {t}" for name, t in zip(names_, types))
+    result = typename(shape, error="Self.E")
+    values = ", ".join(name + "^" for name in names_)
+    out += [f"    @staticmethod\n    def args{gen}({args}) -> {result}:\n        return {result}({values})\n\n"]
+out += [state_class]
 out.insert(1, "from fp.callables.products import _OptionalCell\n\n")
 
 
@@ -457,7 +489,7 @@ def document(text):
     before, public = text[:pos], text[pos:]
     public = public.replace(
         "struct Capture[E: Movable & Deinitable = Error]:\n",
-        'struct Capture[E: Movable & Deinitable = Error]:\n    """Select native errors, bind arguments, and capture one call as a Result.\n\n    `Capture[E].mutable(state).take(value^).run(callback)` fixes the error type,\n    argument types and ownership before callback inference. Use `borrow` for\n    shared access, `mutable` for exclusive access, and `take` for consumption.\n    Up to two positional operands can be followed by `kwargs`. `args` binds\n    zero, one or two consumed operands. The bundle is movable and runs once.\n    An unused bundle destroys its owned arguments without calling anything.\n\n    Construct `Capture[E]()` before direct `run` or `stateful` admission.\n    This fixes E before a native callback is matched. A reusable context such\n    as `var capture = Capture[E]()` also provides `capture.args(...)`,\n    `capture.borrow(...)`, `capture.mutable(...)`, `capture.take(...)` and\n    `capture.kwargs(...)`; it stores no arguments and is reusable after errors.\n\n    Pure functions produce `Result[R, Never]`; raising functions retain E.\n    No-value callbacks return `Result[None, E]`. Native callbacks are borrowed\n    for the call; OnceThunk owners are consumed and retain their own error.\n    Empty keyword packs require K or a typed dictionary. `stateful` owns an\n    explicit state value for repeated calls through a plain native function.\n    Existing `attempt` entry points remain available for compatibility.\n\n    Parameters:\n        E: The native callback error type, selected before inference; Error by default.\n    """\n',
+        'struct Capture[E: Movable & Deinitable = Error]:\n    """Select native errors, bind arguments, and capture one call as a Result.\n\n    `Capture[E].mutable(state).take(value^).run(callback)` fixes the error type,\n    argument types and ownership before callback inference. Use `borrow` for\n    shared access, `mutable` for exclusive access, and `take` for consumption.\n    Up to two positional operands can be followed by `kwargs`. `args` binds\n    zero to eight consumed operands, or extend an owned bundle with `take`. The bundle is movable and runs once.\n    An unused bundle destroys its owned arguments without calling anything.\n\n    Construct `Capture[E]()` before direct `run` or `stateful` admission.\n    This fixes E before a native callback is matched. A reusable context such\n    as `var capture = Capture[E]()` also provides `capture.args(...)`,\n    `capture.borrow(...)`, `capture.mutable(...)`, `capture.take(...)` and\n    `capture.kwargs(...)`; it stores no arguments and is reusable after errors.\n\n    Pure functions produce `Result[R, Never]`; raising functions retain E.\n    No-value callbacks return `Result[None, E]`. Native callbacks are borrowed\n    for the call; OnceThunk owners are consumed and retain their own error.\n    Empty keyword packs require K or a typed dictionary. `stateful` owns an\n    explicit state value for repeated calls through a plain native function.\n    Existing `attempt` entry points remain available for compatibility.\n\n    Parameters:\n        E: The native callback error type, selected before inference; Error by default.\n    """\n',
     )
     descriptions = {
         "run": (
@@ -482,7 +514,7 @@ def document(text):
         ),
         "args": (
             "Bind consumed positional arguments for a single call.",
-            "A consumed-once argument bundle; append arguments or keywords before run.",
+            "A consumed-once argument bundle; owned positional calls support up to eight operands. Keyword packs support at most two positional operands.",
         ),
         "stateful": (
             "Own explicit state for repeated calls through a plain native function.",
@@ -502,6 +534,7 @@ def document(text):
         "a": "The first argument origin, inferred from the bound value.",
         "q": "The callback origin, inferred from the borrowed function.",
     }
+    parameter_docs.update({t: f"The {name} argument type, including its origins." for t, name in zip(ARGUMENT_TYPES, ARGUMENT_NAMES)})
     argument_docs = {
         "function": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
         "state": "The explicit state, moved into the reusable owner.",
@@ -511,6 +544,8 @@ def document(text):
         "values": "The homogeneous keyword values, consumed.",
     }
 
+    argument_docs.update({name: f"The {name} value, consumed." for name in ARGUMENT_NAMES})
+
     def add(match):
         signature, name = match.group(0), match.group(1)
         summary, returns = descriptions[name]
@@ -519,7 +554,7 @@ def document(text):
             if "[" in signature.split("(", 1)[0]
             else ""
         )
-        parameters = re.findall(r"(?:^|, )([A-Za-z]+):", params)
+        parameters = re.findall(r"(?:^|, )([A-Za-z][A-Za-z0-9]*):", params)
         # Parse argument names from the signature separately from native type parameters.
         names = [n for n in argument_docs if re.search(r"\b" + n + r":", signature)]
         docs = ['        """' + summary + "\n"]

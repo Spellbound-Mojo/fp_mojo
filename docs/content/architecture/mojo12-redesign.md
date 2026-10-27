@@ -18,7 +18,7 @@ are historical evidence.
 | Select a native family | `pipeline(value)` | Native carriers select their dictionary; custom semantics use `pipeline[Family](value)`. |
 | Admit throwing native callbacks | `pipeline(value).raising[Failure]()` | Select the native error context before callback inference. Stored Result errors remain independent. |
 | Capture a zero-argument call | `Capture[Failure]().run(callback)` | Construct the context first; pure and explicit Never callbacks retain Never. |
-| Bind consumed operands | `Capture[Failure].args(first, second).run(callback)` | Bind zero to two owned operands and consume the pending call once. |
+| Bind consumed operands | `Capture[Failure].args(first, second).run(callback)` | Bind zero to eight owned operands and consume the pending call once. |
 | Bind mixed ownership | `Capture[Failure].mutable(state).take(value).run(callback)` | Bind each read, mutable or consuming convention explicitly before matching the callback. |
 | Bind a native keyword pack | `Capture.args(value).kwargs(key=option).run(callback)` | Own a homogeneous pack; an empty pack needs its type or a typed dictionary. |
 | Repeat a stateful native call | `Capture[Failure]().stateful(step, state)` | Own the explicit state and function pointer; `run(input)` retains mutations after captured errors. |
@@ -366,9 +366,10 @@ the documented `@always_inline` requirement or use explicit mutable state.
 
 ## Current limits
 
-- Capture binds at most two positional operands and one homogeneous keyword
-  pack. Fixed named arguments, omitted defaults and larger packs use a native
-  zero-argument closure or an existing consuming callable.
+- Capture binds up to eight owned positional operands. Mixed borrow/mutable
+  conventions and calls with a homogeneous keyword pack support at most two
+  positional operands. Fixed named arguments, omitted defaults and calls beyond
+  those limits use a native zero-argument closure or an existing consuming callable.
 - A stored keyword pointer must name its pack `kwargs` in its explicit native
   type. Mojo 1.2 cannot convert stored pointers between pack names, even without
   this library. Direct callback declarations retain their own spelling.
@@ -3339,3 +3340,19 @@ release should use a new major version under semantic versioning. The present
 work does not change a release number, create a tag or publish a registry
 package. A release pass should choose that version explicitly, retain the Mojo
 1.2 pin, publish migration notes, and qualify any additional claimed platforms.
+
+### Owned native capture with several arguments
+
+`Capture[E].args(...)` fixes zero to eight owned operands before callback
+inference. Existing borrowed and mutable shapes retain their two-operand limit,
+as do keyword calls. An all-owned bundle can append another owned argument with
+`take`, through arity eight. No callback is invoked until `run` consumes it.
+
+The larger bundles reuse `callables._nary` for native tuple extraction and
+invocation, then `_BoundThunk` and `attempt_once` for the same catch boundary as
+other capture shapes. They add no second error or ownership implementation.
+The n-ary adapter now delegates all native signatures to `native_dispatch`,
+including no-value closures and explicit Never effects. Known owned operands
+still project their ABI through `_NativeOwnedArg`; they do not enumerate
+register combinations. Argument owners are cleaned up on success, failure and
+abandonment; borrowed origins inside moved values remain part of their types.

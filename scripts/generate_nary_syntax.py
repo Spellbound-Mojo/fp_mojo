@@ -1,5 +1,5 @@
 """Native n-argument boundaries and bounded type inference; execution is shared."""
-from native_signatures import thin_dispatch, native_invocation, argument
+from native_signatures import native_dispatch, native_invocation, argument
 
 MD = 'Movable & Deinitable'
 MAX = 8
@@ -32,14 +32,6 @@ def types():
     return ''.join(out)+'\n'
 
 
-def thin_invocation(names):
-    """Project known consumed inputs through the shared thin ABI dispatcher."""
-    return thin_dispatch(
-        "o" * len(names), ["Self." + name for name in names],
-        [f"a{i}" for i in range(len(names))], error="Self.X", known_owned=True,
-    )
-
-
 def native():
     out = ['''"""Generated native tuple application boundaries; do not edit by hand.
 
@@ -63,15 +55,6 @@ from .native import _NativeOwnedArg, _call_native, _call_native_binary, _Unary, 
         raising_sig = f'_RaisingUnary[{ts}, R, X]' if n == 1 else f'_RaisingBinary[{ts}, R, X]' if n == 2 else f'def({args}) raises X -> R'
         out.append(f'\ncomptime _Nary{n}[{params}, R: {MD}] = {pure_sig}\n')
         out.append(f'comptime _RaisingNary{n}[{params}, R: {MD}, X: {MD}] = {raising_sig}\n')
-        if n >= 3:
-            for raising in (False, True):
-                kind = '_raising' if raising else ''
-                sig = f'_RaisingNary{n}[{ts}, R, X]' if raising else f'_Nary{n}[{ts}, R]'
-                ep = f', X: {MD}' if raising else ''
-                raised = ' raises X' if raising else ''
-                runtime = ', '.join(f'var a{i}: A{i}' for i in range(n))
-                passed = ', '.join(f'a{i}^' for i in range(n))
-                out.append(f'\ndef _native_nary{n}{kind}[{params}, R: {MD}{ep}, F: {sig}](function: F, {runtime}){raised} -> R:\n    return function({passed})\n')
         out.append(f'''\n@fieldwise_init
 struct _NativeNary{n}[{params}, R: {MD}, X: {MD}, F: {MD}, raising: Bool, o: ImmOrigin](Unary, ImplicitlyCopyable):
     comptime Arg = Tuple[{', '.join('Self.'+a for a in names)}]
@@ -94,7 +77,6 @@ struct _NativeNary{n}[{params}, R: {MD}, X: {MD}, F: {MD}, raising: Bool, o: Imm
                     out.append(f'            {branch}:\n                slot{i}.unsafe_ptr().unsafe_write(rebind_var[Self.A{i}](value^))\n')
             out.append('        arg^.consume_elements(store)\n')
         out.extend(f'        var a{i} = slot{i}^.unsafe_assume_init()\n' for i in range(n))
-        values=', '.join(f'a{i}^' for i in range(n))
         own=', '.join('Self.'+a for a in names)
         invocation = native_invocation(
             "o" * n, ["Self." + name for name in names],
@@ -104,16 +86,12 @@ struct _NativeNary{n}[{params}, R: {MD}, X: {MD}, F: {MD}, raising: Bool, o: Imm
         if invocation is not None:
             out.append(f'        return {invocation}\n')
         else:
-            out.append(thin_invocation(names))
-            for raising in (True,False):
-                out.append('        comptime if Self.raising:\n' if raising else '        else:\n')
-                sig=f'_RaisingNary{n}[{own}, Self.R, Self.X]' if raising else f'_Nary{n}[{own}, Self.R]'
-                out.append(f'            comptime Fn = downcast[Self.F, {sig}]\n')
-                checks=[f'conforms_to(Fn, {sig})'] + ([] if raising else ['Self.X == Never'])
-                out.append('            comptime assert '+' and '.join(checks)+'\n')
-                suffix = '_raising' if raising else ''
-                ep = ', Self.X' if raising else ''
-                out.append(f'            return _native_nary{n}{suffix}[{own}, Self.R{ep}, Fn](rebind[Fn](self.function[]), {values})\n')
+            out.append(native_dispatch(
+                "o" * n, ["Self." + name for name in names],
+                [f"a{i}" for i in range(n)], result="Self.R", error="Self.X",
+                function_type="Self.F", function="self.function[]",
+                raising="Self.raising", indent="        ", known_owned=True,
+            ))
         out.append(f'''
 struct _OwnedNativeNary{n}[{params}, R: {MD}, X: {MD}, F: {MD}, raising: Bool](Unary, Copyable where conforms_to(F, Copyable)):
     # Deferred families retain the pointer value, never a borrow of its local

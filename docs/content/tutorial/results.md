@@ -184,7 +184,7 @@ reuse `capture.run(...)`, `capture.mutable(...)`, `capture.args(...)` and the
 other factories. The context stays reusable after a failure.
 
 `Capture[E]` selects the native error type before callback inference. `args`
-binds zero, one or two consumed operands; `borrow`, `mutable` and `take` bind
+binds zero to eight consumed operands; `borrow`, `mutable` and `take` bind
 individual operands with their native ownership. Finish with `run(callback)`.
 The callback is borrowed and called once. Pure and explicitly `raises Never`
 callbacks return `Result[R, Never]`, even in a context selecting another error.
@@ -202,10 +202,21 @@ origins of borrowed arguments. Moving it transfers that responsibility; an
 unused bundle destroys its owned values without calling anything. A bundle
 runs once. Conflicting borrows and use after consumption are compile errors.
 
-There may be up to two positional operands followed by one homogeneous native
-keyword pack. An empty pack needs `kwargs[K=Int]()` or a typed dictionary,
+For an ordinary consuming function, bind all arguments in one `args(...)` call.
+Their types and positions are inferred, including move-only values. An all-owned
+bundle can also grow with `.take(value^)` up to eight operands. No wrapper
+closure is needed for these calls:
+
+<!-- example: docs/examples/capture_arguments.mojo -->
+
+The invoice receives four arguments and returns either its receipt or the exact
+String it raises. `value_or(explain)` renders either outcome as a plain String.
+Argument binding does not invoke the callback; `run` does.
+
+Mixed borrow/mutable conventions support up to two positional operands. A
+homogeneous native keyword pack can follow at most two positional operands. An empty pack needs `kwargs[K=Int]()` or a typed dictionary,
 because there is no value from which to infer K. Fixed named parameters,
-omitted defaults and larger positional packs use a zero-argument closure or
+omitted defaults and calls beyond these limits use a zero-argument closure or
 an existing `OnceThunk`. Returning a Result nests it inside Ok; capture does
 not flatten stored errors.
 

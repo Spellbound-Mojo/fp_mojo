@@ -89,7 +89,7 @@
     },
     "data": {
       "scope": "Result, Optional integration, non-empty lists, Ior and Capture.",
-      "restrictions": "Capture supports zero to two positional operands and homogeneous keyword packs; stored native pointers use kwargs as the pack name. Legacy attempt has diagnostic restrictions.",
+      "restrictions": "Capture supports zero to eight owned positional operands; mixed conventions and homogeneous keyword packs support at most two positional operands; stored native pointers use kwargs as the pack name. Legacy attempt has diagnostic restrictions.",
       "evidence": [
         "docs/examples/capture_native.mojo",
         "docs/examples/result_once.mojo",

@@ -41,6 +41,7 @@ compile them through source and precompiled package imports at O0 and O3 with
 
 | Example | What it shows | Page |
 |---|---|---|
+| `capture_arguments.mojo` | Bind several owned arguments without a wrapper closure | [Results tutorial](../tutorial/results.md#bind-arguments-before-the-callback) |
 | `results.mojo` | Stored domain errors versus raised callback failures | [Results tutorial](../tutorial/results.md#transform-only-the-active-branch) |
 | `result_transform_generic.mojo` | Generic Result transformations | [Results tutorial](../tutorial/results.md#generic-transformations) |
 | `attempt_adapters.mojo` | Select a native callback argument convention with a borrowed adapter | [fp.data](../reference/data.md#select-a-native-argument-convention) |

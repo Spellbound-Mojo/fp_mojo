@@ -538,6 +538,7 @@ def native_dispatch(
     function="function",
     raising="raising",
     indent="    ",
+    known_owned=False,
 ):
     out = thin_dispatch(
         shape,
@@ -551,6 +552,7 @@ def native_dispatch(
         function=function,
         raising=raising,
         indent=indent,
+        known_owned=known_owned,
     )
     args, passed = _call_arguments(shape, types, values, keyword, keyword_value)
     cases = _effect_cases(result, error, raising)

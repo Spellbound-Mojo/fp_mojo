@@ -7,6 +7,8 @@ from std.builtin.rebind import rebind, rebind_var, downcast
 from std.collections import StringDict
 from .native import (_NativeOwnedArg, _call_native_binary, _call_native, _call_native_borrow, _call_native_thunk, _call_native_keywords, _NativeMutatingRef, _NativeMutOwnedRef, _NativeMutatingKeywordsRef, _NativeMutOwnedKeywordsRef)
 
+from ._nary import _NativeNary3, _NativeNary4, _NativeNary5, _NativeNary6, _NativeNary7, _NativeNary8
+
 @fieldwise_init
 struct _ArgumentsZ(Movable):
     def kwargs[K: Movable & Deinitable, //](deinit self, /, var **values: K) -> _ArgumentsK[K]:
@@ -1920,6 +1922,9 @@ struct _ArgumentsOO[A: Movable & Deinitable, B: Movable & Deinitable](Movable):
     def kwargs[K: Movable & Deinitable, //](deinit self, /, var **values: K) -> _ArgumentsOOK[Self.A, Self.B, K]:
         return _ArgumentsOOK[Self.A, Self.B, K](self.a_value^, self.b_value^, values^)
 
+    def take[A2: Movable & Deinitable, //](deinit self, var value: A2) -> _ArgumentsOOO[Self.A, Self.B, A2]:
+        return _ArgumentsOOO[Self.A, Self.B, A2](self.a_value^, self.b_value^, value^)
+
     def _invoke[R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises E -> R:
         return _call_native_binary[Self.A, Self.B, R, E, F, raising](function, self.a_value^, self.b_value^)
 
@@ -2079,4 +2084,100 @@ struct _ArgumentsOOK[A: Movable & Deinitable, B: Movable & Deinitable, K: Movabl
             return rebind[Fn](function)(self.a_value^, self.b_value^, **self.options^)
 
 def _invoke_OOK[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgumentsOOK[A, B, K]) raises E -> R:
+    return arguments^._invoke[R, E, F, raising](function)
+
+@fieldwise_init
+struct _ArgumentsOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable](Movable):
+    var a_value: Self.A
+    var b_value: Self.B
+    var a2_value: Self.A2
+    def take[A3: Movable & Deinitable, //](deinit self, var value: A3) -> _ArgumentsOOOO[Self.A, Self.B, Self.A2, A3]:
+        return _ArgumentsOOOO[Self.A, Self.B, Self.A2, A3](self.a_value^, self.b_value^, self.a2_value^, value^)
+
+    def _invoke[R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises E -> R:
+        return _NativeNary3[Self.A, Self.B, Self.A2, R, E, F, raising, origin_of(function)](Pointer(to=function)).call((self.a_value^, self.b_value^, self.a2_value^))
+
+def _invoke_OOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgumentsOOO[A, B, A2]) raises E -> R:
+    return arguments^._invoke[R, E, F, raising](function)
+
+@fieldwise_init
+struct _ArgumentsOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable](Movable):
+    var a_value: Self.A
+    var b_value: Self.B
+    var a2_value: Self.A2
+    var a3_value: Self.A3
+    def take[A4: Movable & Deinitable, //](deinit self, var value: A4) -> _ArgumentsOOOOO[Self.A, Self.B, Self.A2, Self.A3, A4]:
+        return _ArgumentsOOOOO[Self.A, Self.B, Self.A2, Self.A3, A4](self.a_value^, self.b_value^, self.a2_value^, self.a3_value^, value^)
+
+    def _invoke[R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises E -> R:
+        return _NativeNary4[Self.A, Self.B, Self.A2, Self.A3, R, E, F, raising, origin_of(function)](Pointer(to=function)).call((self.a_value^, self.b_value^, self.a2_value^, self.a3_value^))
+
+def _invoke_OOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgumentsOOOO[A, B, A2, A3]) raises E -> R:
+    return arguments^._invoke[R, E, F, raising](function)
+
+@fieldwise_init
+struct _ArgumentsOOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable](Movable):
+    var a_value: Self.A
+    var b_value: Self.B
+    var a2_value: Self.A2
+    var a3_value: Self.A3
+    var a4_value: Self.A4
+    def take[A5: Movable & Deinitable, //](deinit self, var value: A5) -> _ArgumentsOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, A5]:
+        return _ArgumentsOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, A5](self.a_value^, self.b_value^, self.a2_value^, self.a3_value^, self.a4_value^, value^)
+
+    def _invoke[R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises E -> R:
+        return _NativeNary5[Self.A, Self.B, Self.A2, Self.A3, Self.A4, R, E, F, raising, origin_of(function)](Pointer(to=function)).call((self.a_value^, self.b_value^, self.a2_value^, self.a3_value^, self.a4_value^))
+
+def _invoke_OOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgumentsOOOOO[A, B, A2, A3, A4]) raises E -> R:
+    return arguments^._invoke[R, E, F, raising](function)
+
+@fieldwise_init
+struct _ArgumentsOOOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable](Movable):
+    var a_value: Self.A
+    var b_value: Self.B
+    var a2_value: Self.A2
+    var a3_value: Self.A3
+    var a4_value: Self.A4
+    var a5_value: Self.A5
+    def take[A6: Movable & Deinitable, //](deinit self, var value: A6) -> _ArgumentsOOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, A6]:
+        return _ArgumentsOOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, A6](self.a_value^, self.b_value^, self.a2_value^, self.a3_value^, self.a4_value^, self.a5_value^, value^)
+
+    def _invoke[R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises E -> R:
+        return _NativeNary6[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, R, E, F, raising, origin_of(function)](Pointer(to=function)).call((self.a_value^, self.b_value^, self.a2_value^, self.a3_value^, self.a4_value^, self.a5_value^))
+
+def _invoke_OOOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgumentsOOOOOO[A, B, A2, A3, A4, A5]) raises E -> R:
+    return arguments^._invoke[R, E, F, raising](function)
+
+@fieldwise_init
+struct _ArgumentsOOOOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable](Movable):
+    var a_value: Self.A
+    var b_value: Self.B
+    var a2_value: Self.A2
+    var a3_value: Self.A3
+    var a4_value: Self.A4
+    var a5_value: Self.A5
+    var a6_value: Self.A6
+    def take[A7: Movable & Deinitable, //](deinit self, var value: A7) -> _ArgumentsOOOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, A7]:
+        return _ArgumentsOOOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, A7](self.a_value^, self.b_value^, self.a2_value^, self.a3_value^, self.a4_value^, self.a5_value^, self.a6_value^, value^)
+
+    def _invoke[R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises E -> R:
+        return _NativeNary7[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, R, E, F, raising, origin_of(function)](Pointer(to=function)).call((self.a_value^, self.b_value^, self.a2_value^, self.a3_value^, self.a4_value^, self.a5_value^, self.a6_value^))
+
+def _invoke_OOOOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgumentsOOOOOOO[A, B, A2, A3, A4, A5, A6]) raises E -> R:
+    return arguments^._invoke[R, E, F, raising](function)
+
+@fieldwise_init
+struct _ArgumentsOOOOOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable](Movable):
+    var a_value: Self.A
+    var b_value: Self.B
+    var a2_value: Self.A2
+    var a3_value: Self.A3
+    var a4_value: Self.A4
+    var a5_value: Self.A5
+    var a6_value: Self.A6
+    var a7_value: Self.A7
+    def _invoke[R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](deinit self, function: F) raises E -> R:
+        return _NativeNary8[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, Self.A7, R, E, F, raising, origin_of(function)](Pointer(to=function)).call((self.a_value^, self.b_value^, self.a2_value^, self.a3_value^, self.a4_value^, self.a5_value^, self.a6_value^, self.a7_value^))
+
+def _invoke_OOOOOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](function: F, var arguments: _ArgumentsOOOOOOOO[A, B, A2, A3, A4, A5, A6, A7]) raises E -> R:
     return arguments^._invoke[R, E, F, raising](function)
