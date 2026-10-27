@@ -11,6 +11,7 @@ import sys
 import uuid
 
 from fp_tools.library import add_library_arguments, library_include
+from fp_tools.artifacts import library_inputs, library_binding
 from fp_tools.runs import RunContext
 from fp_tools.runtime import accepted, command, positive_int, sha, write_json
 from suite_contract import (SHARDS, audit_report, benchmark_rows, build_argv, check_module_names,
@@ -39,6 +40,7 @@ def main():
         parser.error('No programs selected')
     run = RunContext.start(args.output or f'.cache/suite/{uuid.uuid4().hex}', 'suite')
     include, package = library_include(args, run.folder)
+    library_before = library_inputs(include)
     shards = [(name, [m for m in modules if m['shard'] == name]) for name, _, _ in SHARDS]
     shards = [(name, members) for name, members in shards if members]
     (run.folder / 'drivers').mkdir()
@@ -99,13 +101,15 @@ def main():
             print(f'  {b["name"]:<16} native {b["native_ns"] / 1e6:8.2f} ms   '
                   f'library {b["library_ns"] / 1e6:8.2f} ms   {b["ratio"]:.2f}x')
     checked = [r for r in rows if r['kind'] != 'benchmark']
-    report = dict(**run.metadata(), include=include, package_compilation=package, filter=args.filter,
+    report = dict(**run.metadata(), **library_binding(include, library_before),
+                  include=include, package_compilation=package, filter=args.filter,
                   werror=args.werror, optimization=args.optimization, jobs=args.jobs,
                   compile_timeout=args.compile_timeout, run_timeout=args.run_timeout,
                   shards=records, modules=rows, benchmarks=benchmarks,
                   passed=all(r['passed'] for r in checked))
     audit = audit_report(report, folder=run.folder, include=include, filter=args.filter,
-                         werror=args.werror, optimization=args.optimization, expected_inputs=run.before)
+                         werror=args.werror, optimization=args.optimization, expected_inputs=run.before,
+                         expected_library_inputs=library_before)
     report['audit_failures'] = audit
     write_json(run.folder / 'report.json', report)
     failures = sum(not r['passed'] for r in checked)

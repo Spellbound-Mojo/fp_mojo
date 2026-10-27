@@ -3,7 +3,7 @@ import argparse
 from concurrent.futures import ThreadPoolExecutor
 
 from docs_contract import data
-from fp_tools.artifacts import manifest
+from fp_tools.artifacts import manifest, library_inputs, library_binding, audit_library_binding
 from fp_tools.cases import CompileCase, execute_case, audit_case
 from fp_tools.runs import RunContext
 from fp_tools.library import precompile
@@ -28,6 +28,7 @@ def main():
     package.mkdir()
     built = precompile(package / 'fp.mojoc', folder / 'package.log', timeout=args.compile_timeout)
     assert accepted(built), 'Package compilation failed'
+    packaged = library_inputs(package)
     tasks = []
     for path, spec in selected.items():
         for route in ('source', 'package'):
@@ -46,13 +47,16 @@ def main():
         return dict(source=path, route=route, optimization=level, **row, audit_failures=failures)
     with ThreadPoolExecutor(max_workers=args.jobs) as executor:
         records = list(executor.map(execute, tasks))
-    passed = all(r['passed'] and not r['audit_failures'] for r in records) and inputs() == context.before
-    report = dict(**context.metadata(), full_inventory=not args.only,
+    binding = library_binding(package, packaged)
+    library_failures = audit_library_binding(binding, include=package, expected_inputs=packaged)
+    passed = (all(r['passed'] and not r['audit_failures'] for r in records)
+              and inputs() == context.before and not library_failures)
+    report = dict(**context.metadata(), **binding, full_inventory=not args.only,
                   compile_timeout=args.compile_timeout, jobs=args.jobs,
                   manifest_sha256=sha(ROOT / 'docs/examples.json'),
                   declared_inventory=[[p, r, o] for p, r, o, _ in tasks],
                   sources={p: sha(ROOT / p) for p in declared}, package_compilation=built,
-                  records=records, passed=passed)
+                  records=records, passed=passed, audit_failures=library_failures)
     report['artifact_sha256'] = manifest(folder)
     write_json(folder / 'report.json', report)
     print('DOCUMENTATION EXAMPLES PASS' if passed else 'FAILED', flush=True)

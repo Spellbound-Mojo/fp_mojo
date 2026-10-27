@@ -6,6 +6,7 @@ import tempfile
 import unittest
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]/'scripts'))
 from fp_tools.runtime import ROOT, PIN, sha
+from fp_tools.artifacts import library_inputs, library_binding
 from compile_fail_contract import audit_report, inventory
 
 
@@ -13,10 +14,13 @@ class CompileFailContractTests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory(dir=ROOT/'.cache');self.addCleanup(self.tmp.cleanup)
         self.root=Path(self.tmp.name)
+        self.library=self.root/'src/fp/__init__.mojo';self.library.parent.mkdir(parents=True)
+        self.library.write_text('synthetic library\n')
+        self.library_before=library_inputs('src',self.root)
         for path,body in [('tests/runtime/test_control.mojo','def main(): pass\n'),('tests/compile_fail/test_control.mojo','# error: expected rejection\n'),('tests/compile_fail/test_control_b.mojo','# error: expected rejection\n')]:
             p=self.root/path;p.parent.mkdir(parents=True,exist_ok=True);p.write_text(body)
         self.binaries=self.root/'run/executables/fresh-unique';self.binaries.mkdir(parents=True)
-        self.contract=dict(root=self.root,folder=self.root/'run',optimization=3,include='src',filter='control',werror=True,expected_inputs={'source':'hash'})
+        self.contract=dict(root=self.root,folder=self.root/'run',optimization=3,include='src',filter='control',werror=True,expected_inputs={'source':'hash'},expected_library_inputs=self.library_before)
         rows=[]
         for path in inventory('control',self.root):
             source=self.root/path
@@ -25,6 +29,16 @@ class CompileFailContractTests(unittest.TestCase):
             compiled=self.command(path+'.compile',argv,1,'expected rejection')
             rows.append(dict(path=path,sha256=sha(source),passed=True,command=argv,expected_errors=['expected rejection'],compilation=compiled,execution=None,executable_sha256=None))
         self.good=dict(report_version=2,output_directory=str(self.root/'run'),inputs_unchanged=True,compiler=PIN,optimization='3',include='src',filter='control',werror=True,tests=rows,declared_inventory=inventory('control',self.root),binary_directory=str(self.binaries),inputs={'source':'hash'},input_changes=[])
+        self.good.update(library_binding('src',self.library_before,self.root))
+
+    def test_library_binding_and_actual_library_changes(self):
+        for change in (dict(library_inputs={}),dict(library_changes=['changed'])):
+            self.assertTrue(audit_report(self.good | change,**self.contract))
+        self.library.write_text('replacement library\n')
+        self.assertTrue(audit_report(self.good,**self.contract))
+        # A replacement snapshot cannot override the caller's original binding.
+        forged=self.good | library_binding('src',library_inputs('src',self.root),self.root)
+        self.assertTrue(audit_report(forged,**self.contract))
 
     def command(self,name,argv,code,err):
         log=self.root/'run'/(name+'.log');log.parent.mkdir(parents=True,exist_ok=True);log.write_text(err)

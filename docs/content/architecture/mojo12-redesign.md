@@ -3142,6 +3142,28 @@ API generation and strict documentation validation passed. All 41 execution
 bodies in the changed modules remain byte-identical. The following runner
 pass also built this library within the unchanged 60-second package limit.
 
+### Verification binds the selected library independently of checkout inputs
+
+The artifact helper now constructs and audits one before/after library binding.
+Suite and rejection runners snapshot their actual include directory after
+package selection and carry that snapshot into their independent report audit.
+Changing package bytes cannot pass by keeping the source checkout unchanged or
+by replacing the report's binding with a later snapshot.
+
+Fresh boundary and example packages use the same binding. Package construction
+and cold-compilation observations reuse its metadata builder. Existing command
+lines, package selection and boundary package fields retain their meanings.
+Source and bytecode replacement, missing and additional candidates, serialized
+paths and malformed or substituted bindings have adversarial tooling controls.
+
+Qualification passed source and precompiled package delivery, two suite
+controls, eight rejection fixtures, four boundary checks, four maintained
+example checks, a cold measurement-runner control, generator parity and all
+53 tooling tests. Strict documentation validation passed. The first package
+precompile hit the existing 60-second limit under concurrent compiler load;
+a fresh run passed at the unchanged limit. Both reports are retained, and the
+measurement is a runner check rather than a performance comparison.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

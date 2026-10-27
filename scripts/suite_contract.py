@@ -18,6 +18,7 @@ import re
 
 from fp_tools.runtime import ROOT, PIN, accepted, audit_command, normalized, sha
 from fp_tools.runs import audit_run_paths
+from fp_tools.artifacts import audit_library_binding
 
 MARK = '@@fp-suite'
 
@@ -204,9 +205,12 @@ def benchmark_rows(module, outcome):
             for m in _BENCH.finditer(outcome.get('output', ''))]
 
 
-def audit_report(report, *, folder, include, filter='', werror=False, optimization=3, expected_inputs, root=ROOT):
+def audit_report(report, *, folder, include, filter='', werror=False, optimization=3,
+                 expected_inputs, expected_library_inputs, root=ROOT):
     failures = []
     try:
+        failures += audit_library_binding(report, include=include,
+                                          expected_inputs=expected_library_inputs, root=root)
         modules = inventory(filter, root)
         if not modules or [dict(path=r.get('path'), shard=r.get('shard'), kind=r.get('kind'))
                             for r in report.get('modules', [])] != [

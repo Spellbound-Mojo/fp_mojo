@@ -11,7 +11,7 @@ import re
 import uuid
 
 from fp_tools.cases import CompileCase, audit_case, execute_case
-from fp_tools.artifacts import library_inputs
+from fp_tools.artifacts import library_inputs, library_binding
 from fp_tools.runtime import (ROOT, binary_directory, environment, input_changes,
                               inputs, positive_int, reserve_output, write_json)
 
@@ -54,7 +54,7 @@ def main():
         print(f'{source} O{args.level}: {compiled["seconds"]:.2f}s cold '
               f'RSS={compiled["peak_rss_bytes"]} passed={result["passed"] and not failures}', flush=True)
         report['input_changes'] = input_changes(before, inputs())
-        report['library_changes'] = input_changes(library_before, library_inputs(args.include))
+        report.update(library_binding(args.include, library_before))
         report['passed'] &= (result['passed'] and not failures
                              and not report['input_changes'] and not report['library_changes'])
         write_json(folder/'report.json', report)

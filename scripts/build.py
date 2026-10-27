@@ -12,11 +12,11 @@ import shutil
 import uuid
 
 from docs_contract import data
-from fp_tools.artifacts import library_inputs, manifest
+from fp_tools.artifacts import library_inputs, library_binding, manifest
 from fp_tools.cases import CompileCase, audit_case, execute_case
 from fp_tools.runs import RunContext
 from fp_tools.library import precompile
-from fp_tools.runtime import ROOT, accepted, input_changes, sha, write_json
+from fp_tools.runtime import ROOT, accepted, sha, write_json
 
 
 def main():
@@ -73,8 +73,8 @@ def main():
         records.append(dict(specification=asdict(case), **result, audit_failures=failures))
 
     report = dict(**run.metadata(), format=args.format, include_directory=str(run.folder),
-                  artifact_created=created, compilation=built, library_inputs=packaged,
-                  library_changes=input_changes(packaged, library_inputs(run.folder)),
+                  artifact_created=created, compilation=built,
+                  **library_binding(run.folder, packaged),
                   verification_scope='Full-package precompilation and native core example at O3; not full library qualification',
                   example_manifest_sha256=sha(ROOT/'docs/examples.json'), records=records)
     report['passed'] = (created and bool(records) and report['inputs_unchanged']

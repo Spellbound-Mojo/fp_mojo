@@ -91,6 +91,13 @@ keeps its generated drivers, executables and raw build and run logs; its audit
 regenerates the drivers and re-derives every program's outcome from the logs
 instead of trusting the reported flags.
 
+The selected library has its own before/after binding. Suite and rejection
+reports record the source or bytecode files resolved by their include directory,
+including packages outside the checkout's source tree. Their independent audits
+compare those files with the original snapshot. Boundary and example matrices
+bind their fresh package in the same way. A replaced, missing or additional
+library artifact fails the gate even when the checkout inputs are unchanged.
+
 A completed gate is reusable evidence only for its recorded inputs and package.
 Check the final outcome, audit failures, input hashes and package digest before
 carrying it into a later qualification. A missing final report after an

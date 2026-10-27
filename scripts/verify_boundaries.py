@@ -11,7 +11,7 @@ from dataclasses import asdict
 from pathlib import Path
 import re
 
-from fp_tools.artifacts import library_inputs
+from fp_tools.artifacts import library_inputs, library_binding, audit_library_binding
 from fp_tools.cases import CompileCase, audit_case, execute_case
 from fp_tools.library import precompile
 from fp_tools.runs import RunContext
@@ -86,7 +86,9 @@ def main():
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
         records = list(pool.map(check, jobs))
     metadata = run.metadata()
-    unchanged = packaged == library_inputs(package)
+    binding = library_binding(package, packaged)
+    library_failures = audit_library_binding(binding, include=package, expected_inputs=packaged)
+    unchanged = not library_failures
     passed = (
         metadata["inputs_unchanged"]
         and unchanged
@@ -96,10 +98,12 @@ def main():
         run.folder / "report.json",
         dict(
             **metadata,
+            **binding,
             declared_inventory=clients,
             package_compilation=built,
             package_inputs=packaged,
             package_unchanged=unchanged,
+            audit_failures=library_failures,
             records=records,
             passed=passed,
         ),

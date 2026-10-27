@@ -7,6 +7,7 @@ import tempfile
 import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]/'scripts'))
 from fp_tools.runtime import ROOT, PIN, sha
+from fp_tools.artifacts import library_inputs, library_binding
 from suite_contract import (MARK, audit_report, benchmark_rows, build_argv, check_module_names,
                             driver_source, fold_runs, inventory, judge, parse_run, run_argv)
 
@@ -28,6 +29,8 @@ class SuiteContractTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(dir=ROOT/'.cache'); self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
+        self.library = self.root/'src/fp/__init__.mojo'; self.library.parent.mkdir(parents=True)
+        self.library.write_text('synthetic library\n')
         for path, body in PROGRAMS.items():
             p = self.root/path; p.parent.mkdir(parents=True, exist_ok=True); p.write_text(body)
         (self.root/'docs/examples.json').write_text(json.dumps(
@@ -110,7 +113,19 @@ class SuiteContractTests(unittest.TestCase):
         report = dict(report_version=2, output_directory=str(folder), binary_directory=str(binaries), compiler=PIN,
                       include='src', filter='', werror=False, optimization=3, inputs={'x': 'y'}, input_changes=[], inputs_unchanged=True,
                       shards=shards, modules=rows, benchmarks=[], passed=True)
-        return report, dict(folder=folder, include='src', expected_inputs={'x': 'y'}, root=self.root)
+        library_before = library_inputs('src', self.root)
+        report.update(library_binding('src', library_before, self.root))
+        return report, dict(folder=folder, include='src', expected_inputs={'x': 'y'},
+                            expected_library_inputs=library_before, root=self.root)
+
+    def test_library_binding_and_actual_library_changes(self):
+        report, contract = self.good_report()
+        for change in (dict(library_inputs={}), dict(library_changes=['changed'])):
+            self.assertTrue(audit_report(report | change, **contract))
+        self.library.write_text('replacement library\n')
+        self.assertTrue(audit_report(report, **contract))
+        forged = report | library_binding('src', library_inputs('src', self.root), self.root)
+        self.assertTrue(audit_report(forged, **contract))
 
     def test_audit_accepts_consistent_evidence_and_rejects_corruption(self):
         good, contract = self.good_report()
