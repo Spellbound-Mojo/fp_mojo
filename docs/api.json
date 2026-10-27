@@ -998,6 +998,14 @@
      "name": "Compatible"
     },
     {
+     "description": "The whole-outcome observer has a shared or consuming receiver.",
+     "name": "ReceiverCompatible"
+    },
+    {
+     "description": "Existing admission plus receiver availability for new wrapper boundaries.",
+     "name": "InvocationCompatible"
+    },
+    {
      "description": "The unchanged family for fluent continuation.",
      "name": "Family"
     },
@@ -1274,6 +1282,14 @@
     {
      "description": "Selected ensure admission; legacy Piped keeps its original predicates.",
      "name": "Compatible"
+    },
+    {
+     "description": "Both borrowed callbacks have a shared or consuming receiver.",
+     "name": "ReceiverCompatible"
+    },
+    {
+     "description": "Existing admission plus receiver availability for new wrapper boundaries.",
+     "name": "InvocationCompatible"
     },
     {
      "description": "The unchanged family for fluent continuation.",
@@ -176420,7 +176436,7 @@
   },
   "functions.RedeemContract": {
    "aliases": [],
-   "description": "Forward Compatible and project Family, Out and Error in a generic wrapper of\nPipeline.redeem. One handler consumes the original selected outcome; its native\nerror is never sent to the other handler. ApplicativeError suffices for family\nexecution, including Validation. Intrinsic Result behavior remains available\nunder non-error families. Mapping rebinds the output family where supported.",
+   "description": "Forward Compatible and project Family, Out and Error in a generic wrapper of\nPipeline.redeem. One handler consumes the original selected outcome; its native\nerror is never sent to the other handler. ApplicativeError suffices for family\nexecution, including Validation. Intrinsic Result behavior remains available\nunder non-error families. Mapping rebinds the output family where supported.\nReceiverCompatible checks both handlers for a shared, mutable or consuming\nreceiver. InvocationCompatible adds that check for new wrapper boundaries,\nwhile existing Compatible proofs and family invocation requirements remain.",
    "fields": [],
    "kind": "alias",
    "methods": {},
@@ -176461,7 +176477,7 @@
   },
   "functions.RedeemWithContract": {
    "aliases": [],
-   "description": "Forward Compatible and project Family, Out and Error in a generic wrapper of\nPipeline.redeem_with. Canonical and intrinsic Result handlers may agree on a new\nstored-error type. Other selected families require ApplicativeError and Monad,\nretaining their own error layer and execution semantics. Returned failures and\nnative raises never invoke the opposite handler.",
+   "description": "Forward Compatible and project Family, Out and Error in a generic wrapper of\nPipeline.redeem_with. Canonical and intrinsic Result handlers may agree on a new\nstored-error type. Other selected families require ApplicativeError and Monad,\nretaining their own error layer and execution semantics. Returned failures and\nnative raises never invoke the opposite handler. ReceiverCompatible checks\nboth handlers; InvocationCompatible adds receiver availability to Compatible\nfor new wrapper boundaries without changing existing generic proofs.",
    "fields": [],
    "kind": "alias",
    "methods": {},

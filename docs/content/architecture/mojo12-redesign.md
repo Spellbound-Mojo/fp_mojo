@@ -2960,6 +2960,34 @@ Qualification passed all generator-parity checks, 49 tooling tests in the pinned
 environment and strict documentation validation. The verified source hashes
 match the preceding pass for every Mojo module.
 
+### Validation and outcome contracts expose receiver-aware wrapper proofs
+
+EnsureContract, RedeemContract, RedeemWithContract and AttemptTapContract now
+provide ReceiverCompatible and InvocationCompatible. The former checks the
+original callbacks for their supported receiver forms; the latter combines
+that availability with the unchanged Compatible predicate. Validation checks
+both borrowing callbacks, redemption checks both consuming-argument handlers,
+and whole-outcome observation checks the borrowing observer.
+
+This is an additive wrapper contract, consistent with primitive operations,
+sequencing and conditional composition. Existing combined and expanded proofs
+remain valid. Receiver availability does not promise repeatability or copying;
+the selected family still owns those requirements and its deferred run checks.
+No operation implementation, native overload or callback storage changes.
+
+The maintained client exercises generic forwarding, shared and mutable calls,
+consuming captures, deferred cleanup and disposal without execution, exact
+native errors and borrowed success/error origins. Seven rejection fixtures
+check each missing callback receiver at an ordinary wrapper call without an
+explicit callback-type binding. Existing expanded generic proofs are retained
+as positive controls.
+
+Qualification passed 32 focused receiver, 76 outcome and 52 whole-outcome
+observation source/package checks at O0 and O3; 142 generic, three validation
+and five shared-outcome programs; and nine selected rejection cases. Input
+snapshots remained unchanged with no audit failures. Generator parity, all 49
+tooling tests, API generation and strict documentation validation passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

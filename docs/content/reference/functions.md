@@ -207,6 +207,10 @@ and `RedeemWithContract[I,V,H,K]` expose `Compatible`, `Family`, `Out` and
 step used by the selected policy. Project the output family instead of assuming it equals the input.
 `Error` describes construction; deferred actions retain their own run errors.
 Existing family bodies still check representation and receiver requirements.
+New wrappers can instead forward `InvocationCompatible`, which adds
+`ReceiverCompatible` to the existing proof. Both handlers must supply a shared,
+mutable or consuming receiver. This rejects missing receivers at the wrapper
+boundary while preserving existing `Compatible` and expanded generic proofs.
 
 <!-- example: docs/examples/selected_outcomes.mojo -->
 

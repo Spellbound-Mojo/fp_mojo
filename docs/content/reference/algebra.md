@@ -346,6 +346,10 @@ The family owns receiver checks, branching and construction errors; deferred
 callback and failure-constructor errors remain in the action's run contract.
 Conditional wrappers use the public `downcast[I, ApplicativeError & Monad]`
 witness consistently for the descriptor and family selection.
+New wrappers can forward `InvocationCompatible` to check receiver availability
+as well as `Compatible`. `ReceiverCompatible` requires both the predicate and
+factory to provide a shared or consuming borrowing receiver. Existing expanded
+proofs remain valid, and the selected family still owns repeatability checks.
 
 <!-- example: docs/examples/selected_validation_workflow.mojo -->
 
@@ -361,6 +365,10 @@ Bodies retain receiver, copying, join and native-error compatibility checks.
 Deferred observer and restoration errors remain in the output action's run
 contract. Conditional capability wrappers use the same public
 `downcast[I, ApplicativeError & Monad]` witness throughout.
+`ReceiverCompatible` checks the original observer for a shared or consuming
+borrowing receiver. New wrappers may forward `InvocationCompatible` to combine
+that check with the existing `Compatible` proof; this does not change legacy
+admission or make a consuming observer repeatable.
 
 <!-- example: docs/examples/selected_outcome_observation.mojo -->
 

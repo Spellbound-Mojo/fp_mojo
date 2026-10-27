@@ -5,6 +5,7 @@ from fp.algebra.protocols import Functor, ApplicativeError, Monad, _MappedFamily
 from fp.algebra.instances import ResultFamily
 from fp.algebra._outcomes import _Redeem
 from fp.callables.protocols import UnaryContract
+from fp.callables.invoke import _OnceUnaryAvailable
 from fp.data._result import Result
 from ._recovery import _RecoverySelection, _RecoveryValue, _RecoveryFailure, _RecoveryCarrier
 
@@ -83,6 +84,10 @@ struct _OutcomeContract[I: Functor, V: Movable & Deinitable,
     """The selected family admits materialization and the final map or bind."""
     comptime Compatible = Self.InputCompatible and Self.CarrierCompatible and Self.OutputCompatible and Self.NativeErrorsCompatible and Self.OperationCompatible
     """Selected admission; existing family primitives retain invocation checks."""
+    comptime ReceiverCompatible = _OnceUnaryAvailable[Self.H] and _OnceUnaryAvailable[Self.K]
+    """Both handlers have a shared, mutable or consuming receiver."""
+    comptime InvocationCompatible = Self.Compatible and Self.ReceiverCompatible
+    """Existing admission plus receiver availability for new wrapper boundaries."""
     comptime Family = Self._Selection.Policy.Family[Self.V,Self.H,Self.K]
     """The output family for fluent continuation."""
     comptime Out = Self._Selection.Policy.Out[Self.V,Self.H,Self.K]
@@ -101,6 +106,9 @@ Pipeline.redeem. One handler consumes the original selected outcome; its native
 error is never sent to the other handler. ApplicativeError suffices for family
 execution, including Validation. Intrinsic Result behavior remains available
 under non-error families. Mapping rebinds the output family where supported.
+ReceiverCompatible checks both handlers for a shared, mutable or consuming
+receiver. InvocationCompatible adds that check for new wrapper boundaries,
+while existing Compatible proofs and family invocation requirements remain.
 
 Parameters:
     I: The selected source family.
@@ -119,7 +127,9 @@ Forward Compatible and project Family, Out and Error in a generic wrapper of
 Pipeline.redeem_with. Canonical and intrinsic Result handlers may agree on a new
 stored-error type. Other selected families require ApplicativeError and Monad,
 retaining their own error layer and execution semantics. Returned failures and
-native raises never invoke the opposite handler.
+native raises never invoke the opposite handler. ReceiverCompatible checks
+both handlers; InvocationCompatible adds receiver availability to Compatible
+for new wrapper boundaries without changing existing generic proofs.
 
 Parameters:
     I: The selected source family.

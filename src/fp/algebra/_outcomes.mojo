@@ -4,7 +4,7 @@ from std.builtin.rebind import downcast, rebind_var
 from fp._internal.errors import _CommonError, _ErrorCompatible
 from fp.callables.protocols import Unary, UnaryContract, OnceUnary, MutableUnary, BorrowCallContract
 from fp.callables.invoke import RepeatableUnary
-from fp.callables._receiver import _RepeatableBorrow, _MutableBorrowRef, _MutableUnaryRef, _unary_once_as, _borrow_once_as
+from fp.callables._receiver import _OnceBorrowAvailable, _RepeatableBorrow, _MutableBorrowRef, _MutableUnaryRef, _unary_once_as, _borrow_once_as
 from fp.callables._conditional import _guard_owned
 from fp.data._result import Result, _transformed, _fold_result_owned
 from .protocols import _pure, Applicative, ApplicativeError, Monad
@@ -50,6 +50,10 @@ struct EnsureContract[I: ApplicativeError & Monad, V: Movable & Deinitable,
     """The selected family's admission of the existing validation continuation."""
     comptime Compatible = Self.InputCompatible and Self.PredicateCompatible and Self.FailureCompatible and Self.CarrierCompatible and Self.CallbackErrorsCompatible and Self.BindCompatible
     """Selected ensure admission; legacy Piped keeps its original predicates."""
+    comptime ReceiverCompatible = _OnceBorrowAvailable[Self.P] and _OnceBorrowAvailable[Self.G]
+    """Both borrowed callbacks have a shared or consuming receiver."""
+    comptime InvocationCompatible = Self.Compatible and Self.ReceiverCompatible
+    """Existing admission plus receiver availability for new wrapper boundaries."""
     comptime Family = Self.I
     """The unchanged family for fluent continuation."""
     comptime Out = Self._Bind.Out
@@ -252,6 +256,10 @@ struct AttemptTapContract[I: ApplicativeError & Monad, V: Movable & Deinitable,
     """Carrier and primitive admission without repeating callback input equality."""
     comptime Compatible = Self.InputCompatible and Self.FamilyCompatible
     """Selected entry-point admission; receiver and copy checks remain with families."""
+    comptime ReceiverCompatible = _OnceBorrowAvailable[Self.C]
+    """The whole-outcome observer has a shared or consuming receiver."""
+    comptime InvocationCompatible = Self.Compatible and Self.ReceiverCompatible
+    """Existing admission plus receiver availability for new wrapper boundaries."""
     comptime Family = Self.I
     """The unchanged family for fluent continuation."""
     comptime Out = Self._Plan.Out
