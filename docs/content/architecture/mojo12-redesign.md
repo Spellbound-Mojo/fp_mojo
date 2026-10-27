@@ -2485,6 +2485,27 @@ source/package O0/O3 checks passed. Reports retained unchanged inputs and no
 audit failures. Generated sources, all 48 tooling tests and strict documentation
 checks passed.
 
+### Dependent folds share the unary signature metadata owner
+
+The default dependent fold's probe and step shapes are aliases of the existing
+type-only unary error probe in callable protocols. They retain their original
+private import names and exact argument, output and error projections. These
+shapes are used only to compute family errors and check them against the actual
+runtime callbacks; they never hold values or invoke a callback.
+
+This removes two independent declarations of the same unary metadata protocol.
+The runtime probe, step, storage, receivers and execution remain unchanged,
+including the assertions equating their actual family errors with these shapes.
+The public API inventory and generated API documentation remain unchanged.
+
+Six focused O0 programs passed, covering Boolean queries, both searches, mapped
+folds, staged generic forwarding and staged ownership traces. All 28 staged-fold
+source/package O0/O3 boundary checks passed. Effect-query, effect-search, fold
+and all 140 generic programs passed, as did the targeted query/search and public
+contract rejection groups. Reports retained unchanged inputs and no audit
+failures. Generated-source checks, all 48 tooling tests and strict documentation
+checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

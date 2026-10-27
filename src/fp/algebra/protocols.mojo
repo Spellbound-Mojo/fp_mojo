@@ -13,7 +13,7 @@ from std.builtin.rebind import rebind
 # Algebra's retained receiver view shares the callable dispatch used by
 # Kleisli. Existing consumers retain their private import name.
 from fp.callables._receiver import _MutableUnaryRef as _UnaryView
-from fp.callables.protocols import (UnaryContract, BinaryContract, ThunkContract,
+from fp.callables.protocols import (_ErrorProbe, UnaryContract, BinaryContract, ThunkContract,
                                     Unary, Binary, OnceUnary, MutableUnary, OnceThunk, BorrowCallable)
 from fp.callables.invoke import call_once, RepeatableUnary, RepeatableBinary
 from fp.callables._receiver import _binary_repeated_as, _unary_repeated_as, _thunk_once_as, _unary_once_as
@@ -889,10 +889,9 @@ struct _Pull[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable
 
 
 # Monad default dependent accumulation.
-@fieldwise_init
-struct _ProbeShape[K: _LiveAccumulator](UnaryContract):
-    comptime Arg = Self.K.Acc
-    comptime Out = Self.K.Acc
+# These shapes project types only. The callable protocol owner supplies their
+# unary signature; _Probe and _Step below remain the execution owners.
+comptime _ProbeShape[K: _LiveAccumulator] = _ErrorProbe[K.Acc, K.Acc, Never]
 
 
 @fieldwise_init
@@ -906,11 +905,7 @@ struct _Probe[K: _LiveAccumulator, o: MutOrigin](Unary):
         return arg^
 
 
-@fieldwise_init
-struct _StepShape[M: Monad, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator](UnaryContract):
-    comptime Arg = Self.K.Acc
-    comptime Out = Self.M._Joined[Self.M.Pure[Self.K.Acc], Self.F.Out]
-    comptime Error = Self.F.Error
+comptime _StepShape[M: Monad, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator] = _ErrorProbe[K.Acc, M._Joined[M.Pure[K.Acc], F.Out], F.Error]
 
 
 @fieldwise_init
