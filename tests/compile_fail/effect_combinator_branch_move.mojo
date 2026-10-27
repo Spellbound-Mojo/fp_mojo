@@ -1,4 +1,4 @@
-# error: List callbacks must be repeatable
+# error: no matching method in call to 'fold_effect'
 from fp.iteration import iterated
 from fp.algebra import ListFamily
 @fieldwise_init

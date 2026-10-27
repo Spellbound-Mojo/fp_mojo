@@ -1876,6 +1876,50 @@ All compiler reports retained unchanged inputs and no audit failures. Integrated
 library comparison found only earlier constructor documentation updates in two
 files; the implementation matches the qualified prototype.
 
+### Declared fold admission and generic forwarding
+
+`FoldContract[I, V, F]` exposes input equality, output carrier membership,
+family admission, the exact result and the construction error for a free
+`fold_effect` call. A generic wrapper forwards its single `Compatible`
+predicate and uses `Out` and `Error`; the same proof works for `Piped` folds.
+It stores no runtime state and does not adapt or invoke the callback.
+
+The existing private fold descriptor moves to the contract module and remains
+re-exported under its existing internal name. The all-live accumulator policy
+moves to the protocol owner. Generated free, fluent and selected effect entries
+use the descriptor's family requirement instead of discovering invalid native
+fold receivers only inside execution.
+
+The four native eager families declare the default driver's precise requirements:
+repeatable preparation and steps, exact source/accumulator/output types and
+compatible native errors. List also requires copyable prepared items because a
+step can be invoked on several accumulator branches. Identity, Optional and
+Result keep move-only items. One helper owns these checks; native carrier type
+and branching policy remain declarations of each family.
+
+Custom families inherit permissive fold metadata and keep their existing
+implementation contract. This pass does not claim complete admission for
+custom or deferred family internals. Describing a complete family through its
+own Monad-bounded helper caused recursive conformance resolution on Mojo 1.2;
+passing the native carrier and branching policy avoids that cycle without
+compiler internals or weaker ownership checks.
+
+The added descriptor is a public API addition. Ordinary call syntax, positional
+bindings and runtime execution remain unchanged. Generic wrappers that forward
+only partial preconditions can use `FoldContract.Compatible` to forward the
+complete checked free-call requirement.
+
+Qualification passed all 721 positive programs. The full rejection run rejected
+all 1,616 fixtures without crashes or timeouts; three expected diagnostic strings
+still named the old execution-body assertion. Those fixtures now require the
+normal call-boundary diagnostic and passed all 12 source/package checks at O0
+and O3. The original report is retained rather than rewritten. The remaining
+1,613 fixtures passed their declared diagnostics in that full run. Twenty new
+contract boundary checks and four checks for the earlier search diagnostic also
+passed. Generated sources and all 48 tooling tests passed; the strict docs build
+validated 319 exports and 82 examples, and the new example passed all four routes.
+A fresh integrated package and its O3 native client passed with unchanged inputs.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

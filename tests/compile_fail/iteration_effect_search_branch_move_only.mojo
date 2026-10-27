@@ -1,4 +1,4 @@
-# error: List callbacks must be repeatable
+# error: no matching function in call to 'find_effect'
 from fp.iteration import find_effect
 from fp.algebra import ListFamily
 @fieldwise_init

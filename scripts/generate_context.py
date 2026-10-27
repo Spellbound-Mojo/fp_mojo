@@ -441,7 +441,7 @@ def methods(*, fold_stage=False):
                                   accumulator="Self.A", initial="self.initial^",
                                   monoid="M" if mapped_fold else "",
                                   retained=f"_TraverseTap[{element}, J, {c}, True]" if borrowing else "")
-            conditions += [f"J.Element[{result}] == {plan.payload}"]
+            conditions += [f"J.Element[{result}] == {plan.payload}", f"{plan.types}.Compatible"]
             if operation.searching:
                 conditions += [f"RepeatableUnary[{plan.callback}]"]
             elif folding:

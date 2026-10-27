@@ -483,6 +483,8 @@ trait Monad(Applicative):
     """The error `flat_map` raises."""
     # One dependent accumulation boundary. Eager families inherit the loop;
     # deferred families store its inputs and delegate when run.
+    # Custom fold implementations retain their existing contract by default.
+    comptime _FoldCompatible[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator]: Bool = True
     comptime _Folded[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator]: Movable & Deinitable = Self.Pure[K.Acc]
     comptime _FoldError[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator]: Movable & Deinitable = _BindLoop[Self, P, F, K].Error
     @staticmethod
@@ -938,6 +940,26 @@ struct _Step[M: Monad, F: BinaryContract & Movable & Deinitable, K: _LiveAccumul
         comptime C = downcast[Self.F.Second, Copyable & Deinitable]
         var item = rebind_var[Self.F.Second](rebind[C](self.item).copy())
         return Self._apply(self.function[], arg^, item^)
+
+
+# Admission for the four native eager families using the default fold driver.
+# Describe their exact output and branching policy without asking an incomplete
+# family to prove its Monad conformance while defining its own predicate.
+comptime _NativeFoldCompatible[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable,
+                              F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator,
+                              Carrier: Movable & Deinitable, branching: Bool] = (
+    RepeatableUnary[P] & RepeatableBinary[F] &
+    (P.Arg == _Item[V]) & (P.Out == F.Second) & (F.First == K.Acc) &
+    (F.Out == Carrier) & _CommonErrorCompatible[P.Error, F.Error] &
+    (not branching or conforms_to(F.Second, Copyable))
+) if conforms_to(V, Iterator) or conforms_to(V, IterableOwned) else False
+
+
+struct _AllLive[A: Movable & Deinitable](_LiveAccumulator):
+    comptime Acc = Self.A
+    @staticmethod
+    def live(ref acc: Self.Acc) -> Bool: return True
+
 
 
 struct _BindLoop[M: Monad, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator]:

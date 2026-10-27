@@ -53,6 +53,7 @@ def folds(mode, array=False):
             raised = f'_EntryError[{hint}, {plan.error}]'
             condition += f' and G.Element[{effect}] == {plan.payload} and _ErrorCompatible[{raised}, {plan.error}]'
             condition += f' and _CarrierCompatible[G, {effect}]'
+            condition += f' and {plan.types}.Compatible'
             result = plan.result
             call = plan.invoke(raised, value)
             args = [arg] + ([f'var initial: {acc}'] if fold else [])
@@ -159,6 +160,7 @@ def searches(mode, array=False):
             raised=f'_EntryError[X, {actual}]'
             condition+=f' and G.Element[{effect}] == {plan.payload}'
             condition+=f' and _CarrierCompatible[G, {effect}] and RepeatableUnary[{plan.callback}]'
+            condition+=f' and {plan.types}.Compatible'
             # Generic forwarding can prove the native callback error directly;
             # deferred families instead admit their construction error. The
             # shared fold boundary checks every actual family error.

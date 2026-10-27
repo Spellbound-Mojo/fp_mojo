@@ -32,6 +32,16 @@ explicitly; its legacy default derives membership from an identity map.
 Transformer binding uses carrier membership and the base's bind predicate,
 not the base's map predicate.
 
+`FoldContract[I, V, F]` describes the free `fold_effect` entry with its inferred
+construction error. A generic wrapper forwards `Compatible`, returns `Out` and
+raises `Error`; `Piped.fold_effect` accepts the same proof. The native Identity,
+Optional and Result folds accept move-only source items. List additionally
+requires copyable items because each prepared item may enter several branches.
+All four require a repeatable step. Custom families keep their existing fold
+contract unless they declare additional admission requirements.
+
+<!-- example: docs/examples/fold_contracts.mojo -->
+
 <!-- example: docs/examples/operation_contracts.mojo -->
 
 `FilterContract[I, V, P]` does the same for `filter`; pass `True` as the

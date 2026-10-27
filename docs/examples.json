@@ -81,6 +81,9 @@
     "docs/examples/fluent_effects.mojo": {
       "stdout": "combined: 7\npaired: 3 4\napplied: 18\ncombined three: 12\nflat tuple: (3, 4, 5)\nretained: [1, 2, 3]\nall checked: True\nsource error preserved: True\n"
     },
+    "docs/examples/fold_contracts.mojo": {
+      "stdout": "folded: 13\n"
+    },
     "docs/examples/foundations.mojo": {
       "stdout": "fold = 15 ; match = 22 ; callbacks = 5\n"
     },
@@ -143,6 +146,9 @@
     },
     "docs/examples/partial.mojo": {
       "stdout": "8\n8\n15\n18\n"
+    },
+    "docs/examples/pure_construction.mojo": {
+      "stdout": "pure construction: direct=7; deferred=11\n"
     },
     "docs/examples/quickstart.mojo": {
       "stdout": "42\n"
@@ -213,6 +219,9 @@
     "docs/examples/shared_outcomes.mojo": {
       "stdout": "observed failure: False\nobserved failure: True\nobserved failure: True\nvalue=8\nfailed: nonpositive\nvalue=0\n"
     },
+    "docs/examples/single_value_deferred.mojo": {
+      "stdout": "deferred single traversal: answer=17; absent=True\n"
+    },
     "docs/examples/single_value_traversal.mojo": {
       "stdout": "single traversal: ticket=7; absent=True\n"
     },
@@ -236,12 +245,6 @@
     },
     "docs/examples/writer_capabilities.mojo": {
       "stdout": "output: [saved] ; observed: [saved]\nnested output: [nested] ; observed: [nested] ; state: 42\nfailed: True ; retained output: [attempted]\n"
-    },
-    "docs/examples/single_value_deferred.mojo": {
-      "stdout": "deferred single traversal: answer=17; absent=True\n"
-    },
-    "docs/examples/pure_construction.mojo": {
-      "stdout": "pure construction: direct=7; deferred=11\n"
     }
   },
   "version": 1

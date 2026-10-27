@@ -17,7 +17,7 @@ from fp.callables._receiver import _unary_repeated_as
 from ._branches import _OptionalGuard, _ResultGuard, _TraverseBranch
 from ._result_accumulation import _result_map2, _result_loop, _ResultLoopCompatible, _FirstError
 from .filtering import _Select, _Keep
-from .protocols import (_pure, Functor, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Filterable, FunctorFilter, _Lifting, _Accumulate, _Present, _Item, _iterator,
+from .protocols import (_NativeFoldCompatible, _LiveAccumulator, _pure, Functor, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Filterable, FunctorFilter, _Lifting, _Accumulate, _Present, _Item, _iterator,
                         _next_item, _start_as, _combine_as, _map_accumulate, _Append, _LinearLoopCompatible, _LinearProducerCompatible)
 
 
@@ -56,6 +56,7 @@ struct IdentityFamily(Monad, Traversable):
 
     `Reader[R]`, `State[S]` and `Writer[W]` are their transformers over it.
     """
+    comptime _FoldCompatible[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator] = _NativeFoldCompatible[V, P, F, K, K.Acc, False]
     comptime _LoopCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = _LinearLoopCompatible[V, F, K.Item, K.Error]
     comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self._LoopCompatible[V, F, _Append[F.Out]]
     comptime Element[V: Movable & Deinitable] = V
@@ -193,6 +194,7 @@ struct IdentityFamily(Monad, Traversable):
 
 struct OptionalFamily(Monad, Traversable, Filterable, FunctorFilter, _Lifting):
     """The standard `Optional` as a carrier: an absent value skips callbacks and right operands."""
+    comptime _FoldCompatible[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator] = _NativeFoldCompatible[V, P, F, K, Optional[K.Acc], False]
     comptime CarrierCompatible[V: Movable & Deinitable] = V == Optional[Self.Element[V]] if conforms_to(V, IterableOwned) else False
     comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == Optional[F.Arg]
     comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.MapCompatible[V, F] and Self.CarrierCompatible[F.Out]
@@ -443,6 +445,7 @@ struct ResultFamily[E: Movable & Deinitable](Monad, ApplicativeError, ErrorMappi
     Parameters:
         E: The stored error type.
     """
+    comptime _FoldCompatible[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator] = _NativeFoldCompatible[V, P, F, K, Result[K.Acc, Self.E], False]
     comptime Error = Self.E
     comptime Failure = Self.E
     # Keep exact nominal equality as the proof generic forwarders provide.
@@ -699,6 +702,7 @@ struct ListFamily(Monad, Traversable, Filterable, FunctorFilter):
     exclusive receiver.
     """
     # Traversal also accepts an existing iterator, without restarting it.
+    comptime _FoldCompatible[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator] = _NativeFoldCompatible[V, P, F, K, List[K.Acc], True]
     comptime CarrierCompatible[V: Movable & Deinitable] = V == List[Self.Element[V]] if conforms_to(V, IterableOwned) else False
     comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == List[F.Arg] and RepeatableUnary[F]
     comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.MapCompatible[V, F] and Self.CarrierCompatible[F.Out]

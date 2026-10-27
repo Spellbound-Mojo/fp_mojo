@@ -11,6 +11,9 @@ from .protocols import _MappedFamily, Functor, Monad, Traversable, Applicative, 
 from fp.iteration._advance import _OwnedElement
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallable
 from fp.callables._predicates import _FilterPredicate
+from .protocols import _AllLive, _LiveAccumulator
+from fp.callables._identity import Identity
+from fp.iteration._advance import _Source
 
 
 struct MapContract[I: Functor, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]:
@@ -191,3 +194,38 @@ struct CombineContract[I: Applicative, V: Movable & Deinitable, F: BinaryContrac
     """The exact carrier produced by the family, including deferred types."""
     comptime Error = Self.I.CombineError[Self.V, Self.F, Self.R]
     """The family's exact construction error, including callback and thunk effects."""
+
+
+struct _EffectFold[G: Monad, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator]:
+    comptime Prepare = Identity[Self.F.Second]
+    comptime Compatible = Self.G._FoldCompatible[Self.V, Self.Prepare, Self.F, Self.K]
+    comptime Out = Self.G._Folded[Self.V, Self.Prepare, Self.F, Self.K]
+    comptime Error = Self.G._FoldError[Self.V, Self.Prepare, Self.F, Self.K]
+
+
+
+struct FoldContract[I: Monad, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable]:
+    """Admission, output and error for an effectful fold with a library callable.
+
+    A generic wrapper forwards `Compatible`, returns `Out` and raises `Error`.
+    The target family owns dependent sequencing; custom families retain their
+    existing fold admission unless they declare additional requirements.
+
+    Parameters:
+        I: The target Monad family.
+        V: The consumed source type, including its native origins.
+        F: The binary accumulator step, including receiver and native error.
+    """
+    comptime _Plan = _EffectFold[Self.I, Self.V, Self.F, _AllLive[Self.F.First]]
+    comptime InputCompatible = _Source[Self.V].Element == Self.F.Second
+    """Exact source-element and step-input equality, including origins."""
+    comptime OutputCompatible = Self.I.CarrierCompatible[Self.F.Out] and Self.I.Element[Self.F.Out] == Self.F.First
+    """The step returns this family's carrier of the unchanged accumulator type."""
+    comptime FamilyCompatible = Self._Plan.Compatible
+    """Requirements declared by the target family's dependent fold."""
+    comptime Compatible = Self.InputCompatible and Self.OutputCompatible and Self.FamilyCompatible
+    """The complete checked fold admission with its inferred construction error."""
+    comptime Out = Self._Plan.Out
+    """The exact family result, including deferred computations."""
+    comptime Error = Self._Plan.Error
+    """The exact native error raised while constructing the fold result."""

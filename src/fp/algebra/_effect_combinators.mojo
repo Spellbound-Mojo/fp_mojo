@@ -8,12 +8,10 @@ from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
 from .protocols import Monad, _LiveAccumulator, Monoid, _AccumulatePair, _BindFirst, _start_as, _map_as, _flat_map_as, _fold_as
 from ._accumulation import _Combine
 from ._admission import _MapCompatible
+from .contracts import _EffectFold
+from .protocols import _AllLive
 
 
-struct _AllLive[A: Movable & Deinitable](_LiveAccumulator):
-    comptime Acc = Self.A
-    @staticmethod
-    def live(ref acc: Self.Acc) -> Bool: return True
 
 
 struct _BoolLive[all_values: Bool](_LiveAccumulator):
@@ -34,10 +32,6 @@ struct _PredicateStep[C: BorrowCallable](Binary):
         return invoke_borrowed[Self.Error](second, self.predicate)
 
 
-struct _EffectFold[G: Monad, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator]:
-    comptime Prepare = Identity[Self.F.Second]
-    comptime Out = Self.G._Folded[Self.V, Self.Prepare, Self.F, Self.K]
-    comptime Error = Self.G._FoldError[Self.V, Self.Prepare, Self.F, Self.K]
 
 
 def _fold_effect[G: Monad, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable,

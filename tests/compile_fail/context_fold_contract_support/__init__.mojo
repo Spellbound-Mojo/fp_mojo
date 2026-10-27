@@ -1,0 +1,1 @@
+../../runtime/context_fold_contract_support/__init__.mojo
