@@ -1,5 +1,5 @@
 """Select native errors once; stored Result errors remain independent."""
-from fp.functions import pipeline
+from fp.functions import pipeline, identity
 from fp.algebra import OptionalFamily, ResultFamily
 from fp.data import Result, Ok, Err
 from std.testing import assert_equal
@@ -19,6 +19,7 @@ def recover(var code: Int) -> Result[Int, String]: return Ok(code)
 def double(var value: Int) -> Int: return value * 2
 def even(value: Int) -> Bool: return value % 2 == 0
 def as_text(value: Int) -> String: return String(value)
+def default_count() -> Int: return 0
 
 def main() raises:
     # A stored native pointer uses the same selected call syntax.
@@ -39,8 +40,8 @@ def main() raises:
     assert_equal(audited.value(), List[Int]([1, 2, 3, 4]))
     def available(value: Int) -> Result[Bool, String]: return Ok(value % 2 == 0)
     def count(var values: List[Int]) -> Int: return len(values)
-    var selected = pipeline(audited.take()).filter_effect[ResultFamily[String]](available).map(count).get()
-    assert_equal(selected._ok().value, 2)
+    var selected = pipeline(audited.take()).filter_effect[ResultFamily[String]](available).map(count).get_or_else(default_count)
+    assert_equal(selected, 2)
 
     # Transform optional values inside the effect, then compact the source.
     def optional_double(var value: Int) -> Optional[Optional[Int]]:
@@ -64,19 +65,22 @@ def main() raises:
     def validate(var value: Int) -> Result[Int,List[String]]:
         if value < 0: return Err(List[String]([String(value)]))
         return Ok(value)
-    assert_equal(pipeline(List[Int]([-1,2,-3])).par_traverse(validate).get()._err().value, List[String](["-1","-3"]))
+    var validation = pipeline(List[Int]([-1,2,-3])).par_traverse(validate).get()
+    def no_errors(var values: List[Int]) -> List[String]: return List[String]()
+    var errors = validation^.fold_owned(no_errors, identity[List[String]])
+    assert_equal(errors, List[String](["-1","-3"]))
 
-    var checked: Result[Int, String]
+    var checked: Int
     try:
-        checked = pipeline(Result[Int, String](Ok(4))).raising[PipelineProcessingFailure]().map(process).ensure(accepted, invalid).get()
+        checked = pipeline(Result[Int, String](Ok(4))).raising[PipelineProcessingFailure]().map(process).ensure(accepted, invalid).get_or_else(default_count)
     except _: raise Error("unexpected processing failure")
-    assert_equal(checked._ok().value, 8)
-    print("accepted:", checked._ok().value)
+    assert_equal(checked, 8)
+    print("accepted:", checked)
 
     # Changing the stored error also updates the selected Result family.
-    var recovered = pipeline(Result[Int, String](Err(String("bad")))).map_err(length).or_else(recover).map(double).get()
-    assert_equal(recovered._ok().value, 6)
-    print("recovered:", recovered._ok().value)
+    var recovered = pipeline(Result[Int, String](Err(String("bad")))).map_err(length).or_else(recover).map(double).get_or_else(default_count)
+    assert_equal(recovered, 6)
+    print("recovered:", recovered)
 
     var code = 0
     try:

@@ -1,21 +1,15 @@
 # fp.functions
 
-For a reusable generic wrapper, follow the [contract-forwarding guide](../guides/generic-wrappers.md).
-
 `fp.functions` provides eager pipelines, function composition and partial
-application. Use `pipe` to apply a sequence of functions now, `flow` or `compose`
-to build a function for later calls, and `partial` to bind leading arguments.
+application. Start fluent code with `pipeline(value)`, use `flow` or `compose`
+to build a reusable function, and `partial` to bind leading arguments.
 The [pipeline tutorial](../tutorial/pipelines.md) starts with a complete program.
 
-Use `.map(transform)` to preserve a supported native container and map its
-payloads immediately. Use `.map[Family](transform)` for an explicit Functor
-instance. `.filter(predicate)` and `.filter_not(predicate)` eagerly preserve supported
-containers, and
-`.fold_left(step, initial)` consumes an iterable immediately and keeps its
-result in the chain. `.get()` extracts the stored value. See
-[combinators](combinators.md) for supported containers and lazy alternatives.
-`Piped` names its payload parameter `Value`: explicit `Piped[T=Int]` and
-`Piped[Int].T` become `Piped[Value=Int]` and `Piped[Int].Value`.
+Use `.map(transform)` for selected payloads and `.then(stage)` for the whole
+value. Native collection operations execute immediately, and `.get()` extracts
+the stored carrier. Result terminals `value_or`, `get_or_else` and `to_optional`
+return their final value directly. For a reusable generic wrapper, follow the
+[contract-forwarding guide](../guides/generic-wrappers.md).
 
 ## Select family and native errors before callbacks
 
@@ -433,8 +427,8 @@ accumulates stored errors through the same operations.
 
 This checkout selects its native error once, traverses into Result, folds the
 collected amounts, and combines shipping and tax. Invalid amounts remain stored
-errors; transport failures remain native raised errors. Existing `Piped` remains
-available, including operations not yet exposed through `Pipeline`.
+errors; transport failures remain native raised errors. `value_or(explain)`
+turns either stored outcome into the final display text without private access.
 
 A generic bind wrapper retains a family parameter (`I: Monad`, optionally
 `I: Monad = ResultFamily[E]`) and forwards `I.BindCompatible[V, F]`,
@@ -459,6 +453,39 @@ as `5830` and prints as `total: $58.30`. With `"19.99"`, `parse_cents` raises
 `PriceError`, no later stage runs, and the program prints
 `invalid price: 19.99`.
 The entry point selects `PriceError` once; subsequent pure stages retain Never.
+
+## Other pipeline entry points
+
+`pipe(value, first, second, ...)` applies up to eight plain functions in one
+call, inferring the intermediate types and their common native error. Existing
+`piped(value).then(...)` chains remain available too. New fluent code can use
+`pipeline` for a consistent selected family and native error context.
+
+<!-- example: docs/examples/callable_pipeline.mojo -->
+
+This fixed-stage example filters the whole input List, totals it and formats
+`"total=10"`. If `checked` raises `ReceiptFailure`, the following stage is
+skipped. This is the existing `pipe` contract; it is separate from Pipeline's
+payload operations and `.raising[E]()` selection.
+
+When a `pipe` call mixes closures or library values with native functions,
+promote the native functions with `as_unary`. The explicit forms
+`pipe[E=Failure]` and `pipe[Results, Failure]` also take promoted functions and
+library values. A `pipeline(...).then(...)` chain accepts those forms directly.
+
+<!-- example: docs/examples/callable_pipeline_generic.mojo -->
+
+The generic `pipe` wrapper checks its exact result type before `rebind_var`
+moves it across the expression boundary. The assertion matters: a rebind alone
+can accept distinct structs with the same representation. Its `E=` parameter
+forwards the native error; use `Never` for a non-raising wrapper. For generic
+Pipeline wrappers, prefer the [public operation contracts](../guides/generic-wrappers.md).
+
+On the older `Piped` surface, `.map[Family](transform)` selects an explicit
+Functor for an operation. Pipeline selects it at construction with
+`pipeline[Family](value)`. `Piped` names its payload parameter `Value`:
+explicit `Piped[T=Int]` and `Piped[Int].T` become `Piped[Value=Int]` and
+`Piped[Int].Value`.
 
 ## Bind leading arguments with partial
 

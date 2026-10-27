@@ -1,7 +1,7 @@
 # Installation and first run
 
-Install `fp_mojo` in a Pixi project, or run the library from a source checkout.
-Both routes use the same imports, such as `from fp.functions import pipe`.
+Use a `nightly` source checkout for the current tutorials and API. The released
+package remains available for existing Mojo 1.1 projects.
 
 The `nightly` development checkout pins Mojo 1.2.0 and Python 3.14 through
 [Pixi](https://pixi.sh). The published FP Mojo 1.0.0 package still requires
@@ -12,7 +12,72 @@ checkpoint passes the full positive and rejection suites. See the
 [compatibility inventory](../guides/compatibility.md) for the qualified source
 commit, platform limits and legacy invalid-call inference restrictions.
 
+## Work from a checkout
+
+Install Pixi if it is missing and put it on your `PATH`:
+
+```sh
+curl -fsSL https://pixi.sh/install.sh | sh
+export PATH="$HOME/.pixi/bin:$PATH"
+```
+
+Then clone the repository, install the locked environment and run the
+quickstart:
+
+```sh
+git clone --branch nightly https://github.com/Spellbound-Mojo/fp_mojo.git
+cd fp_mojo
+pixi install --locked
+pixi run mojo --version
+pixi run mojo run -I src docs/examples/pipeline_quickstart.mojo
+```
+
+The compiler reports `Mojo 1.2.0 (2016d0cd)` and the program prints `42`. Use
+the project environment even if another Mojo is installed on your system.
+Pixi downloads Mojo from `conda.modular.com`. The optional `device` environment
+uses MAX 26.7.0, whose compiler dependency matches Mojo 1.2.0.
+
+## Import from source
+
+The package lives in `src/fp`. Pass `-I src` so imports such as
+`from fp.functions import pipe` resolve. Import each name from the package that
+owns it. The package root `fp` re-exports only `match`, `rewrite` and `when`, so
+`import fp` is enough to write `fp.match(...)`.
+
+```sh
+pixi run mojo run -I src docs/examples/callable_pipeline.mojo
+```
+
+To build an executable, choose the optimization level explicitly:
+
+```sh
+mkdir -p .cache/local
+pixi run mojo build -I src -O3 --Werror docs/examples/quickstart.mojo -o .cache/local/quickstart
+.cache/local/quickstart
+```
+
+`--Werror` turns warnings into errors. Programs written for a different Mojo
+version may not compile on the pinned one.
+
+## Import a precompiled package
+
+A precompiled package gives you the same API without compiling the sources on
+every run:
+
+```sh
+mkdir -p .cache/local/package
+pixi run mojo precompile -I src --Werror src/fp -o .cache/local/package/fp.mojoc
+pixi run mojo run -I .cache/local/package docs/examples/quickstart.mojo
+```
+
+Rebuild the package after changing the library sources. `pixi run build` does the
+same into a fresh directory and also runs an example against the result (see
+[development](../contributing/development.md)).
+
 ## Install the package
+
+This alternative installs the published FP Mojo 1.0.0 release for Mojo 1.1.
+Use the checkout above for the current tutorial API.
 
 Install [Pixi](https://pixi.sh) if it is not already on your `PATH`. Then create
 a project with the Mojo and
@@ -58,78 +123,17 @@ program beside its `pixi.toml`.
 
 ### Run the tutorial examples
 
-Each example on the site has a Download link. Save the file in your Pixi
-project and run it by name, for example:
+The current tutorials use the nightly API, including `pipeline`, Result
+terminals and `.elements()`. Follow the [checkout route](#work-from-a-checkout)
+and run their maintained files from the repository root:
 
 ```sh
-pixi run mojo run algebra_choices.mojo
+pixi run mojo run -I src docs/examples/combinators.mojo
 ```
 
-The command shown inside an example's frame runs its maintained copy from a
-repository checkout. Use the downloaded file's name, as above, when working
-with the installed package.
-
-## Work from a checkout
-
-Install Pixi if it is missing and put it on your `PATH`:
-
-```sh
-curl -fsSL https://pixi.sh/install.sh | sh
-export PATH="$HOME/.pixi/bin:$PATH"
-```
-
-Then clone the repository, install the locked environment and run the
-quickstart:
-
-```sh
-git clone --branch nightly https://github.com/Spellbound-Mojo/fp_mojo.git
-cd fp_mojo
-pixi install --locked
-pixi run mojo --version
-pixi run mojo run -I src docs/examples/quickstart.mojo
-```
-
-The compiler reports `Mojo 1.2.0 (2016d0cd)` and the program prints `42`. Use
-the project environment even if another Mojo is installed on your system.
-Pixi downloads Mojo from `conda.modular.com`. The optional `device` environment
-uses MAX 26.7.0, whose compiler dependency matches Mojo 1.2.0.
-
-## Import from source
-
-The package lives in `src/fp`. Pass `-I src` so imports such as
-`from fp.functions import pipe` resolve. Import each name from the package that
-owns it. The package root `fp` re-exports only `match`, `rewrite` and `when`, so
-`import fp` is enough to write `fp.match(...)`.
-
-```sh
-pixi run mojo run -I src docs/examples/callable_pipeline.mojo
-```
-
-To build an executable, choose the optimization level explicitly:
-
-```sh
-mkdir -p .cache/local
-pixi run mojo build -I src -O3 --Werror docs/examples/quickstart.mojo -o .cache/local/quickstart
-.cache/local/quickstart
-```
-
-`--Werror` turns warnings into errors. Programs written for a different Mojo
-version may not compile on the pinned one.
-
-## Import a precompiled package
-
-A precompiled package gives you the same API without compiling the sources on
-every run:
-
-```sh
-mkdir -p .cache/local/package
-pixi run mojo precompile -I src --Werror src/fp -o .cache/local/package/fp.mojoc
-pixi run mojo run -I .cache/local/package docs/examples/quickstart.mojo
-```
-
-Rebuild the package after changing the library sources. `pixi run build` does the
-same into a fresh directory and also runs an example against the result (see
-[development](../contributing/development.md)).
+Each example's frame includes the corresponding command and a Download link.
+The released-package quickstart above retains the original `pipe` API; it does
+not require the new nightly operations.
 
 ## Build this documentation site
 

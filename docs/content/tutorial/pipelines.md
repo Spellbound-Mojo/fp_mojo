@@ -1,142 +1,113 @@
 # 1. Eager pipelines
 
-`pipe` applies a sequence of functions to a value, passing each result to the
-next function. Evaluation is eager: all stages run before the call returns,
-unless one raises an error. Write each stage as a plain function; `pipe` infers
-the intermediate types and their common error type.
+Start with `pipeline(value)`, chain the operations you need, and finish with
+`.get()`. Plain functions, closures and library callables work together without
+adapters or a fixed stage limit. These tutorials use the Mojo 1.2 nightly
+checkout; follow [installation](../start/installation.md#work-from-a-checkout)
+and read [ownership and errors](../start/ownership.md) first.
 
-A call accepts up to eight plain functions. For longer pipelines, use
-`piped(...).then(...)`. Before running the examples, follow
-[installation](../start/installation.md) and read
-[ownership and errors](../start/ownership.md).
+<a id="run-a-pipeline-over-a-list"></a>
+<a id="use-combinators-for-collection-stages"></a>
 
-## Run a pipeline over a list
+## Map and filter collection elements
 
-The program below consumes a list, keeps the values that are not negative, adds
-them up and formats the total. A second pipeline shows a stage that raises.
-
-<!-- example: docs/examples/callable_pipeline.mojo -->
-
-`pipe(values^, accepted, total, receipt)` starts from `[3, -2, 7, 0]`.
-`accepted` returns `[3, 7, 0]`, `total` returns `10`, and `receipt` returns
-`"total=10"`. The stage results are inferred as `List[Int]`, then `Int`, then
-`String`. Every stage is a plain function, passed as it is.
-
-`values^` moves the input list into the pipeline once. Each result is passed to
-the next stage with native ownership. `accepted` and `total` hand their list to
-`filter` and `fold_left` with `^`, which consume a collection directly.
-
-The result is computed before `pipe` returns: there is no reusable pipeline
-object or deferred closure. `pipe(value)` with no stages returns the value, and
-a one-stage `pipe` takes a callable directly, without the explicit `Results`
-list.
-
-## Choose a pipeline form
-
-How many stages a call takes depends on the form:
-
-- `pipe(value, first, second, ...)` accepts up to eight plain functions in one
-  call. The limit comes from the overloads needed to infer their signatures on
-  Mojo 1.1; the [architecture chapter](../architecture/functions.md#pipelines)
-  explains how they work.
-- `piped(values^).then(accepted).then(total).then(receipt).get()` applies the
-  same stages one call at a time, with no limit on their number. See
-  [chained pipelines](../reference/functions.md#piped).
-
-## Use combinators for collection stages
-
-Use `.filter(predicate)`, `.filter_not(predicate)`, `.map(transform)` and
-`.sum_by(project)` on `piped` and `iterated` chains. For direct calls, import the corresponding
-functions from `fp.combinators`; they are the same functions as in
-`fp.iteration`.
+A List pipeline already selects its elements. Use `.filter(predicate)` to keep
+matching values, `.map(transform)` to change them, and `.sum_by(project)` to
+project and sum in one pass. The same operations have lazy counterparts on
+`iterated` and direct forms in `fp.combinators`:
 
 <!-- example: docs/examples/combinators.mojo -->
 
-The filter retains `3`, `4` and `5`. On the eager path, `.filter(positive)`
-returns a list immediately, then `.sum_by(square)` squares and adds its elements
-in one pass without constructing a list of squares. The lazy path keeps an
-iterator through filtering, then consumes it in the reduction.
-`filter_not(positive)` retains the two negative values instead. Both chains compute
-`9 + 16 + 25 = 50`, without pipeline lambdas or intermediate type aliases.
+The eager chain keeps `3`, `4` and `5`, computes their squared sum as `50`, and
+formats the result with `.then(report)`. Each eager stage completes before the
+next starts. The lazy chain retains an iterator until `.sum_by(square)` consumes
+it. `filter_not(positive)` keeps the two negative values instead.
 
-`Piped.map` preserves supported containers: mapping an `Array[Int, 3]` to
-strings produces `Array[String, 3]`. `Piped.sum_by` keeps the total
-in the chain, so `.then(report)` can format it. `Iter.sum_by` returns the
-total directly. `.get()` extracts a `Piped` value; it does not trigger
-evaluation. See [fp.combinators](../reference/combinators.md) for the contracts.
+For an Array, `.elements()` selects element mapping and preserves its fixed
+length. The Array of three integers becomes another Array of three integers.
+A type-changing map can produce strings while keeping the same length.
 
-## Stop at the first failure
+<a id="choose-a-pipeline-form"></a>
 
-Stages run left to right, once each. When a stage raises, the pipeline stops and
-no later stage runs. In the example, `pipe(-4, checked, receipt)` raises
-`ReceiptFailure(-4)` from `checked`, so `receipt` never runs, and the `except`
-block reads `invalid_total` as `-4`.
+## Choose between payloads and the whole value
 
-For raising stages, `pipe` infers the one error type they share. Stages that do
-not raise, or declare `raises Never`, add nothing to it. Stages that raise
-different error types do not compile together; map their errors to one type
-first. A stage that returns a `Result` holding `Err` passes that value to the
-next stage. To stop on a stored error, use `Result.flat_map`, introduced in the
-[results chapter](results.md).
+`.map(transform)` follows the selected container: it maps List elements,
+a present Optional payload, or a successful Result payload. Empty or failed
+cases skip the callback. `.flat_map(next)` continues with another value in the
+same selected context, such as a Result that can itself fail.
+
+`.then(stage)` consumes the whole current value once. Use it to format a total,
+process a complete collection, or switch to another carrier. Its returned List,
+Optional or Result selects that native family for the next operation; other
+values use Identity. A bare-value pipeline such as `pipeline(21)` also starts
+with Identity, where `.map` applies once to the whole value.
+
+For a named collection, `pipeline(values^)` moves it into the chain. Temporary
+values need no move marker. `.get()` extracts the already computed carrier;
+it does not trigger evaluation. Native collection operations are eager. An
+explicit custom family can define deferred execution under its own contract.
+
+<a id="mix-closures-and-library-values"></a>
+
+## Mix functions, closures and partials
+
+Use `.then(...)` for whole-value stages regardless of whether the stage is a
+plain function, a captured closure or a library callable. The following example
+uses all three forms without `as_unary`:
+
+<!-- example: docs/examples/chained_pipeline.mojo -->
+
+The ten stages compute `"total: $58.30"`. The `discount` and `ship` closures
+capture ordinary arguments; `partial` binds the multiplier and coupon amount.
+Each stage's input and output types are inferred.
+
+<a id="stop-at-the-first-failure"></a>
+
+## Select native errors once
+
+Call `.raising[MyError]()` before native callbacks that can raise that type.
+The example selects `PriceError` once and keeps it across all ten stages.
+Pure callbacks and callbacks declaring `raises Never` remain non-raising.
+If `parse_cents` raises, later stages do not run and the caller receives the
+same `PriceError`. Library callables retain their declared error types.
+
+A stored `Result.Err` is separate from a raised error. Result mapping and bind
+skip a stored failure; a whole-value `.then(...)` can inspect it. Finish a Result
+with `.value_or(on_err)` for error-dependent recovery, `.get_or_else(factory)`
+for a lazy default, or `.to_optional()` to retain only success. These return the
+plain value or Optional directly. See [Results and recovery](results.md).
 
 ## Map sequence elements
 
-Use `pipeline(values^).elements()` to select element operations for an Array,
-Deque, LinkedList or NonEmptyList. List is supported too; its ordinary pipeline
-already maps elements. The container and element types are inferred, including
-Array length. A chain can map Int to String and then String to Int without
-family imports or type annotations.
+Use `pipeline(values^).elements()` for Array, Deque, LinkedList or NonEmptyList.
+List is supported too; its ordinary pipeline already maps elements. The
+container, element type and Array length are inferred, so no family import or
+annotation is needed:
 
 <!-- example: docs/examples/collection_families.mojo -->
 
-Selection only moves the existing container; it does not iterate or call a
-callback. Array mapping preserves its fixed length. Deque and LinkedList also
-support filter and filter_map; filtering NonEmptyList produces a List because
-the result may be empty. The selected native error survives `.elements()`, so
-`pipeline(values^).raising[Failure]().elements().map(callback)` keeps that context.
+Selection only moves the existing container. Array mapping preserves its fixed
+length; Deque and LinkedList also support filter and filter_map. Filtering a
+NonEmptyList produces a List because the result may be empty. `.elements()`
+preserves the native error selected by `.raising[MyError]()`.
 
-`pipeline(array^)` keeps its existing whole-value Identity behavior until
-`.elements()` selects the native sequence family. Explicit families such as
-`pipeline[ArrayFamily[N]](values^)` remain available for generic code. Use
-`pipeline_values(dictionary^)` for dictionary values and `iterated(values^)`
-for lazy element processing.
+`pipeline(array^)` keeps its whole-value behavior until `.elements()` is called.
+Use `pipeline_values(dictionary^)` for dictionary values and `iterated(values^)`
+for lazy processing. Generic code can still name a family explicitly, as in
+`pipeline[ArrayFamily[N]](values^)`.
 
-## Mix closures and library values
+<a id="forward-through-a-generic-function"></a>
 
-A closure becomes a stage once you promote it with `as_unary(closure)`. Library
-values such as a `Partial` or a `flow(...)` composition are stages as they are.
-In a `piped(...).then(...)` chain, closures are stages without promotion.
+## Reuse and generic code
 
-When a `pipe` call mixes closures or library values with native functions,
-promote every native function too. The explicit forms `pipe[E=Failure]` and
-`pipe[Results, Failure]` also take promoted functions and library values. See
-[fp.functions](../reference/functions.md) for the exact overloads.
+Use `flow` or `compose` to build a reusable callable, and `partial` to bind
+leading arguments. A wrapper generic over a family should forward its public
+operation contract; the [wrapper guide](../guides/generic-wrappers.md) covers
+that advanced case. Ordinary fluent calls need no such contract annotations.
 
-## Forward through a generic function
+Existing `pipe(value, first, second, ...)` and `piped(value)` code remains
+supported. Their overload rules are documented under
+[other pipeline entry points](../reference/functions.md#other-pipeline-entry-points).
+Use `pipeline` as the starting point for new fluent code.
 
-A generic helper can keep its declared result and error types while `pipe`
-infers the types in between. The `forward` helper below belongs to the example;
-it is not a library operation. Its stages arrive as a variadic pack, so they are
-library values: the caller promotes the functions with `as_unary`.
-
-<!-- example: docs/examples/callable_pipeline_generic.mojo -->
-
-`forward[Int, Failure](123, first, last)` labels `123` as `"123"` and returns
-its length, `3`. With `-7`, `label` raises `Failure(-7)`, and the caller catches
-it with its exact type and reads `code` as `-7`.
-
-The helper needs both of its last two lines:
-
-- `comptime assert type_of(result) == R` checks that the inferred result is
-  exactly `R`, including nominal struct identity.
-- `rebind_var[R]` then moves the result across the generic expression boundary.
-  On this compiler, a rebind alone accepts some distinct structs with the same
-  representation, so keep the assertion next to it.
-
-`pipe[E=E]` connects the pipeline to the helper's declared error; use `Never`
-for a helper that does not raise. On the pinned compiler, a fully inferred error
-or a return without the rebind still hits generic type-equality limits. The
-explicit `Results` path is an alternative.
-
-Next, see how the [folds and lazy iterators](iteration.md) used inside these
-stages pull their values.
+Next, see how [folds and lazy iterators](iteration.md) consume sources.

@@ -15,13 +15,14 @@ compile them through source and precompiled package imports at O0 and O3 with
 
 | Example | What it shows | Page |
 |---|---|---|
-| `quickstart.mojo` | The smallest complete program: a one-stage `pipe` | [Home](../index.md) |
-| `callable_pipeline.mojo` | A pipeline of plain functions over a consumed list, ending in a fold | [Pipelines tutorial](../tutorial/pipelines.md) |
-| `callable_pipeline_generic.mojo` | Forwarding a pipeline through a generic function | [Pipelines tutorial](../tutorial/pipelines.md#forward-through-a-generic-function) |
-| `chained_pipeline.mojo` | A ten-stage chain with `pipeline(...).raising[E]().then(...)`: plain functions, closures and partials | [fp.functions](../reference/functions.md#chain-ten-stages-with-pipeline) |
+| `pipeline_quickstart.mojo` | A first fluent pipeline on the Mojo 1.2 nightly checkout | [First program](../index.md#run-a-first-program) |
 | `combinators.mojo` | Shared iterator stages in eager and lazy chains, without wrapper lambdas or type aliases | [Pipelines tutorial](../tutorial/pipelines.md#use-combinators-for-collection-stages) |
+| `chained_pipeline.mojo` | A ten-stage chain with `pipeline(...).raising[E]().then(...)`: plain functions, closures and partials | [fp.functions](../reference/functions.md#chain-ten-stages-with-pipeline) |
 | `kleisli.mojo` | Reusable effectful functions with clean eager and lazy callback syntax | [fp.functions](../reference/functions.md#compose-effectful-functions) |
 | `partial.mojo` | Binding leading arguments with `partial`; binding a keyword with a closure | [fp.functions](../reference/functions.md#bind-leading-arguments-with-partial) |
+| `quickstart.mojo` | The released-package quickstart using `pipe` | [Package installation](../start/installation.md#install-the-package) |
+| `callable_pipeline.mojo` | A fixed-stage pipeline of plain functions over a consumed list | [Function reference](../reference/functions.md#other-pipeline-entry-points) |
+| `callable_pipeline_generic.mojo` | Forwarding the fixed-stage pipe API through a generic function | [Function reference](../reference/functions.md#other-pipeline-entry-points) |
 
 ## Iterate and fold
 

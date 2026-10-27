@@ -9,14 +9,12 @@ own structs. Pattern matching checks that every constructor is covered at
 compile time. Functions and closures keep their native ownership conventions
 and error types.
 
-The `nightly` checkout pins Mojo 1.2.0. Its verified Linux checkpoint passes the
-full positive and rejection suites; the [compatibility inventory](guides/compatibility.md)
+These tutorials target the `nightly` checkout, which pins Mojo 1.2.0. Its verified
+Linux checkpoint passes the full positive and rejection suites; the [compatibility inventory](guides/compatibility.md)
 records API migration and remaining restrictions. The published FP Mojo 1.0.0
-package still uses Mojo 1.1.0:
-
-```sh
-pixi add fp_mojo "mojo==1.1.0"  # after adding the modular-community channel
-```
+package still uses Mojo 1.1.0. Follow the [checkout instructions](start/installation.md#work-from-a-checkout)
+for the current API; [package installation](start/installation.md#install-the-package)
+documents the existing release separately.
 
 <div class="hero-actions" markdown="1">
 [Get started](start/installation.md){ .button .primary }
@@ -30,8 +28,9 @@ pixi add fp_mojo "mojo==1.1.0"  # after adding the modular-community channel
 <div class="card" markdown="1">
 [Pipelines](tutorial/pipelines.md)
 
-Apply functions with `pipe`, compose them with `flow`, and bind arguments with
-`partial`. Intermediate types and callback errors are inferred.
+Chain operations with `pipeline`, compose reusable functions with `flow`, and
+bind arguments with `partial`. Plain functions, closures and library callables
+work together without adapters in a fluent chain.
 </div>
 <div class="card" markdown="1">
 [Pattern matching](tutorial/matching.md)
@@ -49,19 +48,15 @@ Monad operations. Combine effects with monad transformers.
 
 ## Run a first program
 
-Follow the [package installation steps](start/installation.md#install-the-package),
-then save this program as `quickstart.mojo` beside your project's `pixi.toml`:
+Follow the [checkout steps](start/installation.md#work-from-a-checkout), then run
+this program from the repository root:
 
-<!-- source: docs/examples/quickstart.mojo -->
+<!-- example: docs/examples/pipeline_quickstart.mojo -->
 
-```sh
-pixi run mojo run quickstart.mojo
-```
-
-The program prints `42`. `pipe(21, twice)` calls `twice` once with `21` and
-returns that `Int` result. Add stages to the same call and they run left to right:
-`pipe(value, parse, check, render)`. Each stage's result type, and the error
-type of any stage that raises, is inferred. The
+The program prints `42`. `pipeline(21).then(twice).get()` calls `twice` once
+and returns its `Int` result. Add `.then(...)` stages to continue with whole
+values, or use `.map(...)` and `.filter(...)` for selected payloads. For native
+callbacks that raise, select their error once with `.raising[MyError]()`. The
 [pipeline tutorial](tutorial/pipelines.md) builds a longer pipeline and shows
 how a failing stage stops it.
 

@@ -168,6 +168,9 @@
     "docs/examples/partial.mojo": {
       "stdout": "8\n8\n15\n18\n"
     },
+    "docs/examples/pipeline_quickstart.mojo": {
+      "stdout": "42\n"
+    },
     "docs/examples/product_contracts.mojo": {
       "stdout": "paired: 3 four\n"
     },
