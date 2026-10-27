@@ -1,10 +1,9 @@
 """Policies and continuations for effectful reductions and conditional bind."""
-from fp.callables.protocols import BinaryContract, ThunkContract, OnceUnary, MutableUnary, UnaryContract
-from fp.callables.invoke import RepeatableThunk
-from fp.callables._receiver import _ThunkView, _thunk_once_as
+from fp.callables.protocols import BinaryContract, ThunkContract, UnaryContract
 from fp.callables._identity import Identity
 from fp._internal.errors import _CommonError, _ErrorCompatible
 from .protocols import Monad, _LiveAccumulator, Monoid, _start_as, _flat_map_as, _fold_as
+from ._sequencing import _choose_effect, _IfEffect
 from ._accumulation import _Combine, _FoldMappedStep, _SearchStep, _BoolLive, _PredicateStep
 from .contracts import _EffectFold
 from .protocols import _AllLive
@@ -16,34 +15,6 @@ def _fold_effect[G: Monad, V: Movable & Deinitable, F: BinaryContract & Movable 
                  K: _LiveAccumulator, E: Movable & Deinitable](var function: F, var initial: K.Acc, var source: V
 ) raises E -> _EffectFold[G, V, F, K].Out:
     return _fold_as[E, G, V, Identity[F.Second], F, K](Identity[F.Second](), function^, initial^, source^)
-
-
-def _choose_effect[G: Monad, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](
-    condition: Bool, var on_true: L, var on_false: R
-) raises _CommonError[L.Error, R.Error] -> G._Joined[L.Out, R.Out]:
-    comptime E = _CommonError[L.Error, R.Error]
-    comptime assert _ErrorCompatible[E, L.Error] and _ErrorCompatible[E, R.Error], "if_effect: incompatible native errors"
-    comptime assert G.Element[L.Out] == G.Element[R.Out], "if_effect: branches must have the same payload type"
-    if condition:
-        return G._join_left[L.Out, R.Out](_thunk_once_as[E](on_true^))
-    return G._join_right[L.Out, R.Out](_thunk_once_as[E](on_false^))
-
-
-@fieldwise_init
-struct _IfEffect[G: Monad, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](
-    OnceUnary, MutableUnary where RepeatableThunk[L] and RepeatableThunk[R]
-):
-    var on_true: Self.L
-    var on_false: Self.R
-    comptime Arg = Bool
-    comptime Out = Self.G._Joined[Self.L.Out, Self.R.Out]
-    comptime Error = _CommonError[Self.L.Error, Self.R.Error]
-    def call_once(deinit self, var arg: Bool) raises Self.Error -> Self.Out:
-        return _choose_effect[Self.G](arg, self.on_true^, self.on_false^)
-    def call_mut(mut self, var arg: Bool) raises Self.Error -> Self.Out:
-        var left = _ThunkView(Pointer(to=self.on_true))
-        var right = _ThunkView(Pointer(to=self.on_false))
-        return _choose_effect[Self.G](arg, left^, right^)
 
 
 def _if_effect[G: Monad, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, E: Movable & Deinitable](

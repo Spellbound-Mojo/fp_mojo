@@ -9,11 +9,11 @@ adapt no callbacks and introduce no additional invocation boundary.
 from std.builtin.rebind import downcast
 from .protocols import _MappedFamily, Functor, Monad, Traversable, Applicative, Filterable, FunctorFilter
 from fp.iteration._advance import _OwnedElement
-from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallable
+from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallable, _ErrorProbe
 from fp.callables._predicates import _FilterPredicate
 from .protocols import Monoid, _AllLive, _LiveAccumulator
 from ._accumulation import _FoldMappedStep, _SearchStep, _FirstPresent, _BoolLive, _PredicateStep
-from ._sequencing import _EffectRetain
+from ._sequencing import _EffectRetain, _IfEffect
 from fp.callables.invoke import RepeatableUnary
 from fp._internal.errors import _CommonError, _ErrorCompatible
 from fp.callables._identity import Identity
@@ -379,3 +379,41 @@ Parameters:
     V: The consumed source type, including native origins.
     C: The repeatable borrowing predicate, including receiver and error.
 """
+
+
+struct IfContract[I: Monad, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable]:
+    """The admission, result and construction error of an effectful conditional.
+
+    Generic wrappers forward Compatible and name Out and Error. The family
+    still owns branch ordering, repeated invocation and deferred execution.
+    Native callback boundaries retain their explicit signature error evidence.
+
+    Parameters:
+        I: The selected Monad family.
+        V: The complete consumed condition carrier, including origins.
+        L: The owned true-branch factory, including its receiver and native error.
+        R: The owned false-branch factory, including its receiver and native error.
+    """
+    comptime _Branch = _IfEffect[Self.I, Self.L, Self.R]
+    comptime _Raised = _CommonError[Self.L.Error, Self.R.Error]
+    comptime _Probe = _ErrorProbe[Bool, Self.I._Joined[Self.L.Out, Self.R.Out], Self._Raised]
+    comptime InputCompatible = Self.I.Element[Self.V] == Bool
+    """The condition carries exactly Bool."""
+    comptime OutputCompatible = Self.I.Element[Self.L.Out] == Self.I.Element[Self.R.Out]
+    """Branch payloads match exactly, including their origins."""
+    comptime CarrierCompatible = Self.I.CarrierCompatible[Self.V] and Self.I.CarrierCompatible[Self.L.Out] and Self.I.CarrierCompatible[Self.R.Out]
+    """The condition and both branches belong to the selected family."""
+    comptime NativeErrorsCompatible = _ErrorCompatible[Self._Raised, Self.L.Error] and _ErrorCompatible[Self._Raised, Self.R.Error]
+    """Branch native errors share one exact raised type without conversion."""
+    comptime FamilyCompatible = Self.I.BindCompatible[Self.V, Self._Branch]
+    """The family's admission of the branch continuation and its receiver."""
+    comptime Family = Self.I
+    """The family selected for fluent continuation over Out."""
+    comptime Out = Self.I.Bound[Self.V, Self._Branch]
+    """The exact carrier produced by conditional binding."""
+    comptime Error = Self.I.BindError[Self.V, Self._Probe]
+    """The native construction error; deferred execution errors stay in Out."""
+    comptime ShapeCompatible = Self.InputCompatible and Self.OutputCompatible and Self.CarrierCompatible
+    """The legacy free entry's shape admission; family execution checks its own requirements."""
+    comptime Compatible = Self.ShapeCompatible and Self.NativeErrorsCompatible and Self.FamilyCompatible
+    """The complete selected conditional admission, available to generic wrappers."""

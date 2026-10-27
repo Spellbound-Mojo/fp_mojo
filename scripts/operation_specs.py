@@ -320,6 +320,10 @@ class EffectChoice:
     right_error: str
 
     @property
+    def contract(self):
+        return f"IfContract[{self.family}, {self.source}, {self.left}, {self.right}]"
+
+    @property
     def common_error(self):
         # Only literal Never is simplified. Evidence from a generic associated
         # error, and admission of that error, remain with each surface.

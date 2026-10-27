@@ -486,3 +486,34 @@ native type. `flat_map[OptionalFamily](positive, Optional(-1))` lets `positive`
 return an absent value. `traverse[ListFamily, OptionalFamily](positive, ...)`
 returns a present list of three values for `[1, 2, 3]`, and an absent value
 for `[1, -2, 3]`, stopping at `-2`.
+
+### Conditional composition contracts
+
+`IfContract[I, V, L, R]` describes `if_effect` with two library factories.
+A generic wrapper forwards `Compatible` and names `Out` and `Error`; it does
+not need the private conditional continuation or error probe. The same contract
+is used by free calls, `Piped` and selected pipelines. Existing ordinary call
+syntax and positional bindings stay available. A fully generic `Piped` wrapper
+uses `.if_effect[G=I](left^, right^)` to distinguish its family binding from the
+inferred-family overloads' error hint.
+
+Admission checks the Bool condition, exact branch payloads and origins, carrier
+membership, compatible native errors and the family's receiver requirements.
+For example, List requires repeatable factories, while a single-result family
+can consume either factory. `ShapeCompatible` exposes the legacy free entry's condition, branch-payload and
+carrier constraints. That entry keeps its existing generic admission; the
+family implementation still checks its execution requirements. `Compatible`
+also includes native-error and family admission, as selected pipelines already
+require. New wrappers can forward the complete predicate without duplicating
+those checks. Native
+function overloads keep their explicit signature and error evidence.
+
+`Error` describes construction. A deferred family's runtime errors remain in its
+returned computation; creating a conditional does not run either factory. Branch
+selection, skipping on absence or failure, repeated calls and cleanup remain
+owned by the family's existing bind implementation.
+
+This executable example forwards a generic conditional with one admission
+predicate.
+
+<!-- example: docs/examples/if_contracts.mojo -->

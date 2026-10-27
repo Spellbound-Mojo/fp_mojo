@@ -1,4 +1,5 @@
 """Select family and native errors before callback inference; reuse algebra execution."""
+from fp.algebra.contracts import IfContract
 from std.builtin.rebind import downcast, rebind_var
 from std.collections import StringDict, KeyElement
 from std.hash import Hasher
@@ -1344,7 +1345,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[ResultFamily[S.Value], _Traversing[Self.I].Traversed[ValidationFamily[S], Self.V, Identity[Self.I.Element[Self.V]]], Self.E](_traverse_as[_Traversing[Self.I], ValidationFamily[S], Self.V, Identity[Self.I.Element[Self.V]], _Traversing[Self.I].TraverseError[ValidationFamily[S], Self.V, Identity[Self.I.Element[Self.V]]]](Identity[Self.I.Element[Self.V]](), self.value^))
 
     @always_inline
-    def if_effect[C: ThunkContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable, //](deinit self, var on_true: C, var on_false: G) raises _Binding[Self.I].BindError[Self.V, _ErrorProbe[Bool, _Binding[Self.I]._Joined[C.Out, G.Out], _CommonError[C.Error, G.Error]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _IfEffect[_Binding[Self.I], C, G]], Self.E] where conforms_to(Self.I, Monad) and Self.I.Element[Self.V] == Bool and _Binding[Self.I].Element[C.Out] == _Binding[Self.I].Element[G.Out] and _ErrorCompatible[_CommonError[C.Error, G.Error], C.Error] and _ErrorCompatible[_CommonError[C.Error, G.Error], G.Error] and _BindCompatible[_Binding[Self.I], Self.V, _IfEffect[_Binding[Self.I], C, G]] and _CarrierCompatible[_Binding[Self.I], Self.V] and _CarrierCompatible[_Binding[Self.I], C.Out] and _CarrierCompatible[_Binding[Self.I], G.Out]:
+    def if_effect[C: ThunkContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable, //](deinit self, var on_true: C, var on_false: G) raises IfContract[_Binding[Self.I], Self.V, C, G].Error -> Pipeline[Self.I, IfContract[_Binding[Self.I], Self.V, C, G].Out, Self.E] where conforms_to(Self.I, Monad) and IfContract[_Binding[Self.I], Self.V, C, G].Compatible:
         """Invoke only the factory selected by an effectful Bool through the selected Monad.
 
         Parameters:
@@ -1361,7 +1362,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         Raises:
             The exact callback or family error; it never becomes a stored Result error.
         """
-        return Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _IfEffect[_Binding[Self.I], C, G]], Self.E](_if_effect[_Binding[Self.I], Self.V, C, G, _Binding[Self.I].BindError[Self.V, _ErrorProbe[Bool, _Binding[Self.I]._Joined[C.Out, G.Out], _CommonError[C.Error, G.Error]]]](self.value^, on_true^, on_false^))
+        return Pipeline[Self.I, IfContract[_Binding[Self.I], Self.V, C, G].Out, Self.E](_if_effect[_Binding[Self.I], Self.V, C, G, IfContract[_Binding[Self.I], Self.V, C, G].Error](self.value^, on_true^, on_false^))
 
     @always_inline
     def if_effect[C: ThunkContract & Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def() -> S](deinit self, var on_true: C, ref[q] on_false: G) raises _Binding[Self.I].BindError[Self.V, _ErrorProbe[Bool, _Binding[Self.I]._Joined[C.Out, S], C.Error]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _IfEffect[_Binding[Self.I], C, _NativeThunkRef[S, Never, G, False, q]]], Self.E] where conforms_to(Self.I, Monad) and Self.I.Element[Self.V] == Bool and _Binding[Self.I].Element[C.Out] == _Binding[Self.I].Element[S] and _ErrorCompatible[C.Error, C.Error] and _ErrorCompatible[C.Error, Never] and _BindCompatible[_Binding[Self.I], Self.V, _IfEffect[_Binding[Self.I], C, _NativeThunkRef[S, Never, G, False, q]]] and _CarrierCompatible[_Binding[Self.I], Self.V] and _CarrierCompatible[_Binding[Self.I], C.Out] and _CarrierCompatible[_Binding[Self.I], S]:

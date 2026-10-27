@@ -343,6 +343,9 @@ def methods(*, fold_stage=False):
                        f"_ErrorCompatible[{common}, {le}]", f"_ErrorCompatible[{common}, {reffect}]",
                        f"_BindCompatible[{family}, Self.V, {composed}]"]
         conditions += [f"_CarrierCompatible[{family}, {v}]" for v in ("Self.V",left["result"],right["result"])]
+        if l == "C" and r == "G":
+            result, error = plan.contract + ".Out", plan.contract + ".Error"
+            conditions = ["conforms_to(Self.I, Monad)", plan.contract + ".Compatible"]
         emit("if_effect", {}, params, left["argument"] + ", " + right["argument"], result, error, "Self.I", conditions,
              plan.invoke(error, "self.value^", left["build"], right["build"]),
              "Invoke only the factory selected by an effectful Bool through the selected Monad.")

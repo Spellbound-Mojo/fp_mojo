@@ -5,6 +5,7 @@ library value such as a `Partial` or a `Composition`. Each stage's own contract
 fixes its types. `piped(value).then(f)` chains stages one call at a time, with no
 stage limit and no promotion.
 """
+from fp.algebra.contracts import IfContract
 from fp.algebra.contracts import AnyContract, AllContract, FindContract, FindMapContract, FoldMapContract, FoldContract
 from fp.algebra._admission import _MapCompatible, _BindCompatible, _CombineCompatible, _CollectCompatible
 from fp.algebra.validation import ValidationFamily, _ListErrors
@@ -1221,7 +1222,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Map each element into the selected Monad and combine its values in order with an explicit Monoid."""
         return Piped(_fold_map_effect[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o], _EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), _take_array(rebind_var[Array[A, N]](self.value^))))
 
-    def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] -> Piped[G.Bound[Self.Value, _IfEffect[G, L, R]]] where G.Element[Self.Value] == Bool and G.Element[L.Out] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]], G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] and _CarrierCompatible[G, Self.Value] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, R.Out]:
+    def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, IfContract[G, Self.Value, L, R].Error] -> Piped[IfContract[G, Self.Value, L, R].Out] where IfContract[G, Self.Value, L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[G, Self.Value, L, R].Error], IfContract[G, Self.Value, L, R].Error]:
         """Run the factory selected by an effectful Bool, skipping both factories on failure or absence.
 
         Parameters:
@@ -1240,7 +1241,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         Raises:
             The exact callback, monoid or family error; Never for a non-raising operation.
         """
-        return Piped(_if_effect[G, Self.Value, L, R, _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]]](self.value^, on_true^, on_false^))
+        return Piped(_if_effect[G, Self.Value, L, R, _EntryError[X, IfContract[G, Self.Value, L, R].Error]](self.value^, on_true^, on_false^))
 
     def if_effect[L: ThunkContract & Movable & Deinitable, W: Movable & Deinitable, q: ImmOrigin, //, G: Monad, R: _Thunk[W], X: AnyType = _InferError](deinit self, var on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> Piped[G.Bound[Self.Value, _IfEffect[G, L, _NativeThunkRef[W, Never, R, False, q]]]] where G.Element[Self.Value] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, Self.Value] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:
         """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
@@ -1274,7 +1275,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
         return Piped(_if_effect[G, Self.Value, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q], _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]]](self.value^, _NativeThunkRef[U, Y, L, True, o](Pointer(to=on_true)), _NativeThunkRef[W, D, R, True, q](Pointer(to=on_false))))
 
-    def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] -> Piped[ListFamily.Bound[List[Bool], _IfEffect[ListFamily, L, R]]] where Self.Value == List[Bool] and ListFamily.Element[L.Out] == ListFamily.Element[R.Out] and _ErrorCompatible[_EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]], ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] and _CarrierCompatible[ListFamily, List[Bool]] and _CarrierCompatible[ListFamily, L.Out] and _CarrierCompatible[ListFamily, R.Out]:
+    def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, IfContract[ListFamily, List[Bool], L, R].Error] -> Piped[IfContract[ListFamily, List[Bool], L, R].Out] where Self.Value == List[Bool] and IfContract[ListFamily, List[Bool], L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[ListFamily, List[Bool], L, R].Error], IfContract[ListFamily, List[Bool], L, R].Error]:
         """Run the factory selected by an effectful Bool, skipping both factories on failure or absence.
 
         Parameters:
@@ -1292,7 +1293,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         Raises:
             The exact callback, monoid or family error; Never for a non-raising operation.
         """
-        return Piped(_if_effect[ListFamily, List[Bool], L, R, _EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]]](rebind_var[List[Bool]](self.value^), on_true^, on_false^))
+        return Piped(_if_effect[ListFamily, List[Bool], L, R, _EntryError[X, IfContract[ListFamily, List[Bool], L, R].Error]](rebind_var[List[Bool]](self.value^), on_true^, on_false^))
 
     def if_effect[L: ThunkContract & Movable & Deinitable, W: Movable & Deinitable, q: ImmOrigin, //, R: _Thunk[W], X: AnyType = _InferError](deinit self, var on_true: L, ref[q] on_false: R) raises _EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[L.Out, W], L.Error]]] -> Piped[ListFamily.Bound[List[Bool], _IfEffect[ListFamily, L, _NativeThunkRef[W, Never, R, False, q]]]] where Self.Value == List[Bool] and ListFamily.Element[L.Out] == ListFamily.Element[W] and _ErrorCompatible[_EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[L.Out, W], L.Error]]], ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[ListFamily, List[Bool]] and _CarrierCompatible[ListFamily, L.Out] and _CarrierCompatible[ListFamily, W]:
         """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
@@ -1326,7 +1327,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
         return Piped(_if_effect[ListFamily, List[Bool], _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q], _EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, W], _CommonError[Y, D]]]]](rebind_var[List[Bool]](self.value^), _NativeThunkRef[U, Y, L, True, o](Pointer(to=on_true)), _NativeThunkRef[W, D, R, True, q](Pointer(to=on_false))))
 
-    def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] -> Piped[OptionalFamily.Bound[Optional[Bool], _IfEffect[OptionalFamily, L, R]]] where Self.Value == Optional[Bool] and OptionalFamily.Element[L.Out] == OptionalFamily.Element[R.Out] and _ErrorCompatible[_EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]], OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] and _CarrierCompatible[OptionalFamily, Optional[Bool]] and _CarrierCompatible[OptionalFamily, L.Out] and _CarrierCompatible[OptionalFamily, R.Out]:
+    def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, IfContract[OptionalFamily, Optional[Bool], L, R].Error] -> Piped[IfContract[OptionalFamily, Optional[Bool], L, R].Out] where Self.Value == Optional[Bool] and IfContract[OptionalFamily, Optional[Bool], L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[OptionalFamily, Optional[Bool], L, R].Error], IfContract[OptionalFamily, Optional[Bool], L, R].Error]:
         """Run the factory selected by an effectful Bool, skipping both factories on failure or absence.
 
         Parameters:
@@ -1344,7 +1345,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         Raises:
             The exact callback, monoid or family error; Never for a non-raising operation.
         """
-        return Piped(_if_effect[OptionalFamily, Optional[Bool], L, R, _EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]]](rebind_var[Optional[Bool]](self.value^), on_true^, on_false^))
+        return Piped(_if_effect[OptionalFamily, Optional[Bool], L, R, _EntryError[X, IfContract[OptionalFamily, Optional[Bool], L, R].Error]](rebind_var[Optional[Bool]](self.value^), on_true^, on_false^))
 
     def if_effect[L: ThunkContract & Movable & Deinitable, W: Movable & Deinitable, q: ImmOrigin, //, R: _Thunk[W], X: AnyType = _InferError](deinit self, var on_true: L, ref[q] on_false: R) raises _EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[L.Out, W], L.Error]]] -> Piped[OptionalFamily.Bound[Optional[Bool], _IfEffect[OptionalFamily, L, _NativeThunkRef[W, Never, R, False, q]]]] where Self.Value == Optional[Bool] and OptionalFamily.Element[L.Out] == OptionalFamily.Element[W] and _ErrorCompatible[_EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[L.Out, W], L.Error]]], OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[OptionalFamily, Optional[Bool]] and _CarrierCompatible[OptionalFamily, L.Out] and _CarrierCompatible[OptionalFamily, W]:
         """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
@@ -1378,7 +1379,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
         return Piped(_if_effect[OptionalFamily, Optional[Bool], _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q], _EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, W], _CommonError[Y, D]]]]](rebind_var[Optional[Bool]](self.value^), _NativeThunkRef[U, Y, L, True, o](Pointer(to=on_true)), _NativeThunkRef[W, D, R, True, q](Pointer(to=on_false))))
 
-    def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, Failure: Movable & Deinitable, //, X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] -> Piped[ResultFamily[Failure].Bound[Result[Bool, Failure], _IfEffect[ResultFamily[Failure], L, R]]] where Self.Value == Result[Bool, Failure] and ResultFamily[Failure].Element[L.Out] == ResultFamily[Failure].Element[R.Out] and _ErrorCompatible[_EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]], ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] and _CarrierCompatible[ResultFamily[Failure], Result[Bool, Failure]] and _CarrierCompatible[ResultFamily[Failure], L.Out] and _CarrierCompatible[ResultFamily[Failure], R.Out]:
+    def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, Failure: Movable & Deinitable, //, X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, IfContract[ResultFamily[Failure], Result[Bool, Failure], L, R].Error] -> Piped[IfContract[ResultFamily[Failure], Result[Bool, Failure], L, R].Out] where Self.Value == Result[Bool, Failure] and IfContract[ResultFamily[Failure], Result[Bool, Failure], L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[ResultFamily[Failure], Result[Bool, Failure], L, R].Error], IfContract[ResultFamily[Failure], Result[Bool, Failure], L, R].Error]:
         """Run the factory selected by an effectful Bool, skipping both factories on failure or absence.
 
         Parameters:
@@ -1397,7 +1398,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         Raises:
             The exact callback, monoid or family error; Never for a non-raising operation.
         """
-        return Piped(_if_effect[ResultFamily[Failure], Result[Bool, Failure], L, R, _EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]]](rebind_var[Result[Bool, Failure]](self.value^), on_true^, on_false^))
+        return Piped(_if_effect[ResultFamily[Failure], Result[Bool, Failure], L, R, _EntryError[X, IfContract[ResultFamily[Failure], Result[Bool, Failure], L, R].Error]](rebind_var[Result[Bool, Failure]](self.value^), on_true^, on_false^))
 
     def if_effect[L: ThunkContract & Movable & Deinitable, W: Movable & Deinitable, q: ImmOrigin, Failure: Movable & Deinitable, //, R: _Thunk[W], X: AnyType = _InferError](deinit self, var on_true: L, ref[q] on_false: R) raises _EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[L.Out, W], L.Error]]] -> Piped[ResultFamily[Failure].Bound[Result[Bool, Failure], _IfEffect[ResultFamily[Failure], L, _NativeThunkRef[W, Never, R, False, q]]]] where Self.Value == Result[Bool, Failure] and ResultFamily[Failure].Element[L.Out] == ResultFamily[Failure].Element[W] and _ErrorCompatible[_EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[L.Out, W], L.Error]]], ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[ResultFamily[Failure], Result[Bool, Failure]] and _CarrierCompatible[ResultFamily[Failure], L.Out] and _CarrierCompatible[ResultFamily[Failure], W]:
         """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""

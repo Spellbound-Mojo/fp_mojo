@@ -2425,6 +2425,88 @@
     "Traversable"
    ]
   },
+  "algebra.IfContract": {
+   "aliases": [
+    {
+     "description": "The condition carries exactly Bool.",
+     "name": "InputCompatible"
+    },
+    {
+     "description": "Branch payloads match exactly, including their origins.",
+     "name": "OutputCompatible"
+    },
+    {
+     "description": "The condition and both branches belong to the selected family.",
+     "name": "CarrierCompatible"
+    },
+    {
+     "description": "Branch native errors share one exact raised type without conversion.",
+     "name": "NativeErrorsCompatible"
+    },
+    {
+     "description": "The family's admission of the branch continuation and its receiver.",
+     "name": "FamilyCompatible"
+    },
+    {
+     "description": "The family selected for fluent continuation over Out.",
+     "name": "Family"
+    },
+    {
+     "description": "The exact carrier produced by conditional binding.",
+     "name": "Out"
+    },
+    {
+     "description": "The native construction error; deferred execution errors stay in Out.",
+     "name": "Error"
+    },
+    {
+     "description": "The legacy free entry's shape admission; family execution checks its own requirements.",
+     "name": "ShapeCompatible"
+    },
+    {
+     "description": "The complete selected conditional admission, available to generic wrappers.",
+     "name": "Compatible"
+    }
+   ],
+   "description": "Generic wrappers forward Compatible and name Out and Error. The family\nstill owns branch ordering, repeated invocation and deferred execution.\nNative callback boundaries retain their explicit signature error evidence.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected Monad family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad",
+     "variadic": false
+    },
+    {
+     "description": "The complete consumed condition carrier, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The owned true-branch factory, including its receiver and native error.",
+     "inferred": false,
+     "name": "L",
+     "type": "ThunkContract & Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The owned false-branch factory, including its receiver and native error.",
+     "inferred": false,
+     "name": "R",
+     "type": "ThunkContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/contracts",
+   "signature": "struct IfContract[I: Monad, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable]",
+   "summary": "The admission, result and construction error of an effectful conditional.",
+   "traits": []
+  },
   "algebra.IorFamily": {
    "aliases": [
     {
@@ -7414,7 +7496,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]]",
+     "error": "_EntryError[X, IfContract[G, V, L, R].Error]",
      "parameters": [
       {
        "description": "The true-branch factory, retaining its native error and receiver mode.",
@@ -7456,9 +7538,9 @@
      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
      "returns": {
       "doc": "The selected branch effect; absence or failure in the condition skips both factories.",
-      "type": "G.Bound[V, _IfEffect[G, L, R]]"
+      "type": "IfContract[G, V, L, R].Out"
      },
-     "signature": "def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var on_true: L, var on_false: R, var condition: V) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] -> G.Bound[V, _IfEffect[G, L, R]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, R.Out]",
+     "signature": "def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var on_true: L, var on_false: R, var condition: V) raises _EntryError[X, IfContract[G, V, L, R].Error] -> IfContract[G, V, L, R].Out where IfContract[G, V, L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[G, V, L, R].Error], IfContract[G, V, L, R].Error]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -14347,7 +14429,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]]",
+     "error": "_EntryError[X, IfContract[G, V, L, R].Error]",
      "parameters": [
       {
        "description": "The true-branch factory, retaining its native error and receiver mode.",
@@ -14389,9 +14471,9 @@
      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
      "returns": {
       "doc": "The selected branch effect; absence or failure in the condition skips both factories.",
-      "type": "G.Bound[V, _IfEffect[G, L, R]]"
+      "type": "IfContract[G, V, L, R].Out"
      },
-     "signature": "def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var on_true: L, var on_false: R, var condition: V) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] -> G.Bound[V, _IfEffect[G, L, R]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, R.Out]",
+     "signature": "def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var on_true: L, var on_false: R, var condition: V) raises _EntryError[X, IfContract[G, V, L, R].Error] -> IfContract[G, V, L, R].Out where IfContract[G, V, L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[G, V, L, R].Error], IfContract[G, V, L, R].Error]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -55923,7 +56005,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]]",
+      "error": "_EntryError[X, IfContract[G, Self.Value, L, R].Error]",
       "parameters": [
        {
         "description": "The true-branch factory, retaining its native error and receiver mode.",
@@ -55958,9 +56040,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The selected branch effect; absence or failure in the condition skips both factories.",
-       "type": "Piped[G.Bound[Self.Value, _IfEffect[G, L, R]]]"
+       "type": "Piped[IfContract[G, Self.Value, L, R].Out]"
       },
-      "signature": "def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] -> Piped[G.Bound[Self.Value, _IfEffect[G, L, R]]] where G.Element[Self.Value] == Bool and G.Element[L.Out] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]], G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] and _CarrierCompatible[G, Self.Value] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, R.Out]",
+      "signature": "def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, IfContract[G, Self.Value, L, R].Error] -> Piped[IfContract[G, Self.Value, L, R].Out] where IfContract[G, Self.Value, L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[G, Self.Value, L, R].Error], IfContract[G, Self.Value, L, R].Error]",
       "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
      },
      {
@@ -56655,7 +56737,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]]",
+      "error": "_EntryError[X, IfContract[ListFamily, List[Bool], L, R].Error]",
       "parameters": [
        {
         "description": "The true-branch factory, retaining its native error and receiver mode.",
@@ -56683,9 +56765,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The selected branch effect; absence or failure in the condition skips both factories.",
-       "type": "Piped[ListFamily.Bound[List[Bool], _IfEffect[ListFamily, L, R]]]"
+       "type": "Piped[IfContract[ListFamily, List[Bool], L, R].Out]"
       },
-      "signature": "def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] -> Piped[ListFamily.Bound[List[Bool], _IfEffect[ListFamily, L, R]]] where Self.Value == List[Bool] and ListFamily.Element[L.Out] == ListFamily.Element[R.Out] and _ErrorCompatible[_EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]], ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] and _CarrierCompatible[ListFamily, List[Bool]] and _CarrierCompatible[ListFamily, L.Out] and _CarrierCompatible[ListFamily, R.Out]",
+      "signature": "def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, IfContract[ListFamily, List[Bool], L, R].Error] -> Piped[IfContract[ListFamily, List[Bool], L, R].Out] where Self.Value == List[Bool] and IfContract[ListFamily, List[Bool], L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[ListFamily, List[Bool], L, R].Error], IfContract[ListFamily, List[Bool], L, R].Error]",
       "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
      },
      {
@@ -57324,7 +57406,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]]",
+      "error": "_EntryError[X, IfContract[OptionalFamily, Optional[Bool], L, R].Error]",
       "parameters": [
        {
         "description": "The true-branch factory, retaining its native error and receiver mode.",
@@ -57352,9 +57434,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The selected branch effect; absence or failure in the condition skips both factories.",
-       "type": "Piped[OptionalFamily.Bound[Optional[Bool], _IfEffect[OptionalFamily, L, R]]]"
+       "type": "Piped[IfContract[OptionalFamily, Optional[Bool], L, R].Out]"
       },
-      "signature": "def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] -> Piped[OptionalFamily.Bound[Optional[Bool], _IfEffect[OptionalFamily, L, R]]] where Self.Value == Optional[Bool] and OptionalFamily.Element[L.Out] == OptionalFamily.Element[R.Out] and _ErrorCompatible[_EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]], OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] and _CarrierCompatible[OptionalFamily, Optional[Bool]] and _CarrierCompatible[OptionalFamily, L.Out] and _CarrierCompatible[OptionalFamily, R.Out]",
+      "signature": "def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, IfContract[OptionalFamily, Optional[Bool], L, R].Error] -> Piped[IfContract[OptionalFamily, Optional[Bool], L, R].Out] where Self.Value == Optional[Bool] and IfContract[OptionalFamily, Optional[Bool], L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[OptionalFamily, Optional[Bool], L, R].Error], IfContract[OptionalFamily, Optional[Bool], L, R].Error]",
       "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
      },
      {
@@ -57993,7 +58075,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]]",
+      "error": "_EntryError[X, IfContract[ResultFamily[Failure], Result[Bool, Failure], L, R].Error]",
       "parameters": [
        {
         "description": "The true-branch factory, retaining its native error and receiver mode.",
@@ -58028,9 +58110,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The selected branch effect; absence or failure in the condition skips both factories.",
-       "type": "Piped[ResultFamily[Failure].Bound[Result[Bool, Failure], _IfEffect[ResultFamily[Failure], L, R]]]"
+       "type": "Piped[IfContract[ResultFamily[Failure], Result[Bool, Failure], L, R].Out]"
       },
-      "signature": "def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, Failure: Movable & Deinitable, //, X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] -> Piped[ResultFamily[Failure].Bound[Result[Bool, Failure], _IfEffect[ResultFamily[Failure], L, R]]] where Self.Value == Result[Bool, Failure] and ResultFamily[Failure].Element[L.Out] == ResultFamily[Failure].Element[R.Out] and _ErrorCompatible[_EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]], ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[L.Out, R.Out], _CommonError[L.Error, R.Error]]]] and _CarrierCompatible[ResultFamily[Failure], Result[Bool, Failure]] and _CarrierCompatible[ResultFamily[Failure], L.Out] and _CarrierCompatible[ResultFamily[Failure], R.Out]",
+      "signature": "def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, Failure: Movable & Deinitable, //, X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, IfContract[ResultFamily[Failure], Result[Bool, Failure], L, R].Error] -> Piped[IfContract[ResultFamily[Failure], Result[Bool, Failure], L, R].Out] where Self.Value == Result[Bool, Failure] and IfContract[ResultFamily[Failure], Result[Bool, Failure], L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[ResultFamily[Failure], Result[Bool, Failure], L, R].Error], IfContract[ResultFamily[Failure], Result[Bool, Failure], L, R].Error]",
       "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
      },
      {
@@ -111510,7 +111592,7 @@
        }
       ],
       "description": "",
-      "error": "_Binding[Self.I].BindError[Self.V, _ErrorProbe[Bool, _Binding[Self.I]._Joined[C.Out, G.Out], _CommonError[C.Error, G.Error]]]",
+      "error": "IfContract[_Binding[Self.I], Self.V, C, G].Error",
       "parameters": [
        {
         "description": "The first library callback type, retaining its receiver and origins.",
@@ -111531,9 +111613,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _IfEffect[_Binding[Self.I], C, G]], Self.E]"
+       "type": "Pipeline[Self.I, IfContract[_Binding[Self.I], Self.V, C, G].Out, Self.E]"
       },
-      "signature": "def if_effect[C: ThunkContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable, //](deinit self, var on_true: C, var on_false: G) raises _Binding[Self.I].BindError[Self.V, _ErrorProbe[Bool, _Binding[Self.I]._Joined[C.Out, G.Out], _CommonError[C.Error, G.Error]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _IfEffect[_Binding[Self.I], C, G]], Self.E] where conforms_to(Self.I, Monad) and Self.I.Element[Self.V] == Bool and _Binding[Self.I].Element[C.Out] == _Binding[Self.I].Element[G.Out] and _ErrorCompatible[_CommonError[C.Error, G.Error], C.Error] and _ErrorCompatible[_CommonError[C.Error, G.Error], G.Error] and _BindCompatible[_Binding[Self.I], Self.V, _IfEffect[_Binding[Self.I], C, G]] and _CarrierCompatible[_Binding[Self.I], Self.V] and _CarrierCompatible[_Binding[Self.I], C.Out] and _CarrierCompatible[_Binding[Self.I], G.Out]",
+      "signature": "def if_effect[C: ThunkContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable, //](deinit self, var on_true: C, var on_false: G) raises IfContract[_Binding[Self.I], Self.V, C, G].Error -> Pipeline[Self.I, IfContract[_Binding[Self.I], Self.V, C, G].Out, Self.E] where conforms_to(Self.I, Monad) and IfContract[_Binding[Self.I], Self.V, C, G].Compatible",
       "summary": "Invoke only the factory selected by an effectful Bool through the selected Monad."
      },
      {

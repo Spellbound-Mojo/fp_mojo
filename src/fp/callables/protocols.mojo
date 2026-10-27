@@ -263,3 +263,12 @@ trait BorrowOnceCallable(BorrowCallContract, Movable, Deinitable):
             `Failure`, the callable's own error type; nothing when it is `Never`.
         """
         ...
+
+
+# Native boundaries project family errors through this type-only signature.
+# Keeping it independent of callback storage lets generic native declarations
+# retain explicit error evidence; operation bodies check the actual callback.
+struct _ErrorProbe[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable](UnaryContract):
+    comptime Arg = Self.A
+    comptime Out = Self.R
+    comptime Error = Self.E

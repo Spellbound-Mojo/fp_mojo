@@ -104,6 +104,16 @@ def conditional(mode, family=None):
         cond += f' and {g}.Element[{results[0]}] == {g}.Element[{results[1]}] and _ErrorCompatible[{raised}, {actual}]'
         for effect in [source] + results:
             cond += f' and _CarrierCompatible[{g}, {effect}]'
+        # Preserve legacy generic admission; the complete contract remains
+        # available to wrappers and selected pipelines.
+        if left == right == 'library':
+            actual = plan.contract + '.Error'
+            raised = f'_EntryError[X, {actual}]'
+            result = plan.contract + '.Out'
+            source_binding = ('Self.T == Bool and ' if mode == 'result' else
+                              f'Self.Value == {source} and ' if family else '')
+            cond = (source_binding + plan.contract + '.ShapeCompatible'
+                    + f' and _ErrorCompatible[{raised}, {actual}]')
         call = plan.invoke(raised, value, *values)
         if mode == 'piped': result, call = f'Piped[{result}]', f'Piped({call})'
         if mode == 'free': args += ['var condition: V']

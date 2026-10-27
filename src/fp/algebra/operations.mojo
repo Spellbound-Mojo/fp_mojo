@@ -8,7 +8,7 @@ type with `X=`.
 from fp.algebra._admission import _MapCompatible, _BindCompatible, _CombineCompatible, _CollectCompatible
 from std.builtin.rebind import rebind_var, downcast
 from fp.callables._views import _UnaryViewable
-from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract
+from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, _ErrorProbe
 from fp.callables.native import _NativeUnaryRef, _Unary, _RaisingUnary
 from fp._internal.errors import _ErrorCompatible
 from .protocols import _SemigroupBinary
@@ -226,12 +226,6 @@ comptime _EntryError[Expected: AnyType, Actual: Movable & Deinitable]: Movable &
 # callback's types: a member alias of a struct holding the native function is not
 # reduced in a raises clause on Mojo 1.1. The body checks that the probe and the
 # stored callback give the instance the same error.
-struct _ErrorProbe[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable](UnaryContract):
-    comptime Arg = Self.A
-    comptime Out = Self.R
-    comptime Error = Self.E
-
-
 # Keep the native signature at the call site while borrowing its closure. On
 # Mojo 1.2 an out-of-line entry can give the reference adapter invalid capture
 # storage at O0 after generic forwarding. The family still owns execution.

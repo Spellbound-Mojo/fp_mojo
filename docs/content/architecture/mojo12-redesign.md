@@ -2419,6 +2419,42 @@ left all 106 library Mojo source files byte-for-byte unchanged. Generated-source
 checks and all 48 tooling tests passed. This pass changes generator structure,
 not public signatures or runtime execution.
 
+### Conditional composition has a public contract
+
+`IfContract[I, V, L, R]` exposes the condition and branch checks, family
+admission, exact output and construction error of `if_effect` with library
+factories. Generic wrappers can name these without importing the private
+conditional continuation or signature-only error probe. Free, piped and selected
+library-factory declarations project the same metadata.
+
+`ShapeCompatible` preserves the free entry's existing generic constraints:
+Bool condition, exact branch payload equality and carrier membership.
+`Compatible` additionally includes native-error and family admission, matching
+the selected API's existing requirements. This distinction preserves wrappers
+that already forward the older predicates. The family implementation still
+checks its actual execution and error requirements. Native overloads retain
+their explicit signature error evidence, and ordinary calls and positional
+bindings are unchanged. A fully generic Piped wrapper still uses `G=I` to
+distinguish the family from inferred-family overloads' error hints.
+
+The unchanged branch continuation now lives with sequencing continuations.
+The unchanged type-only error probe now lives with callable protocols. Their
+old internal import names remain available. These dependency changes let the
+public descriptor share the actual continuation and probe without an import
+cycle or duplicate implementation. Family bind still owns branch order,
+skipping, repeated invocation, deferral and ownership.
+
+Twelve baseline/candidate cleanup traces match exactly. Maintained clients
+cover consuming and mutable factories, all three public routes, legacy generic
+constraints, native and third-party families, exact borrowed result and error
+origins, differing Reader branch representations and abandonment. All 48 new
+and 72 existing conditional source/package O0/O3 checks passed, along with
+13 conditional, two effect-combinator and 139 generic programs. All nine new
+and 35 conditional rejection fixtures passed with ordinary diagnostics. The
+public example passed its four source/package O0/O3 checks. Reports retained
+unchanged inputs and no audit failures. Generated sources, all 48 tooling tests
+and strict documentation checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.
