@@ -516,6 +516,20 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
 ''')
 
 
+    # Already-produced effects use the same mapped fold with an identity
+    # callback. Both target choices retain its carrier and ownership contract.
+    element = "_FoldElement[Self.V]"
+    for family, params in (
+        (f"_Binding[_InferredApplicative[{element}]]", ["M: Monoid"]),
+        ("J", ["J: Monad", "M: Monoid"]),
+    ):
+        plan = EFFECT_REDUCTIONS["fold_map_effect"].bind(
+            family, "Self.V", element, f"Identity[{element}]", f"Identity[{element}]()", element, monoid="M")
+        contract = plan.contract
+        emit("combine_all_effect", {}, params, "", contract + ".Out", contract + ".Error", family,
+             [contract + ".Compatible"], plan.invoke(contract + ".Error", "self.value^"),
+             "Combine existing effects in source order through the selected monoid; empty input lifts its identity.")
+
     # Numeric shape inference must see the native carrier directly on 1.2;
     # inferring both J and SIMD parameters through J.Element[R] is opaque.
     # These boundaries select the existing sum monoid and FoldMapContract.

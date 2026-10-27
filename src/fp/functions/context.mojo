@@ -2667,6 +2667,26 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E](_fold_map_effect[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error](NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True](function), self.value^))
 
     @always_inline
+    def combine_all_effect[M: Monoid](deinit self) raises FoldMapContract[_Binding[_InferredApplicative[_FoldElement[Self.V]]], M, Self.V, Identity[_FoldElement[Self.V]]].Error -> Pipeline[_Binding[_InferredApplicative[_FoldElement[Self.V]]], FoldMapContract[_Binding[_InferredApplicative[_FoldElement[Self.V]]], M, Self.V, Identity[_FoldElement[Self.V]]].Out, Self.E] where FoldMapContract[_Binding[_InferredApplicative[_FoldElement[Self.V]]], M, Self.V, Identity[_FoldElement[Self.V]]].Compatible:
+        """Combine existing effects in source order through the selected monoid; empty input lifts its identity.
+
+        Parameters:
+            M: The Monoid used for the identity and ordered combination of mapped values.
+
+        Returns:
+            The pipeline containing the operation result, retaining its selected native error.
+
+        Raises:
+            The exact callback or family error; it never becomes a stored Result error.
+        """
+        return Pipeline[_Binding[_InferredApplicative[_FoldElement[Self.V]]], FoldMapContract[_Binding[_InferredApplicative[_FoldElement[Self.V]]], M, Self.V, Identity[_FoldElement[Self.V]]].Out, Self.E](_fold_map_effect[_Binding[_InferredApplicative[_FoldElement[Self.V]]], M, Self.V, Identity[_FoldElement[Self.V]], FoldMapContract[_Binding[_InferredApplicative[_FoldElement[Self.V]]], M, Self.V, Identity[_FoldElement[Self.V]]].Error](Identity[_FoldElement[Self.V]](), self.value^))
+
+    @always_inline
+    def combine_all_effect[J: Monad, M: Monoid](deinit self) raises FoldMapContract[J, M, Self.V, Identity[_FoldElement[Self.V]]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, Identity[_FoldElement[Self.V]]].Out, Self.E] where FoldMapContract[J, M, Self.V, Identity[_FoldElement[Self.V]]].Compatible:
+        """Combine existing effects in source order through the selected monoid; empty input lifts its identity."""
+        return Pipeline[J, FoldMapContract[J, M, Self.V, Identity[_FoldElement[Self.V]]].Out, Self.E](_fold_map_effect[J, M, Self.V, Identity[_FoldElement[Self.V]], FoldMapContract[J, M, Self.V, Identity[_FoldElement[Self.V]]].Error](Identity[_FoldElement[Self.V]](), self.value^))
+
+    @always_inline
     def sum_by_effect[C: UnaryContract & Movable & Deinitable, dtype: DType, size: SIMDLength, //](deinit self, var function: C) raises FoldMapContract[OptionalFamily, _SIMDSum[dtype, size], Self.V, C].Error -> Pipeline[OptionalFamily, FoldMapContract[OptionalFamily, _SIMDSum[dtype, size], Self.V, C].Out, Self.E] where C.Arg == _FoldElement[Self.V] and C.Out == Optional[_SIMDSum[dtype, size].Value] and _SIMDSum[dtype, size].Admitted and FoldMapContract[OptionalFamily, _SIMDSum[dtype, size], Self.V, C].Compatible:
         """Sum numeric effects in source order through the target Monad; empty input lifts zero.
 

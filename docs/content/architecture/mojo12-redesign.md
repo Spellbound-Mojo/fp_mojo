@@ -3549,3 +3549,20 @@ callback/combination errors, source advancement, repeatability and cleanup
 remain with the existing fold. Custom and deferred policies continue to use
 explicit targets. Ordinary inferred calls also retain generic forwarding,
 owned payloads, mutable library callbacks and stored-error origins.
+
+### Combining existing effects
+
+`combine_all_effect[Monoid]()` is the identity projection of the same effectful
+monoid fold. Its inferred target comes from the source element's native carrier;
+`[Target, Monoid]` selects a custom policy. The generated boundary supplies the
+canonical `Identity` callable to the existing effect-reduction descriptor and
+checks FoldMapContract before entering the mapped-fold driver.
+
+There is no separate sequence buffer, collection loop or error policy. Native
+input owners move into the fold, partial accumulators and unread values are
+released on failure, and retained result/error origins stay exact. Branching
+continues to require the same copyability evidence. The monoid identity is
+constructed before source binding, including for deferred targets; combination
+and effect execution retain the target's timing. The caller constructed the
+existing effect values before this operation, so the convenience does not
+claim to defer their construction.

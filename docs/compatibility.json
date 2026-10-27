@@ -370,10 +370,11 @@
         "fold_effect",
         "fold_map_effect",
         "sum_by_effect",
-        "sum_effect"
+        "sum_effect",
+        "combine_all_effect"
       ],
       "status": "selected",
-      "families": "Native source; infer native Optional, Result or List Monad targets. Explicit targets retain custom policies; fold_map_effect[Monoid] binds the combining rule and [Target, Monoid] also selects the effect.",
+      "families": "Native source; infer native Optional, Result or List Monad targets. Explicit targets retain custom policies; fold_map_effect[Monoid] and combine_all_effect[Monoid] bind the combining rule and [Target, Monoid] also selects the effect.",
       "callbacks": "Borrowing predicates; consuming unary/binary transformations; repeatable shared or mutable library receivers. Bind fold_effect(initial).run(step).",
       "ownership": "Moves inputs, retains first matches and releases partial accumulators; Arrays use O(N) temporary List storage. An unexecuted fold binding owns and destroys its source and seed.",
       "errors": "Exact native errors, stored target failures and borrowed origins remain distinct.",
@@ -410,7 +411,13 @@
         "tests/compile_fail/inferred_monoid_payload.mojo",
         "tests/compile_fail/inferred_monoid_conflicting_errors.mojo",
         "tests/compile_fail/inferred_monoid_origin.mojo",
-        "docs/examples/inferred_monoid_fold.mojo"
+        "docs/examples/inferred_monoid_fold.mojo",
+        "tests/runtime/test_context_combine_effect_behavior.mojo",
+        "tests/runtime/test_context_combine_effect_errors.mojo",
+        "tests/ownership/test_context_combine_effect_ownership.mojo",
+        "tests/compile_fail/combine_effect_branch_ownership.mojo",
+        "tests/compile_fail/combine_effect_origin.mojo",
+        "docs/examples/combine_effects.mojo"
       ]
     },
     {

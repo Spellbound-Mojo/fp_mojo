@@ -369,6 +369,11 @@ values and combines them in order, starting with the identity. The callback
 infers a native Optional, Result or List target. The original
 `fold_map_effect[Target, Monoid](transform)` form retains explicit custom
 policies and positional callback type bindings.
+`combine_all_effect[Monoid]()` combines existing effectful values through the
+same mapped fold with its canonical identity callable. It infers native targets;
+`combine_all_effect[Target, Monoid]()` selects a custom policy. Empty input lifts
+the monoid identity, and owned contents and borrowed origins are preserved.
+Existing effects are already constructed; their execution follows the target.
 `sum_by_effect(transform)` selects numeric addition automatically for native
 Optional, Result and List results; `sum_effect()` sums existing numeric effects.
 Both support Int and integral or floating-point SIMD payloads, including scalar

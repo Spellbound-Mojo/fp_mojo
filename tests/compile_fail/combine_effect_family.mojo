@@ -1,0 +1,6 @@
+# error: no matching
+from fp.functions import pipeline
+from fp.algebra import StringMonoid, OptionalFamily, ResultFamily, ValidationFamily, ListMonoid
+from fp.data import Result
+def main() raises:
+    _ = pipeline(List[Optional[String]]()).combine_all_effect[ResultFamily[Int], StringMonoid]()

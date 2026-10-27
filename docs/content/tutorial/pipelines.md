@@ -184,6 +184,16 @@ Empty input returns that identity in the effect without calling the transform.
 Optional and Result stop on failure; List keeps branch order. Use the existing
 `[Target, Monoid]` form to select a custom or deferred effect explicitly.
 
+When the effects already exist, use `.combine_all_effect[Monoid]()`:
+
+<!-- example: docs/examples/combine_effects.mojo -->
+
+This keeps the same target inference, identity, order and failure behavior,
+without asking you to write an identity callback. Existing effects were
+constructed before the call; explicitly selected deferred effects still execute
+when run. Use `.combine_all_effect[Target, Monoid]()` for another Monad policy.
+For numeric payloads, `.sum_effect()` also selects the combining rule for you.
+
 ## Choose a constant or lazy default
 
 Use `.get_or(value)` to finish an Optional or Result pipeline with an already

@@ -93835,6 +93835,59 @@
       "summary": "Combine source elements in order, returning the identity for empty input."
      }
     ],
+    "combine_all_effect": [
+     {
+      "args": [],
+      "description": "",
+      "error": "FoldMapContract[_Binding[_InferredApplicative[_FoldElement[Self.V]]], M, Self.V, Identity[_FoldElement[Self.V]]].Error",
+      "parameters": [
+       {
+        "description": "The Monoid used for the identity and ordered combination of mapped values.",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[_Binding[_InferredApplicative[_FoldElement[Self.V]]], FoldMapContract[_Binding[_InferredApplicative[_FoldElement[Self.V]]], M, Self.V, Identity[_FoldElement[Self.V]]].Out, Self.E]"
+      },
+      "signature": "def combine_all_effect[M: Monoid](deinit self) raises FoldMapContract[_Binding[_InferredApplicative[_FoldElement[Self.V]]], M, Self.V, Identity[_FoldElement[Self.V]]].Error -> Pipeline[_Binding[_InferredApplicative[_FoldElement[Self.V]]], FoldMapContract[_Binding[_InferredApplicative[_FoldElement[Self.V]]], M, Self.V, Identity[_FoldElement[Self.V]]].Out, Self.E] where FoldMapContract[_Binding[_InferredApplicative[_FoldElement[Self.V]]], M, Self.V, Identity[_FoldElement[Self.V]]].Compatible",
+      "summary": "Combine existing effects in source order through the selected monoid; empty input lifts its identity."
+     },
+     {
+      "args": [],
+      "description": "",
+      "error": "FoldMapContract[J, M, Self.V, Identity[_FoldElement[Self.V]]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "J",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[J, FoldMapContract[J, M, Self.V, Identity[_FoldElement[Self.V]]].Out, Self.E]"
+      },
+      "signature": "def combine_all_effect[J: Monad, M: Monoid](deinit self) raises FoldMapContract[J, M, Self.V, Identity[_FoldElement[Self.V]]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, Identity[_FoldElement[Self.V]]].Out, Self.E] where FoldMapContract[J, M, Self.V, Identity[_FoldElement[Self.V]]].Compatible",
+      "summary": "Combine existing effects in source order through the selected monoid; empty input lifts its identity."
+     }
+    ],
     "compact": [
      {
       "args": [],

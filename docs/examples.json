@@ -51,6 +51,9 @@
     "docs/examples/combinators.mojo": {
       "stdout": "sum of positive squares = 50\n"
     },
+    "docs/examples/combine_effects.mojo": {
+      "stdout": "Hello Mojo!\nitems: 1 2 3\nchoices: ab aB Ab AB\n"
+    },
     "docs/examples/config_parser.mojo": {
       "stdout": "ready: batch=12, workers=4\n"
     },
