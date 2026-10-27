@@ -1,8 +1,8 @@
 """Policies and continuations for effectful reductions and conditional bind."""
 from std.builtin.rebind import downcast, rebind_var
-from fp.callables.protocols import BinaryContract, Binary, ThunkContract, OnceThunk, OnceUnary, MutableUnary, BorrowCallable, UnaryContract, MutableBinary
-from fp.callables.invoke import call_repeated, invoke_borrowed, RepeatableThunk, RepeatableUnary
-from fp.callables._receiver import _thunk_once_as, _unary_repeated_as
+from fp.callables.protocols import BinaryContract, Binary, ThunkContract, OnceUnary, MutableUnary, BorrowCallable, UnaryContract, MutableBinary
+from fp.callables.invoke import invoke_borrowed, RepeatableThunk, RepeatableUnary
+from fp.callables._receiver import _ThunkView, _thunk_once_as, _unary_repeated_as
 from fp.callables._identity import Identity
 from fp._internal.errors import _CommonError, _ErrorCompatible
 from .protocols import Monad, _LiveAccumulator, Monoid, _AccumulatePair, _BindFirst, _start_as, _map_as, _flat_map_as, _fold_as
@@ -38,16 +38,6 @@ def _fold_effect[G: Monad, V: Movable & Deinitable, F: BinaryContract & Movable 
                  K: _LiveAccumulator, E: Movable & Deinitable](var function: F, var initial: K.Acc, var source: V
 ) raises E -> _EffectFold[G, V, F, K].Out:
     return _fold_as[E, G, V, Identity[F.Second], F, K](Identity[F.Second](), function^, initial^, source^)
-
-
-@fieldwise_init
-struct _ThunkView[F: ThunkContract & Movable & Deinitable, o: MutOrigin](OnceThunk):
-    var function: Pointer[Self.F, Self.o]
-    comptime Out = Self.F.Out
-    comptime Error = Self.F.Error
-    def call_once(deinit self) raises Self.Error -> Self.Out:
-        comptime assert RepeatableThunk[Self.F]
-        return call_repeated(self.function[])
 
 
 def _choose_effect[G: Monad, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](

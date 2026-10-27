@@ -1,8 +1,8 @@
 """Fixed-arity calls whose error is widened to a caller's common error type."""
 from std.builtin.rebind import downcast, rebind_var, rebind
 from fp._internal.errors import _ErrorCompatible, _propagate_error
-from fp.callables.protocols import UnaryContract, Unary, MutableUnary, OnceUnary, BinaryContract, OnceBinary, MutableBinary, ThunkContract, BorrowCallContract, BorrowCallable, BorrowOnceCallable
-from fp.callables.invoke import RepeatableUnary, RepeatableBinary, call_once, call_repeated, invoke_borrowed, invoke_borrowed_once
+from fp.callables.protocols import UnaryContract, Unary, MutableUnary, OnceUnary, BinaryContract, OnceBinary, MutableBinary, ThunkContract, OnceThunk, BorrowCallContract, BorrowCallable, BorrowOnceCallable
+from fp.callables.invoke import RepeatableUnary, RepeatableBinary, RepeatableThunk, call_once, call_repeated, invoke_borrowed, invoke_borrowed_once
 
 
 @fieldwise_init
@@ -134,3 +134,13 @@ struct _MutableBorrowRef[F: BorrowCallContract & Movable & Deinitable, o: MutOri
     def invoke_once(deinit self, ref payload: Self.Payload) raises Self.Failure capturing -> Self.Result:
         comptime assert _RepeatableBorrow[Self.F]
         return _borrow_repeated_as[Self.Failure](payload, self.function[])
+
+
+@fieldwise_init
+struct _ThunkView[F: ThunkContract & Movable & Deinitable, o: MutOrigin](OnceThunk):
+    var function: Pointer[Self.F, Self.o]
+    comptime Out = Self.F.Out
+    comptime Error = Self.F.Error
+    def call_once(deinit self) raises Self.Error -> Self.Out:
+        comptime assert RepeatableThunk[Self.F]
+        return call_repeated(self.function[])

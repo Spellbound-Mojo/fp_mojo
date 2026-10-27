@@ -2172,6 +2172,27 @@ group; the corrected groups passed without changing fixtures. Reports retained
 unchanged inputs and no audit failures. Generated sources, all 48 tooling tests
 and strict documentation checks passed.
 
+### Callable ownership lives below algebra
+
+The shared first-argument binder now lives in the callable binding module,
+beside native argument-bundle binding. Algebra reexports its existing internal
+name. The exclusive borrowed thunk view likewise lives with the other callable
+receiver views and keeps its existing algebra import name. Neither owner adds
+an algebra dependency to the callable layer.
+
+The implementations and receiver modes are unchanged: consuming the binder
+moves its argument, repeating it requires a copyable bound argument, and the
+thunk view borrows its original receiver without copying callback state. This
+keeps general invocation and ownership rules out of algebra-specific protocols.
+Public names, call syntax, exact errors and native origins are unchanged.
+
+All six focused O0 programs passed, including owned Result combination, effect
+queries, State origins and native argument capture. Qualification passed four
+source/package ownership checks at O0/O3 and the full 726-program checkpoint:
+724 test/example checks and two benchmark programs. All 1,621 rejection fixtures
+passed. Reports retained unchanged inputs and no audit failures. Generated
+sources, all 48 tooling tests and strict documentation checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

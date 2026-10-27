@@ -15,14 +15,14 @@ from std.builtin.rebind import rebind
 from fp.callables._receiver import _MutableUnaryRef as _UnaryView
 from fp.callables.protocols import (UnaryContract, BinaryContract, ThunkContract,
                                     Unary, Binary, OnceUnary, MutableUnary, OnceThunk, BorrowCallable)
-from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
-from fp.callables._receiver import _unary_repeated_as, _thunk_once_as, _unary_once_as
+from fp.callables.invoke import call_once, RepeatableUnary, RepeatableBinary
+from fp.callables._receiver import _binary_repeated_as, _unary_repeated_as, _thunk_once_as, _unary_once_as
 from fp.iteration._advance import _next_optional, _Source, _source
 from fp.iteration._terminal import _append
 from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible, _propagate_error
 from fp.callables._identity import Identity
 from fp.data._result import _ResultType
-from fp.callables._receiver import _binary_repeated_as
+from fp.callables._binding import _BindFirst
 
 
 # Shared wording for family admission that includes receiver requirements.
@@ -829,26 +829,6 @@ struct _FoldShape[K: _Accumulate](BinaryContract):
     comptime Second = Optional[Self.K.Item]
     comptime Out = Self.K.Acc
     comptime Error = Self.K.Error
-
-
-@fieldwise_init
-struct _BindFirst[F: BinaryContract & Movable & Deinitable](
-    OnceUnary, MutableUnary where RepeatableBinary[F] and conforms_to(F.First, Copyable),
-    Copyable where conforms_to(F, Copyable) and conforms_to(F.First, Copyable)
-):
-    """A binary callback with its first argument retained; repeated calls copy it."""
-    var function: Self.F
-    var first: Self.F.First
-    comptime Arg = Self.F.Second
-    comptime Out = Self.F.Out
-    comptime Error = Self.F.Error
-    def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        return call_once(self.function^, self.first^, arg^)
-    def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        comptime assert RepeatableBinary[Self.F] and conforms_to(Self.F.First, Copyable)
-        comptime C = downcast[Self.F.First, Copyable & Deinitable]
-        var first = rebind_var[Self.F.First](rebind[C](self.first).copy())
-        return call_repeated(self.function, first^, arg^)
 
 
 struct _Lazy[G: ThunkContract & Movable & Deinitable](
