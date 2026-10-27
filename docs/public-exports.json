@@ -11946,19 +11946,26 @@
       "declarations": [
         "struct MapContract[I: Functor, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]:"
       ],
-      "provider": "algebra/contracts"
-    },
-    "algebra.FilterMapContract": {
-      "kind": "type or alias",
-      "declarations": [
-        "struct FilterMapContract[I: FunctorFilter, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]:"
-      ],
-      "provider": "algebra/contracts"
+      "provider": "algebra/_primitive_contracts"
     },
     "algebra.BindContract": {
       "kind": "type or alias",
       "declarations": [
         "struct BindContract[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]:"
+      ],
+      "provider": "algebra/_primitive_contracts"
+    },
+    "algebra.CombineContract": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct CombineContract[I: Applicative, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable]:"
+      ],
+      "provider": "algebra/_primitive_contracts"
+    },
+    "algebra.FilterMapContract": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct FilterMapContract[I: FunctorFilter, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]:"
       ],
       "provider": "algebra/contracts"
     },
@@ -11973,13 +11980,6 @@
       "kind": "type or alias",
       "declarations": [
         "struct FilterContract[I: Filterable, V: Movable & Deinitable, P: BorrowCallable, inverted: Bool = False]:"
-      ],
-      "provider": "algebra/contracts"
-    },
-    "algebra.CombineContract": {
-      "kind": "type or alias",
-      "declarations": [
-        "struct CombineContract[I: Applicative, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable]:"
       ],
       "provider": "algebra/contracts"
     },

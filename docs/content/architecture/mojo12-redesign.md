@@ -2808,6 +2808,34 @@ All inputs remained unchanged. Generated sources, all 48 tooling tests and
 strict documentation checks passed; the public inventory remains 328 exports
 and 90 examples.
 
+### Primitive contracts live below derived algebra
+
+The exact `MapContract`, `BindContract` and `CombineContract` declarations now
+live in a small private primitive-contract module. The public `contracts`
+module re-exports the same types, so existing submodule and package imports
+retain identical type identities. The admission adapters depend directly on
+that lower owner. Derived fold, search and sequencing metadata remain in the
+higher module.
+
+This removes the dependency obstacle to reusing primitive contracts from lower
+continuations: those continuations no longer need to import the module that
+already imports them. The new owner reaches only algebra protocols and lower
+callable/data machinery. A maintained dependency test prevents it from reaching
+derived algebra or function/effect integration modules; the shared traversal of
+the import graph also serves the existing leaf-boundary checks.
+
+All three moved declarations are byte-identical. The reviewed export comparison
+retains all 328 names and signatures, changing only their three physical
+providers. Runtime execution and public operation signatures are unchanged.
+Focused checks verify both public import routes, checked receiver wrappers,
+fluent contracts and selected combination before broader qualification.
+
+Qualification passed 32 operation, 76 combination and 56 branch source/package
+checks at both optimization levels, 142 generic and eight combination test
+programs, 14 rejection cases and the four operation-contract example builds.
+All input snapshots remained unchanged. Generator checks, all 49 tooling tests,
+API inventory generation and strict documentation validation also passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

@@ -1138,7 +1138,7 @@
      "variadic": false
     }
    ],
-   "provider": "algebra/contracts",
+   "provider": "algebra/_primitive_contracts",
    "signature": "struct BindContract[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]",
    "summary": "The admission, result and error of flat_map with a library callable.",
    "traits": []
@@ -1224,7 +1224,7 @@
      "variadic": false
     }
    ],
-   "provider": "algebra/contracts",
+   "provider": "algebra/_primitive_contracts",
    "signature": "struct CombineContract[I: Applicative, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable]",
    "summary": "The joint contract of a left carrier, binary callback and lazy right carrier.",
    "traits": []
@@ -3837,7 +3837,7 @@
      "variadic": false
     }
    ],
-   "provider": "algebra/contracts",
+   "provider": "algebra/_primitive_contracts",
    "signature": "struct MapContract[I: Functor, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]",
    "summary": "The admission, result and error of mapping a library callable.",
    "traits": []
