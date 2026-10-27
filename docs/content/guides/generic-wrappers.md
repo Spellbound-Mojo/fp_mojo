@@ -68,12 +68,36 @@ are exported from `fp.functions`.
 | Validate a success or observe a whole stored outcome | `EnsureContract`, `AttemptTapContract` |
 | Handle either original outcome | `RedeemContract`, `RedeemWithContract` |
 | Map stored errors or both payloads | `MapErrContract`, `MapBothContract` |
+| Recover a stored error to a value | `RecoverContract` |
+| Recover matching errors to a value or another carrier | `RecoverIfContract`, `OrElseIfContract` |
+| Observe a stored error directly or through an effect | `TapErrContract`, `FlatTapErrContract` |
 | Fold, accumulate mapped values or search | `FoldContract`, `FoldMapContract`, `FindContract`, `FindMapContract`, `AnyContract`, `AllContract` |
 
 See the [algebra reference](../reference/algebra.md) and
 [function reference](../reference/functions.md) for each descriptor's parameters
 and component predicates. Do not assume every descriptor has the same fields
 or admits the same source representations.
+
+## Forward recovery and error observation
+
+Recovery descriptors already include receiver admission in `Compatible`.
+This maintained wrapper uses one signature for an immediate Result and a
+deferred ResultT/Reader action. The call sites supply only the family; carrier
+and handler types are inferred.
+
+<!-- example: docs/examples/recovery_contract.mojo -->
+
+Use `RecoverIfContract` for a replacement value and `OrElseIfContract` for a
+replacement carrier when a predicate selects which errors to handle. Use
+`TapErrContract` or `FlatTapErrContract` when the error should remain in the
+output after observation. These contracts describe the selected stored-error
+layer; they do not catch arbitrary native raised errors.
+
+Keep the same family witness in the contract and operation call. Value recovery
+through a conditional `ApplicativeError` capability needs its public downcast
+witness in both places. `TapErrContract` can use the original `Functor` directly,
+including mapping-only families. The [algebra reference](../reference/algebra.md)
+describes these distinct capability requirements and component predicates.
 
 ## Preserve family, error and ownership
 

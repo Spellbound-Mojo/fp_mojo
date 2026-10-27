@@ -3183,6 +3183,23 @@ fixtures and all four builds/runs of the maintained recovery example.
 Generator parity, all 53 tooling tests, unchanged API generation and strict
 documentation validation passed. All 30 execution bodies remain unchanged.
 
+### The generic wrapper guide includes stored-error workflows
+
+The descriptor index now includes value and conditional recovery and borrowed
+error observation. A maintained recovery example demonstrates the same public
+wrapper signature for immediate and deferred families. The guide distinguishes
+replacement values, replacement carriers and preserved observed errors, and
+links the existing capability rules rather than introducing a parallel API.
+
+The guide also distinguishes conditional recovery's explicit error-capability
+witness from TapErrContract's original Functor witness. Library sources,
+exports and all executable examples remain unchanged.
+
+Qualification passed strict documentation validation, generator parity and
+all 53 tooling tests. All 107 library Mojo files remain byte-identical to the
+preceding candidate. The embedded example remains the maintained source used
+by the recovery qualification; no separate code sample was introduced.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.
