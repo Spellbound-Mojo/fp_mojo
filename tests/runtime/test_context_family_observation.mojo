@@ -1,6 +1,6 @@
 """Selected observation retains family policy, deferred timing and native errors."""
 from fp.functions import pipeline
-from fp.algebra import Applicative, ApplicativeError, ResultFamily, ListFamily, ValidationFamily, ListMonoid, IdentityFamily, TapErrContract, FlatTapErrContract
+from fp.algebra import Applicative, ApplicativeError, ErrorMapping, ResultFamily, ListFamily, ValidationFamily, ListMonoid, IdentityFamily, TapErrContract, FlatTapErrContract
 from fp.callables import BorrowCallContract, BorrowCallable, UnaryContract, BinaryContract, ThunkContract
 from fp.effects import Reader, ReaderT, ResultT, run
 from fp.data import Result, Ok, Err
@@ -18,8 +18,12 @@ def flat_tapped[I: ApplicativeError,V: Movable & Deinitable,C: BorrowCallContrac
     return pipeline[I](source^).flat_tap_err(observer^).get()
 
 
-def conditional[I: Applicative,V: Movable & Deinitable,C: BorrowCallContract & Movable & Deinitable](var source:V,var observer:C) raises TapErrContract[downcast[I,ApplicativeError],V,C].Error -> TapErrContract[downcast[I,ApplicativeError],V,C].Out where conforms_to(I,ApplicativeError) and TapErrContract[downcast[I,ApplicativeError],V,C].Compatible:
+def conditional[I: Applicative,V: Movable & Deinitable,C: BorrowCallContract & Movable & Deinitable](var source:V,var observer:C) raises TapErrContract[I,V,C].Error -> TapErrContract[I,V,C].Out where conforms_to(I,ApplicativeError) and TapErrContract[I,V,C].Compatible:
     return pipeline[I](source^).tap_err(observer^).get()
+
+
+def conditional_witness[I: Applicative,V: Movable & Deinitable,C: BorrowCallContract & Movable & Deinitable](var source:V,var observer:C) raises TapErrContract[downcast[I,ApplicativeError],V,C].Error -> TapErrContract[downcast[I,ApplicativeError],V,C].Out where conforms_to(I,ApplicativeError) and TapErrContract[downcast[I,ApplicativeError],V,C].Compatible:
+    return pipeline[downcast[I,ApplicativeError]](source^).tap_err(observer^).get()
 
 
 def conditional_flat[I: Applicative,V: Movable & Deinitable,C: BorrowCallContract & Movable & Deinitable](var source:V,var observer:C) raises FlatTapErrContract[downcast[I,ApplicativeError],V,C].Error -> FlatTapErrContract[downcast[I,ApplicativeError],V,C].Out where conforms_to(I,ApplicativeError) and FlatTapErrContract[downcast[I,ApplicativeError],V,C].Compatible:
@@ -102,7 +106,8 @@ def deferred() raises:
     comptime Conditional=ReaderT[ResultFamily[String],Int]
     assert_equal(run[Conditional](conditional[Conditional](Conditional.fail[Int](String("conditional")),Inspect(calls)),0)._err().value,"conditional")
     assert_equal(run[Conditional](conditional_flat[Conditional](Conditional.fail[Int](String("conditional")),ObserveEffect[Conditional](calls)),0)._err().value,"conditional")
-    assert_equal(calls[],15)
+    assert_equal(run[Conditional](conditional_witness[Conditional](Conditional.fail[Int](String("witness")),Inspect(calls)),0)._err().value,"witness")
+    assert_equal(calls[],16)
     def length(error:String) -> Int: return error.byte_length()
     var pointer:def(String) thin -> Int=length
     var stored=pipeline[I](I.fail[Int](String("pointer"))).tap_err(pointer).get()
@@ -127,7 +132,7 @@ def deferred() raises:
     assert_equal(code,702)
 
 
-struct FailurePolicy(ApplicativeError):
+struct FailurePolicy(ApplicativeError,ErrorMapping):
     comptime Base=ResultFamily[String]
     comptime Element[V:Movable & Deinitable]=Self.Base.Element[V]
     comptime Mapped[V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable]=Self.Base.Mapped[V,F]
@@ -141,6 +146,13 @@ struct FailurePolicy(ApplicativeError):
     comptime Handled[V:Movable & Deinitable,H:UnaryContract & Movable & Deinitable]=Self.Base.Handled[V,H]
     comptime HandleError[V:Movable & Deinitable,H:UnaryContract & Movable & Deinitable]=H.Error
     comptime _ErrorCarrier[V:Movable & Deinitable]=Self.Base.CarrierCompatible[V]
+    comptime ErrorCarrierCompatible[V:Movable & Deinitable]=Self.Base.ErrorCarrierCompatible[V]
+    comptime DefaultErrorTarget[A:Movable & Deinitable,E:Movable & Deinitable]=ResultFamily[E]
+    comptime BimapCompatible[Target:ErrorMapping,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable,G:UnaryContract & Movable & Deinitable]=Self.Base.BimapCompatible[ResultFamily[G.Out],V,F,G]
+    comptime Bimapped[Target:ErrorMapping,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable,G:UnaryContract & Movable & Deinitable]=Self.Base.Bimapped[ResultFamily[G.Out],V,F,G]
+    comptime BimapError[Target:ErrorMapping,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable,G:UnaryContract & Movable & Deinitable]=Int
+    @staticmethod
+    def bimap[Target:ErrorMapping,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable,G:UnaryContract & Movable & Deinitable](var f:F,var g:G,var source:V) raises Int -> Self.Bimapped[Target,V,F,G]:raise 799
     @staticmethod
     def pure[A:Movable & Deinitable](var value:A)->Self.Pure[A]:return Self.Base.pure(value^)
     @staticmethod

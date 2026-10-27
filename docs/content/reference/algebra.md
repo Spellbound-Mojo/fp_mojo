@@ -134,7 +134,10 @@ handler's exact error when run. Stored errors remain data throughout.
 <!-- example: docs/examples/recovery_contract.mojo -->
 
 `TapErrContract[I, V, C]` and `FlatTapErrContract[I, V, C]` describe borrowing
-error observation through an `ApplicativeError` family. A generic selected
+error observation. `FlatTapErrContract` requires `ApplicativeError`;
+`TapErrContract` accepts a `Functor` and selects recovery first, then
+`ErrorMapping`, then legacy intrinsic Result behavior for families with neither
+error capability. A generic selected
 wrapper forwards `Compatible` and projects `Family`, `Out` and `Error` without
 importing the private observation continuation. Input equality includes the
 stored error's origins; source-carrier membership is checked in both cases,
@@ -145,6 +148,20 @@ the finishing map and combination. `NativeErrorsCompatible` includes failure
 construction and preservation errors. Family-specific branching and retained-error
 copy requirements remain with the family primitives. Construction errors include the family's own recovery policy; deferred
 callback and failure-constructor errors remain in the action's run contract.
+
+For plain observation, mapping-only families delegate admission to
+`MapErrContract` with the same family as the destination. The observer result
+is discarded and the original stored error is moved into the output after the
+borrow ends. An incompatible source, receiver, payload origin or destination
+policy rejects the call; mapping errors propagate normally.
+
+Generic `tap_err` wrappers now use `TapErrContract[I, V, C]` with the original
+`I: Functor` directly, including conditional capabilities. Remove the old
+recovery downcast from that contract. A wrapper that deliberately retains
+`TapErrContract[downcast[I, ApplicativeError], V, C]` must select the same witness
+with `pipeline[downcast[I, ApplicativeError]]`; mixing that contract witness with
+`pipeline[I]` cannot forward the constraint on Mojo 1.2. Combined and component
+predicate forwarding remain tested. `flat_tap_err` keeps its existing boundary.
 
 <!-- example: docs/examples/selected_error_observation.mojo -->
 

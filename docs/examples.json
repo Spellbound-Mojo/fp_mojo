@@ -123,6 +123,9 @@
     "docs/examples/kleisli.mojo": {
       "stdout": "accepted: 8\naccepted: 9\naccepted: 12\n"
     },
+    "docs/examples/mapping_error_observation.mojo": {
+      "stdout": "before run\nobserved: unavailable\nretained: unavailable\n"
+    },
     "docs/examples/monad_sequencing.mojo": {
       "stdout": "retained: [1, 1, 3, 3]\npaired: [(1, 11), (1, 21), (3, 13), (3, 23)]\nbefore: [1, 1, 2, 2]\nfollowed_by: [7, 8, 7, 8]\noptional present: False\n"
     },

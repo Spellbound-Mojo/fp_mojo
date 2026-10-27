@@ -7268,8 +7268,8 @@
         ],
         "tap_err": [
           {
-            "signature": "def tap_err[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises TapErrContract[_Recovering[Self.I], Self.V, C].Error -> Pipeline[Self.I, TapErrContract[_Recovering[Self.I], Self.V, C].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and TapErrContract[_Recovering[Self.I], Self.V, C].Compatible:",
-            "sha256": "d9ec774483a708422cf8a7d30193611b42930846f3545564136f20aa5b05924a"
+            "signature": "def tap_err[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises TapErrContract[Self.I, Self.V, C].Error -> Pipeline[TapErrContract[Self.I, Self.V, C].Family, TapErrContract[Self.I, Self.V, C].Out, Self.E] where TapErrContract[Self.I, Self.V, C].Compatible:",
+            "sha256": "47fdbef16a4b5e1fd9c0272c86cec74993925bba6d8592b99f34106cf24e30bf"
           },
           {
             "signature": "def tap_err[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_Recovering[Self.I].Failure) -> R](deinit self, ref[o] function: C) raises TapErrContract[_Recovering[Self.I], Self.V, _NativeBorrowRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Error -> Pipeline[Self.I, TapErrContract[_Recovering[Self.I], Self.V, _NativeBorrowRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and TapErrContract[_Recovering[Self.I], Self.V, _NativeBorrowRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Compatible:",
@@ -7316,8 +7316,48 @@
             "sha256": "6e54d074788544e8b286a3a8ce14178c17a697fbb0c902ed01e1a9da0638d01d"
           },
           {
-            "signature": "def tap_err[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Failure[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping):",
-            "sha256": "0f7d5595c0b36d827c92c933bc2665446e94677f29c05c2ae2aae87783e6e7dc"
+            "signature": "def tap_err[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_MappingErrors[Self.I].Failure) -> R](deinit self, ref[o] function: C) raises TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrowRef[_MappingErrors[Self.I].Failure, R, Never, C, False, o]].Error -> Pipeline[Self.I, TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrowRef[_MappingErrors[Self.I].Failure, R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, ErrorMapping) and not conforms_to(Self.I, ApplicativeError) and TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrowRef[_MappingErrors[Self.I].Failure, R, Never, C, False, o]].Compatible:",
+            "sha256": "128745f5013654845d2ff5010f51c41dd659b23f9271b67eb38d4b3ad762f6e3"
+          },
+          {
+            "signature": "def tap_err[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_MappingErrors[Self.I].Failure) raises Self.E -> R](deinit self, ref[o] function: C) raises TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrowRef[_MappingErrors[Self.I].Failure, R, Self.E, C, True, o]].Error -> Pipeline[Self.I, TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrowRef[_MappingErrors[Self.I].Failure, R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, ErrorMapping) and not conforms_to(Self.I, ApplicativeError) and TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrowRef[_MappingErrors[Self.I].Failure, R, Self.E, C, True, o]].Compatible:",
+            "sha256": "9dd3031e876c5475f6accf28e67ca68f8046709b0994a18f4e9895c8eedffc8f"
+          },
+          {
+            "signature": "def tap_err[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_MappingErrors[Self.I].Failure) raises Never -> R](deinit self, ref[o] function: C) raises TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrowRef[_MappingErrors[Self.I].Failure, R, Never, C, True, o]].Error -> Pipeline[Self.I, TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrowRef[_MappingErrors[Self.I].Failure, R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, ErrorMapping) and not conforms_to(Self.I, ApplicativeError) and Self.E != Never and TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrowRef[_MappingErrors[Self.I].Failure, R, Never, C, True, o]].Compatible:",
+            "sha256": "9ba56f654dcac1c212c5d6785ddb3a4b7c845c9c6cb213a69c72bb8b1d8080cb"
+          },
+          {
+            "signature": "def tap_err[R: Movable & Deinitable, //](deinit self, function: def(_MappingErrors[Self.I].Failure) thin -> R) raises TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[_MappingErrors[Self.I].Failure, R, Never, def(_MappingErrors[Self.I].Failure) thin -> R, False]].Error -> Pipeline[Self.I, TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[_MappingErrors[Self.I].Failure, R, Never, def(_MappingErrors[Self.I].Failure) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ErrorMapping) and not conforms_to(Self.I, ApplicativeError) and not conforms_to(_MappingErrors[Self.I].Failure, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[_MappingErrors[Self.I].Failure, R, Never, def(_MappingErrors[Self.I].Failure) thin -> R, False]].Compatible:",
+            "sha256": "7bcf1ae077e3b6a88d91b3f523303c089659ed0020d8c5b5bd87f82b5b45511f"
+          },
+          {
+            "signature": "def tap_err[R: RegisterPassable & Deinitable, //](deinit self, function: def(_MappingErrors[Self.I].Failure) thin -> R) raises TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[_MappingErrors[Self.I].Failure, R, Never, def(_MappingErrors[Self.I].Failure) thin -> R, False]].Error -> Pipeline[Self.I, TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[_MappingErrors[Self.I].Failure, R, Never, def(_MappingErrors[Self.I].Failure) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ErrorMapping) and not conforms_to(Self.I, ApplicativeError) and not conforms_to(_MappingErrors[Self.I].Failure, TrivialRegisterPassable) and TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[_MappingErrors[Self.I].Failure, R, Never, def(_MappingErrors[Self.I].Failure) thin -> R, False]].Compatible:",
+            "sha256": "8398baea76a948bbab09d6abe9217bf5d65f69bd4ad4598f193f1c5b43c00189"
+          },
+          {
+            "signature": "def tap_err[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, function: def(P) thin -> R) raises TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[Self.I, TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ErrorMapping) and not conforms_to(Self.I, ApplicativeError) and P == _MappingErrors[Self.I].Failure and not conforms_to(R, RegisterPassable) and TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Compatible:",
+            "sha256": "392811a1dd66512eba7902bbb8a980837ecb2ed52cbd87607166583da1eaedf9"
+          },
+          {
+            "signature": "def tap_err[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, function: def(P) thin -> R) raises TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[Self.I, TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ErrorMapping) and not conforms_to(Self.I, ApplicativeError) and P == _MappingErrors[Self.I].Failure and TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Compatible:",
+            "sha256": "032ca697b8fa221c58d8b3bc719ae268060342c4d00b7511f75652fcf2d90393"
+          },
+          {
+            "signature": "def tap_err[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(_MappingErrors[Self.I].Failure) raises X thin -> R) raises TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[_MappingErrors[Self.I].Failure, R, X, def(_MappingErrors[Self.I].Failure) raises X thin -> R, True]].Error -> Pipeline[Self.I, TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[_MappingErrors[Self.I].Failure, R, X, def(_MappingErrors[Self.I].Failure) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ErrorMapping) and not conforms_to(Self.I, ApplicativeError) and _ErrorCompatible[Self.E, X] and not conforms_to(_MappingErrors[Self.I].Failure, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[_MappingErrors[Self.I].Failure, R, X, def(_MappingErrors[Self.I].Failure) raises X thin -> R, True]].Compatible:",
+            "sha256": "c0c246826706ebef864365fb3d03c64b80e2888ec6137dfb2c78b15744a8a560"
+          },
+          {
+            "signature": "def tap_err[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(_MappingErrors[Self.I].Failure) raises X thin -> R) raises TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[_MappingErrors[Self.I].Failure, R, X, def(_MappingErrors[Self.I].Failure) raises X thin -> R, True]].Error -> Pipeline[Self.I, TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[_MappingErrors[Self.I].Failure, R, X, def(_MappingErrors[Self.I].Failure) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ErrorMapping) and not conforms_to(Self.I, ApplicativeError) and _ErrorCompatible[Self.E, X] and not conforms_to(_MappingErrors[Self.I].Failure, TrivialRegisterPassable) and TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[_MappingErrors[Self.I].Failure, R, X, def(_MappingErrors[Self.I].Failure) raises X thin -> R, True]].Compatible:",
+            "sha256": "cbf2e87a67b2372bbda0fbf7f0380f70cec477012641766298deee0ca399beae"
+          },
+          {
+            "signature": "def tap_err[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> R) raises TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[Self.I, TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ErrorMapping) and not conforms_to(Self.I, ApplicativeError) and _ErrorCompatible[Self.E, X] and P == _MappingErrors[Self.I].Failure and not conforms_to(R, RegisterPassable) and TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Compatible:",
+            "sha256": "a25d7b5095e05afd98a5bb9fab2836cabece93c4ecdb09106d3f4fff7dd64b16"
+          },
+          {
+            "signature": "def tap_err[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> R) raises TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[Self.I, TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ErrorMapping) and not conforms_to(Self.I, ApplicativeError) and _ErrorCompatible[Self.E, X] and P == _MappingErrors[Self.I].Failure and TapErrContract[_MappingErrors[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Compatible:",
+            "sha256": "d572a451551de666f4b625c22f0f06bac541becbd961f943e767acc9cf006250"
           },
           {
             "signature": "def tap_err[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_Failure[Self.V]) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping):",
@@ -11645,7 +11685,7 @@
     "algebra.TapErrContract": {
       "kind": "type or alias",
       "declarations": [
-        "comptime TapErrContract[I: ApplicativeError, V: Movable & Deinitable,"
+        "struct TapErrContract[I: Functor, V: Movable & Deinitable,"
       ],
       "provider": "algebra/errors"
     },

@@ -836,22 +836,35 @@ def methods(*, fold_stage=False):
              f"_recover[{family}]({cb['build']}, self.value^)",
              "Recover the selected family's stored errors, preserving its timing and carrier.")
 
-    # Observation preserves the selected error family, including native Result
-    # storage under a custom family. Intrinsic Result calls under non-error
-    # families retain their disjoint native and library boundaries below.
+    # Plain observation uses recovery when available and mapping otherwise.
+    # Native signatures retain capability-specific input witnesses; one library
+    # boundary forwards the public contract without choosing a capability.
     for operation in error_operations("observation"):
         contract_name = "FlatTapErrContract" if operation.effect else "TapErrContract"
         primary = operation.callbacks[0]
-        payload = primary.input("Self.I.Element[Self.V]", family + ".Failure")
-        for cb in native_callbacks(primary.mode, payload, primary.argument):
-            contract = f"{contract_name}[{family}, Self.V, {cb['adapter_type']}]"
-            conditions = ["conforms_to(Self.I, ApplicativeError)"]
-            if cb["adapter_type"] != "C": conditions += cb["conditions"]
-            conditions += [contract + ".Compatible"]
-            emit(operation.name, cb, cb["params"], cb["argument"], contract + ".Out", contract + ".Error",
-                 "Self.I", conditions,
-                 f"_observe_error[{family}, Self.V, {cb['adapter_type']}, {operation.effect}]({cb['build']}, self.value^)",
-                 "Observe the selected stored-error layer using its family's timing and error policy.")
+        capabilities = [("ApplicativeError", "_Recovering[Self.I]")]
+        if not operation.effect:
+            capabilities.append(("ErrorMapping", "_MappingErrors[Self.I]"))
+        for capability, witness in capabilities:
+            payload = primary.input("Self.I.Element[Self.V]", witness + ".Failure")
+            for cb in native_callbacks(primary.mode, payload, primary.argument):
+                if not operation.effect and cb["adapter_type"] == "C":
+                    if capability == "ErrorMapping": continue
+                    selected = "Self.I"
+                    conditions = []
+                else:
+                    selected = witness
+                    conditions = [f"conforms_to(Self.I, {capability})"]
+                    if capability == "ErrorMapping": conditions += ["not conforms_to(Self.I, ApplicativeError)"]
+                    if cb["adapter_type"] != "C": conditions += cb["conditions"]
+                contract = f"{contract_name}[{selected}, Self.V, {cb['adapter_type']}]"
+                conditions += [contract + ".Compatible"]
+                runner = (f"_observe_error[{selected}, Self.V, {cb['adapter_type']}, True]"
+                          if operation.effect else f"_tap_err[{selected}]")
+                emit(operation.name, cb, cb["params"], cb["argument"], contract + ".Out", contract + ".Error",
+                     contract + ".Family" if not operation.effect and cb["adapter_type"] == "C" else "Self.I",
+                     conditions, f"{runner}({cb['build']}, self.value^)",
+                     "Observe the selected stored-error layer using its family's timing and error policy.")
 
     # Conditional recovery reuses the family's conditional continuation. The
     # error family is selected before either native callback is admitted.
@@ -948,7 +961,7 @@ def methods(*, fold_stage=False):
         summary, detail = operation.documentation
         two = len(operation.callbacks) == 2
         primary = operation.callbacks[0]
-        left = list(native_callbacks(primary.mode, primary.input(T, Err, whole=Source), primary.argument, library=name != "or_else", result_register=True if operation.conditional else None))
+        left = list(native_callbacks(primary.mode, primary.input(T, Err, whole=Source), primary.argument, library=name not in ("or_else", "tap_err"), result_register=True if operation.conditional else None))
         if two:
             secondary = operation.callbacks[1]
             right = native_callbacks(secondary.mode, secondary.input(T, Err, whole=Source), secondary.argument, second=True)

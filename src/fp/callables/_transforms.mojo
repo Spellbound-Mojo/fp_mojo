@@ -157,7 +157,9 @@ struct _IgnoreInput[T: Movable & Deinitable, F: ThunkContract & Movable & Deinit
 
 
 @fieldwise_init
-struct _ObserveOnce[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, paired: Bool](OnceUnary):
+struct _ObserveOnce[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, paired: Bool](
+    OnceUnary, MutableUnary where _RepeatableBorrow[C], Copyable where conforms_to(C, Copyable)
+):
     """Observe one borrowed payload, retaining ownership for the output."""
     var function: Self.C
     comptime Arg = Self.T
@@ -166,6 +168,11 @@ struct _ObserveOnce[T: Movable & Deinitable, C: BorrowCallContract & Movable & D
     def call_once(deinit self, var arg: Self.T) raises Self.Error -> Self.Out:
         comptime assert Self.C.Payload == Self.T
         var result = _borrow_once_as[Self.Error](arg, self.function^)
+        return _observed[Self.T, Self.C.Result, Self.paired](arg^, result^)
+
+    def call_mut(mut self, var arg: Self.T) raises Self.Error -> Self.Out:
+        comptime assert Self.C.Payload == Self.T and _RepeatableBorrow[Self.C]
+        var result = _borrow_repeated_as[Self.Error](arg, self.function)
         return _observed[Self.T, Self.C.Result, Self.paired](arg^, result^)
 
 

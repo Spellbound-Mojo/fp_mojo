@@ -1,5 +1,8 @@
 """Stored failures and recovery derived from the selected family's capability."""
-from .protocols import Applicative, ApplicativeError, Monad
+from .protocols import Functor, Applicative, ApplicativeError, ErrorMapping, Monad
+from .error_mapping import MapErrContract, _map_err
+from .instances import ResultFamily
+from fp.data._result import Result, _ResultType
 from std.builtin.rebind import downcast, rebind_var
 from fp._internal.errors import _ErrorCompatible, _CommonErrorCompatible, _CommonError, _propagate_error, _absurd
 from ._adapt import _fail_as, _flat_map_as, _or_else_as, _map2_lazy_as
@@ -332,23 +335,116 @@ struct _ErrorObserverContract[I: ApplicativeError, V: Movable & Deinitable,
     comptime Error = Self.I.HandleError[Self.V, Self.Handler]
 
 
-comptime TapErrContract[I: ApplicativeError, V: Movable & Deinitable,
-                         C: BorrowCallContract & Movable & Deinitable] = _ErrorObserverContract[I,V,C,False]
-"""Admission, output family and construction error of selected tap_err.
+trait _TapErrPolicy:
+    comptime CarrierCompatible[V: Movable & Deinitable]: Bool
+    comptime NativeErrorsCompatible[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable]: Bool
+    comptime OperationCompatible[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable]: Bool
+    comptime Family[V: Movable & Deinitable]: Functor
+    comptime Handler[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable]: UnaryContract & Movable & Deinitable
+    comptime Out[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable]: Movable & Deinitable
+    comptime Error[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable]: Movable & Deinitable
+    @staticmethod
+    def apply[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var observer: C, var source: V) raises Self.Error[V,C] -> Self.Out[V,C]: ...
 
-Forward Compatible in generic selected-pipeline wrappers and project Family,
-Out and Error. InputCompatible checks exact stored-error payload equality,
-including origins; CarrierCompatible checks the source's selected error layer.
-OutputCompatible is True because the observer result is discarded. Family
-admission includes OperationCompatible for the adapted observer and
-NativeErrorsCompatible for callback and failure construction. Native errors
-propagate; deferred callback errors remain in the run contract.
 
-Parameters:
-    I: The selected error family, preserving its construction and execution rules.
-    V: The complete source carrier, including origins.
-    C: The borrowed-error observer, including receiver and native error types.
-"""
+struct _RecoveryTap[I: ApplicativeError](_TapErrPolicy):
+    comptime Contract[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = _ErrorObserverContract[Self.I,V,C,False]
+    comptime CarrierCompatible[V: Movable & Deinitable] = Self.I._ErrorCarrier[V]
+    comptime NativeErrorsCompatible[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = Self.Contract[V,C].NativeErrorsCompatible
+    comptime OperationCompatible[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = Self.Contract[V,C].OperationCompatible
+    comptime Family[V: Movable & Deinitable] = Self.I
+    comptime Handler[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = Self.Contract[V,C].Handler
+    comptime Out[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = Self.Contract[V,C].Out
+    comptime Error[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = Self.Contract[V,C].Error
+    @staticmethod
+    def apply[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var observer: C, var source: V) raises Self.Error[V,C] -> Self.Out[V,C]:
+        comptime assert Self.Contract[V,C].Compatible
+        return _observe_error[Self.I,V,C,False](observer^,source^)
+
+
+struct _MappingTap[I: ErrorMapping](_TapErrPolicy):
+    comptime Handler[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = _ObserveOnce[Self.I.Failure,C,False]
+    comptime Contract[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = MapErrContract[Self.I,V,Self.Handler[V,C],Self.I]
+    comptime CarrierCompatible[V: Movable & Deinitable] = Self.I.ErrorCarrierCompatible[V]
+    comptime NativeErrorsCompatible[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = True
+    comptime OperationCompatible[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = Self.Contract[V,C].Compatible
+    comptime Family[V: Movable & Deinitable] = Self.I
+    comptime Out[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = Self.Contract[V,C].Out
+    comptime Error[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = Self.Contract[V,C].Error
+    @staticmethod
+    def apply[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var observer: C, var source: V) raises Self.Error[V,C] -> Self.Out[V,C]:
+        comptime assert Self.Contract[V,C].Compatible
+        return _map_err[Self.I,V,Self.Handler[V,C],Self.I](Self.Handler[V,C](observer^),source^)
+
+
+struct _IntrinsicTap(_TapErrPolicy):
+    comptime Family[V: Movable & Deinitable] = ResultFamily[downcast[V,_ResultType].Error]
+    comptime CarrierCompatible[V: Movable & Deinitable] = Self.Family[V]._ErrorCarrier[V] if conforms_to(V,_ResultType) else False
+    comptime NativeErrorsCompatible[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = True
+    comptime OperationCompatible[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = True
+    comptime Handler[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = _ObserveOnce[Self.Family[V].Failure,C,False]
+    comptime Out[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = V
+    comptime Error[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = C.Failure
+    @staticmethod
+    def apply[V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var observer: C, var source: V) raises C.Failure -> V:
+        comptime assert Self.CarrierCompatible[V] and C.Payload == Self.Family[V].Failure
+        comptime Native = Result[downcast[V,_ResultType].Value,Self.Family[V].Failure]
+        return rebind_var[V](rebind_var[Native](source^).tap_err(observer^))
+
+
+struct _TapErrSelection[I: Functor, V: Movable & Deinitable]:
+    # Keep execution, carrier and native errors under one selected dictionary.
+    # Recovery retains fail-constructor effects; mapping must target itself.
+    comptime Recovering = conforms_to(Self.I,ApplicativeError)
+    comptime Mapping = conforms_to(Self.I,ErrorMapping)
+    comptime Supported = Self.Recovering or Self.Mapping or conforms_to(Self.V,_ResultType)
+    comptime Input = downcast[Self.I,ApplicativeError].Failure if Self.Recovering else (downcast[Self.I,ErrorMapping].Failure if Self.Mapping else downcast[Self.V,_ResultType].Error)
+    comptime Policy = downcast[_RecoveryTap[downcast[Self.I,ApplicativeError]] if Self.Recovering else (_MappingTap[downcast[Self.I,ErrorMapping]] if Self.Mapping else _IntrinsicTap),_TapErrPolicy]
+
+
+struct TapErrContract[I: Functor, V: Movable & Deinitable,
+                      C: BorrowCallContract & Movable & Deinitable]:
+    """Admission, selected family and exact error of borrowed error observation.
+
+    Forward Compatible and project Family, Out and Error in generic wrappers.
+    Recovery families retain their failure-construction semantics. Mapping-only
+    families borrow and retain the original error while targeting themselves.
+    Families with neither capability retain legacy intrinsic Result observation.
+    Callback results are discarded; native errors propagate at execution time.
+
+    Parameters:
+        I: The selected family.
+        V: The complete source carrier, including origins.
+        C: The borrowed-error observer and its exact native error.
+    """
+    comptime _Selection = _TapErrSelection[Self.I,Self.V]
+    comptime _Policy = Self._Selection.Policy
+    comptime CapabilityCompatible = Self._Selection.Supported
+    """A selected error capability or legacy intrinsic Result is available."""
+    comptime InputCompatible = Self.C.Payload == Self._Selection.Input if Self.CapabilityCompatible else False
+    """Exact stored-error payload equality, including origins."""
+    comptime CarrierCompatible = Self._Policy.CarrierCompatible[Self.V] if Self.CapabilityCompatible else False
+    """The source belongs to the selected error channel."""
+    comptime OutputCompatible = True
+    """The observer result is discarded, so its type is unrestricted."""
+    comptime FamilyCompatible = Self.CarrierCompatible
+    """The selected source and observer output are admitted."""
+    comptime ReceiverCompatible = _OnceBorrowAvailable[Self.C]
+    """The observer supplies an invocable receiver."""
+    comptime NativeErrorsCompatible = Self._Policy.NativeErrorsCompatible[Self.V,Self.C] if Self.InputCompatible and Self.FamilyCompatible else False
+    """Recovery checks its fail error; mapping adds no failure-constructor error."""
+    comptime OperationCompatible = Self._Policy.OperationCompatible[Self.V,Self.C] if Self.InputCompatible and Self.FamilyCompatible and Self.ReceiverCompatible and Self.NativeErrorsCompatible else False
+    """The chosen primitive admits this observer and destination policy."""
+    comptime Compatible = Self.InputCompatible and Self.FamilyCompatible and Self.ReceiverCompatible and Self.NativeErrorsCompatible and Self.OperationCompatible
+    """Complete selected observation admission."""
+    comptime Family = Self._Policy.Family[Self.V]
+    """The selected family, or ResultFamily for legacy intrinsic observation."""
+    comptime Handler = Self._Policy.Handler[Self.V,Self.C]
+    """The adapted observation callback used by the selected primitive."""
+    comptime Out = Self._Policy.Out[Self.V,Self.C]
+    """The exact carrier, preserving deferred representation."""
+    comptime Error = Self._Policy.Error[Self.V,Self.C]
+    """The exact construction error; deferred errors remain in Out."""
 
 
 comptime FlatTapErrContract[I: ApplicativeError, V: Movable & Deinitable,
@@ -407,3 +503,11 @@ def _observe_error[I: ApplicativeError, V: Movable & Deinitable,
 ) raises _ErrorObserverContract[I,V,C,effect].Error -> _ErrorObserverContract[I,V,C,effect].Out where _ErrorObserverContract[I,V,C,effect].Compatible:
     comptime Operation = _ErrorObserverContract[I,V,C,effect]
     return I.or_else(Operation.Handler(observer^),source^)
+
+
+@always_inline
+def _tap_err[I: Functor, V: Movable & Deinitable,
+             C: BorrowCallContract & Movable & Deinitable](
+    var observer: C, var source: V
+) raises TapErrContract[I,V,C].Error -> TapErrContract[I,V,C].Out where TapErrContract[I,V,C].Compatible:
+    return TapErrContract[I,V,C]._Policy.apply(observer^,source^)

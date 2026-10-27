@@ -452,7 +452,9 @@ Ordinary canonical Result calls keep their existing type-changing behavior.
 
 The same boundary applies to conditional recovery, error observation, success
 validation, outcome handling and whole-outcome observation. A mapping-only
-family keeps `map`, `map_err` and `map_both`, while these operations require
+family keeps `map`, `map_err` and `map_both`; the later
+[mapping observation pass](#observation-through-error-mapping) also admits plain
+`tap_err` through its own mapping policy. The other operations require
 `ApplicativeError` and, where documented, Monad. This corrects the previous
 fallback that could silently discard a mapping-only family's policy by
 reselecting Result. `.get()` followed by `pipeline(...)`, or explicit
@@ -1150,7 +1152,7 @@ for the other two clients; it does not establish a general performance trend.
 
 #### Mapping-only capability boundary qualification
 
-The final policy correction passed 84 source/package O0/O3 checks: all ten
+At that pass, the policy correction passed 84 source/package O0/O3 checks: all ten
 unsupported recovery/observation/validation/outcome operations reject ordinary
 native and library calls, while positive controls retain canonical Result,
 Identity fallback, explicit Result selection and mapping-only continuation.
@@ -1222,6 +1224,69 @@ admission controls and 0.51→0.52 for incompatible observer errors. Median peak
 RSS changes ranged from −1.7% to +2.0%; executable sizes were identical. These
 small samples show no material regression in these clients, not a general
 performance claim. Artifacts are in `.cache/quality-cycle11/`.
+
+### Observation through error mapping
+
+Plain selected `tap_err` requires observation and retention of a stored error,
+not the ability to replace it with a recovered success. Mapping-only families
+now use `MapErrContract` and `_map_err`, with the source family explicitly set as
+the destination. The existing `_ObserveOnce` adapter borrows the error, discards
+the callback result and returns the original owned error. It also exposes a
+mutable invocation when its stored observer is repeatable and is copyable only
+when that observer is copyable. This permits branching observers without
+making consuming observers repeatable or requiring copyable stored errors.
+
+`_TapErrSelection` chooses one dictionary before callback admission. Each
+policy forwards metadata and delegates execution to an existing owner:
+
+| Selected capability | Execution owner | Preserved semantics |
+|---|---|---|
+| `ApplicativeError`, including a family also implementing `ErrorMapping` | Checked recovery observation | Existing failure-constructor and recovery effects |
+| `ErrorMapping` only | Checked mapping into the same family | Original error, family mapping errors, deferred timing |
+| Neither capability, with native Result storage | Result observation | Existing intrinsic Result behavior and output family |
+
+This makes observation available to `StateT[ResultFamily[E], S]` with move-only
+state. The action owns state consumption and cleanup; observation adds no
+rollback, extra copy or second traversal. A family's different default mapping
+target cannot silently replace the selected family. `flat_tap_err` continues
+to require recovery and effect combination.
+
+The generic library callback has one overload and one public `TapErrContract`.
+Native closures and thin pointers retain disjoint capability/ABI signatures.
+A conditional alias of two contract structs loses their metadata fields in
+Mojo 1.2; selecting execution and its exact error independently also loses
+error-equality evidence in generic bodies. The selected dictionary keeps
+execution, output and native error together, following the existing recovery
+and outcome policy architecture. It neither erases native errors nor inserts
+catch-and-convert bridges.
+
+Generic wrappers now pass the original `I: Functor` to `TapErrContract` and
+`pipeline`, removing the old capability downcast. Explicitly witnessed wrappers
+can still use `downcast[I, ApplicativeError]` in both places. Mixing that witness
+in the contract with the original family in the operation needs this narrow
+migration; it is not accepted by Mojo 1.2's generic proof checker. Ordinary
+callback calls, positional callback bindings and existing effect observation
+signatures remain unchanged.
+
+Qualification passed 236 source/package O0/O3 boundary checks, 13 packaged
+runtime/example programs and 11 legacy rejection fixtures, with unchanged
+inputs/packages and no audit failures. The checked cases include move-only
+state/error/capture cleanup on success, failure, native exception and abandonment;
+branching repeatable observers; origin-bound payloads/results/errors; changed
+stored thin pointers; self-target rejection; generic component forwarding; and
+recovery precedence when both capabilities are present. Tooling (46 tests),
+generated-source checks and strict docs pass with 318 exports and 78 examples.
+Only `TapErrContract` and `Pipeline.tap_err` declarations changed in the reviewed
+public inventory.
+
+A bounded comparison against `10e147f` used four unchanged clients, alternating
+two cold O3/two-thread samples per version. All 16 checks passed and executable
+sizes were unchanged. Median seconds were 6.22→6.23 for the observation example,
+5.61→5.40 for native observation, 8.80→8.72 for transport mapping, and 0.57→0.67
+for incompatible observer-error rejection. Peak-RSS medians changed by −0.7%
+to +4.5%. The rejection cost increased by about 0.10 seconds in this small sample;
+these observations do not establish a general performance trend. Artifacts are
+in `.cache/quality-cycle12/` (final qualification under `qualified/`).
 
 ### Resource scopes
 

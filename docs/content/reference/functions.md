@@ -98,8 +98,9 @@ their meaning; use the trailing `Target` binding by name when needed.
 
 This fallback boundary also applies to `recover`, `or_else`, `tap_err`,
 `flat_tap_err`, `recover_if`, `or_else_if`, `ensure`, `redeem`, `redeem_with` and
-`attempt_tap`. An `ErrorMapping`-only family retains `map`, `map_err` and
-`map_both`; these other operations require `ApplicativeError`, plus Monad where
+`attempt_tap`. An `ErrorMapping`-only family supports `map`, `map_err`,
+`map_both` and `tap_err` when mapping back into itself is admitted. The other
+operations require `ApplicativeError`, plus Monad where
 specified below. Native Result storage never silently reselects `ResultFamily`
 for a family missing that capability. To deliberately use the carrier's Result
 semantics, extract it with `.get()` and pass it to `pipeline(...)`, or select
@@ -137,8 +138,11 @@ its result metadata is needed; native Result storage never overrides that policy
 <!-- example: docs/examples/selected_recovery.mojo -->
 
 `tap_err(observer)` borrows a selected stored error and discards the observer's
-result, including a returned stored failure. The original error is then
-reintroduced through the family's failure constructor. `flat_tap_err(observer)`
+result, including a returned stored failure. For an `ApplicativeError` family,
+the original error is reintroduced through its failure constructor, including
+any native constructor error. A mapping-only family instead retains the original
+error through its `ErrorMapping` primitive, explicitly targeting itself; it
+never substitutes the default target family. `flat_tap_err(observer)`
 instead sequences the observer's effect: successful branches retain the
 original error, empty effects remain empty, and failed observers follow the
 family's combination policy. Result keeps the observer error; Validation
@@ -151,7 +155,13 @@ mode. Deferred families keep observation deferred. Family construction errors
 and native observer errors retain their exact types. See the algebra reference
 for `TapErrContract` and `FlatTapErrContract` generic-wrapper metadata.
 
+Plain observation also works for `StateT[ResultFamily[E], S]` with move-only
+state, which cannot offer recovery with rollback. It neither copies the state
+nor recovers from the failure; the source action keeps its usual state ownership.
+
 <!-- example: docs/examples/selected_error_observation.mojo -->
+
+<!-- example: docs/examples/mapping_error_observation.mojo -->
 
 `recover_if(predicate, handler)` recovers matching stored errors with a value;
 `or_else_if(predicate, handler)` uses a replacement effect in the same family.
