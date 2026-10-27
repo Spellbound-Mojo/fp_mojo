@@ -2,7 +2,7 @@
 
 from .protocols import _pure, _CALLBACK_ADMISSION, Functor, Applicative, ApplicativeError, ErrorMapping, Monad
 from .error_mapping import MapErrContract, _map_err
-from ._primitive_contracts import BindContract
+from ._primitive_contracts import MapContract, BindContract, CombineContract
 from .instances import ResultFamily
 from fp.data._result import Result, _ResultType
 from std.builtin.rebind import downcast, rebind_var
@@ -270,9 +270,11 @@ struct _ObserveFailure[I: ApplicativeError, A: Movable & Deinitable, V: Movable 
     comptime Voided = Self.Discard.Out
     comptime Join = _UninhabitedRight[Self.A]
     comptime Next = _FailedThunk[Self.I]
-    comptime Compatible = Self.I.MapCompatible[Self.V,Self.Discard.Discard] and Self.I.CombineCompatible[Self.Voided,Self.Join,Self.Next]
-    comptime Out = Self.I.Combined[Self.Voided, Self.Join, Self.Next]
-    comptime Error = _CommonError[Self.Discard.Error, Self.I.CombineError[Self.Voided, Self.Join, Self.Next]]
+    comptime _Map = MapContract[Self.I, Self.V, Self.Discard.Discard]
+    comptime _Combine = CombineContract[Self.I, Self.Voided, Self.Join, Self.Next]
+    comptime Compatible = Self._Map.FamilyCompatible and Self._Combine.OperationCompatible
+    comptime Out = Self._Combine.Out
+    comptime Error = _CommonError[Self.Discard.Error, Self._Combine.Error]
     def call(self, var original: Self.First, var observed: Self.V) raises Self.Error -> Self.Out:
         comptime assert Self.Compatible, _CALLBACK_ADMISSION
         comptime assert _ErrorCompatible[Self.Error, Self.Discard.Error]

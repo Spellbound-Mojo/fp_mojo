@@ -2910,6 +2910,31 @@ error-observation programs; and all 34 selected rejection cases. Input snapshots
 remained unchanged with no audit failures. Generator parity, all 49 tooling
 tests, API freshness and strict documentation validation also passed.
 
+### Derived binding and observation project primitive contracts
+
+The sequencing contract and conditional contract now obtain their family bind
+admission and result types from `BindContract`. Conditional construction errors
+still use the separate type-only error probe through their own descriptor;
+they never substitute the stored branch callback for that native signature
+witness. Existing Compatible and InvocationCompatible meanings are preserved.
+
+Failure observation names its mapping and lazy combination descriptors and
+projects the same family admission and native error composition. It preserves
+the legacy combination predicate rather than adding carrier or receiver checks
+that existing generic wrappers did not promise. The family continues to own
+observer evaluation, restoration of stored failure and short-circuiting.
+
+Function bodies are unchanged in all three modules. Five focused programs
+passed for sequencing receivers, conditional generic and receiver proofs,
+failure-forwarding ownership and custom recovery admission.
+
+Qualification passed all 758 test programs and both benchmark programs in the
+full package/O3 suite, with zero audit failures; all 1,692 rejection fixtures;
+196 source/package O0/O3 boundary checks; generator parity; all 49 tooling
+tests; and strict documentation validation. Recorded inputs and package hashes
+remained unchanged. The full rejection gate restarted in a fresh output bundle
+after an environment interruption; its final completed report owns the result.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

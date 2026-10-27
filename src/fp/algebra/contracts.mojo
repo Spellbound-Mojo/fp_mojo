@@ -384,6 +384,8 @@ struct IfContract[I: Monad, V: Movable & Deinitable, L: ThunkContract & Movable 
     comptime _Branch = _IfEffect[Self.I, Self.L, Self.R]
     comptime _Raised = _CommonError[Self.L.Error, Self.R.Error]
     comptime _Probe = _ErrorProbe[Bool, Self.I._Joined[Self.L.Out, Self.R.Out], Self._Raised]
+    comptime _Bind = BindContract[Self.I, Self.V, Self._Branch]
+    comptime _ErrorBind = BindContract[Self.I, Self.V, Self._Probe]
     comptime InputCompatible = Self.I.Element[Self.V] == Bool
     """The condition carries exactly Bool."""
     comptime OutputCompatible = Self.I.Element[Self.L.Out] == Self.I.Element[Self.R.Out]
@@ -392,13 +394,13 @@ struct IfContract[I: Monad, V: Movable & Deinitable, L: ThunkContract & Movable 
     """The condition and both branches belong to the selected family."""
     comptime NativeErrorsCompatible = _ErrorCompatible[Self._Raised, Self.L.Error] and _ErrorCompatible[Self._Raised, Self.R.Error]
     """Branch native errors share one exact raised type without conversion."""
-    comptime FamilyCompatible = Self.I.BindCompatible[Self.V, Self._Branch]
+    comptime FamilyCompatible = Self._Bind.FamilyCompatible
     """The family's admission of the branch continuation and its receiver."""
     comptime Family = Self.I
     """The family selected for fluent continuation over Out."""
-    comptime Out = Self.I.Bound[Self.V, Self._Branch]
+    comptime Out = Self._Bind.Out
     """The exact carrier produced by conditional binding."""
-    comptime Error = Self.I.BindError[Self.V, Self._Probe]
+    comptime Error = Self._ErrorBind.Error
     """The native construction error; deferred execution errors stay in Out."""
     comptime ShapeCompatible = Self.InputCompatible and Self.OutputCompatible and Self.CarrierCompatible
     """The legacy free entry's shape admission; family execution checks its own requirements."""

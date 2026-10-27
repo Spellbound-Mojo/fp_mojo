@@ -1,5 +1,6 @@
 """Compile-time sequencing metadata; family bind remains the execution owner."""
 from .protocols import Monad
+from ._primitive_contracts import BindContract
 from ._sequencing import _EffectRetain
 from fp.callables.protocols import BorrowCallContract, ThunkContract
 from fp.callables._transforms import _BorrowedUnary, _IgnoreInput
@@ -14,14 +15,15 @@ struct _SequencingContract[I: Monad, V: Movable & Deinitable,
     comptime Continuation = _EffectRetain[Self.I.Element[Self.V], Self.I, Self.C, False, Self.paired] if Self.retained else _BorrowedUnary[Self.I.Element[Self.V], Self.C]
     comptime InputCompatible = Self.C.Payload == Self.I.Element[Self.V]
     comptime CarrierCompatible = Self.I.CarrierCompatible[Self.C.Result]
-    comptime BindCompatible = Self.I.BindCompatible[Self.V, Self.Continuation]
+    comptime _Bind = BindContract[Self.I, Self.V, Self.Continuation]
+    comptime BindCompatible = Self._Bind.FamilyCompatible
     comptime FamilyCompatible = Self.CarrierCompatible and Self.BindCompatible
     comptime Compatible = Self.InputCompatible and Self.FamilyCompatible
     comptime ReceiverCompatible = Self.receiver_available
     comptime InvocationCompatible = Self.Compatible and Self.ReceiverCompatible
     comptime Family = Self.I
-    comptime Out = Self.I.Bound[Self.V, Self.Continuation]
-    comptime Error = Self.I.BindError[Self.V, Self.Continuation]
+    comptime Out = Self._Bind.Out
+    comptime Error = Self._Bind.Error
 
 
 comptime FlatTapContract[I: Monad, V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = _SequencingContract[I, V, C, True, False, _OnceBorrowAvailable[C]]
