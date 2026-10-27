@@ -703,6 +703,19 @@ def _map2_lazy_as[E: Movable & Deinitable, M: Applicative, V: Movable & Deinitab
         _propagate_error[E](error^)
 
 
+def _traverse_as[S: Traversable, G: Applicative, V: Movable & Deinitable,
+                 F: UnaryContract & Movable & Deinitable, Raised: Movable & Deinitable](
+    var function: F, var source: V
+) raises Raised -> S.Traversed[G, V, F]:
+    # A generic native wrapper may provide its exact error as evidence. Keep
+    # the family's existing symbolic spelling and validate identity here.
+    try:
+        return S.traverse[G](function^, source^)
+    except error:
+        comptime assert _ErrorCompatible[Raised, type_of(error)]
+        _propagate_error[Raised](error^)
+
+
 def _start_as[E: Movable & Deinitable, K: _Accumulate]() raises E -> K.Acc where _ErrorCompatible[E, K.Error]:
     try:
         return K.start()

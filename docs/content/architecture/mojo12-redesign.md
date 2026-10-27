@@ -1759,6 +1759,25 @@ Reports retain unchanged inputs and no audit failures. Strict documentation
 checks retain 318 exports and 81 examples. Evidence is in
 `.cache/quality-cycle27/qualified-main/`.
 
+### Traversal forwarding and computed-right combination
+
+The protocol module now owns traversal's existing native-error forwarding
+adapter. Native traversal entries and traversal postprocessing use that same
+owner; the traversal module retains its internal re-export. Existing callback
+error-shape checks remain at native entry points.
+
+`_map2_as` owns adapting an already-computed right operand to the canonical
+value thunk and forwarding combination errors. Public `map2` delegates to it,
+and `ap` delegates to `map2` with the existing application callable. All three
+retain their selected family's admission, evaluation order, exact output and
+error types, and ownership of skipped right operands. Public signatures and
+positional bindings are unchanged.
+
+Qualification on Mojo 1.2.0 passed 396 source/package checks at O0 and O3,
+34 traversal programs, 39 algebra programs, 132 generic clients, all 48 tooling
+tests and generated-source verification. Compiler reports retained unchanged
+inputs and no audit failures.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

@@ -4,8 +4,8 @@ from std.builtin.rebind import downcast
 from fp.callables.protocols import UnaryContract, BinaryContract
 from fp.callables._identity import Identity
 from fp.callables._transforms import _ValueThunk as _Value, _Pair, _Apply
-from .protocols import Applicative, Monad, Traversable
-from fp._internal.errors import _ErrorCompatible, _propagate_error
+from .protocols import Applicative, Monad, Traversable, _map2_lazy_as
+from fp._internal.errors import _ErrorCompatible
 
 
 def _map2_as[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & Movable & Deinitable,
@@ -15,11 +15,8 @@ def _map2_as[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract
     comptime assert _CombineCompatible[I, V, F, _Value[W]]
     # Native carrier syntax knows the exact callback error. Keep the family's
     # public symbolic error spelling intact and admit that identity here.
-    try:
-        return map2[I](f^, left^, right^)
-    except error:
-        comptime assert _ErrorCompatible[X, type_of(error)]
-        _propagate_error[X](error^)
+    comptime assert _ErrorCompatible[X, I.CombineError[V, F, _Value[W]]]
+    return _map2_lazy_as[X, I](f^, left^, _Value(right^))
 
 
 comptime _Same[T: Movable & Deinitable] = Identity[T]
@@ -50,7 +47,7 @@ def map2[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & M
     Raises:
         The combiner's error.
     """
-    return I.map2_lazy(f^, left^, _Value(right^))
+    return _map2_as[I, X=I.CombineError[V, F, _Value[W]]](f^, left^, right^)
 
 
 def ap[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var functions: V, var values: W
@@ -73,7 +70,7 @@ def ap[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var
     Raises:
         The callbacks' error.
     """
-    return I.map2_lazy(_Apply[_Function[I, V]](), functions^, _Value(values^))
+    return map2[I](_Apply[_Function[I, V]](), functions^, values^)
 
 
 def flatten[V: Movable & Deinitable, //, I: Monad](var nested: V

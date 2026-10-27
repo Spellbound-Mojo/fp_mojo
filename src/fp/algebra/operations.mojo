@@ -10,8 +10,8 @@ from std.builtin.rebind import rebind_var, downcast
 from fp.callables._views import _UnaryViewable
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract
 from fp.callables.native import _NativeUnaryRef, _Unary, _RaisingUnary
-from fp._internal.errors import _ErrorCompatible, _propagate_error
-from .protocols import Functor, Applicative, Monad, Traversable, Monoid, Semigroup, _pure, _map_as, _flat_map_as
+from fp._internal.errors import _ErrorCompatible
+from .protocols import Functor, Applicative, Monad, Traversable, Monoid, Semigroup, _pure, _map_as, _flat_map_as, _traverse_as
 from .contracts import MapContract, BindContract, TraverseContract, FilterContract, CombineContract
 
 
@@ -298,11 +298,7 @@ def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Dein
     comptime D = _NativeUnaryRef[A, R, Never, F, False, o]
     comptime Raised = S.TraverseError[G, V, _ErrorProbe[A, R, Never]]
     comptime assert S.TraverseError[G, V, D] == Raised
-    try:
-        return S.traverse[G](D(Pointer(to=f)), source^)
-    except error:
-        comptime assert _ErrorCompatible[Raised, type_of(error)]
-        _propagate_error[Raised](error^)
+    return _traverse_as[S, G, V, D, Raised](D(Pointer(to=f)), source^)
 
 
 def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //,
@@ -312,8 +308,4 @@ def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Dein
     comptime D = _NativeUnaryRef[A, R, E, F, True, o]
     comptime Raised = S.TraverseError[G, V, _ErrorProbe[A, R, E]]
     comptime assert S.TraverseError[G, V, D] == Raised
-    try:
-        return S.traverse[G](D(Pointer(to=f)), source^)
-    except error:
-        comptime assert _ErrorCompatible[Raised, type_of(error)]
-        _propagate_error[Raised](error^)
+    return _traverse_as[S, G, V, D, Raised](D(Pointer(to=f)), source^)

@@ -4,7 +4,7 @@ from std.builtin.rebind import downcast, rebind, rebind_var
 from fp.callables.protocols import Unary, UnaryContract, BorrowCallContract
 from fp.callables._transforms import _Fill
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from .protocols import Applicative, Traversable, Monad, FunctorFilter, _Accumulate, _map_as
+from .protocols import Applicative, Traversable, Monad, FunctorFilter, _Accumulate, _map_as, _traverse_as
 from ._sequencing import _EffectRetain
 from ._derived import flatten
 from .filtering import compact
@@ -29,19 +29,6 @@ def _traverse_void[V: Movable & Deinitable, F: UnaryContract & Movable & Deinita
 ) raises Raised -> G._Looped[V, F, _Discard[G.Element[F.Out]]]:
     try:
         return G._loop[V, F, _Discard[G.Element[F.Out]]](function^, source^)
-    except error:
-        comptime assert _ErrorCompatible[Raised, type_of(error)]
-        _propagate_error[Raised](error^)
-
-
-def _traverse_as[S: Traversable, G: Applicative, V: Movable & Deinitable,
-                 F: UnaryContract & Movable & Deinitable, Raised: Movable & Deinitable](
-    var function: F, var source: V
-) raises Raised -> S.Traversed[G, V, F]:
-    # A generic native wrapper may provide its exact error as evidence. Keep
-    # the family's existing symbolic spelling and validate identity here.
-    try:
-        return S.traverse[G](function^, source^)
     except error:
         comptime assert _ErrorCompatible[Raised, type_of(error)]
         _propagate_error[Raised](error^)
