@@ -369,3 +369,41 @@ Parameters:
     V: The complete source carrier, including origins.
     C: The borrowed-error observer returning a carrier in I.
 """
+
+
+@always_inline
+def _recover[I: ApplicativeError, V: Movable & Deinitable,
+             H: UnaryContract & Movable & Deinitable](
+    var handler: H, var source: V
+) raises RecoverContract[I,V,H].Error -> RecoverContract[I,V,H].Out where RecoverContract[I,V,H].Compatible:
+    comptime C = RecoverContract[I,V,H]
+    return I.or_else(C.Handler(handler^),source^)
+
+
+@always_inline
+def _or_else_if[I: ApplicativeError, V: Movable & Deinitable,
+                P: BorrowCallContract & Movable & Deinitable,
+                H: UnaryContract & Movable & Deinitable](
+    var predicate: P, var handler: H, var source: V
+) raises OrElseIfContract[I,V,P,H].Error -> OrElseIfContract[I,V,P,H].Out where OrElseIfContract[I,V,P,H].Compatible:
+    comptime C = OrElseIfContract[I,V,P,H]
+    return I.or_else(C.Continuation(predicate^,handler^),source^)
+
+
+@always_inline
+def _recover_if[I: ApplicativeError, V: Movable & Deinitable,
+                P: BorrowCallContract & Movable & Deinitable,
+                H: UnaryContract & Movable & Deinitable](
+    var predicate: P, var handler: H, var source: V
+) raises RecoverIfContract[I,V,P,H].Error -> RecoverIfContract[I,V,P,H].Out where RecoverIfContract[I,V,P,H].Compatible:
+    comptime C = RecoverIfContract[I,V,P,H]
+    return _or_else_if[I,V,P,C.Handler](predicate^,C.Handler(handler^),source^)
+
+
+@always_inline
+def _observe_error[I: ApplicativeError, V: Movable & Deinitable,
+                   C: BorrowCallContract & Movable & Deinitable, effect: Bool](
+    var observer: C, var source: V
+) raises _ErrorObserverContract[I,V,C,effect].Error -> _ErrorObserverContract[I,V,C,effect].Out where _ErrorObserverContract[I,V,C,effect].Compatible:
+    comptime Operation = _ErrorObserverContract[I,V,C,effect]
+    return I.or_else(Operation.Handler(observer^),source^)

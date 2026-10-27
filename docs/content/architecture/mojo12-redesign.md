@@ -1191,6 +1191,38 @@ policy rejection, missing receiver modes, finishing-operation admission and nati
 construction errors; the same callback shapes remain executable under an admitted
 policy. The public inventory remains 318 exports and 77 examples.
 
+### Shared checked recovery operations
+
+Selected Pipeline recovery and observation overloads delegate to four checked
+functions beside the existing contracts in `algebra.errors`. `_recover` lifts a
+value handler, `_or_else_if` builds the conditional continuation, `_recover_if`
+lifts its handler and delegates to that effect path, and `_observe_error` uses
+the existing observation continuation for both observation modes. Contracts
+supply the exact adapted types, result types, errors and admission predicates.
+
+The generator now describes native callback admission and calls these checked
+functions. It no longer constructs the recovery continuations or repeats their
+family assertions in 160 generated bodies. The checked functions call the
+family primitive directly: their error already equals `I.HandleError`, so no
+error-widening bridge is needed. Execution remains in the existing family and
+callback owners. Legacy native syntax retains its established admission and
+error-probe boundary while using the same continuations and family primitive.
+The reviewed public declaration inventory is unchanged by this refactor.
+
+Qualification passed 92 source/package O0/O3 boundary checks, 11 packaged
+runtime/example programs, 31 existing rejection tests, 46 tooling tests, generated
+source checks and strict docs (318 exports, 77 examples). Runtime report audits
+found no input/package drift or resource-contract failures.
+
+A bounded cold-build comparison against `f4d0a00` used four unchanged clients,
+two samples per version in alternating order, O3 and two compiler threads. All
+16 builds/runs or expected rejections passed. Median seconds were 5.24→5.26 for
+native observation, 6.52→6.19 for conditional generic recovery, 8.00→7.41 for
+admission controls and 0.51→0.52 for incompatible observer errors. Median peak
+RSS changes ranged from −1.7% to +2.0%; executable sizes were identical. These
+small samples show no material regression in these clients, not a general
+performance claim. Artifacts are in `.cache/quality-cycle11/`.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

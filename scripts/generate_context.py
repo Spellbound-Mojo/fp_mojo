@@ -827,16 +827,13 @@ def methods(*, fold_stage=False):
     family = "_Recovering[Self.I]"
     operation = next(op for op in error_operations("recovery") if op.name == "recover")
     for cb in native_callbacks("owned", family + ".Failure", "function"):
-        handler = operation.handler(family, cb["adapter_type"])
-        built = operation.handler_value(family, cb["adapter_type"], cb["build"])
         contract = f"RecoverContract[{family}, Self.V, {cb['adapter_type']}]"
         conditions = ["conforms_to(Self.I, ApplicativeError)", contract + ".Compatible"]
         if cb["adapter_type"] != "C": conditions += cb["conditions"]
         result, error = contract + ".Out", contract + ".Error"
-        cb["prelude"] = cb.get("prelude", "") + f"        comptime assert {family}._Handles[Self.V, {handler}]\n"
         emit(operation.name, cb, cb["params"], cb["argument"], result, error,
              "Self.I", conditions,
-             f"_or_else_as[{error}, {family}, Self.V, {handler}]({built}, self.value^)",
+             f"_recover[{family}]({cb['build']}, self.value^)",
              "Recover the selected family's stored errors, preserving its timing and carrier.")
 
     # Observation preserves the selected error family, including native Result
@@ -851,10 +848,9 @@ def methods(*, fold_stage=False):
             conditions = ["conforms_to(Self.I, ApplicativeError)"]
             if cb["adapter_type"] != "C": conditions += cb["conditions"]
             conditions += [contract + ".Compatible"]
-            cb["prelude"] = cb.get("prelude", "") + f"        comptime assert {family}._Handles[Self.V, {contract}.Handler]\n"
             emit(operation.name, cb, cb["params"], cb["argument"], contract + ".Out", contract + ".Error",
                  "Self.I", conditions,
-                 f"_or_else_as[{contract}.Error, {family}, Self.V, {contract}.Handler]({contract}.Handler({cb['build']}), self.value^)",
+                 f"_observe_error[{family}, Self.V, {cb['adapter_type']}, {operation.effect}]({cb['build']}, self.value^)",
                  "Observe the selected stored-error layer using its family's timing and error policy.")
 
     # Conditional recovery reuses the family's conditional continuation. The
@@ -866,9 +862,6 @@ def methods(*, fold_stage=False):
         for p, h in product(predicates, handlers):
             contract_name = "OrElseIfContract" if operation.effect else "RecoverIfContract"
             contract = f"{contract_name}[{family}, Self.V, {p['adapter_type']}, {h['adapter_type']}]"
-            handler = operation.handler(family, h["adapter_type"])
-            build = operation.handler_value(family, h["adapter_type"], h["build"])
-            continuation = f"_ConditionalRecovery[{family}, Self.I.Element[Self.V], {p['adapter_type']}, {handler}]"
             params = callback_parameters((p, h))
             conditions = ["conforms_to(Self.I, ApplicativeError)", contract + ".Compatible"]
             # The public contract owns callback input/output proofs for generic
@@ -879,11 +872,10 @@ def methods(*, fold_stage=False):
                     conditions += cb["conditions"]
             error = contract + ".Error"
             prelude = p.get("prelude", "") + h.get("prelude", "")
-            prelude += f"        comptime assert {family}._Handles[Self.V, {continuation}]\n"
             emit(operation.name, {"prelude": prelude}, params,
                  p["argument"] + ", " + h["argument"], contract + ".Out", error,
                  "Self.I", conditions,
-                 f"_or_else_as[{error}, {family}, Self.V, {continuation}]({continuation}({p['build']}, {build}), self.value^)",
+                 f"_{operation.name}[{family}]({p['build']}, {h['build']}, self.value^)",
                  "Recover matching stored errors through the selected family; success skips both callbacks.")
 
     # Select the original outcome's policy before either callback is admitted.
