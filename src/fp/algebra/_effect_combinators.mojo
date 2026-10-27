@@ -4,7 +4,7 @@ from fp.callables.protocols import BinaryContract, Binary, ThunkContract, OnceTh
 from fp.callables.invoke import call_repeated, invoke_borrowed, RepeatableThunk, RepeatableUnary
 from fp.callables._receiver import _thunk_once_as, _unary_repeated_as
 from fp.callables._identity import Identity
-from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
+from fp._internal.errors import _CommonError, _ErrorCompatible
 from .protocols import Monad, _LiveAccumulator, Monoid, _AccumulatePair, _BindFirst, _start_as, _map_as, _flat_map_as, _fold_as
 from ._accumulation import _Combine
 from ._admission import _MapCompatible

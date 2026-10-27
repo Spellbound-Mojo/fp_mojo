@@ -17,9 +17,9 @@ from fp.algebra.contracts import MapContract
 from fp.algebra.error_mapping import MapBothContract
 from fp.algebra.instances import IdentityFamily, OptionalFamily, ResultFamily, _OkOf
 from fp.callables.protocols import BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, OnceUnary, MutableUnary
-from fp.callables.invoke import _OnceBinaryAvailable, _OnceThunkAvailable, call_once, call_repeated, RepeatableUnary
+from fp.callables.invoke import _OnceBinaryAvailable, _OnceThunkAvailable, RepeatableUnary
 from fp.data._result import Result, Ok, Err
-from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible, _propagate_error
+from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible
 from .protocols import Local, Listen, _CarrierOp, _LocalLifting, _CapabilityLifting
 from ._adapt import _map_as
 from ._transport import _LocalOp, _ListenMapped, _ListenSum

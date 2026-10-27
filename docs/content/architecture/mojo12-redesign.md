@@ -1963,6 +1963,21 @@ The integrated package and O3 client passed with unchanged inputs. One tooling
 run encountered an intermittent child-reaping test failure; the focused resource
 checks and a fresh full 48-test run passed, with the failed log retained.
 
+### State traversal delegates directly to the fold owner
+
+State collection executes through the canonical dependent-fold adapter directly
+from its run method. The private forwarding method is removed, and the recipe's
+execution requirement sits with its other metadata. Reader, layer and effect
+modules also drop imports made obsolete by earlier invocation consolidation.
+
+This pass changes no public signatures or operation order. The accumulator is
+initialized before the function and source move into the same fold call; the
+base family retains liveness, state threading, errors and ownership. Six focused
+O0 programs passed, followed by 24 State execution boundary checks at O0/O3,
+25 State programs, 34 traversal programs, two layer programs and six Reader
+programs. The categories overlap. All reports retained unchanged inputs and no
+audit failures; generated sources and all 48 tooling tests passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

@@ -366,6 +366,8 @@ struct _StateLoop[M: Monad, S: Movable & Deinitable, V: Movable & Deinitable, F:
     comptime Step = _StateTraverseStep[Self.Family, Self.M, Self.S, Self.K, Self.Produced]
     comptime Out = Self.M.Pure[Self.Policy.Acc]
     comptime Error = _CommonError[Self.K.Error, Self.M._FoldError[Self.V, Self.F, Self.Step, Self.Policy]]
+    comptime _RunCompatible = Self.Step._RunCompatible & Self.M._FoldCompatible[Self.V, Self.F, Self.Step, Self.Policy] & (Self.M._Folded[Self.V, Self.F, Self.Step, Self.Policy] == Self.Out) & _CommonErrorCompatible[Self.K.Error, Self.M._FoldError[Self.V, Self.F, Self.Step, Self.Policy]]
+
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
         comptime assert Self._RunCompatible, "run: incompatible State recipe"
         comptime E = Self.Error
@@ -375,14 +377,8 @@ struct _StateLoop[M: Monad, S: Movable & Deinitable, V: Movable & Deinitable, F:
         comptime assert Self.M._Folded[Self.V, Self.F, Self.Step, Self.Policy] == Self.Out, "traverse: State traversal needs a base whose carrier type stays the same across steps"
         comptime assert _ErrorCompatible[E, Self.K.Error]
         var initial = Tuple(_start_as[E, Self.K](), state^)
-        return Self._fold(self.function^, initial^, self.source^)
-    comptime _RunCompatible = Self.Step._RunCompatible & Self.M._FoldCompatible[Self.V, Self.F, Self.Step, Self.Policy] & (Self.M._Folded[Self.V, Self.F, Self.Step, Self.Policy] == Self.Out) & _CommonErrorCompatible[Self.K.Error, Self.M._FoldError[Self.V, Self.F, Self.Step, Self.Policy]]
-
-    @staticmethod
-    def _fold(var function: Self.F, var initial: Self.Policy.Acc, var source: Self.V) raises Self.Error -> Self.Out:
-        comptime E = Self.Error
         return rebind_var[Self.Out](_fold_as[E, Self.M, Self.V, Self.F, Self.Step, Self.Policy](
-            function^, Self.Step(), initial^, source^))
+            self.function^, Self.Step(), initial^, self.source^))
 
 
 @fieldwise_init
