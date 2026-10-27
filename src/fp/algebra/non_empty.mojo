@@ -57,7 +57,8 @@ struct NonEmptyListSemigroup[T: Movable & Deinitable](Semigroup):
 struct NonEmptyListFamily(Traversable, Filterable, FunctorFilter):
     """Non-empty mapping and traversal; filtering returns an ordinary List.
 
-    Name this family explicitly in algebra operations or fluent pipelines.
+    Select with `pipeline(values^).elements()`, or name this family explicitly
+    in generic algebra operations and fluent pipelines.
     ListFamily owns callback invocation and traversal. Map preserves length;
     every successful traversal preserves the non-empty source shape. The target
     Applicative retains its failure, branching, evaluation and error policies.

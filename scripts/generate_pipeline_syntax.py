@@ -46,6 +46,13 @@ CARRIERS = (
     Carrier('Result', 'Result[{element}, Failure]', 'ResultFamily[Failure]', (f'Failure: {MD}',), frozenset({'map', 'flat_map', 'traverse', 'combine'})),
 )
 
+# Explicit element selection shares the native carrier shapes above. Non-empty
+# lists use their existing family, whose filtering may change the carrier.
+SEQUENCE_CARRIERS = tuple(c for c in CARRIERS if c.name in ('List', 'Array', 'Deque', 'LinkedList')) + (
+    Carrier('NonEmptyList', 'NonEmptyList[{element}]', 'NonEmptyListFamily',
+            capabilities=frozenset({'map', 'filter', 'filter_map', 'fold', 'traverse'})),
+)
+
 
 def forward(name, parameters, argument, result, source, operation, callback, doc, error='', condition=''):
     """Only native admission and nominal type recovery belong in this body."""

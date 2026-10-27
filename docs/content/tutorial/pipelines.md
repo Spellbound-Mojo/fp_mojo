@@ -81,16 +81,25 @@ next stage. To stop on a stored error, use `Result.flat_map`, introduced in the
 
 ## Map sequence elements
 
-For a selected pipeline over sequence elements, choose `ArrayFamily[N]`,
-`DequeFamily` or `LinkedListFamily`. The family stays selected as element types
-change, so a chain can map Int to String and then String to Int without another
-annotation. Array preserves its fixed length; Deque and LinkedList also support
-filter and filter_map.
+Use `pipeline(values^).elements()` to select element operations for an Array,
+Deque, LinkedList or NonEmptyList. List is supported too; its ordinary pipeline
+already maps elements. The container and element types are inferred, including
+Array length. A chain can map Int to String and then String to Int without
+family imports or type annotations.
 
 <!-- example: docs/examples/collection_families.mojo -->
 
-`pipeline(array^)` keeps its existing whole-value Identity behavior. Explicit
-selection chooses element operations, as `piped(array^)` does for native map.
+Selection only moves the existing container; it does not iterate or call a
+callback. Array mapping preserves its fixed length. Deque and LinkedList also
+support filter and filter_map; filtering NonEmptyList produces a List because
+the result may be empty. The selected native error survives `.elements()`, so
+`pipeline(values^).raising[Failure]().elements().map(callback)` keeps that context.
+
+`pipeline(array^)` keeps its existing whole-value Identity behavior until
+`.elements()` selects the native sequence family. Explicit families such as
+`pipeline[ArrayFamily[N]](values^)` remain available for generic code. Use
+`pipeline_values(dictionary^)` for dictionary values and `iterated(values^)`
+for lazy element processing.
 
 ## Mix closures and library values
 

@@ -762,6 +762,29 @@
         "tests/ownership/test_result_terminals_ownership.mojo",
         "tests/compile_fail/result_terminals_context_error.mojo"
       ]
+    },
+    {
+      "name": "Native sequence selection",
+      "methods": [
+        "elements"
+      ],
+      "status": "selected",
+      "families": "Native List, Array, Deque, LinkedList and NonEmptyList",
+      "callbacks": "No callback; subsequent operations retain their family requirements.",
+      "ownership": "Moves the carrier into its native element family without copying.",
+      "errors": "Preserves the selected native error context.",
+      "timing": "No iteration or callback evaluation during selection.",
+      "owner": [
+        "src/fp/functions/context.mojo",
+        "src/fp/algebra/collections.mojo",
+        "src/fp/algebra/non_empty.mojo"
+      ],
+      "evidence": [
+        "docs/examples/collection_families.mojo",
+        "tests/runtime/test_context_elements.mojo",
+        "tests/ownership/test_context_elements_ownership.mojo",
+        "tests/compile_fail/context_elements_array_filter.mojo"
+      ]
     }
   ],
   "legacy_methods": [

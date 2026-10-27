@@ -937,7 +937,7 @@
   },
   "algebra.ArrayFamily": {
    "aliases": [],
-   "description": "Select with `pipeline[ArrayFamily[N]](values^)`. Mapping can change the element\ntype and moves each element; it requires a repeatable callback. This family\nimplements Functor only: fixed length does not support filtering or flat_map.\nThe existing Array mapping boundary uses O(N) temporary storage on Mojo 1.2.",
+   "description": "Select with `pipeline(values^).elements()` or name `ArrayFamily[N]` explicitly.\nMapping can change the element\ntype and moves each element; it requires a repeatable callback. This family\nimplements Functor only: fixed length does not support filtering or flat_map.\nThe existing Array mapping boundary uses O(N) temporary storage on Mojo 1.2.",
    "fields": [],
    "kind": "alias",
    "methods": {},
@@ -1239,7 +1239,7 @@
   },
   "algebra.DequeFamily": {
    "aliases": [],
-   "description": "Select with `pipeline[DequeFamily](values^)`. Mapping and filter_map can change\nthe element type. Callbacks are repeatable and elements are moved. The family\nimplements Functor, Filterable and FunctorFilter, without Applicative or Monad.",
+   "description": "Select with `pipeline(values^).elements()` or name `DequeFamily` explicitly.\nMapping and filter_map can change\nthe element type. Callbacks are repeatable and elements are moved. The family\nimplements Functor, Filterable and FunctorFilter, without Applicative or Monad.",
    "fields": [],
    "kind": "alias",
    "methods": {},
@@ -3125,7 +3125,7 @@
   },
   "algebra.LinkedListFamily": {
    "aliases": [],
-   "description": "Select with `pipeline[LinkedListFamily](values^)`. Mapping and filter_map can\nchange the element type. Callbacks are repeatable and elements are moved. The\nfamily implements Functor, Filterable and FunctorFilter, without Applicative\nor Monad.",
+   "description": "Select with `pipeline(values^).elements()` or name `LinkedListFamily` explicitly.\nMapping and filter_map can\nchange the element type. Callbacks are repeatable and elements are moved. The\nfamily implements Functor, Filterable and FunctorFilter, without Applicative\nor Monad.",
    "fields": [],
    "kind": "alias",
    "methods": {},
@@ -4084,7 +4084,7 @@
      "name": "TraverseCompatible"
     }
    ],
-   "description": "Name this family explicitly in algebra operations or fluent pipelines.\nListFamily owns callback invocation and traversal. Map preserves length;\nevery successful traversal preserves the non-empty source shape. The target\nApplicative retains its failure, branching, evaluation and error policies.\nThis family does not introduce a second collection loop.",
+   "description": "Select with `pipeline(values^).elements()`, or name this family explicitly\nin generic algebra operations and fluent pipelines.\nListFamily owns callback invocation and traversal. Map preserves length;\nevery successful traversal preserves the non-empty source shape. The target\nApplicative retains its failure, branching, evaluation and error policies.\nThis family does not introduce a second collection loop.",
    "fields": [],
    "kind": "struct",
    "methods": {
@@ -90777,7 +90777,7 @@
   },
   "functions.Pipeline": {
    "aliases": [],
-   "description": "Start with `pipeline(value)` for List, Optional, Result or a bare value, or\n`pipeline[Family](value)` for an explicit Functor. Select a native error\nonce with `raising[E]()`. Pure callbacks keep Never; library callbacks\nkeep their declared errors. `get()` extracts the value. Map, flat_map,\nfilter and filter_map delegate to the family's evaluation and ownership\nrules, including deferred execution and retained callback borrows.\n\n`tap` borrows the whole value once now, including empty carriers and Err.\n`tap_each` borrows each payload through the family's map; `pair_with`\nretains each original beside its projection. Observer results are\ndiscarded for both tap forms. `filter_not` retains payloads rejected by\na borrowing Bool predicate. These operations consume a library\nBorrowCallable or borrow a native closure; stored thin pointers are\ncopied. Observation preserves the selected family and native error context.\nMapping rebinds RebindingFunctor; filtering follows FilteredFamily or MapFilteredFamily; NonEmptyList filtering\ncontinues as List because it may discard every element.\n\n`flat_tap` and `flat_pair_with` sequence borrowing effects through the\nselected Monad, retaining originals or pairing them with each projection.\n`before` sequences a factory and keeps originals; `followed_by` keeps its\nproduced payloads. The family owns skipping, branching and deferred timing.\nRetained originals need Copyable only when successful effects duplicate them.\n\n`then` consumes the whole value once. It selects the returned List,\nOptional or Result family, or Identity for other values; `then[Family]`\nselects an explicit output family. Folds consume a native source and\nselect the accumulator's family by the same rule. Traversal selects its\ntarget effect family. `traverse_tap[TargetFamily]` borrows each payload,\nruns its effect and retains the original. `filter_effect[TargetFamily]`\nretains originals whose borrowing effect returns True; the source must\nalso support FunctorFilter. Both preserve the target's short-circuiting,\naccumulation, branching and deferred timing. Single-use library callbacks\nwork where traversal calls them at most once. Branching targets may require\ncopyable payloads. Combinations retain the current Applicative family.\n\n`traverse_filter` and `sequence_filter` compact Optional payloads inside\nthe target effect using the source's FunctorFilter. `flat_traverse` and\n`flat_sequence` flatten one source layer using its Monad. `traverse_void`\nand `sequence_void` discard successful outputs from native sources;\nResult traversal retains its source error layer inside the target.\n\nEffectful queries consume a native source into a target Monad.\n`all_effect`, `any_effect` and `find_effect` borrow each item;\n`find_map_effect` and `fold_map_effect` consume it. Bind a fold accumulator\nbefore its callback with `fold_effect[TargetFamily](initial).run(step)`.\nThe target controls stopping, branching and deferral. Monoid identity\nconstruction happens immediately; callback and combination timing follows\nthe target. Array sources move through temporary List storage.\n\nPure reductions consume sources immediately. `find_map` stops at the\nfirst present projection. `fold_map[Monoid]` and `combine_all[Monoid]`\ncombine in source order; `sum` and `sum_by` infer numeric types and SIMD\nlanes. `min_by` and `max_by` borrow each item for its key, preserving the\nfirst item on ties. Reduction results select their native family.\n\nMapping conveniences retain the selected family. `fill`, `replace`, `void`\nand tuple pairing use its map; copied constants must be Copyable.\n`compact` requires FunctorFilter, `flatten` requires Monad, and `ap`\napplies stored library callables through Applicative combination.\n\n`if_effect(on_true, on_false)` uses the selected Monad's Bool condition.\nA failed or absent condition skips both factories. Native closures remain\nborrowed; thin pointers and library factories are owned. Repeated sources\nrequire repeatable factories. Deferred families retain their invocation\ntiming and can join distinct carrier representations with one payload type.\n\n`par_map_n`, `par_product_n`, `par_traverse` and `par_sequence` use ordered\nValidation accumulation for stored Result errors. Native raises stop\nimmediately. List-valued errors infer concatenation; an explicit Semigroup\nselects another error policy. N-ary methods retain the selected source\nfamily; accumulating traversal continues in the resulting Result family.\n\nResult-specific methods delegate to Result and update ResultFamily when\nthe stored error type changes. Native raised errors remain raised;\nuse Capture to store them. Existing Piped and piped remain available.",
+   "description": "Start with `pipeline(value)` for List, Optional, Result or a bare value, or\n`pipeline[Family](value)` for an explicit Functor. Select a native error\nonce with `raising[E]()`. Pure callbacks keep Never; library callbacks\nkeep their declared errors. `get()` extracts the value. Map, flat_map,\nfilter and filter_map delegate to the family's evaluation and ownership\nrules, including deferred execution and retained callback borrows.\n\n`elements()` selects native List, Array, Deque, LinkedList or NonEmptyList\nelement operations without naming a family. It only moves the carrier and\npreserves the selected native error. The chosen family's shape and\ncapabilities still apply: Array keeps its length; NonEmptyList filtering\nproduces List. Other whole-value pipelines keep their existing semantics.\n\n`tap` borrows the whole value once now, including empty carriers and Err.\n`tap_each` borrows each payload through the family's map; `pair_with`\nretains each original beside its projection. Observer results are\ndiscarded for both tap forms. `filter_not` retains payloads rejected by\na borrowing Bool predicate. These operations consume a library\nBorrowCallable or borrow a native closure; stored thin pointers are\ncopied. Observation preserves the selected family and native error context.\nMapping rebinds RebindingFunctor; filtering follows FilteredFamily or MapFilteredFamily; NonEmptyList filtering\ncontinues as List because it may discard every element.\n\n`flat_tap` and `flat_pair_with` sequence borrowing effects through the\nselected Monad, retaining originals or pairing them with each projection.\n`before` sequences a factory and keeps originals; `followed_by` keeps its\nproduced payloads. The family owns skipping, branching and deferred timing.\nRetained originals need Copyable only when successful effects duplicate them.\n\n`then` consumes the whole value once. It selects the returned List,\nOptional or Result family, or Identity for other values; `then[Family]`\nselects an explicit output family. Folds consume a native source and\nselect the accumulator's family by the same rule. Traversal selects its\ntarget effect family. `traverse_tap[TargetFamily]` borrows each payload,\nruns its effect and retains the original. `filter_effect[TargetFamily]`\nretains originals whose borrowing effect returns True; the source must\nalso support FunctorFilter. Both preserve the target's short-circuiting,\naccumulation, branching and deferred timing. Single-use library callbacks\nwork where traversal calls them at most once. Branching targets may require\ncopyable payloads. Combinations retain the current Applicative family.\n\n`traverse_filter` and `sequence_filter` compact Optional payloads inside\nthe target effect using the source's FunctorFilter. `flat_traverse` and\n`flat_sequence` flatten one source layer using its Monad. `traverse_void`\nand `sequence_void` discard successful outputs from native sources;\nResult traversal retains its source error layer inside the target.\n\nEffectful queries consume a native source into a target Monad.\n`all_effect`, `any_effect` and `find_effect` borrow each item;\n`find_map_effect` and `fold_map_effect` consume it. Bind a fold accumulator\nbefore its callback with `fold_effect[TargetFamily](initial).run(step)`.\nThe target controls stopping, branching and deferral. Monoid identity\nconstruction happens immediately; callback and combination timing follows\nthe target. Array sources move through temporary List storage.\n\nPure reductions consume sources immediately. `find_map` stops at the\nfirst present projection. `fold_map[Monoid]` and `combine_all[Monoid]`\ncombine in source order; `sum` and `sum_by` infer numeric types and SIMD\nlanes. `min_by` and `max_by` borrow each item for its key, preserving the\nfirst item on ties. Reduction results select their native family.\n\nMapping conveniences retain the selected family. `fill`, `replace`, `void`\nand tuple pairing use its map; copied constants must be Copyable.\n`compact` requires FunctorFilter, `flatten` requires Monad, and `ap`\napplies stored library callables through Applicative combination.\n\n`if_effect(on_true, on_false)` uses the selected Monad's Bool condition.\nA failed or absent condition skips both factories. Native closures remain\nborrowed; thin pointers and library factories are owned. Repeated sources\nrequire repeatable factories. Deferred families retain their invocation\ntiming and can join distinct carrier representations with one payload type.\n\n`par_map_n`, `par_product_n`, `par_traverse` and `par_sequence` use ordered\nValidation accumulation for stored Result errors. Native raises stop\nimmediately. List-valued errors infer concatenation; an explicit Semigroup\nselects another error policy. N-ary methods retain the selected source\nfamily; accumulating traversal continues in the resulting Result family.\n\nResult-specific methods delegate to Result and update ResultFamily when\nthe stored error type changes. Native raised errors remain raised;\nuse Capture to store them. Existing Piped and piped remain available.",
    "fields": [
     {
      "description": "The carrier owned by this pipeline.",
@@ -93161,6 +93161,125 @@
       },
       "signature": "def compact(deinit self) raises _Compacting[Self.I].MapFilterError[Self.V, Identity[Self.I.Element[Self.V]]] -> Pipeline[FilterMapContract[_Compacting[Self.I], Self.V, Identity[Self.I.Element[Self.V]]].Family, _Compacting[Self.I].MapFiltered[Self.V, Identity[Self.I.Element[Self.V]]], Self.E] where conforms_to(Self.I, FunctorFilter) and _MapCompatible[Self.I, Self.V, Identity[Self.I.Element[Self.V]]] and Self.I.Element[Self.V] == Optional[_ListElement[Self.I.Element[Self.V]]]",
       "summary": "Remove one admitted inner layer through the selected source family."
+     }
+    ],
+    "elements": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The carrier payload type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[ListFamily, Self.V, Self.E]"
+      },
+      "signature": "def elements[T: Movable & Deinitable](deinit self) -> Pipeline[ListFamily, Self.V, Self.E] where Self.V == List[T]",
+      "summary": "Select native sequence element operations without naming a family."
+     },
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "N",
+        "type": "Int",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_ArrayFamily[N], Self.V, Self.E]"
+      },
+      "signature": "def elements[T: Movable & Deinitable, N: Int](deinit self) -> Pipeline[_ArrayFamily[N], Self.V, Self.E] where Self.V == Array[T, N]",
+      "summary": "Select native sequence element operations without naming a family."
+     },
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_DequeFamily, Self.V, Self.E]"
+      },
+      "signature": "def elements[T: Movable & Deinitable](deinit self) -> Pipeline[_DequeFamily, Self.V, Self.E] where Self.V == Deque[T]",
+      "summary": "Select native sequence element operations without naming a family."
+     },
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_LinkedListFamily, Self.V, Self.E]"
+      },
+      "signature": "def elements[T: Movable & Deinitable](deinit self) -> Pipeline[_LinkedListFamily, Self.V, Self.E] where Self.V == LinkedList[T]",
+      "summary": "Select native sequence element operations without naming a family."
+     },
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[NonEmptyListFamily, Self.V, Self.E]"
+      },
+      "signature": "def elements[T: Movable & Deinitable](deinit self) -> Pipeline[NonEmptyListFamily, Self.V, Self.E] where Self.V == NonEmptyList[T]",
+      "summary": "Select native sequence element operations without naming a family."
      }
     ],
     "ensure": [

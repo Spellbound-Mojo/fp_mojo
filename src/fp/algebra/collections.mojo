@@ -26,7 +26,8 @@ from fp.iteration.adapters import map as _lazy_map
 comptime ArrayFamily[N: Int] = _ArrayFamily[N]
 """Map a native Array's elements, preserving its length and order.
 
-Select with `pipeline[ArrayFamily[N]](values^)`. Mapping can change the element
+Select with `pipeline(values^).elements()` or name `ArrayFamily[N]` explicitly.
+Mapping can change the element
 type and moves each element; it requires a repeatable callback. This family
 implements Functor only: fixed length does not support filtering or flat_map.
 The existing Array mapping boundary uses O(N) temporary storage on Mojo 1.2.
@@ -38,7 +39,8 @@ Parameters:
 comptime DequeFamily = _DequeFamily
 """Map and filter native Deque elements, preserving their order and settings.
 
-Select with `pipeline[DequeFamily](values^)`. Mapping and filter_map can change
+Select with `pipeline(values^).elements()` or name `DequeFamily` explicitly.
+Mapping and filter_map can change
 the element type. Callbacks are repeatable and elements are moved. The family
 implements Functor, Filterable and FunctorFilter, without Applicative or Monad.
 """
@@ -46,7 +48,8 @@ implements Functor, Filterable and FunctorFilter, without Applicative or Monad.
 comptime LinkedListFamily = _LinkedListFamily
 """Map and filter native LinkedList elements in their original order.
 
-Select with `pipeline[LinkedListFamily](values^)`. Mapping and filter_map can
+Select with `pipeline(values^).elements()` or name `LinkedListFamily` explicitly.
+Mapping and filter_map can
 change the element type. Callbacks are repeatable and elements are moved. The
 family implements Functor, Filterable and FunctorFilter, without Applicative
 or Monad.

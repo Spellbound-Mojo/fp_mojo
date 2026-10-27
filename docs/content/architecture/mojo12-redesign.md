@@ -3251,6 +3251,23 @@ The [Result tutorial](../tutorial/results.md#finish-with-a-value) maintains an
 executable example covering fallback selection, a skipped default, direct
 pipeline extraction and Optional conversion.
 
+### Native element selection avoids family annotations
+
+`pipeline(values^).elements()` selects the existing List, Array, Deque,
+LinkedList or NonEmptyList family from the native carrier type. Array length
+is inferred from the receiver's type constraint. Selection moves the carrier
+without iteration, allocation or callbacks and preserves the selected native
+error. Subsequent operations keep their existing family execution, ownership
+and capability checks. In particular, Array cannot filter or flat_map, while
+NonEmptyList filtering continues as List.
+
+Native carrier shapes are shared with the existing syntax generator. This
+adds no new family, traversal loop or native callback boundary. Explicit
+family selection remains available for generic/custom semantics, and the
+existing whole-value behavior of `pipeline(array)` is unchanged until the
+caller selects `.elements()`. Dictionaries retain `pipeline_values`; lazy
+sources retain `iterated`.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

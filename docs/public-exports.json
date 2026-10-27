@@ -3754,6 +3754,28 @@
             "sha256": "3dabf68bc7ba8a51f857408c6e1d00b6bf63fdd1184cf4f61e6fbda82effeb92"
           }
         ],
+        "elements": [
+          {
+            "signature": "def elements[T: Movable & Deinitable](deinit self) -> Pipeline[ListFamily, Self.V, Self.E] where Self.V == List[T]:",
+            "sha256": "65362dada213e00ba0847b1dcd1ec4b101b5201616460a7f04f2f9357ef36c45"
+          },
+          {
+            "signature": "def elements[T: Movable & Deinitable, N: Int](deinit self) -> Pipeline[_ArrayFamily[N], Self.V, Self.E] where Self.V == Array[T, N]:",
+            "sha256": "5def1d0ab4a304415ec8307977dfaa453bf10c16636d480072fa6a18d16add8d"
+          },
+          {
+            "signature": "def elements[T: Movable & Deinitable](deinit self) -> Pipeline[_DequeFamily, Self.V, Self.E] where Self.V == Deque[T]:",
+            "sha256": "f784477afee7bae1fc199e8f475067a64fd955b3b9cda00ac611a370647e868b"
+          },
+          {
+            "signature": "def elements[T: Movable & Deinitable](deinit self) -> Pipeline[_LinkedListFamily, Self.V, Self.E] where Self.V == LinkedList[T]:",
+            "sha256": "a30b956dc10e1396a2df109f57753d4b325429317a97a6b7f4031bba8cef15f4"
+          },
+          {
+            "signature": "def elements[T: Movable & Deinitable](deinit self) -> Pipeline[NonEmptyListFamily, Self.V, Self.E] where Self.V == NonEmptyList[T]:",
+            "sha256": "636e29e1d9c5647fd8e01ec1fecbf570199179d2d37644f2a7e0f41ebd63d655"
+          }
+        ],
         "tap": [
           {
             "signature": "def tap[C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Pipeline[Self.I, Self.V, Self.E] where C.Payload == Self.V:",

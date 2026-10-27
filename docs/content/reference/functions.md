@@ -26,6 +26,10 @@ deferred family. Call `raising[E]()` once to select native callback errors.
 Existing explicit payload bindings, such as `pipeline[T=Int](values)`, remain
 available. Generic wrappers over an unknown value type select a family
 explicitly; use `pipeline[IdentityFamily](value)` for a whole-value stage.
+For native sequences, `.elements()` infers the element family: for example,
+`pipeline(array^).elements().map(transform)`. List, Array, Deque, LinkedList
+and NonEmptyList are supported. Selection preserves the native error context
+and performs no iteration or callback invocation.
 `map`, `filter`, `flat_map` and `filter_map` use the selected family's
 capabilities. Result combinators use their existing branch and ownership rules.
 `map_err` and `map_both` use the selected family's `ErrorMapping` capability.

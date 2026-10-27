@@ -8,7 +8,7 @@ from api_docs import parse_signature
 from operation_specs import RESULT_OPERATIONS, RESULT_TERMINALS, ERROR_OPERATIONS, error_operations
 from generate_plain_overloads import splice_source
 from generate_nary_syntax import MAX
-from generate_pipeline_syntax import TRANSFORMS
+from generate_pipeline_syntax import TRANSFORMS, SEQUENCE_CARRIERS
 from operation_specs import TERMINALS, TRAVERSALS, SEQUENCING, EFFECT_REDUCTIONS, EffectChoice
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,6 +27,15 @@ def methods(*, fold_stage=False):
     T = "_Success[Self.V]"
     Err = "_Failure[Self.V]"
     Source = f"Result[{T}, {Err}]"
+
+    # Selecting native sequence semantics only moves the existing carrier.
+    # Every following operation keeps its existing family implementation.
+    for carrier in SEQUENCE_CARRIERS:
+        source, family = carrier.value('T'), carrier.instance('T')
+        params = [f'T: {MD}', *carrier.parameters]
+        body.append(f'\n    def elements[{", ".join(params)}](deinit self) -> Pipeline[{family}, Self.V, Self.E] where Self.V == {source}:\n'
+                    '        """Select native sequence element operations without naming a family."""\n'
+                    f'        return Pipeline[{family}, Self.V, Self.E](self.value^)\n')
 
     def callback(mode, kind, payload, arg, second=False, repeatable=False):
         C, R, o = ("G", "S", "q") if second else ("C", "R", "o")
@@ -1038,6 +1047,7 @@ def documented(source):
     params = {
         "A": "The accumulator type, inferred from the initial value and preserved by every step.",
         "M": "The Monoid used for the identity and ordered combination of mapped values.",
+        "N": "The fixed native Array length, inferred from its carrier type.",
         "P": "The borrowed payload type, including its origins.",
         "Q": "The second borrowed native operand type, including its origins.",
         "P0": "The first native register operand type, including its origins.",
