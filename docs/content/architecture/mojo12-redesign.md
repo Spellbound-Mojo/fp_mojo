@@ -1852,6 +1852,30 @@ earlier constructor documentation updates in two files. A fresh main-tree
 precompiled package and its O3 native client passed. Public signatures and
 positional bindings are unchanged.
 
+### Cached lazy operand error forwarding
+
+The lazy right-operand owner now forwards thunk invocation through the canonical
+consuming error adapter for both transfer and repeated-copy access. Its private
+`copy_value` accepts the caller's compatible raised type, defaulting to the
+thunk's exact error. State and Optional/Result transformer continuations use
+that boundary and remove their duplicate catch-and-rethrow blocks.
+
+Construction remains lazy. The first request produces and retains the value;
+repeated requests copy that retained value, and consuming access transfers it.
+The callers still copy their combining callback after obtaining the right
+value. Skipped operands, producer failure and abandonment retain their original
+cleanup and error precedence. No public call syntax changes.
+
+Eight baseline/candidate traces matched for unused operands, direct transfer,
+repeated copying, cached transfer, abandonment and producer failure. Maintained
+controls also exercise a non-raising producer in a raising caller and exact
+borrowed output/error origins. Qualification passed four source/package checks
+for those controls and 76 combination admission checks at O0 and O3, 24 State
+programs, six layer programs, seven combination programs and 132 generic clients.
+All compiler reports retained unchanged inputs and no audit failures. Integrated
+library comparison found only earlier constructor documentation updates in two
+files; the implementation matches the qualified prototype.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

@@ -104,11 +104,7 @@ struct _LayerRight[M: Monad, N: Applicative, F: BinaryContract & Movable & Deini
     def call_mut(mut self, var first: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert conforms_to(Self.F, Copyable), "map2: repeated branches copy the callback and the right operand"
         comptime assert _ErrorCompatible[Self.Error, Self.G.Error]
-        var right: Self.G.Out
-        try:
-            right = self.right.copy_value()
-        except error:
-            _propagate_error[Self.Error](error^)
+        var right = self.right.copy_value[Self.Error]()
         comptime C = downcast[Self.F, Copyable & Deinitable]
         var function = rebind_var[Self.F](rebind[C](self.function).copy())
         return Self._apply(function^, first^, right^)

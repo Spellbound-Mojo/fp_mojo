@@ -847,11 +847,11 @@ struct _Lazy[G: ThunkContract & Movable & Deinitable](
             return produced.unsafe_take()
         var thunk = self.thunk^
         return _thunk_once_as[X](thunk.unsafe_take())
-    def copy_value(mut self) raises Self.G.Error -> Self.G.Out:
+    def copy_value[X: Movable & Deinitable = Self.G.Error](mut self) raises X -> Self.G.Out where _ErrorCompatible[X, Self.G.Error]:
         """Produce the operand on first use and return a copy of it."""
         comptime assert conforms_to(Self.G.Out, Copyable), "map2: repeated branches copy the right operand"
         if not self.produced:
-            self.produced = Optional(call_once(self.thunk.unsafe_take()))
+            self.produced = Optional(_thunk_once_as[X](self.thunk.unsafe_take()))
         comptime C = downcast[Self.G.Out, Copyable & Deinitable]
         return rebind_var[Self.G.Out](rebind[C](self.produced.value()).copy())
 

@@ -193,11 +193,7 @@ struct _StatePrepare[I: AnyType, M: Monad, S: Movable & Deinitable, F: BinaryCon
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert conforms_to(Self.F, Copyable), "map2: repeated branches copy the callback and the right computation"
         comptime assert _ErrorCompatible[Self.Error, Self.G.Error]
-        var action: Self.Action
-        try:
-            action = rebind_var[Self.Action](self.right.copy_value())
-        except error:
-            _propagate_error[Self.Error](error^)
+        var action = rebind_var[Self.Action](self.right.copy_value[Self.Error]())
         comptime C = downcast[Self.F, Copyable & Deinitable]
         var function = rebind_var[Self.F](rebind[C](self.function).copy())
         return Self._combine(action^, function^, arg^)
