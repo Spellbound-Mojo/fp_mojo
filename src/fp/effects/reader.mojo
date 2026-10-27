@@ -9,7 +9,7 @@ from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, downcast
 from std.utils import Variant
 from fp.algebra.errors import _Continue
-from fp.algebra.protocols import _pure, ApplicativeError, ErrorMapping, Monad, _Accumulate, _LiveAccumulator
+from fp.algebra.protocols import _fold_as, _pure, ApplicativeError, ErrorMapping, Monad, _Accumulate, _LiveAccumulator
 from fp.algebra.instances import IdentityFamily
 from fp.callables.protocols import (UnaryContract, BinaryContract, ThunkContract, OnceUnary, MutableUnary,
                                     OnceThunk, MutableBinary, BorrowCallContract, BorrowCallable, BorrowOnceCallable)
@@ -319,7 +319,7 @@ struct _ReaderFold[M: Monad, R: AnyType, V: Movable & Deinitable, P: UnaryContra
     comptime _RunCompatible[o: ImmOrigin] = Self.Step[o]._RunCompatible
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Self.Out[o]:
         comptime assert Self._RunCompatible[o], "run: incompatible Reader recipe at this environment origin"
-        return Self.M._fold[Self.V, Self.P, Self.Step[o], Self.K](self.prepare^, Self.Step[o](self.function^, Pointer(to=env)), self.initial^, self.source^)
+        return _fold_as[Self.Error[o], Self.M, Self.V, Self.P, Self.Step[o], Self.K](self.prepare^, Self.Step[o](self.function^, Pointer(to=env)), self.initial^, self.source^)
 
 
 @fieldwise_init

@@ -5,7 +5,7 @@ from fp.callables.invoke import call_repeated, invoke_borrowed, RepeatableThunk,
 from fp.callables._receiver import _thunk_once_as, _unary_repeated_as
 from fp.callables._identity import Identity
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from .protocols import Monad, _LiveAccumulator, Monoid, _AccumulatePair, _BindFirst, _start_as, _map_as, _flat_map_as
+from .protocols import Monad, _LiveAccumulator, Monoid, _AccumulatePair, _BindFirst, _start_as, _map_as, _flat_map_as, _fold_as
 from ._accumulation import _Combine
 from ._admission import _MapCompatible
 
@@ -43,11 +43,7 @@ struct _EffectFold[G: Monad, V: Movable & Deinitable, F: BinaryContract & Movabl
 def _fold_effect[G: Monad, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable,
                  K: _LiveAccumulator, E: Movable & Deinitable](var function: F, var initial: K.Acc, var source: V
 ) raises E -> _EffectFold[G, V, F, K].Out:
-    try:
-        return G._fold[V, Identity[F.Second], F, K](Identity[F.Second](), function^, initial^, source^)
-    except error:
-        comptime assert _ErrorCompatible[E, type_of(error)]
-        _propagate_error[E](error^)
+    return _fold_as[E, G, V, Identity[F.Second], F, K](Identity[F.Second](), function^, initial^, source^)
 
 
 @fieldwise_init

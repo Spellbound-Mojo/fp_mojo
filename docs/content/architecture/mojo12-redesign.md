@@ -1835,6 +1835,23 @@ audit failures. Public receiver capabilities and call syntax are unchanged. Main
 qualification repeated those checks and passed all 48 tooling tests and generated
 source verification; compiler inputs remained unchanged with no audit failures.
 
+### Dependent fold error forwarding
+
+The protocol module owns one native-error adapter for the dependent `_fold`
+primitive. Effectful reductions, State traversal, and deferred Reader/State
+folds delegate through it. The selected family still owns source advancement,
+liveness, accumulator state, callback order and the exact result representation;
+the adapter only checks and forwards the native raised type. No callback,
+source or accumulator is copied by this boundary.
+
+Qualification passed 232 source/package effect-query checks at O0 and O3,
+24 State programs, 34 traversal programs and 132 generic clients, with unchanged
+inputs and no audit failures. Six standalone O0 programs also passed. The
+integrated library matches the qualified implementation; comparison found only
+earlier constructor documentation updates in two files. A fresh main-tree
+precompiled package and its O3 native client passed. Public signatures and
+positional bindings are unchanged.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

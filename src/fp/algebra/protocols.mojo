@@ -716,6 +716,18 @@ def _traverse_as[S: Traversable, G: Applicative, V: Movable & Deinitable,
         _propagate_error[Raised](error^)
 
 
+def _fold_as[E: Movable & Deinitable, M: Monad, V: Movable & Deinitable,
+             P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable,
+             K: _LiveAccumulator](var prepare: P, var step: F, var initial: K.Acc, var source: V
+) raises E -> M._Folded[V, P, F, K]:
+    # Keep the family's symbolic error and validate the native error it raises.
+    try:
+        return M._fold[V, P, F, K](prepare^, step^, initial^, source^)
+    except error:
+        comptime assert _ErrorCompatible[E, type_of(error)]
+        _propagate_error[E](error^)
+
+
 def _start_as[E: Movable & Deinitable, K: _Accumulate]() raises E -> K.Acc where _ErrorCompatible[E, K.Error]:
     try:
         return K.start()

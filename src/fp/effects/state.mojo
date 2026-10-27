@@ -8,7 +8,7 @@ from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, rebind, downcast
 from std.utils import Variant
 from fp.algebra.errors import _Continue
-from fp.algebra.protocols import (_pure, ApplicativeError, ErrorMapping, _UnaryView, Monad, _Accumulate, _AccumulatePair, _LiveAccumulator, _BindFirst, _Lazy, _Item, _iterator, _next_item, _start_as)
+from fp.algebra.protocols import (_fold_as, _pure, ApplicativeError, ErrorMapping, _UnaryView, Monad, _Accumulate, _AccumulatePair, _LiveAccumulator, _BindFirst, _Lazy, _Item, _iterator, _next_item, _start_as)
 from fp.algebra.instances import IdentityFamily
 from fp.callables.protocols import (BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, Unary, OnceUnary, MutableUnary, Binary, MutableBinary)
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
@@ -352,11 +352,8 @@ struct _StateLoop[M: Monad, S: Movable & Deinitable, V: Movable & Deinitable, F:
     @staticmethod
     def _fold(var function: Self.F, var initial: Self.Policy.Acc, var source: Self.V) raises Self.Error -> Self.Out:
         comptime E = Self.Error
-        try:
-            return rebind_var[Self.Out](Self.M._fold[Self.V, Self.F, Self.Step, Self.Policy](function^, Self.Step(), initial^, source^))
-        except error:
-            comptime assert _ErrorCompatible[E, type_of(error)]
-            _propagate_error[E](error^)
+        return rebind_var[Self.Out](_fold_as[E, Self.M, Self.V, Self.F, Self.Step, Self.Policy](
+            function^, Self.Step(), initial^, source^))
 
 
 @fieldwise_init
@@ -394,7 +391,7 @@ struct _StateFold[M: Monad, S: Movable & Deinitable, V: Movable & Deinitable, P:
     comptime Out = Self.M._Folded[Self.V, Self.P, Self.Step, Self.Policy]
     comptime Error = Self.M._FoldError[Self.V, Self.P, Self.Step, Self.Policy]
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
-        return Self.M._fold[Self.V, Self.P, Self.Step, Self.Policy](self.prepare^, Self.Step(self.function^), Tuple(self.initial^, state^), self.source^)
+        return _fold_as[Self.Error, Self.M, Self.V, Self.P, Self.Step, Self.Policy](self.prepare^, Self.Step(self.function^), Tuple(self.initial^, state^), self.source^)
 
 
 @fieldwise_init
