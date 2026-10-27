@@ -9,20 +9,23 @@ use the `nightly` source checkout.
 ## Qualification checkpoint
 
 The functional checkpoint is
-[`51e0ef4`](https://github.com/Spellbound-Mojo/fp_mojo/commit/51e0ef40a141beb352bf47fb27cf3c4fb5913b6e).
-The memory-accounting, measurement and installation pass is
-[`1783fcf`](https://github.com/Spellbound-Mojo/fp_mojo/commit/1783fcf30dd0c06e89b060b230b9c929a0711c26);
-its production Mojo sources are identical. Both use Mojo 1.2.0 (2016d0cd)
-on Linux x86-64. Each row states its actual import and optimization scope;
-the selected O0 checks are not a claim that the entire suite ran at O0.
+[`0d9350e`](https://github.com/Spellbound-Mojo/fp_mojo/commit/0d9350e41608d530b9c47e73483947e702acd86e),
+using Mojo 1.2.0 (2016d0cd) on Linux x86-64. Production sources, fixtures and
+runner inputs stayed unchanged throughout qualification. The source and
+precompiled package artifacts passed their retained-manifest audits; the
+documentation matrix's bytecode matches the original qualified package.
 
 <!-- compatibility: current-qualification -->
 
+The complete positive suite and rejection fixtures ran at O3. Every executable
+documentation example ran through both import routes at O0 and O3; this does
+not claim a full-suite O0 run. Both benchmark programs executed, but their
+timings were collected alongside compiler jobs and are diagnostic observations.
+
 The [performance page](../architecture/performance.md#mojo-12-capture-qualification)
-records individual cold-build observations, their resource budgets, and the
-limits of those measurements. Source and installed artifact hashes remained
-unchanged during qualification. Later changes recorded alongside reports are
-documentation or catalog serialization, not production code.
+retains earlier cold-build observations at their named commits. Prior functional,
+installation and measurement checkpoints remain in the downloadable catalog's
+qualification history. This checkpoint adds no new performance claim.
 
 ## Historical baseline
 
