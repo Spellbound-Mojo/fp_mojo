@@ -75,6 +75,9 @@
     "docs/examples/file_tree.mojo": {
       "stdout": "home/{notes.txt, photos/{a.jpg, b.jpg}, latest@, broken@}\n10120\n"
     },
+    "docs/examples/find_map_contracts.mojo": {
+      "stdout": "first match: 2\n"
+    },
     "docs/examples/fluent_contracts.mojo": {
       "stdout": "kept: 1 3\n"
     },

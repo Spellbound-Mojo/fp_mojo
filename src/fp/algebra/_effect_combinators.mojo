@@ -1,12 +1,12 @@
 """Policies and continuations for effectful reductions and conditional bind."""
 from std.builtin.rebind import downcast, rebind_var
-from fp.callables.protocols import BinaryContract, Binary, ThunkContract, OnceUnary, MutableUnary, BorrowCallable, UnaryContract, MutableBinary
-from fp.callables.invoke import invoke_borrowed, RepeatableThunk, RepeatableUnary
-from fp.callables._receiver import _ThunkView, _thunk_once_as, _unary_repeated_as
+from fp.callables.protocols import BinaryContract, Binary, ThunkContract, OnceUnary, MutableUnary, BorrowCallable, UnaryContract
+from fp.callables.invoke import invoke_borrowed, RepeatableThunk
+from fp.callables._receiver import _ThunkView, _thunk_once_as
 from fp.callables._identity import Identity
 from fp._internal.errors import _CommonError, _ErrorCompatible
 from .protocols import Monad, _LiveAccumulator, Monoid, _start_as, _flat_map_as, _fold_as
-from ._accumulation import _Combine, _FoldMappedStep
+from ._accumulation import _Combine, _FoldMappedStep, _SearchStep
 from .contracts import _EffectFold
 from .protocols import _AllLive
 
@@ -73,20 +73,6 @@ def _if_effect[G: Monad, V: Movable & Deinitable, L: ThunkContract & Movable & D
     comptime assert G.Element[V] == Bool, "if_effect: Bool condition required"
     comptime assert _ErrorCompatible[E, G.BindError[V, _IfEffect[G, L, R]]]
     return _flat_map_as[E, G](_IfEffect[G, L, R](on_true^, on_false^), condition^)
-
-
-@fieldwise_init
-struct _SearchStep[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](MutableBinary):
-    var function: Self.F
-    comptime First = Optional[Self.A]
-    comptime Second = Self.F.Arg
-    comptime Out = Self.F.Out
-    comptime Error = Self.F.Error
-    def call_mut(mut self, var first: Self.First, var item: Self.Second) raises Self.Error -> Self.Out:
-        # The dependent fold calls only live (absent) accumulators. Successful
-        # branches are retained by that driver without evaluating this step.
-        comptime assert RepeatableUnary[Self.F]
-        return _unary_repeated_as[Self.Error](self.function, item^)
 
 
 def _fold_map_effect[G: Monad, M: Monoid, V: Movable & Deinitable,

@@ -441,8 +441,9 @@ def methods(*, fold_stage=False):
                                   accumulator="Self.A", initial="self.initial^",
                                   monoid="M" if mapped_fold else "",
                                   retained=f"_TraverseTap[{element}, J, {c}, True]" if borrowing else "")
-            if mapped_fold:
-                contract = f"FoldMapContract[J, M, Self.V, {c}]"
+            if mapped_fold or name == "find_map_effect":
+                contract = (f"FoldMapContract[J, M, Self.V, {c}]" if mapped_fold else
+                            f"FindMapContract[J, Self.V, {c}]")
                 conditions = cb["conditions"] + [contract + ".Compatible"]
                 result, error = contract + ".Out", contract + ".Error"
             else:

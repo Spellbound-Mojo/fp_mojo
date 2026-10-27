@@ -2266,6 +2266,37 @@ fixtures passed; categories overlap. Executable reports retained unchanged input
 and no audit failures. Generated sources, all 48 tooling tests and strict
 documentation checks passed.
 
+### Public admission for effectful first matches
+
+`FindMapContract[I, V, F]` describes `find_map_effect` with one `Compatible`
+proof and exact `Out` and `Error` projections. Free, piped, iterator and selected
+pipeline signatures share that descriptor. Generic wrappers no longer name the
+private search step and first-present policy. Ordinary calls, positional type
+bindings, explicit native-error bindings and Array buffering remain unchanged.
+
+The descriptor requires exact source input, an effect containing Optional,
+a repeatable producer and the target family's dependent-fold admission. Each
+branch stops at its first present payload. The existing fold and first-present
+policy still own execution, branching, deferred timing and cleanup. The search
+step now lives beside that policy, so the descriptor does not import runtime
+entry points.
+
+Maintained controls cover all four public routes, native and third-party
+families, move-only captures and selected values, per-branch stopping order,
+borrowed result/error origins and deferred execution or abandonment. Five
+negative clients require a normal public-constraint diagnostic without callback
+type bindings, including wrong inputs, non-Optional payloads, consuming
+receivers, branching ownership and stored errors. All 24 source/package O0/O3
+checks passed. Five effect-query, four effect-search, two effect-combinator and
+135 generic programs passed. The five new, 53 effect-query and 16 effect-search
+rejection fixtures passed; categories overlap. The public example passed its
+four source/package O0/O3 checks.
+
+An initial matrix passed its executable checks but failed its input audit because
+API metadata finished updating after startup. That report is retained. The
+qualification rerun used unchanged inputs and had no audit failures. Generated
+sources, all 48 tooling tests and strict documentation checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

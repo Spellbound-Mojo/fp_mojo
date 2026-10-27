@@ -12,7 +12,7 @@ from fp.iteration._advance import _OwnedElement
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallable
 from fp.callables._predicates import _FilterPredicate
 from .protocols import Monoid, _AllLive, _LiveAccumulator
-from ._accumulation import _FoldMappedStep
+from ._accumulation import _FoldMappedStep, _SearchStep, _FirstPresent
 from fp.callables.invoke import RepeatableUnary
 from fp._internal.errors import _CommonError, _ErrorCompatible
 from fp.callables._identity import Identity
@@ -270,3 +270,35 @@ struct FoldMapContract[I: Monad, M: Monoid, V: Movable & Deinitable, F: UnaryCon
     """The exact folded carrier, including deferred computation types."""
     comptime Error = _CommonError[Self.M.Error, Self._Plan.Error]
     """The native construction error, including eager monoid initialization."""
+
+
+struct FindMapContract[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]:
+    """Admission, result and construction error of an effectful first match.
+
+    Generic wrappers forward `Compatible`, return `Out` and raise `Error`.
+    The producer returns an effect of Optional; each live branch visits source
+    elements until its first present value. Families retain their own stopping,
+    branching, ownership and deferred execution rules.
+
+    Parameters:
+        I: The target Monad family.
+        V: The consumed source type, including native origins.
+        F: The repeatable unary producer, including its receiver and error.
+    """
+    comptime _Selected = _OwnedElement[Self.I.Element[Self.F.Out]]
+    comptime _Step = _SearchStep[Self._Selected, Self.F]
+    comptime _Plan = _EffectFold[Self.I, Self.V, Self._Step, _FirstPresent[Self._Selected]]
+    comptime InputCompatible = _Source[Self.V].Element == Self.F.Arg
+    """The producer accepts the exact source element, including origins."""
+    comptime OutputCompatible = Self.I.CarrierCompatible[Self.F.Out] and Self.I.Element[Self.F.Out] == Optional[Self._Selected]
+    """The producer returns this family's carrier of an Optional payload."""
+    comptime ReceiverCompatible = RepeatableUnary[Self.F]
+    """The producer can be called for each visited source element."""
+    comptime FamilyCompatible = Self._Plan.Compatible
+    """Requirements declared by the family's dependent fold."""
+    comptime Compatible = Self.InputCompatible and Self.OutputCompatible and Self.ReceiverCompatible and Self.FamilyCompatible
+    """Complete first-match admission with the inferred construction error."""
+    comptime Out = Self._Plan.Out
+    """The exact folded carrier, including deferred computation types."""
+    comptime Error = Self._Plan.Error
+    """The native construction error; deferred execution retains its own errors."""

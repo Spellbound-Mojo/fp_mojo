@@ -67,3 +67,17 @@ struct _FoldMappedStep[G: Monad, M: Monoid, F: UnaryContract & Movable & Deinita
         # selected family requires repeated branches; single-use maps move it.
         var combine = Self.Combine(_SemigroupBinary[Self.M](), first^)
         return _map_as[Self.Error, Self.G](combine^, produced^)
+
+
+@fieldwise_init
+struct _SearchStep[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](MutableBinary):
+    var function: Self.F
+    comptime First = Optional[Self.A]
+    comptime Second = Self.F.Arg
+    comptime Out = Self.F.Out
+    comptime Error = Self.F.Error
+    def call_mut(mut self, var first: Self.First, var item: Self.Second) raises Self.Error -> Self.Out:
+        # The dependent fold calls only live (absent) accumulators. Successful
+        # branches are retained by that driver without evaluating this step.
+        comptime assert RepeatableUnary[Self.F]
+        return _unary_repeated_as[Self.Error](self.function, item^)

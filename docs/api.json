@@ -1472,6 +1472,69 @@
    "summary": "A carrier family that can discard payloads while keeping its context.",
    "traits": []
   },
+  "algebra.FindMapContract": {
+   "aliases": [
+    {
+     "description": "The producer accepts the exact source element, including origins.",
+     "name": "InputCompatible"
+    },
+    {
+     "description": "The producer returns this family's carrier of an Optional payload.",
+     "name": "OutputCompatible"
+    },
+    {
+     "description": "The producer can be called for each visited source element.",
+     "name": "ReceiverCompatible"
+    },
+    {
+     "description": "Requirements declared by the family's dependent fold.",
+     "name": "FamilyCompatible"
+    },
+    {
+     "description": "Complete first-match admission with the inferred construction error.",
+     "name": "Compatible"
+    },
+    {
+     "description": "The exact folded carrier, including deferred computation types.",
+     "name": "Out"
+    },
+    {
+     "description": "The native construction error; deferred execution retains its own errors.",
+     "name": "Error"
+    }
+   ],
+   "description": "Generic wrappers forward `Compatible`, return `Out` and raise `Error`.\nThe producer returns an effect of Optional; each live branch visits source\nelements until its first present value. Families retain their own stopping,\nbranching, ownership and deferred execution rules.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The target Monad family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad",
+     "variadic": false
+    },
+    {
+     "description": "The consumed source type, including native origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The repeatable unary producer, including its receiver and error.",
+     "inferred": false,
+     "name": "F",
+     "type": "UnaryContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/contracts",
+   "signature": "struct FindMapContract[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]",
+   "summary": "Admission, result and construction error of an effectful first match.",
+   "traits": []
+  },
   "algebra.FlatPairWithContract": {
    "aliases": [],
    "description": "Project `Family`, `Out` and `Error` and forward `Compatible` in generic selected\nwrappers. Component predicates have the same meaning as FlatTapContract.\nOnly retained originals need copying when the selected effect branches;\nprojected values are moved. Family primitives still own receiver admission.",
@@ -12402,7 +12465,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error]",
+     "error": "_EntryError[X, FindMapContract[G, V, F].Error]",
      "parameters": [
       {
        "description": "The callback type, retaining its receiver, captures and error contract.",
@@ -12437,9 +12500,9 @@
      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
      "returns": {
       "doc": "The target effect of the first present Optional in each live branch; empty input lifts None and target failure stays in the effect.",
-      "type": "_EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Out"
+      "type": "FindMapContract[G, V, F].Out"
      },
-     "signature": "def find_map_effect[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error] -> _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Out where _Source[V].Element == F.Arg and G.Element[F.Out] == Optional[_ListElement[G.Element[F.Out]]] and _CarrierCompatible[G, F.Out] and RepeatableUnary[F] and _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Compatible and (_ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error], F.Error] or _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error], _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error])",
+     "signature": "def find_map_effect[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var function: F, var source: V) raises _EntryError[X, FindMapContract[G, V, F].Error] -> FindMapContract[G, V, F].Out where FindMapContract[G, V, F].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, F].Error], F.Error] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, F].Error], FindMapContract[G, V, F].Error])",
      "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
     },
     {
@@ -12460,7 +12523,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error]",
+     "error": "_EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error]",
      "parameters": [
       {
        "description": "",
@@ -12516,9 +12579,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out"
+      "type": "FindMapContract[G, V, _NativeUnaryRef[A, R, Never, F, False, o]].Out"
      },
-     "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, F: _Unary[A, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error] -> _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out where _Source[V].Element == A and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, Never, F, False, o]] and _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Compatible and (_ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], Never] or _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error])",
+     "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, F: _Unary[A, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error] -> FindMapContract[G, V, _NativeUnaryRef[A, R, Never, F, False, o]].Out where FindMapContract[G, V, _NativeUnaryRef[A, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error], FindMapContract[G, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error])",
      "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
     },
     {
@@ -12539,7 +12602,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error]",
+     "error": "_EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Error]",
      "parameters": [
       {
        "description": "",
@@ -12602,9 +12665,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out"
+      "type": "FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Out"
      },
-     "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error] -> _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out where _Source[V].Element == A and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, E, F, True, o]] and _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Compatible and (_ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], E] or _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error])",
+     "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Error] -> FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Out where FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Error], FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Error])",
      "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
     }
    ],
@@ -49022,7 +49085,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error]",
+      "error": "_EntryError[X, FindMapContract[G, Self.Value, F].Error]",
       "parameters": [
        {
         "description": "The callback type, retaining its receiver, captures and error contract.",
@@ -49050,9 +49113,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The target effect of the first present Optional in each live branch; empty input lifts None and target failure stays in the effect.",
-       "type": "Piped[_EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Out]"
+       "type": "Piped[FindMapContract[G, Self.Value, F].Out]"
       },
-      "signature": "def find_map_effect[F: UnaryContract & Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error] -> Piped[_EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Out] where _Source[Self.Value].Element == F.Arg and G.Element[F.Out] == Optional[_ListElement[G.Element[F.Out]]] and _CarrierCompatible[G, F.Out] and RepeatableUnary[F] and _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Compatible and (_ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error], F.Error] or _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error], _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error])",
+      "signature": "def find_map_effect[F: UnaryContract & Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, FindMapContract[G, Self.Value, F].Error] -> Piped[FindMapContract[G, Self.Value, F].Out] where FindMapContract[G, Self.Value, F].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, Self.Value, F].Error], F.Error] or _ErrorCompatible[_EntryError[X, FindMapContract[G, Self.Value, F].Error], FindMapContract[G, Self.Value, F].Error])",
       "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
      },
      {
@@ -49066,7 +49129,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error]",
+      "error": "_EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -49115,9 +49178,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Piped[_EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out]"
+       "type": "Piped[FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Out]"
       },
-      "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: _Unary[A, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error] -> Piped[_EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out] where _Source[Self.Value].Element == A and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, Never, F, False, o]] and _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Compatible and (_ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], Never] or _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error])",
+      "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: _Unary[A, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error] -> Piped[FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Out] where FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error], FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error])",
       "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
      },
      {
@@ -49131,7 +49194,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error]",
+      "error": "_EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -49187,9 +49250,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Piped[_EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out]"
+       "type": "Piped[FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Out]"
       },
-      "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error] -> Piped[_EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out] where _Source[Self.Value].Element == A and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, E, F, True, o]] and _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Compatible and (_ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], E] or _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], _EffectFold[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error])",
+      "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error] -> Piped[FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Out] where FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error], FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error])",
       "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
      },
      {
@@ -49203,7 +49266,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, List[F.Arg], _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error]",
+      "error": "_EntryError[X, FindMapContract[G, List[F.Arg], F].Error]",
       "parameters": [
        {
         "description": "The callback type, retaining its receiver, captures and error contract.",
@@ -49238,9 +49301,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The target effect of the first present Optional in each live branch; empty input lifts None and target failure stays in the effect.",
-       "type": "Piped[_EffectFold[G, List[F.Arg], _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Out]"
+       "type": "Piped[FindMapContract[G, List[F.Arg], F].Out]"
       },
-      "signature": "def find_map_effect[F: UnaryContract & Movable & Deinitable, N: Int, //, G: Monad, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _EffectFold[G, List[F.Arg], _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error] -> Piped[_EffectFold[G, List[F.Arg], _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Out] where Self.Value == Array[F.Arg, N] and G.Element[F.Out] == Optional[_ListElement[G.Element[F.Out]]] and _CarrierCompatible[G, F.Out] and RepeatableUnary[F] and _EffectFold[G, List[F.Arg], _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Compatible and (_ErrorCompatible[_EntryError[X, _EffectFold[G, List[F.Arg], _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error], F.Error] or _ErrorCompatible[_EntryError[X, _EffectFold[G, List[F.Arg], _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error], _EffectFold[G, List[F.Arg], _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error])",
+      "signature": "def find_map_effect[F: UnaryContract & Movable & Deinitable, N: Int, //, G: Monad, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, FindMapContract[G, List[F.Arg], F].Error] -> Piped[FindMapContract[G, List[F.Arg], F].Out] where Self.Value == Array[F.Arg, N] and FindMapContract[G, List[F.Arg], F].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, List[F.Arg], F].Error], F.Error] or _ErrorCompatible[_EntryError[X, FindMapContract[G, List[F.Arg], F].Error], FindMapContract[G, List[F.Arg], F].Error])",
       "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
      },
      {
@@ -49254,7 +49317,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error]",
+      "error": "_EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -49310,9 +49373,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Piped[_EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out]"
+       "type": "Piped[FindMapContract[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Out]"
       },
-      "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, F: _Unary[A, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error] -> Piped[_EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out] where Self.Value == Array[A, N] and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, Never, F, False, o]] and _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Compatible and (_ErrorCompatible[_EntryError[X, _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], Never] or _ErrorCompatible[_EntryError[X, _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error])",
+      "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, F: _Unary[A, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error] -> Piped[FindMapContract[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Out] where Self.Value == Array[A, N] and FindMapContract[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error], FindMapContract[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error])",
       "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
      },
      {
@@ -49326,7 +49389,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error]",
+      "error": "_EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -49389,9 +49452,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Piped[_EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out]"
+       "type": "Piped[FindMapContract[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Out]"
       },
-      "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error] -> Piped[_EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out] where Self.Value == Array[A, N] and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, E, F, True, o]] and _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Compatible and (_ErrorCompatible[_EntryError[X, _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], E] or _ErrorCompatible[_EntryError[X, _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], _EffectFold[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error])",
+      "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error] -> Piped[FindMapContract[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Out] where Self.Value == Array[A, N] and FindMapContract[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error], FindMapContract[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error])",
       "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
      }
     ],
@@ -106509,7 +106572,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[C.Out]], C], _FirstPresent[_ListElement[J.Element[C.Out]]]].Error",
+      "error": "FindMapContract[J, Self.V, C].Error",
       "parameters": [
        {
         "description": "The first library callback type, retaining its receiver and origins.",
@@ -106530,9 +106593,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[C.Out]], C], _FirstPresent[_ListElement[J.Element[C.Out]]]].Out, Self.E]"
+       "type": "Pipeline[J, FindMapContract[J, Self.V, C].Out, Self.E]"
       },
-      "signature": "def find_map_effect[C: UnaryContract & Movable & Deinitable, //, J: Monad](deinit self, var function: C) raises _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[C.Out]], C], _FirstPresent[_ListElement[J.Element[C.Out]]]].Error -> Pipeline[J, _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[C.Out]], C], _FirstPresent[_ListElement[J.Element[C.Out]]]].Out, Self.E] where C.Arg == _FoldElement[Self.V] and _CarrierCompatible[J, C.Out] and J.Element[C.Out] == Optional[_ListElement[J.Element[C.Out]]] and _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[C.Out]], C], _FirstPresent[_ListElement[J.Element[C.Out]]]].Compatible and RepeatableUnary[C]",
+      "signature": "def find_map_effect[C: UnaryContract & Movable & Deinitable, //, J: Monad](deinit self, var function: C) raises FindMapContract[J, Self.V, C].Error -> Pipeline[J, FindMapContract[J, Self.V, C].Out, Self.E] where C.Arg == _FoldElement[Self.V] and FindMapContract[J, Self.V, C].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -106546,7 +106609,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]], _FirstPresent[_ListElement[J.Element[R]]]].Error",
+      "error": "FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -106581,9 +106644,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]], _FirstPresent[_ListElement[J.Element[R]]]].Out, Self.E]"
+       "type": "Pipeline[J, FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E]"
       },
-      "signature": "def find_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]], _FirstPresent[_ListElement[J.Element[R]]]].Error -> Pipeline[J, _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]], _FirstPresent[_ListElement[J.Element[R]]]].Out, Self.E] where _CarrierCompatible[J, R] and J.Element[R] == Optional[_ListElement[J.Element[R]]] and _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]], _FirstPresent[_ListElement[J.Element[R]]]].Compatible and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]]",
+      "signature": "def find_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -106597,7 +106660,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]], _FirstPresent[_ListElement[J.Element[R]]]].Error",
+      "error": "FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -106632,9 +106695,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]], _FirstPresent[_ListElement[J.Element[R]]]].Out, Self.E]"
+       "type": "Pipeline[J, FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E]"
       },
-      "signature": "def find_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(var _FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]], _FirstPresent[_ListElement[J.Element[R]]]].Error -> Pipeline[J, _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]], _FirstPresent[_ListElement[J.Element[R]]]].Out, Self.E] where _CarrierCompatible[J, R] and J.Element[R] == Optional[_ListElement[J.Element[R]]] and _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]], _FirstPresent[_ListElement[J.Element[R]]]].Compatible and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]]",
+      "signature": "def find_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(var _FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[J, FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E] where FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -106648,7 +106711,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]], _FirstPresent[_ListElement[J.Element[R]]]].Error",
+      "error": "FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -106683,9 +106746,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]], _FirstPresent[_ListElement[J.Element[R]]]].Out, Self.E]"
+       "type": "Pipeline[J, FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E]"
       },
-      "signature": "def find_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]], _FirstPresent[_ListElement[J.Element[R]]]].Error -> Pipeline[J, _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]], _FirstPresent[_ListElement[J.Element[R]]]].Out, Self.E] where Self.E != Never and _CarrierCompatible[J, R] and J.Element[R] == Optional[_ListElement[J.Element[R]]] and _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]], _FirstPresent[_ListElement[J.Element[R]]]].Compatible and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]]",
+      "signature": "def find_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E] where Self.E != Never and FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -106699,7 +106762,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]], _FirstPresent[_ListElement[J.Element[R]]]].Error",
+      "error": "FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -106720,9 +106783,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]], _FirstPresent[_ListElement[J.Element[R]]]].Out, Self.E]"
+       "type": "Pipeline[J, FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def find_map_effect[R: Movable & Deinitable, //, J: Monad](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R) raises _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]], _FirstPresent[_ListElement[J.Element[R]]]].Error -> Pipeline[J, _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]], _FirstPresent[_ListElement[J.Element[R]]]].Out, Self.E] where not conforms_to(R, RegisterPassable) and _CarrierCompatible[J, R] and J.Element[R] == Optional[_ListElement[J.Element[R]]] and _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]], _FirstPresent[_ListElement[J.Element[R]]]].Compatible and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]]",
+      "signature": "def find_map_effect[R: Movable & Deinitable, //, J: Monad](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R) raises FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error -> Pipeline[J, FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E] where not conforms_to(R, RegisterPassable) and FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -106736,7 +106799,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]], _FirstPresent[_ListElement[J.Element[R]]]].Error",
+      "error": "FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -106757,9 +106820,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]], _FirstPresent[_ListElement[J.Element[R]]]].Out, Self.E]"
+       "type": "Pipeline[J, FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def find_map_effect[R: RegisterPassable & Deinitable, //, J: Monad](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R) raises _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]], _FirstPresent[_ListElement[J.Element[R]]]].Error -> Pipeline[J, _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]], _FirstPresent[_ListElement[J.Element[R]]]].Out, Self.E] where _CarrierCompatible[J, R] and J.Element[R] == Optional[_ListElement[J.Element[R]]] and _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]], _FirstPresent[_ListElement[J.Element[R]]]].Compatible and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]]",
+      "signature": "def find_map_effect[R: RegisterPassable & Deinitable, //, J: Monad](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R) raises FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error -> Pipeline[J, FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E] where FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -106773,7 +106836,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]], _FirstPresent[_ListElement[J.Element[R]]]].Error",
+      "error": "FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -106801,9 +106864,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]], _FirstPresent[_ListElement[J.Element[R]]]].Out, Self.E]"
+       "type": "Pipeline[J, FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def find_map_effect[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]], _FirstPresent[_ListElement[J.Element[R]]]].Error -> Pipeline[J, _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]], _FirstPresent[_ListElement[J.Element[R]]]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and _CarrierCompatible[J, R] and J.Element[R] == Optional[_ListElement[J.Element[R]]] and _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]], _FirstPresent[_ListElement[J.Element[R]]]].Compatible and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]]",
+      "signature": "def find_map_effect[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -106817,7 +106880,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]], _FirstPresent[_ListElement[J.Element[R]]]].Error",
+      "error": "FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -106845,9 +106908,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]], _FirstPresent[_ListElement[J.Element[R]]]].Out, Self.E]"
+       "type": "Pipeline[J, FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def find_map_effect[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]], _FirstPresent[_ListElement[J.Element[R]]]].Error -> Pipeline[J, _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]], _FirstPresent[_ListElement[J.Element[R]]]].Out, Self.E] where _ErrorCompatible[Self.E, X] and _CarrierCompatible[J, R] and J.Element[R] == Optional[_ListElement[J.Element[R]]] and _EffectFold[J, Self.V, _SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]], _FirstPresent[_ListElement[J.Element[R]]]].Compatible and RepeatableUnary[NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]]",
+      "signature": "def find_map_effect[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      }
     ],
@@ -189414,7 +189477,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error]",
+      "error": "_EntryError[X, FindMapContract[G, Self.I, F].Error]",
       "parameters": [
        {
         "description": "The callback type, retaining its receiver, captures and error contract.",
@@ -189442,9 +189505,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The target effect of the first present Optional in each live branch; empty input lifts None and target failure stays in the effect.",
-       "type": "_EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Out"
+       "type": "FindMapContract[G, Self.I, F].Out"
       },
-      "signature": "def find_map_effect[F: UnaryContract & Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error] -> _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Out where _Source[Self.I].Element == F.Arg and G.Element[F.Out] == Optional[_ListElement[G.Element[F.Out]]] and _CarrierCompatible[G, F.Out] and RepeatableUnary[F] and _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Compatible and (_ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error], F.Error] or _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error], _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error])",
+      "signature": "def find_map_effect[F: UnaryContract & Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, FindMapContract[G, Self.I, F].Error] -> FindMapContract[G, Self.I, F].Out where FindMapContract[G, Self.I, F].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, Self.I, F].Error], F.Error] or _ErrorCompatible[_EntryError[X, FindMapContract[G, Self.I, F].Error], FindMapContract[G, Self.I, F].Error])",
       "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
      },
      {
@@ -189458,7 +189521,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error]",
+      "error": "_EntryError[X, FindMapContract[G, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -189507,9 +189570,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "_EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out"
+       "type": "FindMapContract[G, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Out"
       },
-      "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: _Unary[A, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error] -> _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out where _Source[Self.I].Element == A and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, Never, F, False, o]] and _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Compatible and (_ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], Never] or _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error])",
+      "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: _Unary[A, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindMapContract[G, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error] -> FindMapContract[G, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Out where FindMapContract[G, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FindMapContract[G, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error], FindMapContract[G, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error])",
       "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
      },
      {
@@ -189523,7 +189586,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error]",
+      "error": "_EntryError[X, FindMapContract[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -189579,9 +189642,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "_EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out"
+       "type": "FindMapContract[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Out"
       },
-      "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error] -> _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out where _Source[Self.I].Element == A and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, E, F, True, o]] and _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Compatible and (_ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], E] or _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], _EffectFold[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error])",
+      "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindMapContract[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Error] -> FindMapContract[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Out where FindMapContract[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FindMapContract[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Error], FindMapContract[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Error])",
       "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
      }
     ],
@@ -199087,7 +199150,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error]",
+     "error": "_EntryError[X, FindMapContract[G, V, F].Error]",
      "parameters": [
       {
        "description": "The callback type, retaining its receiver, captures and error contract.",
@@ -199122,9 +199185,9 @@
      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
      "returns": {
       "doc": "The target effect of the first present Optional in each live branch; empty input lifts None and target failure stays in the effect.",
-      "type": "_EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Out"
+      "type": "FindMapContract[G, V, F].Out"
      },
-     "signature": "def find_map_effect[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error] -> _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Out where _Source[V].Element == F.Arg and G.Element[F.Out] == Optional[_ListElement[G.Element[F.Out]]] and _CarrierCompatible[G, F.Out] and RepeatableUnary[F] and _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Compatible and (_ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error], F.Error] or _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error], _EffectFold[G, V, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]]].Error])",
+     "signature": "def find_map_effect[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var function: F, var source: V) raises _EntryError[X, FindMapContract[G, V, F].Error] -> FindMapContract[G, V, F].Out where FindMapContract[G, V, F].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, F].Error], F.Error] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, F].Error], FindMapContract[G, V, F].Error])",
      "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
     },
     {
@@ -199145,7 +199208,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error]",
+     "error": "_EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error]",
      "parameters": [
       {
        "description": "",
@@ -199201,9 +199264,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out"
+      "type": "FindMapContract[G, V, _NativeUnaryRef[A, R, Never, F, False, o]].Out"
      },
-     "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, F: _Unary[A, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error] -> _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out where _Source[V].Element == A and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, Never, F, False, o]] and _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Compatible and (_ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], Never] or _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error])",
+     "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, F: _Unary[A, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error] -> FindMapContract[G, V, _NativeUnaryRef[A, R, Never, F, False, o]].Out where FindMapContract[G, V, _NativeUnaryRef[A, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error], FindMapContract[G, V, _NativeUnaryRef[A, R, Never, F, False, o]].Error])",
      "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
     },
     {
@@ -199224,7 +199287,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error]",
+     "error": "_EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Error]",
      "parameters": [
       {
        "description": "",
@@ -199287,9 +199350,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out"
+      "type": "FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Out"
      },
-     "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error] -> _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Out where _Source[V].Element == A and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and RepeatableUnary[_NativeUnaryRef[A, R, E, F, True, o]] and _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Compatible and (_ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], E] or _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error], _EffectFold[G, V, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]]].Error])",
+     "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Error] -> FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Out where FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Error], FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Error])",
      "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
     }
    ],

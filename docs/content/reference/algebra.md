@@ -56,6 +56,19 @@ when the resulting computation runs, with their exact native errors and origins.
 
 <!-- example: docs/examples/fold_map_contracts.mojo -->
 
+`FindMapContract[I, V, F]` provides the same public proof and type projections
+for `find_map_effect`. The callback produces an effect of `Optional`; each live
+branch stops at its first present value. Free, piped, iterator and selected
+pipeline wrappers can forward `Compatible` without naming private search steps.
+
+Empty input and an exhausted branch produce an absent inner Optional. An absent
+or failed outer effect keeps the target family's usual meaning. List retains
+branch order and its copying requirements; deferred families pull input and run
+the callback only when the computation runs. Result and error origins remain
+exact, and successful linear searches retain move-only selected values.
+
+<!-- example: docs/examples/find_map_contracts.mojo -->
+
 <!-- example: docs/examples/operation_contracts.mojo -->
 
 `FilterContract[I, V, P]` does the same for `filter`; pass `True` as the

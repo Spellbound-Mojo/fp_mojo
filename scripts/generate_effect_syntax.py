@@ -162,10 +162,11 @@ def searches(mode, array=False):
             plan = operation.bind('G', source, elem, cb, build, effect,
                                   monoid='M' if folding else '',
                                   retained=f'_EffectRetain[{elem}, G, {cb}, True]' if borrowing else '')
-            contract = f'FoldMapContract[G, M, {source}, {cb}]' if folding else None
-            actual = contract + '.Error' if folding else plan.error
+            contract = (f'FoldMapContract[G, M, {source}, {cb}]' if folding else
+                        f'FindMapContract[G, {source}, {cb}]' if name == 'find_map_effect' else None)
+            actual = contract + '.Error' if contract else plan.error
             raised=f'_EntryError[X, {actual}]'
-            if folding:
+            if contract:
                 condition = (condition + ' and ' if array else '') + contract + '.Compatible'
             else:
                 condition+=f' and G.Element[{effect}] == {plan.payload}'
@@ -177,7 +178,7 @@ def searches(mode, array=False):
             condition+=f' and (_ErrorCompatible[{raised}, {fe}] or _ErrorCompatible[{raised}, {actual}])'
             if folding: condition+=f' and _ErrorCompatible[{raised}, M.Error]'
             call = plan.invoke(raised, value)
-            result = contract + '.Out' if folding else plan.result
+            result = contract + '.Out' if contract else plan.result
             args=[arg]+(['var source: V'] if mode=='free' else [])
             if mode!='free':args.insert(0,'deinit self')
             if mode=='piped':result=f'Piped[{result}]';call=f'Piped({call})'
