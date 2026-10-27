@@ -35071,9 +35071,13 @@
     {
      "description": "",
      "name": "StateType"
+    },
+    {
+     "description": "Admission for running a recipe; defaults to existing carrier membership.",
+     "name": "RunCompatible"
     }
    ],
-   "description": "Generic runners forward CarrierCompatible; EndpointCompatible admits action.",
+   "description": "Generic runners forward RunCompatible; EndpointCompatible admits action.",
    "fields": [],
    "kind": "trait",
    "methods": {},
@@ -35169,6 +35173,10 @@
     {
      "description": "",
      "name": "EndpointCompatible"
+    },
+    {
+     "description": "",
+     "name": "RunCompatible"
     },
     {
      "description": "",
@@ -37618,7 +37626,7 @@
       "doc": "",
       "type": "_State[V].Out"
      },
-     "signature": "def run[V: Movable & Deinitable, //, I: StateFamily](var action: V, var state: I.StateType) raises _State[V].Error -> _State[V].Out where I.CarrierCompatible[V]",
+     "signature": "def run[V: Movable & Deinitable, //, I: StateFamily](var action: V, var state: I.StateType) raises _State[V].Error -> _State[V].Out where I.RunCompatible[V]",
      "summary": "Run a State computation of family `I`, consuming the initial state."
     }
    ],

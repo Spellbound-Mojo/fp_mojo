@@ -7,7 +7,7 @@ from std.builtin.rebind import rebind_var
 from std.memory import ArcPointer
 from std.testing import assert_equal
 
-def check[retain:Bool]() raises where Stack[retain].CombineCompatible[Endpoint[retain],Combine,Produce[retain]] and Base[retain].CarrierCompatible[Stack[retain].Combined[Endpoint[retain],Combine,Produce[retain]]]:
+def check[retain:Bool]() raises where Stack[retain].CombineCompatible[Endpoint[retain],Combine,Produce[retain]] and Base[retain].RunCompatible[Stack[retain].Combined[Endpoint[retain],Combine,Produce[retain]]]:
     comptime I=Stack[retain]
     comptime C=I.Combined[Endpoint[retain],Combine,Produce[retain]]
     for left_failure in range(3):

@@ -1,4 +1,4 @@
-# error: repeatable
+# error: no matching function in call to 'run'
 from fp.algebra import ResultFamily, ListFamily, StringMonoid, ListMonoid, fail, pure
 from fp.effects import ReaderT, StateT, WriterT, OptionalT, ResultT, action, run
 from fp.functions import piped

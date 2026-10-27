@@ -1,4 +1,4 @@
-# error: fold_effect: eager carrier must keep one type across steps
+# error: no matching function in call to 'run'
 from fp.algebra import pure, traverse, ListFamily
 from fp.effects import Reader, StateT, run
 from fp.callables import as_unary

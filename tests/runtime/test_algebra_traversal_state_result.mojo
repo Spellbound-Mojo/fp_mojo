@@ -25,7 +25,7 @@ struct Produce[retain:Bool](Unary):
             raise Error("native producer failure")
         return step[Self.retain](self.trace,item,item,self.failure if item==3 else 0)
 
-def check[retain:Bool, o:MutOrigin](ref[o] pulls:Int) raises where Base[retain].CarrierCompatible[Stack[retain].Collected[Counted[o],Produce[retain]]]:
+def check[retain:Bool, o:MutOrigin](ref[o] pulls:Int) raises where Base[retain].RunCompatible[Stack[retain].Collected[Counted[o],Produce[retain]]]:
     comptime I=Stack[retain]
     comptime Data=Result[List[Int],Int]
     comptime Out=Tuple[Data,Int] if retain else Result[Tuple[List[Int],Int],Int]

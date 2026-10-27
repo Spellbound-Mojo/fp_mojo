@@ -38,9 +38,10 @@ def run[V: Movable & Deinitable, o: ImmOrigin, //, I: ReaderFamily](var action: 
 
 
 def run[V: Movable & Deinitable, //, I: StateFamily](var action: V, var state: I.StateType
-) raises _State[V].Error -> _State[V].Out where I.CarrierCompatible[V]:
+) raises _State[V].Error -> _State[V].Out where I.RunCompatible[V]:
     """Run a State computation of family `I`, consuming the initial state."""
-    comptime assert I.CarrierCompatible[V], _FAMILY_MISMATCH
+    comptime assert I.RunCompatible[V], _FAMILY_MISMATCH
+    comptime assert _State[V]._RunCompatible
     return rebind_var[_State[V]](action^).run(rebind_var[_State[V].State](state^))
 
 

@@ -58,7 +58,7 @@ def check[is_state:Bool,is_result:Bool]() raises:
                     else:
                         comptime if is_state:
                             comptime G=downcast[I,StateFamily]
-                            comptime assert G.CarrierCompatible[Pending]
+                            comptime assert G.RunCompatible[Pending]
                             try:_=run[G](pending.take(),rebind_var[G.StateType](Owner(0,states)))
                             except error:
                                 comptime assert type_of(error)==Never

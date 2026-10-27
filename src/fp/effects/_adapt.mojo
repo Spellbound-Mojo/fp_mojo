@@ -36,7 +36,7 @@ def _reader_run_as[E: Movable & Deinitable, V: ReaderAction, o: ImmOrigin](var a
 
 
 def _state_run_as[E: Movable & Deinitable, V: StateAction](var action: V, var state: V.State
-) raises E -> V.Out where _ErrorCompatible[E, V.Error]:
+) raises E -> V.Out where _ErrorCompatible[E, V.Error] and V._RunCompatible:
     try:
         return action^.run(state^)
     except error:

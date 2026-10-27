@@ -25,7 +25,7 @@ def forward[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movable & Dein
 def forward_run[I: ReaderFamily, V: ReaderAction, o: ImmOrigin](var value: V, ref[o] environment: I.Environment) raises V.Error[o] -> V.Out[o] where I.RunCompatible[V, o]:
     return run[I](value^, environment)
 
-def forward_state[I: StateFamily, V: StateAction](var value: V, var state: I.StateType) raises V.Error -> V.Out where I.CarrierCompatible[V]:
+def forward_state[I: StateFamily, V: StateAction](var value: V, var state: I.StateType) raises V.Error -> V.Out where I.RunCompatible[V]:
     return run[I](value^, state^)
 
 def check(owner: List[Int]) raises:

@@ -1,4 +1,4 @@
-# error: fold_effect: callbacks must be repeatable
+# error: no matching function in call to 'run'
 from fp.algebra import traverse, ListFamily, pure
 from fp.effects import State, run
 from fp.callables import OnceUnary

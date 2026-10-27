@@ -43,7 +43,7 @@ struct Produce[I:StateFamily](MutableUnary):
         comptime assert Self.I.EndpointCompatible[Int,Step]
         return action[Self.I,Int](Step(item^,self.failure))
 
-def check_traversal_ownership[I:StateFamily]() raises where I.StateType == Token[1] and I.EndpointCompatible[Int,Step] and I.CollectCompatible[List[Token[0]],Produce[I]] and I.CarrierCompatible[I.Collected[List[Token[0]],Produce[I]]]:
+def check_traversal_ownership[I:StateFamily]() raises where I.StateType == Token[1] and I.EndpointCompatible[Int,Step] and I.CollectCompatible[List[Token[0]],Produce[I]] and I.RunCompatible[I.Collected[List[Token[0]],Produce[I]]]:
     for failure in range(4):
         var trace=ArcPointer(Trace(0,SIMD[DType.int64,4](0)))
         var items=List[Token[0]]()

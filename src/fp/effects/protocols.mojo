@@ -323,6 +323,8 @@ trait StateAction(_Computation):
     """The base carrier a run returns."""
     comptime Error: Movable & Deinitable = Never
     """The error a run raises; `Never` by default."""
+    # Requirements carried by built-in recipes; custom actions keep their contract.
+    comptime _RunCompatible: Bool = True
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
         """Run the computation, consuming it and the state.
 
@@ -365,9 +367,11 @@ trait ReaderFamily(_Acting):
 trait StateFamily(_Acting):
     """A Monad whose computations consume StateType when run.
 
-    Generic runners forward CarrierCompatible; EndpointCompatible admits action.
+    Generic runners forward RunCompatible; EndpointCompatible admits action.
     """
     comptime StateType: Movable & Deinitable
+    comptime RunCompatible[V: Movable & Deinitable]: Bool = Self.CarrierCompatible[V]
+    """Admission for running a recipe; defaults to existing carrier membership."""
 
 
 

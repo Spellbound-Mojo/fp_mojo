@@ -68,16 +68,16 @@ def endpoint[optional_first:Bool,stateful:Bool](trace:ArcPointer[List[Int]],mark
         return rebind_var[Endpoint[optional_first,stateful]](writer[Logged[False],Payload[optional_first]](value^))
 
 
-comptime FinishCompatible[stateful:Bool,V:Movable & Deinitable,o:ImmOrigin] = Logged[stateful].CarrierCompatible[V] and (State[Int].CarrierCompatible[Logged[stateful].Unwrapped[V]] if stateful else Reader[Int].RunCompatible[Logged[stateful].Unwrapped[V],o])
+comptime FinishCompatible[stateful:Bool,V:Movable & Deinitable,o:ImmOrigin] = Logged[stateful].CarrierCompatible[V] and (State[Int].RunCompatible[Logged[stateful].Unwrapped[V]] if stateful else Reader[Int].RunCompatible[Logged[stateful].Unwrapped[V],o])
 
 
-def finish[optional_first:Bool,stateful:Bool,V:Movable & Deinitable,o:ImmOrigin,W:WriterFamily=Logged[stateful],R:ReaderFamily=Reader[Int],S:StateFamily=State[Int]](var value:V,ref[o] environment:Int) raises Int ->Emit[optional_first,stateful].Output where W.CarrierCompatible[V] and R.Environment == Int and S.StateType == Int and (S.CarrierCompatible[W.Unwrapped[V]] if stateful else R.RunCompatible[W.Unwrapped[V],o]):
+def finish[optional_first:Bool,stateful:Bool,V:Movable & Deinitable,o:ImmOrigin,W:WriterFamily=Logged[stateful],R:ReaderFamily=Reader[Int],S:StateFamily=State[Int]](var value:V,ref[o] environment:Int) raises Int ->Emit[optional_first,stateful].Output where W.CarrierCompatible[V] and R.Environment == Int and S.StateType == Int and (S.RunCompatible[W.Unwrapped[V]] if stateful else R.RunCompatible[W.Unwrapped[V],o]):
     # Adapt the two native frame signatures; each opaque run error is proved
     # independently before crossing this common test assertion boundary.
     comptime if stateful:
         # FinishCompatible checks this branch at the public signature. Refine
         # that conditional proof for the concrete native run overload.
-        comptime assert S.CarrierCompatible[W.Unwrapped[V]]
+        comptime assert S.RunCompatible[W.Unwrapped[V]]
         try:
             var output=run[S](run_writer[W](value^),rebind_var[S.StateType](Int(environment)))
             comptime assert type_of(output)==Emit[optional_first,stateful].Output

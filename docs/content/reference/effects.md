@@ -30,8 +30,8 @@ Reader or State can accept the base's alternative computation representations.
 
 Generic execution wrappers use `I: ReaderFamily`, `I: StateFamily`, or
 `I: WriterFamily`. Reader wrappers forward `I.RunCompatible[V, o]` with the
-actual borrowed environment origin; State and Writer wrappers forward
-`I.CarrierCompatible[V]`. Writer's `I.Unwrapped[V]` names the exact base type
+actual borrowed environment origin. State wrappers forward
+`I.RunCompatible[V]`; Writer wrappers forward `I.CarrierCompatible[V]`. Writer's `I.Unwrapped[V]` names the exact base type
 returned by `run_writer`. Endpoint wrappers forward
 `I.EndpointCompatible[T, F]`. Keep `I` as a type parameter: substituting a
 concrete ReaderT expression inside a generic origin constraint can expand its

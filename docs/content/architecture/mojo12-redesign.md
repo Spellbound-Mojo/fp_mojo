@@ -1920,6 +1920,49 @@ passed. Generated sources and all 48 tooling tests passed; the strict docs build
 validated 319 exports and 82 examples, and the new example passed all four routes.
 A fresh integrated package and its O3 native client passed with unchanged inputs.
 
+### State recipe requirements at execution
+
+State actions carry a private execution requirement through mapping, bind,
+combination, traversal, dependent folds, choice and hoisting. The checked free
+`run` entry uses the public `StateFamily.RunCompatible[V]` predicate. Built-in
+State families combine carrier membership with the recipe's requirement;
+custom families and actions keep their existing contract through defaults.
+
+A State recipe's requirements describe its actual base operations and native
+error combination. A traversal asks the selected base's fold admission about
+its adapted step, without imposing List's branch-copy rule on linear families
+or inventing source requirements for custom fold implementations. Reader's
+dependent-fold recipe now forwards that same base requirement at its actual
+run origin.
+
+Ordinary calls and positional bindings are unchanged. Generic State runners
+should forward `I.RunCompatible[V]` in place of `I.CarrierCompatible[V]`: carrier
+membership alone cannot prove that every nested operation can execute. A runner
+bounded by the public StateAction trait can still return `V.Out` and raise
+`V.Error`, without private projections or extra callback annotations. Trait
+methods keep their existing unconstrained signatures and primitive preconditions;
+the checked free entry owns signature admission.
+
+The maintained controls distinguish producer and child-action error origins,
+propagate incompatibility through map and bind, reject a consuming producer in
+a multi-element native fold, and preserve consuming single-value traversal.
+They also verify a generic runner and exactly-once destruction of move-only
+state. Requirements do not add runtime allocation, invocation or copying.
+
+Eight maintained generic helpers now forward RunCompatible in place of carrier
+membership; their value and ownership assertions are unchanged. All eight passed
+focused O0 checks, and the fresh full suite passed all 722 positive programs.
+The 24 source/package execution checks at O0/O3 also passed. The full rejection
+run rejected all 1,621 fixtures without crashes or timeouts: 1,614 matched their
+declared diagnostics, while seven retained earlier diagnostic spellings. Three
+were the preceding fold pass's expectations; four now identify run admission.
+All seven corrected fixtures passed 28 fresh source/package checks at O0/O3.
+The original failed reports remain available. Generated sources, all 48 tooling
+tests and the strict documentation build passed.
+The integrated package and O3 client passed with unchanged inputs. One tooling
+run encountered an intermittent child-reaping test failure; the focused resource
+checks and a fresh full 48-test run passed, with the failed log retained.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

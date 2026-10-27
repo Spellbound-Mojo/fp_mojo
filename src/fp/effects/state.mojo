@@ -15,7 +15,7 @@ from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, Repea
 from fp.callables._receiver import _binary_repeated_as, _unary_once_as
 from std.memory import MaybeUninit
 from fp.callables.products import _take_pair, _MapPair, _WithSecond as _WithState
-from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
+from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible, _propagate_error
 from .protocols import Stateful, Local, Listen, _CarrierOp, _LocalLifting, StateAction, StateFamily, _EndpointCompatible, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
 from ._adapt import _op_as, _state_run_as, _map_as, _flat_map_as
 
@@ -33,6 +33,7 @@ struct _StatePure[M: Monad, S: Movable & Deinitable, T: Movable & Deinitable](St
     comptime Value = Self.T
     comptime Out = Self.M.Pure[Tuple[Self.T, Self.S]]
     def run(deinit self, var state: Self.State) -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         return _pure[Self.M](Tuple(self.value^, state^))
 
 
@@ -47,6 +48,7 @@ struct _StateFail[M: Monad, S: Movable & Deinitable, A: Movable & Deinitable](St
     comptime Out = Self.Errors.Failed[Tuple[Self.A, Self.S]]
     comptime Error = Self.Errors.FailError[Tuple[Self.A, Self.S]]
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         return Self.Errors.fail[Tuple[Self.A, Self.S]](self.error^)
 
 
@@ -57,6 +59,7 @@ struct _StateGet[M: Monad, S: Copyable & Deinitable](StateAction, Copyable, Defa
     comptime Value = Self.S
     comptime Out = Self.M.Pure[Tuple[Self.S, Self.S]]
     def run(deinit self, var state: Self.State) -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         var copy = state.copy()
         return _pure[Self.M](Tuple(copy^, state^))
 
@@ -72,6 +75,7 @@ struct _StateModify[M: Monad, S: Movable & Deinitable, F: UnaryContract & Movabl
     comptime Out = Self.M.Pure[Tuple[NoneType, Self.S]]
     comptime Error = Self.F.Error
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         comptime assert Self.F.Arg == Self.S and Self.F.Out == Self.S, "modify: the callback must map the state to a new state"
         var updated = rebind_var[Self.S](call_once(self.function^, rebind_var[Self.F.Arg](state^)))
         var nothing: NoneType = None
@@ -90,6 +94,7 @@ struct _StateEndpoint[M: Monad, S: Movable & Deinitable, T: Movable & Deinitable
     comptime Out = Self.F.Out
     comptime Error = Self.F.Error
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         comptime assert Self.F.Arg == Self.S, "action: the endpoint must consume the State"
         return call_once(self.function^, rebind_var[Self.F.Arg](state^))
 
@@ -104,7 +109,10 @@ struct _StateLift[M: Monad, S: Movable & Deinitable, V: Movable & Deinitable](St
     comptime Pair = _WithState[Self.Value, Self.S]
     comptime Out = Self.M.Mapped[Self.V, Self.Pair]
     comptime Error = Self.M.MapError[Self.V, Self.Pair]
+    comptime _RunCompatible = Self.M.MapCompatible[Self.V, Self.Pair]
+
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         return Self.M.map(Self.Pair(state^), self.value^)
 
 
@@ -128,6 +136,8 @@ struct _StateContinue[I: AnyType, F: UnaryContract & Movable & Deinitable, S: Mo
     comptime Arg = Self.F.Arg if Self.recover else Tuple[Self.F.Arg, Self.S]
     comptime Out = Self.Action.Out
     comptime Error = _CommonError[Self.F.Error, Self.Action.Error]
+    comptime _RunCompatible = Self.Action._RunCompatible & _CommonErrorCompatible[Self.F.Error, Self.Action.Error]
+
     def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert Self.Action.Family == Self.I, _FAMILY_MISMATCH
         comptime assert _ErrorCompatible[Self.Error, Self.F.Error] and _ErrorCompatible[Self.Error, Self.Action.Error]
@@ -143,6 +153,7 @@ struct _StateContinue[I: AnyType, F: UnaryContract & Movable & Deinitable, S: Mo
             value_part = value_slot^.unsafe_assume_init()
             state_part = state_slot^.unsafe_assume_init()
         var action = rebind_var[Self.Action](_unary_once_as[Self.Error](self.function^, value_part^))
+        comptime assert Self.Action._RunCompatible
         return _state_run_as[Self.Error](action^, rebind_var[Self.Action.State](state_part^))
 
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
@@ -175,6 +186,8 @@ struct _StatePrepare[I: AnyType, M: Monad, S: Movable & Deinitable, F: BinaryCon
     comptime Arg = Tuple[Self.F.First, Self.S]
     comptime Out = Self.M.Mapped[Self.Action.Out, Self.Combine]
     comptime Error = _CommonError[Self.G.Error, _CommonError[Self.Action.Error, Self.M.MapError[Self.Action.Out, Self.Combine]]]
+    comptime _RunCompatible = Self.Action._RunCompatible & Self.M.MapCompatible[Self.Action.Out, Self.Combine] & _CommonErrorCompatible[Self.Action.Error, Self.M.MapError[Self.Action.Out, Self.Combine]] & _CommonErrorCompatible[Self.G.Error, _CommonError[Self.Action.Error, Self.M.MapError[Self.Action.Out, Self.Combine]]]
+
     @staticmethod
     def _combine(var action: Self.Action, var function: Self.F, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert Self.Action.Family == Self.I, _FAMILY_MISMATCH
@@ -184,6 +197,7 @@ struct _StatePrepare[I: AnyType, M: Monad, S: Movable & Deinitable, F: BinaryCon
         _take_pair(arg^, value_slot, state_slot)
         var value_part = value_slot^.unsafe_assume_init()
         var state_part = state_slot^.unsafe_assume_init()
+        comptime assert Self.Action._RunCompatible
         var based = _state_run_as[Self.Error](action^, rebind_var[Self.Action.State](state_part^))
         return _map_as[Self.Error, Self.M](Self.Combine(_BindFirst[Self.F](function^, value_part^)), based^)
     def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
@@ -211,8 +225,12 @@ struct _StateMap[M: Monad, S: Movable & Deinitable, A: StateAction, F: UnaryCont
     comptime Step = _MapFirst[Self.F, Self.S]
     comptime Out = Self.M.Mapped[Self.A.Out, Self.Step]
     comptime Error = _CommonError[Self.A.Error, Self.M.MapError[Self.A.Out, Self.Step]]
+    comptime _RunCompatible = Self.A._RunCompatible & Self.M.MapCompatible[Self.A.Out, Self.Step] & _CommonErrorCompatible[Self.A.Error, Self.M.MapError[Self.A.Out, Self.Step]]
+
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         comptime assert _ErrorCompatible[Self.Error, Self.A.Error] and _ErrorCompatible[Self.Error, Self.M.MapError[Self.A.Out, Self.Step]]
+        comptime assert Self.A._RunCompatible
         var base = _state_run_as[Self.Error](self.source^, rebind_var[Self.A.State](state^))
         return _map_as[Self.Error, Self.M](Self.Step(self.function^), base^)
 
@@ -230,7 +248,11 @@ struct _StateBind[M: Monad, S: Movable & Deinitable, A: StateAction, F: UnaryCon
     comptime Operation = _Continue[Self.M, Self.recover]
     comptime Out = Self.Operation.Out[Self.A.Out, Self.Next]
     comptime Error = _CommonError[Self.A.Error, Self.Operation.Error[Self.A.Out, Self.Next]]
+    comptime _BaseCompatible = Self.Operation.Errors._Handles[Self.A.Out, Self.Next] if Self.recover else Self.M.BindCompatible[Self.A.Out, Self.Next]
+    comptime _RunCompatible = Self.A._RunCompatible & Self.Next._RunCompatible & Self._BaseCompatible & _CommonErrorCompatible[Self.A.Error, Self.Operation.Error[Self.A.Out, Self.Next]]
+
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         comptime assert _Action[Self.F.Out].Family == Self.Family, _FAMILY_MISMATCH
         comptime assert _ErrorCompatible[Self.Error, Self.A.Error] and _ErrorCompatible[Self.Error, Self.Operation.Error[Self.A.Out, Self.Next]]
         var source_state: Self.S
@@ -243,6 +265,7 @@ struct _StateBind[M: Monad, S: Movable & Deinitable, A: StateAction, F: UnaryCon
         else:
             source_state = state^
             saved = rebind_var[Self.Next.Saved](None)
+        comptime assert Self.A._RunCompatible
         var base = _state_run_as[Self.Error](self.source^, rebind_var[Self.A.State](source_state^))
         return Self.Operation.apply[Self.Error](Self.Next(self.function^, saved^), base^)
 
@@ -262,9 +285,12 @@ struct _StateCombine[M: Monad, S: Movable & Deinitable, A: StateAction, F: Binar
     comptime Next = _StatePrepare[Self.Family, Self.M, Self.S, Self.F, Self.G]
     comptime Out = Self.M.Bound[Self.A.Out, Self.Next]
     comptime Error = _CommonError[Self.A.Error, Self.M.BindError[Self.A.Out, Self.Next]]
+    comptime _RunCompatible = Self.A._RunCompatible & Self.Next._RunCompatible & Self.M.BindCompatible[Self.A.Out, Self.Next] & _CommonErrorCompatible[Self.A.Error, Self.M.BindError[Self.A.Out, Self.Next]]
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         comptime assert _Action[Self.G.Out].Family == Self.Family, _FAMILY_MISMATCH
         comptime assert _ErrorCompatible[Self.Error, Self.A.Error] and _ErrorCompatible[Self.Error, Self.M.BindError[Self.A.Out, Self.Next]]
+        comptime assert Self.A._RunCompatible
         var base = _state_run_as[Self.Error](self.source^, rebind_var[Self.A.State](state^))
         var next = Self.Next(self.function^, _Lazy[Self.G](self.right^))
         return _flat_map_as[Self.Error, Self.M](next^, base^)
@@ -272,6 +298,7 @@ struct _StateCombine[M: Monad, S: Movable & Deinitable, A: StateAction, F: Binar
 
 struct _StateLive[K: _LiveAccumulator, S: Movable & Deinitable](_LiveAccumulator):
     comptime Acc = Tuple[Self.K.Acc, Self.S]
+
     @staticmethod
     def live(ref acc: Self.Acc) -> Bool:
         return Self.K.live(acc[0])
@@ -306,6 +333,8 @@ struct _StateTraverseStep[I: AnyType, M: Monad, S: Movable & Deinitable, K: _Acc
     comptime Fold = _FoldState[Self.K, Self.S]
     comptime Out = Self.M.Mapped[Self.A.Out, Self.Fold]
     comptime Error = _CommonError[Self.A.Error, Self.M.MapError[Self.A.Out, Self.Fold]]
+    comptime _RunCompatible = Self.A._RunCompatible & Self.M.MapCompatible[Self.A.Out, Self.Fold] & (Self.M.Pure[Self.First] == Self.Out) & _CommonErrorCompatible[Self.A.Error, Self.M.MapError[Self.A.Out, Self.Fold]]
+
     def call(self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out:
         comptime assert Self.A.Family == Self.I, _FAMILY_MISMATCH
         comptime assert Self.A.Value == Self.K.Item, "traverse: every produced computation must have the accumulated value type"
@@ -316,6 +345,7 @@ struct _StateTraverseStep[I: AnyType, M: Monad, S: Movable & Deinitable, K: _Acc
         _take_pair(first^, value_slot, state_slot)
         var value_part = value_slot^.unsafe_assume_init()
         var state_part = state_slot^.unsafe_assume_init()
+        comptime assert Self.A._RunCompatible
         var based = _state_run_as[Self.Error](second^, rebind_var[Self.A.State](state_part^))
         return _map_as[Self.Error, Self.M](Self.Fold(value_part^), based^)
 
@@ -337,6 +367,7 @@ struct _StateLoop[M: Monad, S: Movable & Deinitable, V: Movable & Deinitable, F:
     comptime Out = Self.M.Pure[Self.Policy.Acc]
     comptime Error = _CommonError[Self.K.Error, Self.M._FoldError[Self.V, Self.F, Self.Step, Self.Policy]]
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         comptime E = Self.Error
         comptime assert Self.Produced.Family == Self.Family, _FAMILY_MISMATCH
         # Preserve traversal's existing stable-base contract; the dependent
@@ -345,6 +376,8 @@ struct _StateLoop[M: Monad, S: Movable & Deinitable, V: Movable & Deinitable, F:
         comptime assert _ErrorCompatible[E, Self.K.Error]
         var initial = Tuple(_start_as[E, Self.K](), state^)
         return Self._fold(self.function^, initial^, self.source^)
+    comptime _RunCompatible = Self.Step._RunCompatible & Self.M._FoldCompatible[Self.V, Self.F, Self.Step, Self.Policy] & (Self.M._Folded[Self.V, Self.F, Self.Step, Self.Policy] == Self.Out) & _CommonErrorCompatible[Self.K.Error, Self.M._FoldError[Self.V, Self.F, Self.Step, Self.Policy]]
+
     @staticmethod
     def _fold(var function: Self.F, var initial: Self.Policy.Acc, var source: Self.V) raises Self.Error -> Self.Out:
         comptime E = Self.Error
@@ -361,6 +394,8 @@ struct _StateFoldStep[I: AnyType, S: Movable & Deinitable, F: BinaryContract & M
     comptime Action = _Action[Self.F.Out]
     comptime Out = Self.Action.Out
     comptime Error = _CommonError[Self.F.Error, Self.Action.Error]
+    comptime _RunCompatible = RepeatableBinary[Self.F] & Self.Action._RunCompatible & _CommonErrorCompatible[Self.F.Error, Self.Action.Error]
+
     def call_mut(mut self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out:
         comptime assert RepeatableBinary[Self.F] and Self.Action.Family == Self.I
         comptime assert _ErrorCompatible[Self.Error, Self.F.Error] and _ErrorCompatible[Self.Error, Self.Action.Error]
@@ -370,6 +405,7 @@ struct _StateFoldStep[I: AnyType, S: Movable & Deinitable, F: BinaryContract & M
         var acc = acc_slot^.unsafe_assume_init()
         var state = state_slot^.unsafe_assume_init()
         var action = rebind_var[Self.Action](_binary_repeated_as[Self.Error](self.function, acc^, second^))
+        comptime assert Self.Action._RunCompatible
         return _state_run_as[Self.Error](action^, rebind_var[Self.Action.State](state^))
 
 
@@ -386,7 +422,10 @@ struct _StateFold[M: Monad, S: Movable & Deinitable, V: Movable & Deinitable, P:
     comptime Policy = _StateLive[Self.K, Self.S]
     comptime Out = Self.M._Folded[Self.V, Self.P, Self.Step, Self.Policy]
     comptime Error = Self.M._FoldError[Self.V, Self.P, Self.Step, Self.Policy]
+    comptime _RunCompatible = Self.Step._RunCompatible & Self.M._FoldCompatible[Self.V, Self.P, Self.Step, Self.Policy]
+
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         return _fold_as[Self.Error, Self.M, Self.V, Self.P, Self.Step, Self.Policy](self.prepare^, Self.Step(self.function^), Tuple(self.initial^, state^), self.source^)
 
 
@@ -402,7 +441,10 @@ struct _StateChoice[M: Monad, A: StateAction, B: StateAction](
     comptime Value = Self.A.Value
     comptime Out = Self.M._Joined[Self.A.Out, Self.B.Out]
     comptime Error = _CommonError[Self.A.Error, Self.B.Error]
+    comptime _RunCompatible = Self.A._RunCompatible & Self.B._RunCompatible & Self.M._JoinCompatible[Self.A.Out, Self.B.Out] & _CommonErrorCompatible[Self.A.Error, Self.B.Error]
+
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         comptime assert Self.B.Family == Self.A.Family and Self.B.State == Self.A.State, _CHOICE_FAMILY
         comptime assert Self.B.Value == Self.A.Value, _CHOICE_VALUE
         comptime assert _ErrorCompatible[Self.Error, Self.A.Error] and _ErrorCompatible[Self.Error, Self.B.Error]
@@ -426,10 +468,14 @@ struct _StateHoist[A: Movable & Deinitable, S: StateAction, H: _CarrierOp, Targe
     comptime Value = Self.A
     comptime Out = Self.H.Applied[Self.S.Out]
     comptime Error = _CommonError[Self.S.Error, Self.H.Error[Self.S.Out]]
+    comptime _RunCompatible = Self.S._RunCompatible & Self.H.Compatible[Self.S.Out] & _CommonErrorCompatible[Self.S.Error, Self.H.Error[Self.S.Out]]
+
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         comptime E = Self.Error
         comptime assert Self.H.Compatible[Self.S.Out]
         comptime assert _ErrorCompatible[E, Self.S.Error] and _ErrorCompatible[E, Self.H.Error[Self.S.Out]]
+        comptime assert Self.S._RunCompatible
         var base = _state_run_as[E](self.source^, state^)
         return _op_as[E](self.operation^, base^)
 
@@ -613,6 +659,7 @@ struct StateT[M: Monad, S: Movable & Deinitable](StateFamily, Stateful, _LocalLi
         downcast[F, UnaryContract].Arg == Self.S and
         _EndpointCompatible[Self.M, Tuple[T, Self.S], downcast[F, UnaryContract].Out]
     ) if conforms_to(F, UnaryContract) else False
+    comptime RunCompatible[V: Movable & Deinitable] = Self.CarrierCompatible[V] & _Action[V]._RunCompatible if conforms_to(V, StateAction) else False
     comptime Element[V: Movable & Deinitable] = _Action[V].Value
     comptime CarrierCompatible[V: Movable & Deinitable] = (_Action[V].Family == Self and _Action[V].State == Self.S and Self.M.CarrierCompatible[_Action[V].Out] and Self.M.Element[_Action[V].Out] == Tuple[Self.Element[V], Self.S]) if conforms_to(V, StateAction) else False
     comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[V]

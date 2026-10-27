@@ -1,5 +1,5 @@
 # error: invalid call to 'run': lacking evidence to prove correctness
-# error: CarrierCompatible
+# error: RunCompatible
 # error: origin_of(left)
 # error: origin_of(right)
 from fp.effects import StateT, StateAction, run

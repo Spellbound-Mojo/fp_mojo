@@ -15743,8 +15743,8 @@
           "sha256": "0f58f27e5c81aa157d4f8a5f9611b444d7ef1719010d1d29cd7222cf898406aa"
         },
         {
-          "signature": "def run[V: Movable & Deinitable, //, I: StateFamily](var action: V, var state: I.StateType ) raises _State[V].Error -> _State[V].Out where I.CarrierCompatible[V]:",
-          "sha256": "3ca45462ae1471d4a85f37856425eacded2a4d67a4d7fec3be2851c3a20f46c5"
+          "signature": "def run[V: Movable & Deinitable, //, I: StateFamily](var action: V, var state: I.StateType ) raises _State[V].Error -> _State[V].Out where I.RunCompatible[V]:",
+          "sha256": "58445b667c512e663aef2d546715053d874c5149ea3b01c1aed799f9ca350acd"
         }
       ],
       "provider": "effects/operations"

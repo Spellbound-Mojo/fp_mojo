@@ -316,7 +316,7 @@ struct _ReaderFold[M: Monad, R: AnyType, V: Movable & Deinitable, P: UnaryContra
     comptime Step[o: ImmOrigin] = _ReaderFoldStep[Self.Family, Self.R, Self.F, o]
     comptime Out[o: ImmOrigin] = Self.M._Folded[Self.V, Self.P, Self.Step[o], Self.K]
     comptime Error[o: ImmOrigin] = Self.M._FoldError[Self.V, Self.P, Self.Step[o], Self.K]
-    comptime _RunCompatible[o: ImmOrigin] = Self.Step[o]._RunCompatible
+    comptime _RunCompatible[o: ImmOrigin] = Self.Step[o]._RunCompatible & Self.M._FoldCompatible[Self.V, Self.P, Self.Step[o], Self.K]
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Self.Out[o]:
         comptime assert Self._RunCompatible[o], "run: incompatible Reader recipe at this environment origin"
         return _fold_as[Self.Error[o], Self.M, Self.V, Self.P, Self.Step[o], Self.K](self.prepare^, Self.Step[o](self.function^, Pointer(to=env)), self.initial^, self.source^)

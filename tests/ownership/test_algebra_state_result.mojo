@@ -36,7 +36,7 @@ struct Next[retain:Bool](OnceUnary):
             raise Token[3](value,self.capture.trace)
         return pure[Self.I](value)
 
-def check[retain:Bool]() raises where Stack[retain].Element[Source[retain]] == Next[retain].Arg and Stack[retain].BindCompatible[Source[retain],Next[retain]] and Base[retain].CarrierCompatible[Stack[retain].Bound[Source[retain],Next[retain]]]:
+def check[retain:Bool]() raises where Stack[retain].Element[Source[retain]] == Next[retain].Arg and Stack[retain].BindCompatible[Source[retain],Next[retain]] and Base[retain].RunCompatible[Stack[retain].Bound[Source[retain],Next[retain]]]:
     comptime I=Stack[retain]
     comptime C=I.Bound[Source[retain],Next[retain]]
     comptime Out=Tuple[Data,Token[0]] if retain else Result[Tuple[Int,Token[0]],Token[2]]
