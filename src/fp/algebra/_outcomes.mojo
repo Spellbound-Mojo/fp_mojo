@@ -1,7 +1,7 @@
 """Validation and outcome composition derived from existing family operations."""
 
 from std.builtin.rebind import downcast, rebind_var
-from fp._internal.errors import _CommonError, _ErrorCompatible
+from fp._internal.errors import _CommonError, _CommonErrorCompatible, _ErrorCompatible
 from fp.callables.protocols import Unary, UnaryContract, OnceUnary, MutableUnary, BorrowCallContract
 from fp.callables.invoke import RepeatableUnary
 from fp.callables._receiver import _OnceBorrowAvailable, _RepeatableBorrow, _MutableBorrowRef, _MutableUnaryRef, _unary_once_as, _borrow_once_as
@@ -43,7 +43,7 @@ struct EnsureContract[I: ApplicativeError & Monad, V: Movable & Deinitable,
     """The factory produces the exact selected stored-error type and origins."""
     comptime CarrierCompatible = Self.I._ErrorCarrier[Self.V]
     """The source belongs to the selected stored-error layer."""
-    comptime CallbackErrorsCompatible = Self.P.Failure == Never or Self.G.Failure == Never or Self.P.Failure == Self.G.Failure
+    comptime CallbackErrorsCompatible = _CommonErrorCompatible[Self.P.Failure, Self.G.Failure]
     """The callbacks share an exact native error type or cannot raise."""
     comptime _Bind = BindContract[Self.I, Self.V, Self.Continuation]
     comptime BindCompatible = Self._Bind.FamilyCompatible

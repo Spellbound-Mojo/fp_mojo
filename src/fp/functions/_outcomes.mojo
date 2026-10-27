@@ -1,6 +1,6 @@
 """Selected outcome metadata; existing Result and family primitives execute it."""
 from std.builtin.rebind import downcast, rebind_var
-from fp._internal.errors import _CommonError
+from fp._internal.errors import _CommonError, _CommonErrorCompatible
 from fp.algebra.protocols import Functor, ApplicativeError, Monad, _MappedFamily
 from fp.algebra.instances import ResultFamily
 from fp.algebra._outcomes import _Redeem
@@ -78,7 +78,7 @@ struct _OutcomeContract[I: Functor, V: Movable & Deinitable,
     """The source belongs to the selected outcome policy."""
     comptime OutputCompatible = Self._Selection.Supported and Self._Selection.Policy.OutputCompatible[Self.V,Self.H,Self.K]
     """Handlers agree on a value type or produce compatible selected effects."""
-    comptime NativeErrorsCompatible = Self.H.Error == Never or Self.K.Error == Never or Self.H.Error == Self.K.Error
+    comptime NativeErrorsCompatible = _CommonErrorCompatible[Self.H.Error, Self.K.Error]
     """The callbacks share a native error type or at least one cannot raise."""
     comptime OperationCompatible = Self._Selection.Supported and Self._Selection.Policy.OperationCompatible[Self.V,Self.H,Self.K]
     """The selected family admits materialization and the final map or bind."""

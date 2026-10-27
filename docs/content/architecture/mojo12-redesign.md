@@ -3030,6 +3030,31 @@ Qualification passed generator parity, all 49 tooling tests and strict
 documentation validation. Verified source hashes match the preceding pass
 for every Mojo module.
 
+### Outcome metadata shares the exact-error compatibility predicate
+
+Validation and selected outcome handling now project callback error admission
+through the existing `_CommonErrorCompatible` predicate. Its operands are total
+type equalities; eager Boolean evaluation preserves symbolic equality evidence
+on Mojo 1.2. Both callbacks must raise the same exact native error or at least
+one must raise Never. No conversion or common representation is inferred.
+
+Only the two metadata projections and their imports change. All 14 library
+function bodies remain byte-identical, including native-error evidence at
+invocation. Existing generic wrappers retain combined and component proofs.
+Maintained literal-proof forwarders also express the old equality disjunction
+for both value and effect redemption; mixed pure/raising runtime cases preserve
+the exact raised Int. The existing validation control retains its literal proof.
+
+Five preliminary programs passed, including a complete scratch copy of the
+outcome generic client using the old literal error conditions. Qualification
+then uses the maintained proof cases and unchanged rejection fixtures.
+
+Qualification passed 156 source/package O0/O3 boundary checks, 150 selected
+test programs, 24 rejection fixtures, generator parity, all 49 tooling tests
+and strict documentation validation. The interrupted initial run is retained
+separately; all reported qualification gates completed on the unchanged
+prototype after the environment restart.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

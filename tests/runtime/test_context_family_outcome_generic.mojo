@@ -78,8 +78,36 @@ struct Keep[I:ApplicativeError,A:Movable & Deinitable](Unary):
     def call(self,var a:Self.A)->Self.Out:return Self.I.pure(7)
 
 
+def literal_values[I:Functor,V:Movable & Deinitable,H:UnaryContract & Movable & Deinitable,K:UnaryContract & Movable & Deinitable](var v:V,var h:H,var k:K) raises RedeemContract[I,V,H,K].Error ->Pipeline[RedeemContract[I,V,H,K].Family,RedeemContract[I,V,H,K].Out] where RedeemContract[I,V,H,K].InputCompatible and RedeemContract[I,V,H,K].CarrierCompatible and RedeemContract[I,V,H,K].OutputCompatible and (H.Error == Never or K.Error == Never or H.Error == K.Error) and RedeemContract[I,V,H,K].OperationCompatible:
+    return values[I](v^,h^,k^)
+
+def literal_effects[I:Functor,V:Movable & Deinitable,H:UnaryContract & Movable & Deinitable,K:UnaryContract & Movable & Deinitable](var v:V,var h:H,var k:K) raises RedeemWithContract[I,V,H,K].Error ->Pipeline[RedeemWithContract[I,V,H,K].Family,RedeemWithContract[I,V,H,K].Out] where RedeemWithContract[I,V,H,K].InputCompatible and RedeemWithContract[I,V,H,K].CarrierCompatible and RedeemWithContract[I,V,H,K].OutputCompatible and (H.Error == Never or K.Error == Never or H.Error == K.Error) and RedeemWithContract[I,V,H,K].OperationCompatible:
+    return effects[I](v^,h^,k^)
+
+@fieldwise_init
+struct Raised[A: Movable & Deinitable](Unary):
+    comptime Arg = Self.A
+    comptime Out = String
+    comptime Error = Int
+    def call(self, var value: Self.A) raises Int -> String: raise 831
+
+
 def main() raises:
     comptime I = ResultFamily[String]
+    assert_equal(literal_values[I](I.pure(13),Show(),Explain()).get()._ok().value,"13")
+    assert_equal(literal_effects[I](I.pure(13),Changed[Int](),Changed[String]()).get()._err().value,7)
+    var literal_code = 0
+    try: _ = literal_values[I](I.pure(1),Raised[Int](),Explain()).get()
+    except error:
+        comptime assert type_of(error) == Int
+        literal_code = error
+    assert_equal(literal_code,831)
+    literal_code = 0
+    try: _ = literal_values[I](I.fail[Int](String("raised")),Show(),Raised[String]()).get()
+    except error:
+        comptime assert type_of(error) == Int
+        literal_code = error
+    assert_equal(literal_code,831)
     var selected = values[I](I.pure(3),Show(),Explain())
     comptime assert type_of(selected).I == I
     assert_equal(selected^.get()._ok().value,"3")
