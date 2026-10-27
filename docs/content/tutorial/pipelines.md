@@ -153,6 +153,22 @@ stage runs once; abandoning it releases both inputs. Move-only accumulators and
 borrowed origins are preserved. Use `.fold_effect[Target](initial).run(step)` to
 select a custom or deferred Monad policy explicitly.
 
+## Sum effectful values
+
+Use `.sum_by_effect(transform)` when each item produces a numeric Optional,
+Result or List, and `.sum_effect()` when those numeric effects already exist.
+Both infer the native effect, numeric type and SIMD lane count. They project
+and add in one source pass, without collecting an intermediate list:
+
+<!-- example: docs/examples/effectful_sums.mojo -->
+
+Empty input yields zero inside the effect. Optional stops on absence, Result
+stops on the first stored error, and List enumerates sums in branch order.
+Addition follows source order, including floating-point rounding. Native callback
+errors still use `.raising[E]()`. Use `[Target]` for a custom Monad policy;
+Reader and State defer pulls and callbacks until execution. These conveniences
+use the same fold as `fold_map_effect[Target, Monoid]`.
+
 ## Choose a constant or lazy default
 
 Use `.get_or(value)` to finish an Optional or Result pipeline with an already

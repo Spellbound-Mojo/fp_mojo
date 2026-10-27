@@ -368,10 +368,12 @@
         "find_effect",
         "find_map_effect",
         "fold_effect",
-        "fold_map_effect"
+        "fold_map_effect",
+        "sum_by_effect",
+        "sum_effect"
       ],
       "status": "selected",
-      "families": "Native source; queries and seeded folds infer native Optional, Result or List Monad targets. Explicit targets retain custom policies; monoid folds keep explicit target and monoid bindings.",
+      "families": "Native source; queries, seeded folds and numeric sums infer native Optional, Result or List Monad targets. Explicit targets retain custom policies; general monoid folds keep explicit target and monoid bindings.",
       "callbacks": "Borrowing predicates; consuming unary/binary transformations; repeatable shared or mutable library receivers. Bind fold_effect(initial).run(step).",
       "ownership": "Moves inputs, retains first matches and releases partial accumulators; Arrays use O(N) temporary List storage. An unexecuted fold binding owns and destroys its source and seed.",
       "errors": "Exact native errors, stored target failures and borrowed origins remain distinct.",
@@ -381,7 +383,8 @@
         "src/fp/algebra/protocols.mojo",
         "src/fp/iteration/_advance.mojo",
         "src/fp/algebra/instances.mojo",
-        "src/fp/functions/context.mojo"
+        "src/fp/functions/context.mojo",
+        "src/fp/iteration/reductions.mojo"
       ],
       "evidence": [
         "tests/runtime/test_context_effect_queries_behavior.mojo",
@@ -396,7 +399,14 @@
         "docs/examples/inferred_fold.mojo",
         "tests/ownership/test_context_inferred_fold_ownership.mojo",
         "tests/compile_fail/inferred_fold_reuse.mojo",
-        "tests/compile_fail/inferred_fold_origin.mojo"
+        "tests/compile_fail/inferred_fold_origin.mojo",
+        "tests/runtime/test_context_effect_sum_behavior.mojo",
+        "tests/runtime/test_context_effect_sum_effects.mojo",
+        "tests/runtime/test_context_effect_sum_thin.mojo",
+        "tests/ownership/test_context_effect_sum_ownership.mojo",
+        "tests/compile_fail/effect_sum_payload.mojo",
+        "tests/compile_fail/effect_sum_origin.mojo",
+        "docs/examples/effectful_sums.mojo"
       ]
     },
     {

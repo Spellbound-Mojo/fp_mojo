@@ -3508,3 +3508,27 @@ which preserves custom and deferred policies. Binding itself evaluates no
 callback, and native field ownership releases abandoned sources and seeds.
 The output keeps the selected callback error independently of its stored error
 and preserves accumulator origins, including through deferred execution.
+
+### Numeric effect reductions
+
+`Pipeline.sum_by_effect(transform)` and `sum_effect()` select the existing
+numeric SIMD sum monoid and execute through `FoldMapContract` and the canonical
+mapped-fold driver. Int is a native scalar SIMD on Mojo 1.2; the same monoid
+preserves its exact type. No source loop, addition policy, callback owner,
+error propagation or deferred execution is reimplemented.
+
+The admission generator has small native boundaries for Optional, Result and
+List. Mojo 1.2 cannot infer both an omitted family and SIMD parameters through
+`J.Element[R]`. Native boundaries expose the carrier shape directly; Result
+uses its existing payload/error projections because its carrier alias is also
+opaque to reverse inference. An explicit target instead uses the already known
+`J.Element` projection. All paths infer numeric type and width, select the same
+monoid, adapt callbacks through existing metadata and check the same contract.
+Unsupported payloads, conventions, receiver kinds, native errors and non-Monad
+policies fail ordinary calls without explicit callback type bindings.
+
+The operation preserves left-associated addition, including floating-point
+rounding, rather than reassociating numeric work. Empty input lifts zero;
+Optional and Result stop on failure, and List retains ordered branches. Owned
+inputs and callbacks are consumed once; borrowed error origins remain exact.
+Reader and State retain their existing deferred source/callback timing.

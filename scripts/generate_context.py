@@ -505,6 +505,43 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
 ''')
 
 
+    # Numeric shape inference must see the native carrier directly on 1.2;
+    # inferring both J and SIMD parameters through J.Element[R] is opaque.
+    # These boundaries select the existing sum monoid and FoldMapContract.
+    # An explicit J uses its known Element projection, including custom effects.
+    for name in ("sum_by_effect", "sum_effect"):
+        element = "_FoldElement[Self.V]"
+        operation = EFFECT_REDUCTIONS["fold_map_effect"]
+        monoid = "_SIMDSum[dtype, size]"
+        for carrier, family in (
+            ("Optional", "OptionalFamily"),
+            ("Result", ""),
+            ("List", "ListFamily"),
+            (None, "J"),
+        ):
+            callbacks = owning_callbacks("owned", element, "function") if name == "sum_by_effect" else [dict(
+                params=[], argument="", adapter_type=f"Identity[{element}]",
+                build=f"Identity[{element}]()", result=element, conditions=[])]
+            for cb in callbacks:
+                params = list(cb["params"])
+                if "//" not in params: params += ["//"]
+                params[params.index("//"):params.index("//")] = ["dtype: DType", "size: SIMDLength"]
+                if carrier is None:
+                    params.insert(params.index("//") + 1, "J: Monad")
+                    shape = f"J.Element[{cb['result']}] == {monoid}.Value"
+                elif carrier == "Result":
+                    family = f"ResultFamily[_Failure[{cb['result']}]]"
+                    shape = f"conforms_to({cb['result']}, _ResultType) and _Success[{cb['result']}] == {monoid}.Value"
+                else:
+                    shape = f"{cb['result']} == {carrier}[{monoid}.Value]"
+                plan = operation.bind(family, "Self.V", element, cb["adapter_type"], cb["build"], cb["result"], monoid=monoid)
+                contract = plan.contract
+                conditions = cb["conditions"] + [shape, f"{monoid}.Admitted", contract + ".Compatible"]
+                emit(name, cb, params, cb["argument"], contract + ".Out", contract + ".Error", family,
+                     conditions, plan.invoke(contract + ".Error", "self.value^"),
+                     "Sum numeric effects in source order through the target Monad; empty input lifts zero.")
+
+
 
     for cb in owning_callbacks("owned", "Self.I.Element[Self.V]", "function"):
         params = inferred_target_parameters(cb)
@@ -1113,6 +1150,8 @@ def documented(source):
         "P1": "The second native register operand type, including its origins.",
         "R": "The first callback result type, inferred from the callback.",
         "S": "The second callback result type, inferred from the callback.",
+        "dtype": "The numeric SIMD element type, inferred from the effect payload.",
+        "size": "The SIMD lane count, inferred from the effect payload.",
         "K": "The native dictionary key type.",
         "H": "The native dictionary hasher type, preserved by transformations.",
         "T": "The carrier payload type.",

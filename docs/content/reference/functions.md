@@ -366,6 +366,12 @@ accepts `run[Target](step)`. Both forms use the same fold contract and execution
 Existing `Piped.fold_effect(step, initial)` retains its original syntax.
 `fold_map_effect[Target, Monoid](transform)` consumes items into effectful monoid
 values and combines them in order, starting with the identity.
+`sum_by_effect(transform)` selects numeric addition automatically for native
+Optional, Result and List results; `sum_effect()` sums existing numeric effects.
+Both support Int and integral or floating-point SIMD payloads, including scalar
+floats. Empty input lifts zero; sums preserve source and branch order and stop
+on target failure. An explicit `[Target]` retains custom Monad policies without
+requiring numeric type annotations. They share the existing monoid fold.
 
 These operations require repeatable library callbacks; consuming unary and
 binary callbacks may use mutable receiver state. Reader and State defer source
@@ -436,8 +442,8 @@ accumulates stored errors through the same operations.
 
 <!-- example: docs/examples/selected_workflow.mojo -->
 
-This checkout selects its native error once, traverses into Result, folds the
-collected amounts, and combines shipping and tax. Invalid amounts remain stored
+This checkout selects its native error once, parses and sums into Result in
+one pass, and combines shipping and tax. Invalid amounts remain stored
 errors; transport failures remain native raised errors. `value_or(explain)`
 turns either stored outcome into the final display text without private access.
 

@@ -63,6 +63,9 @@
     "docs/examples/effectful_reductions.mojo": {
       "stdout": "total: 16\nlarge value found\nall positive: True\nnegative input failed: True\n"
     },
+    "docs/examples/effectful_sums.mojo": {
+      "stdout": "total: 27\nerror: invalid amount\nparsed: 2\nknown: 5\n"
+    },
     "docs/examples/effects_reader.mojo": {
       "stdout": "before run: calls = 0\nstandard total: 41\nfree shipping total: 36 ; original shipping: 5\nafter both runs: calls = 2\n"
     },
