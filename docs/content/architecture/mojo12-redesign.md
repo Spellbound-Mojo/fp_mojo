@@ -3164,6 +3164,25 @@ precompile hit the existing 60-second limit under concurrent compiler load;
 a fresh run passed at the unchanged limit. Both reports are retained, and the
 measurement is a runner check rather than a performance comparison.
 
+### Derived recovery projects one primitive family operation
+
+Primitive recovery metadata now lives beside the existing map, bind and
+combination descriptors. Its three projections retain the family's own
+admission, handled carrier and exact construction error. Value recovery,
+conditional recovery, error observation, outcome materialization and deferred
+continuation selection use that owner.
+
+Derived operations retain their existing input, carrier, receiver and native
+error guards, including their order and conditional projection boundaries.
+The private descriptor adapts no handler and adds no invocation path. Native
+error witnesses in execution bodies remain literal family projections.
+
+Qualification passed 100 recovery and 40 native family-recovery boundary
+checks across source/package O0/O3, 160 selected programs, 59 rejection
+fixtures and all four builds/runs of the maintained recovery example.
+Generator parity, all 53 tooling tests, unchanged API generation and strict
+documentation validation passed. All 30 execution bodies remain unchanged.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

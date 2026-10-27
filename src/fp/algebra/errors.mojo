@@ -2,7 +2,7 @@
 
 from .protocols import _pure, _CALLBACK_ADMISSION, Functor, Applicative, ApplicativeError, ErrorMapping, Monad
 from .error_mapping import MapErrContract, _map_err
-from ._primitive_contracts import MapContract, BindContract, CombineContract
+from ._primitive_contracts import MapContract, BindContract, CombineContract, _HandleContract
 from .instances import ResultFamily
 from fp.data._result import Result, _ResultType
 from std.builtin.rebind import downcast, rebind_var
@@ -88,7 +88,8 @@ struct RecoverContract[I: ApplicativeError, V: Movable & Deinitable, H: UnaryCon
     """The source belongs to the family's selected stored-error layer."""
     comptime ReceiverCompatible = _OnceUnaryAvailable[Self.H]
     """The handler supplies a callable consuming, mutable or shared receiver."""
-    comptime OperationCompatible = Self.I._Handles[Self.V, Self.Handler] if Self.InputCompatible and Self.OutputCompatible and Self.CarrierCompatible and Self.ReceiverCompatible else False
+    comptime _Handle = _HandleContract[Self.I, Self.V, Self.Handler]
+    comptime OperationCompatible = Self._Handle.FamilyCompatible if Self.InputCompatible and Self.OutputCompatible and Self.CarrierCompatible and Self.ReceiverCompatible else False
     """The family's declared admission of the value-lifting handler."""
     comptime Compatible = Self.InputCompatible and Self.OutputCompatible and Self.CarrierCompatible and Self.ReceiverCompatible and Self.OperationCompatible
     """Complete selected entry admission, including the adapted family operation."""
@@ -96,9 +97,9 @@ struct RecoverContract[I: ApplicativeError, V: Movable & Deinitable, H: UnaryCon
     """The unchanged family for fluent continuation over Out."""
     comptime Handler = _Recovered[Self.I, Self.H]
     """The existing adapter lifting a successful handler value through pure."""
-    comptime Out = Self.I.Handled[Self.V, Self.Handler]
+    comptime Out = Self._Handle.Out
     """The family's exact recovered carrier, including deferred representations."""
-    comptime Error = Self.I.HandleError[Self.V, Self.Handler]
+    comptime Error = Self._Handle.Error
     """The family's exact native construction error, separate from stored errors."""
 
 
@@ -106,9 +107,10 @@ struct _Continue[M: Monad, recover: Bool]:
     """Select the base operation; deferred transformers own only their run boundary."""
     comptime Errors = downcast[Self.M, ApplicativeError]
     comptime _Bind[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = BindContract[Self.M, V, H]
-    comptime FamilyCompatible[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self.Errors._Handles[V, H] if Self.recover else Self._Bind[V, H].FamilyCompatible
-    comptime Out[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self.Errors.Handled[V, H] if Self.recover else Self._Bind[V, H].Out
-    comptime Error[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self.Errors.HandleError[V, H] if Self.recover else Self._Bind[V, H].Error
+    comptime _Handle[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = _HandleContract[Self.Errors, V, H]
+    comptime FamilyCompatible[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self._Handle[V, H].FamilyCompatible if Self.recover else Self._Bind[V, H].FamilyCompatible
+    comptime Out[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self._Handle[V, H].Out if Self.recover else Self._Bind[V, H].Out
+    comptime Error[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self._Handle[V, H].Error if Self.recover else Self._Bind[V, H].Error
 
     @staticmethod
     def apply[E: Movable & Deinitable, V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V
@@ -181,7 +183,8 @@ struct OrElseIfContract[I: ApplicativeError, V: Movable & Deinitable,
     # Predicate result equality belongs to entry admission, not to projecting
     # the continuation's carrier. Keeping it out of this conditional lets
     # native generic wrappers forward a symbolic R == Bool proof unchanged.
-    comptime OperationCompatible = Self.I._Handles[Self.V, Self.Continuation] if Self.InputCompatible and Self.CarrierCompatible and Self.OutputCompatible and Self.NativeErrorsCompatible and Self.ReceiverCompatible else False
+    comptime _Handle = _HandleContract[Self.I, Self.V, Self.Continuation]
+    comptime OperationCompatible = Self._Handle.FamilyCompatible if Self.InputCompatible and Self.CarrierCompatible and Self.OutputCompatible and Self.NativeErrorsCompatible and Self.ReceiverCompatible else False
     """The family's declared admission of the conditional continuation."""
     comptime Compatible = Self.InputCompatible and Self.PredicateCompatible and Self.CarrierCompatible and Self.OutputCompatible and Self.NativeErrorsCompatible and Self.ReceiverCompatible and Self.OperationCompatible
     """Complete selected conditional recovery admission."""
@@ -189,9 +192,9 @@ struct OrElseIfContract[I: ApplicativeError, V: Movable & Deinitable,
     """The unchanged family for fluent continuation."""
     comptime Continuation = _ConditionalRecovery[Self.I, Self.I.Element[Self.V], Self.P, Self.H]
     """The existing conditional recovery continuation."""
-    comptime Out = Self.I.Handled[Self.V, Self.Continuation]
+    comptime Out = Self._Handle.Out
     """The family's exact handled carrier, including deferred representations."""
-    comptime Error = Self.I.HandleError[Self.V, Self.Continuation]
+    comptime Error = Self._Handle.Error
     """Construction error; callback and failure-constructor errors may remain deferred."""
 
 
@@ -334,12 +337,13 @@ struct _ErrorObserverContract[I: ApplicativeError, V: Movable & Deinitable,
         if Self.effect else _CommonErrorCompatible[Self.C.Failure,Self.I.FailError[Self.I.Element[Self.V]]]
     ) if Self.InputCompatible and Self.FamilyCompatible else False
     comptime ReceiverCompatible = _OnceBorrowAvailable[Self.C]
-    comptime OperationCompatible = (Self.I._Handles[Self.V, Self.Handler] and (Self._Finish.Compatible if Self.effect else True)) if Self.InputCompatible and Self.FamilyCompatible and Self.NativeErrorsCompatible and Self.ReceiverCompatible else False
+    comptime _Handle = _HandleContract[Self.I, Self.V, Self.Handler]
+    comptime OperationCompatible = (Self._Handle.FamilyCompatible and (Self._Finish.Compatible if Self.effect else True)) if Self.InputCompatible and Self.FamilyCompatible and Self.NativeErrorsCompatible and Self.ReceiverCompatible else False
     comptime Compatible = Self.InputCompatible and Self.FamilyCompatible and Self.NativeErrorsCompatible and Self.ReceiverCompatible and Self.OperationCompatible
     comptime Family = Self.I
     comptime Handler = _ObserveError[Self.I, Self.I.Element[Self.V], Self.C, Self.effect]
-    comptime Out = Self.I.Handled[Self.V, Self.Handler]
-    comptime Error = Self.I.HandleError[Self.V, Self.Handler]
+    comptime Out = Self._Handle.Out
+    comptime Error = Self._Handle.Error
 
 
 trait _TapErrPolicy:

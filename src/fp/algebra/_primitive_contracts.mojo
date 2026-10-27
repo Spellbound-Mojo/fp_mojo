@@ -3,7 +3,7 @@
 Public contracts and package initializers re-export these exact declarations.
 This module depends only on family protocols and callable receiver metadata.
 """
-from .protocols import _MappedFamily, Functor, Monad, Applicative
+from .protocols import _MappedFamily, Functor, Monad, Applicative, ApplicativeError
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract
 from fp.callables.invoke import _OnceUnaryAvailable, _OnceBinaryAvailable, _OnceThunkAvailable
 
@@ -67,6 +67,19 @@ struct BindContract[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movabl
     """The exact carrier produced by the family."""
     comptime Error = Self.I.BindError[Self.V, Self.F]
     """The exact native error raised when constructing the bound carrier."""
+
+
+struct _HandleContract[I: ApplicativeError, V: Movable & Deinitable,
+                       H: UnaryContract & Movable & Deinitable]:
+    """Primitive family recovery metadata, without derived entry constraints.
+
+    Derived operations retain their own payload, receiver, carrier and native
+    error guards. This descriptor projects the family's exact operation and
+    introduces no value lifting, handler adaptation or execution boundary.
+    """
+    comptime FamilyCompatible = Self.I._Handles[Self.V, Self.H]
+    comptime Out = Self.I.Handled[Self.V, Self.H]
+    comptime Error = Self.I.HandleError[Self.V, Self.H]
 
 
 struct CombineContract[I: Applicative, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable]:

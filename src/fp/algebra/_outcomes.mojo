@@ -8,7 +8,7 @@ from fp.callables._receiver import _OnceBorrowAvailable, _RepeatableBorrow, _Mut
 from fp.callables._conditional import _guard_owned
 from fp.data._result import Result, _transformed, _fold_result_owned
 from .protocols import _pure, Applicative, ApplicativeError, Monad
-from ._primitive_contracts import MapContract, BindContract
+from ._primitive_contracts import MapContract, BindContract, _HandleContract
 from ._adapt import _fail_as, _map_as, _or_else_as, _flat_map_as
 from .errors import _Recovered
 from ._sequencing import _EffectRetain
@@ -107,9 +107,10 @@ struct _Materialize[I: ApplicativeError, V: Movable & Deinitable]:
     comptime _Map = MapContract[Self.I, Self.V, Self.Wrap]
     comptime Mapped = Self._Map.Out
     comptime MapCompatible = Self._Map.FamilyCompatible
-    comptime HandleCompatible = Self.I._Handles[Self.Mapped, Self.Recover]
-    comptime Out = Self.I.Handled[Self.Mapped, Self.Recover]
-    comptime Error = _CommonError[Self._Map.Error, Self.I.HandleError[Self.Mapped, Self.Recover]]
+    comptime _Handle = _HandleContract[Self.I, Self.Mapped, Self.Recover]
+    comptime HandleCompatible = Self._Handle.FamilyCompatible
+    comptime Out = Self._Handle.Out
+    comptime Error = _CommonError[Self._Map.Error, Self._Handle.Error]
     @staticmethod
     def apply[X: Movable & Deinitable](var source: Self.V) raises X -> Self.Out:
         comptime assert _ErrorCompatible[X, Self.I.MapError[Self.V, Self.Wrap]]
