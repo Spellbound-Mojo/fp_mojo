@@ -8,6 +8,7 @@ produced at most once. Over IdentityFamily the aliases are the native Optional
 and Result families.
 """
 from fp.algebra._branches import _OptionalGuard, _ResultGuard
+from fp.algebra._result_accumulation import _ResultAccumulator, _FirstError
 from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, rebind, downcast
 from fp.algebra.protocols import (Monad, Applicative, ApplicativeError, ErrorMapping, _CALLBACK_ADMISSION, _RecoveryShape, _MappedFamily, _Lifting, _Accumulate, _Append, _Present, _BindFirst, _Lazy, _UnaryView)
@@ -136,27 +137,8 @@ struct _OptionalAcc[K: _Accumulate](_Accumulate):
         return Optional(Self.K.combine(acc.unsafe_take(), item.unsafe_take()))
 
 
-struct _ResultAcc[K: _Accumulate, E: Movable & Deinitable](_Accumulate):
-    """Accumulate inside Result: the first stored error ends accumulation."""
-    comptime Acc = Result[Self.K.Acc, Self.E]
-    comptime Item = Result[Self.K.Item, Self.E]
-    comptime Error = Self.K.Error
-    @staticmethod
-    def start() raises Self.Error -> Self.Acc:
-        return Result[Self.K.Acc, Self.E](Ok(Self.K.start()))
-    @staticmethod
-    def live(ref acc: Self.Acc) -> Bool:
-        return acc.is_ok() and Self.K.live(acc._ok().value)
-    @staticmethod
-    def combine(var acc: Self.Acc, var item: Self.Item) raises Self.Error -> Self.Acc:
-        if acc.is_err():
-            return acc^
-        var current = acc^._take_ok()
-        if not Self.K.live(current):
-            return Result[Self.K.Acc, Self.E](Ok(current^))
-        if item.is_err():
-            return Result[Self.K.Acc, Self.E](Err(item^._take_err()))
-        return Result[Self.K.Acc, Self.E](Ok(Self.K.combine(current^, item^._take_ok())))
+# Layers and native Result loops share the same first-error accumulation owner.
+comptime _ResultAcc[K: _Accumulate, E: Movable & Deinitable] = _ResultAccumulator[K, _FirstError[E]]
 
 
 struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError), ErrorMapping where conforms_to(M, ErrorMapping)):

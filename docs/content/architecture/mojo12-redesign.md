@@ -1556,6 +1556,28 @@ report retains the two audit findings caused by that stale expectation.
 Evidence is retained in `.cache/quality-cycle18/qualified-main/` and the focused
 follow-up under `.cache/quality-cycle18/diagnostic-followup/`.
 
+### Shared first-error accumulator
+
+Result transformer layers now use `_ResultAccumulator[K, _FirstError[E]]`, the
+same owner as native Result collection. The private `_ResultAcc` spelling is an
+alias, so there is one implementation of start, liveness and first-error
+combination. Native errors, early termination and ownership remain unchanged.
+
+The ownership control exercises all 16 combinations of left/right stored
+errors, live/stopped accumulation and a raising combine, plus a raising start.
+It checks the exact native error, selected result, liveness and combine call
+counts, and one destruction for each move-only input. A pre-change versus
+post-change trace comparison also retained destruction order. Optional's loop
+is deliberately separate: routing it through the existing Optional accumulator
+would introduce an additional observable liveness query.
+
+Qualification passed four source/package O0/O3 ownership checks, 34 packaged
+traversal programs, all 128 traversal rejection fixtures and 48 tooling tests.
+Reports retain unchanged inputs and packages and no audit failures. Strict
+documentation checks cover 318 public exports and 80 examples. Evidence is in
+`.cache/quality-cycle19/qualified-main/`; public syntax and signatures are
+unchanged.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.
