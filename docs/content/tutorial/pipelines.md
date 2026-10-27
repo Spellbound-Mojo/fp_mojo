@@ -88,7 +88,7 @@ inside the selected target effect and continue in that effect's family:
 
 <!-- example: docs/examples/inferred_traversal.mojo -->
 
-This follows Cats' `traverse` and `sequence` workflow. Native Optional stops on
+This follows [Cats' `traverse` and `sequence` workflow](https://github.com/typelevel/cats/blob/main/core/src/main/scala/cats/Traverse.scala). Native Optional stops on
 absence, Result stops on its first stored error, and List enumerates ordered
 combinations. Raised callback errors still use `.raising[E]()`; they are
 independent of the stored Result error. Payload types, origins and permitted
@@ -97,9 +97,23 @@ move-only ownership are preserved.
 Use an explicit family when choosing another policy, such as
 `.traverse[ValidationFamily[Policy]](validate)` for error accumulation or
 `.traverse[Reader[Environment]](make_action)` for deferred execution. Existing
-explicit family and callback type bindings remain available. Target inference
-currently applies to `traverse` and `sequence`; derived traversal methods keep
-their explicit target argument.
+explicit family and callback type bindings remain available.
+
+The same target inference applies to the other Pipeline traversal methods:
+
+| Call | Result on success |
+|---|---|
+| `traverse_tap(effect)` | Run effects while retaining the original payloads |
+| `filter_effect(predicate)` | Keep payloads whose effect returns True |
+| `traverse_filter(transform)` | Transform into effectful Optionals, keeping present values |
+| `flat_traverse(transform)` | Transform into effectful collections and flatten the inner source shape |
+| `traverse_void(effect)` | Run effects and discard their successful payloads |
+| `sequence_filter()`, `flat_sequence()`, `sequence_void()` | Apply those policies to effects that already exist |
+
+See the [complete traversal example](../reference/combinators.md#flatten-and-filter-effects).
+Each method preserves its existing source-shape, ownership and error policy;
+an explicit target remains the way to select validation, deferred execution or
+a custom family.
 
 ## Choose a constant or lazy default
 

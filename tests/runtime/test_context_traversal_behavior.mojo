@@ -1,6 +1,6 @@
 """Borrowing traversal retains source shape and the target's sequencing policy."""
 from fp.functions import pipeline
-from fp.algebra import OptionalFamily, ResultFamily, ListFamily, ValidationFamily, ListMonoid
+from fp.algebra import OptionalFamily, ValidationFamily, ListMonoid
 from fp.data import Result, Ok, Err
 from std.memory import ArcPointer
 from std.testing import assert_equal
@@ -10,18 +10,20 @@ def even(value: Int) -> Optional[Bool]: return Optional(value % 2 == 0)
 def count(var values: List[Int]) -> Int: return len(values)
 
 def main() raises:
-    assert_equal(pipeline(5).traverse_tap[OptionalFamily](present).get().value(), 5)
-    var kept = pipeline(List[Int]([1, 2, 3])).traverse_tap[OptionalFamily](present).get()
+    assert_equal(pipeline(List[Int]([1])).traverse_tap[OptionalFamily, type_of(present)](present).get_or(List[Int]()), [1])
+    assert_equal(pipeline(List[Int]([1, 2])).filter_effect[OptionalFamily, type_of(even)](even).get_or(List[Int]()), [2])
+    assert_equal(pipeline(5).traverse_tap(present).get().value(), 5)
+    var kept = pipeline(List[Int]([1, 2, 3])).traverse_tap(present).get()
     assert_equal(kept.value(), List[Int]([1, 2, 3]))
-    assert_equal(pipeline(List[Int]([1, 2, 3, 4])).filter_effect[OptionalFamily](even).map(count).get().value(), 2)
-    assert_equal(pipeline(Optional(2)).filter_effect[OptionalFamily](even).get().value().value(), 2)
-    assert_equal(Bool(pipeline(Optional(1)).filter_effect[OptionalFamily](even).get().value()), False)
-    assert_equal(Bool(pipeline(Optional[Int]()).filter_effect[OptionalFamily](even).get().value()), False)
-    assert_equal(pipeline(List[Int]()).traverse_tap[OptionalFamily](present).get().value(), List[Int]())
-    assert_equal(pipeline(List[Int]()).filter_effect[OptionalFamily](even).get().value(), List[Int]())
-    var source_error = pipeline(Result[Int, String](Err(String("source")))).traverse_tap[OptionalFamily](present).get()
+    assert_equal(pipeline(List[Int]([1, 2, 3, 4])).filter_effect(even).map(count).get().value(), 2)
+    assert_equal(pipeline(Optional(2)).filter_effect(even).get().value().value(), 2)
+    assert_equal(Bool(pipeline(Optional(1)).filter_effect(even).get().value()), False)
+    assert_equal(Bool(pipeline(Optional[Int]()).filter_effect(even).get().value()), False)
+    assert_equal(pipeline(List[Int]()).traverse_tap(present).get().value(), List[Int]())
+    assert_equal(pipeline(List[Int]()).filter_effect(even).get().value(), List[Int]())
+    var source_error = pipeline(Result[Int, String](Err(String("source")))).traverse_tap(present).get()
     assert_equal(source_error.value()._err().value, "source")
-    var source_ok = pipeline(Result[Int, String](Ok(7))).traverse_tap[OptionalFamily](present).get()
+    var source_ok = pipeline(Result[Int, String](Ok(7))).traverse_tap(present).get()
     assert_equal(source_ok.value()._ok().value, 7)
 
     var calls = ArcPointer(List[Int]())
@@ -29,11 +31,11 @@ def main() raises:
         calls[].append(value)
         if value == 3: return Err(String("target"))
         return Ok(value % 2 == 0)
-    var failed = pipeline(List[Int]([1, 2, 3, 4])).filter_effect[ResultFamily[String]](checked).get()
+    var failed = pipeline(List[Int]([1, 2, 3, 4])).filter_effect(checked).get()
     assert_equal(failed._err().value, "target")
     assert_equal(calls[], List[Int]([1, 2, 3]))
     calls[].clear()
-    var stopped = pipeline(List[Int]([1, 2, 3, 4])).traverse_tap[ResultFamily[String]](checked).get()
+    var stopped = pipeline(List[Int]([1, 2, 3, 4])).traverse_tap(checked).get()
     assert_equal(stopped._err().value, "target")
     assert_equal(calls[], List[Int]([1, 2, 3]))
     calls[].clear()
@@ -41,17 +43,17 @@ def main() raises:
         calls[].append(value)
         if value == 2: return None
         return Optional(True)
-    assert_equal(Bool(pipeline(List[Int]([1, 2, 3])).filter_effect[OptionalFamily](absent).get()), False)
+    assert_equal(Bool(pipeline(List[Int]([1, 2, 3])).filter_effect(absent).get()), False)
     assert_equal(calls[], List[Int]([1, 2]))
 
     def branches(value: Int) -> List[Bool]: return List[Bool]([False, True])
-    var choices = pipeline(List[Int]([1, 2])).filter_effect[ListFamily](branches).get()
+    var choices = pipeline(List[Int]([1, 2])).filter_effect(branches).get()
     assert_equal(len(choices), 4)
     assert_equal(choices[0], List[Int]())
     assert_equal(choices[1], List[Int]([2]))
     assert_equal(choices[2], List[Int]([1]))
     assert_equal(choices[3], List[Int]([1, 2]))
-    var repeated = pipeline(List[Int]([1, 2])).traverse_tap[ListFamily](branches).get()
+    var repeated = pipeline(List[Int]([1, 2])).traverse_tap(branches).get()
     assert_equal(len(repeated), 4)
     for values in repeated: assert_equal(values, List[Int]([1, 2]))
 

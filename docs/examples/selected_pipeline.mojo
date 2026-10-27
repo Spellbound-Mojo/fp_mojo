@@ -1,6 +1,5 @@
 """Select native errors once; stored Result errors remain independent."""
 from fp.functions import pipeline
-from fp.algebra import OptionalFamily, ResultFamily
 from fp.data import Result, Ok, Err, ok, err
 from std.testing import assert_equal
 
@@ -35,22 +34,22 @@ def main() raises:
 
     # Borrow payloads for effects, then continue in the selected target family.
     def audit(value: Int) -> Optional[String]: return Optional(String(value))
-    var audited = pipeline(List[Int]([1, 2, 3, 4])).traverse_tap[OptionalFamily](audit).get()
+    var audited = pipeline(List[Int]([1, 2, 3, 4])).traverse_tap(audit).get()
     assert_equal(audited.value(), List[Int]([1, 2, 3, 4]))
     def available(value: Int) -> Result[Bool, String]: return Ok(value % 2 == 0)
     def count(var values: List[Int]) -> Int: return len(values)
-    var selected = pipeline(audited.take()).filter_effect[ResultFamily[String]](available).map(count).get_or(0)
+    var selected = pipeline(audited.take()).filter_effect(available).map(count).get_or(0)
     assert_equal(selected, 2)
 
     # Transform optional values inside the effect, then compact the source.
     def optional_double(var value: Int) -> Optional[Optional[Int]]:
         return Optional(Optional(value * 2) if value % 2 == 0 else Optional[Int]())
-    var doubled = pipeline(List[Int]([1,2,3,4])).traverse_filter[OptionalFamily](optional_double).get()
+    var doubled = pipeline(List[Int]([1,2,3,4])).traverse_filter(optional_double).get()
     assert_equal(doubled.value(), List[Int]([4,8]))
     def expand(var value: Int) -> Optional[List[Int]]: return Optional(List[Int]([value,value+10]))
-    var expanded = pipeline(List[Int]([1,2])).flat_traverse[OptionalFamily](expand).get()
+    var expanded = pipeline(List[Int]([1,2])).flat_traverse(expand).get()
     assert_equal(expanded.value(), List[Int]([1,11,2,12]))
-    _ = pipeline(List[Int]([1,2])).traverse_void[OptionalFamily](optional_double).get()
+    _ = pipeline(List[Int]([1,2])).traverse_void(optional_double).get()
 
     # Reductions infer numeric types and select the resulting carrier family.
     assert_equal(pipeline(range(4)).sum_by(double).get(), 12)

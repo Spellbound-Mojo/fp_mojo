@@ -1,6 +1,5 @@
 """Compaction, flattening and discard move owners and release abandoned effects."""
 from fp.functions import pipeline
-from fp.algebra import OptionalFamily
 from fp.callables import OnceUnary
 from fp.effects import Reader, run
 from fp.data import Result, Ok, Err
@@ -36,12 +35,12 @@ def expand(var value: TraversalOwner) -> Optional[List[TraversalOwner]]:
 
 def main() raises:
     var drops = ArcPointer(0)
-    var selected = pipeline(owners(drops)).traverse_filter[OptionalFamily](select).get()
+    var selected = pipeline(owners(drops)).traverse_filter(select).get()
     assert_equal(selected.value()[0].id, 2); assert_equal(drops[], 2)
     _ = selected^
     assert_equal(drops[], 3)
     drops[] = 0
-    var flattened = pipeline(owners(drops)).flat_traverse[OptionalFamily](expand).get()
+    var flattened = pipeline(owners(drops)).flat_traverse(expand).get()
     assert_equal(flattened.value()[2].id, 3); assert_equal(drops[], 0)
     _ = flattened^
     assert_equal(drops[], 3)
@@ -50,27 +49,27 @@ def main() raises:
     nested.append(Optional(Optional(TraversalOwner(1,drops))))
     nested.append(Optional(Optional[TraversalOwner]()))
     nested.append(Optional(Optional(TraversalOwner(3,drops))))
-    var sequenced = pipeline(nested^).sequence_filter[OptionalFamily]().get()
+    var sequenced = pipeline(nested^).sequence_filter().get()
     assert_equal(len(sequenced.value()), 2); assert_equal(drops[], 0)
     _ = sequenced^
     assert_equal(drops[], 2)
     drops[] = 0
     var captures = ArcPointer(0)
-    var once = pipeline(Optional(TraversalOwner(1,drops))).traverse_filter[OptionalFamily](OnceSelect(TraversalOwner(9,captures))).get()
+    var once = pipeline(Optional(TraversalOwner(1,drops))).traverse_filter(OnceSelect(TraversalOwner(9,captures))).get()
     assert_equal(once.value().value().id, 1); assert_equal(captures[], 1)
     _ = once^
     assert_equal(drops[], 1)
-    var skipped = pipeline(Result[TraversalOwner,String](Err(String("source")))).traverse_void[OptionalFamily](OnceSelect(TraversalOwner(9,captures))).get()
+    var skipped = pipeline(Result[TraversalOwner,String](Err(String("source")))).traverse_void(OnceSelect(TraversalOwner(9,captures))).get()
     assert_equal(skipped.value()._err().value, "source"); assert_equal(captures[], 2)
     drops[] = 0
     var outputs = ArcPointer(0)
     def produce(var value: TraversalOwner) {outputs} -> Optional[TraversalOwner]:
         return Optional(TraversalOwner(value.id, outputs))
-    _ = pipeline(owners(drops)).traverse_void[OptionalFamily](produce).get()
+    _ = pipeline(owners(drops)).traverse_void(produce).get()
     assert_equal(drops[], 3); assert_equal(outputs[], 3)
     drops[] = 0; outputs[] = 0
     var array: Array[TraversalOwner,2] = [TraversalOwner(1,drops),TraversalOwner(2,drops)]
-    _ = pipeline(array^).traverse_void[OptionalFamily](produce).get()
+    _ = pipeline(array^).traverse_void(produce).get()
     assert_equal(drops[], 2); assert_equal(outputs[], 2)
     comptime Deferred = Reader[Int]
     def later(var value: TraversalOwner) -> Deferred.Pure[Optional[TraversalOwner]]:

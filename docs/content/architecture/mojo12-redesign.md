@@ -3459,3 +3459,18 @@ Library callable and native thin-pointer forms use the same target recognition.
 
 Traversal execution, output shape, error propagation, repeatability admission
 and cleanup remain owned by the existing TraverseContract and family operations.
+
+### Inferred targets across traversal policies
+
+The same target-parameter generator now serves retention, effectful filtering,
+compaction, flattening and discarded-output traversal, including their sequence
+forms. Callback result metadata or an existing effect element supplies the
+candidate family; each operation's existing contract still admits it. A generator
+guard permits signature defaults only for native callback type parameters, so
+future required policy parameters cannot silently acquire a fabricated default.
+
+Existing behavioral, origin and ownership tests now exercise ordinary inferred
+calls. Explicit validation and deferred targets retain coverage, along with
+positional native callback type bindings. No new execution path or callback
+overload is introduced, and the source/error layers of discarded Result traversal
+remain intact.

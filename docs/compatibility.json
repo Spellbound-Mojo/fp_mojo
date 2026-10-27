@@ -281,7 +281,7 @@
         "filter_effect"
       ],
       "status": "selected",
-      "families": "Traversable source; Applicative target; filtering also requires FunctorFilter; traverse and sequence infer native Optional, Result and List targets when J is omitted",
+      "families": "Traversable source; Applicative target; filtering also requires FunctorFilter; Native traversal methods infer native Optional, Result and List targets when J is omitted",
       "callbacks": "Consuming transform or borrowing retention callback; single-use where the source permits.",
       "ownership": "Original move-only values retained when the target does not duplicate them.",
       "errors": "Source errors, target failures and raised errors stay distinct.",
@@ -303,7 +303,9 @@
         "tests/runtime/test_context_inferred_traversal_native.mojo",
         "tests/ownership/test_context_inferred_traversal_ownership.mojo",
         "tests/compile_fail/inferred_traversal_error.mojo",
-        "tests/compile_fail/inferred_traversal_once.mojo"
+        "tests/compile_fail/inferred_traversal_once.mojo",
+        "tests/compile_fail/inferred_derived_filter_effect_once.mojo",
+        "tests/compile_fail/inferred_derived_traverse_tap_error.mojo"
       ]
     },
     {
@@ -315,19 +317,22 @@
         "flat_sequence"
       ],
       "status": "selected",
-      "families": "Traversable source with FunctorFilter for compaction or Monad for flattening; Applicative target",
+      "families": "Traversable source with FunctorFilter for compaction or Monad for flattening; Applicative target; native Optional, Result and List targets are inferred when J is omitted",
       "callbacks": "Consuming native or library callback; sequence uses Identity. Source and target determine repeatability.",
       "ownership": "Move-only payloads survive compaction and flattening when the target does not duplicate them.",
       "errors": "Source errors remain inside target effects; nested Result errors preserve the source family and origins.",
       "timing": "Compaction and flattening run inside the target; source traversal retains its callback-construction timing.",
       "owner": [
-        "src/fp/algebra/_traversal.mojo"
+        "src/fp/algebra/_traversal.mojo",
+        "src/fp/algebra/instances.mojo"
       ],
       "evidence": [
         "tests/runtime/test_context_traversal_composition_behavior.mojo",
         "tests/runtime/test_context_traversal_composition_effects.mojo",
         "tests/runtime/test_context_traversal_composition_native.mojo",
-        "tests/ownership/test_context_traversal_composition_ownership.mojo"
+        "tests/ownership/test_context_traversal_composition_ownership.mojo",
+        "docs/examples/traversal_composition.mojo",
+        "tests/compile_fail/inferred_derived_origin.mojo"
       ]
     },
     {
@@ -337,19 +342,22 @@
         "sequence_void"
       ],
       "status": "selected",
-      "families": "Native iterator/owned iterable, or Result traversal; Applicative target",
+      "families": "Native iterator/owned iterable, or Result traversal; Applicative target; native Optional, Result and List targets are inferred when J is omitted",
       "callbacks": "Consuming repeated transform for native sources; Result traversal can consume a single-use callback.",
       "ownership": "Discards successful payloads without an output collection. Array inputs use safe temporary storage.",
       "errors": "Source Result errors remain nested; target failures and native raised errors stay distinct.",
       "timing": "Uses target loop timing for native sources and source traversal timing for Result.",
       "owner": [
         "src/fp/algebra/_traversal.mojo",
-        "src/fp/functions/composition.mojo"
+        "src/fp/functions/composition.mojo",
+        "src/fp/algebra/instances.mojo"
       ],
       "evidence": [
         "tests/runtime/test_context_traversal_composition_behavior.mojo",
         "tests/runtime/test_context_traversal_composition_effects.mojo",
-        "tests/ownership/test_context_traversal_composition_ownership.mojo"
+        "tests/ownership/test_context_traversal_composition_ownership.mojo",
+        "docs/examples/traversal_composition.mojo",
+        "tests/compile_fail/inferred_derived_origin.mojo"
       ]
     },
     {

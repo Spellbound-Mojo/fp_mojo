@@ -1,6 +1,5 @@
 """Native errors, thin pointers and deferred callback errors keep their exact timing."""
 from fp.functions import pipeline
-from fp.algebra import OptionalFamily, ResultFamily
 from fp.data import Result, Ok
 from fp.effects import Reader, run
 from std.memory import ArcPointer
@@ -21,19 +20,19 @@ def string_decide(value: String) -> Optional[Bool]: return Optional(value.byte_l
 def exact_never() -> Optional[List[Int]]:
     var pointer: def(Int) thin -> Optional[Bool] = decide
     var never_pointer: def(Int) raises Never thin -> Optional[Bool] = never
-    var retained = pipeline(List[Int]([1, 2, 3])).raising[ContextTraversalFault]().traverse_tap[OptionalFamily](pointer).get()
+    var retained = pipeline(List[Int]([1, 2, 3])).raising[ContextTraversalFault]().traverse_tap(pointer).get()
     var values = retained.take()
-    return pipeline(values^).raising[ContextTraversalFault]().filter_effect[OptionalFamily](never_pointer).get()
+    return pipeline(values^).raising[ContextTraversalFault]().filter_effect(never_pointer).get()
 
 def main() raises:
     assert_equal(exact_never().value(), List[Int]([2]))
     var string_pointer: def(String) thin -> Optional[Bool] = string_decide
-    var strings = pipeline(List[String](["a", "ab"])).traverse_tap[OptionalFamily](string_pointer).get()
+    var strings = pipeline(List[String](["a", "ab"])).traverse_tap(string_pointer).get()
     assert_equal(strings.value(), List[String](["a", "ab"]))
-    assert_equal(pipeline(strings.take()).filter_effect[OptionalFamily](string_pointer).get().value(), List[String](["ab"]))
+    assert_equal(pipeline(strings.take()).filter_effect(string_pointer).get().value(), List[String](["ab"]))
     var native: def(Int) raises ContextTraversalFault thin -> Optional[Bool] = checked
     var code = 0
-    try: _ = pipeline(List[Int]([1, 2, 3, 4])).raising[ContextTraversalFault]().filter_effect[OptionalFamily](native).get()
+    try: _ = pipeline(List[Int]([1, 2, 3, 4])).raising[ContextTraversalFault]().filter_effect(native).get()
     except error:
         comptime assert type_of(error) == ContextTraversalFault
         code = error.code
@@ -43,7 +42,7 @@ def main() raises:
         calls[].append(value)
         if value == 2: raise ContextTraversalFault(20)
         return Ok(value)
-    try: _ = pipeline(List[Int]([1, 2, 3])).raising[ContextTraversalFault]().traverse_tap[ResultFamily[String]](fail).get()
+    try: _ = pipeline(List[Int]([1, 2, 3])).raising[ContextTraversalFault]().traverse_tap(fail).get()
     except error: code = error.code
     assert_equal(code, 20)
     assert_equal(calls[], List[Int]([1, 2]))

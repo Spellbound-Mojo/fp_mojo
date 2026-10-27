@@ -483,6 +483,8 @@ def methods(*, fold_stage=False):
         params[boundary:boundary] = [f'J: Applicative = _InferredApplicative[{cb["result"]}]']
         for i in range(boundary + 1, len(params)):
             name, constraint = params[i].split(": ", 1)
+            if not constraint.startswith("def("):
+                raise ValueError("Only native callback signatures may follow an inferred target")
             params[i] = f"{name}: {constraint} = {constraint}"
         return params
 
@@ -513,10 +515,7 @@ def methods(*, fold_stage=False):
         filtering = operation.filtering
         family = f"{operation.selected_family}[Self.I]"
         for cb in borrowing_callbacks("Self.I.Element[Self.V]", "function", repeatable=False):
-            params = list(cb["params"])
-            if "//" not in params:
-                params += ["//"]
-            params.insert(params.index("//") + 1, "J: Applicative")
+            params = inferred_target_parameters(cb)
             retained = operation.retained("Self.I.Element[Self.V]", "J", cb["adapter_type"], explicit=True)
             built = f"{retained}({cb['build']})"
             traversed = f"{family}.Traversed[J, Self.V, {retained}]"
@@ -553,9 +552,7 @@ def methods(*, fold_stage=False):
         callbacks = ([dict(params=[],argument="",adapter_type=identity,build=f"{identity}()",result=element,error="Never",conditions=[])]
                      if sequence else owning_callbacks("owned", element, "function"))
         for cb in callbacks:
-            params = list(cb["params"])
-            if "//" not in params: params += ["//"]
-            params.insert(params.index("//") + 1, "J: Applicative")
+            params = inferred_target_parameters(cb)
             c, result = cb["adapter_type"], cb["result"]
             plan = operation.postprocess(family, "J", "Self.V", c)
             traversed, finish, error = plan.traversed, plan.finish, plan.error
@@ -583,9 +580,7 @@ def methods(*, fold_stage=False):
             callbacks = ([dict(params=[],argument="",adapter_type=identity,build=f"{identity}()",result=element,error="Never",conditions=[])]
                          if operation.sequence else owning_callbacks("owned", element, "function"))
             for cb in callbacks:
-                params = list(cb["params"])
-                if "//" not in params: params += ["//"]
-                params.insert(params.index("//") + 1, "J: Applicative")
+                params = inferred_target_parameters(cb)
                 c, result = cb["adapter_type"], cb["result"]
                 conditions = [("" if retained_error else "not ") + "conforms_to(Self.V, _ResultType)"] + cb["conditions"]
                 conditions += [f"_CarrierCompatible[J, {result}]"]
@@ -1186,7 +1181,7 @@ def documented(source):
                     "The error Semigroup; inferred list errors concatenate in order."
                     if p["name"] == "S" and name.startswith("par_") else
                     "The target Applicative; inferred for native Optional, Result and List effects. Explicit bindings retain their policy."
-                    if p["name"] == "J" and name in ("traverse", "sequence") else params[p["name"]]
+                    if p["name"] == "J" and name in ("traverse", "sequence", *TRAVERSALS) else params[p["name"]]
                 ) + "\n"
                 for p in spec["parameters"]
             ]

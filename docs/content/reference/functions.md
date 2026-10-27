@@ -376,9 +376,9 @@ continue from their current position.
 targets from the callback result or existing effect element. Use
 `traverse[TargetFamily](transform)` and `sequence[TargetFamily]()` to select
 another policy, including validation or a deferred effect. Both continue in
-the target effect family. `traverse_tap[TargetFamily](effect)` borrows each
+the target effect family. `traverse_tap(effect)` borrows each
 payload, runs its effect and retains the original on success, discarding the
-effect's payload. `filter_effect[TargetFamily](predicate)` runs a borrowing
+effect's payload. `filter_effect(predicate)` runs a borrowing
 effect returning Bool and retains the originals whose result is True. Both
 require a Traversable source; filtering also requires FunctorFilter, such as
 List or Optional. A subsequent `map` operates in the target family.
@@ -392,19 +392,22 @@ A library BorrowOnceCallable works with single-use sources such as Optional;
 List needs repeatable callbacks. Original move-only payloads are supported
 when the target does not need to duplicate them; List branching requires copies.
 
-`traverse_filter[Target](transform)` consumes payloads into effects containing
+These derived methods also infer native Optional, Result and List targets;
+their explicit `[Target]` form keeps custom target policies available.
+
+`traverse_filter(transform)` consumes payloads into effects containing
 Optional values, then compacts them through the source's FunctorFilter.
-`sequence_filter[Target]()` does the same for effects already in the source.
+`sequence_filter()` does the same for effects already in the source.
 Both preserve the source shape inside the target; an inner None is filtered,
 while a failed target effect follows its normal failure policy.
 
-`flat_traverse[Target](transform)` consumes payloads into effects containing
+`flat_traverse(transform)` consumes payloads into effects containing
 another source-family carrier. It flattens one source layer inside the target.
-`flat_sequence[Target]()` accepts those effects directly. The source must be
+`flat_sequence()` accepts those effects directly. The source must be
 both Traversable and Monad, and nested Result errors must match the selected
 source family, including their origins. Target failures remain separate.
 
-`traverse_void[Target](effect)` and `sequence_void[Target]()` consume native
+`traverse_void(effect)` and `sequence_void()` consume native
 iterators or owned collections and discard successful outputs without building
 an output collection. Result sources instead use their traversal, preserving
 source errors: traversing `Result[Int, String]` into Optional returns
