@@ -4,11 +4,11 @@ from ._primitive_contracts import MapContract
 from std.builtin.rebind import rebind_var, downcast
 from fp.algebra.protocols import _pure, Applicative, _UnaryView
 from fp.callables.protocols import UnaryContract, OnceUnary, MutableUnary
-from fp.callables.invoke import call_once, RepeatableUnary
+from fp.callables.invoke import call_once, RepeatableUnary, _OnceUnaryAvailable
 from fp.callables._receiver import _unary_once_as
 from fp.data._result import Result, _ResultType, _fold_result_owned, _transformed
 from fp.iteration._advance import _OwnedElement
-from fp._internal.errors import _CommonError, _ErrorCompatible
+from fp._internal.errors import _CommonError, _CommonErrorCompatible, _ErrorCompatible
 from ._adapt import _map_as
 
 
@@ -90,6 +90,13 @@ struct _TraverseBranch[G: Applicative, F: UnaryContract & Movable & Deinitable,
     comptime _Operation = MapContract[Self.G, Self.F.Out, Self.W]
     comptime Out = Self._Operation.Out
     comptime Error = _CommonError[Self.F.Error, Self._Operation.Error]
+    # A single-value source maps a wrapper and joins its empty/error branch.
+    # Guard family projections, then retain symbolic join/error evidence with
+    # eager conjunction. The producer need not be repeatable or copyable.
+    comptime Compatible = (
+        Self.G._JoinCompatible[Self.G.Pure[Self.W.Out], Self.Out] &
+        _CommonErrorCompatible[Self.F.Error, Self._Operation.Error]
+    ) if _OnceUnaryAvailable[Self.F] and Self.G.CarrierCompatible[Self.F.Out] and Self._Operation.FamilyCompatible else False
     def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert _ErrorCompatible[Self.Error, Self.F.Error]
         comptime assert _ErrorCompatible[Self.Error, Self.G.MapError[Self.F.Out, Self.W]]

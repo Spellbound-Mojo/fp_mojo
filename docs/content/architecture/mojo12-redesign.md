@@ -3122,6 +3122,26 @@ Qualification passed generator parity, all 49 tooling tests and strict
 documentation validation. All 107 Mojo source files remain byte-identical to
 the preceding qualified candidate; no public or native signature changes.
 
+### Single-value traversal keeps admission beside its branch operation
+
+The existing traversal branch now owns its admission metadata alongside its
+output and native error. Optional and Result source families project that
+predicate instead of maintaining a separate helper that reconstructs the
+branch's mapping types. The branch's existing MapContract supplies the mapping
+predicate, result and error.
+
+The original guard order and eager join/error conjunction are retained.
+Single-value producers still need neither repeatability nor copying, and target
+families retain their own map, carrier and join policies. Execution and native
+error forwarding bodies remain unchanged.
+
+Qualification passed 396 traversal and 20 native single-value traversal
+source/package O0/O3 checks, the traversal and generic program selections,
+110 expected rejection fixtures, generator parity and all 49 tooling tests.
+API generation and strict documentation validation passed. All 41 execution
+bodies in the changed modules remain byte-identical. The following runner
+pass also built this library within the unchanged 60-second package limit.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

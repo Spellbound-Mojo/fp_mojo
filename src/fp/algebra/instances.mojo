@@ -24,17 +24,6 @@ from .protocols import (_NativeFoldCompatible, _LiveAccumulator, _pure, Functor,
 comptime _ListElement[V: Movable & Deinitable] = downcast[downcast[V, IterableOwned].IteratorOwnedType.Element, Movable & Deinitable]
 
 
-# Single-value sources map a wrapper and introduce an empty/error branch.
-# They do not collect, copy payloads, or require a repeatable producer.
-# Guard family projections, then preserve symbolic join and native-error
-# evidence with eager Boolean conjunction.
-comptime _WrappedTraversalCompatible[G: Applicative, F: UnaryContract & Movable & Deinitable,
-                                    W: UnaryContract & Movable & Deinitable] = (
-    G._JoinCompatible[G.Pure[W.Out], G.Mapped[F.Out, W]] &
-    _CommonErrorCompatible[F.Error, G.MapError[F.Out, W]]
-) if _OnceUnaryAvailable[F] and G.CarrierCompatible[F.Out] and G.MapCompatible[F.Out, W] else False
-
-
 # Native carrier recognition has one owner. Guard iterable projection before
 # inspecting its element; scalar and custom values use the caller's fallback.
 comptime _NativeFamily[V: Movable & Deinitable, Fallback: Functor = IdentityFamily]: Functor = (
@@ -211,7 +200,7 @@ struct OptionalFamily(Monad, Traversable, Filterable, FunctorFilter, _Lifting):
     comptime CombineError[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = _CommonError[F.Error, R.Error]
     comptime Bound[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Out
     comptime BindError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
-    comptime TargetCompatible[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _WrappedTraversalCompatible[G, F, _Present[G.Element[F.Out]]]
+    comptime TargetCompatible[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _TraverseBranch[G, F, _Present[G.Element[F.Out]]].Compatible
     comptime Traversed[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _OptionalGuard[G, _TraverseBranch[G, F, _Present[G.Element[F.Out]]]].Out
     comptime TraverseError[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _CommonError[F.Error, G.MapError[F.Out, _Present[G.Element[F.Out]]]]
     comptime _Looped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Optional[K.Acc]
@@ -491,7 +480,7 @@ struct ResultFamily[E: Movable & Deinitable](Monad, ApplicativeError, ErrorMappi
     """Require the callback to return a Result with the same stored error and origins."""
     comptime Bound[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Out
     comptime BindError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
-    comptime TargetCompatible[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _WrappedTraversalCompatible[G, F, _OkOf[G.Element[F.Out], Self.E]]
+    comptime TargetCompatible[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _TraverseBranch[G, F, _OkOf[G.Element[F.Out], Self.E]].Compatible
     comptime Traversed[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _ResultGuard[G, Self.E, _TraverseBranch[G, F, _OkOf[G.Element[F.Out], Self.E]]].Out
     comptime TraverseError[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _CommonError[F.Error, G.MapError[F.Out, _OkOf[G.Element[F.Out], Self.E]]]
     comptime _Looped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Result[K.Acc, Self.E]
