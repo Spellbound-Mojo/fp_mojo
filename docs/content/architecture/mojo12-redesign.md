@@ -398,13 +398,13 @@ signature. The descriptor lives beside that adapter in `algebra.errors`;
 primitive operation contracts do not acquire a dependency on derived recovery
 and traversal modules. It adds no invocation or storage layer.
 
-Its `Compatible` predicate preserves the existing input equality, output
-equality and source error-carrier checks. The family's adapted-handler and
-receiver checks remain in their original bodies. Generic wrappers with
-`I: ApplicativeError` using the combined predicate and callers forwarding the
-original expanded constraints both qualify; the descriptor does not replace
-those constraints in existing overloads. Construction errors still belong to the family, so deferred
-ResultT/Reader recovery remains lazy and can raise a handler error only at run.
+Its `Compatible` predicate now combines input/output/carrier checks with
+`ReceiverCompatible` and `OperationCompatible`. The latter forwards the family's
+declared adapted-handler admission, guarded by the earlier checks. Combined
+wrappers inherit the stronger predicate; wrappers spelling individual predicates
+add the receiver and operation witnesses. Legacy Piped's signature checks retain
+their existing shape. Deferred ResultT/Reader recovery still retains native
+handler errors until run.
 Conditionally error-capable Applicatives use the same public downcast witness
 in the contract and operation, preserving dependent error-type identity.
 
@@ -497,9 +497,10 @@ Success skips both callbacks; deferred families retain deferred execution.
 `RecoverIfContract` and `OrElseIfContract` publish admission and exact
 family/output/construction-error projections. The value contract shares the
 effect contract's predicate and callback-error metadata, while checking the
-unlifted value boundary directly. The family validates the adapted handler in
-the body. This avoids requiring an abstract family to prove its own `Pure`
-representation belongs to its error layer during callback inference.
+unlifted value boundary directly. Selected admission also forwards the family's
+adapted-handler predicate; generic wrappers use the combined contract or its
+public components. Callback and failure-constructor errors are compared through
+total exact-type equalities, preserving symbolic native-error inference.
 Intrinsic native Result overloads remain disjoint under non-error families.
 Canonical Result and custom families with Result storage use family recovery;
 no extra selector, callback binding or invocation mechanism is introduced.
@@ -1162,6 +1163,33 @@ documentation checks passed with unchanged report inputs and zero audit
 failures. Public contract-based wrappers retain their `Compatible` witness;
 intrinsic generic wrappers now prove absence of both stored-error capabilities.
 The documentation inventory remains 77 examples and 318 public exports.
+
+### Recovery admission consolidation
+
+Selected recovery and observation contracts now include invocable receivers and
+the family's declared adapted-handler admission. Effect observation also checks
+the finishing map and combination. Conditional recovery and observation include
+failure-constructor errors in native error admission. Custom dictionaries can
+reject an operation without instantiating its unavailable handled carrier.
+
+The exact-common-error predicate belongs to `_internal.errors` and is shared by
+Result mapping and these contracts. Eager Boolean evaluation of total type
+equalities preserves symbolic equality evidence in Mojo 1.2; projecting a
+conditional common-error type into admission loses that evidence for generic
+native callbacks. Runtime errors keep their existing exact projections.
+
+This pass makes declared operation checks available at the public boundary.
+Family primitives still own their branching, copying and execution rules;
+additional implementation-only checks in those primitives are a subsequent
+admission-audit target. No family semantics are inferred from native storage.
+
+Qualification on Mojo 1.2.0 (`2016d0cd`) passed 92 source/package O0/O3 boundary
+checks, 11 packaged regression/example programs and 31 existing rejection cases.
+The 46 tooling tests and strict documentation checks also passed. All qualification
+reports retained unchanged inputs and zero audit failures. New fixtures distinguish
+policy rejection, missing receiver modes, finishing-operation admission and native
+construction errors; the same callback shapes remain executable under an admitted
+policy. The public inventory remains 318 exports and 77 examples.
 
 ### Resource scopes
 

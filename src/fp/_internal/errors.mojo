@@ -19,6 +19,11 @@ comptime _CommonError[A: Movable & Deinitable, B: Movable & Deinitable] = B if A
 comptime _ErrorCompatible[E: AnyType, Actual: AnyType]: Bool = Actual == Never or Actual == E
 
 
+# All operands are total type equalities. Eager Boolean evaluation preserves
+# symbolic equality evidence during Mojo 1.2 native overload admission.
+comptime _CommonErrorCompatible[A: AnyType, B: AnyType]: Bool = (A == B) | (A == Never) | (B == Never)
+
+
 def _compatible[E: Movable & Deinitable, Actual: Movable & Deinitable]() -> Bool:
     comptime assert _ErrorCompatible[E, Actual], "callback errors: incompatible native error type; got " + reflect[Actual].name() + "; expected " + reflect[E].name() + "; use an explicit common error mapping"
     return True

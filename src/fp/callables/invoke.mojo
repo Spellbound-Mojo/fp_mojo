@@ -118,6 +118,10 @@ Parameters:
 """
 
 
+# The same receiver alternatives selected by call_once, exposed to admission.
+comptime _OnceUnaryAvailable[F: UnaryContract] = conforms_to(F, OnceUnary) or RepeatableUnary[F]
+
+
 def call_once[F: UnaryContract & Movable & Deinitable](var f: F, var arg: F.Arg) raises F.Error -> F.Out:
     """Call a unary callback once, in whichever receiver mode it has.
 

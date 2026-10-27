@@ -130,6 +130,9 @@ Generic value-returning recovery can use `fp.algebra.RecoverContract` with an
 `Family`/`Out`/`Error` projections describe both family recovery and Result's
 type-changing case. This lets a generic wrapper retain fluent continuation
 without importing a private adapter or assuming the result has native storage.
+Its `Compatible` also requires an invocable handler and the selected family's
+`OperationCompatible` proof. A rejected family operation is excluded before
+its result metadata is needed; native Result storage never overrides that policy.
 
 <!-- example: docs/examples/selected_recovery.mojo -->
 

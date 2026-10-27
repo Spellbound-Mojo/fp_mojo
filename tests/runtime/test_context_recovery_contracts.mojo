@@ -8,7 +8,7 @@ from fp.data import Result, Ok, Err
 from std.testing import assert_equal
 from std.memory import ArcPointer
 
-def expanded[I: ApplicativeError, V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var source: V, var handler: H) raises RecoverContract[I,V,H].Error -> RecoverContract[I,V,H].Out where H.Arg == I.Failure and H.Out == I.Element[V] and I._ErrorCarrier[V]:
+def expanded[I: ApplicativeError, V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var source: V, var handler: H) raises RecoverContract[I,V,H].Error -> RecoverContract[I,V,H].Out where H.Arg == I.Failure and H.Out == I.Element[V] and I._ErrorCarrier[V] and RecoverContract[I,V,H].ReceiverCompatible and RecoverContract[I,V,H].OperationCompatible:
     return recovered[I](source^, handler^)
 
 def recovered[I: ApplicativeError, V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var source: V, var handler: H) raises RecoverContract[I,V,H].Error -> RecoverContract[I,V,H].Out where RecoverContract[I,V,H].Compatible:

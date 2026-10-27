@@ -38,6 +38,7 @@ trait _MutableBorrow(BorrowCallContract, Movable, Deinitable):
 
 
 comptime _RepeatableBorrow[C: BorrowCallContract] = conforms_to(C, BorrowCallable) or conforms_to(C, _MutableBorrow)
+comptime _OnceBorrowAvailable[C: BorrowCallContract] = conforms_to(C, BorrowOnceCallable) or _RepeatableBorrow[C]
 
 
 def _borrow_repeated_as[E: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable, T: AnyType](

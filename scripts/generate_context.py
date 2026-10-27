@@ -829,9 +829,9 @@ def methods(*, fold_stage=False):
     for cb in native_callbacks("owned", family + ".Failure", "function"):
         handler = operation.handler(family, cb["adapter_type"])
         built = operation.handler_value(family, cb["adapter_type"], cb["build"])
-        conditions = ["conforms_to(Self.I, ApplicativeError)"] + cb["conditions"]
-        conditions += [f"{family}._ErrorCarrier[Self.V]", f"{cb['result']} == Self.I.Element[Self.V]"]
         contract = f"RecoverContract[{family}, Self.V, {cb['adapter_type']}]"
+        conditions = ["conforms_to(Self.I, ApplicativeError)", contract + ".Compatible"]
+        if cb["adapter_type"] != "C": conditions += cb["conditions"]
         result, error = contract + ".Out", contract + ".Error"
         cb["prelude"] = cb.get("prelude", "") + f"        comptime assert {family}._Handles[Self.V, {handler}]\n"
         emit(operation.name, cb, cb["params"], cb["argument"], result, error,

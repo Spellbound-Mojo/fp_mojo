@@ -1,15 +1,15 @@
 """Stored failures and recovery derived from the selected family's capability."""
 from .protocols import Applicative, ApplicativeError, Monad
 from std.builtin.rebind import downcast, rebind_var
-from fp._internal.errors import _ErrorCompatible, _CommonError, _propagate_error, _absurd
+from fp._internal.errors import _ErrorCompatible, _CommonErrorCompatible, _CommonError, _propagate_error, _absurd
 from ._adapt import _fail_as, _flat_map_as, _or_else_as, _map2_lazy_as
 from fp.callables.protocols import UnaryContract, OnceUnary, MutableUnary, BorrowCallContract, Binary, OnceThunk
 from fp.callables._conditional import _guard_owned
-from fp.callables._receiver import _RepeatableBorrow, _MutableBorrowRef, _MutableUnaryRef, _unary_once_as
+from fp.callables._receiver import _RepeatableBorrow, _OnceBorrowAvailable, _MutableBorrowRef, _MutableUnaryRef, _unary_once_as
 from fp.callables._transforms import _ObserveOnce
 from ._sequencing import _EffectRetain
 from ._traversal import _EffectVoid
-from fp.callables.invoke import call_once, call_repeated, RepeatableUnary
+from fp.callables.invoke import _OnceUnaryAvailable, call_once, call_repeated, RepeatableUnary
 
 
 # A conditional type alias can expose only the common traits of its branches
@@ -66,10 +66,9 @@ struct RecoverContract[I: ApplicativeError, V: Movable & Deinitable, H: UnaryCon
     Execution remains with the family's recovery primitive. Deferred families
     may construct without raising and retain the handler's error until run.
 
-    Compatible preserves the existing library-handler entry-point checks.
-    Families still validate their adapted handler and receiver requirements;
-    this metadata does not turn those body checks into new admission rules.
-    Native callbacks keep their existing signature-inference boundaries.
+    Compatible includes the family's declared admission of the adapted handler.
+    Generic wrappers forward that complete predicate; expanded wrappers also
+    forward OperationCompatible. Native signature inference remains separate.
 
     Parameters:
         I: The family selecting the stored-error layer to recover.
@@ -82,8 +81,12 @@ struct RecoverContract[I: ApplicativeError, V: Movable & Deinitable, H: UnaryCon
     """The replacement value retains the source payload type and origins."""
     comptime CarrierCompatible = Self.I._ErrorCarrier[Self.V]
     """The source belongs to the family's selected stored-error layer."""
-    comptime Compatible = Self.InputCompatible and Self.OutputCompatible and Self.CarrierCompatible
-    """The existing library-handler recovery entry-point admission."""
+    comptime ReceiverCompatible = _OnceUnaryAvailable[Self.H]
+    """The handler supplies a callable consuming, mutable or shared receiver."""
+    comptime OperationCompatible = Self.I._Handles[Self.V, Self.Handler] if Self.InputCompatible and Self.OutputCompatible and Self.CarrierCompatible and Self.ReceiverCompatible else False
+    """The family's declared admission of the value-lifting handler."""
+    comptime Compatible = Self.InputCompatible and Self.OutputCompatible and Self.CarrierCompatible and Self.ReceiverCompatible and Self.OperationCompatible
+    """Complete selected entry admission, including the adapted family operation."""
     comptime Family = Self.I
     """The unchanged family for fluent continuation over Out."""
     comptime Handler = _Recovered[Self.I, Self.H]
@@ -166,10 +169,14 @@ struct OrElseIfContract[I: ApplicativeError, V: Movable & Deinitable,
     """The source and replacement belong to the selected stored-error layer."""
     comptime OutputCompatible = Self.I.Element[Self.H.Out] == Self.I.Element[Self.V]
     """The replacement retains the source's success payload and origins."""
-    comptime NativeErrorsCompatible = Self.P.Failure == Never or Self.H.Error == Never or Self.P.Failure == Self.H.Error
-    """The callbacks share a native error type, or at least one never raises."""
-    comptime Compatible = Self.InputCompatible and Self.PredicateCompatible and Self.CarrierCompatible and Self.OutputCompatible and Self.NativeErrorsCompatible
-    """Entry-point admission; family primitives retain invocation checks."""
+    comptime NativeErrorsCompatible = _CommonErrorCompatible[Self.P.Failure,Self.H.Error] and _CommonErrorCompatible[Self.P.Failure,Self.I.FailError[Self.I.Element[Self.V]]] and _CommonErrorCompatible[Self.H.Error,Self.I.FailError[Self.I.Element[Self.V]]]
+    """Callbacks and unmatched-error construction share an exact native error."""
+    comptime ReceiverCompatible = _OnceBorrowAvailable[Self.P] and _OnceUnaryAvailable[Self.H]
+    """Both callbacks supply an invocable receiver; family branching adds its own rules."""
+    comptime OperationCompatible = Self.I._Handles[Self.V, Self.Continuation] if Self.InputCompatible and Self.PredicateCompatible and Self.CarrierCompatible and Self.OutputCompatible and Self.NativeErrorsCompatible and Self.ReceiverCompatible else False
+    """The family's declared admission of the conditional continuation."""
+    comptime Compatible = Self.InputCompatible and Self.PredicateCompatible and Self.CarrierCompatible and Self.OutputCompatible and Self.NativeErrorsCompatible and Self.ReceiverCompatible and Self.OperationCompatible
+    """Complete selected conditional recovery admission."""
     comptime Family = Self.I
     """The unchanged family for fluent continuation."""
     comptime Continuation = _ConditionalRecovery[Self.I, Self.I.Element[Self.V], Self.P, Self.H]
@@ -209,8 +216,12 @@ struct RecoverIfContract[I: ApplicativeError, V: Movable & Deinitable,
     """The handler returns the source's success payload type and origins."""
     comptime NativeErrorsCompatible = Self.Operation.NativeErrorsCompatible
     """The callbacks share a native error type, or at least one never raises."""
-    comptime Compatible = Self.InputCompatible and Self.PredicateCompatible and Self.CarrierCompatible and Self.OutputCompatible and Self.NativeErrorsCompatible
-    """Value-recovery admission; the family retains lifted-handler validation."""
+    comptime ReceiverCompatible = _OnceBorrowAvailable[Self.P] and _OnceUnaryAvailable[Self.H]
+    """The original callbacks supply invocable receivers before value lifting."""
+    comptime OperationCompatible = Self.Operation.Compatible
+    """The admitted effect-recovery operation after lifting the value handler."""
+    comptime Compatible = Self.InputCompatible and Self.PredicateCompatible and Self.CarrierCompatible and Self.OutputCompatible and Self.NativeErrorsCompatible and Self.ReceiverCompatible and Self.OperationCompatible
+    """Complete selected value-recovery admission through the shared effect contract."""
     comptime Family = Self.I
     """The unchanged family for fluent continuation."""
     comptime Continuation = Self.Operation.Continuation
@@ -251,9 +262,11 @@ struct _ObserveFailure[I: ApplicativeError, A: Movable & Deinitable, V: Movable 
     comptime Voided = Self.Discard.Out
     comptime Join = _UninhabitedRight[Self.A]
     comptime Next = _FailedThunk[Self.I]
+    comptime Compatible = Self.I.MapCompatible[Self.V,Self.Discard.Discard] and Self.I.CombineCompatible[Self.Voided,Self.Join,Self.Next]
     comptime Out = Self.I.Combined[Self.Voided, Self.Join, Self.Next]
     comptime Error = _CommonError[Self.Discard.Error, Self.I.CombineError[Self.Voided, Self.Join, Self.Next]]
     def call(self, var original: Self.First, var observed: Self.V) raises Self.Error -> Self.Out:
+        comptime assert Self.Compatible
         comptime assert _ErrorCompatible[Self.Error, Self.Discard.Error]
         comptime assert _ErrorCompatible[Self.Error, Self.I.CombineError[Self.Voided, Self.Join, Self.Next]], "error observation: incompatible native errors"
         var discarded = _unary_once_as[Self.Error](Self.Discard(), observed^)
@@ -303,7 +316,16 @@ struct _ErrorObserverContract[I: ApplicativeError, V: Movable & Deinitable,
     comptime CarrierCompatible = Self.I._ErrorCarrier[Self.V]
     comptime OutputCompatible = Self.I._ErrorCarrier[Self.C.Result] if Self.effect else True
     comptime FamilyCompatible = Self.CarrierCompatible and Self.OutputCompatible
-    comptime Compatible = Self.InputCompatible and Self.FamilyCompatible
+    comptime _Finish = _ObserveFailure[Self.I,Self.I.Element[Self.V],Self.C.Result]
+    comptime NativeErrorsCompatible = (
+        (_CommonErrorCompatible[Self.C.Failure,Self._Finish.Discard.Error] and
+         _CommonErrorCompatible[Self.C.Failure,Self.I.CombineError[Self._Finish.Voided,Self._Finish.Join,Self._Finish.Next]] and
+         _CommonErrorCompatible[Self._Finish.Discard.Error,Self.I.CombineError[Self._Finish.Voided,Self._Finish.Join,Self._Finish.Next]])
+        if Self.effect else _CommonErrorCompatible[Self.C.Failure,Self.I.FailError[Self.I.Element[Self.V]]]
+    ) if Self.InputCompatible and Self.FamilyCompatible else False
+    comptime ReceiverCompatible = _OnceBorrowAvailable[Self.C]
+    comptime OperationCompatible = (Self.I._Handles[Self.V, Self.Handler] and (Self._Finish.Compatible if Self.effect else True)) if Self.InputCompatible and Self.FamilyCompatible and Self.NativeErrorsCompatible and Self.ReceiverCompatible else False
+    comptime Compatible = Self.InputCompatible and Self.FamilyCompatible and Self.NativeErrorsCompatible and Self.ReceiverCompatible and Self.OperationCompatible
     comptime Family = Self.I
     comptime Handler = _ObserveError[Self.I, Self.I.Element[Self.V], Self.C, Self.effect]
     comptime Out = Self.I.Handled[Self.V, Self.Handler]
@@ -318,8 +340,9 @@ Forward Compatible in generic selected-pipeline wrappers and project Family,
 Out and Error. InputCompatible checks exact stored-error payload equality,
 including origins; CarrierCompatible checks the source's selected error layer.
 OutputCompatible is True because the observer result is discarded. Family
-receiver validation remains with the existing observation continuation.
-Native errors propagate; deferred callback errors remain in the run contract.
+admission includes OperationCompatible for the adapted observer and
+NativeErrorsCompatible for callback and failure construction. Native errors
+propagate; deferred callback errors remain in the run contract.
 
 Parameters:
     I: The selected error family, preserving its construction and execution rules.
@@ -337,7 +360,9 @@ Out and Error. InputCompatible checks exact stored-error payload equality;
 CarrierCompatible checks the source and OutputCompatible checks the observer's
 returned carrier against the selected error layer. Its success payload may be
 any type and is discarded. FamilyCompatible combines both carrier predicates.
-The family owns receiver checks, accumulation, branching and deferred timing.
+OperationCompatible forwards the family's admission of the adapted observer;
+NativeErrorsCompatible checks observer and failure-preservation errors. The
+family owns accumulation, branching and deferred timing.
 
 Parameters:
     I: The selected error family, including its error-combination policy.

@@ -15,11 +15,11 @@ def replaced[I: ApplicativeError, V: Movable & Deinitable, P: BorrowCallContract
     return pipeline[I](source^).or_else_if(predicate^,handler^).get()
 
 
-def expanded[I: ApplicativeError, V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var source: V, var predicate: P, var handler: H) raises RecoverIfContract[I,V,P,H].Error -> RecoverIfContract[I,V,P,H].Out where P.Payload == I.Failure and H.Arg == I.Failure and P.Result == Bool and I._ErrorCarrier[V] and H.Out == I.Element[V] and (P.Failure == Never or H.Error == Never or P.Failure == H.Error):
+def expanded[I: ApplicativeError, V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var source: V, var predicate: P, var handler: H) raises RecoverIfContract[I,V,P,H].Error -> RecoverIfContract[I,V,P,H].Out where P.Payload == I.Failure and H.Arg == I.Failure and P.Result == Bool and I._ErrorCarrier[V] and H.Out == I.Element[V] and RecoverIfContract[I,V,P,H].NativeErrorsCompatible and RecoverIfContract[I,V,P,H].ReceiverCompatible and RecoverIfContract[I,V,P,H].OperationCompatible:
     return recovered[I](source^,predicate^,handler^)
 
 
-def expanded_effect[I: ApplicativeError, V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var source: V, var predicate: P, var handler: H) raises OrElseIfContract[I,V,P,H].Error -> OrElseIfContract[I,V,P,H].Out where P.Payload == I.Failure and H.Arg == I.Failure and P.Result == Bool and I._ErrorCarrier[V] and I._ErrorCarrier[H.Out] and I.Element[H.Out] == I.Element[V] and (P.Failure == Never or H.Error == Never or P.Failure == H.Error):
+def expanded_effect[I: ApplicativeError, V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var source: V, var predicate: P, var handler: H) raises OrElseIfContract[I,V,P,H].Error -> OrElseIfContract[I,V,P,H].Out where P.Payload == I.Failure and H.Arg == I.Failure and P.Result == Bool and I._ErrorCarrier[V] and I._ErrorCarrier[H.Out] and I.Element[H.Out] == I.Element[V] and OrElseIfContract[I,V,P,H].NativeErrorsCompatible and OrElseIfContract[I,V,P,H].ReceiverCompatible and OrElseIfContract[I,V,P,H].OperationCompatible:
     return replaced[I](source^,predicate^,handler^)
 
 

@@ -114,9 +114,10 @@ instantiated. Existing component predicates remain available.
 `RecoverContract[I, V, H]` describes value-returning recovery through an
 `ApplicativeError` family. Generic signatures can use its `Out` and `Error`
 without importing the private adapter that lifts the handler's value through
-the family's `pure`. With `I: ApplicativeError`, forward `Compatible`, or retain
-the existing expanded input, output and source-carrier checks. The family still
-checks its adapted handler and receiver requirements when instantiated.
+the family's `pure`. With `I: ApplicativeError`, forward `Compatible`. Expanded
+selected wrappers also forward `ReceiverCompatible` and `OperationCompatible`:
+the callback must supply an invocation mode and the family must admit the
+adapted handler. Legacy Piped retains its existing signature predicates.
 
 For a generic `I: Applicative` with conditional error capability, forward
 `conforms_to(I, ApplicativeError)` and use the public
@@ -138,8 +139,11 @@ wrapper forwards `Compatible` and projects `Family`, `Out` and `Error` without
 importing the private observation continuation. Input equality includes the
 stored error's origins; source-carrier membership is checked in both cases,
 and effectful observation also checks the observer's output carrier.
-The family still validates receiver repeatability and retained-error copying.
-Construction errors include the family's own recovery policy; deferred
+`ReceiverCompatible` checks that the observer has an invocation mode;
+`OperationCompatible` checks family recovery and, for effectful observation,
+the finishing map and combination. `NativeErrorsCompatible` includes failure
+construction and preservation errors. Family-specific branching and retained-error
+copy requirements remain with the family primitives. Construction errors include the family's own recovery policy; deferred
 callback and failure-constructor errors remain in the action's run contract.
 
 <!-- example: docs/examples/selected_error_observation.mojo -->
@@ -155,6 +159,13 @@ native errors must agree unless one callback never raises. Family receiver
 checks and exact construction/deferred errors remain in force. Conditional
 capability wrappers use the same public `downcast[I, ApplicativeError]` witness
 for the descriptor and pipeline selection.
+
+Their complete `Compatible` predicate includes callback invocation modes,
+the family's adapted recovery admission, and compatibility with failure-constructor
+errors. Expanded wrappers forward the corresponding `ReceiverCompatible`,
+`OperationCompatible` and `NativeErrorsCompatible` fields. Combined wrappers need
+no additional predicate. These are construction contracts; deferred errors remain
+with the resulting action's run contract.
 
 <!-- example: docs/examples/selected_conditional_recovery.mojo -->
 

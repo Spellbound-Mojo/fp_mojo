@@ -3,6 +3,7 @@ from std.builtin.rebind import downcast, rebind_var
 from fp.algebra.protocols import Functor, ApplicativeError, ErrorMapping
 from fp.algebra.instances import ResultFamily
 from fp.callables.protocols import UnaryContract
+from fp.callables.invoke import _OnceUnaryAvailable
 from fp.data._result import Result, _ResultType
 
 comptime _RecoveryValue[V: Movable & Deinitable] = downcast[V, _ResultType].Value
@@ -12,6 +13,7 @@ comptime _RecoveryCarrier[V: Movable & Deinitable] = (V == Result[_RecoveryValue
 trait _OrElsePolicy:
     comptime CarrierCompatible[V: Movable & Deinitable]: Bool
     comptime OutputCompatible[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable]: Bool
+    comptime OperationCompatible[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable]: Bool
     comptime Family[H: UnaryContract & Movable & Deinitable]: Functor
     comptime Out[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable]: Movable & Deinitable
     comptime Error[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable]: Movable & Deinitable
@@ -21,6 +23,7 @@ trait _OrElsePolicy:
 
 struct _IntrinsicOrElse(_OrElsePolicy):
     comptime CarrierCompatible[V: Movable & Deinitable] = _RecoveryCarrier[V]
+    comptime OperationCompatible[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = True
     comptime OutputCompatible[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = (H.Out == Result[_RecoveryValue[V], _RecoveryFailure[H.Out]]) if conforms_to(H.Out, _ResultType) else False
     comptime Family[H: UnaryContract & Movable & Deinitable] = ResultFamily[_RecoveryFailure[H.Out]]
     comptime Out[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = H.Out
@@ -33,6 +36,7 @@ struct _IntrinsicOrElse(_OrElsePolicy):
 
 struct _FamilyOrElse[I: ApplicativeError](_OrElsePolicy):
     comptime CarrierCompatible[V: Movable & Deinitable] = Self.I._ErrorCarrier[V]
+    comptime OperationCompatible[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self.I._Handles[V,H]
     comptime OutputCompatible[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self.I._ErrorCarrier[H.Out] and Self.I.Element[V] == Self.I.Element[H.Out]
     comptime Family[H: UnaryContract & Movable & Deinitable] = Self.I
     comptime Out[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self.I.Handled[V,H]
@@ -76,8 +80,12 @@ struct OrElseContract[I: Functor, V: Movable & Deinitable, H: UnaryContract & Mo
     """The source belongs to the selected recovery policy."""
     comptime OutputCompatible = Self._Selection.Supported and Self._Selection.Policy.OutputCompatible[Self.V,Self.H]
     """Intrinsic Result permits a new error; other families retain their error layer."""
-    comptime Compatible = Self.InputCompatible and Self.CarrierCompatible and Self.OutputCompatible
-    """Selected entry-point admission; the family retains receiver validation."""
+    comptime ReceiverCompatible = _OnceUnaryAvailable[Self.H]
+    """The handler supplies an invocable receiver before policy execution."""
+    comptime OperationCompatible = Self._Selection.Policy.OperationCompatible[Self.V,Self.H] if Self.InputCompatible and Self.CarrierCompatible and Self.OutputCompatible and Self.ReceiverCompatible else False
+    """The selected policy admits the handler; custom families retain their rules."""
+    comptime Compatible = Self.InputCompatible and Self.CarrierCompatible and Self.OutputCompatible and Self.ReceiverCompatible and Self.OperationCompatible
+    """Complete selected recovery admission, including the declared family operation."""
     comptime Family = Self._Selection.Policy.Family[Self.H]
     """The output family for fluent continuation."""
     comptime Out = Self._Selection.Policy.Out[Self.V, Self.H]

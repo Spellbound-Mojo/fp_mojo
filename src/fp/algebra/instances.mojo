@@ -11,7 +11,7 @@ from fp.callables._receiver import _unary_once_as, _binary_once_as, _binary_repe
 from fp.data._result import Result, Ok, Err, _ResultType, _transform_result_owned
 from fp.iteration._advance import _next_optional
 from fp.iteration._terminal import _append
-from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
+from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible, _propagate_error
 from fp.callables._receiver import _unary_repeated_as
 from ._result_accumulation import _result_map2, _result_loop, _FirstError
 from .filtering import _Select, _Keep
@@ -445,7 +445,7 @@ struct ResultFamily[E: Movable & Deinitable](Monad, ApplicativeError, ErrorMappi
     # These total type equalities use eager OR: short-circuit conditionals hide
     # equal-X and pure/X evidence during generic native overload selection.
     comptime BimapCompatible[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = (
-        Target == ResultFamily[G.Out] and ((F.Error == G.Error) | (F.Error == Never) | (G.Error == Never))
+        Target == ResultFamily[G.Out] and _CommonErrorCompatible[F.Error,G.Error]
     )
     comptime Bimapped[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Result[F.Out,G.Out]
     comptime BimapError[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = _CommonError[F.Error,G.Error]

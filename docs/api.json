@@ -1542,7 +1542,7 @@
   },
   "algebra.FlatTapErrContract": {
    "aliases": [],
-   "description": "Forward Compatible in generic selected-pipeline wrappers and project Family,\nOut and Error. InputCompatible checks exact stored-error payload equality;\nCarrierCompatible checks the source and OutputCompatible checks the observer's\nreturned carrier against the selected error layer. Its success payload may be\nany type and is discarded. FamilyCompatible combines both carrier predicates.\nThe family owns receiver checks, accumulation, branching and deferred timing.",
+   "description": "Forward Compatible in generic selected-pipeline wrappers and project Family,\nOut and Error. InputCompatible checks exact stored-error payload equality;\nCarrierCompatible checks the source and OutputCompatible checks the observer's\nreturned carrier against the selected error layer. Its success payload may be\nany type and is discarded. FamilyCompatible combines both carrier predicates.\nOperationCompatible forwards the family's admission of the adapted observer;\nNativeErrorsCompatible checks observer and failure-preservation errors. The\nfamily owns accumulation, branching and deferred timing.",
    "fields": [],
    "kind": "alias",
    "methods": {},
@@ -4247,11 +4247,19 @@
      "name": "OutputCompatible"
     },
     {
-     "description": "The callbacks share a native error type, or at least one never raises.",
+     "description": "Callbacks and unmatched-error construction share an exact native error.",
      "name": "NativeErrorsCompatible"
     },
     {
-     "description": "Entry-point admission; family primitives retain invocation checks.",
+     "description": "Both callbacks supply an invocable receiver; family branching adds its own rules.",
+     "name": "ReceiverCompatible"
+    },
+    {
+     "description": "The family's declared admission of the conditional continuation.",
+     "name": "OperationCompatible"
+    },
+    {
+     "description": "Complete selected conditional recovery admission.",
      "name": "Compatible"
     },
     {
@@ -4344,7 +4352,15 @@
      "name": "CarrierCompatible"
     },
     {
-     "description": "The existing library-handler recovery entry-point admission.",
+     "description": "The handler supplies a callable consuming, mutable or shared receiver.",
+     "name": "ReceiverCompatible"
+    },
+    {
+     "description": "The family's declared admission of the value-lifting handler.",
+     "name": "OperationCompatible"
+    },
+    {
+     "description": "Complete selected entry admission, including the adapted family operation.",
      "name": "Compatible"
     },
     {
@@ -4364,7 +4380,7 @@
      "name": "Error"
     }
    ],
-   "description": "A generic wrapper forwards `Compatible`, returns `Out` and raises `Error`\nwhen calling `piped(value).recover[I](handler)`. This removes the need to\nname the private value-to-pure handler adapter in a public signature.\nExecution remains with the family's recovery primitive. Deferred families\nmay construct without raising and retain the handler's error until run.\n\nCompatible preserves the existing library-handler entry-point checks.\nFamilies still validate their adapted handler and receiver requirements;\nthis metadata does not turn those body checks into new admission rules.\nNative callbacks keep their existing signature-inference boundaries.",
+   "description": "A generic wrapper forwards `Compatible`, returns `Out` and raises `Error`\nwhen calling `piped(value).recover[I](handler)`. This removes the need to\nname the private value-to-pure handler adapter in a public signature.\nExecution remains with the family's recovery primitive. Deferred families\nmay construct without raising and retain the handler's error until run.\n\nCompatible includes the family's declared admission of the adapted handler.\nGeneric wrappers forward that complete predicate; expanded wrappers also\nforward OperationCompatible. Native signature inference remains separate.",
    "fields": [],
    "kind": "struct",
    "methods": {},
@@ -4427,7 +4443,15 @@
      "name": "NativeErrorsCompatible"
     },
     {
-     "description": "Value-recovery admission; the family retains lifted-handler validation.",
+     "description": "The original callbacks supply invocable receivers before value lifting.",
+     "name": "ReceiverCompatible"
+    },
+    {
+     "description": "The admitted effect-recovery operation after lifting the value handler.",
+     "name": "OperationCompatible"
+    },
+    {
+     "description": "Complete selected value-recovery admission through the shared effect contract.",
      "name": "Compatible"
     },
     {
@@ -5181,7 +5205,7 @@
   },
   "algebra.TapErrContract": {
    "aliases": [],
-   "description": "Forward Compatible in generic selected-pipeline wrappers and project Family,\nOut and Error. InputCompatible checks exact stored-error payload equality,\nincluding origins; CarrierCompatible checks the source's selected error layer.\nOutputCompatible is True because the observer result is discarded. Family\nreceiver validation remains with the existing observation continuation.\nNative errors propagate; deferred callback errors remain in the run contract.",
+   "description": "Forward Compatible in generic selected-pipeline wrappers and project Family,\nOut and Error. InputCompatible checks exact stored-error payload equality,\nincluding origins; CarrierCompatible checks the source's selected error layer.\nOutputCompatible is True because the observer result is discarded. Family\nadmission includes OperationCompatible for the adapted observer and\nNativeErrorsCompatible for callback and failure construction. Native errors\npropagate; deferred callback errors remain in the run contract.",
    "fields": [],
    "kind": "alias",
    "methods": {},
@@ -39072,7 +39096,15 @@
      "name": "OutputCompatible"
     },
     {
-     "description": "Selected entry-point admission; the family retains receiver validation.",
+     "description": "The handler supplies an invocable receiver before policy execution.",
+     "name": "ReceiverCompatible"
+    },
+    {
+     "description": "The selected policy admits the handler; custom families retain their rules.",
+     "name": "OperationCompatible"
+    },
+    {
+     "description": "Complete selected recovery admission, including the declared family operation.",
      "name": "Compatible"
     },
     {
@@ -146853,7 +146885,7 @@
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
        "type": "Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, C].Out, Self.E]"
       },
-      "signature": "def recover[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises RecoverContract[_Recovering[Self.I], Self.V, C].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, C].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and C.Arg == _Recovering[Self.I].Failure and _Recovering[Self.I]._ErrorCarrier[Self.V] and C.Out == Self.I.Element[Self.V]",
+      "signature": "def recover[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises RecoverContract[_Recovering[Self.I], Self.V, C].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, C].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverContract[_Recovering[Self.I], Self.V, C].Compatible",
       "summary": "Recover the selected family's stored errors, preserving its timing and carrier."
      },
      {
@@ -146897,7 +146929,7 @@
        "doc": "",
        "type": "Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Out, Self.E]"
       },
-      "signature": "def recover[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Recovering[Self.I].Failure) -> R](deinit self, ref[o] function: C) raises RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and _Recovering[Self.I]._ErrorCarrier[Self.V] and R == Self.I.Element[Self.V]",
+      "signature": "def recover[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Recovering[Self.I].Failure) -> R](deinit self, ref[o] function: C) raises RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Compatible",
       "summary": "Recover the selected family's stored errors, preserving its timing and carrier."
      },
      {
@@ -146941,7 +146973,7 @@
        "doc": "",
        "type": "Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Self.E, C, True, o]].Out, Self.E]"
       },
-      "signature": "def recover[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Recovering[Self.I].Failure) raises Self.E -> R](deinit self, ref[o] function: C) raises RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Self.E, C, True, o]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and _Recovering[Self.I]._ErrorCarrier[Self.V] and R == Self.I.Element[Self.V]",
+      "signature": "def recover[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Recovering[Self.I].Failure) raises Self.E -> R](deinit self, ref[o] function: C) raises RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Self.E, C, True, o]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Self.E, C, True, o]].Compatible",
       "summary": "Recover the selected family's stored errors, preserving its timing and carrier."
      },
      {
@@ -146985,7 +147017,7 @@
        "doc": "",
        "type": "Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, True, o]].Out, Self.E]"
       },
-      "signature": "def recover[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Recovering[Self.I].Failure) raises Never -> R](deinit self, ref[o] function: C) raises RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, True, o]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and Self.E != Never and _Recovering[Self.I]._ErrorCarrier[Self.V] and R == Self.I.Element[Self.V]",
+      "signature": "def recover[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Recovering[Self.I].Failure) raises Never -> R](deinit self, ref[o] function: C) raises RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, True, o]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, True, o]].Compatible and Self.E != Never",
       "summary": "Recover the selected family's stored errors, preserving its timing and carrier."
      },
      {
@@ -147015,7 +147047,7 @@
        "doc": "",
        "type": "Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def recover[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R) raises RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and not conforms_to(R, RegisterPassable) and _Recovering[Self.I]._ErrorCarrier[Self.V] and R == Self.I.Element[Self.V]",
+      "signature": "def recover[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R) raises RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]].Compatible and not conforms_to(R, RegisterPassable)",
       "summary": "Recover the selected family's stored errors, preserving its timing and carrier."
      },
      {
@@ -147045,7 +147077,7 @@
        "doc": "",
        "type": "Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def recover[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R) raises RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and _Recovering[Self.I]._ErrorCarrier[Self.V] and R == Self.I.Element[Self.V]",
+      "signature": "def recover[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R) raises RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> R, False]].Compatible",
       "summary": "Recover the selected family's stored errors, preserving its timing and carrier."
      },
      {
@@ -147082,7 +147114,7 @@
        "doc": "",
        "type": "Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def recover[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R) raises RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and _Recovering[Self.I]._ErrorCarrier[Self.V] and R == Self.I.Element[Self.V]",
+      "signature": "def recover[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R) raises RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]].Compatible and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable)",
       "summary": "Recover the selected family's stored errors, preserving its timing and carrier."
      },
      {
@@ -147119,7 +147151,7 @@
        "doc": "",
        "type": "Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def recover[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R) raises RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and _ErrorCompatible[Self.E, X] and _Recovering[Self.I]._ErrorCarrier[Self.V] and R == Self.I.Element[Self.V]",
+      "signature": "def recover[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R) raises RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverContract[_Recovering[Self.I], Self.V, NativeUnary[_Recovering[Self.I].Failure, R, X, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises X thin -> R, True]].Compatible and _ErrorCompatible[Self.E, X]",
       "summary": "Recover the selected family's stored errors, preserving its timing and carrier."
      },
      {
