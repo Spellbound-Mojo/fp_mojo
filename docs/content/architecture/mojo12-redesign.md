@@ -3073,6 +3073,19 @@ embedded example, generator parity, all 49 tooling tests and strict documentatio
 validation. The site includes the guide in navigation and validates its links;
 no library source or public declaration changes.
 
+### Capture generation records storage ownership explicitly
+
+Capture's signature generator now records each stored field's ownership with
+its name and type. Borrowed operands store pointers; consumed operands and
+keyword dictionaries store owners. Constructor forwarding and consuming
+transitions share that metadata, instead of rediscovering ownership by testing
+whether a rendered type name begins with Pointer. The native invocation catalog
+and callables._arguments remain the execution owners.
+
+Qualification passed generator parity, all 49 tooling tests and strict
+documentation validation. All 107 Mojo source files remain byte-identical;
+there is no runtime, public API or native-signature change.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

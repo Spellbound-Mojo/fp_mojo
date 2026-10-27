@@ -5,9 +5,11 @@ therefore has one storage layout and invocation boundary per native shape.
 The generator enumerates those shapes; it never generates Result handling.
 """
 
+from dataclasses import dataclass
 from itertools import product
 import re
 from native_signatures import (
+    MD,
     Operand,
     variants,
     argument,
@@ -20,7 +22,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "src/fp/data/_capture.mojo"
 ARGUMENT_OUTPUT = ROOT / "src/fp/callables/_arguments.mojo"
-MD = "Movable & Deinitable"
 MODES = {
     "r": ("borrow", "ImmOrigin"),
     "m": ("mutable", "MutOrigin"),
@@ -70,22 +71,39 @@ def storage(shape, kw):
         "_Arguments" + tag(shape, kw) + ("[" + ", ".join(ps) + "]" if ps else "")
     )
     out = [f"@fieldwise_init\nstruct {declaration}(Movable):\n"]
-    for name, typ in fields(shape, kw):
+    for field in fields(shape, kw):
+        typ = field.type
         for x in names(shape, kw, False):
             typ = re.sub(r"\b" + x + r"\b", "Self." + x, typ)
-        out += [f"    var {name}: {typ}\n"]
+        out += [f"    var {field.name}: {typ}\n"]
     out += [transitions(shape, kw, stored=True)]
     return "".join(out)
+
+
+@dataclass(frozen=True)
+class StorageField:
+    """Stored ownership is independent of how the Mojo type is rendered.
+
+    Borrowed operands store copyable pointers; consumed operands and keyword
+    dictionaries store owners. Constructors and transitions share this fact.
+    """
+
+    name: str
+    type: str
+    owned: bool
+
+    def transfer(self, prefix=""):
+        return prefix + self.name + ("^" if self.owned else "")
 
 
 def fields(shape, kw=False):
     out = []
     for c, m in zip("AB", shape):
         out.append(
-            (c.lower() + "_value", c if m == "o" else f"Pointer[{c}, {c.lower()}]")
+            StorageField(c.lower() + "_value", c if m == "o" else f"Pointer[{c}, {c.lower()}]", m == "o")
         )
     if kw:
-        out.append(("options", "StringDict[K]"))
+        out.append(StorageField("options", "StringDict[K]", True))
     return out
 
 
@@ -138,10 +156,7 @@ def transitions(shape, kw, *, stored):
     type_name = storage_type if stored else typename
     target = type_name(shape, True, "Self.").replace("Self.K", "K")
     if stored:
-        values = [
-            "self." + n + ("^" if not t.startswith("Pointer") else "")
-            for n, t in fields(shape)
-        ] + ["values^"]
+        values = [field.transfer("self.") for field in fields(shape)] + ["values^"]
         construct = f"{target}({', '.join(values)})"
     else:
         construct = f"{target}(self._arguments^.kwargs(**values^))"
@@ -160,10 +175,7 @@ def transitions(shape, kw, *, stored):
                 .replace("Self." + c.lower(), c.lower())
             )
             if stored:
-                values = [
-                    "self." + n + ("^" if not t.startswith("Pointer") else "")
-                    for n, t in fields(shape)
-                ]
+                values = [field.transfer("self.") for field in fields(shape)]
                 values += ["Pointer(to=value)" if origin else "value^"]
                 construct = f"{target}({', '.join(values)})"
             else:
@@ -182,12 +194,12 @@ def builder(shape, kw):
     stored = storage_type(shape, kw, "Self.")
     out += [f"    var _arguments: {stored}\n"]
     inputs, values = [], []
-    for name, typ in fields(shape, kw):
-        owned = not typ.startswith("Pointer")
+    for field in fields(shape, kw):
+        typ = field.type
         for x in names(shape, kw, False):
             typ = re.sub(r"\b" + x + r"\b", "Self." + x, typ)
-        inputs += [("var " if owned else "") + name + ": " + typ]
-        values += [name + ("^" if owned else "")]
+        inputs += [("var " if field.owned else "") + field.name + ": " + typ]
+        values += [field.transfer()]
     out += [
         f'    def __init__(out self{", " if inputs else ""}{", ".join(inputs)}):\n        self._arguments = {stored}({", ".join(values)})\n\n'
     ]
