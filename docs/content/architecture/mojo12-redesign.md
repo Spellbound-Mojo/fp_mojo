@@ -2094,6 +2094,26 @@ six reduction programs, 16 Ior programs, five parallel-validation programs and
 and no audit failures. Generated sources, all 48 tooling tests and strict
 documentation checks passed.
 
+### State recipes separate admission from error projection
+
+State map, bind, combination and hoist bodies use their existing execution
+contract for child admission, without asserting the same child requirement
+again. Hoist likewise obtains operation admission from its recipe contract.
+Family, payload and explicit native-error projection checks remain intact.
+Imports left behind by earlier forwarding consolidation are removed.
+
+An isolated attempt to remove common-error projection assertions was rejected:
+Mojo 1.2 could not prove the constrained calls from `_CommonErrorCompatible`
+alone. Selecting a common error and proving that each operation can raise it
+remain distinct native proof obligations. The accepted implementation documents
+that boundary rather than weakening the adapters or introducing casts.
+
+Seven focused O0 programs passed. Qualification passed 24 source/package State
+execution checks at O0/O3, 25 State programs, 34 traversal programs and
+133 generic clients, followed by all 43 State-related rejection fixtures. Categories
+overlap. Reports retained unchanged inputs and no audit failures. Generated
+sources, all 48 tooling tests and strict documentation checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

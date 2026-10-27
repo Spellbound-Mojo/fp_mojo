@@ -8,20 +8,23 @@ from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, rebind, downcast
 from std.utils import Variant
 from fp.algebra.errors import _Continue
-from fp.algebra.protocols import (_fold_as, _pure, ApplicativeError, ErrorMapping, _UnaryView, Monad, _Accumulate, _AccumulatePair, _LiveAccumulator, _BindFirst, _Lazy, _Item, _iterator, _next_item, _start_as)
+from fp.algebra.protocols import (_fold_as, _pure, ApplicativeError, ErrorMapping, _UnaryView, Monad, _Accumulate, _AccumulatePair, _LiveAccumulator, _BindFirst, _Lazy, _start_as)
 from fp.algebra.instances import IdentityFamily
-from fp.callables.protocols import (BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, Unary, OnceUnary, MutableUnary, Binary, MutableBinary)
-from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
+from fp.callables.protocols import (BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, OnceUnary, MutableUnary, Binary, MutableBinary)
+from fp.callables.invoke import call_once, RepeatableUnary, RepeatableBinary
 from fp.callables._receiver import _binary_repeated_as, _unary_once_as
 from std.memory import MaybeUninit
 from fp.callables.products import _take_pair, _MapPair, _WithSecond as _WithState
-from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible, _propagate_error
+from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible
 from .protocols import Stateful, Local, Listen, _CarrierOp, _LocalLifting, StateAction, StateFamily, _EndpointCompatible, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
 from ._adapt import _op_as, _state_run_as, _map_as, _flat_map_as
 
 from ._transport import _BimapOp, _LocalOp, _ListenOp, _ListenMapped, _ListenPair
 
 
+# Recipe admission supplies child execution requirements. Common-error
+# projection still needs explicit _ErrorCompatible evidence at invocation:
+# Mojo 1.2 does not derive it from _CommonErrorCompatible alone.
 comptime _Action[V: Movable & Deinitable] = downcast[V, StateAction]
 
 
@@ -230,7 +233,6 @@ struct _StateMap[M: Monad, S: Movable & Deinitable, A: StateAction, F: UnaryCont
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
         comptime assert Self._RunCompatible, "run: incompatible State recipe"
         comptime assert _ErrorCompatible[Self.Error, Self.A.Error] and _ErrorCompatible[Self.Error, Self.M.MapError[Self.A.Out, Self.Step]]
-        comptime assert Self.A._RunCompatible
         var base = _state_run_as[Self.Error](self.source^, rebind_var[Self.A.State](state^))
         return _map_as[Self.Error, Self.M](Self.Step(self.function^), base^)
 
@@ -265,7 +267,6 @@ struct _StateBind[M: Monad, S: Movable & Deinitable, A: StateAction, F: UnaryCon
         else:
             source_state = state^
             saved = rebind_var[Self.Next.Saved](None)
-        comptime assert Self.A._RunCompatible
         var base = _state_run_as[Self.Error](self.source^, rebind_var[Self.A.State](source_state^))
         return Self.Operation.apply[Self.Error](Self.Next(self.function^, saved^), base^)
 
@@ -290,7 +291,6 @@ struct _StateCombine[M: Monad, S: Movable & Deinitable, A: StateAction, F: Binar
         comptime assert Self._RunCompatible, "run: incompatible State recipe"
         comptime assert _Action[Self.G.Out].Family == Self.Family, _FAMILY_MISMATCH
         comptime assert _ErrorCompatible[Self.Error, Self.A.Error] and _ErrorCompatible[Self.Error, Self.M.BindError[Self.A.Out, Self.Next]]
-        comptime assert Self.A._RunCompatible
         var base = _state_run_as[Self.Error](self.source^, rebind_var[Self.A.State](state^))
         var next = Self.Next(self.function^, _Lazy[Self.G](self.right^))
         return _flat_map_as[Self.Error, Self.M](next^, base^)
@@ -469,9 +469,7 @@ struct _StateHoist[A: Movable & Deinitable, S: StateAction, H: _CarrierOp, Targe
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
         comptime assert Self._RunCompatible, "run: incompatible State recipe"
         comptime E = Self.Error
-        comptime assert Self.H.Compatible[Self.S.Out]
         comptime assert _ErrorCompatible[E, Self.S.Error] and _ErrorCompatible[E, Self.H.Error[Self.S.Out]]
-        comptime assert Self.S._RunCompatible
         var base = _state_run_as[E](self.source^, state^)
         return _op_as[E](self.operation^, base^)
 
