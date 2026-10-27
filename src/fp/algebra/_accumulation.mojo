@@ -1,5 +1,5 @@
 """Accumulation policies shared by pure and effectful terminals."""
-from .protocols import Monoid, _Accumulate
+from .protocols import Monoid, _Accumulate, _SemigroupBinary
 
 
 struct _Combine[M: Monoid](_Accumulate):
@@ -14,7 +14,7 @@ struct _Combine[M: Monoid](_Accumulate):
         return True
     @staticmethod
     def combine(var acc: Self.Acc, var item: Self.Item) raises Self.Error -> Self.Acc:
-        return Self.M.combine(acc^, item^)
+        return _SemigroupBinary[Self.M]().call(acc^, item^)
 
 
 struct _FirstPresent[T: Movable & Deinitable](_Accumulate):

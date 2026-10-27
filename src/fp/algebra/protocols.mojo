@@ -598,6 +598,17 @@ trait Monoid(Semigroup):
         """
         ...
 
+@fieldwise_init
+struct _SemigroupBinary[S: Semigroup](Binary, Copyable, Defaultable):
+    """Expose ordered Semigroup combination to the shared binary call boundary."""
+    comptime First = Self.S.Value
+    comptime Second = Self.S.Value
+    comptime Out = Self.S.Value
+    comptime Error = Self.S.Error
+    def call(self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out:
+        return Self.S.combine(first^, second^)
+
+
 # Owned iteration. An iterator continues from its current position; any other
 # owned iterable starts a fresh iteration. Restarting an iterator would re-pull.
 comptime _Iterator[V: Movable & Deinitable] = _Source[V]

@@ -1,10 +1,10 @@
 """Result error policies and accumulation over the shared native pull loop."""
-from .protocols import Semigroup, _Accumulate, _map_accumulate, _start_as, _AccumulatePair, _LinearLoopCompatible
+from .protocols import Semigroup, _SemigroupBinary, _Accumulate, _map_accumulate, _start_as, _AccumulatePair, _LinearLoopCompatible
 from fp.data._result import Result, Ok, Err, _transform_result_owned
 from std.builtin.rebind import rebind_var
 from fp.callables.protocols import BinaryContract, ThunkContract
 from fp.callables.invoke import call_once
-from fp.callables._receiver import _thunk_once_as
+from fp.callables._receiver import _thunk_once_as, _binary_once_as
 from fp._internal.errors import _propagate_error
 from fp.callables.protocols import UnaryContract, Binary
 from fp.callables._transforms import _ValueThunk
@@ -30,7 +30,7 @@ struct _AccumulatingErrors[S: Semigroup](_ResultPolicy):
     comptime Accumulate = True
     @staticmethod
     def combine(var left: Self.Value, var right: Self.Value) raises Self.Error -> Self.Value:
-        return Self.S.combine(left^, right^)
+        return _SemigroupBinary[Self.S]().call(left^, right^)
 
 
 struct _ResultAccumulator[K: _Accumulate, P: _ResultPolicy](_Accumulate):
@@ -127,10 +127,11 @@ def _result_map2[E: Movable & Deinitable, F: BinaryContract & Movable & Deinitab
             var second = rebind_var[Result[F.Second, E]](_thunk_once_as[X](right^))
             var error = left^._take_err()
             if second.is_err():
-                try:
-                    error = rebind_var[E](P.combine(rebind_var[P.Value](error^), rebind_var[P.Value](second^._take_err())))
-                except raised:
-                    _propagate_error[X](raised^)
+                error = rebind_var[E](_binary_once_as[X](_SemigroupBinary[P](),
+                    rebind_var[P.Value](error^), rebind_var[P.Value](second^._take_err())))
+                # Retain the unused success callback until diagnostics combine.
+                # Its cleanup follows the policy result, including raised errors.
+                _ = function^
             return Result[F.Out, E](Err(error^))
     return _transform_result_owned[F.First, E, F.Out, E, X, True, False, F.First, Result[F.Out, E],
         _ResultRight[F, R, E, X], _result_right[F, R, E, X]](left^, _ResultRight[F, R, E, X](function^, right^))

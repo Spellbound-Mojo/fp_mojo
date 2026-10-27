@@ -6,8 +6,8 @@ from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract
 from fp.callables.invoke import call_once
 from fp.callables._receiver import _unary_once_as, _binary_once_as, _thunk_once_as
 from fp.callables._transforms import _ValueThunk
-from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from .protocols import (Applicative, Monad, Semigroup, _Accumulate,
+from fp._internal.errors import _CommonError, _ErrorCompatible
+from .protocols import (Applicative, Monad, Semigroup, _Accumulate, _SemigroupBinary,
                         _AccumulatePair, _map_accumulate, _start_as)
 
 
@@ -29,10 +29,8 @@ def _ior_merge[S: Semigroup, X: Movable & Deinitable](
         return later^
     if not later:
         return earlier^
-    try:
-        return Optional(S.combine(earlier.unsafe_take(), later.unsafe_take()))
-    except error:
-        _propagate_error[X](error^)
+    return Optional(_binary_once_as[X](
+        _SemigroupBinary[S](), earlier.unsafe_take(), later.unsafe_take()))
 
 
 def _ior_map[E: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](

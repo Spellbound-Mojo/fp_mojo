@@ -2039,6 +2039,29 @@ The rejection categories overlap. Reports retained unchanged inputs and no
 audit failures. Generated sources, all 48 tooling tests, refreshed API metadata
 and strict documentation checks passed.
 
+### Semigroup invocation preserves callback lifetimes
+
+A stateless binary callable exposes Semigroup combination to the existing
+callable invocation boundary. Public combination, monoid accumulation,
+Validation and Ior reuse it. It introduces no identity requirement, payload
+copy or error conversion; the selected policy still owns ordered combination.
+The shared binary adapter forwards its exact native error where the surrounding
+operation admits that error.
+
+Removing a local catch initially changed when an unused Validation success
+callback was destroyed. The accepted implementation explicitly retains that
+callback until diagnostic combination finishes, including the raising path.
+This preserves the original ownership order without duplicating error forwarding.
+The rejected prototype and its trace mismatch remain available as evidence.
+
+All 27 baseline/candidate traces match across direct combination, optional
+Ior diagnostics, every Validation branch pairing, policy and callback failures,
+and ordinary first-error Result behavior. Maintained checks also retain borrowed
+result and native-error origins. Qualification passed four source/package checks
+at O0/O3, all 724 positive programs and all 1,621 rejection fixtures, with unchanged
+inputs and no audit failures. Generated-source verification, all 48 tooling tests
+and strict documentation checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

@@ -11,6 +11,7 @@ from fp.callables._views import _UnaryViewable
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract
 from fp.callables.native import _NativeUnaryRef, _Unary, _RaisingUnary
 from fp._internal.errors import _ErrorCompatible
+from .protocols import _SemigroupBinary
 from .protocols import Functor, Applicative, Monad, Traversable, Monoid, Semigroup, _pure, _map_as, _flat_map_as, _traverse_as
 from .contracts import MapContract, BindContract, TraverseContract, FilterContract, CombineContract
 
@@ -204,7 +205,7 @@ def combine[M: Semigroup](var left: M.Value, var right: M.Value) raises M.Error 
     Raises:
         `M.Error`; nothing for the library's monoids.
     """
-    return M.combine(left^, right^)
+    return _SemigroupBinary[M]().call(left^, right^)
 
 
 # Native functions and closures for every instance. The callback is borrowed
