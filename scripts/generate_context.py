@@ -995,9 +995,13 @@ def methods(*, fold_stage=False):
              ["OptionalFamily.CarrierCompatible[Self.V]", *cb["conditions"]],
              f'_optional_to_result[{element}, {cb["adapter_type"]}](rebind_var[Optional[{element}]](self.value^), {cb["build"]})',
              "Convert a native Optional to Result, invoking the error factory only on absence.")
-    body.append(f'\n    def to_optional(deinit self) -> Optional[{T}] where {" and ".join(result_conditions)}:\n'
-                '        """Consume the native Result carrier, retaining only its success in an Optional."""\n'
-                f'        return rebind_var[{Source}](self.value^).to_optional()\n')
+    for name, output, effect, summary in (
+        ("to_optional", f"Optional[{T}]", "", "Consume the native Result carrier, retaining only its success in an Optional."),
+        ("raise_on_err", T, f" raises {Err}", "Consume the native Result carrier, returning its success or raising its stored error."),
+    ):
+        body.append(f'\n    def {name}(deinit self){effect} -> {output} where {" and ".join(result_conditions)}:\n'
+                    f'        """{summary}"""\n'
+                    f'        return rebind_var[{Source}](self.value^).{name}()\n')
     swapped = f"Result[{Err}, {T}]"
     body.append(f'\n    def swap(deinit self) -> Pipeline[ResultFamily[{T}], {swapped}, Self.E] where {" and ".join(result_conditions)}:\n'
                 '        """Exchange native Result success and stored failure, retaining the selected native error."""\n'
@@ -1189,6 +1193,7 @@ def documented(source):
             + ("    An owning fold stage; run(step) returns the target pipeline.\n" if name == "fold_effect" else
                "    The moved payload or fallback, without a pipeline wrapper.\n" if name in ("value_or", "get_or", "get_or_else") else
                "    A native Optional containing the moved success, or empty on Err.\n" if name == "to_optional" else
+               "    The moved Result success value, without a pipeline wrapper.\n" if name == "raise_on_err" else
                "    The pipeline containing the operation result, retaining its selected native error.\n")
         ]
         if spec["error"]:
@@ -1197,7 +1202,8 @@ def documented(source):
                 + indent
                 + "Raises:\n"
                 + indent
-                + "    The exact callback or family error; it never becomes a stored Result error.\n"
+                + ("    The stored Result error, retaining its exact type and origins; independent of the selected callback error.\n"
+                   if name == "raise_on_err" else "    The exact callback or family error; it never becomes a stored Result error.\n")
             ]
         doc += [indent + '"""\n']
         out += doc

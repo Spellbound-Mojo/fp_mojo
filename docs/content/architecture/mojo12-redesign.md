@@ -3427,3 +3427,15 @@ type on the default parameter. This gives literals an expected type, allowing
 Normal Mojo conversions apply to value arguments; nominal identity and origins
 are preserved. Argument expressions are eager by Mojo's ordinary call semantics;
 `get_or_else(factory)` remains the explicit lazy form.
+
+### Raising a stored error from a pipeline
+
+`Pipeline.raise_on_err()` is a terminal for native Result carriers. It forwards
+directly to `Result.raise_on_err()`, which remains the owner of extraction and
+raising. The method's declared error comes from the carrier, independently of
+the selected native callback error and selected family. This keeps both success
+and error ownership, origins and nominal types intact, including pure extraction
+for Result values whose stored error is Never.
+
+Generation shares the native Result receiver boundary with `to_optional`; no
+callback overloads, error conversions or new branch execution are introduced.

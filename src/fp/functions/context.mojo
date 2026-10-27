@@ -6816,6 +6816,17 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         """
         return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).to_optional()
 
+    def raise_on_err(deinit self) raises _Failure[Self.V] -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]:
+        """Consume the native Result carrier, returning its success or raising its stored error.
+
+        Returns:
+            The moved Result success value, without a pipeline wrapper.
+
+        Raises:
+            The stored Result error, retaining its exact type and origins; independent of the selected callback error.
+        """
+        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).raise_on_err()
+
     def swap(deinit self) -> Pipeline[ResultFamily[_Success[Self.V]], Result[_Failure[Self.V], _Success[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]:
         """Exchange native Result success and stored failure, retaining the selected native error.
 

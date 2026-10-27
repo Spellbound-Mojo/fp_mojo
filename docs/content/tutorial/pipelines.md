@@ -75,7 +75,9 @@ A stored `Result.Err` is separate from a raised error. Result mapping and bind
 skip a stored failure; a whole-value `.then(...)` can inspect it. Finish a Result
 with `.value_or(on_err)` for error-dependent recovery, `.get_or(value)` for an
 available default, `.get_or_else(factory)` for a lazy default, or `.to_optional()` to retain only success. These return the
-plain value or Optional directly. See [Results and recovery](results.md).
+plain value or Optional directly. To propagate a stored error as a native
+exception, finish with `.raise_on_err()`; its raised type comes from the Result.
+See [Results and recovery](results.md).
 
 ## Choose a constant or lazy default
 

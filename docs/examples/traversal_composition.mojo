@@ -1,7 +1,7 @@
 """Flatten and filter effectful results with fluent traversal combinators."""
 from fp.algebra import ResultFamily
 from fp.data import Result, Ok, Err
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.iteration import iterated
 from std.testing import assert_equal, assert_true
 
@@ -23,8 +23,8 @@ def select_even(value: Int) -> Result[Optional[Int], String]:
 
 def main() raises:
     var values: List[Int] = [1, 2, 3]
-    var expanded = piped(values.copy()).flat_traverse[ResultFamily[String]](expand).get().raise_on_err()
-    var kept = piped(expanded^).filter_effect[ResultFamily[String]](keep_even).get().raise_on_err()
+    var expanded = pipeline(values.copy()).flat_traverse[ResultFamily[String]](expand).raise_on_err()
+    var kept = pipeline(expanded^).filter_effect[ResultFamily[String]](keep_even).raise_on_err()
     assert_equal(kept, [10, 2, 20, 30])
     print("kept:", kept)
 
@@ -33,7 +33,7 @@ def main() raises:
     print("selected:", selected)
 
     var groups: List[Result[List[Int], String]] = [expand(1), expand(2)]
-    var flattened = piped(groups^).flat_sequence[ResultFamily[String]]().get().raise_on_err()
+    var flattened = pipeline(groups^).flat_sequence[ResultFamily[String]]().raise_on_err()
     assert_equal(flattened, [1, 10, 2, 20])
     print("sequenced:", flattened)
 

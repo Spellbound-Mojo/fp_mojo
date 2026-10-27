@@ -71,8 +71,11 @@ even on success; an unused default is destroyed. See the
 [eager and lazy default example](pipelines.md#choose-a-constant-or-lazy-default).
 The callback must return exactly `T`, including its origins; the library does
 not widen the success type. Unlike `recover`, `value_or` returns `T` rather
-than `Result[T, E]`. `raise_on_err()` remains the way to return `T` or raise
-the stored error.
+than `Result[T, E]`. Use `raise_on_err()` to return `T` or raise the stored error.
+It also finishes a pipeline directly: `pipeline(result^).raise_on_err()`.
+This follows [Cats EitherT's `rethrowT`](https://github.com/typelevel/cats/blob/main/core/src/main/scala/cats/data/EitherT.scala#L251),
+using Mojo's native exception mechanism. The stored `E` is preserved, independent
+of the pipeline's selected callback error. A stored Never keeps extraction pure.
 
 A native error raised by a fallback propagates unchanged. Plain functions infer
 their error; non-raising closures and closures raising `Error` or `Never` work

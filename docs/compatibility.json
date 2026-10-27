@@ -744,13 +744,14 @@
       "name": "Result terminals",
       "methods": [
         "value_or",
-        "to_optional"
+        "to_optional",
+        "raise_on_err"
       ],
       "status": "result_only",
       "families": "A native Result carrier",
-      "callbacks": "Owned unary fallback; no callback for to_optional.",
+      "callbacks": "Owned unary fallback for value_or; no callback for to_optional or raise_on_err.",
       "ownership": "Consumes the Result and library callback owners; native closures are borrowed. Returns a plain value or Optional.",
-      "errors": "Selected native error for closures, exact declared library error. Stored errors feed value_or or are discarded by to_optional.",
+      "errors": "Selected native error for closures, exact declared library error. Stored errors feed value_or or are discarded by to_optional. raise_on_err raises the stored error with its exact type and origins, independent of the selected callback error.",
       "timing": "Immediate extraction; fallback callbacks run only on Err.",
       "owner": [
         "src/fp/data/_result.mojo",
@@ -760,7 +761,11 @@
         "docs/examples/result_values.mojo",
         "tests/runtime/test_result_terminals.mojo",
         "tests/ownership/test_result_terminals_ownership.mojo",
-        "tests/compile_fail/result_terminals_context_error.mojo"
+        "tests/compile_fail/result_terminals_context_error.mojo",
+        "docs/examples/traversal_composition.mojo",
+        "tests/runtime/test_pipeline_raise.mojo",
+        "tests/ownership/test_pipeline_raise_ownership.mojo",
+        "tests/compile_fail/pipeline_raise_effect.mojo"
       ]
     },
     {

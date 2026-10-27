@@ -25020,6 +25020,30 @@
       "summary": "On success, call a zero-argument factory and return its Result."
      }
     ],
+    "get_or": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The fallback value, with the exact success type and origins.",
+        "name": "default_value",
+        "type": "Self.T",
+        "variadic": false
+       }
+      ],
+      "description": "Both the Result and the default are consumed. On Ok, the unused default\nis destroyed. Argument expressions evaluate normally before this call;\nuse `get_or_else(factory)` to construct a default only on Err.",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The success value or default, moved out without copying.",
+       "type": "Self.T"
+      },
+      "signature": "def get_or(deinit self, var default_value: Self.T) -> Self.T",
+      "summary": "Return the success value or an already evaluated default."
+     }
+    ],
     "get_or_else": [
      {
       "args": [
@@ -113087,6 +113111,52 @@
       "summary": "Consume the pipeline and extract its carrier without evaluating it."
      }
     ],
+    "get_or": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The already evaluated fallback; consumed even when the payload is present. Use get_or_else for lazy construction.",
+        "name": "default_value",
+        "type": "_Success[Self.V]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The moved payload or fallback, without a pipeline wrapper.",
+       "type": "_Success[Self.V]"
+      },
+      "signature": "def get_or(deinit self, var default_value: _Success[Self.V]) -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]",
+      "summary": "Return the present payload or an already evaluated default; consume both inputs."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "default_value",
+        "type": "OptionalFamily.Element[Self.V]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "OptionalFamily.Element[Self.V]"
+      },
+      "signature": "def get_or(deinit self, var default_value: OptionalFamily.Element[Self.V]) -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V]",
+      "summary": "Return the present payload or an already evaluated default; consume both inputs."
+     }
+    ],
     "get_or_else": [
      {
       "args": [
@@ -149445,6 +149515,22 @@
       },
       "signature": "def product_n[*Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws]) raises _ProductTypes[_Combining[Self.I], Self.V, *Ws].Error -> Pipeline[Self.I, _ProductTypes[_Combining[Self.I], Self.V, *Ws].Out, Self.E] where conforms_to(Self.I, Applicative) and Ws.length < 8 and _ProductRun[_Combining[Self.I], Self.V, *Ws].AdmittedInputs",
       "summary": "Combine up to eight evaluated carriers into flat tuples."
+     }
+    ],
+    "raise_on_err": [
+     {
+      "args": [],
+      "description": "",
+      "error": "_Failure[Self.V]",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The stored Result error, retaining its exact type and origins; independent of the selected callback error.",
+      "returns": {
+       "doc": "The moved Result success value, without a pipeline wrapper.",
+       "type": "_Success[Self.V]"
+      },
+      "signature": "def raise_on_err(deinit self) raises _Failure[Self.V] -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]",
+      "summary": "Consume the native Result carrier, returning its success or raising its stored error."
      }
     ],
     "raising": [

@@ -10302,6 +10302,12 @@
             "sha256": "28d77ec17bcc84a58ce868888e0b5ff70874c1c939a920a989c977682362331e"
           }
         ],
+        "raise_on_err": [
+          {
+            "signature": "def raise_on_err(deinit self) raises _Failure[Self.V] -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]:",
+            "sha256": "a8b578718ed7bac4f2ed5dead5c35dd7770e6596f374ccb4c6f5e234cb8fbc48"
+          }
+        ],
         "swap": [
           {
             "signature": "def swap(deinit self) -> Pipeline[ResultFamily[_Success[Self.V]], Result[_Failure[Self.V], _Success[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]:",

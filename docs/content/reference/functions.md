@@ -7,7 +7,7 @@ The [pipeline tutorial](../tutorial/pipelines.md) starts with a complete program
 
 Use `.map(transform)` for selected payloads and `.then(stage)` for the whole
 value. Native collection operations execute immediately, and `.get()` extracts
-the stored carrier. Value terminals `value_or`, `get_or`, `get_or_else` and `to_optional`
+the stored carrier. Value terminals `value_or`, `get_or`, `get_or_else`, `raise_on_err` and `to_optional`
 return their final value directly. For a reusable generic wrapper, follow the
 [contract-forwarding guide](../guides/generic-wrappers.md).
 
@@ -453,6 +453,18 @@ as `5830` and prints as `total: $58.30`. With `"19.99"`, `parse_cents` raises
 `PriceError`, no later stage runs, and the program prints
 `invalid price: 19.99`.
 The entry point selects `PriceError` once; subsequent pure stages retain Never.
+
+## Raise a stored Result error
+
+`pipeline(result^).raise_on_err()` returns the success payload directly or raises
+the stored error. It consumes the Result and preserves both payload types,
+move-only ownership and origins. No `.get()` or additional type argument is
+needed. The terminal delegates to `Result.raise_on_err()`.
+
+The raised type is the Result's stored error type. `.raising[E]()` continues to
+select native callback errors; it does not change or convert stored errors.
+An error type of Never keeps this terminal non-raising. See
+[finishing with a value](../tutorial/results.md#finish-with-a-value).
 
 ## Convert an Optional to a Result
 
