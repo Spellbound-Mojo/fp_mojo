@@ -14,7 +14,7 @@ from fp.algebra.instances import IdentityFamily
 from fp.callables.protocols import (UnaryContract, BinaryContract, ThunkContract, OnceUnary, MutableUnary,
                                     OnceThunk, MutableBinary, BorrowCallContract, BorrowCallable, BorrowOnceCallable)
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
-from fp.callables._receiver import _borrow_once_as, _binary_repeated_as, _unary_once_as, _thunk_once_as
+from fp.callables._receiver import _MutableUnaryRef, _borrow_once_as, _binary_repeated_as, _unary_once_as, _thunk_once_as
 from fp._internal.errors import _CommonError, _CommonErrorCompatible, _ErrorCompatible, _propagate_error
 from .protocols import Local, Listen, _CarrierOp, _LocalLifting, ReaderAction, ReaderFamily, _EndpointCompatible, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
 from ._adapt import _op_as, _reader_run_as, _map_as, _flat_map_as, _map2_lazy_as
@@ -121,16 +121,13 @@ struct _ReaderContinue[I: AnyType, F: UnaryContract & Movable & Deinitable, R: A
         comptime assert Self.Action._RunCompatible[Self.o]
         return _reader_run_as[Self.Error](action^, rebind[Self.Action.Env](self.env[]))
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        comptime assert Self.Action.Family == Self.I, _FAMILY_MISMATCH
-        comptime assert _ErrorCompatible[Self.Error, Self.F.Error] and _ErrorCompatible[Self.Error, Self.Action.Error[Self.o]]
         comptime assert RepeatableUnary[Self.F]
-        var action: Self.Action
-        try:
-            action = rebind_var[Self.Action](call_repeated(self.function, arg^))
-        except error:
-            _propagate_error[Self.Error](error^)
-        comptime assert Self.Action._RunCompatible[Self.o]
-        return _reader_run_as[Self.Error](action^, rebind[Self.Action.Env](self.env[]))
+        comptime View = _MutableUnaryRef[Self.F, origin_of(self.function)]
+        comptime Next = _ReaderContinue[Self.I, View, Self.R, Self.o]
+        comptime assert Next.Arg == Self.Arg and Next.Out == Self.Out
+        comptime assert _ErrorCompatible[Self.Error, Next.Error]
+        return rebind_var[Self.Out](_unary_once_as[Self.Error](
+            Next(View(Pointer(to=self.function)), self.env), rebind_var[Next.Arg](arg^)))
 
 
 @fieldwise_init

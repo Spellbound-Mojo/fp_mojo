@@ -1817,6 +1817,24 @@ qualification passed 20 source/package checks, five Reader programs, 34 traversa
 programs, 132 generic clients, all 48 tooling tests and generator verification.
 Compiler reports retained unchanged inputs and no audit failures.
 
+### Repeated Reader receivers share consuming execution
+
+A repeated Reader continuation now borrows its mutable callback through the
+canonical unary receiver view and runs the existing consuming continuation.
+The environment pointer keeps its original origin. The callback is neither
+copied nor consumed by the view; each repeated call mutates the same receiver.
+The consuming implementation remains the owner of producer invocation, child
+recipe admission, error forwarding and running the produced action.
+
+Eight baseline/candidate traces matched for consuming and repeated calls,
+producer failure, child-run failure, exact error precedence and owned-capture
+cleanup. The maintained ownership program checks those traces. Prototype
+qualification passed 24 source/package checks at O0 and O3, 17 Writer programs,
+34 traversal programs and 132 generic clients with unchanged inputs and no
+audit failures. Public receiver capabilities and call syntax are unchanged. Main-tree
+qualification repeated those checks and passed all 48 tooling tests and generated
+source verification; compiler inputs remained unchanged with no audit failures.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.
