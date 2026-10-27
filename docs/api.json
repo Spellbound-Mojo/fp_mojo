@@ -172909,7 +172909,7 @@
       "error": "_Traversing[Self.I].TraverseError[J, Self.V, Identity[Self.I.Element[Self.V]]]",
       "parameters": [
        {
-        "description": "The output family; inferred for whole-value stages, explicit for traversal.",
+        "description": "The target Applicative; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",
@@ -172922,7 +172922,7 @@
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
        "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]], Self.E]"
       },
-      "signature": "def sequence[J: Applicative](deinit self) raises _Traversing[Self.I].TraverseError[J, Self.V, Identity[Self.I.Element[Self.V]]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]], Self.E] where conforms_to(Self.I, Traversable) and _TraverseCompatible[_Traversing[Self.I], Self.V, Identity[Self.I.Element[Self.V]]] and _Traversing[Self.I].TargetCompatible[J, Self.V, Identity[Self.I.Element[Self.V]]] and _CarrierCompatible[J, Self.I.Element[Self.V]]",
+      "signature": "def sequence[J: Applicative = _InferredApplicative[Self.I.Element[Self.V]]](deinit self) raises _Traversing[Self.I].TraverseError[J, Self.V, Identity[Self.I.Element[Self.V]]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]], Self.E] where conforms_to(Self.I, Traversable) and _TraverseCompatible[_Traversing[Self.I], Self.V, Identity[Self.I.Element[Self.V]]] and _Traversing[Self.I].TargetCompatible[J, Self.V, Identity[Self.I.Element[Self.V]]] and _CarrierCompatible[J, Self.I.Element[Self.V]]",
       "summary": "Sequence existing effects and continue in the target family."
      }
     ],
@@ -176689,7 +176689,7 @@
         "variadic": false
        },
        {
-        "description": "The output family; inferred for whole-value stages, explicit for traversal.",
+        "description": "The target Applicative; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",
@@ -176702,7 +176702,7 @@
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
        "type": "Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, C].Out, Self.E]"
       },
-      "signature": "def traverse[C: UnaryContract & Movable & Deinitable, //, J: Applicative](deinit self, var function: C) raises TraverseContract[_Traversing[Self.I], J, Self.V, C].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, C].Out, Self.E] where conforms_to(Self.I, Traversable) and C.Arg == Self.I.Element[Self.V] and TraverseContract[_Traversing[Self.I], J, Self.V, C].FamilyCompatible",
+      "signature": "def traverse[C: UnaryContract & Movable & Deinitable, //, J: Applicative = _InferredApplicative[C.Out]](deinit self, var function: C) raises TraverseContract[_Traversing[Self.I], J, Self.V, C].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, C].Out, Self.E] where conforms_to(Self.I, Traversable) and C.Arg == Self.I.Element[Self.V] and TraverseContract[_Traversing[Self.I], J, Self.V, C].FamilyCompatible",
       "summary": "Traverse into the selected target effect and continue in that family."
      },
      {
@@ -176753,7 +176753,7 @@
        "doc": "",
        "type": "Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E]"
       },
-      "signature": "def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative, C: def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].FamilyCompatible",
+      "signature": "def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(var Self.I.Element[Self.V]) -> R = def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].FamilyCompatible",
       "summary": "Traverse into the selected target effect and continue in that family."
      },
      {
@@ -176804,7 +176804,7 @@
        "doc": "",
        "type": "Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Out, Self.E]"
       },
-      "signature": "def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative, C: def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].FamilyCompatible",
+      "signature": "def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(var Self.I.Element[Self.V]) raises Self.E -> R = def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].FamilyCompatible",
       "summary": "Traverse into the selected target effect and continue in that family."
      },
      {
@@ -176855,7 +176855,7 @@
        "doc": "",
        "type": "Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Out, Self.E]"
       },
-      "signature": "def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative, C: def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and Self.E != Never and TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].FamilyCompatible",
+      "signature": "def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(var Self.I.Element[Self.V]) raises Never -> R = def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and Self.E != Never and TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].FamilyCompatible",
       "summary": "Traverse into the selected target effect and continue in that family."
      },
      {
@@ -176892,7 +176892,7 @@
        "doc": "",
        "type": "Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def traverse[R: Movable & Deinitable, //, J: Applicative](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Traversable) and not conforms_to(R, RegisterPassable) and TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].FamilyCompatible",
+      "signature": "def traverse[R: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Traversable) and not conforms_to(R, RegisterPassable) and TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].FamilyCompatible",
       "summary": "Traverse into the selected target effect and continue in that family."
      },
      {
@@ -176929,7 +176929,7 @@
        "doc": "",
        "type": "Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def traverse[R: RegisterPassable & Deinitable, //, J: Applicative](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Traversable) and TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].FamilyCompatible",
+      "signature": "def traverse[R: RegisterPassable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Traversable) and TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].FamilyCompatible",
       "summary": "Traverse into the selected target effect and continue in that family."
      },
      {
@@ -176973,7 +176973,7 @@
        "doc": "",
        "type": "Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def traverse[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Applicative](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Traversable) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].FamilyCompatible",
+      "signature": "def traverse[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Traversable) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].FamilyCompatible",
       "summary": "Traverse into the selected target effect and continue in that family."
      },
      {
@@ -177017,7 +177017,7 @@
        "doc": "",
        "type": "Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def traverse[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Applicative](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Traversable) and _ErrorCompatible[Self.E, X] and TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].FamilyCompatible",
+      "signature": "def traverse[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Traversable) and _ErrorCompatible[Self.E, X] and TraverseContract[_Traversing[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].FamilyCompatible",
       "summary": "Traverse into the selected target effect and continue in that family."
      }
     ],

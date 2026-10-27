@@ -3439,3 +3439,23 @@ for Result values whose stored error is Never.
 
 Generation shares the native Result receiver boundary with `to_optional`; no
 callback overloads, error conversions or new branch execution are introduced.
+
+### Inferring native traversal targets
+
+`Pipeline.traverse` and `sequence` default their target parameter through the
+existing `_InferredApplicative` carrier recognizer. Native Optional, Result and
+List select their canonical families. The candidate must still satisfy the
+existing traversal and carrier contracts; unrecognized effects require an
+explicit target. Result inference keeps short-circuiting semantics, while an
+explicit validation or deferred target retains its own evaluation policy.
+
+The generator changes parameter defaults without adding overloads or execution
+paths. Native closure types are still inferred from borrowed runtime arguments,
+preserving exact storage and origins. Their existing positional type parameter
+defaults to its native signature because Mojo requires all parameters following
+an optional target to have defaults. Explicit target and callback type bindings
+keep their order; the signature default does not coerce inferred closure types.
+Library callable and native thin-pointer forms use the same target recognition.
+
+Traversal execution, output shape, error propagation, repeatability admission
+and cleanup remain owned by the existing TraverseContract and family operations.

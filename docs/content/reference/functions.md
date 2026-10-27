@@ -372,7 +372,10 @@ Arrays use O(N) temporary List storage to avoid moving Mojo 1.2's owning Array
 iterator; their elements still move once without copying. Other native iterators
 continue from their current position.
 
-`traverse[TargetFamily](transform)` and `sequence[TargetFamily]()` continue in
+`traverse(transform)` and `sequence()` infer native Optional, Result and List
+targets from the callback result or existing effect element. Use
+`traverse[TargetFamily](transform)` and `sequence[TargetFamily]()` to select
+another policy, including validation or a deferred effect. Both continue in
 the target effect family. `traverse_tap[TargetFamily](effect)` borrows each
 payload, runs its effect and retains the original on success, discarding the
 effect's payload. `filter_effect[TargetFamily](predicate)` runs a borrowing

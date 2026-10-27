@@ -37,7 +37,7 @@ def checkout_fold(var amounts: List[String]) raises WorkflowTransportFailure -> 
 def checkout(var amounts: List[String]) raises WorkflowTransportFailure -> Result[String, String]:
     return (pipeline(amounts^)
         .raising[WorkflowTransportFailure]()
-        .traverse[ResultFamily[String]](parse)
+        .traverse(parse)
         .map(total)
         .map_n((ok[String](5), ok[String](2)), receipt)
         .get())

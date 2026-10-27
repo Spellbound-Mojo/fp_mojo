@@ -470,11 +470,24 @@ def methods(*, fold_stage=False):
 ''')
 
 
-    for cb in owning_callbacks("owned", "Self.I.Element[Self.V]", "function"):
+    def inferred_target_parameters(cb):
+        # Native carrier recognition proposes a target; the existing traversal
+        # contract still admits that target and preserves its exact semantics.
+        # Keep J and callback type bindings in their existing positional order.
+        # Mojo requires parameters after a default to have defaults too. A
+        # closure's type remains inferred from its borrowed argument; its
+        # signature is the default for an omitted explicit type binding.
         params = list(cb["params"])
-        if "//" not in params:
-            params += ["//"]
-        params.insert(params.index("//") + 1, "J: Applicative")
+        if "//" not in params: params += ["//"]
+        boundary = params.index("//") + 1
+        params[boundary:boundary] = [f'J: Applicative = _InferredApplicative[{cb["result"]}]']
+        for i in range(boundary + 1, len(params)):
+            name, constraint = params[i].split(": ", 1)
+            params[i] = f"{name}: {constraint} = {constraint}"
+        return params
+
+    for cb in owning_callbacks("owned", "Self.I.Element[Self.V]", "function"):
+        params = inferred_target_parameters(cb)
         family = "_Traversing[Self.I]"
         contract = f"TraverseContract[{family}, J, Self.V, {cb['adapter_type']}]"
         result, error = contract + ".Out", contract + ".Error"
@@ -648,7 +661,7 @@ def methods(*, fold_stage=False):
     result, error = f"{family}.Traversed[{types}]", f"{family}.TraverseError[{types}]"
     target = f"Pipeline[J, {result}, Self.E]"
     body.append(
-        f"\n    def sequence[J: Applicative](deinit self) raises {error} -> {target} where conforms_to(Self.I, Traversable) and _TraverseCompatible[{family}, Self.V, {identity}] and {family}.TargetCompatible[J, Self.V, {identity}] and _CarrierCompatible[J, Self.I.Element[Self.V]]:\n"
+        f"\n    def sequence[J: Applicative = _InferredApplicative[Self.I.Element[Self.V]]](deinit self) raises {error} -> {target} where conforms_to(Self.I, Traversable) and _TraverseCompatible[{family}, Self.V, {identity}] and {family}.TargetCompatible[J, Self.V, {identity}] and _CarrierCompatible[J, Self.I.Element[Self.V]]:\n"
         f'        """Sequence existing effects and continue in the target family."""\n'
         f"        return {target}({family}.traverse[J]({identity}(), self.value^))\n"
     )
@@ -1171,7 +1184,9 @@ def documented(source):
             doc += [
                 indent + "    " + p["name"] + ": " + (
                     "The error Semigroup; inferred list errors concatenate in order."
-                    if p["name"] == "S" and name.startswith("par_") else params[p["name"]]
+                    if p["name"] == "S" and name.startswith("par_") else
+                    "The target Applicative; inferred for native Optional, Result and List effects. Explicit bindings retain their policy."
+                    if p["name"] == "J" and name in ("traverse", "sequence") else params[p["name"]]
                 ) + "\n"
                 for p in spec["parameters"]
             ]

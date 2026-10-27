@@ -79,6 +79,28 @@ plain value or Optional directly. To propagate a stored error as a native
 exception, finish with `.raise_on_err()`; its raised type comes from the Result.
 See [Results and recovery](results.md).
 
+## Gather effects without family annotations
+
+Use `.traverse(callback)` when each payload produces an Optional, Result or
+List. The pipeline infers the target family from the callback's return type.
+Use `.sequence()` when the effects already exist. Both keep the source shape
+inside the selected target effect and continue in that effect's family:
+
+<!-- example: docs/examples/inferred_traversal.mojo -->
+
+This follows Cats' `traverse` and `sequence` workflow. Native Optional stops on
+absence, Result stops on its first stored error, and List enumerates ordered
+combinations. Raised callback errors still use `.raising[E]()`; they are
+independent of the stored Result error. Payload types, origins and permitted
+move-only ownership are preserved.
+
+Use an explicit family when choosing another policy, such as
+`.traverse[ValidationFamily[Policy]](validate)` for error accumulation or
+`.traverse[Reader[Environment]](make_action)` for deferred execution. Existing
+explicit family and callback type bindings remain available. Target inference
+currently applies to `traverse` and `sequence`; derived traversal methods keep
+their explicit target argument.
+
 ## Choose a constant or lazy default
 
 Use `.get_or(value)` to finish an Optional or Result pipeline with an already

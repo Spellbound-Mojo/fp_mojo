@@ -111,6 +111,9 @@
     "docs/examples/if_contracts.mojo": {
       "stdout": "selected: 14\n"
     },
+    "docs/examples/inferred_traversal.mojo": {
+      "stdout": "total: 15\nerror: invalid quantity\ngathered: 2 4\n"
+    },
     "docs/examples/ior_validation.mojo": {
       "stdout": "value: 0\nwarning: zero accepted\nindependent diagnostics: 3\nsequential diagnostics: 2\n"
     },
