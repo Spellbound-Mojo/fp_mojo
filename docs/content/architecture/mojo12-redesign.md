@@ -2506,6 +2506,23 @@ contract rejection groups. Reports retained unchanged inputs and no audit
 failures. Generated-source checks, all 48 tooling tests and strict documentation
 checks passed.
 
+### Runtime fold callbacks project their shared signature metadata
+
+The default dependent fold's runtime probe and step now project their argument,
+output and error from the corresponding shared type-only shapes. In particular,
+the step's joined-carrier formula has one declaration. The callbacks' stored
+values, receiver requirements, execution methods and native error-equivalence
+assertions are unchanged. Public signatures and generated API documentation
+remain unchanged.
+
+The exact candidate passed six focused O0 controls spanning Boolean queries,
+both searches, mapped folds, generic staged folds and ownership traces. All
+28 staged-fold source/package O0/O3 checks passed, as did five effect-query,
+four effect-search, sixteen fold and all 140 generic programs. The same six
+targeted rejection groups passed with ordinary diagnostics. Reports retained
+unchanged inputs and no audit failures. Generated-source checks, all 48 tooling
+tests and strict documentation checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

@@ -897,8 +897,8 @@ comptime _ProbeShape[K: _LiveAccumulator] = _ErrorProbe[K.Acc, K.Acc, Never]
 @fieldwise_init
 struct _Probe[K: _LiveAccumulator, o: MutOrigin](Unary):
     var live: Pointer[Bool, Self.o]
-    comptime Arg = Self.K.Acc
-    comptime Out = Self.K.Acc
+    comptime Arg = _ProbeShape[Self.K].Arg
+    comptime Out = _ProbeShape[Self.K].Out
     def call(self, var arg: Self.Arg) -> Self.Out:
         if Self.K.live(arg):
             self.live[] = True
@@ -914,9 +914,9 @@ struct _Step[M: Monad, F: BinaryContract & Movable & Deinitable, K: _LiveAccumul
 ):
     var function: Pointer[Self.F, Self.o]
     var item: Self.F.Second
-    comptime Arg = Self.K.Acc
-    comptime Out = Self.M._Joined[Self.M.Pure[Self.K.Acc], Self.F.Out]
-    comptime Error = Self.F.Error
+    comptime Arg = _StepShape[Self.M, Self.F, Self.K].Arg
+    comptime Out = _StepShape[Self.M, Self.F, Self.K].Out
+    comptime Error = _StepShape[Self.M, Self.F, Self.K].Error
 
     @staticmethod
     def _apply(mut function: Self.F, var arg: Self.Arg, var item: Self.F.Second) raises Self.Error -> Self.Out:
