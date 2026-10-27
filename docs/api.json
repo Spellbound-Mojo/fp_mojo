@@ -1087,8 +1087,16 @@
      "name": "FamilyCompatible"
     },
     {
-     "description": "The complete checked flat_map admission.",
+     "description": "Existing bind admission, preserving the expanded input and family proof.",
      "name": "Compatible"
+    },
+    {
+     "description": "The callback has a consuming, mutable or shared receiver.",
+     "name": "ReceiverCompatible"
+    },
+    {
+     "description": "Existing admission plus callback receiver availability for new wrappers.",
+     "name": "InvocationCompatible"
     },
     {
      "description": "The family selected for fluent continuation over Out.",
@@ -1158,8 +1166,16 @@
      "name": "FamilyCompatible"
     },
     {
-     "description": "The complete checked lazy combination admission.",
+     "description": "Existing combination admission, preserving expanded input and family proofs.",
      "name": "Compatible"
+    },
+    {
+     "description": "The binary callback and right factory each have an invocable receiver.",
+     "name": "ReceiverCompatible"
+    },
+    {
+     "description": "Existing admission plus callback receiver availability for new wrappers.",
+     "name": "InvocationCompatible"
     },
     {
      "description": "The family selected for fluent continuation over Out.",
@@ -3770,8 +3786,16 @@
      "name": "FamilyCompatible"
     },
     {
-     "description": "The complete checked map admission.",
+     "description": "Existing map admission, preserving the expanded input and family proof.",
      "name": "Compatible"
+    },
+    {
+     "description": "The callback has a consuming, mutable or shared receiver.",
+     "name": "ReceiverCompatible"
+    },
+    {
+     "description": "Existing admission plus callback receiver availability for new wrappers.",
+     "name": "InvocationCompatible"
     },
     {
      "description": "The family selected for fluent continuation over Out.",

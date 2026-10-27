@@ -18,6 +18,13 @@ input equality and three family predicates. These compile-time descriptors
 store nothing and delegate execution to the same families. They describe
 library callbacks; native callbacks keep their existing admission syntax.
 
+For new map or bind wrappers, `InvocationCompatible` adds callback receiver
+availability to the historical `Compatible` proof. `ReceiverCompatible` exposes
+that check alone. This catches metadata-only callbacks at the wrapper boundary,
+without explicit callback type bindings. Existing expanded input/family proofs
+continue to forward `Compatible`; family-specific repetition and copy policies
+still apply.
+
 List mapping and binding require repeatable callbacks: shared or mutable
 receivers. Their public family predicates now include that requirement.
 OptionalT and ResultT propagate the admission of the actual base map, bind or
@@ -109,6 +116,9 @@ fourth parameter for `filter_not`. Its error and output use the actual
 predicate supplied to the family, including inversion. `CombineContract`
 describes a binary callback and a lazy right-hand thunk; it preserves the
 family's exact construction error and does not evaluate the thunk.
+Its `InvocationCompatible` additionally requires invocable receivers on both the
+binary callback and the right factory. `Map2Contract` and `ProductContract`
+inherit these projections through their existing aliases.
 
 Cartesian List combination requires a repeatable binary callback and copyable
 operands. Its right-hand factory is invoked at most once and may consume its

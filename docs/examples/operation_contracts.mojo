@@ -1,8 +1,14 @@
-"""One shared contract describes a generic traversal's admission and types."""
-from fp.algebra import Applicative, Traversable, TraverseContract, ListFamily, OptionalFamily
+"""Public contracts name generic operation admission, results and native errors."""
+from fp.algebra import Functor, MapContract, Applicative, Traversable, TraverseContract, ListFamily, OptionalFamily
 from fp.callables import UnaryContract, Unary
-from fp.functions import pipeline
+from fp.functions import pipeline, Identity
 from std.testing import assert_equal
+
+def mapped[I: Functor, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
+    var value: V, var function: F
+) raises MapContract[I,V,F].Error -> MapContract[I,V,F].Out where MapContract[I,V,F].InvocationCompatible:
+    return pipeline[I](value^).map(function^).get()
+
 
 def gather[S: Traversable, G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
     var values: V, var function: F
@@ -17,6 +23,7 @@ struct Positive(Unary):
         return Optional(value) if value > 0 else None
 
 def main() raises:
+    assert_equal(mapped[OptionalFamily](Optional(3), Identity[Int]()).value(), 3)
     var result = gather[ListFamily, OptionalFamily](List[Int]([3, 7]), Positive())
     var values = result.take()
     assert_equal(values, List[Int]([3, 7]))

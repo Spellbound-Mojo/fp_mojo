@@ -15,7 +15,7 @@ from fp.callables._transforms import _ValueThunk, _Pair, _Apply
 from .protocols import Monoid, _AllLive, _LiveAccumulator
 from ._accumulation import _FoldMappedStep, _SearchStep, _FirstPresent, _BoolLive, _PredicateStep
 from ._sequencing import _EffectRetain, _IfEffect
-from fp.callables.invoke import RepeatableUnary, _OnceUnaryAvailable, _OnceThunkAvailable
+from fp.callables.invoke import RepeatableUnary, _OnceUnaryAvailable, _OnceThunkAvailable, _OnceBinaryAvailable
 from fp._internal.errors import _CommonError, _ErrorCompatible
 from fp.callables._identity import Identity
 from fp.iteration._advance import _Source
@@ -39,7 +39,11 @@ struct MapContract[I: Functor, V: Movable & Deinitable, F: UnaryContract & Movab
     comptime FamilyCompatible = Self.I.MapCompatible[Self.V, Self.F]
     """The family's admission without forcing input equality again."""
     comptime Compatible = Self.InputCompatible and Self.FamilyCompatible
-    """The complete checked map admission."""
+    """Existing map admission, preserving the expanded input and family proof."""
+    comptime ReceiverCompatible = _OnceUnaryAvailable[Self.F]
+    """The callback has a consuming, mutable or shared receiver."""
+    comptime InvocationCompatible = Self.Compatible and Self.ReceiverCompatible
+    """Existing admission plus callback receiver availability for new wrappers."""
     comptime Family = _MappedFamily[Self.I, Self.F.Out]
     """The family selected for fluent continuation over Out."""
     comptime Out = Self.I.Mapped[Self.V, Self.F]
@@ -90,7 +94,11 @@ struct BindContract[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movabl
     comptime FamilyCompatible = Self.I.BindCompatible[Self.V, Self.F]
     """The family's binding admission."""
     comptime Compatible = Self.InputCompatible and Self.FamilyCompatible
-    """The complete checked flat_map admission."""
+    """Existing bind admission, preserving the expanded input and family proof."""
+    comptime ReceiverCompatible = _OnceUnaryAvailable[Self.F]
+    """The callback has a consuming, mutable or shared receiver."""
+    comptime InvocationCompatible = Self.Compatible and Self.ReceiverCompatible
+    """Existing admission plus callback receiver availability for new wrappers."""
     comptime Family = Self.I
     """The family selected for fluent continuation over Out."""
     comptime Out = Self.I.Bound[Self.V, Self.F]
@@ -192,7 +200,11 @@ struct CombineContract[I: Applicative, V: Movable & Deinitable, F: BinaryContrac
     comptime FamilyCompatible = Self.OperationCompatible and Self.LeftCompatible and Self.RightCompatible
     """Family admission without repeating callback operand equality."""
     comptime Compatible = Self.InputCompatible and Self.FamilyCompatible
-    """The complete checked lazy combination admission."""
+    """Existing combination admission, preserving expanded input and family proofs."""
+    comptime ReceiverCompatible = _OnceBinaryAvailable[Self.F] and _OnceThunkAvailable[Self.R]
+    """The binary callback and right factory each have an invocable receiver."""
+    comptime InvocationCompatible = Self.Compatible and Self.ReceiverCompatible
+    """Existing admission plus callback receiver availability for new wrappers."""
     comptime Family = Self.I
     """The family selected for fluent continuation over Out."""
     comptime Out = Self.I.Combined[Self.V, Self.F, Self.R]

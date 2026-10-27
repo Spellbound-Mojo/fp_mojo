@@ -2780,6 +2780,34 @@ includes the preceding conditional, sequencing, layer, State and n-ary changes.
 All inputs remained unchanged. The API snapshot, generated sources, all 48
 tooling tests and strict documentation checks passed.
 
+### Primitive operation contracts expose receiver-aware invocation proofs
+
+`MapContract`, `BindContract` and `CombineContract` now expose
+`ReceiverCompatible` and `InvocationCompatible`, using the existing consuming,
+mutable and shared receiver predicates from callable invocation. Combination
+checks both the binary callback and the lazy right factory. Its evaluated
+`Map2Contract` and `ProductContract` aliases inherit the same projections.
+
+The existing `Compatible` expressions are unchanged. Generic wrappers can still
+exchange them with expanded input and family proofs; new wrappers can forward
+`InvocationCompatible` to reject metadata-only callbacks at their boundary.
+Family repeatability and copying requirements still apply. No operation
+signature, runtime dispatcher or native error projection changes.
+
+Maintained controls exercise legacy and checked generic forwarding, mutable List
+mapping, consuming callbacks, lazy-right cleanup on success and skipping, exact
+third-party family errors, borrowed output origins and deferred Reader mapping.
+Four invalid clients reject missing unary, binary or thunk receivers without
+explicit callback type bindings. The operation-contract example demonstrates a
+checked mapping wrapper alongside the existing traversal wrapper.
+
+Qualification passed 32 operation, 76 combination and 56 branch-admission
+source/package checks at O0/O3, 142 generic and eight combination programs,
+14 declared n-ary rejection fixtures and the four-route updated example.
+All inputs remained unchanged. Generated sources, all 48 tooling tests and
+strict documentation checks passed; the public inventory remains 328 exports
+and 90 examples.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.
