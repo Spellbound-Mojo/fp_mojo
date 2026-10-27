@@ -371,7 +371,7 @@
         "fold_map_effect"
       ],
       "status": "selected",
-      "families": "Native source; explicit Monad target",
+      "families": "Native source; queries infer native Optional, Result or List Monad targets. Explicit targets retain custom policies; fold targets remain explicit.",
       "callbacks": "Borrowing predicates; consuming unary/binary transformations; repeatable shared or mutable library receivers. Bind fold_effect(initial).run(step).",
       "ownership": "Moves inputs, retains first matches and releases partial accumulators; Arrays use O(N) temporary List storage.",
       "errors": "Exact native errors, stored target failures and borrowed origins remain distinct.",
@@ -379,14 +379,19 @@
       "owner": [
         "src/fp/algebra/_effect_combinators.mojo",
         "src/fp/algebra/protocols.mojo",
-        "src/fp/iteration/_advance.mojo"
+        "src/fp/iteration/_advance.mojo",
+        "src/fp/algebra/instances.mojo"
       ],
       "evidence": [
         "tests/runtime/test_context_effect_queries_behavior.mojo",
         "tests/runtime/test_context_effect_queries_effects.mojo",
         "tests/runtime/test_context_effect_queries_generic.mojo",
         "tests/runtime/test_context_effect_queries_thin.mojo",
-        "tests/ownership/test_context_effect_queries_ownership.mojo"
+        "tests/ownership/test_context_effect_queries_ownership.mojo",
+        "docs/examples/inferred_queries.mojo",
+        "tests/compile_fail/inferred_query_receiver.mojo",
+        "tests/compile_fail/inferred_query_non_monad.mojo",
+        "tests/compile_fail/inferred_query_origin.mojo"
       ]
     },
     {

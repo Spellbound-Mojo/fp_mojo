@@ -3474,3 +3474,17 @@ calls. Explicit validation and deferred targets retain coverage, along with
 positional native callback type bindings. No new execution path or callback
 overload is introduced, and the source/error layers of discarded Result traversal
 remain intact.
+
+### Native query target inference
+
+Effectful all/any predicates and both search operations use the same target
+parameter generator as traversal. The native candidate is projected through the
+existing Monad capability witness because query stopping depends on bind. The
+public query contracts still check carrier compatibility, payloads, repeatability
+and exact errors. Explicit custom targets retain their policies and native
+callback type bindings keep their positional order.
+
+The generator selects a required capability without changing carrier recognition
+or operation execution. Ordinary query calls therefore preserve the existing
+source advancement, per-branch stopping, ownership and deferred timing rules.
+Seeded and monoid folds retain their explicit target parameters in this pass.

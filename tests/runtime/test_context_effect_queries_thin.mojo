@@ -25,22 +25,22 @@ def nonraising() -> Int:
     var predicate: def(Int) raises Never thin -> Optional[Bool] = never_choose
     var mapper: def(var Int) raises Never thin -> Optional[Optional[Int]] = never_project
     var step: def(var Int, var Int) raises Never thin -> Optional[Int] = never_add
-    _ = pipeline(List[Int]([1,2])).raising[Int]().any_effect[OptionalFamily](predicate).get()
-    _ = pipeline(List[Int]([1,2])).raising[Int]().find_map_effect[OptionalFamily](mapper).get()
+    _ = pipeline(List[Int]([1,2])).raising[Int]().any_effect(predicate).get()
+    _ = pipeline(List[Int]([1,2])).raising[Int]().find_map_effect(mapper).get()
     return pipeline(List[Int]([1,2])).raising[Int]().fold_effect[OptionalFamily](10).run(step).get().value()
 
 def main() raises:
     assert_equal(nonraising(), 13)
     var predicate: def(Int) thin -> Optional[Bool] = choose
-    assert_equal(pipeline(List[Int]([1,2])).all_effect[OptionalFamily](predicate).get().value(), False)
-    assert_equal(pipeline(List[Int]([1,2])).find_effect[OptionalFamily](predicate).get().value().value(), 2)
+    assert_equal(pipeline(List[Int]([1,2])).all_effect(predicate).get().value(), False)
+    assert_equal(pipeline(List[Int]([1,2])).find_effect(predicate).get().value().value(), 2)
     var mapper: def(var Int) thin -> Optional[Optional[Int]] = project
-    assert_equal(pipeline(List[Int]([1,2])).find_map_effect[OptionalFamily](mapper).get().value().value(), 1)
+    assert_equal(pipeline(List[Int]([1,2])).find_map_effect(mapper).get().value().value(), 1)
     var strings: def(var String) thin -> Optional[Optional[Int]] = string_project
-    assert_equal(pipeline(List[String](["abc"])).find_map_effect[OptionalFamily](strings).get().value().value(), 3)
+    assert_equal(pipeline(List[String](["abc"])).find_map_effect(strings).get().value().value(), 3)
     # Optional[Int] is a nontrivial RegisterPassable consumed argument.
     var optionals: def(var Optional[Int]) thin -> Optional[Optional[Int]] = optional_project
-    assert_equal(pipeline(List[Optional[Int]]([Optional(7)])).find_map_effect[OptionalFamily](optionals).get().value().value(), 7)
+    assert_equal(pipeline(List[Optional[Int]]([Optional(7)])).find_map_effect(optionals).get().value().value(), 7)
     var stringer: def(var Int) thin -> Optional[String] = text
     assert_equal(pipeline(List[Int]([1,2])).fold_map_effect[OptionalFamily,StringMonoid](stringer).get().value(), "12")
     var keeper: def(var String) thin -> Optional[String] = keep_text
@@ -59,10 +59,10 @@ def main() raises:
     var bad_mapper: def(var Int) raises Int thin -> Optional[Optional[Int]] = fail_project
     var bad_step: def(var Int,var Int) raises Int thin -> Optional[Int] = fail_add
     var code = 0
-    try: _ = pipeline(List[Int]([3])).raising[Int]().any_effect[OptionalFamily](bad_predicate).get()
+    try: _ = pipeline(List[Int]([3])).raising[Int]().any_effect(bad_predicate).get()
     except error: code = error
     assert_equal(code, 3)
-    try: _ = pipeline(List[Int]([4])).raising[Int]().find_map_effect[OptionalFamily](bad_mapper).get()
+    try: _ = pipeline(List[Int]([4])).raising[Int]().find_map_effect(bad_mapper).get()
     except error: code = error
     assert_equal(code, 4)
     try: _ = pipeline(List[Int]([5])).raising[Int]().fold_effect[OptionalFamily](10).run(bad_step).get()

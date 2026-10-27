@@ -115,6 +115,26 @@ Each method preserves its existing source-shape, ownership and error policy;
 an explicit target remains the way to select validation, deferred execution or
 a custom family.
 
+## Search with effects
+
+`any_effect(predicate)`, `all_effect(predicate)`, `find_effect(predicate)` and
+`find_map_effect(transform)` also infer native Optional, Result and List targets.
+The first three borrow each item; `find_map_effect` consumes items to produce
+an effect containing an Optional answer:
+
+<!-- example: docs/examples/inferred_queries.mojo -->
+
+`any_effect` stops on True, `all_effect` stops on False, and searches stop on
+their first match. Absence or a stored error in the target effect also stops
+Optional/Result queries. A successful search with no match keeps an empty
+Optional inside its effect; `.raise_on_err()` propagates a stored Result error
+and leaves that Optional answer intact.
+
+Explicit `[Target]` bindings select custom Monad policies, including deferred
+execution. Native callback errors still use the pipeline's selected error type.
+See [effectful queries and folds](../reference/functions.md#select-family-and-native-errors-before-callbacks)
+for source consumption, empty answers and the explicit fold interfaces.
+
 ## Choose a constant or lazy default
 
 Use `.get_or(value)` to finish an Optional or Result pipeline with an already

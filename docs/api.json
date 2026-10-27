@@ -91497,7 +91497,7 @@
         "variadic": false
        },
        {
-        "description": "The output family; inferred for whole-value stages, explicit for traversal.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Monad",
@@ -91510,7 +91510,7 @@
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
        "type": "Pipeline[J, AllContract[J, Self.V, C].Out, Self.E]"
       },
-      "signature": "def all_effect[C: BorrowCallable, //, J: Monad](deinit self, var function: C) raises AllContract[J, Self.V, C].Error -> Pipeline[J, AllContract[J, Self.V, C].Out, Self.E] where AllContract[J, Self.V, C].Compatible",
+      "signature": "def all_effect[C: BorrowCallable, //, J: Monad = _Binding[_InferredApplicative[C.Result]]](deinit self, var function: C) raises AllContract[J, Self.V, C].Error -> Pipeline[J, AllContract[J, Self.V, C].Out, Self.E] where AllContract[J, Self.V, C].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -91561,7 +91561,7 @@
        "doc": "",
        "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E]"
       },
-      "signature": "def all_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(_FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible",
+      "signature": "def all_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[R]], C: def(_FoldElement[Self.V]) -> R = def(_FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -91612,7 +91612,7 @@
        "doc": "",
        "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E]"
       },
-      "signature": "def all_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(_FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E] where AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Compatible",
+      "signature": "def all_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[R]], C: def(_FoldElement[Self.V]) raises Self.E -> R = def(_FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E] where AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -91663,7 +91663,7 @@
        "doc": "",
        "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E]"
       },
-      "signature": "def all_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(_FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E] where Self.E != Never and AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Compatible",
+      "signature": "def all_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[R]], C: def(_FoldElement[Self.V]) raises Never -> R = def(_FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E] where Self.E != Never and AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -91700,7 +91700,7 @@
        "doc": "",
        "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def all_effect[R: Movable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Compatible",
+      "signature": "def all_effect[R: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -91737,7 +91737,7 @@
        "doc": "",
        "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def all_effect[R: RegisterPassable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Compatible",
+      "signature": "def all_effect[R: RegisterPassable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -91781,7 +91781,7 @@
        "doc": "",
        "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def all_effect[P: TrivialRegisterPassable, R: Movable & Deinitable, //, J: Monad](deinit self, function: def(P) thin -> R) raises AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Compatible",
+      "signature": "def all_effect[P: TrivialRegisterPassable, R: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(P) thin -> R) raises AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -91825,7 +91825,7 @@
        "doc": "",
        "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def all_effect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //, J: Monad](deinit self, function: def(P) thin -> R) raises AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where P == _FoldElement[Self.V] and AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Compatible",
+      "signature": "def all_effect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(P) thin -> R) raises AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where P == _FoldElement[Self.V] and AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -91869,7 +91869,7 @@
        "doc": "",
        "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def all_effect[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) raises X thin -> R) raises AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Compatible",
+      "signature": "def all_effect[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(_FoldElement[Self.V]) raises X thin -> R) raises AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -91913,7 +91913,7 @@
        "doc": "",
        "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def all_effect[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) raises X thin -> R) raises AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Compatible",
+      "signature": "def all_effect[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(_FoldElement[Self.V]) raises X thin -> R) raises AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -91964,7 +91964,7 @@
        "doc": "",
        "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def all_effect[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(P) raises X thin -> R) raises AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Compatible",
+      "signature": "def all_effect[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(P) raises X thin -> R) raises AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -92015,7 +92015,7 @@
        "doc": "",
        "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def all_effect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(P) raises X thin -> R) raises AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Compatible",
+      "signature": "def all_effect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(P) raises X thin -> R) raises AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      }
     ],
@@ -92041,7 +92041,7 @@
         "variadic": false
        },
        {
-        "description": "The output family; inferred for whole-value stages, explicit for traversal.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Monad",
@@ -92054,7 +92054,7 @@
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
        "type": "Pipeline[J, AnyContract[J, Self.V, C].Out, Self.E]"
       },
-      "signature": "def any_effect[C: BorrowCallable, //, J: Monad](deinit self, var function: C) raises AnyContract[J, Self.V, C].Error -> Pipeline[J, AnyContract[J, Self.V, C].Out, Self.E] where AnyContract[J, Self.V, C].Compatible",
+      "signature": "def any_effect[C: BorrowCallable, //, J: Monad = _Binding[_InferredApplicative[C.Result]]](deinit self, var function: C) raises AnyContract[J, Self.V, C].Error -> Pipeline[J, AnyContract[J, Self.V, C].Out, Self.E] where AnyContract[J, Self.V, C].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -92105,7 +92105,7 @@
        "doc": "",
        "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E]"
       },
-      "signature": "def any_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(_FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible",
+      "signature": "def any_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[R]], C: def(_FoldElement[Self.V]) -> R = def(_FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -92156,7 +92156,7 @@
        "doc": "",
        "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E]"
       },
-      "signature": "def any_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(_FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E] where AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Compatible",
+      "signature": "def any_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[R]], C: def(_FoldElement[Self.V]) raises Self.E -> R = def(_FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E] where AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -92207,7 +92207,7 @@
        "doc": "",
        "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E]"
       },
-      "signature": "def any_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(_FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E] where Self.E != Never and AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Compatible",
+      "signature": "def any_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[R]], C: def(_FoldElement[Self.V]) raises Never -> R = def(_FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E] where Self.E != Never and AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -92244,7 +92244,7 @@
        "doc": "",
        "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def any_effect[R: Movable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Compatible",
+      "signature": "def any_effect[R: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -92281,7 +92281,7 @@
        "doc": "",
        "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def any_effect[R: RegisterPassable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Compatible",
+      "signature": "def any_effect[R: RegisterPassable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -92325,7 +92325,7 @@
        "doc": "",
        "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def any_effect[P: TrivialRegisterPassable, R: Movable & Deinitable, //, J: Monad](deinit self, function: def(P) thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Compatible",
+      "signature": "def any_effect[P: TrivialRegisterPassable, R: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(P) thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -92369,7 +92369,7 @@
        "doc": "",
        "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def any_effect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //, J: Monad](deinit self, function: def(P) thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where P == _FoldElement[Self.V] and AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Compatible",
+      "signature": "def any_effect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(P) thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where P == _FoldElement[Self.V] and AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -92413,7 +92413,7 @@
        "doc": "",
        "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def any_effect[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) raises X thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Compatible",
+      "signature": "def any_effect[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(_FoldElement[Self.V]) raises X thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -92457,7 +92457,7 @@
        "doc": "",
        "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def any_effect[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) raises X thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Compatible",
+      "signature": "def any_effect[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(_FoldElement[Self.V]) raises X thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -92508,7 +92508,7 @@
        "doc": "",
        "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def any_effect[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(P) raises X thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Compatible",
+      "signature": "def any_effect[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(P) raises X thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -92559,7 +92559,7 @@
        "doc": "",
        "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def any_effect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(P) raises X thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Compatible",
+      "signature": "def any_effect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(P) raises X thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      }
     ],
@@ -106189,7 +106189,7 @@
         "variadic": false
        },
        {
-        "description": "The target Applicative; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",
@@ -107491,7 +107491,7 @@
         "variadic": false
        },
        {
-        "description": "The output family; inferred for whole-value stages, explicit for traversal.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Monad",
@@ -107504,7 +107504,7 @@
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
        "type": "Pipeline[J, FindContract[J, Self.V, C].Out, Self.E]"
       },
-      "signature": "def find_effect[C: BorrowCallable, //, J: Monad](deinit self, var function: C) raises FindContract[J, Self.V, C].Error -> Pipeline[J, FindContract[J, Self.V, C].Out, Self.E] where FindContract[J, Self.V, C].Compatible",
+      "signature": "def find_effect[C: BorrowCallable, //, J: Monad = _Binding[_InferredApplicative[C.Result]]](deinit self, var function: C) raises FindContract[J, Self.V, C].Error -> Pipeline[J, FindContract[J, Self.V, C].Out, Self.E] where FindContract[J, Self.V, C].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -107555,7 +107555,7 @@
        "doc": "",
        "type": "Pipeline[J, FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E]"
       },
-      "signature": "def find_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(_FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible",
+      "signature": "def find_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[R]], C: def(_FoldElement[Self.V]) -> R = def(_FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -107606,7 +107606,7 @@
        "doc": "",
        "type": "Pipeline[J, FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E]"
       },
-      "signature": "def find_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(_FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E] where FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Compatible",
+      "signature": "def find_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[R]], C: def(_FoldElement[Self.V]) raises Self.E -> R = def(_FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E] where FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -107657,7 +107657,7 @@
        "doc": "",
        "type": "Pipeline[J, FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E]"
       },
-      "signature": "def find_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(_FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E] where Self.E != Never and FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Compatible",
+      "signature": "def find_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[R]], C: def(_FoldElement[Self.V]) raises Never -> R = def(_FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E] where Self.E != Never and FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -107694,7 +107694,7 @@
        "doc": "",
        "type": "Pipeline[J, FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def find_effect[R: Movable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Compatible",
+      "signature": "def find_effect[R: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -107731,7 +107731,7 @@
        "doc": "",
        "type": "Pipeline[J, FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def find_effect[R: RegisterPassable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Compatible",
+      "signature": "def find_effect[R: RegisterPassable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -107775,7 +107775,7 @@
        "doc": "",
        "type": "Pipeline[J, FindContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def find_effect[P: TrivialRegisterPassable, R: Movable & Deinitable, //, J: Monad](deinit self, function: def(P) thin -> R) raises FindContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and FindContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Compatible",
+      "signature": "def find_effect[P: TrivialRegisterPassable, R: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(P) thin -> R) raises FindContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and FindContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -107819,7 +107819,7 @@
        "doc": "",
        "type": "Pipeline[J, FindContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def find_effect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //, J: Monad](deinit self, function: def(P) thin -> R) raises FindContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where P == _FoldElement[Self.V] and FindContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Compatible",
+      "signature": "def find_effect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(P) thin -> R) raises FindContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where P == _FoldElement[Self.V] and FindContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -107863,7 +107863,7 @@
        "doc": "",
        "type": "Pipeline[J, FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def find_effect[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) raises X thin -> R) raises FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Compatible",
+      "signature": "def find_effect[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(_FoldElement[Self.V]) raises X thin -> R) raises FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -107907,7 +107907,7 @@
        "doc": "",
        "type": "Pipeline[J, FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def find_effect[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) raises X thin -> R) raises FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Compatible",
+      "signature": "def find_effect[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(_FoldElement[Self.V]) raises X thin -> R) raises FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and FindContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -107958,7 +107958,7 @@
        "doc": "",
        "type": "Pipeline[J, FindContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def find_effect[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(P) raises X thin -> R) raises FindContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and FindContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Compatible",
+      "signature": "def find_effect[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(P) raises X thin -> R) raises FindContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and FindContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -108009,7 +108009,7 @@
        "doc": "",
        "type": "Pipeline[J, FindContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def find_effect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(P) raises X thin -> R) raises FindContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and FindContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Compatible",
+      "signature": "def find_effect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(P) raises X thin -> R) raises FindContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and FindContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      }
     ],
@@ -108333,7 +108333,7 @@
         "variadic": false
        },
        {
-        "description": "The output family; inferred for whole-value stages, explicit for traversal.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Monad",
@@ -108346,7 +108346,7 @@
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
        "type": "Pipeline[J, FindMapContract[J, Self.V, C].Out, Self.E]"
       },
-      "signature": "def find_map_effect[C: UnaryContract & Movable & Deinitable, //, J: Monad](deinit self, var function: C) raises FindMapContract[J, Self.V, C].Error -> Pipeline[J, FindMapContract[J, Self.V, C].Out, Self.E] where C.Arg == _FoldElement[Self.V] and FindMapContract[J, Self.V, C].Compatible",
+      "signature": "def find_map_effect[C: UnaryContract & Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[C.Out]]](deinit self, var function: C) raises FindMapContract[J, Self.V, C].Error -> Pipeline[J, FindMapContract[J, Self.V, C].Out, Self.E] where C.Arg == _FoldElement[Self.V] and FindMapContract[J, Self.V, C].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -108397,7 +108397,7 @@
        "doc": "",
        "type": "Pipeline[J, FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E]"
       },
-      "signature": "def find_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible",
+      "signature": "def find_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[R]], C: def(var _FoldElement[Self.V]) -> R = def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -108448,7 +108448,7 @@
        "doc": "",
        "type": "Pipeline[J, FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E]"
       },
-      "signature": "def find_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(var _FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[J, FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E] where FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Compatible",
+      "signature": "def find_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[R]], C: def(var _FoldElement[Self.V]) raises Self.E -> R = def(var _FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[J, FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E] where FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -108499,7 +108499,7 @@
        "doc": "",
        "type": "Pipeline[J, FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E]"
       },
-      "signature": "def find_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E] where Self.E != Never and FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Compatible",
+      "signature": "def find_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[R]], C: def(var _FoldElement[Self.V]) raises Never -> R = def(var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E] where Self.E != Never and FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -108536,7 +108536,7 @@
        "doc": "",
        "type": "Pipeline[J, FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def find_map_effect[R: Movable & Deinitable, //, J: Monad](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R) raises FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error -> Pipeline[J, FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E] where not conforms_to(R, RegisterPassable) and FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Compatible",
+      "signature": "def find_map_effect[R: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R) raises FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error -> Pipeline[J, FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E] where not conforms_to(R, RegisterPassable) and FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -108573,7 +108573,7 @@
        "doc": "",
        "type": "Pipeline[J, FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def find_map_effect[R: RegisterPassable & Deinitable, //, J: Monad](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R) raises FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error -> Pipeline[J, FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E] where FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Compatible",
+      "signature": "def find_map_effect[R: RegisterPassable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R) raises FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error -> Pipeline[J, FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E] where FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -108617,7 +108617,7 @@
        "doc": "",
        "type": "Pipeline[J, FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def find_map_effect[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Compatible",
+      "signature": "def find_map_effect[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -108661,7 +108661,7 @@
        "doc": "",
        "type": "Pipeline[J, FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def find_map_effect[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Compatible",
+      "signature": "def find_map_effect[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      }
     ],
@@ -109430,7 +109430,7 @@
       "error": "_CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, Identity[Self.I.Element[Self.V]]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]]]]]]",
       "parameters": [
        {
-        "description": "The target Applicative; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",
@@ -110847,7 +110847,7 @@
         "variadic": false
        },
        {
-        "description": "The target Applicative; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",
@@ -172909,7 +172909,7 @@
       "error": "_Traversing[Self.I].TraverseError[J, Self.V, Identity[Self.I.Element[Self.V]]]",
       "parameters": [
        {
-        "description": "The target Applicative; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",
@@ -172933,7 +172933,7 @@
       "error": "_CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, Identity[Self.I.Element[Self.V]]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]]]]]]",
       "parameters": [
        {
-        "description": "The target Applicative; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",
@@ -172957,7 +172957,7 @@
       "error": "J._LoopError[Self.V, Identity[_FoldElement[Self.V]], _Discard[J.Element[_FoldElement[Self.V]]]]",
       "parameters": [
        {
-        "description": "The target Applicative; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",
@@ -176689,7 +176689,7 @@
         "variadic": false
        },
        {
-        "description": "The target Applicative; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",
@@ -177043,7 +177043,7 @@
         "variadic": false
        },
        {
-        "description": "The target Applicative; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",
@@ -177397,7 +177397,7 @@
         "variadic": false
        },
        {
-        "description": "The target Applicative; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",
@@ -177941,7 +177941,7 @@
         "variadic": false
        },
        {
-        "description": "The target Applicative; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",

@@ -137,6 +137,26 @@ def methods(*, fold_stage=False):
                 params += cb["params"]
         return params + (["//"] + explicit if explicit else [])
 
+    def inferred_target_parameters(cb, *, capability="Applicative"):
+        # Native carrier recognition proposes a target; the existing operation
+        # contract still admits that target and preserves its exact semantics.
+        # Keep J and callback type bindings in their existing positional order.
+        # Mojo requires parameters after a default to have defaults too. A
+        # closure's type remains inferred from its borrowed argument; its
+        # signature is the default for an omitted explicit type binding.
+        params = list(cb["params"])
+        if "//" not in params: params += ["//"]
+        boundary = params.index("//") + 1
+        native = f'_InferredApplicative[{cb["result"]}]'
+        candidate = {"Applicative": native, "Monad": f"_Binding[{native}]"}[capability]
+        params[boundary:boundary] = [f'J: {capability} = {candidate}']
+        for i in range(boundary + 1, len(params)):
+            name, constraint = params[i].split(": ", 1)
+            if not constraint.startswith("def("):
+                raise ValueError("Only native callback signatures may follow an inferred target")
+            params[i] = f"{name}: {constraint} = {constraint}"
+        return params
+
     def emit(name, cb, params, arguments, result, error, family, conditions, expr, summary):
         if params and params[0] == "//":
             params = params[1:]
@@ -429,9 +449,10 @@ def methods(*, fold_stage=False):
             if "//" not in params:
                 params += ["//"]
             if not folding:
-                params[params.index("//") + 1:params.index("//") + 1] = (
-                    ["J: Monad", "M: Monoid"] if mapped_fold else ["J: Monad"]
-                )
+                if mapped_fold:
+                    params[params.index("//") + 1:params.index("//") + 1] = ["J: Monad", "M: Monoid"]
+                else:
+                    params = inferred_target_parameters(cb, capability="Monad")
             c, result = cb["adapter_type"], cb["result"]
             # Borrowing search uses the predicate's exact payload as its
             # retention type, matching the free entry and public contract.
@@ -470,23 +491,6 @@ def methods(*, fold_stage=False):
 ''')
 
 
-    def inferred_target_parameters(cb):
-        # Native carrier recognition proposes a target; the existing traversal
-        # contract still admits that target and preserves its exact semantics.
-        # Keep J and callback type bindings in their existing positional order.
-        # Mojo requires parameters after a default to have defaults too. A
-        # closure's type remains inferred from its borrowed argument; its
-        # signature is the default for an omitted explicit type binding.
-        params = list(cb["params"])
-        if "//" not in params: params += ["//"]
-        boundary = params.index("//") + 1
-        params[boundary:boundary] = [f'J: Applicative = _InferredApplicative[{cb["result"]}]']
-        for i in range(boundary + 1, len(params)):
-            name, constraint = params[i].split(": ", 1)
-            if not constraint.startswith("def("):
-                raise ValueError("Only native callback signatures may follow an inferred target")
-            params[i] = f"{name}: {constraint} = {constraint}"
-        return params
 
     for cb in owning_callbacks("owned", "Self.I.Element[Self.V]", "function"):
         params = inferred_target_parameters(cb)
@@ -1180,8 +1184,8 @@ def documented(source):
                 indent + "    " + p["name"] + ": " + (
                     "The error Semigroup; inferred list errors concatenate in order."
                     if p["name"] == "S" and name.startswith("par_") else
-                    "The target Applicative; inferred for native Optional, Result and List effects. Explicit bindings retain their policy."
-                    if p["name"] == "J" and name in ("traverse", "sequence", *TRAVERSALS) else params[p["name"]]
+                    "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy."
+                    if p["name"] == "J" and name in ("traverse", "sequence", *TRAVERSALS, "all_effect", "any_effect", "find_effect", "find_map_effect") else params[p["name"]]
                 ) + "\n"
                 for p in spec["parameters"]
             ]

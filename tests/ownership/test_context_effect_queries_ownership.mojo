@@ -54,25 +54,25 @@ def collect(var value: QueryOwner) -> Result[List[QueryOwner], String]:
 
 def main() raises:
     var drops = ArcPointer(0)
-    var found = pipeline(owners(drops)).find_effect[OptionalFamily](choose).get()
+    var found = pipeline(owners(drops)).find_effect(choose).get()
     assert_equal(found.value().value().id, 2); assert_equal(drops[], 2)
     _ = found^
     assert_equal(drops[], 3)
     drops[] = 0
     var array: Array[QueryOwner,3] = [QueryOwner(1,drops),QueryOwner(2,drops),QueryOwner(3,drops)]
-    var array_found = pipeline(array^).find_effect[OptionalFamily](choose).get()
+    var array_found = pipeline(array^).find_effect(choose).get()
     assert_equal(array_found.value().value().id, 2); assert_equal(drops[], 2)
     _ = array_found^
     assert_equal(drops[], 3)
     drops[] = 0
     var calls = ArcPointer(0)
-    var mapped = pipeline(owners(drops)).find_map_effect[ResultFamily[String]](QueryMapper(QueryOwner(2,drops), calls)).get()
+    var mapped = pipeline(owners(drops)).find_map_effect(QueryMapper(QueryOwner(2,drops), calls)).get()
     assert_equal(mapped._ok().value.value().id, 2)
     assert_equal(calls[], 2); assert_equal(drops[], 3)
     _ = mapped^
     assert_equal(drops[], 4)
     drops[] = 0; calls[] = 0
-    var failed = pipeline(owners(drops,True)).find_map_effect[ResultFamily[String]](QueryMapper(QueryOwner(2,drops),calls)).get()
+    var failed = pipeline(owners(drops,True)).find_map_effect(QueryMapper(QueryOwner(2,drops),calls)).get()
     assert_equal(failed.is_err(), True); assert_equal(drops[], 4); assert_equal(calls[], 2)
     drops[] = 0
     var combined = pipeline(owners(drops)).fold_map_effect[ResultFamily[String], ListMonoid[QueryOwner]](collect).get()

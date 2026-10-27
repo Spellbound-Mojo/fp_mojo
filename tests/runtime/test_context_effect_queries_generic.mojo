@@ -1,16 +1,16 @@
 """Generic forwarding uses ordinary calls and retains payload and error origins."""
 from fp.functions import pipeline
-from fp.algebra import OptionalFamily, ResultFamily, StringMonoid
+from fp.algebra import OptionalFamily, StringMonoid
 from fp.data import Result, Err
 from std.testing import assert_equal
 
 def forward_find[A: Movable & Deinitable, E: Movable & Deinitable, //,
                  F: def(A) raises E -> Optional[Bool]](ref function: F, var source: List[A]) raises E -> Optional[Optional[A]]:
-    return pipeline(source^).raising[E]().find_effect[OptionalFamily](function).get()
+    return pipeline(source^).raising[E]().find_effect(function).get()
 
 def forward_map[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, //,
                 F: def(var A) raises E -> Optional[Optional[B]]](ref function: F, var source: List[A]) raises E -> Optional[Optional[B]]:
-    return pipeline(source^).raising[E]().find_map_effect[OptionalFamily](function).get()
+    return pipeline(source^).raising[E]().find_map_effect(function).get()
 
 def forward_fold[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, //,
                  F: def(var A, var B) raises E -> Optional[A]](ref function: F, var initial: A, var source: List[B]) raises E -> Optional[A]:
@@ -31,7 +31,7 @@ def origins(owner: List[Int], errors: List[Int]) raises:
     assert_equal(selected.value().value().unsafe_ptr() == Span(owner).unsafe_ptr(), True)
     assert_equal(mapped.value().value().unsafe_ptr() == Span(owner).unsafe_ptr(), True)
     def reject(value: View) {failure} -> Result[Bool, Failure]: return Err(failure)
-    var stored = pipeline(List[View]([Span(owner)])).find_effect[ResultFamily[Failure]](reject).get()
+    var stored = pipeline(List[View]([Span(owner)])).find_effect(reject).get()
     assert_equal(stored._err().value.unsafe_ptr() == Span(errors).unsafe_ptr(), True)
     def raise_view(value: View) raises Failure {failure} -> Optional[Bool]: raise failure
     var matched = False

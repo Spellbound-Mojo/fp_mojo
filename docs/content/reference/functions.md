@@ -344,12 +344,13 @@ through eight operands. Deferred families own the pointer value, so reassigning
 the caller's pointer variable does not change the pending computation. Captured
 native closures remain borrowed for that computation's lifetime.
 
-Effectful terminals consume an iterator or owned iterable into an explicit
-Monad target. `all_effect[Target](predicate)`, `any_effect[Target](predicate)`
-and `find_effect[Target](predicate)` borrow each item and require a Bool inside
+Effectful terminals consume an iterator or owned iterable into a Monad target.
+`all_effect(predicate)`, `any_effect(predicate)` and `find_effect(predicate)`
+infer native Optional, Result and List targets from the callback result. Their
+explicit `[Target]` forms retain custom or deferred policies. They borrow each item and require a Bool inside
 the target effect. Each branch stops at its decisive answer without another
 source pull. Empty input yields True, False or an absent Optional respectively.
-`find_map_effect[Target](transform)` consumes each item and stops at the first
+`find_map_effect(transform)` likewise infers its target, consumes each item and stops at the first
 present Optional inside the effect. An absent outer Optional or stored Result
 error still stops the entire computation according to the target's rules.
 

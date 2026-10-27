@@ -51,7 +51,7 @@ def main() raises:
     assert_equal(code, 20); assert_equal(calls[], 2); assert_equal(pulls, 2)
     def stop(value: Int) raises StopIteration -> Optional[Bool]: raise StopIteration()
     var stopped = False
-    try: _ = pipeline(range(4)).raising[StopIteration]().find_effect[OptionalFamily](stop).get()
+    try: _ = pipeline(range(4)).raising[StopIteration]().find_effect(stop).get()
     except StopIteration: stopped = True
     assert_equal(stopped, True)
 
