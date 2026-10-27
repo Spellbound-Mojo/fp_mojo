@@ -502,11 +502,15 @@ membership, compatible native errors and the family's receiver requirements.
 For example, List requires repeatable factories, while a single-result family
 can consume either factory. `ShapeCompatible` exposes the legacy free entry's condition, branch-payload and
 carrier constraints. That entry keeps its existing generic admission; the
-family implementation still checks its execution requirements. `Compatible`
-also includes native-error and family admission, as selected pipelines already
-require. New wrappers can forward the complete predicate without duplicating
-those checks. Native
-function overloads keep their explicit signature and error evidence.
+family implementation still checks its execution requirements.
+`Compatible` also includes native-error and family admission, preserving the
+selected method's existing generic constraints and their expanded spelling.
+`ReceiverCompatible` checks that each factory has a consuming, mutable or shared
+receiver; declaring only `ThunkContract` does not provide one.
+`InvocationCompatible` combines both predicates. New generic wrappers can forward
+it to reject missing receivers at their boundary. Existing `Compatible` wrappers
+and ordinary calls retain receiver checks during specialization. Native function
+overloads keep their explicit signature and error evidence.
 
 `Error` describes construction. A deferred family's runtime errors remain in its
 returned computation; creating a conditional does not run either factory. Branch

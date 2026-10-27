@@ -152,3 +152,23 @@ def legacy_forward[I: Monad, V: Movable & Deinitable, L: ThunkContract & Movable
 def legacy_fluent[I: Monad, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var left: L, var right: R, var source: V
 ) raises IfContract[I,V,L,R].Error -> IfContract[I,V,L,R].Out where I.Element[V] == Bool and I.Element[L.Out] == I.Element[R.Out] and I.CarrierCompatible[V] and I.CarrierCompatible[L.Out] and I.CarrierCompatible[R.Out]:
     return piped(source^).if_effect[G=I](left^, right^).get()
+
+
+@fieldwise_init
+struct Missing(ThunkContract, Movable):
+    comptime Out = Optional[Int]
+
+
+def legacy_selected[I: Monad, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var left: L, var right: R, var source: V
+) raises IfContract[I,V,L,R].Error -> IfContract[I,V,L,R].Out where IfContract[I,V,L,R].ShapeCompatible and IfContract[I,V,L,R].NativeErrorsCompatible and IfContract[I,V,L,R].FamilyCompatible:
+    return pipeline[I](source^).if_effect(left^,right^).get()
+
+
+def checked_forward[I: Monad, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var left: L, var right: R, var source: V
+) raises IfContract[I,V,L,R].Error -> IfContract[I,V,L,R].Out where IfContract[I,V,L,R].InvocationCompatible:
+    return forward[I](left^,right^,source^)
+
+
+def expanded_forward[I: Monad, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var left: L, var right: R, var source: V
+) raises IfContract[I,V,L,R].Error -> IfContract[I,V,L,R].Out where IfContract[I,V,L,R].ShapeCompatible and IfContract[I,V,L,R].NativeErrorsCompatible and IfContract[I,V,L,R].FamilyCompatible:
+    return forward[I](left^,right^,source^)

@@ -2633,6 +2633,34 @@ were retained and the complete rerun passed after space recovery. Earlier
 passed reports were revalidated against unchanged inputs. Generated-source
 checks, all 48 tooling tests, the current API snapshot and strict docs passed.
 
+### Conditional contracts expose branch invocation admission
+
+`IfContract.InvocationCompatible` adds shared, mutable or consuming receiver
+availability for both factories to the existing `Compatible` predicate. The
+baseline reports `Compatible` for a metadata-only `ThunkContract`, then rejects
+its invocation. New generic wrappers can use the stronger predicate to reject
+that factory at their own boundary, using the existing receiver-availability
+owner. `ReceiverCompatible` is also available independently.
+
+`Compatible` remains exactly the historical shape, native-error and family
+conjunction. Strengthening it breaks valid generic wrappers carrying that
+expanded proof and forwarding to another wrapper constrained by `Compatible`.
+A baseline/initial/revised comparison qualifies that regression and its
+resolution. The initial candidate and its interrupted qualification are retained.
+Selected, free, native and piped signatures are unchanged, as are invocation,
+cleanup and positional bindings. No callable wrapper or runtime check is added.
+
+Maintained controls retain both selected and wrapper-to-wrapper forwarding with
+the old expanded constraints. Separate checked wrappers reject a missing
+receiver on either branch without explicit callback type bindings. Existing
+generic, origin and ownership clients qualify the unchanged execution.
+
+Qualification passed 60 contract and 72 conditional source/package checks at
+O0/O3, 13 conditional programs, two effect-combinator programs, 142 generic
+programs, 35 declared rejection fixtures and the four-route example. All inputs
+remained unchanged. Generated-source checks, all 48 tooling tests and the strict
+documentation build passed for the revised candidate.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

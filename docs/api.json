@@ -2543,8 +2543,16 @@
      "name": "ShapeCompatible"
     },
     {
-     "description": "The complete selected conditional admission, available to generic wrappers.",
+     "description": "Legacy selected admission, with branch receiver dispatch checked at invocation.",
      "name": "Compatible"
+    },
+    {
+     "description": "Both branch factories have a consuming, mutable or shared receiver.",
+     "name": "ReceiverCompatible"
+    },
+    {
+     "description": "Selected admission plus receiver availability for both branch factories.",
+     "name": "InvocationCompatible"
     }
    ],
    "description": "Generic wrappers forward Compatible and name Out and Error. The family\nstill owns branch ordering, repeated invocation and deferred execution.\nNative callback boundaries retain their explicit signature error evidence.",

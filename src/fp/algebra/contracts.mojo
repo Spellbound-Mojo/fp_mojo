@@ -15,7 +15,7 @@ from fp.callables._transforms import _ValueThunk, _Pair, _Apply
 from .protocols import Monoid, _AllLive, _LiveAccumulator
 from ._accumulation import _FoldMappedStep, _SearchStep, _FirstPresent, _BoolLive, _PredicateStep
 from ._sequencing import _EffectRetain, _IfEffect
-from fp.callables.invoke import RepeatableUnary, _OnceUnaryAvailable
+from fp.callables.invoke import RepeatableUnary, _OnceUnaryAvailable, _OnceThunkAvailable
 from fp._internal.errors import _CommonError, _ErrorCompatible
 from fp.callables._identity import Identity
 from fp.iteration._advance import _Source
@@ -490,4 +490,8 @@ struct IfContract[I: Monad, V: Movable & Deinitable, L: ThunkContract & Movable 
     comptime ShapeCompatible = Self.InputCompatible and Self.OutputCompatible and Self.CarrierCompatible
     """The legacy free entry's shape admission; family execution checks its own requirements."""
     comptime Compatible = Self.ShapeCompatible and Self.NativeErrorsCompatible and Self.FamilyCompatible
-    """The complete selected conditional admission, available to generic wrappers."""
+    """Legacy selected admission, with branch receiver dispatch checked at invocation."""
+    comptime ReceiverCompatible = _OnceThunkAvailable[Self.L] and _OnceThunkAvailable[Self.R]
+    """Both branch factories have a consuming, mutable or shared receiver."""
+    comptime InvocationCompatible = Self.Compatible and Self.ReceiverCompatible
+    """Selected admission plus receiver availability for both branch factories."""
