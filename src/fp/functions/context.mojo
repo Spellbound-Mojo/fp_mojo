@@ -6556,6 +6556,120 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         """Map the selected stored-error channel through its family's admitted destination policy."""
         return Pipeline[MapBothContract[_MappingErrors[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True], NativeUnary[_MappingErrors[Self.I].Failure, S, Y, def(var _NativeOwnedArg[_MappingErrors[Self.I].Failure]) raises Y thin -> S, True], _MappingErrors[Target]].Family, MapBothContract[_MappingErrors[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True], NativeUnary[_MappingErrors[Self.I].Failure, S, Y, def(var _NativeOwnedArg[_MappingErrors[Self.I].Failure]) raises Y thin -> S, True], _MappingErrors[Target]].Out, Self.E](_map_both[_MappingErrors[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True], NativeUnary[_MappingErrors[Self.I].Failure, S, Y, def(var _NativeOwnedArg[_MappingErrors[Self.I].Failure]) raises Y thin -> S, True], _MappingErrors[Target]](NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True](on_ok), NativeUnary[_MappingErrors[Self.I].Failure, S, Y, def(var _NativeOwnedArg[_MappingErrors[Self.I].Failure]) raises Y thin -> S, True](on_err), self.value^))
 
+    @always_inline
+    def value_or[C: UnaryContract & Movable & Deinitable](deinit self, var on_err: C) raises C.Error -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Failure[Self.V] and C.Out == _Success[Self.V]:
+        """Return the success value or consume the error to produce a fallback.
+
+        Parameters:
+            C: The first library callback type, retaining its receiver and origins.
+
+        Args:
+            on_err: The error handler, consuming the stored error payload.
+
+        Returns:
+            The moved success value or computed fallback, without a pipeline wrapper.
+
+        Raises:
+            The exact callback or family error; it never becomes a stored Result error.
+        """
+        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).value_or(on_err^)
+
+    @always_inline
+    def value_or[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) -> R](deinit self, ref[o] on_err: C) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]:
+        """Return the success value or consume the error to produce a fallback."""
+        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).value_or(_NativeUnaryRef[_Failure[Self.V], R, Never, C, False, o](Pointer(to=on_err)))
+
+    @always_inline
+    def value_or[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) raises Self.E -> R](deinit self, ref[o] on_err: C) raises Self.E -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]:
+        """Return the success value or consume the error to produce a fallback."""
+        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).value_or(_NativeUnaryRef[_Failure[Self.V], R, Self.E, C, True, o](Pointer(to=on_err)))
+
+    @always_inline
+    def value_or[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) raises Never -> R](deinit self, ref[o] on_err: C) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == _Success[Self.V]:
+        """Return the success value or consume the error to produce a fallback."""
+        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).value_or(_NativeUnaryRef[_Failure[Self.V], R, Never, C, True, o](Pointer(to=on_err)))
+
+    @always_inline
+    def value_or[R: Movable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and R == _Success[Self.V]:
+        """Return the success value or consume the error to produce a fallback."""
+        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).value_or(NativeUnary[_Failure[Self.V], R, Never, def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R, False](on_err))
+
+    @always_inline
+    def value_or[R: RegisterPassable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]:
+        """Return the success value or consume the error to produce a fallback."""
+        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).value_or(NativeUnary[_Failure[Self.V], R, Never, def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R, False](on_err))
+
+    @always_inline
+    def value_or[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R) raises X -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and R == _Success[Self.V]:
+        """Return the success value or consume the error to produce a fallback."""
+        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).value_or(NativeUnary[_Failure[Self.V], R, X, def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R, True](on_err))
+
+    @always_inline
+    def value_or[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R) raises X -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and R == _Success[Self.V]:
+        """Return the success value or consume the error to produce a fallback."""
+        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).value_or(NativeUnary[_Failure[Self.V], R, X, def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R, True](on_err))
+
+    @always_inline
+    def get_or_else[C: ThunkContract & Movable & Deinitable](deinit self, var make_default: C) raises C.Error -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Out == _Success[Self.V]:
+        """Return the success value or invoke a default factory only on Err.
+
+        Parameters:
+            C: The first library callback type, retaining its receiver and origins.
+
+        Args:
+            make_default: The zero-argument default factory, invoked only on Err.
+
+        Returns:
+            The moved success value or computed fallback, without a pipeline wrapper.
+
+        Raises:
+            The exact callback or family error; it never becomes a stored Result error.
+        """
+        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).get_or_else(make_default^)
+
+    @always_inline
+    def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] make_default: C) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]:
+        """Return the success value or invoke a default factory only on Err."""
+        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).get_or_else(_NativeThunkRef[R, Never, C, False, o](Pointer(to=make_default)))
+
+    @always_inline
+    def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Self.E -> R](deinit self, ref[o] make_default: C) raises Self.E -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]:
+        """Return the success value or invoke a default factory only on Err."""
+        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).get_or_else(_NativeThunkRef[R, Self.E, C, True, o](Pointer(to=make_default)))
+
+    @always_inline
+    def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Never -> R](deinit self, ref[o] make_default: C) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == _Success[Self.V]:
+        """Return the success value or invoke a default factory only on Err."""
+        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).get_or_else(_NativeThunkRef[R, Never, C, True, o](Pointer(to=make_default)))
+
+    @always_inline
+    def get_or_else[R: Movable & Deinitable](deinit self, make_default: def() thin -> R) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and R == _Success[Self.V]:
+        """Return the success value or invoke a default factory only on Err."""
+        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).get_or_else(_NativeThunk[R, Never, def() thin -> R, False](make_default))
+
+    @always_inline
+    def get_or_else[R: RegisterPassable & Deinitable](deinit self, make_default: def() thin -> R) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]:
+        """Return the success value or invoke a default factory only on Err."""
+        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).get_or_else(_NativeThunk[R, Never, def() thin -> R, False](make_default))
+
+    @always_inline
+    def get_or_else[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and R == _Success[Self.V]:
+        """Return the success value or invoke a default factory only on Err."""
+        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).get_or_else(_NativeThunk[R, X, def() raises X thin -> R, True](make_default))
+
+    @always_inline
+    def get_or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and R == _Success[Self.V]:
+        """Return the success value or invoke a default factory only on Err."""
+        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).get_or_else(_NativeThunk[R, X, def() raises X thin -> R, True](make_default))
+
+    def to_optional(deinit self) -> Optional[_Success[Self.V]] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]:
+        """Consume the native Result carrier, retaining only its success in an Optional.
+
+        Returns:
+            A native Optional containing the moved success, or empty on Err.
+        """
+        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).to_optional()
+
     def ensure[C: BorrowCallContract & Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C, var make_error: G) raises _CommonError[C.Failure, G.Failure] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Success[Self.V] and G.Payload == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C.Result == Bool and G.Result == _Failure[Self.V] and (C.Failure == Never or G.Failure == Never or C.Failure == G.Failure):
         """Keep an accepted success or construct a stored error from its borrowed value."""
         return Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E](rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).ensure(predicate^, make_error^))

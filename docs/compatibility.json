@@ -97,7 +97,8 @@
         "docs/examples/ior_validation.mojo",
         "tests/runtime/test_capture_native_abi_register.mojo",
         "tests/runtime/test_capture_native_abi_state.mojo",
-        "tests/ownership/test_capture_native_abi_ownership.mojo"
+        "tests/ownership/test_capture_native_abi_ownership.mojo",
+        "docs/examples/result_values.mojo"
       ]
     },
     "iteration": {
@@ -736,6 +737,30 @@
         "tests/ownership/test_context_accumulating_ownership.mojo",
         "tests/runtime/test_context_native_nary_abi.mojo",
         "tests/ownership/test_context_native_nary_ownership.mojo"
+      ]
+    },
+    {
+      "name": "Result terminals",
+      "methods": [
+        "value_or",
+        "get_or_else",
+        "to_optional"
+      ],
+      "status": "result_only",
+      "families": "A native Result carrier",
+      "callbacks": "Owned unary fallback or zero-argument default; no callback for to_optional.",
+      "ownership": "Consumes the Result and library callback owners; native closures are borrowed. Returns a plain value or Optional.",
+      "errors": "Selected native error for closures, exact declared library error. Stored errors feed the fallback or are discarded by to_optional.",
+      "timing": "Immediate extraction; fallback callbacks run only on Err.",
+      "owner": [
+        "src/fp/data/_result.mojo",
+        "src/fp/functions/context.mojo"
+      ],
+      "evidence": [
+        "docs/examples/result_values.mojo",
+        "tests/runtime/test_result_terminals.mojo",
+        "tests/ownership/test_result_terminals_ownership.mojo",
+        "tests/compile_fail/result_terminals_context_error.mojo"
       ]
     }
   ],

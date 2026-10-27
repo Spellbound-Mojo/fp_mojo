@@ -5,7 +5,7 @@ from itertools import product
 from native_signatures import MD, callable_metadata, Operand, variants, argument as native_argument, callable_protocol, native_adapter
 import re
 from api_docs import parse_signature
-from operation_specs import RESULT_OPERATIONS, ERROR_OPERATIONS, error_operations
+from operation_specs import RESULT_OPERATIONS, RESULT_TERMINALS, ERROR_OPERATIONS, error_operations
 from generate_plain_overloads import splice_source
 from generate_nary_syntax import MAX
 from generate_pipeline_syntax import TRANSFORMS
@@ -949,6 +949,22 @@ def methods(*, fold_stage=False):
                  f"_{name}[{family}, Self.V, {types}, {target}]({built}, self.value^)",
                  "Map the selected stored-error channel through its family's admitted destination policy.")
 
+    # These consume a native Result carrier and return the final value, rather
+    # than another pipeline. Callback admission stays with this selected context;
+    # Result owns branch selection, ownership and skipped callback disposal.
+    result_conditions = ["conforms_to(Self.V, _ResultType)", f"Self.V == {Source}"]
+    for name, mode, arg, summary in RESULT_TERMINALS:
+        for cb in native_callbacks(mode, Err if mode == "owned" else "", arg):
+            params = callback_parameters([cb])
+            if params and params[-1] == "//": params.pop()
+            conditions = result_conditions + cb["conditions"] + [f'{cb["result"]} == {T}']
+            body.append(f'\n    @always_inline\n    def {name}[{", ".join(params)}](deinit self, {cb["argument"]}) raises {cb["error"]} -> {T} where {" and ".join(conditions)}:\n'
+                        f'        """{summary}"""\n'
+                        f'        return rebind_var[{Source}](self.value^).{name}({cb["build"]})\n')
+    body.append(f'\n    def to_optional(deinit self) -> Optional[{T}] where {" and ".join(result_conditions)}:\n'
+                '        """Consume the native Result carrier, retaining only its success in an Optional."""\n'
+                f'        return rebind_var[{Source}](self.value^).to_optional()\n')
+
     for name, operation in RESULT_OPERATIONS.items():
         if operation.sequence: continue
         summary, detail = operation.documentation
@@ -1050,6 +1066,7 @@ def documented(source):
         "function": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
         "predicate": "The borrowing Bool predicate.",
         "make_error": "The borrowed-payload factory of a stored Result error.",
+        "make_default": "The zero-argument default factory, invoked only on Err.",
         "on_true": "The factory invoked only for a true payload; native closures are borrowed.",
         "on_false": "The factory invoked only for a false payload; native closures are borrowed.",
         "on_ok": "The success handler, consuming the success payload.",
@@ -1130,6 +1147,8 @@ def documented(source):
             + "Returns:\n"
             + indent
             + ("    An owning fold stage; run(step) returns the target pipeline.\n" if name == "fold_effect" else
+               "    The moved success value or computed fallback, without a pipeline wrapper.\n" if name in ("value_or", "get_or_else") else
+               "    A native Optional containing the moved success, or empty on Err.\n" if name == "to_optional" else
                "    The pipeline containing the operation result, retaining its selected native error.\n")
         ]
         if spec["error"]:

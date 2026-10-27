@@ -1,5 +1,6 @@
 """Typed result values stored in place: a native Variant of `Ok` and `Err`."""
 from fp.callables.native import _NativeThunkRef
+from fp.callables.native import _NativeOwnedArg, NativeUnary, _NativeThunk
 from fp.callables._conditional import _guard_owned
 from fp.callables._views import _UnaryViewable
 from fp.callables._retention import _Retain
@@ -180,6 +181,79 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         if self.is_ok():
             return self^._take_ok()
         raise self^._take_err()
+
+    def value_or[C: UnaryContract & Movable & Deinitable](
+        deinit self, var on_err: C
+    ) raises C.Error -> Self.T where C.Arg == Self.E and C.Out == Self.T:
+        """Return the success value, or consume the error to produce a fallback.
+
+        This is Cats Either's `valueOr`: the result is a plain `T`. The handler
+        runs only on Err. Both the Result and a library handler are consumed;
+        a skipped library handler is destroyed. Native handlers are borrowed.
+        Plain functions infer their native error. Captured handlers support
+        non-raising, Never and Error directly; select a custom native error with
+        `pipeline(result^).raising[X]().value_or(handler)`. Library handlers
+        retain their declared error without an extra context.
+
+        Parameters:
+            C: The handler, retaining its receiver mode and native error type.
+
+        Args:
+            on_err: A handler consuming `E` and returning exactly `T`.
+
+        Returns:
+            The success value or the handler's value, moved out without copying.
+
+        Raises:
+            The handler's exact native error; Never for non-raising handlers.
+        """
+        return _fold_result_owned[Self.T, Self.E, Self.T, C.Error, Never, C.Error,
+            Identity[Self.T], C, _call_transform[Self.T, Identity[Self.T]],
+            _call_transform[Self.E, C, Self.T]](self^, Identity[Self.T](), on_err^)
+
+    def get_or_else[C: ThunkContract & Movable & Deinitable](
+        deinit self, var make_default: C
+    ) raises C.Error -> Self.T where C.Out == Self.T:
+        """Return the success value, or call a zero-argument default factory.
+
+        Like Cats Either's `getOrElse`, evaluation of the default is lazy.
+        Mojo expresses that explicitly with a factory: it runs only on Err.
+        The Result and a library factory are consumed, including destruction
+        of a skipped factory. Native factories are borrowed in place.
+        Plain functions infer their native error. For a captured factory raising
+        a custom error, use `pipeline(result^).raising[X]().get_or_else(factory)`.
+        Non-raising, Never and Error closures work directly. Library factories
+        retain their declared error without an extra context.
+
+        Parameters:
+            C: The factory, retaining its receiver mode and native error type.
+
+        Args:
+            make_default: A zero-argument factory returning exactly `T`.
+
+        Returns:
+            The success value or the factory's value, moved out without copying.
+
+        Raises:
+            The factory's exact native error; Never for non-raising factories.
+        """
+        return self^.value_or(_IgnoreInput[Self.E, C](make_default^))
+
+    def to_optional(deinit self) -> Optional[Self.T]:
+        """Consume the Result, keeping its success in a native Optional.
+
+        An Err becomes an empty Optional and its error is destroyed. Like
+        Cats Either's `toOption`, this deliberately discards error information.
+        The success payload moves without copying, preserving its origins.
+
+        Returns:
+            An Optional containing the success value, or an empty Optional.
+        """
+        def present(var value: Self.T) -> Optional[Self.T]:
+            return Optional[Self.T](value^)
+        def absent(var error: Self.E) -> Optional[Self.T]:
+            return Optional[Self.T]()
+        return self^.fold_owned(present, absent)
 
     # Folds borrow the Result, or consume it with `fold_owned`, and call the
     # callback for its case with the payload. Native callbacks are borrowed;
@@ -1200,6 +1274,56 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
             return context[](rebind_var[Self.E](payload^))
         return rebind_var[R](_result_both[Self.T, Self.E, downcast[R, _ResultType].Value, downcast[R, _ResultType].Error, R, S, X, Y, _CommonError[X, Y], Pointer[C, o], Pointer[G, q], False, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err)))
+
+    @always_inline
+    def value_or[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: _Unary[A, R]](deinit self, ref[o] on_err: C) raises Never -> Self.T where A == Self.E and R == Self.T:
+        """Native form of `value_or`; borrow the callback and keep its exact error."""
+        return self^.value_or(_NativeUnaryRef[A, R, Never, C, False, o](Pointer(to=on_err)))
+
+    @always_inline
+    def value_or[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: _RaisingUnary[A, R, Never]](deinit self, ref[o] on_err: C) raises Never -> Self.T where A == Self.E and R == Self.T:
+        """Native form of `value_or`; borrow the callback and keep its exact error."""
+        return self^.value_or(_NativeUnaryRef[A, R, Never, C, True, o](Pointer(to=on_err)))
+
+    @always_inline
+    def value_or[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: _RaisingUnary[A, R, Error]](deinit self, ref[o] on_err: C) raises Error -> Self.T where A == Self.E and R == Self.T:
+        """Native form of `value_or`; borrow the callback and keep its exact error."""
+        return self^.value_or(_NativeUnaryRef[A, R, Error, C, True, o](Pointer(to=on_err)))
+
+    @always_inline
+    def value_or[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises X -> Self.T where not conforms_to(R, RegisterPassable) and R == Self.T:
+        """Plain raising form of `value_or`; infer the exact native error."""
+        return self^.value_or(NativeUnary[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def value_or[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises X -> Self.T where R == Self.T:
+        """Plain raising form of `value_or`; infer the exact native error."""
+        return self^.value_or(NativeUnary[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: _Thunk[R]](deinit self, ref[o] make_default: C) raises Never -> Self.T where R == Self.T:
+        """Native form of `get_or_else`; borrow the callback and keep its exact error."""
+        return self^.get_or_else(_NativeThunkRef[R, Never, C, False, o](Pointer(to=make_default)))
+
+    @always_inline
+    def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: _RaisingThunk[R, Never]](deinit self, ref[o] make_default: C) raises Never -> Self.T where R == Self.T:
+        """Native form of `get_or_else`; borrow the callback and keep its exact error."""
+        return self^.get_or_else(_NativeThunkRef[R, Never, C, True, o](Pointer(to=make_default)))
+
+    @always_inline
+    def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: _RaisingThunk[R, Error]](deinit self, ref[o] make_default: C) raises Error -> Self.T where R == Self.T:
+        """Native form of `get_or_else`; borrow the callback and keep its exact error."""
+        return self^.get_or_else(_NativeThunkRef[R, Error, C, True, o](Pointer(to=make_default)))
+
+    @always_inline
+    def get_or_else[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> Self.T where not conforms_to(R, RegisterPassable) and R == Self.T:
+        """Plain raising form of `get_or_else`; infer the exact native error."""
+        return self^.get_or_else(_NativeThunk[R, X, type_of(make_default), True](make_default))
+
+    @always_inline
+    def get_or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> Self.T where R == Self.T:
+        """Plain raising form of `get_or_else`; infer the exact native error."""
+        return self^.get_or_else(_NativeThunk[R, X, type_of(make_default), True](make_default))
 
     # --- end Result combinators ---
 

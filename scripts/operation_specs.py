@@ -432,6 +432,12 @@ SEQUENCING = {
 
 
 # Result semantics are shared; native inference policy stays with each emitter.
+RESULT_TERMINALS = (
+    ('value_or', 'owned', 'on_err', 'Return the success value or consume the error to produce a fallback.'),
+    ('get_or_else', 'thunk', 'make_default', 'Return the success value or invoke a default factory only on Err.'),
+)
+
+
 RESULT_DOCS = {
     "flat_tap": (
         "Sequence a borrowed Result projection and retain the original success "

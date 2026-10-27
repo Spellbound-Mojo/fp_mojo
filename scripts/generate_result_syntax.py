@@ -1,7 +1,7 @@
 """Result combinator admission and Piped forwarding; no execution is generated."""
 from itertools import product
-from native_signatures import callback
-from operation_specs import RESULT_DOCS as DOCS, RESULT_OUTCOMES as OUTCOMES, RESULT_OPERATIONS, SEQUENCING
+from native_signatures import callback, native_adapter, Operand, variants, argument as native_argument
+from operation_specs import RESULT_DOCS as DOCS, RESULT_OUTCOMES as OUTCOMES, RESULT_OPERATIONS, RESULT_TERMINALS, SEQUENCING
 
 MD = 'Movable & Deinitable'
 START = '    # --- Result combinators (generated) ---\n'
@@ -146,9 +146,43 @@ def methods(piped=False):
             where = ' where '+' and '.join(conditions) if conditions else ''
             out.append(f'\n    def {name}[{", ".join(params)}](deinit self, {", ".join(c.argument for c in cbs)}) raises {error} -> {result}{where}:\n        """{doc}"""\n{prelude}        {body}\n')
     out.append(outcome_methods(piped))
+    if not piped:
+        out.append(terminal_methods())
     return ''.join(out)+'\n'
 
 
+
+
+def terminal_methods():
+    """Adapt native terminal callbacks to the owned Result implementation."""
+    out = []
+    for name, mode, argument, _ in RESULT_TERMINALS:
+        # Fix closure errors before inference, as selected Pipeline does. A
+        # custom closure error uses that existing .raising[X]() context.
+        for kind in ('pure', 'never', 'error'):
+            cb = callback(mode, 'pure' if kind == 'pure' else 'raising', argument)
+            if kind != 'pure':
+                cb.explicit = [p for p in cb.explicit if p != f'X: {MD}']
+                cb = cb.renamed({'X': 'Never' if kind == 'never' else 'Error'})
+            params = cb.parameters + ['//', *cb.explicit]
+            conditions = ([f'{cb.payload} == Self.E'] if mode == 'owned' else [])
+            conditions.append(f'{cb.result} == Self.T')
+            out.append(f'\n    @always_inline\n    def {name}[{", ".join(params)}](deinit self, {cb.argument}) raises {cb.error} -> Self.T where {" and ".join(conditions)}:\n'
+                       f'        """Native form of `{name}`; borrow the callback and keep its exact error."""\n'
+                       f'        return self^.{name}({cb.build})\n')
+        payloads = ['Self.E'] if mode == 'owned' else []
+        # Thin signatures infer their error without trait-bound inference. Reuse
+        # the shared ABI alternatives for register and memory return values.
+        operands = [Operand(p, 'o') for p in payloads]
+        for abi in variants(operands):
+            params = [f'{p}: {bound}' for p, bound in abi.parameters] + [f'X: {MD}']
+            signature = 'def(' + ', '.join(native_argument(p, 'o', thin=True) for p in abi.payloads) + ') raises X thin -> R'
+            adapter = native_adapter(mode, payloads, 'R', 'X', f'type_of({argument})', True)
+            conditions = [*abi.conditions, 'R == Self.T']
+            out.append(f'\n    @always_inline\n    def {name}[{", ".join(params)}](deinit self, {argument}: {signature}) raises X -> Self.T where {" and ".join(conditions)}:\n'
+                       f'        """Plain raising form of `{name}`; infer the exact native error."""\n'
+                       f'        return self^.{name}({adapter}({argument}))\n')
+    return ''.join(out)
 
 
 def outcome_methods(piped=False):

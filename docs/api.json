@@ -24462,6 +24462,244 @@
       "summary": "On success, call a zero-argument factory and return its Result."
      }
     ],
+    "get_or_else": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "A zero-argument factory returning exactly `T`.",
+        "name": "make_default",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "Like Cats Either's `getOrElse`, evaluation of the default is lazy.\nMojo expresses that explicitly with a factory: it runs only on Err.\nThe Result and a library factory are consumed, including destruction\nof a skipped factory. Native factories are borrowed in place.\nPlain functions infer their native error. For a captured factory raising\na custom error, use `pipeline(result^).raising[X]().get_or_else(factory)`.\nNon-raising, Never and Error closures work directly. Library factories\nretain their declared error without an extra context.",
+      "error": "C.Error",
+      "parameters": [
+       {
+        "description": "The factory, retaining its receiver mode and native error type.",
+        "inferred": false,
+        "name": "C",
+        "type": "ThunkContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The factory's exact native error; Never for non-raising factories.",
+      "returns": {
+       "doc": "The success value or the factory's value, moved out without copying.",
+       "type": "Self.T"
+      },
+      "signature": "def get_or_else[C: ThunkContract & Movable & Deinitable](deinit self, var make_default: C) raises C.Error -> Self.T where C.Out == Self.T",
+      "summary": "Return the success value, or call a zero-argument default factory."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "make_default",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_Thunk[R]",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self.T"
+      },
+      "signature": "def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: _Thunk[R]](deinit self, ref[o] make_default: C) raises Never -> Self.T where R == Self.T",
+      "summary": "Native form of `get_or_else`; borrow the callback and keep its exact error."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "make_default",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_RaisingThunk[R, Never]",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self.T"
+      },
+      "signature": "def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: _RaisingThunk[R, Never]](deinit self, ref[o] make_default: C) raises Never -> Self.T where R == Self.T",
+      "summary": "Native form of `get_or_else`; borrow the callback and keep its exact error."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "make_default",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_RaisingThunk[R, Error]",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self.T"
+      },
+      "signature": "def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: _RaisingThunk[R, Error]](deinit self, ref[o] make_default: C) raises Error -> Self.T where R == Self.T",
+      "summary": "Native form of `get_or_else`; borrow the callback and keep its exact error."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "make_default",
+        "type": "def() raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "X",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self.T"
+      },
+      "signature": "def get_or_else[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> Self.T where not conforms_to(R, RegisterPassable) and R == Self.T",
+      "summary": "Plain raising form of `get_or_else`; infer the exact native error."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "make_default",
+        "type": "def() raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "X",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self.T"
+      },
+      "signature": "def get_or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> Self.T where R == Self.T",
+      "summary": "Plain raising form of `get_or_else`; infer the exact native error."
+     }
+    ],
     "is_err": [
      {
       "args": [],
@@ -28528,6 +28766,281 @@
       },
       "signature": "def tap_err[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where P == Self.E",
       "summary": "Inspect a borrowed stored error and retain the Result."
+     }
+    ],
+    "to_optional": [
+     {
+      "args": [],
+      "description": "An Err becomes an empty Optional and its error is destroyed. Like\nCats Either's `toOption`, this deliberately discards error information.\nThe success payload moves without copying, preserving its origins.",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An Optional containing the success value, or an empty Optional.",
+       "type": "Optional[Self.T]"
+      },
+      "signature": "def to_optional(deinit self) -> Optional[Self.T]",
+      "summary": "Consume the Result, keeping its success in a native Optional."
+     }
+    ],
+    "value_or": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "A handler consuming `E` and returning exactly `T`.",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "This is Cats Either's `valueOr`: the result is a plain `T`. The handler\nruns only on Err. Both the Result and a library handler are consumed;\na skipped library handler is destroyed. Native handlers are borrowed.\nPlain functions infer their native error. Captured handlers support\nnon-raising, Never and Error directly; select a custom native error with\n`pipeline(result^).raising[X]().value_or(handler)`. Library handlers\nretain their declared error without an extra context.",
+      "error": "C.Error",
+      "parameters": [
+       {
+        "description": "The handler, retaining its receiver mode and native error type.",
+        "inferred": false,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The handler's exact native error; Never for non-raising handlers.",
+      "returns": {
+       "doc": "The success value or the handler's value, moved out without copying.",
+       "type": "Self.T"
+      },
+      "signature": "def value_or[C: UnaryContract & Movable & Deinitable](deinit self, var on_err: C) raises C.Error -> Self.T where C.Arg == Self.E and C.Out == Self.T",
+      "summary": "Return the success value, or consume the error to produce a fallback."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_Unary[A, R]",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self.T"
+      },
+      "signature": "def value_or[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: _Unary[A, R]](deinit self, ref[o] on_err: C) raises Never -> Self.T where A == Self.E and R == Self.T",
+      "summary": "Native form of `value_or`; borrow the callback and keep its exact error."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_RaisingUnary[A, R, Never]",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self.T"
+      },
+      "signature": "def value_or[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: _RaisingUnary[A, R, Never]](deinit self, ref[o] on_err: C) raises Never -> Self.T where A == Self.E and R == Self.T",
+      "summary": "Native form of `value_or`; borrow the callback and keep its exact error."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_RaisingUnary[A, R, Error]",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self.T"
+      },
+      "signature": "def value_or[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: _RaisingUnary[A, R, Error]](deinit self, ref[o] on_err: C) raises Error -> Self.T where A == Self.E and R == Self.T",
+      "summary": "Native form of `value_or`; borrow the callback and keep its exact error."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[Self.E]) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "X",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self.T"
+      },
+      "signature": "def value_or[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises X -> Self.T where not conforms_to(R, RegisterPassable) and R == Self.T",
+      "summary": "Plain raising form of `value_or`; infer the exact native error."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[Self.E]) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "X",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self.T"
+      },
+      "signature": "def value_or[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises X -> Self.T where R == Self.T",
+      "summary": "Plain raising form of `value_or`; infer the exact native error."
      }
     ]
    },
@@ -111791,6 +112304,304 @@
       "summary": "Consume the pipeline and extract its carrier without evaluating it."
      }
     ],
+    "get_or_else": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The zero-argument default factory, invoked only on Err.",
+        "name": "make_default",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C.Error",
+      "parameters": [
+       {
+        "description": "The first library callback type, retaining its receiver and origins.",
+        "inferred": false,
+        "name": "C",
+        "type": "ThunkContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The moved success value or computed fallback, without a pipeline wrapper.",
+       "type": "_Success[Self.V]"
+      },
+      "signature": "def get_or_else[C: ThunkContract & Movable & Deinitable](deinit self, var make_default: C) raises C.Error -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Out == _Success[Self.V]",
+      "summary": "Return the success value or invoke a default factory only on Err."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "make_default",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def() -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_Success[Self.V]"
+      },
+      "signature": "def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] make_default: C) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]",
+      "summary": "Return the success value or invoke a default factory only on Err."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "make_default",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def() raises Self.E -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_Success[Self.V]"
+      },
+      "signature": "def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Self.E -> R](deinit self, ref[o] make_default: C) raises Self.E -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]",
+      "summary": "Return the success value or invoke a default factory only on Err."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "make_default",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def() raises Never -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_Success[Self.V]"
+      },
+      "signature": "def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Never -> R](deinit self, ref[o] make_default: C) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == _Success[Self.V]",
+      "summary": "Return the success value or invoke a default factory only on Err."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "make_default",
+        "type": "def() thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_Success[Self.V]"
+      },
+      "signature": "def get_or_else[R: Movable & Deinitable](deinit self, make_default: def() thin -> R) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and R == _Success[Self.V]",
+      "summary": "Return the success value or invoke a default factory only on Err."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "make_default",
+        "type": "def() thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_Success[Self.V]"
+      },
+      "signature": "def get_or_else[R: RegisterPassable & Deinitable](deinit self, make_default: def() thin -> R) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]",
+      "summary": "Return the success value or invoke a default factory only on Err."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "make_default",
+        "type": "def() raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "X",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_Success[Self.V]"
+      },
+      "signature": "def get_or_else[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and R == _Success[Self.V]",
+      "summary": "Return the success value or invoke a default factory only on Err."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "make_default",
+        "type": "def() raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "X",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_Success[Self.V]"
+      },
+      "signature": "def get_or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and R == _Success[Self.V]",
+      "summary": "Return the success value or invoke a default factory only on Err."
+     }
+    ],
     "if_effect": [
      {
       "args": [
@@ -174361,6 +175172,22 @@
       "summary": "Consume the whole value with one stage and select its output family."
      }
     ],
+    "to_optional": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A native Optional containing the moved success, or empty on Err.",
+       "type": "Optional[_Success[Self.V]]"
+      },
+      "signature": "def to_optional(deinit self) -> Optional[_Success[Self.V]] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]",
+      "summary": "Consume the native Result carrier, retaining only its success in an Optional."
+     }
+    ],
     "traverse": [
      {
       "args": [
@@ -176395,6 +177222,304 @@
       },
       "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _TupleWith[T, U, False]] -> Pipeline[_MappedFamily[Self.I, _TupleWith[T, U, False].Out], Self.I.Mapped[Self.V, _TupleWith[T, U, False]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _TupleWith[T, U, False]]",
       "summary": "Pair each payload with a copy of value on the right."
+     }
+    ],
+    "value_or": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The error handler, consuming the stored error payload.",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C.Error",
+      "parameters": [
+       {
+        "description": "The first library callback type, retaining its receiver and origins.",
+        "inferred": false,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The moved success value or computed fallback, without a pipeline wrapper.",
+       "type": "_Success[Self.V]"
+      },
+      "signature": "def value_or[C: UnaryContract & Movable & Deinitable](deinit self, var on_err: C) raises C.Error -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Failure[Self.V] and C.Out == _Success[Self.V]",
+      "summary": "Return the success value or consume the error to produce a fallback."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Failure[Self.V]) -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_Success[Self.V]"
+      },
+      "signature": "def value_or[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) -> R](deinit self, ref[o] on_err: C) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]",
+      "summary": "Return the success value or consume the error to produce a fallback."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Failure[Self.V]) raises Self.E -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_Success[Self.V]"
+      },
+      "signature": "def value_or[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) raises Self.E -> R](deinit self, ref[o] on_err: C) raises Self.E -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]",
+      "summary": "Return the success value or consume the error to produce a fallback."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Failure[Self.V]) raises Never -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_Success[Self.V]"
+      },
+      "signature": "def value_or[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) raises Never -> R](deinit self, ref[o] on_err: C) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == _Success[Self.V]",
+      "summary": "Return the success value or consume the error to produce a fallback."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_Success[Self.V]"
+      },
+      "signature": "def value_or[R: Movable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and R == _Success[Self.V]",
+      "summary": "Return the success value or consume the error to produce a fallback."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_Success[Self.V]"
+      },
+      "signature": "def value_or[R: RegisterPassable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]",
+      "summary": "Return the success value or consume the error to produce a fallback."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "X",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_Success[Self.V]"
+      },
+      "signature": "def value_or[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R) raises X -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and R == _Success[Self.V]",
+      "summary": "Return the success value or consume the error to produce a fallback."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "X",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_Success[Self.V]"
+      },
+      "signature": "def value_or[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R) raises X -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and R == _Success[Self.V]",
+      "summary": "Return the success value or consume the error to produce a fallback."
      }
     ],
     "void": [

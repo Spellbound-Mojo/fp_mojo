@@ -8,6 +8,37 @@ sequences computations that can themselves return an `Err`.
 Stored failures and raised errors are separate. If a callback raises, its
 error propagates to the caller. Use `Capture[E]` to catch it in a `Result`.
 
+## Finish with a value
+
+Use `value_or(on_err)` when the fallback depends on the error, or
+`get_or_else(make_default)` when it does not. Both return a plain success value.
+The callback runs only on `Err`; passing a factory keeps the default lazy.
+Use `to_optional()` when you want to discard error information and keep only
+the success in Mojo's native `Optional`.
+
+<!-- example: docs/examples/result_values.mojo -->
+
+The same methods finish a `pipeline` directly: no `.get()` or private payload
+access is needed. All three consume their Result, so use `result^` for a named
+local. Move-only payloads work without copying. A skipped library callback is
+destroyed; a captured native callback remains borrowed and can be reused.
+
+These operations follow [Cats Either's `valueOr`, `getOrElse` and `toOption`](https://github.com/typelevel/cats/blob/main/core/src/main/scala/cats/syntax/either.scala).
+Mojo uses snake_case and an explicit zero-argument factory for a lazy default.
+The callback must return exactly `T`, including its origins; the library does
+not widen the success type. Unlike `recover`, `value_or` returns `T` rather
+than `Result[T, E]`. `raise_on_err()` remains the way to return `T` or raise
+the stored error.
+
+A native error raised by a fallback propagates unchanged. Plain functions infer
+their error; non-raising closures and closures raising `Error` or `Never` work
+directly. For a closure with a custom error, select it before the callback:
+`pipeline(result^).raising[MyError]().get_or_else(factory)`, or the corresponding
+`value_or(handler)`. This is the existing pipeline error context, independent
+of the stored `E`. Library callables keep their declared error automatically.
+Selecting a closure's error first also lets incompatible callbacks receive
+normal diagnostics on Mojo 1.2.
+
 ## Transform only the active branch
 
 <!-- example: docs/examples/results.mojo -->

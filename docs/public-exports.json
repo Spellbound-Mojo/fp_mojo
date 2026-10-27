@@ -10129,6 +10129,80 @@
             "signature": "def map_both[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable, Target: Functor = ResultFamily[_Failure[Result[R, S]]]](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[X, Y] -> Pipeline[Target, Result[R, S], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and _ErrorCompatible[Self.E, Y] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and (X == Never or Y == Never or X == Y) and Target == ResultFamily[_Failure[Result[R, S]]]:",
             "sha256": "9c7a9d4ada6d0c4c99846a676cac18b60336928bc7533032bc6cae61c61f8058"
           }
+        ],
+        "value_or": [
+          {
+            "signature": "def value_or[C: UnaryContract & Movable & Deinitable](deinit self, var on_err: C) raises C.Error -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Failure[Self.V] and C.Out == _Success[Self.V]:",
+            "sha256": "b7f45e149a6b8f7c564f4f6f87ace10eb976e96bb0a7da43da92e4281144118e"
+          },
+          {
+            "signature": "def value_or[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) -> R](deinit self, ref[o] on_err: C) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]:",
+            "sha256": "926ea69bae8a611c84666964d9552c3f18c73ec672bd7d536a3159bc2ae5f48a"
+          },
+          {
+            "signature": "def value_or[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) raises Self.E -> R](deinit self, ref[o] on_err: C) raises Self.E -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]:",
+            "sha256": "2b9abf36f7a32047b4b77cedd4831d6ba51452dc93d7902d77147d8b00e2ab7e"
+          },
+          {
+            "signature": "def value_or[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) raises Never -> R](deinit self, ref[o] on_err: C) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == _Success[Self.V]:",
+            "sha256": "bb53a5a659a56375c7ee41d6ddd246022be3e883ba774760df71d5ea4bcbb926"
+          },
+          {
+            "signature": "def value_or[R: Movable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and R == _Success[Self.V]:",
+            "sha256": "1ae32c0395a30de0ff33df36dc10a5adad84fea970b9bfb41e575a54cb060ab7"
+          },
+          {
+            "signature": "def value_or[R: RegisterPassable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> R) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]:",
+            "sha256": "3eec9f31e039fc516cb3bf783bed3d7753fb695ce4964a2ab4a39cc4e17e6541"
+          },
+          {
+            "signature": "def value_or[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R) raises X -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and R == _Success[Self.V]:",
+            "sha256": "2096aba6fbdec95305529a338b4893e3f25f9230e9e1cebafaa6fe38805e855a"
+          },
+          {
+            "signature": "def value_or[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises X thin -> R) raises X -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and R == _Success[Self.V]:",
+            "sha256": "ff5f1469291ce0374c268d8706c5f102a3f1a5e6fdb7a8b79ad598de8e9e64ed"
+          }
+        ],
+        "get_or_else": [
+          {
+            "signature": "def get_or_else[C: ThunkContract & Movable & Deinitable](deinit self, var make_default: C) raises C.Error -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Out == _Success[Self.V]:",
+            "sha256": "9cab42723cc0aa5bdcda1d6d7aca41bbac5108f612a23c07802abe612f9d76ec"
+          },
+          {
+            "signature": "def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] make_default: C) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]:",
+            "sha256": "344bd61b02cc6348db2621f1375a967a5cd4dab7d750751fa632e40ec8e6db21"
+          },
+          {
+            "signature": "def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Self.E -> R](deinit self, ref[o] make_default: C) raises Self.E -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]:",
+            "sha256": "a62d546671409c6eb7f3951be601e2794f6e27f4f1e1f4a4fd3afdb377c24e94"
+          },
+          {
+            "signature": "def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Never -> R](deinit self, ref[o] make_default: C) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == _Success[Self.V]:",
+            "sha256": "f95acb04fcf270a25249f4c1822c79a244a82099e35f11b0b80a5450f0a23e54"
+          },
+          {
+            "signature": "def get_or_else[R: Movable & Deinitable](deinit self, make_default: def() thin -> R) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and R == _Success[Self.V]:",
+            "sha256": "7b5405116312d4a12648083b9e291a5432ff1b1376b3787b98bd8fe924e3f79a"
+          },
+          {
+            "signature": "def get_or_else[R: RegisterPassable & Deinitable](deinit self, make_default: def() thin -> R) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]:",
+            "sha256": "482d78d1a2722f02bbf579679d131ccb1aa7ba5b75e13fa5f04f62fa4671f4bd"
+          },
+          {
+            "signature": "def get_or_else[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and R == _Success[Self.V]:",
+            "sha256": "537430a42b0a47cb2a9a45ef39d3659dcff0f6d6c43f79ca8b72d338319d3cb7"
+          },
+          {
+            "signature": "def get_or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and R == _Success[Self.V]:",
+            "sha256": "532762a294387451a3b1143f9317b581e0025dbccc4edfaa982ce78c40734935"
+          }
+        ],
+        "to_optional": [
+          {
+            "signature": "def to_optional(deinit self) -> Optional[_Success[Self.V]] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]:",
+            "sha256": "28d77ec17bcc84a58ce868888e0b5ff70874c1c939a920a989c977682362331e"
+          }
         ]
       },
       "provider": "functions/context"
@@ -12908,6 +12982,64 @@
           {
             "signature": "def raise_on_err(deinit self) raises Self.E -> Self.T:",
             "sha256": "cced560633f60c17b97dfa33ccb0a3aa83abfe519d1b4e950387fbd6fba6cd16"
+          }
+        ],
+        "value_or": [
+          {
+            "signature": "def value_or[C: UnaryContract & Movable & Deinitable]( deinit self, var on_err: C ) raises C.Error -> Self.T where C.Arg == Self.E and C.Out == Self.T:",
+            "sha256": "11b33a5730c780a74f04b94cdba7c0163dbfd4a91f44542592391e0e2ac694de"
+          },
+          {
+            "signature": "def value_or[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: _Unary[A, R]](deinit self, ref[o] on_err: C) raises Never -> Self.T where A == Self.E and R == Self.T:",
+            "sha256": "599b777b595784ef5d5c22dbba0fc747b70938af772e50c9a8966a4193c07b64"
+          },
+          {
+            "signature": "def value_or[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: _RaisingUnary[A, R, Never]](deinit self, ref[o] on_err: C) raises Never -> Self.T where A == Self.E and R == Self.T:",
+            "sha256": "59385d33a5b8db4d4354c770ea08add887432403f4dabd4f573d0b3bb60bf88b"
+          },
+          {
+            "signature": "def value_or[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: _RaisingUnary[A, R, Error]](deinit self, ref[o] on_err: C) raises Error -> Self.T where A == Self.E and R == Self.T:",
+            "sha256": "34f81728240cf38817dd9e15aed97e61ec3663ac5b03cfc1cadfcf33bd488611"
+          },
+          {
+            "signature": "def value_or[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises X -> Self.T where not conforms_to(R, RegisterPassable) and R == Self.T:",
+            "sha256": "1948c2f145de03342000ea19485760fed1138b93842b7e4919f948355c0731ff"
+          },
+          {
+            "signature": "def value_or[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises X -> Self.T where R == Self.T:",
+            "sha256": "c9526f67d6f210b39d2b2e29649ca27ab4da5344365e84520303838dd1f562c2"
+          }
+        ],
+        "get_or_else": [
+          {
+            "signature": "def get_or_else[C: ThunkContract & Movable & Deinitable]( deinit self, var make_default: C ) raises C.Error -> Self.T where C.Out == Self.T:",
+            "sha256": "b2b16406a6f8291d93eee31251d3c1466d0ac043adce0a4c649fdb3d91a72ba3"
+          },
+          {
+            "signature": "def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: _Thunk[R]](deinit self, ref[o] make_default: C) raises Never -> Self.T where R == Self.T:",
+            "sha256": "fca0b07fa0f492b5c526c7c740f505b8e5b14f48f25280508e964d78df707b8c"
+          },
+          {
+            "signature": "def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: _RaisingThunk[R, Never]](deinit self, ref[o] make_default: C) raises Never -> Self.T where R == Self.T:",
+            "sha256": "b529db282b24ac121f14281ccb9fd04826d6cac9c33f7a2432d9fbc8a0026031"
+          },
+          {
+            "signature": "def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: _RaisingThunk[R, Error]](deinit self, ref[o] make_default: C) raises Error -> Self.T where R == Self.T:",
+            "sha256": "5d076771a34c218524bd549a5181feb23d8d4da35ce16b536b2a4009e4e06dd8"
+          },
+          {
+            "signature": "def get_or_else[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> Self.T where not conforms_to(R, RegisterPassable) and R == Self.T:",
+            "sha256": "6c015b0b1c53e86d2195c302ac1c24855601b798e6fd7e53d72aa2af613ad9e3"
+          },
+          {
+            "signature": "def get_or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> Self.T where R == Self.T:",
+            "sha256": "1dd40241f1e79751d7a6333d614c4cd4902c3a22e536dd5048135bbbe8376ce5"
+          }
+        ],
+        "to_optional": [
+          {
+            "signature": "def to_optional(deinit self) -> Optional[Self.T]:",
+            "sha256": "6a4b9b61364a6f3496ef4127fc022b5fd27a90da556871ea5c702ef214089c27"
           }
         ],
         "fold": [

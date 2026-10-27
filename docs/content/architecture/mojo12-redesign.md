@@ -3221,6 +3221,36 @@ Generator parity, all 53 tooling tests, regenerated API/export inventories and
 strict documentation validation passed. The API review found only the two
 provider-path changes; both moved contract declarations remain byte-identical.
 
+### Result terminals follow Cats Either semantics
+
+`Result.value_or`, `get_or_else` and `to_optional` finish an outcome as a plain
+value or native Optional. Their semantics follow Cats Either's `valueOr`,
+`getOrElse` and `toOption`: fallback callbacks run only on failure, and conversion
+to Optional deliberately discards the error. Mojo represents the lazy default
+as a zero-argument factory and retains exact types and origins instead of
+widening the success type.
+
+The existing owned Result fold selects the payload and disposes of the unused
+callback owner. `value_or` supplies identity for success; `get_or_else` adapts
+the factory through the shared ignored-input callable; `to_optional` uses the
+existing consuming fold. Native overloads only adapt signatures. No new branch
+interpreter, storage representation or receiver dispatch is introduced.
+
+Closure admission fixes the native error before inference. Direct Result
+methods admit pure, Never and Error closures; thin functions infer their native
+error through the shared register/memory signature variants. A custom-error
+closure uses the existing `pipeline(result^).raising[X]()` context. Pipeline
+terminals forward to Result and return the final value without a wrapper.
+Library callables keep their own error metadata and receiver mode. Inferring
+a free error through a closure trait bound can crash Mojo 1.2 on invalid
+arity or convention, so these new APIs use the established selected-context
+boundary instead. Rejection fixtures exercise ordinary calls without callback
+type hints.
+
+The [Result tutorial](../tutorial/results.md#finish-with-a-value) maintains an
+executable example covering fallback selection, a skipped default, direct
+pipeline extraction and Optional conversion.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.
