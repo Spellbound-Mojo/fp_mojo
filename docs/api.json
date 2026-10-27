@@ -1898,6 +1898,14 @@
      "name": "Compatible"
     },
     {
+     "description": "The step has a shared or mutable receiver and remains usable after a call.",
+     "name": "ReceiverCompatible"
+    },
+    {
+     "description": "Existing fold admission plus the staged entry's repeatable-step requirement.",
+     "name": "InvocationCompatible"
+    },
+    {
      "description": "The exact family result, including deferred computations.",
      "name": "Out"
     },
@@ -1906,7 +1914,7 @@
      "name": "Error"
     }
    ],
-   "description": "A generic wrapper forwards `Compatible`, returns `Out` and raises `Error`.\nThe target family owns dependent sequencing; custom families retain their\nexisting fold admission unless they declare additional requirements.",
+   "description": "A generic wrapper forwards `Compatible`, returns `Out` and raises `Error`.\nThe target family owns dependent sequencing; custom families retain their\nexisting fold admission unless they declare additional requirements.\nA staged wrapper can forward InvocationCompatible to include the required\nrepeatable receiver; existing Compatible proofs retain their meaning.",
    "fields": [],
    "kind": "struct",
    "methods": {},

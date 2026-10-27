@@ -10,6 +10,17 @@ def forward[I: Monad, V: Movable & Deinitable, F: BinaryContract & Movable & Dei
 ) raises FoldContract[I, V, F].Error -> Pipeline[I, FoldContract[I, V, F].Out] where FoldContract[I, V, F].Compatible and RepeatableBinary[F]:
     return pipeline[IdentityFamily](source^).fold_effect[I](initial^).run(function^)
 
+def checked[I: Monad, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](
+    var function: F, var initial: F.First, var source: V
+) raises FoldContract[I, V, F].Error -> Pipeline[I, FoldContract[I, V, F].Out] where FoldContract[I, V, F].InvocationCompatible:
+    return forward[I](function^, initial^, source^)
+
+@fieldwise_init
+struct MissingFoldReceiver[I: Monad](BinaryContract, Movable):
+    comptime First = Int
+    comptime Second = Int
+    comptime Out = Self.I.Pure[Int]
+
 from fp.algebra import pure
 from fp.callables import Binary, MutableBinary
 from fp.effects import Reader, run
@@ -47,7 +58,7 @@ def initial(trace: ArcPointer[String]) -> List[Owner]:
 def immediate[G: Monad, fail: Bool]() -> String where FoldContract[G, List[Owner], Step[G, fail]].Compatible and FoldContract[G, List[Owner], Step[G, fail]].Error == Owner:
     var trace = ArcPointer(String())
     try:
-        var result = forward[G](Step[G, fail](Owner(9, trace), 0), initial(trace), source(trace)).get()
+        var result = checked[G](Step[G, fail](Owner(9, trace), 0), initial(trace), source(trace)).get()
         trace[] += "r"
         _ = result^
     except error:
@@ -61,7 +72,7 @@ def immediate[G: Monad, fail: Bool]() -> String where FoldContract[G, List[Owner
 def delayed[fail: Bool, execute: Bool]() -> String:
     comptime G = Reader[Int]
     var trace = ArcPointer(String())
-    var pending = forward[G](Step[G, fail](Owner(9, trace), 0), initial(trace), source(trace)).get()
+    var pending = checked[G](Step[G, fail](Owner(9, trace), 0), initial(trace), source(trace)).get()
     trace[] += "d"
     try:
         if execute:

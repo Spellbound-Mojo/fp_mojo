@@ -16,7 +16,7 @@ from fp.callables._transforms import _ValueThunk, _Pair, _Apply
 from .protocols import Monoid, _AllLive, _LiveAccumulator
 from ._accumulation import _FoldMappedStep, _SearchStep, _FirstPresent, _BoolLive, _PredicateStep
 from ._sequencing import _EffectRetain, _IfEffect
-from fp.callables.invoke import RepeatableUnary, _OnceUnaryAvailable, _OnceThunkAvailable
+from fp.callables.invoke import RepeatableUnary, RepeatableBinary, _OnceUnaryAvailable, _OnceThunkAvailable
 from fp._internal.errors import _CommonError, _ErrorCompatible
 from fp.callables._identity import Identity
 from fp.iteration._advance import _Source
@@ -201,6 +201,8 @@ struct FoldContract[I: Monad, V: Movable & Deinitable, F: BinaryContract & Movab
     A generic wrapper forwards `Compatible`, returns `Out` and raises `Error`.
     The target family owns dependent sequencing; custom families retain their
     existing fold admission unless they declare additional requirements.
+    A staged wrapper can forward InvocationCompatible to include the required
+    repeatable receiver; existing Compatible proofs retain their meaning.
 
     Parameters:
         I: The target Monad family.
@@ -216,6 +218,10 @@ struct FoldContract[I: Monad, V: Movable & Deinitable, F: BinaryContract & Movab
     """Requirements declared by the target family's dependent fold."""
     comptime Compatible = Self.InputCompatible and Self.OutputCompatible and Self.FamilyCompatible
     """The complete checked fold admission with its inferred construction error."""
+    comptime ReceiverCompatible = RepeatableBinary[Self.F]
+    """The step has a shared or mutable receiver and remains usable after a call."""
+    comptime InvocationCompatible = Self.Compatible and Self.ReceiverCompatible
+    """Existing fold admission plus the staged entry's repeatable-step requirement."""
     comptime Out = Self._Plan.Out
     """The exact family result, including deferred computations."""
     comptime Error = Self._Plan.Error

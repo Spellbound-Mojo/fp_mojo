@@ -3086,6 +3086,25 @@ Qualification passed generator parity, all 49 tooling tests and strict
 documentation validation. All 107 Mojo source files remain byte-identical;
 there is no runtime, public API or native-signature change.
 
+### Staged folds forward one optional receiver proof
+
+FoldContract now exposes ReceiverCompatible for the canonical RepeatableBinary
+predicate and InvocationCompatible for that receiver requirement together with
+the unchanged Compatible proof. Generic wrappers of the staged fold can forward
+one public predicate. Free folds and custom families retain their original
+admission; existing combined and expanded wrapper proofs still work.
+
+The maintained staged example uses the combined proof. Shared and mutable
+steps, move-only inputs, empty and branching families, custom family admission,
+borrowed output/error origins and deferred cleanup retain their positive
+controls. Missing and consuming-only receivers are rejected at an ordinary
+checked wrapper call without an explicit callback-type argument.
+
+Qualification passed 36 source/package O0/O3 boundary checks, 142 generic
+test programs, 11 selected rejection fixtures and all four builds/runs of the
+maintained example. Generator parity, all 49 tooling tests, API generation
+and strict documentation validation passed with unchanged prototype inputs.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

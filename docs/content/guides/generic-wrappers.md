@@ -30,12 +30,13 @@ consuming boundary.
 |---|---|
 | `Compatible` | The documented operation's admission. Its exact requirements depend on the operation. Existing wrappers can keep this proof. |
 | `ReceiverCompatible` | The documented receiver requirement. Some contracts require a repeatable callback; others check whether a single invocation is available. |
-| `InvocationCompatible`, where provided | `Compatible` plus receiver availability for a new wrapper boundary. Missing receiver methods fail at that boundary. |
+| `InvocationCompatible`, where provided | `Compatible` plus the documented receiver requirement for a new wrapper boundary. Missing receiver methods fail at that boundary. |
 | Component predicates | Individual input, carrier, output, error or family requirements. Forward the components documented for that particular contract. |
 
 Use `InvocationCompatible` for a new wrapper when its descriptor offers it.
 Map, bind, combination, sequencing, conditional composition, validation, outcome
-handling and stored-error mapping expose this optional stronger proof. Some
+handling, stored-error mapping and staged folding expose this optional stronger
+proof. FoldContract requires a repeatable binary receiver for staged invocation. Some
 contracts already include their receiver requirement in `Compatible`, including
 `ApContract`, `FoldMapContract` and `FindMapContract`.
 

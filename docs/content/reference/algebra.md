@@ -53,8 +53,10 @@ Selected `fold_effect(initial).run(step)` projects the same `FoldContract`
 result and construction error. It retains the staged API's additional requirement
 that the step is repeatable, and requires the bound seed to have exactly the
 step's first-argument type, including origins. A generic staged wrapper forwards
-`FoldContract.Compatible` and `RepeatableBinary[F]`; custom families retain the
-free fold's existing admission. The example demonstrates both forms.
+`FoldContract.InvocationCompatible`, combining the unchanged `Compatible` proof
+with `ReceiverCompatible` (`RepeatableBinary[F]`). Existing wrappers can retain
+their two separate predicates. Custom families retain the free fold's existing
+admission. The example demonstrates the free and staged forms.
 
 <!-- example: docs/examples/fold_contracts.mojo -->
 

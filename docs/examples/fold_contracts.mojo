@@ -1,5 +1,5 @@
 from fp.algebra import FoldContract, Monad, OptionalFamily, IdentityFamily
-from fp.callables import BinaryContract, Binary, RepeatableBinary
+from fp.callables import BinaryContract, Binary
 from fp.functions import pipeline, Pipeline
 from fp.iteration import fold_effect
 from std.testing import assert_equal
@@ -19,7 +19,7 @@ def forward[I: Monad, V: Movable & Deinitable, F: BinaryContract & Movable & Dei
 
 def staged[I: Monad, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](
     var function: F, var initial: F.First, var source: V
-) raises FoldContract[I, V, F].Error -> Pipeline[I, FoldContract[I, V, F].Out] where FoldContract[I, V, F].Compatible and RepeatableBinary[F]:
+) raises FoldContract[I, V, F].Error -> Pipeline[I, FoldContract[I, V, F].Out] where FoldContract[I, V, F].InvocationCompatible:
     return pipeline[IdentityFamily](source^).fold_effect[I](initial^).run(function^)
 
 def main() raises:
