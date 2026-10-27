@@ -294,6 +294,9 @@ trait ReaderAction(_Computation):
     """The base carrier a run with an environment of origin `o` returns."""
     comptime Error[o: ImmOrigin]: Movable & Deinitable = Never
     """The error such a run raises; `Never` by default."""
+    # Additional requirements of a library recipe at the actual run origin.
+    # External actions retain their existing contract through this default.
+    comptime _RunCompatible[o: ImmOrigin]: Bool = True
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Self.Out[o]:
         """Run the computation, consuming it, with a borrowed environment.
 

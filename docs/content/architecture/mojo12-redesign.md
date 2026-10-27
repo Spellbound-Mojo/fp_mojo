@@ -1778,6 +1778,45 @@ Qualification on Mojo 1.2.0 passed 396 source/package checks at O0 and O3,
 tests and generated-source verification. Compiler reports retained unchanged
 inputs and no audit failures.
 
+### Reader recipe requirements at the run boundary
+
+Reader recipes now carry a private origin-dependent requirement through maps,
+binds, combinations, collection, choice, hoisting and local environments. The
+checked free `run` entry combines that requirement with the existing base-carrier
+check at the actual environment origin. A producer's raised pointer and a child
+recipe's environment-dependent raised pointer must therefore have compatible
+origins before the call is admitted; selecting one symbolic common error must
+not hide the child's requirement. Existing custom Reader actions inherit a true
+default and keep their current trait contract.
+
+Collection admits repeatable producers, and its run checks the selected base's
+actual loop requirement with the adapted producer. A single-value Optional
+traversal still accepts a consuming producer: it uses bind, not the collection
+hook. Construction does not speculate about a custom base's source requirements
+or invent an environment origin before a run exists.
+
+`local` also checks the nested requirement at its existing empty and universal
+origin witnesses. Those witnesses are declaration checks, never execution
+origins or permission to relabel a borrow. The inner run still checks the fresh
+local environment. This rejects a hidden child-error mismatch even when the
+recipe's final output and selected error appear independent of that environment.
+
+Public call syntax and positional bindings are unchanged. Mojo 1.2 does not
+support a `where` clause on the Reader trait's `run` method, or a stronger clause
+on its implementations. Accordingly, the free `run` and `local` entries own
+signature admission; primitive trait methods retain their preconditions. This
+pass propagates declared recipe requirements, rather than claiming complete
+admission for arbitrary custom bases or the dependent-fold hook.
+
+Prototype qualification passed 20 source/package checks at O0 and O3, all 717
+runnable programs (715 checked programs and two benchmarks), and all 1,612
+rejection cases with unchanged inputs and no audit failures. Generated sources
+matched. The prototype's tooling snapshot retained an obsolete 80-example count;
+main-tree qualification uses the already-corrected 81-example inventory. Main-tree
+qualification passed 20 source/package checks, five Reader programs, 34 traversal
+programs, 132 generic clients, all 48 tooling tests and generator verification.
+Compiler reports retained unchanged inputs and no audit failures.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

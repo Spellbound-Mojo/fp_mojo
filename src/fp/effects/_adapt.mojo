@@ -28,7 +28,7 @@ def _local_as[E: Movable & Deinitable, C: Local, V: Movable & Deinitable, F: Bor
 
 
 def _reader_run_as[E: Movable & Deinitable, V: ReaderAction, o: ImmOrigin](var action: V, ref[o] env: V.Env
-) raises E -> V.Out[o] where _ErrorCompatible[E, V.Error[o]]:
+) raises E -> V.Out[o] where _ErrorCompatible[E, V.Error[o]] and V._RunCompatible[o]:
     try:
         return action^.run(env)
     except error:

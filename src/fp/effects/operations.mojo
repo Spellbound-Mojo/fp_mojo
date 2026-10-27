@@ -33,6 +33,7 @@ def run[V: Movable & Deinitable, o: ImmOrigin, //, I: ReaderFamily](var action: 
         The common error of the stages the run executes.
     """
     comptime assert I.RunCompatible[V, o], _FAMILY_MISMATCH
+    comptime assert _Reader[V]._RunCompatible[o]
     return rebind_var[_Reader[V]](action^).run(rebind[_Reader[V].Env](env))
 
 

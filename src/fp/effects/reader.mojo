@@ -15,7 +15,7 @@ from fp.callables.protocols import (UnaryContract, BinaryContract, ThunkContract
                                     OnceThunk, MutableBinary, BorrowCallContract, BorrowCallable, BorrowOnceCallable)
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
 from fp.callables._receiver import _borrow_once_as, _binary_repeated_as, _unary_once_as, _thunk_once_as
-from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
+from fp._internal.errors import _CommonError, _CommonErrorCompatible, _ErrorCompatible, _propagate_error
 from .protocols import Local, Listen, _CarrierOp, _LocalLifting, ReaderAction, ReaderFamily, _EndpointCompatible, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
 from ._adapt import _op_as, _reader_run_as, _map_as, _flat_map_as, _map2_lazy_as
 
@@ -31,7 +31,7 @@ comptime _Action[V: Movable & Deinitable] = downcast[V, ReaderAction]
 # changes its type. Keep this check in a public
 # where clause: body-level equality assertions erase origin distinctions on
 # Mojo 1.1 and cannot protect the temporary local environment.
-comptime _LocalIndependent[V: ReaderAction] = V.Out[ImmUntrackedOrigin] == V.Out[ImmutAnyOrigin] and V.Error[ImmUntrackedOrigin] == V.Error[ImmutAnyOrigin]
+comptime _LocalIndependent[V: ReaderAction] = V.Out[ImmUntrackedOrigin] == V.Out[ImmutAnyOrigin] and V.Error[ImmUntrackedOrigin] == V.Error[ImmutAnyOrigin] and V._RunCompatible[ImmUntrackedOrigin] and V._RunCompatible[ImmutAnyOrigin]
 
 
 @fieldwise_init
@@ -42,6 +42,7 @@ struct _ReaderPure[M: Monad, R: AnyType, T: Movable & Deinitable](ReaderAction, 
     comptime Value = Self.T
     comptime Out[o: ImmOrigin] = Self.M.Pure[Self.T]
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) -> Self.Out[o]:
+        comptime assert Self._RunCompatible[o], "run: incompatible Reader recipe at this environment origin"
         return _pure[Self.M](self.value^)
 
 
@@ -56,6 +57,7 @@ struct _ReaderFail[M: Monad, R: AnyType, A: Movable & Deinitable](ReaderAction, 
     comptime Out[o: ImmOrigin] = Self.Errors.Failed[Self.A]
     comptime Error[o: ImmOrigin] = Self.Errors.FailError[Self.A]
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Self.Out[o]:
+        comptime assert Self._RunCompatible[o], "run: incompatible Reader recipe at this environment origin"
         return Self.Errors.fail[Self.A](self.error^)
 
 
@@ -68,6 +70,7 @@ struct _ReaderLift[M: Monad, R: AnyType, V: Movable & Deinitable](ReaderAction, 
     comptime Value = Self.M.Element[Self.V]
     comptime Out[o: ImmOrigin] = Self.V
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) -> Self.Out[o]:
+        comptime assert Self._RunCompatible[o], "run: incompatible Reader recipe at this environment origin"
         return self.value^
 
 
@@ -78,6 +81,7 @@ struct _ReaderAsk[M: Monad, R: Copyable & Deinitable](ReaderAction, Copyable, De
     comptime Value = Self.R
     comptime Out[o: ImmOrigin] = Self.M.Pure[Self.R]
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) -> Self.Out[o]:
+        comptime assert Self._RunCompatible[o], "run: incompatible Reader recipe at this environment origin"
         return _pure[Self.M](env.copy())
 
 
@@ -93,6 +97,7 @@ struct _ReaderEndpoint[M: Monad, R: AnyType, T: Movable & Deinitable, F: BorrowC
     comptime Out[o: ImmOrigin] = Self.F.Result
     comptime Error[o: ImmOrigin] = Self.F.Failure
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Self.Out[o]:
+        comptime assert Self._RunCompatible[o], "run: incompatible Reader recipe at this environment origin"
         comptime assert Self.F.Payload == Self.R, "action: the endpoint must borrow the Reader environment"
         return _borrow_once_as[Self.Error[o]](env, self.function^)
 
@@ -108,10 +113,12 @@ struct _ReaderContinue[I: AnyType, F: UnaryContract & Movable & Deinitable, R: A
     comptime Arg = Self.F.Arg
     comptime Out = Self.Action.Out[Self.o]
     comptime Error = _CommonError[Self.F.Error, Self.Action.Error[Self.o]]
+    comptime _RunCompatible = Self.Action._RunCompatible[Self.o] & _CommonErrorCompatible[Self.F.Error, Self.Action.Error[Self.o]]
     def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert Self.Action.Family == Self.I, _FAMILY_MISMATCH
         comptime assert _ErrorCompatible[Self.Error, Self.F.Error] and _ErrorCompatible[Self.Error, Self.Action.Error[Self.o]]
         var action = rebind_var[Self.Action](_unary_once_as[Self.Error](self.function^, arg^))
+        comptime assert Self.Action._RunCompatible[Self.o]
         return _reader_run_as[Self.Error](action^, rebind[Self.Action.Env](self.env[]))
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert Self.Action.Family == Self.I, _FAMILY_MISMATCH
@@ -122,6 +129,7 @@ struct _ReaderContinue[I: AnyType, F: UnaryContract & Movable & Deinitable, R: A
             action = rebind_var[Self.Action](call_repeated(self.function, arg^))
         except error:
             _propagate_error[Self.Error](error^)
+        comptime assert Self.Action._RunCompatible[Self.o]
         return _reader_run_as[Self.Error](action^, rebind[Self.Action.Env](self.env[]))
 
 
@@ -133,10 +141,12 @@ struct _ReaderRight[I: AnyType, G: ThunkContract & Movable & Deinitable, R: AnyT
     comptime Action = _Action[Self.G.Out]
     comptime Out = Self.Action.Out[Self.o]
     comptime Error = _CommonError[Self.G.Error, Self.Action.Error[Self.o]]
+    comptime _RunCompatible = Self.Action._RunCompatible[Self.o] & _CommonErrorCompatible[Self.G.Error, Self.Action.Error[Self.o]]
     def call_once(deinit self) raises Self.Error -> Self.Out:
         comptime assert Self.Action.Family == Self.I, _FAMILY_MISMATCH
         comptime assert _ErrorCompatible[Self.Error, Self.G.Error] and _ErrorCompatible[Self.Error, Self.Action.Error[Self.o]]
         var action = rebind_var[Self.Action](_thunk_once_as[Self.Error](self.right^))
+        comptime assert Self.Action._RunCompatible[Self.o]
         return _reader_run_as[Self.Error](action^, rebind[Self.Action.Env](self.env[]))
 
 
@@ -151,9 +161,15 @@ struct _ReaderMap[M: Monad, R: AnyType, S: ReaderAction, F: UnaryContract & Mova
     comptime Value = Self.F.Out
     comptime Out[o: ImmOrigin] = Self.M.Mapped[Self.S.Out[o], Self.F]
     comptime Error[o: ImmOrigin] = _CommonError[Self.S.Error[o], Self.M.MapError[Self.S.Out[o], Self.F]]
+    comptime _RunCompatible[o: ImmOrigin] = (
+        Self.S._RunCompatible[o] & Self.M.MapCompatible[Self.S.Out[o], Self.F] &
+        _CommonErrorCompatible[Self.S.Error[o], Self.M.MapError[Self.S.Out[o], Self.F]]
+    )
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Self.Out[o]:
+        comptime assert Self._RunCompatible[o], "run: incompatible Reader recipe at this environment origin"
         comptime E = Self.Error[o]
         comptime assert _ErrorCompatible[E, Self.S.Error[o]] and _ErrorCompatible[E, Self.M.MapError[Self.S.Out[o], Self.F]]
+        comptime assert Self.S._RunCompatible[o]
         var base = _reader_run_as[E](self.source^, rebind[Self.S.Env](env))
         return _map_as[E, Self.M](self.function^, base^)
 
@@ -171,10 +187,20 @@ struct _ReaderBind[M: Monad, R: AnyType, S: ReaderAction, F: UnaryContract & Mov
     comptime Next[o: ImmOrigin] = _ReaderContinue[Self.Family, Self.F, Self.R, o]
     comptime Out[o: ImmOrigin] = Self.Operation.Out[Self.S.Out[o], Self.Next[o]]
     comptime Error[o: ImmOrigin] = _CommonError[Self.S.Error[o], Self.Operation.Error[Self.S.Out[o], Self.Next[o]]]
+    comptime _BaseCompatible[o: ImmOrigin] = (
+        Self.Operation.Errors._Handles[Self.S.Out[o], Self.Next[o]] if Self.recover
+        else Self.M.BindCompatible[Self.S.Out[o], Self.Next[o]]
+    )
+    comptime _RunCompatible[o: ImmOrigin] = (
+        Self.S._RunCompatible[o] & Self.Next[o]._RunCompatible & Self._BaseCompatible[o] &
+        _CommonErrorCompatible[Self.S.Error[o], Self.Operation.Error[Self.S.Out[o], Self.Next[o]]]
+    )
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Self.Out[o]:
+        comptime assert Self._RunCompatible[o], "run: incompatible Reader recipe at this environment origin"
         comptime E = Self.Error[o]
         comptime assert _Action[Self.F.Out].Family == Self.Family, _FAMILY_MISMATCH
         comptime assert _ErrorCompatible[E, Self.S.Error[o]] and _ErrorCompatible[E, Self.Operation.Error[Self.S.Out[o], Self.Next[o]]]
+        comptime assert Self.S._RunCompatible[o]
         var base = _reader_run_as[E](self.source^, rebind[Self.S.Env](env))
         return Self.Operation.apply[E](Self.Next[o](self.function^, Pointer(to=env)), base^)
 
@@ -194,10 +220,17 @@ struct _ReaderCombine[M: Monad, R: AnyType, S: ReaderAction, F: BinaryContract &
     comptime Right[o: ImmOrigin] = _ReaderRight[Self.Family, Self.G, Self.R, o]
     comptime Out[o: ImmOrigin] = Self.M.Combined[Self.S.Out[o], Self.F, Self.Right[o]]
     comptime Error[o: ImmOrigin] = _CommonError[Self.S.Error[o], Self.M.CombineError[Self.S.Out[o], Self.F, Self.Right[o]]]
+    comptime _RunCompatible[o: ImmOrigin] = (
+        Self.S._RunCompatible[o] & Self.Right[o]._RunCompatible &
+        Self.M.CombineCompatible[Self.S.Out[o], Self.F, Self.Right[o]] &
+        _CommonErrorCompatible[Self.S.Error[o], Self.M.CombineError[Self.S.Out[o], Self.F, Self.Right[o]]]
+    )
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Self.Out[o]:
+        comptime assert Self._RunCompatible[o], "run: incompatible Reader recipe at this environment origin"
         comptime E = Self.Error[o]
         comptime assert _Action[Self.G.Out].Family == Self.Family, _FAMILY_MISMATCH
         comptime assert _ErrorCompatible[E, Self.S.Error[o]] and _ErrorCompatible[E, Self.M.CombineError[Self.S.Out[o], Self.F, Self.Right[o]]]
+        comptime assert Self.S._RunCompatible[o]
         var base = _reader_run_as[E](self.source^, rebind[Self.S.Env](env))
         return _map2_lazy_as[E, Self.M](self.function^, base^, Self.Right[o](self.right^, Pointer(to=env)))
 
@@ -214,7 +247,11 @@ struct _ReaderLocal[M: Monad, R: Movable & Deinitable, S: ReaderAction, F: Borro
     comptime Value = Self.S.Value
     comptime Out[o: ImmOrigin] = Self.S.Out[o]
     comptime Error[o: ImmOrigin] = _CommonError[Self.F.Failure, Self.S.Error[o]]
+    # The inner run additionally checks the fresh local environment at its
+    # own origin; this forwards the source obligation without inventing one.
+    comptime _RunCompatible[o: ImmOrigin] = _LocalIndependent[Self.S] & Self.S._RunCompatible[o] & _CommonErrorCompatible[Self.F.Failure, Self.S.Error[o]]
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Self.Out[o]:
+        comptime assert Self._RunCompatible[o], "run: incompatible Reader recipe at this environment origin"
         comptime E = Self.Error[o]
         comptime assert Self.F.Payload == Self.R and Self.F.Result == Self.R, "local: the callback must map the environment to a new environment"
         comptime assert _ErrorCompatible[E, Self.F.Failure] and _ErrorCompatible[E, Self.S.Error[o]]
@@ -223,6 +260,7 @@ struct _ReaderLocal[M: Monad, R: Movable & Deinitable, S: ReaderAction, F: Borro
         # not retain it: the base must complete the computation eagerly.
         comptime assert Self.S.Out[origin_of(changed)] == Self.S.Out[o], "local: the base retains the environment; run local over an eager base"
         comptime assert _ErrorCompatible[E, Self.S.Error[origin_of(changed)]]
+        comptime assert Self.S._RunCompatible[origin_of(changed)]
         return rebind_var[Self.Out[o]](_reader_run_as[E](self.source^, rebind[Self.S.Env](changed)))
 
 
@@ -240,7 +278,12 @@ struct _ReaderLoop[M: Monad, R: AnyType, V: Movable & Deinitable, F: UnaryContra
     comptime Step[o: ImmOrigin] = _ReaderContinue[Self.Family, Self.F, Self.R, o]
     comptime Out[o: ImmOrigin] = Self.M._Looped[Self.V, Self.Step[o], Self.K]
     comptime Error[o: ImmOrigin] = Self.M._LoopError[Self.V, Self.Step[o], Self.K]
+    comptime _RunCompatible[o: ImmOrigin] = (
+        Self.Family._LoopCompatible[Self.V, Self.F, Self.K] & Self.Step[o]._RunCompatible &
+        Self.M._LoopCompatible[Self.V, Self.Step[o], Self.K]
+    )
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Self.Out[o]:
+        comptime assert Self._RunCompatible[o], "run: incompatible Reader recipe at this environment origin"
         comptime assert RepeatableUnary[Self.F], "traverse: the callback must be repeatable"
         comptime assert _Action[Self.F.Out].Family == Self.Family, _FAMILY_MISMATCH
         return Self.M._loop[Self.V, Self.Step[o], Self.K](Self.Step[o](self.function^, Pointer(to=env)), self.source^)
@@ -255,10 +298,12 @@ struct _ReaderFoldStep[I: AnyType, R: AnyType, F: BinaryContract & Movable & Dei
     comptime Action = _Action[Self.F.Out]
     comptime Out = Self.Action.Out[Self.o]
     comptime Error = _CommonError[Self.F.Error, Self.Action.Error[Self.o]]
+    comptime _RunCompatible = Self.Action._RunCompatible[Self.o] & _CommonErrorCompatible[Self.F.Error, Self.Action.Error[Self.o]]
     def call_mut(mut self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out:
         comptime assert RepeatableBinary[Self.F] and Self.Action.Family == Self.I
         comptime assert _ErrorCompatible[Self.Error, Self.F.Error] and _ErrorCompatible[Self.Error, Self.Action.Error[Self.o]]
         var action = rebind_var[Self.Action](_binary_repeated_as[Self.Error](self.function, first^, second^))
+        comptime assert Self.Action._RunCompatible[Self.o]
         return _reader_run_as[Self.Error](action^, rebind[Self.Action.Env](self.env[]))
 
 
@@ -274,7 +319,9 @@ struct _ReaderFold[M: Monad, R: AnyType, V: Movable & Deinitable, P: UnaryContra
     comptime Step[o: ImmOrigin] = _ReaderFoldStep[Self.Family, Self.R, Self.F, o]
     comptime Out[o: ImmOrigin] = Self.M._Folded[Self.V, Self.P, Self.Step[o], Self.K]
     comptime Error[o: ImmOrigin] = Self.M._FoldError[Self.V, Self.P, Self.Step[o], Self.K]
+    comptime _RunCompatible[o: ImmOrigin] = Self.Step[o]._RunCompatible
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Self.Out[o]:
+        comptime assert Self._RunCompatible[o], "run: incompatible Reader recipe at this environment origin"
         return Self.M._fold[Self.V, Self.P, Self.Step[o], Self.K](self.prepare^, Self.Step[o](self.function^, Pointer(to=env)), self.initial^, self.source^)
 
 
@@ -290,15 +337,23 @@ struct _ReaderChoice[M: Monad, A: ReaderAction, B: ReaderAction](
     comptime Value = Self.A.Value
     comptime Out[o: ImmOrigin] = Self.M._Joined[Self.A.Out[o], Self.B.Out[o]]
     comptime Error[o: ImmOrigin] = _CommonError[Self.A.Error[o], Self.B.Error[o]]
+    comptime _RunCompatible[o: ImmOrigin] = (
+        Self.A._RunCompatible[o] & Self.B._RunCompatible[o] &
+        Self.M._JoinCompatible[Self.A.Out[o], Self.B.Out[o]] &
+        _CommonErrorCompatible[Self.A.Error[o], Self.B.Error[o]]
+    )
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Self.Out[o]:
+        comptime assert Self._RunCompatible[o], "run: incompatible Reader recipe at this environment origin"
         comptime E = Self.Error[o]
         comptime assert Self.B.Family == Self.A.Family and Self.B.Env == Self.A.Env, _CHOICE_FAMILY
         comptime assert Self.B.Value == Self.A.Value, _CHOICE_VALUE
         comptime assert _ErrorCompatible[E, Self.A.Error[o]] and _ErrorCompatible[E, Self.B.Error[o]]
         var value = self.value^
         if value.isa[Self.A]():
+            comptime assert Self.A._RunCompatible[o]
             var left = _reader_run_as[E](value^.unsafe_unwrap[Self.A](), rebind[Self.A.Env](env))
             return Self.M._join_left[Self.A.Out[o], Self.B.Out[o]](left^)
+        comptime assert Self.B._RunCompatible[o]
         var right = _reader_run_as[E](value^.unsafe_unwrap[Self.B](), rebind[Self.B.Env](env))
         return Self.M._join_right[Self.A.Out[o], Self.B.Out[o]](right^)
 
@@ -315,10 +370,16 @@ struct _ReaderHoist[A: Movable & Deinitable, S: ReaderAction, H: _CarrierOp, Tar
     comptime Value = Self.A
     comptime Out[o: ImmOrigin] = Self.H.Applied[Self.S.Out[o]]
     comptime Error[o: ImmOrigin] = _CommonError[Self.S.Error[o], Self.H.Error[Self.S.Out[o]]]
+    comptime _RunCompatible[o: ImmOrigin] = (
+        Self.S._RunCompatible[o] & Self.H.Compatible[Self.S.Out[o]] &
+        _CommonErrorCompatible[Self.S.Error[o], Self.H.Error[Self.S.Out[o]]]
+    )
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Self.Out[o]:
+        comptime assert Self._RunCompatible[o], "run: incompatible Reader recipe at this environment origin"
         comptime E = Self.Error[o]
         comptime assert Self.H.Compatible[Self.S.Out[o]]
         comptime assert _ErrorCompatible[E, Self.S.Error[o]] and _ErrorCompatible[E, Self.H.Error[Self.S.Out[o]]]
+        comptime assert Self.S._RunCompatible[o]
         var base = _reader_run_as[E](self.source^, env)
         return _op_as[E](self.operation^, base^)
 
@@ -501,15 +562,18 @@ struct ReaderT[M: Monad, R: AnyType](ReaderFamily, Local, _LocalLifting, Applica
         _EndpointCompatible[Self.M, T, downcast[F, BorrowCallContract].Result]
     ) if conforms_to(F, BorrowCallContract) else False
     comptime RunCompatible[V: Movable & Deinitable, o: ImmOrigin] = (
-        Self.CarrierCompatible[V] and
+        _Action[V]._RunCompatible[o] &
         _EndpointCompatible[Self.M, Self.Element[V], _Action[V].Out[o]]
-    )
+    ) if Self.CarrierCompatible[V] else False
     comptime Element[V: Movable & Deinitable] = _Action[V].Value
     comptime CarrierCompatible[V: Movable & Deinitable] = (_Action[V].Family == Self and _Action[V].Env == Self.R) if conforms_to(V, ReaderAction) else False
     comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[V]
     comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _CarrierBind[Self, V, F]
     comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable] = _CarrierCombine[Self, V, F, G]
-    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out]
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out] & RepeatableUnary[F]
+    comptime _LoopCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = (
+        Self.CollectCompatible[V, F] & (Self.Element[F.Out] == K.Item)
+    ) if Self.CarrierCompatible[F.Out] else False
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _ReaderMap[Self.M, Self.R, _Action[V], F]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Never
     comptime Pure[A: Movable & Deinitable] = _ReaderPure[Self.M, Self.R, A]
