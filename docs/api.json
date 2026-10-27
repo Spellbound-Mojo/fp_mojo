@@ -112048,6 +112048,43 @@
      {
       "args": [
        {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "FoldMapContract[_Binding[_InferredApplicative[C.Out]], M, Self.V, C].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_Binding[_InferredApplicative[C.Out]], FoldMapContract[_Binding[_InferredApplicative[C.Out]], M, Self.V, C].Out, Self.E]"
+      },
+      "signature": "def fold_map_effect[C: UnaryContract & Movable & Deinitable, //, M: Monoid](deinit self, var function: C) raises FoldMapContract[_Binding[_InferredApplicative[C.Out]], M, Self.V, C].Error -> Pipeline[_Binding[_InferredApplicative[C.Out]], FoldMapContract[_Binding[_InferredApplicative[C.Out]], M, Self.V, C].Out, Self.E] where C.Arg == _FoldElement[Self.V] and FoldMapContract[_Binding[_InferredApplicative[C.Out]], M, Self.V, C].Compatible",
+      "summary": "Infer the native effect from the callback and combine through the selected monoid."
+     },
+     {
+      "args": [
+       {
         "convention": "ref[o]",
         "description": "",
         "name": "function",
@@ -112102,6 +112139,57 @@
       },
       "signature": "def fold_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, M: Monoid, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _FoldElement[Self.V]) -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E]"
+      },
+      "signature": "def fold_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible",
+      "summary": "Infer the native effect from the callback and combine through the selected monoid."
      },
      {
       "args": [
@@ -112172,6 +112260,57 @@
        }
       ],
       "description": "",
+      "error": "FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _FoldElement[Self.V]) raises Self.E -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E]"
+      },
+      "signature": "def fold_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, C: def(var _FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E] where FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Compatible",
+      "summary": "Infer the native effect from the callback and combine through the selected monoid."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Error",
       "parameters": [
        {
@@ -112218,6 +112357,57 @@
       },
       "signature": "def fold_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, M: Monoid, C: def(var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E] where Self.E != Never and FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _FoldElement[Self.V]) raises Never -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E]"
+      },
+      "signature": "def fold_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, C: def(var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Error -> Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E] where Self.E != Never and FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Compatible",
+      "summary": "Infer the native effect from the callback and combine through the selected monoid."
      },
      {
       "args": [
@@ -112274,6 +112464,43 @@
        }
       ],
       "description": "",
+      "error": "FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E]"
+      },
+      "signature": "def fold_map_effect[R: Movable & Deinitable, //, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R) raises FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error -> Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E] where not conforms_to(R, RegisterPassable) and FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Compatible",
+      "summary": "Infer the native effect from the callback and combine through the selected monoid."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error",
       "parameters": [
        {
@@ -112306,6 +112533,43 @@
       },
       "signature": "def fold_map_effect[R: RegisterPassable & Deinitable, //, J: Monad, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R) raises FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E] where FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E]"
+      },
+      "signature": "def fold_map_effect[R: RegisterPassable & Deinitable, //, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R) raises FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error -> Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E] where FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Compatible",
+      "summary": "Infer the native effect from the callback and combine through the selected monoid."
      },
      {
       "args": [
@@ -112369,6 +112633,50 @@
        }
       ],
       "description": "",
+      "error": "FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E]"
+      },
+      "signature": "def fold_map_effect[R: Movable & Deinitable, X: Movable & Deinitable, //, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Compatible",
+      "summary": "Infer the native effect from the callback and combine through the selected monoid."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error",
       "parameters": [
        {
@@ -112408,6 +112716,50 @@
       },
       "signature": "def fold_map_effect[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E]"
+      },
+      "signature": "def fold_map_effect[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Compatible",
+      "summary": "Infer the native effect from the callback and combine through the selected monoid."
      }
     ],
     "fold_until": [

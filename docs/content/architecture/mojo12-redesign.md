@@ -3532,3 +3532,20 @@ rounding, rather than reassociating numeric work. Empty input lifts zero;
 Optional and Result stop on failure, and List retains ordered branches. Owned
 inputs and callbacks are consumed once; borrowed error origins remain exact.
 Reader and State retain their existing deferred source/callback timing.
+
+### Inferring the effect of a monoid fold
+
+`fold_map_effect[Monoid](transform)` binds the combination policy while the
+existing native target recognizer selects Optional, Result or List from the
+callback result. A second admission surface retains `[Target, Monoid]` unchanged,
+including named parameters and native callback type bindings. The inferred form
+has no target parameter, so fully named legacy calls continue to select the
+explicit surface unambiguously.
+
+Both forms use the same callback metadata, effect-reduction descriptor and
+FoldMapContract. The generator binds only a different family expression; it
+adds no execution owner, loop or conversion. Monoid identity creation, exact
+callback/combination errors, source advancement, repeatability and cleanup
+remain with the existing fold. Custom and deferred policies continue to use
+explicit targets. Ordinary inferred calls also retain generic forwarding,
+owned payloads, mutable library callbacks and stored-error origins.

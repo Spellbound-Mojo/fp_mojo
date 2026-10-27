@@ -1,6 +1,6 @@
 """Stored native pointers retain consumed operand and result calling conventions."""
 from fp.functions import pipeline
-from fp.algebra import OptionalFamily, StringMonoid
+from fp.algebra import StringMonoid
 from std.testing import assert_equal
 
 def choose(value: Int) -> Optional[Bool]: return Optional(value == 2)
@@ -42,9 +42,9 @@ def main() raises:
     var optionals: def(var Optional[Int]) thin -> Optional[Optional[Int]] = optional_project
     assert_equal(pipeline(List[Optional[Int]]([Optional(7)])).find_map_effect(optionals).get().value().value(), 7)
     var stringer: def(var Int) thin -> Optional[String] = text
-    assert_equal(pipeline(List[Int]([1,2])).fold_map_effect[OptionalFamily,StringMonoid](stringer).get().value(), "12")
+    assert_equal(pipeline(List[Int]([1,2])).fold_map_effect[StringMonoid](stringer).get().value(), "12")
     var keeper: def(var String) thin -> Optional[String] = keep_text
-    assert_equal(pipeline(List[String](["a","b"])).fold_map_effect[OptionalFamily,StringMonoid](keeper).get().value(), "ab")
+    assert_equal(pipeline(List[String](["a","b"])).fold_map_effect[StringMonoid](keeper).get().value(), "ab")
     var step: def(var Int,var Int) thin -> Optional[Int] = add
     assert_equal(pipeline(List[Int]([1,2])).fold_effect(10).run(step).get().value(), 13)
     var appender: def(var String,var Int) thin -> Optional[String] = append

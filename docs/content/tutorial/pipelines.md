@@ -167,7 +167,22 @@ stops on the first stored error, and List enumerates sums in branch order.
 Addition follows source order, including floating-point rounding. Native callback
 errors still use `.raising[E]()`. Use `[Target]` for a custom Monad policy;
 Reader and State defer pulls and callbacks until execution. These conveniences
-use the same fold as `fold_map_effect[Target, Monoid]`.
+use the same fold as `fold_map_effect[Monoid]`.
+
+## Combine effectful values
+
+For a combining rule beyond numeric addition, use
+`.fold_map_effect[Monoid](transform)`. The monoid supplies an empty value and
+ordered combination; the callback supplies the Optional, Result or List effect.
+This is the same pattern as [Cats' `foldMapM`](https://github.com/typelevel/cats/blob/main/core/src/main/scala/cats/Foldable.scala):
+
+<!-- example: docs/examples/inferred_monoid_fold.mojo -->
+
+`StringMonoid` concatenates successful strings. `ListMonoid[T]` concatenates
+lists, and a custom `Monoid` can define another identity and combination.
+Empty input returns that identity in the effect without calling the transform.
+Optional and Result stop on failure; List keeps branch order. Use the existing
+`[Target, Monoid]` form to select a custom or deferred effect explicitly.
 
 ## Choose a constant or lazy default
 

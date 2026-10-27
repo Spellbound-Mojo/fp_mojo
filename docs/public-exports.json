@@ -5326,32 +5326,64 @@
             "sha256": "f1875d98710081c82486cd45cdccb59b17b3ad923965db2a3f9fd85553a3fc21"
           },
           {
+            "signature": "def fold_map_effect[C: UnaryContract & Movable & Deinitable, //, M: Monoid](deinit self, var function: C) raises FoldMapContract[_Binding[_InferredApplicative[C.Out]], M, Self.V, C].Error -> Pipeline[_Binding[_InferredApplicative[C.Out]], FoldMapContract[_Binding[_InferredApplicative[C.Out]], M, Self.V, C].Out, Self.E] where C.Arg == _FoldElement[Self.V] and FoldMapContract[_Binding[_InferredApplicative[C.Out]], M, Self.V, C].Compatible:",
+            "sha256": "3ee9923b045f0b9f8591b3c936dd4afecfede9971057974cfad9b6eaee2aa202"
+          },
+          {
             "signature": "def fold_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, M: Monoid, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible:",
             "sha256": "2dba3145696a60662a8bbceb4cea64b6ae7d73877f353e089f99564ae3f8bce1"
+          },
+          {
+            "signature": "def fold_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible:",
+            "sha256": "c458f3a9a538e6797c3787a27521715ca2520498c8984bc69f0515cc2da08f5b"
           },
           {
             "signature": "def fold_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, M: Monoid, C: def(var _FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E] where FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Compatible:",
             "sha256": "a8225d35f5dc047e937ff7da962b43de70e01cbea8d4024feb4c9ae03c530d4b"
           },
           {
+            "signature": "def fold_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, C: def(var _FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E] where FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Compatible:",
+            "sha256": "1a9d63fef757da47e76e7812c9c74d942feb30a1de2a737fa1943099f89e900a"
+          },
+          {
             "signature": "def fold_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, M: Monoid, C: def(var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E] where Self.E != Never and FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Compatible:",
             "sha256": "d777dfbea66b19266e83e3b2b178739d30a29ba2e9e10226e7d24b636c59a625"
+          },
+          {
+            "signature": "def fold_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, C: def(var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Error -> Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E] where Self.E != Never and FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, True, o]].Compatible:",
+            "sha256": "ec531aa874db57d679d35b607bb2d6761066dd89105b946a497c0894316e77cf"
           },
           {
             "signature": "def fold_map_effect[R: Movable & Deinitable, //, J: Monad, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R) raises FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E] where not conforms_to(R, RegisterPassable) and FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Compatible:",
             "sha256": "8dc6c61364a3ebc0a769a1a63f873f7e393bfe02c2e2fa50f1f9a33d485197c3"
           },
           {
+            "signature": "def fold_map_effect[R: Movable & Deinitable, //, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R) raises FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error -> Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E] where not conforms_to(R, RegisterPassable) and FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Compatible:",
+            "sha256": "a6865e1f1edb692ae844bffe6eba9d903f6df612d8d3c88b80c2d7eee349710d"
+          },
+          {
             "signature": "def fold_map_effect[R: RegisterPassable & Deinitable, //, J: Monad, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R) raises FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E] where FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Compatible:",
             "sha256": "4239effcf135cfd19fb3a998327df4d08b27c62bd45a4af926e0a273bce7ce0b"
+          },
+          {
+            "signature": "def fold_map_effect[R: RegisterPassable & Deinitable, //, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R) raises FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error -> Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E] where FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Compatible:",
+            "sha256": "6b3f0c8e5d641a43bed8a248d588d161fc06aa1af9f66cee4ba24b037074c704"
           },
           {
             "signature": "def fold_map_effect[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Compatible:",
             "sha256": "ca6b1e76a1966ce36b1a0d791a37167b663805831fd6cdca84c98e1cf21587a5"
           },
           {
+            "signature": "def fold_map_effect[R: Movable & Deinitable, X: Movable & Deinitable, //, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Compatible:",
+            "sha256": "b2908f246b37e9495a9e775f8f959df385aec6891c01944264ca330aa349286d"
+          },
+          {
             "signature": "def fold_map_effect[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and FoldMapContract[J, M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Compatible:",
             "sha256": "70af92b6d6bd7bbcd38622c703352c9b96ca99d8ffdf603b34e219bb2aa96159"
+          },
+          {
+            "signature": "def fold_map_effect[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, M: Monoid](deinit self, function: def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[_Binding[_InferredApplicative[R]], FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and FoldMapContract[_Binding[_InferredApplicative[R]], M, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Compatible:",
+            "sha256": "c28d72196b9d7f6b1e73fef828dd018d821a961417d9b768c6c9b6ff76546125"
           }
         ],
         "sum_by_effect": [

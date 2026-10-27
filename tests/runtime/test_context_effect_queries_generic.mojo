@@ -1,6 +1,6 @@
 """Generic forwarding uses ordinary calls and retains payload and error origins."""
 from fp.functions import pipeline
-from fp.algebra import OptionalFamily, StringMonoid
+from fp.algebra import StringMonoid
 from fp.data import Result, Err
 from std.testing import assert_equal
 
@@ -18,7 +18,7 @@ def forward_fold[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & 
 
 def forward_monoid[A: Movable & Deinitable, E: Movable & Deinitable, //,
                    F: def(var A) raises E -> Optional[String]](ref function: F, var source: List[A]) raises E -> Optional[String]:
-    return pipeline(source^).raising[E]().fold_map_effect[OptionalFamily, StringMonoid](function).get()
+    return pipeline(source^).raising[E]().fold_map_effect[StringMonoid](function).get()
 
 def origins(owner: List[Int], errors: List[Int]) raises:
     comptime View = type_of(Span(owner))
@@ -33,6 +33,9 @@ def origins(owner: List[Int], errors: List[Int]) raises:
     def reject(value: View) {failure} -> Result[Bool, Failure]: return Err(failure)
     var stored = pipeline(List[View]([Span(owner)])).find_effect(reject).get()
     assert_equal(stored._err().value.unsafe_ptr() == Span(errors).unsafe_ptr(), True)
+    def reject_fold(var value: View) {failure} -> Result[String, Failure]: return Err(failure)
+    var folded = pipeline(List[View]([Span(owner)])).fold_map_effect[StringMonoid](reject_fold).get()
+    assert_equal(folded._err().value.unsafe_ptr() == Span(errors).unsafe_ptr(), True)
     def raise_view(value: View) raises Failure {failure} -> Optional[Bool]: raise failure
     var matched = False
     try: _ = forward_find(raise_view, List[View]([Span(owner)]))

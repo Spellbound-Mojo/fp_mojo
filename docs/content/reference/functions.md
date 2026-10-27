@@ -364,8 +364,11 @@ Abandoning it destroys those owners. Explicit `fold_effect[Target](initial)`
 retains the original target selection; an already bound inferred stage also
 accepts `run[Target](step)`. Both forms use the same fold contract and execution.
 Existing `Piped.fold_effect(step, initial)` retains its original syntax.
-`fold_map_effect[Target, Monoid](transform)` consumes items into effectful monoid
-values and combines them in order, starting with the identity.
+`fold_map_effect[Monoid](transform)` consumes items into effectful monoid
+values and combines them in order, starting with the identity. The callback
+infers a native Optional, Result or List target. The original
+`fold_map_effect[Target, Monoid](transform)` form retains explicit custom
+policies and positional callback type bindings.
 `sum_by_effect(transform)` selects numeric addition automatically for native
 Optional, Result and List results; `sum_effect()` sums existing numeric effects.
 Both support Int and integral or floating-point SIMD payloads, including scalar

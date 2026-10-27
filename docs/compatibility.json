@@ -373,7 +373,7 @@
         "sum_effect"
       ],
       "status": "selected",
-      "families": "Native source; queries, seeded folds and numeric sums infer native Optional, Result or List Monad targets. Explicit targets retain custom policies; general monoid folds keep explicit target and monoid bindings.",
+      "families": "Native source; infer native Optional, Result or List Monad targets. Explicit targets retain custom policies; fold_map_effect[Monoid] binds the combining rule and [Target, Monoid] also selects the effect.",
       "callbacks": "Borrowing predicates; consuming unary/binary transformations; repeatable shared or mutable library receivers. Bind fold_effect(initial).run(step).",
       "ownership": "Moves inputs, retains first matches and releases partial accumulators; Arrays use O(N) temporary List storage. An unexecuted fold binding owns and destroys its source and seed.",
       "errors": "Exact native errors, stored target failures and borrowed origins remain distinct.",
@@ -406,7 +406,11 @@
         "tests/ownership/test_context_effect_sum_ownership.mojo",
         "tests/compile_fail/effect_sum_payload.mojo",
         "tests/compile_fail/effect_sum_origin.mojo",
-        "docs/examples/effectful_sums.mojo"
+        "docs/examples/effectful_sums.mojo",
+        "tests/compile_fail/inferred_monoid_payload.mojo",
+        "tests/compile_fail/inferred_monoid_conflicting_errors.mojo",
+        "tests/compile_fail/inferred_monoid_origin.mojo",
+        "docs/examples/inferred_monoid_fold.mojo"
       ]
     },
     {

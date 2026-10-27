@@ -21,6 +21,7 @@ compile them through source and precompiled package imports at O0 and O3 with
 | `inferred_traversal.mojo` | Gather Optional, Result or List effects without family annotations | [Pipelines tutorial](../tutorial/pipelines.md#gather-effects-without-family-annotations) |
 | `inferred_queries.mojo` | Test and search with effects while inferring native target families | [Pipelines tutorial](../tutorial/pipelines.md#search-with-effects) |
 | `effectful_sums.mojo` | Parse and total effects in one pass with inferred numeric types | [Pipelines tutorial](../tutorial/pipelines.md#sum-effectful-values) |
+| `inferred_monoid_fold.mojo` | Select a combining rule and infer the native effect | [Pipelines tutorial](../tutorial/pipelines.md#combine-effectful-values) |
 | `inferred_fold.mojo` | Bind a seed before the step and infer its native effect family | [Pipelines tutorial](../tutorial/pipelines.md#fold-with-effects) |
 | `combinators.mojo` | Shared iterator stages in eager and lazy chains, without wrapper lambdas or type aliases | [Pipelines tutorial](../tutorial/pipelines.md#use-combinators-for-collection-stages) |
 | `chained_pipeline.mojo` | A ten-stage chain with `pipeline(...).raising[E]().then(...)`: plain functions, closures and partials | [fp.functions](../reference/functions.md#chain-ten-stages-with-pipeline) |

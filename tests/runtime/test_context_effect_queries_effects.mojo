@@ -1,6 +1,6 @@
 """Errors stay exact; deferred callbacks and combinations run only with the effect."""
 from fp.functions import pipeline
-from fp.algebra import OptionalFamily, Monoid
+from fp.algebra import Monoid
 from fp.effects import Reader, State, action, run
 from fp.callables import Unary
 from std.memory import ArcPointer
@@ -41,12 +41,12 @@ def main() raises:
     def text(var value: Int) {calls} -> Optional[String]:
         calls[] += 1
         return Optional(String(value))
-    try: _ = pipeline(Counted(Pointer(to=pulls),0,5)).fold_map_effect[OptionalFamily, QueryMonoid[True]](text).get()
+    try: _ = pipeline(Counted(Pointer(to=pulls),0,5)).fold_map_effect[QueryMonoid[True]](text).get()
     except error:
         comptime assert type_of(error) == QueryFailure
         code = error.code
     assert_equal(code, 10); assert_equal(calls[], 0); assert_equal(pulls, 0)
-    try: _ = pipeline(Counted(Pointer(to=pulls),0,5)).fold_map_effect[OptionalFamily, QueryMonoid[False]](text).get()
+    try: _ = pipeline(Counted(Pointer(to=pulls),0,5)).fold_map_effect[QueryMonoid[False]](text).get()
     except error: code = error.code
     assert_equal(code, 20); assert_equal(calls[], 2); assert_equal(pulls, 2)
     def stop(value: Int) raises StopIteration -> Optional[Bool]: raise StopIteration()

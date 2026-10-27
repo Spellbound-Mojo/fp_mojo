@@ -117,6 +117,9 @@
     "docs/examples/inferred_fold.mojo": {
       "stdout": "total: 16\nerror: negative amount\nsteps: 2\n"
     },
+    "docs/examples/inferred_monoid_fold.mojo": {
+      "stdout": "hello!world!\nerror: empty word\ntransformed: 2\n"
+    },
     "docs/examples/inferred_queries.mojo": {
       "stdout": "any: True\nall: False\nfirst: 2\nlabel: item-3\n"
     },

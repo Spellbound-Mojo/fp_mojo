@@ -483,6 +483,17 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
             emit("run" if folding else name, cb, params, cb["argument"],
                  result, error, "J", conditions, expr,
                  "Consume the source through the target Monad's ordered effectful reduction.")
+            if mapped_fold:
+                # Binding the monoid leaves the native effect inferable from
+                # the callback. Keep the original [J, M] surface independently.
+                inferred = f"_Binding[_InferredApplicative[{cb['result']}]]"
+                native_plan = operation.bind(inferred, "Self.V", element, c, cb["build"], cb["result"], monoid="M")
+                native_contract = native_plan.contract
+                emit(name, cb, [p for p in params if p != "J: Monad"], cb["argument"],
+                     native_contract + ".Out", native_contract + ".Error", inferred,
+                     admission + [native_contract + ".Compatible"],
+                     native_plan.invoke(native_contract + ".Error", "self.value^"),
+                     "Infer the native effect from the callback and combine through the selected monoid.")
             if folding:
                 fold_body.append(re.sub(r"\bJ\b", "Self.J", body.pop()))
                 # The source and seed are already owned and typed. Infer the
