@@ -89,6 +89,7 @@ nav:
   - Guides:
       - Support and limitations: guides/status.md
       - Mojo 1.2 compatibility: guides/compatibility.md
+      - Generic wrappers: guides/generic-wrappers.md
       - Troubleshooting: guides/troubleshooting.md
   - Contributing:
       - Development: contributing/development.md

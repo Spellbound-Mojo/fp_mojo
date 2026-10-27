@@ -1,5 +1,7 @@
 # fp.functions
 
+For a reusable generic wrapper, follow the [contract-forwarding guide](../guides/generic-wrappers.md).
+
 `fp.functions` provides eager pipelines, function composition and partial
 application. Use `pipe` to apply a sequence of functions now, `flow` or `compose`
 to build a function for later calls, and `partial` to bind leading arguments.

@@ -7,6 +7,8 @@ evaluation order, laziness, costs, and behavior for empty input or uncovered
 cases. Most pages also include runnable examples.
 
 For a guided introduction, follow the [tutorial](../tutorial/pipelines.md).
+For reusable generic operations, see [generic wrappers](../guides/generic-wrappers.md):
+public contracts name admission, output families and exact native errors.
 
 ## Packages
 

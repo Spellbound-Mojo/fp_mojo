@@ -3055,6 +3055,24 @@ and strict documentation validation. The interrupted initial run is retained
 separately; all reported qualification gates completed on the unchanged
 prototype after the environment restart.
 
+### Generic wrapper guidance shares maintained examples
+
+The generic-wrapper guide groups the public proof projections, descriptor
+selection, output-family forwarding and deferred error rules in one workflow.
+The package references link to that workflow while retaining operation-specific
+requirements. Its code comes from the maintained operation-contract example,
+so the guide does not introduce a separate demonstration implementation.
+
+No library source or callable signature changes. All 107 Mojo source files and
+the 328 public declarations remain unchanged; documentation inventories retain
+90 executable examples. The embedded example remains independently verified
+against source and a fresh package at both optimization levels.
+
+Qualification passed the four source/package O0/O3 builds and runs of the
+embedded example, generator parity, all 49 tooling tests and strict documentation
+validation. The site includes the guide in navigation and validates its links;
+no library source or public declaration changes.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

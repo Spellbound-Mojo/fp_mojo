@@ -1,5 +1,7 @@
 # fp.algebra
 
+For a reusable generic wrapper, follow the [contract-forwarding guide](../guides/generic-wrappers.md).
+
 `fp.algebra` provides Functor, Filterable, FunctorFilter, Applicative, ApplicativeError, Monad, Traversable, Semigroup and Monoid
 interfaces. Their instances let you write generic operations over native values
 such as `Optional`, `Result` and `List`; select the instance at each call. When
