@@ -2114,6 +2114,25 @@ execution checks at O0/O3, 25 State programs, 34 traversal programs and
 overlap. Reports retained unchanged inputs and no audit failures. Generated
 sources, all 48 tooling tests and strict documentation checks passed.
 
+### Conditional failure construction reuses its native adapter
+
+Ensure and conditional recovery delegate fallible failure construction to the
+existing family failure adapter. Their continuations still own branch selection
+and joining; the adapter alone forwards the family's native construction error.
+An unmatched stored error is reintroduced through the selected family's `fail`,
+including custom implementations. A rejected ensure value still reaches its
+error factory before failure construction. Public signatures are unchanged.
+
+All 28 baseline/candidate traces match, covering predicate, factory, handler and
+family-construction failures, accepted values, retained stored errors and skipped
+callbacks. Maintained checks assert exact errors, outcome branches and destruction
+order for owned callback captures and payloads. Qualification passed four
+source/package ownership checks at O0/O3, three family-ensure programs, four
+family-conditional programs, five shared-outcome programs and 133 generic clients.
+Rejection groups passed 32 ensure, 35 conditional and 33 recovery fixtures;
+categories overlap. Reports retained unchanged inputs and no audit failures.
+Generated sources, all 48 tooling tests and strict documentation checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

@@ -5,7 +5,7 @@ from .error_mapping import MapErrContract, _map_err
 from .instances import ResultFamily
 from fp.data._result import Result, _ResultType
 from std.builtin.rebind import downcast, rebind_var
-from fp._internal.errors import _ErrorCompatible, _CommonErrorCompatible, _CommonError, _propagate_error, _absurd
+from fp._internal.errors import _ErrorCompatible, _CommonErrorCompatible, _CommonError, _absurd
 from ._adapt import _fail_as, _flat_map_as, _or_else_as, _map2_lazy_as
 from fp.callables.protocols import UnaryContract, OnceUnary, MutableUnary, BorrowCallContract, Binary, OnceThunk
 from fp.callables._conditional import _guard_owned
@@ -136,10 +136,8 @@ struct _ConditionalRecovery[I: ApplicativeError, A: Movable & Deinitable,
         comptime assert Self.H.Arg == Self.Arg
         comptime assert _ErrorCompatible[Self.Error, Self.H.Error] and _ErrorCompatible[Self.Error, Self.I.FailError[Self.A]], "conditional recovery: incompatible native errors"
         def keep(var error: Self.Arg) raises Self.Error capturing -> Self.Out:
-            try:
-                return Self.I._join_left[Self.I.Failed[Self.A], Self.H.Out](Self.I.fail[Self.A](error^))
-            except raised:
-                _propagate_error[Self.Error](raised^)
+            return Self.I._join_left[Self.I.Failed[Self.A], Self.H.Out](
+                _fail_as[Self.Error, Self.I, Self.A](error^))
         def apply(var error: Self.Arg, var handler: Self.H) raises Self.Error capturing -> Self.Out:
             return Self.I._join_right[Self.I.Failed[Self.A], Self.H.Out](_unary_once_as[Self.Error](handler^, rebind_var[Self.H.Arg](error^)))
         return _guard_owned[Self.Arg, Self.C, Self.H, Self.Out, Self.Error, True, keep, apply](arg^, self.predicate^, self.handler^)

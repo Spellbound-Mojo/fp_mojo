@@ -8,7 +8,7 @@ from fp.callables._receiver import _RepeatableBorrow, _MutableBorrowRef, _Mutabl
 from fp.callables._conditional import _guard_owned
 from fp.data._result import Result, _transformed, _fold_result_owned
 from .protocols import _pure, Applicative, ApplicativeError, Monad
-from ._adapt import _map_as, _or_else_as, _flat_map_as
+from ._adapt import _fail_as, _map_as, _or_else_as, _flat_map_as
 from .errors import _Recovered
 from ._sequencing import _EffectRetain
 
@@ -75,10 +75,8 @@ struct _Ensure[I: ApplicativeError, A: Movable & Deinitable,
             return Self.I._join_left[Self.I.Pure[Self.A], Self.I.Failed[Self.A]](_pure[Self.I](value^))
         def reject(var value: Self.A, var factory: Self.G) raises Self.Error capturing -> Self.Out:
             var error = _borrow_once_as[Self.Error](value, factory^)
-            try:
-                return Self.I._join_right[Self.I.Pure[Self.A], Self.I.Failed[Self.A]](Self.I.fail[Self.A](rebind_var[Self.I.Failure](error^)))
-            except raised:
-                _propagate_error[Self.Error](raised^)
+            return Self.I._join_right[Self.I.Pure[Self.A], Self.I.Failed[Self.A]](
+                _fail_as[Self.Error, Self.I, Self.A](rebind_var[Self.I.Failure](error^)))
         return _guard_owned[Self.A, Self.C, Self.G, Self.Out, Self.Error, False, keep, reject](arg^, self.predicate^, self.make_error^)
     def call_mut(mut self, var arg: Self.A) raises Self.Error -> Self.Out:
         comptime assert _RepeatableBorrow[Self.C] and _RepeatableBorrow[Self.G], "ensure: branching requires repeatable callbacks"
