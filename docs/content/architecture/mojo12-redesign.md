@@ -2018,6 +2018,27 @@ accumulation checks at O0/O3, 34 traversal programs, five NonEmptyList programs,
 133 generic clients, all 48 tooling tests and generated-source verification.
 All compiler reports retained unchanged inputs and no audit failures.
 
+### Generated fold signatures use the public contract
+
+Free, Piped and iterator `fold_effect` entries now express source, result and
+family admission through `FoldContract.Compatible`. The native Array Piped
+route also retains its exact Array shape check. The explicit raised-error
+compatibility check remains separate because callers may supply that binding.
+
+The generator no longer repeats the contract's individual predicates across
+these entries. Parameter order, native callback adaptation, output/error types
+and runtime forwarding are unchanged. Existing generic callers can still
+provide the individual requirements or forward the public contract as a whole.
+Selected staged reductions retain their existing receiver constraints.
+
+Five focused O0 programs passed, including generic forwarding, thin callbacks,
+owned inputs and the public FoldContract wrapper. Qualification passed 20
+source/package contract checks at O0/O3, five effect-query programs, 133 generic
+clients, 15 effect-combinator rejection fixtures and 63 fold rejection fixtures.
+The rejection categories overlap. Reports retained unchanged inputs and no
+audit failures. Generated sources, all 48 tooling tests, refreshed API metadata
+and strict documentation checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

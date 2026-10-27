@@ -51,9 +51,14 @@ def folds(mode, array=False):
             plan = operation.bind('G', source, elem, cb, build, effect,
                                   accumulator=acc, initial='initial^')
             raised = f'_EntryError[{hint}, {plan.error}]'
-            condition += f' and G.Element[{effect}] == {plan.payload} and _ErrorCompatible[{raised}, {plan.error}]'
-            condition += f' and _CarrierCompatible[G, {effect}]'
-            condition += f' and {plan.types}.Compatible'
+            if fold:
+                contract = f'FoldContract[G, {source}, {cb}]'
+                condition = (condition + ' and ' if array else '') + f'{contract}.Compatible'
+                condition += f' and _ErrorCompatible[{raised}, {plan.error}]'
+            else:
+                condition += f' and G.Element[{effect}] == {plan.payload} and _ErrorCompatible[{raised}, {plan.error}]'
+                condition += f' and _CarrierCompatible[G, {effect}]'
+                condition += f' and {plan.types}.Compatible'
             result = plan.result
             call = plan.invoke(raised, value)
             args = [arg] + ([f'var initial: {acc}'] if fold else [])
