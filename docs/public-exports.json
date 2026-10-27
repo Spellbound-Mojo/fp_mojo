@@ -10252,6 +10252,40 @@
             "sha256": "9282d2ec94f524ad4bd16308a1c8c32f97de210d3aa21c2b758b5d5470342a2a"
           }
         ],
+        "to_result": [
+          {
+            "signature": "def to_result[C: ThunkContract & Movable & Deinitable](deinit self, var make_error: C) raises C.Error -> Pipeline[ResultFamily[C.Out], Result[OptionalFamily.Element[Self.V], C.Out], Self.E] where OptionalFamily.CarrierCompatible[Self.V]:",
+            "sha256": "7d29baf4e2048017ef51d2bbfe7c5e0abec4d0d106376ade8aca68e58fe91ecf"
+          },
+          {
+            "signature": "def to_result[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] make_error: C) raises Never -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V]:",
+            "sha256": "b2ebf54b01892fd45a48ae48d5294b868d79f06e5c0ea976516c8263f4297e4f"
+          },
+          {
+            "signature": "def to_result[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Self.E -> R](deinit self, ref[o] make_error: C) raises Self.E -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V]:",
+            "sha256": "3e14b8bd78c900f15a7fa62f211a918ad33f22aeaf6e6c83b1cfc6da7286fd7c"
+          },
+          {
+            "signature": "def to_result[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Never -> R](deinit self, ref[o] make_error: C) raises Never -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V] and Self.E != Never:",
+            "sha256": "b7305440f92545c10cc02a446ba2f32b9c2bff1c8295c914e0bec85618a4970b"
+          },
+          {
+            "signature": "def to_result[R: Movable & Deinitable](deinit self, make_error: def() thin -> R) raises Never -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V] and not conforms_to(R, RegisterPassable):",
+            "sha256": "0741992f21ffa79b73218a5a44662eca92b3e725eea203e6d33cefffd0819df0"
+          },
+          {
+            "signature": "def to_result[R: RegisterPassable & Deinitable](deinit self, make_error: def() thin -> R) raises Never -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V]:",
+            "sha256": "d50832963899de791e95bdbe1b414a39300d9884aff30ca9eecf781854f4bfe1"
+          },
+          {
+            "signature": "def to_result[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, make_error: def() raises X thin -> R) raises X -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable):",
+            "sha256": "d04efcc8963bc553be3eee90338fe72385ca9abc56d43fa68b6d32a8e9c6de5e"
+          },
+          {
+            "signature": "def to_result[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, make_error: def() raises X thin -> R) raises X -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V] and _ErrorCompatible[Self.E, X]:",
+            "sha256": "ba7d309b406a4416428ce65b43384db294745f48673c41db51cba8f4abdf3ddd"
+          }
+        ],
         "to_optional": [
           {
             "signature": "def to_optional(deinit self) -> Optional[_Success[Self.V]] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]:",

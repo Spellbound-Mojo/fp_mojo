@@ -829,6 +829,29 @@
         "tests/ownership/test_optional_default_ownership.mojo",
         "tests/compile_fail/optional_default_origin.mojo"
       ]
+    },
+    {
+      "name": "Optional-to-Result conversion",
+      "methods": [
+        "to_result"
+      ],
+      "status": "selected",
+      "families": "A native Optional carrier; selects ResultFamily with the inferred factory output as stored error",
+      "callbacks": "Zero-argument native closures and thin pointers; shared, mutable or consuming library factories",
+      "ownership": "Consumes the source and library factory, including skipped owners. Borrows native closures and retains exact payload/error origins.",
+      "errors": "Factory return values become stored errors; native exceptions propagate unchanged. The selected native error context is retained.",
+      "timing": "A present payload becomes Ok; only absence invokes the error factory.",
+      "owner": [
+        "src/fp/algebra/_branches.mojo",
+        "src/fp/data/_result.mojo",
+        "src/fp/functions/context.mojo"
+      ],
+      "evidence": [
+        "docs/examples/optional_result.mojo",
+        "tests/runtime/test_optional_result.mojo",
+        "tests/ownership/test_optional_result_ownership.mojo",
+        "tests/compile_fail/optional_result_origin.mojo"
+      ]
     }
   ],
   "legacy_methods": [

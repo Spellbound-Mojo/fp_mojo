@@ -15,7 +15,7 @@ from fp.algebra.contracts import FoldContract, AnyContract, AllContract, FindCon
 from fp.algebra._admission import _TraverseCompatible, _MapCompatible, _BindCompatible, _CombineCompatible, _CollectCompatible, _CarrierCompatible
 from fp.algebra._sequencing import _EffectRetain
 from fp.algebra._adapt import _flat_map_as
-from fp.algebra._branches import _optional_get_or_else
+from fp.algebra._branches import _optional_get_or_else, _optional_to_result
 from fp.algebra.errors import _tap_err, _recover, _recover_if, _or_else_if, _observe_error, RecoverIfContract, OrElseIfContract, RecoverContract, TapErrContract, FlatTapErrContract
 from fp.algebra._outcomes import EnsureContract, AttemptTapContract, _AttemptTap
 from fp.algebra.error_mapping import MapBothContract, MapErrContract, _map_both, _map_err
@@ -6737,6 +6737,59 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
     def get_or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and _ErrorCompatible[Self.E, X] and R == OptionalFamily.Element[Self.V]:
         """Return the present Optional value or invoke a default factory only on absence."""
         return rebind_var[OptionalFamily.Element[Self.V]](_optional_get_or_else[_NativeThunk[R, X, def() raises X thin -> R, True]](rebind_var[Optional[R]](self.value^), _NativeThunk[R, X, def() raises X thin -> R, True](make_default)))
+
+    @always_inline
+    def to_result[C: ThunkContract & Movable & Deinitable](deinit self, var make_error: C) raises C.Error -> Pipeline[ResultFamily[C.Out], Result[OptionalFamily.Element[Self.V], C.Out], Self.E] where OptionalFamily.CarrierCompatible[Self.V]:
+        """Convert a native Optional to Result, invoking the error factory only on absence.
+
+        Parameters:
+            C: The first library callback type, retaining its receiver and origins.
+
+        Args:
+            make_error: The borrowed-payload factory of a stored Result error.
+
+        Returns:
+            The pipeline containing the operation result, retaining its selected native error.
+
+        Raises:
+            The exact callback or family error; it never becomes a stored Result error.
+        """
+        return Pipeline[ResultFamily[C.Out], Result[OptionalFamily.Element[Self.V], C.Out], Self.E](_optional_to_result[OptionalFamily.Element[Self.V], C](rebind_var[Optional[OptionalFamily.Element[Self.V]]](self.value^), make_error^))
+
+    @always_inline
+    def to_result[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] make_error: C) raises Never -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V]:
+        """Convert a native Optional to Result, invoking the error factory only on absence."""
+        return Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E](_optional_to_result[OptionalFamily.Element[Self.V], _NativeThunkRef[R, Never, C, False, o]](rebind_var[Optional[OptionalFamily.Element[Self.V]]](self.value^), _NativeThunkRef[R, Never, C, False, o](Pointer(to=make_error))))
+
+    @always_inline
+    def to_result[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Self.E -> R](deinit self, ref[o] make_error: C) raises Self.E -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V]:
+        """Convert a native Optional to Result, invoking the error factory only on absence."""
+        return Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E](_optional_to_result[OptionalFamily.Element[Self.V], _NativeThunkRef[R, Self.E, C, True, o]](rebind_var[Optional[OptionalFamily.Element[Self.V]]](self.value^), _NativeThunkRef[R, Self.E, C, True, o](Pointer(to=make_error))))
+
+    @always_inline
+    def to_result[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Never -> R](deinit self, ref[o] make_error: C) raises Never -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V] and Self.E != Never:
+        """Convert a native Optional to Result, invoking the error factory only on absence."""
+        return Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E](_optional_to_result[OptionalFamily.Element[Self.V], _NativeThunkRef[R, Never, C, True, o]](rebind_var[Optional[OptionalFamily.Element[Self.V]]](self.value^), _NativeThunkRef[R, Never, C, True, o](Pointer(to=make_error))))
+
+    @always_inline
+    def to_result[R: Movable & Deinitable](deinit self, make_error: def() thin -> R) raises Never -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V] and not conforms_to(R, RegisterPassable):
+        """Convert a native Optional to Result, invoking the error factory only on absence."""
+        return Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E](_optional_to_result[OptionalFamily.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]](rebind_var[Optional[OptionalFamily.Element[Self.V]]](self.value^), _NativeThunk[R, Never, def() thin -> R, False](make_error)))
+
+    @always_inline
+    def to_result[R: RegisterPassable & Deinitable](deinit self, make_error: def() thin -> R) raises Never -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V]:
+        """Convert a native Optional to Result, invoking the error factory only on absence."""
+        return Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E](_optional_to_result[OptionalFamily.Element[Self.V], _NativeThunk[R, Never, def() thin -> R, False]](rebind_var[Optional[OptionalFamily.Element[Self.V]]](self.value^), _NativeThunk[R, Never, def() thin -> R, False](make_error)))
+
+    @always_inline
+    def to_result[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, make_error: def() raises X thin -> R) raises X -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable):
+        """Convert a native Optional to Result, invoking the error factory only on absence."""
+        return Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E](_optional_to_result[OptionalFamily.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]](rebind_var[Optional[OptionalFamily.Element[Self.V]]](self.value^), _NativeThunk[R, X, def() raises X thin -> R, True](make_error)))
+
+    @always_inline
+    def to_result[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, make_error: def() raises X thin -> R) raises X -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V] and _ErrorCompatible[Self.E, X]:
+        """Convert a native Optional to Result, invoking the error factory only on absence."""
+        return Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E](_optional_to_result[OptionalFamily.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]](rebind_var[Optional[OptionalFamily.Element[Self.V]]](self.value^), _NativeThunk[R, X, def() raises X thin -> R, True](make_error)))
 
     def to_optional(deinit self) -> Optional[_Success[Self.V]] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]:
         """Consume the native Result carrier, retaining only its success in an Optional.

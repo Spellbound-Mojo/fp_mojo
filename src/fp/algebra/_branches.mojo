@@ -6,19 +6,43 @@ from fp.algebra.protocols import _pure, Applicative, _UnaryView
 from fp.callables.protocols import UnaryContract, OnceUnary, MutableUnary, ThunkContract
 from fp.callables.invoke import call_once, RepeatableUnary, _OnceUnaryAvailable
 from fp.callables._receiver import _unary_once_as
-from fp.data._result import Result, _ResultType, _fold_result_owned, _transformed
+from fp.callables._identity import Identity
+from fp.data._result import Result, _ResultType, _fold_result_owned, _transformed, _keep_ok, _keep_err
 from fp.iteration._advance import _OwnedElement
 from fp._internal.errors import _CommonError, _CommonErrorCompatible, _ErrorCompatible
 from ._adapt import _map_as
 
 
+def _optional_choose[T: Movable & Deinitable, R: Movable & Deinitable,
+                     C: ThunkContract & Movable & Deinitable,
+                     present: def(var T) capturing -> R,
+                     absent: def(var C) raises C.Error capturing -> R](
+    var source: Optional[T], var factory: C
+) raises C.Error -> R:
+    """Move the present payload or invoke the absence branch; destroy unused owners."""
+    if source:
+        return present(source.unsafe_take())
+    return absent(factory^)
+
+
 def _optional_get_or_else[C: ThunkContract & Movable & Deinitable](
     var source: Optional[C.Out], var make_default: C
 ) raises C.Error -> C.Out:
-    """Move a present value, or consume the default factory only on absence."""
-    if source:
-        return source.unsafe_take()
-    return call_once(make_default^)
+    def present(var value: C.Out) capturing -> C.Out:
+        return Identity[C.Out]().call(value^)
+    def absent(var factory: C) raises C.Error capturing -> C.Out:
+        return call_once(factory^)
+    return _optional_choose[C.Out, C.Out, C, present, absent](source^, make_default^)
+
+
+def _optional_to_result[T: Movable & Deinitable, C: ThunkContract & Movable & Deinitable](
+    var source: Optional[T], var make_error: C
+) raises C.Error -> Result[T, C.Out]:
+    def present(var value: T) capturing -> Result[T, C.Out]:
+        return _keep_ok[T, C.Out](value^)
+    def absent(var factory: C) raises C.Error capturing -> Result[T, C.Out]:
+        return _keep_err[T, C.Out](call_once(factory^))
+    return _optional_choose[T, Result[T, C.Out], C, present, absent](source^, make_error^)
 
 
 @fieldwise_init

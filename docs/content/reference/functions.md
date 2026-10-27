@@ -454,6 +454,13 @@ as `5830` and prints as `total: $58.30`. With `"19.99"`, `parse_cents` raises
 `invalid price: 19.99`.
 The entry point selects `PriceError` once; subsequent pure stages retain Never.
 
+## Convert an Optional to a Result
+
+`pipeline(optional^).to_result(make_error)` continues as a Result pipeline,
+inferring the success type from the Optional and the stored error type from
+the factory. The factory runs only on absence; native errors propagate and
+retain their selected context. See [optional input to Result](../tutorial/results.md#turn-optional-input-into-a-result).
+
 ## Finish an Optional with a lazy default
 
 `pipeline(optional^).get_or_else(make_default)` returns the present payload or

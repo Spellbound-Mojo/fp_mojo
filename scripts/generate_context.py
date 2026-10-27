@@ -977,6 +977,13 @@ def methods(*, fold_stage=False):
                    "Return the present Optional value or invoke a default factory only on absence.",
                    "", element, ["OptionalFamily.CarrierCompatible[Self.V]"],
                    lambda cb: f'rebind_var[{element}](_optional_get_or_else[{cb["adapter_type"]}](rebind_var[Optional[{cb["result"]}]](self.value^), {cb["build"]}))')
+    for cb in native_callbacks("thunk", "", "make_error"):
+        result = f'Result[{element}, {cb["result"]}]'
+        emit("to_result", cb, callback_parameters([cb]), cb["argument"], result,
+             cb["error"], f'ResultFamily[{cb["result"]}]',
+             ["OptionalFamily.CarrierCompatible[Self.V]", *cb["conditions"]],
+             f'_optional_to_result[{element}, {cb["adapter_type"]}](rebind_var[Optional[{element}]](self.value^), {cb["build"]})',
+             "Convert a native Optional to Result, invoking the error factory only on absence.")
     body.append(f'\n    def to_optional(deinit self) -> Optional[{T}] where {" and ".join(result_conditions)}:\n'
                 '        """Consume the native Result carrier, retaining only its success in an Optional."""\n'
                 f'        return rebind_var[{Source}](self.value^).to_optional()\n')

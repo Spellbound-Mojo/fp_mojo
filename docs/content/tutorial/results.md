@@ -8,6 +8,28 @@ sequences computations that can themselves return an `Err`.
 Stored failures and raised errors are separate. If a callback raises, its
 error propagates to the caller. Use `Capture[E]` to catch it in a `Result`.
 
+## Turn optional input into a Result
+
+Use `pipeline(optional^).to_result(make_error)` when absence should become a
+stored error. A present payload becomes `Ok`; an empty Optional invokes the
+zero-argument factory and stores its returned error in `Err`. Both payload and
+error types are inferred, so the next Result operations need no type annotation:
+
+<!-- example: docs/examples/optional_result.mojo -->
+
+This follows [Cats OptionT's `toRight`](https://github.com/typelevel/cats/blob/main/core/src/main/scala/cats/data/OptionT.scala#L495),
+named `to_result` for this library's Result type. Pass the factory itself so
+error construction stays lazy. `.to_optional()` converts back, discarding any
+stored error; `.swap()` can exchange the cases afterward.
+
+Both the source and a library factory are consumed, including cleanup of a
+skipped factory. Native captured factories are borrowed and remain reusable.
+Move-only payloads, error values and borrowed origins are retained. A factory's
+raised native error propagates unchanged; it does not become an `Err`. Select
+native callback errors with `.raising[MyError]()` before conversion, as with
+other pipeline operations. The selected native error remains available for
+subsequent callbacks.
+
 ## Finish with a value
 
 Use `value_or(on_err)` when the fallback depends on the error, or

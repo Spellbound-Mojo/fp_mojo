@@ -176193,6 +176193,304 @@
       "summary": "Consume the native Result carrier, retaining only its success in an Optional."
      }
     ],
+    "to_result": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The borrowed-payload factory of a stored Result error.",
+        "name": "make_error",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C.Error",
+      "parameters": [
+       {
+        "description": "The first library callback type, retaining its receiver and origins.",
+        "inferred": false,
+        "name": "C",
+        "type": "ThunkContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[ResultFamily[C.Out], Result[OptionalFamily.Element[Self.V], C.Out], Self.E]"
+      },
+      "signature": "def to_result[C: ThunkContract & Movable & Deinitable](deinit self, var make_error: C) raises C.Error -> Pipeline[ResultFamily[C.Out], Result[OptionalFamily.Element[Self.V], C.Out], Self.E] where OptionalFamily.CarrierCompatible[Self.V]",
+      "summary": "Convert a native Optional to Result, invoking the error factory only on absence."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "make_error",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def() -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E]"
+      },
+      "signature": "def to_result[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] make_error: C) raises Never -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V]",
+      "summary": "Convert a native Optional to Result, invoking the error factory only on absence."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "make_error",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def() raises Self.E -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E]"
+      },
+      "signature": "def to_result[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Self.E -> R](deinit self, ref[o] make_error: C) raises Self.E -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V]",
+      "summary": "Convert a native Optional to Result, invoking the error factory only on absence."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "make_error",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def() raises Never -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E]"
+      },
+      "signature": "def to_result[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Never -> R](deinit self, ref[o] make_error: C) raises Never -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V] and Self.E != Never",
+      "summary": "Convert a native Optional to Result, invoking the error factory only on absence."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "make_error",
+        "type": "def() thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E]"
+      },
+      "signature": "def to_result[R: Movable & Deinitable](deinit self, make_error: def() thin -> R) raises Never -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V] and not conforms_to(R, RegisterPassable)",
+      "summary": "Convert a native Optional to Result, invoking the error factory only on absence."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "make_error",
+        "type": "def() thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E]"
+      },
+      "signature": "def to_result[R: RegisterPassable & Deinitable](deinit self, make_error: def() thin -> R) raises Never -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V]",
+      "summary": "Convert a native Optional to Result, invoking the error factory only on absence."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "make_error",
+        "type": "def() raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "X",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E]"
+      },
+      "signature": "def to_result[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, make_error: def() raises X thin -> R) raises X -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable)",
+      "summary": "Convert a native Optional to Result, invoking the error factory only on absence."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "make_error",
+        "type": "def() raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "X",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E]"
+      },
+      "signature": "def to_result[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, make_error: def() raises X thin -> R) raises X -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V] and _ErrorCompatible[Self.E, X]",
+      "summary": "Convert a native Optional to Result, invoking the error factory only on absence."
+     }
+    ],
     "traverse": [
      {
       "args": [

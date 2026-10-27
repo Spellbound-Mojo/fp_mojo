@@ -3385,3 +3385,19 @@ continues through Result's owned fold. Both paths consume skipped library
 factory owners and borrow native closure storage through the established
 adapter. This shares callback admission and invocation without changing when
 Result destroys its stored error.
+
+### Lazy Optional-to-Result conversion
+
+`Pipeline.to_result(make_error)` follows the Option-to-Either conversion in
+Cats: absence computes a stored error, while presence retains the original
+payload. It selects the resulting ResultFamily and keeps the independent
+native error context. Exact factory output types become the stored error;
+raising a native error bypasses Result construction entirely.
+
+`_optional_choose` now owns branch selection and skipped-factory cleanup for
+both Optional default extraction and Result conversion. Each operation supplies
+a pure present projection and an absence projection retaining the factory's
+native error. Default extraction delegates to the canonical Identity callable;
+Result conversion delegates to Result's existing constructors. Factory invocation
+uses the shared receiver dispatcher, without introducing capture copies or
+another native callback inference path.

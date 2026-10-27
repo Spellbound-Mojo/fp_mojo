@@ -168,6 +168,9 @@
     "docs/examples/optional_default.mojo": {
       "stdout": "configured: example.org\ndefault: localhost\ndefaults computed: 1\n"
     },
+    "docs/examples/optional_result.mojo": {
+      "stdout": "https://example.org\nhost is missing\n"
+    },
     "docs/examples/parallel_validation.mojo": {
       "stdout": "total: 9\nerrors: -2 must be positive; -4 must be positive;\nerrors: -3 must be positive; -5 must be positive;\nvalues: 1 4 9\npair: 2 3\nerrors: -3 must be positive; -4 must be positive;\n"
     },
