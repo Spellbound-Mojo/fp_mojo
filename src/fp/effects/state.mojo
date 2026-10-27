@@ -14,7 +14,7 @@ from fp.callables.protocols import (BorrowCallContract, UnaryContract, BinaryCon
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
 from fp.callables._receiver import _binary_repeated_as, _unary_once_as
 from std.memory import MaybeUninit
-from fp.callables.products import _take_pair, _WithSecond as _WithState
+from fp.callables.products import _take_pair, _MapPair, _WithSecond as _WithState
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
 from .protocols import Stateful, Local, Listen, _CarrierOp, _LocalLifting, StateAction, StateFamily, _EndpointCompatible, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
 from ._adapt import _op_as, _state_run_as, _map_as, _flat_map_as
@@ -108,32 +108,7 @@ struct _StateLift[M: Monad, S: Movable & Deinitable, V: Movable & Deinitable](St
         return Self.M.map(Self.Pair(state^), self.value^)
 
 
-@fieldwise_init
-struct _MapFirst[F: UnaryContract & Movable & Deinitable, S: Movable & Deinitable](
-    OnceUnary, MutableUnary where RepeatableUnary[F], Copyable where conforms_to(F, Copyable)
-):
-    """Map the value of a (value, state) pair."""
-    var function: Self.F
-    comptime Arg = Tuple[Self.F.Arg, Self.S]
-    comptime Out = Tuple[Self.F.Out, Self.S]
-    comptime Error = Self.F.Error
-    def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        var value_slot = MaybeUninit[Self.F.Arg]()
-        var state_slot = MaybeUninit[Self.S]()
-        _take_pair(arg^, value_slot, state_slot)
-        var value_part = value_slot^.unsafe_assume_init()
-        var state_part = state_slot^.unsafe_assume_init()
-        var value = call_once(self.function^, value_part^)
-        return Tuple(value^, state_part^)
-    def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        comptime assert RepeatableUnary[Self.F]
-        var value_slot = MaybeUninit[Self.F.Arg]()
-        var state_slot = MaybeUninit[Self.S]()
-        _take_pair(arg^, value_slot, state_slot)
-        var value_part = value_slot^.unsafe_assume_init()
-        var state_part = state_slot^.unsafe_assume_init()
-        var value = call_repeated(self.function, value_part^)
-        return Tuple(value^, state_part^)
+comptime _MapFirst[F: UnaryContract & Movable & Deinitable, S: Movable & Deinitable] = _MapPair[F, S, True]
 
 
 @fieldwise_init

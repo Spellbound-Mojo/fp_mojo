@@ -14,7 +14,7 @@ from fp.callables.protocols import (BorrowCallContract, UnaryContract, BinaryCon
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
 from fp.callables._receiver import _unary_once_as, _binary_once_as
 from std.memory import MaybeUninit
-from fp.callables.products import _take_pair
+from fp.callables.products import _take_pair, _MapPair
 from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible, _propagate_error
 from .protocols import Local, Listen, Censor, _CarrierOp, _LocalLifting, WriterFamily, _WriterType
 from ._adapt import _map_as
@@ -76,32 +76,7 @@ struct _WithLog[W: Monoid, A: Movable & Deinitable](Unary, Copyable, Defaultable
         return Tuple(log^, arg^)
 
 
-@fieldwise_init
-struct _MapValue[L: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
-    OnceUnary, MutableUnary where RepeatableUnary[F], Copyable where conforms_to(F, Copyable)
-):
-    """Map the value of a (log, value) pair."""
-    var function: Self.F
-    comptime Arg = Tuple[Self.L, Self.F.Arg]
-    comptime Out = Tuple[Self.L, Self.F.Out]
-    comptime Error = Self.F.Error
-    def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        var log_slot = MaybeUninit[Self.L]()
-        var value_slot = MaybeUninit[Self.F.Arg]()
-        _take_pair(arg^, log_slot, value_slot)
-        var log_part = log_slot^.unsafe_assume_init()
-        var value_part = value_slot^.unsafe_assume_init()
-        var value = call_once(self.function^, value_part^)
-        return Tuple(log_part^, value^)
-    def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        comptime assert RepeatableUnary[Self.F]
-        var log_slot = MaybeUninit[Self.L]()
-        var value_slot = MaybeUninit[Self.F.Arg]()
-        _take_pair(arg^, log_slot, value_slot)
-        var log_part = log_slot^.unsafe_assume_init()
-        var value_part = value_slot^.unsafe_assume_init()
-        var value = call_repeated(self.function, value_part^)
-        return Tuple(log_part^, value^)
+comptime _MapValue[L: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _MapPair[F, L, False]
 
 
 @fieldwise_init
@@ -267,32 +242,7 @@ struct _Listen[W: Monoid, T: Movable & Deinitable](Unary, Copyable, Defaultable)
         return Tuple(log^, Tuple(value_part^, copy^))
 
 
-@fieldwise_init
-struct _Censor[F: UnaryContract & Movable & Deinitable, T: Movable & Deinitable](
-    OnceUnary, MutableUnary where RepeatableUnary[F], Copyable where conforms_to(F, Copyable)
-):
-    """Replace the final log with F(log)."""
-    var function: Self.F
-    comptime Arg = Tuple[Self.F.Arg, Self.T]
-    comptime Out = Tuple[Self.F.Out, Self.T]
-    comptime Error = Self.F.Error
-    def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        var log_slot = MaybeUninit[Self.F.Arg]()
-        var value_slot = MaybeUninit[Self.T]()
-        _take_pair(arg^, log_slot, value_slot)
-        var log_part = log_slot^.unsafe_assume_init()
-        var value_part = value_slot^.unsafe_assume_init()
-        var log = call_once(self.function^, log_part^)
-        return Tuple(log^, value_part^)
-    def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        comptime assert RepeatableUnary[Self.F]
-        var log_slot = MaybeUninit[Self.F.Arg]()
-        var value_slot = MaybeUninit[Self.T]()
-        _take_pair(arg^, log_slot, value_slot)
-        var log_part = log_slot^.unsafe_assume_init()
-        var value_part = value_slot^.unsafe_assume_init()
-        var log = call_repeated(self.function, log_part^)
-        return Tuple(log^, value_part^)
+comptime _Censor[F: UnaryContract & Movable & Deinitable, T: Movable & Deinitable] = _MapPair[F, T, True]
 
 
 struct _WriterAcc[W: Monoid, K: _Accumulate](_Accumulate):

@@ -1653,6 +1653,28 @@ The compiler reports retain unchanged inputs and no audit failures. Strict
 documentation checks retain 318 exports and 81 examples. Evidence is in
 `.cache/quality-cycle22/qualified-main/`.
 
+### Mapping native product components
+
+`_MapPair` in the callable product module owns moving a native pair apart,
+mapping one component, and retaining the other unchanged. State's `_MapFirst`
+and Writer's `_MapValue` and `_Censor` are aliases selecting the component.
+The adapter preserves the exact native tuple type and each component's origin;
+the untouched component never needs to be copyable.
+
+Consuming invocation moves the callback. Repeated invocation borrows it through
+the existing exclusive receiver view and runs the same mapping implementation,
+retaining callback mutations across calls. The aliases retain their existing
+constructor field and receiver/copyability contracts. Maintained controls cover
+native errors, both component positions, distinct borrowed result/error origins,
+and rejection of an escaping local borrow. Twelve old/new destruction traces,
+including two successive calls through one mutable callback, match exactly.
+
+Qualification passes 12 source/package checks at O0/O3, 15 Writer programs,
+24 State programs, 132 generic clients, all 48 tooling tests, and the
+generated-signature check. Reports retain unchanged inputs and no audit
+failures. Strict documentation checks retain 318 exports and 81 examples.
+Evidence is in `.cache/quality-cycle23/qualified-main/`.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.
