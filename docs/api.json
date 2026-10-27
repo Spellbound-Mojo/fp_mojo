@@ -1044,7 +1044,7 @@
   },
   "algebra.BeforeContract": {
    "aliases": [],
-   "description": "Project `Family`, `Out` and `Error` and forward `Compatible` in generic selected\nwrappers. `InputCompatible` is satisfied by the existing ignored-input adapter;\n`CarrierCompatible` checks F.Out and `BindCompatible` checks family admission.\nConstruction and execution keep the selected family's timing and exact errors.",
+   "description": "Project `Family`, `Out` and `Error` and forward `Compatible` in generic selected\nwrappers. `InputCompatible` is satisfied by the existing ignored-input adapter;\n`CarrierCompatible` checks F.Out and `BindCompatible` checks family admission.\n`ReceiverCompatible` checks the original factory, before ignored-input\nadaptation; `InvocationCompatible` combines it with `Compatible` for new\nwrapper boundaries. Construction and execution retain family timing and errors.",
    "fields": [],
    "kind": "alias",
    "methods": {},
@@ -1072,7 +1072,7 @@
     }
    ],
    "provider": "algebra/sequencing",
-   "signature": "comptime BeforeContract[I: Monad, V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable] = _SequencingContract[I, V, _IgnoreInput[I.Element[V], F], True, False]",
+   "signature": "comptime BeforeContract[I: Monad, V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable] = _SequencingContract[I, V, _IgnoreInput[I.Element[V], F], True, False, _OnceThunkAvailable[F]]",
    "summary": "The selected before contract, retaining originals after a factory succeeds.",
    "traits": []
   },
@@ -1747,7 +1747,7 @@
   },
   "algebra.FlatPairWithContract": {
    "aliases": [],
-   "description": "Project `Family`, `Out` and `Error` and forward `Compatible` in generic selected\nwrappers. Component predicates have the same meaning as FlatTapContract.\nOnly retained originals need copying when the selected effect branches;\nprojected values are moved. Family primitives still own receiver admission.",
+   "description": "Project `Family`, `Out` and `Error` and forward `Compatible` in generic selected\nwrappers. Component predicates have the same meaning as FlatTapContract.\n`InvocationCompatible` additionally requires an invocable callback receiver.\nOnly retained originals need copying when the selected effect branches;\nprojected values are moved. Family primitives still own receiver admission.",
    "fields": [],
    "kind": "alias",
    "methods": {},
@@ -1775,13 +1775,13 @@
     }
    ],
    "provider": "algebra/sequencing",
-   "signature": "comptime FlatPairWithContract[I: Monad, V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = _SequencingContract[I, V, C, True, True]",
+   "signature": "comptime FlatPairWithContract[I: Monad, V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = _SequencingContract[I, V, C, True, True, _OnceBorrowAvailable[C]]",
    "summary": "The selected flat_pair_with contract, retaining original/projected pairs.",
    "traits": []
   },
   "algebra.FlatTapContract": {
    "aliases": [],
-   "description": "Forward `Compatible` in generic selected-pipeline wrappers and project `Family`,\n`Out` and `Error` for their return and raised types. `InputCompatible` checks\nthe borrowed payload including origins, `CarrierCompatible` checks the effect\nproduced by C, and `BindCompatible` is the family's continuation admission.\n`FamilyCompatible` combines the latter two without repeating input equality.\nLegacy Piped keeps its input-and-carrier entry checks; this descriptor does not\nstrengthen an existing overload. Families retain receiver and copy checks.",
+   "description": "Forward `Compatible` in generic selected-pipeline wrappers and project `Family`,\n`Out` and `Error` for their return and raised types. `InputCompatible` checks\nthe borrowed payload including origins, `CarrierCompatible` checks the effect\nproduced by C, and `BindCompatible` is the family's continuation admission.\n`FamilyCompatible` combines the latter two without repeating input equality.\nLegacy Piped keeps its input-and-carrier entry checks; this descriptor does not\nstrengthen an existing overload. `ReceiverCompatible` checks for a shared, mutable or consuming callback;\n`InvocationCompatible` adds it to `Compatible` for new wrapper boundaries.\nFamilies retain repeatability and copy checks.",
    "fields": [],
    "kind": "alias",
    "methods": {},
@@ -1809,7 +1809,7 @@
     }
    ],
    "provider": "algebra/sequencing",
-   "signature": "comptime FlatTapContract[I: Monad, V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = _SequencingContract[I, V, C, True, False]",
+   "signature": "comptime FlatTapContract[I: Monad, V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable] = _SequencingContract[I, V, C, True, False, _OnceBorrowAvailable[C]]",
    "summary": "The selected flat_tap admission, output family, carrier and construction error.",
    "traits": []
   },
@@ -1990,7 +1990,7 @@
   },
   "algebra.FollowedByContract": {
    "aliases": [],
-   "description": "Project `Family`, `Out` and `Error` and forward `Compatible` in generic selected\nwrappers. Component predicates have the same meaning as BeforeContract.\nNo original payload is copied for retention. The family owns branching,\ncallback repeatability, deferred execution and native construction errors.",
+   "description": "Project `Family`, `Out` and `Error` and forward `Compatible` in generic selected\nwrappers. Component predicates have the same meaning as BeforeContract.\n`InvocationCompatible` additionally requires an invocable factory receiver.\nNo original payload is copied for retention. The family owns branching,\ncallback repeatability, deferred execution and native construction errors.",
    "fields": [],
    "kind": "alias",
    "methods": {},
@@ -2018,7 +2018,7 @@
     }
    ],
    "provider": "algebra/sequencing",
-   "signature": "comptime FollowedByContract[I: Monad, V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable] = _SequencingContract[I, V, _IgnoreInput[I.Element[V], F], False, False]",
+   "signature": "comptime FollowedByContract[I: Monad, V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable] = _SequencingContract[I, V, _IgnoreInput[I.Element[V], F], False, False, _OnceThunkAvailable[F]]",
    "summary": "The selected followed_by contract, returning the factory's produced payloads.",
    "traits": []
   },

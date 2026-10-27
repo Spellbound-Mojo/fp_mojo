@@ -2661,6 +2661,33 @@ programs, 35 declared rejection fixtures and the four-route example. All inputs
 remained unchanged. Generated-source checks, all 48 tooling tests and the strict
 documentation build passed for the revised candidate.
 
+### Sequencing contracts expose invocation admission without changing generic proofs
+
+`FlatTapContract`, `FlatPairWithContract`, `BeforeContract` and
+`FollowedByContract` expose `ReceiverCompatible` and `InvocationCompatible`.
+The private sequencing descriptor combines the existing input/family proof with
+receiver availability from the callable invocation owner. Factory contracts
+check the original factory rather than the ignored-input adapter, whose own
+consuming receiver does not establish that its factory can be invoked.
+
+`Compatible` retains its exact previous expression. Existing generic wrappers
+can still exchange that predicate with their expanded input, carrier and bind
+proofs. New wrappers can use `InvocationCompatible` to reject metadata-only
+callbacks at their boundary, without explicit callback type bindings. All
+operation signatures and execution remain unchanged; family bodies still own
+branch repeatability, copying and native error checks.
+
+Maintained controls exercise shared, mutable and consuming receivers, retained
+and paired outputs, native errors, move-only cleanup and deferred Reader timing.
+Four negative clients reject missing callback receivers with ordinary constraint
+diagnostics. Existing sequencing clients qualify old generic proof forwarding,
+origins and conditional Monad witnesses.
+
+Qualification passed 20 focused and 56 broader source/package checks at O0/O3,
+five sequencing and 142 generic programs, 30 declared rejection fixtures and the
+four-route documentation example. All inputs remained unchanged; the 48 tooling
+tests, generated-source checks and strict documentation build passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

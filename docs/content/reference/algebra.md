@@ -374,8 +374,13 @@ from both projections and the admission constraint.
 factory adaptation satisfies it automatically. `CarrierCompatible` checks the
 produced effect, and `BindCompatible` preserves the selected family's existing
 bind predicate. `FamilyCompatible` combines the latter two, and `Compatible`
-adds input equality. These are selected entry-point checks: family bodies still
-validate receiver repeatability and copying retained originals when branching.
+adds input equality. `Compatible` preserves the existing expanded generic proofs.
+New wrappers can forward `InvocationCompatible` to additionally require a shared,
+mutable or consuming callback receiver. `ReceiverCompatible` exposes that check
+separately; factory contracts check the original factory before adapting its
+ignored input. A metadata-only callback fails a checked wrapper's constraint
+without explicit callback type arguments. Family bodies still validate receiver
+repeatability and copying retained originals when branching.
 Legacy Piped retains its input-and-carrier entry admission; its generic wrappers
 can forward those component predicates without adding a bind predicate.
 `Error` describes construction: deferred effects retain their separate run-time
