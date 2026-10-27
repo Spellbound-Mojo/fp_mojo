@@ -50,16 +50,17 @@ def folds(mode, array=False):
                 value = f'_take_array(rebind_var[Array[{elem}, N]]({value}))'
             plan = operation.bind('G', source, elem, cb, build, effect,
                                   accumulator=acc, initial='initial^')
-            raised = f'_EntryError[{hint}, {plan.error}]'
+            contract = f'FoldContract[G, {source}, {cb}]' if fold else plan.types
+            error = f'{contract}.Error'
+            raised = f'_EntryError[{hint}, {error}]'
             if fold:
-                contract = f'FoldContract[G, {source}, {cb}]'
                 condition = (condition + ' and ' if array else '') + f'{contract}.Compatible'
-                condition += f' and _ErrorCompatible[{raised}, {plan.error}]'
+                condition += f' and _ErrorCompatible[{raised}, {error}]'
             else:
-                condition += f' and G.Element[{effect}] == {plan.payload} and _ErrorCompatible[{raised}, {plan.error}]'
+                condition += f' and G.Element[{effect}] == {plan.payload} and _ErrorCompatible[{raised}, {error}]'
                 condition += f' and _CarrierCompatible[G, {effect}]'
                 condition += f' and {plan.types}.Compatible'
-            result = plan.result
+            result = f'{contract}.Out'
             call = plan.invoke(raised, value)
             args = [arg] + ([f'var initial: {acc}'] if fold else [])
             if mode == 'free': args += ['var source: V']

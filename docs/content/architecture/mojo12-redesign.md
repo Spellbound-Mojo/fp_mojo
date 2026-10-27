@@ -2062,6 +2062,20 @@ at O0/O3, all 724 positive programs and all 1,621 rejection fixtures, with uncha
 inputs and no audit failures. Generated-source verification, all 48 tooling tests
 and strict documentation checks passed.
 
+### Fold output and error projections use the same public contract
+
+Generated free, Piped and iterator `fold_effect` signatures project both their
+result and native error through `FoldContract`, alongside its admission predicate.
+Generic clients and the API reference therefore name one contract for the whole
+operation. The private fold recipe remains the execution owner. Native callback
+adaptation, explicit error bindings, parameter order and exact types are unchanged.
+
+Five focused O0 programs passed. Qualification passed 20 source/package contract
+checks at O0/O3, five effect-query programs, 133 generic clients, 15 effect-combinator
+rejection fixtures and 63 fold rejection fixtures. Categories overlap. Reports
+retained unchanged inputs and no audit failures. Generated sources, all 48 tooling
+tests, refreshed API metadata and strict documentation checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

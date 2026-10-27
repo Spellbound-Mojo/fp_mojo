@@ -13098,7 +13098,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[Z, _EffectFold[G, V, F, _AllLive[F.First]].Error]",
+     "error": "_EntryError[Z, FoldContract[G, V, F].Error]",
      "parameters": [
       {
        "description": "The callback type, retaining its receiver, captures and error contract.",
@@ -13133,9 +13133,9 @@
      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
      "returns": {
       "doc": "The target effect containing the final accumulator; empty input lifts the initial value.",
-      "type": "_EffectFold[G, V, F, _AllLive[F.First]].Out"
+      "type": "FoldContract[G, V, F].Out"
      },
-     "signature": "def fold_effect[F: BinaryContract & Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, Z: AnyType = _InferError](var function: F, var initial: F.First, var source: V) raises _EntryError[Z, _EffectFold[G, V, F, _AllLive[F.First]].Error] -> _EffectFold[G, V, F, _AllLive[F.First]].Out where FoldContract[G, V, F].Compatible and _ErrorCompatible[_EntryError[Z, _EffectFold[G, V, F, _AllLive[F.First]].Error], _EffectFold[G, V, F, _AllLive[F.First]].Error]",
+     "signature": "def fold_effect[F: BinaryContract & Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, Z: AnyType = _InferError](var function: F, var initial: F.First, var source: V) raises _EntryError[Z, FoldContract[G, V, F].Error] -> FoldContract[G, V, F].Out where FoldContract[G, V, F].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, V, F].Error], FoldContract[G, V, F].Error]",
      "summary": "Fold in order with an effectful accumulator step; empty input returns the initial value in the effect."
     },
     {
@@ -13163,7 +13163,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[Z, _EffectFold[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Error]",
+     "error": "_EntryError[Z, FoldContract[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error]",
      "parameters": [
       {
        "description": "",
@@ -13226,9 +13226,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_EffectFold[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Out"
+      "type": "FoldContract[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o]].Out"
      },
-     "signature": "def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, F: _Binary[A, B, R], Z: AnyType = _InferError](ref[o] function: F, var initial: A, var source: V) raises _EntryError[Z, _EffectFold[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Error] -> _EffectFold[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Out where FoldContract[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[Z, _EffectFold[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Error], _EffectFold[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Error]",
+     "signature": "def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, F: _Binary[A, B, R], Z: AnyType = _InferError](ref[o] function: F, var initial: A, var source: V) raises _EntryError[Z, FoldContract[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error] -> FoldContract[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o]].Out where FoldContract[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error], FoldContract[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error]",
      "summary": "Fold in order with an effectful accumulator step; empty input returns the initial value in the effect."
     },
     {
@@ -13256,7 +13256,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[Z, _EffectFold[G, V, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Error]",
+     "error": "_EntryError[Z, FoldContract[G, V, _NativeBinaryRef[A, B, R, X, F, True, o]].Error]",
      "parameters": [
       {
        "description": "",
@@ -13326,9 +13326,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_EffectFold[G, V, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Out"
+      "type": "FoldContract[G, V, _NativeBinaryRef[A, B, R, X, F, True, o]].Out"
      },
-     "signature": "def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X], Z: AnyType = _InferError](ref[o] function: F, var initial: A, var source: V) raises _EntryError[Z, _EffectFold[G, V, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Error] -> _EffectFold[G, V, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Out where FoldContract[G, V, _NativeBinaryRef[A, B, R, X, F, True, o]].Compatible and _ErrorCompatible[_EntryError[Z, _EffectFold[G, V, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Error], _EffectFold[G, V, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Error]",
+     "signature": "def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X], Z: AnyType = _InferError](ref[o] function: F, var initial: A, var source: V) raises _EntryError[Z, FoldContract[G, V, _NativeBinaryRef[A, B, R, X, F, True, o]].Error] -> FoldContract[G, V, _NativeBinaryRef[A, B, R, X, F, True, o]].Out where FoldContract[G, V, _NativeBinaryRef[A, B, R, X, F, True, o]].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, V, _NativeBinaryRef[A, B, R, X, F, True, o]].Error], FoldContract[G, V, _NativeBinaryRef[A, B, R, X, F, True, o]].Error]",
      "summary": "Fold in order with an effectful accumulator step; empty input returns the initial value in the effect."
     }
    ],
@@ -52802,7 +52802,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[Z, _EffectFold[G, Self.Value, F, _AllLive[F.First]].Error]",
+      "error": "_EntryError[Z, FoldContract[G, Self.Value, F].Error]",
       "parameters": [
        {
         "description": "The callback type, retaining its receiver, captures and error contract.",
@@ -52830,9 +52830,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The target effect containing the final accumulator; empty input lifts the initial value.",
-       "type": "Piped[_EffectFold[G, Self.Value, F, _AllLive[F.First]].Out]"
+       "type": "Piped[FoldContract[G, Self.Value, F].Out]"
       },
-      "signature": "def fold_effect[F: BinaryContract & Movable & Deinitable, //, G: Monad, Z: AnyType = _InferError](deinit self, var function: F, var initial: F.First) raises _EntryError[Z, _EffectFold[G, Self.Value, F, _AllLive[F.First]].Error] -> Piped[_EffectFold[G, Self.Value, F, _AllLive[F.First]].Out] where FoldContract[G, Self.Value, F].Compatible and _ErrorCompatible[_EntryError[Z, _EffectFold[G, Self.Value, F, _AllLive[F.First]].Error], _EffectFold[G, Self.Value, F, _AllLive[F.First]].Error]",
+      "signature": "def fold_effect[F: BinaryContract & Movable & Deinitable, //, G: Monad, Z: AnyType = _InferError](deinit self, var function: F, var initial: F.First) raises _EntryError[Z, FoldContract[G, Self.Value, F].Error] -> Piped[FoldContract[G, Self.Value, F].Out] where FoldContract[G, Self.Value, F].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, Self.Value, F].Error], FoldContract[G, Self.Value, F].Error]",
       "summary": "Fold in order with an effectful accumulator step; empty input returns the initial value in the effect."
      },
      {
@@ -52853,7 +52853,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[Z, _EffectFold[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Error]",
+      "error": "_EntryError[Z, FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -52909,9 +52909,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Piped[_EffectFold[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Out]"
+       "type": "Piped[FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o]].Out]"
       },
-      "signature": "def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: _Binary[A, B, R], Z: AnyType = _InferError](deinit self, ref[o] function: F, var initial: A) raises _EntryError[Z, _EffectFold[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Error] -> Piped[_EffectFold[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Out] where FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[Z, _EffectFold[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Error], _EffectFold[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Error]",
+      "signature": "def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: _Binary[A, B, R], Z: AnyType = _InferError](deinit self, ref[o] function: F, var initial: A) raises _EntryError[Z, FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error] -> Piped[FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o]].Out] where FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error], FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error]",
       "summary": "Fold in order with an effectful accumulator step; empty input returns the initial value in the effect."
      },
      {
@@ -52932,7 +52932,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[Z, _EffectFold[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Error]",
+      "error": "_EntryError[Z, FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -52995,9 +52995,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Piped[_EffectFold[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Out]"
+       "type": "Piped[FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o]].Out]"
       },
-      "signature": "def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X], Z: AnyType = _InferError](deinit self, ref[o] function: F, var initial: A) raises _EntryError[Z, _EffectFold[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Error] -> Piped[_EffectFold[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Out] where FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o]].Compatible and _ErrorCompatible[_EntryError[Z, _EffectFold[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Error], _EffectFold[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Error]",
+      "signature": "def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X], Z: AnyType = _InferError](deinit self, ref[o] function: F, var initial: A) raises _EntryError[Z, FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o]].Error] -> Piped[FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o]].Out] where FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o]].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o]].Error], FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o]].Error]",
       "summary": "Fold in order with an effectful accumulator step; empty input returns the initial value in the effect."
      },
      {
@@ -53018,7 +53018,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[Z, _EffectFold[G, List[F.Second], F, _AllLive[F.First]].Error]",
+      "error": "_EntryError[Z, FoldContract[G, List[F.Second], F].Error]",
       "parameters": [
        {
         "description": "The callback type, retaining its receiver, captures and error contract.",
@@ -53053,9 +53053,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The target effect containing the final accumulator; empty input lifts the initial value.",
-       "type": "Piped[_EffectFold[G, List[F.Second], F, _AllLive[F.First]].Out]"
+       "type": "Piped[FoldContract[G, List[F.Second], F].Out]"
       },
-      "signature": "def fold_effect[F: BinaryContract & Movable & Deinitable, N: Int, //, G: Monad, Z: AnyType = _InferError](deinit self, var function: F, var initial: F.First) raises _EntryError[Z, _EffectFold[G, List[F.Second], F, _AllLive[F.First]].Error] -> Piped[_EffectFold[G, List[F.Second], F, _AllLive[F.First]].Out] where Self.Value == Array[F.Second, N] and FoldContract[G, List[F.Second], F].Compatible and _ErrorCompatible[_EntryError[Z, _EffectFold[G, List[F.Second], F, _AllLive[F.First]].Error], _EffectFold[G, List[F.Second], F, _AllLive[F.First]].Error]",
+      "signature": "def fold_effect[F: BinaryContract & Movable & Deinitable, N: Int, //, G: Monad, Z: AnyType = _InferError](deinit self, var function: F, var initial: F.First) raises _EntryError[Z, FoldContract[G, List[F.Second], F].Error] -> Piped[FoldContract[G, List[F.Second], F].Out] where Self.Value == Array[F.Second, N] and FoldContract[G, List[F.Second], F].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, List[F.Second], F].Error], FoldContract[G, List[F.Second], F].Error]",
       "summary": "Fold in order with an effectful accumulator step; empty input returns the initial value in the effect."
      },
      {
@@ -53076,7 +53076,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[Z, _EffectFold[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Error]",
+      "error": "_EntryError[Z, FoldContract[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -53139,9 +53139,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Piped[_EffectFold[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Out]"
+       "type": "Piped[FoldContract[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o]].Out]"
       },
-      "signature": "def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, F: _Binary[A, B, R], Z: AnyType = _InferError](deinit self, ref[o] function: F, var initial: A) raises _EntryError[Z, _EffectFold[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Error] -> Piped[_EffectFold[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Out] where Self.Value == Array[B, N] and FoldContract[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[Z, _EffectFold[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Error], _EffectFold[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Error]",
+      "signature": "def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, F: _Binary[A, B, R], Z: AnyType = _InferError](deinit self, ref[o] function: F, var initial: A) raises _EntryError[Z, FoldContract[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o]].Error] -> Piped[FoldContract[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o]].Out] where Self.Value == Array[B, N] and FoldContract[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o]].Error], FoldContract[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o]].Error]",
       "summary": "Fold in order with an effectful accumulator step; empty input returns the initial value in the effect."
      },
      {
@@ -53162,7 +53162,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[Z, _EffectFold[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Error]",
+      "error": "_EntryError[Z, FoldContract[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -53232,9 +53232,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Piped[_EffectFold[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Out]"
+       "type": "Piped[FoldContract[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o]].Out]"
       },
-      "signature": "def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X], Z: AnyType = _InferError](deinit self, ref[o] function: F, var initial: A) raises _EntryError[Z, _EffectFold[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Error] -> Piped[_EffectFold[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Out] where Self.Value == Array[B, N] and FoldContract[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o]].Compatible and _ErrorCompatible[_EntryError[Z, _EffectFold[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Error], _EffectFold[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Error]",
+      "signature": "def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X], Z: AnyType = _InferError](deinit self, ref[o] function: F, var initial: A) raises _EntryError[Z, FoldContract[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o]].Error] -> Piped[FoldContract[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o]].Out] where Self.Value == Array[B, N] and FoldContract[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o]].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o]].Error], FoldContract[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o]].Error]",
       "summary": "Fold in order with an effectful accumulator step; empty input returns the initial value in the effect."
      }
     ],
@@ -190078,7 +190078,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[Z, _EffectFold[G, Self.I, F, _AllLive[F.First]].Error]",
+      "error": "_EntryError[Z, FoldContract[G, Self.I, F].Error]",
       "parameters": [
        {
         "description": "The callback type, retaining its receiver, captures and error contract.",
@@ -190106,9 +190106,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The target effect containing the final accumulator; empty input lifts the initial value.",
-       "type": "_EffectFold[G, Self.I, F, _AllLive[F.First]].Out"
+       "type": "FoldContract[G, Self.I, F].Out"
       },
-      "signature": "def fold_effect[F: BinaryContract & Movable & Deinitable, //, G: Monad, Z: AnyType = _InferError](deinit self, var function: F, var initial: F.First) raises _EntryError[Z, _EffectFold[G, Self.I, F, _AllLive[F.First]].Error] -> _EffectFold[G, Self.I, F, _AllLive[F.First]].Out where FoldContract[G, Self.I, F].Compatible and _ErrorCompatible[_EntryError[Z, _EffectFold[G, Self.I, F, _AllLive[F.First]].Error], _EffectFold[G, Self.I, F, _AllLive[F.First]].Error]",
+      "signature": "def fold_effect[F: BinaryContract & Movable & Deinitable, //, G: Monad, Z: AnyType = _InferError](deinit self, var function: F, var initial: F.First) raises _EntryError[Z, FoldContract[G, Self.I, F].Error] -> FoldContract[G, Self.I, F].Out where FoldContract[G, Self.I, F].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, Self.I, F].Error], FoldContract[G, Self.I, F].Error]",
       "summary": "Fold in order with an effectful accumulator step; empty input returns the initial value in the effect."
      },
      {
@@ -190129,7 +190129,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[Z, _EffectFold[G, Self.I, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Error]",
+      "error": "_EntryError[Z, FoldContract[G, Self.I, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -190185,9 +190185,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "_EffectFold[G, Self.I, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Out"
+       "type": "FoldContract[G, Self.I, _NativeBinaryRef[A, B, R, Never, F, False, o]].Out"
       },
-      "signature": "def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: _Binary[A, B, R], Z: AnyType = _InferError](deinit self, ref[o] function: F, var initial: A) raises _EntryError[Z, _EffectFold[G, Self.I, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Error] -> _EffectFold[G, Self.I, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Out where FoldContract[G, Self.I, _NativeBinaryRef[A, B, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[Z, _EffectFold[G, Self.I, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Error], _EffectFold[G, Self.I, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Error]",
+      "signature": "def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: _Binary[A, B, R], Z: AnyType = _InferError](deinit self, ref[o] function: F, var initial: A) raises _EntryError[Z, FoldContract[G, Self.I, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error] -> FoldContract[G, Self.I, _NativeBinaryRef[A, B, R, Never, F, False, o]].Out where FoldContract[G, Self.I, _NativeBinaryRef[A, B, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, Self.I, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error], FoldContract[G, Self.I, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error]",
       "summary": "Fold in order with an effectful accumulator step; empty input returns the initial value in the effect."
      },
      {
@@ -190208,7 +190208,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[Z, _EffectFold[G, Self.I, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Error]",
+      "error": "_EntryError[Z, FoldContract[G, Self.I, _NativeBinaryRef[A, B, R, X, F, True, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -190271,9 +190271,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "_EffectFold[G, Self.I, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Out"
+       "type": "FoldContract[G, Self.I, _NativeBinaryRef[A, B, R, X, F, True, o]].Out"
       },
-      "signature": "def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X], Z: AnyType = _InferError](deinit self, ref[o] function: F, var initial: A) raises _EntryError[Z, _EffectFold[G, Self.I, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Error] -> _EffectFold[G, Self.I, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Out where FoldContract[G, Self.I, _NativeBinaryRef[A, B, R, X, F, True, o]].Compatible and _ErrorCompatible[_EntryError[Z, _EffectFold[G, Self.I, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Error], _EffectFold[G, Self.I, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Error]",
+      "signature": "def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X], Z: AnyType = _InferError](deinit self, ref[o] function: F, var initial: A) raises _EntryError[Z, FoldContract[G, Self.I, _NativeBinaryRef[A, B, R, X, F, True, o]].Error] -> FoldContract[G, Self.I, _NativeBinaryRef[A, B, R, X, F, True, o]].Out where FoldContract[G, Self.I, _NativeBinaryRef[A, B, R, X, F, True, o]].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, Self.I, _NativeBinaryRef[A, B, R, X, F, True, o]].Error], FoldContract[G, Self.I, _NativeBinaryRef[A, B, R, X, F, True, o]].Error]",
       "summary": "Fold in order with an effectful accumulator step; empty input returns the initial value in the effect."
      }
     ],
@@ -199821,7 +199821,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[Z, _EffectFold[G, V, F, _AllLive[F.First]].Error]",
+     "error": "_EntryError[Z, FoldContract[G, V, F].Error]",
      "parameters": [
       {
        "description": "The callback type, retaining its receiver, captures and error contract.",
@@ -199856,9 +199856,9 @@
      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
      "returns": {
       "doc": "The target effect containing the final accumulator; empty input lifts the initial value.",
-      "type": "_EffectFold[G, V, F, _AllLive[F.First]].Out"
+      "type": "FoldContract[G, V, F].Out"
      },
-     "signature": "def fold_effect[F: BinaryContract & Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, Z: AnyType = _InferError](var function: F, var initial: F.First, var source: V) raises _EntryError[Z, _EffectFold[G, V, F, _AllLive[F.First]].Error] -> _EffectFold[G, V, F, _AllLive[F.First]].Out where FoldContract[G, V, F].Compatible and _ErrorCompatible[_EntryError[Z, _EffectFold[G, V, F, _AllLive[F.First]].Error], _EffectFold[G, V, F, _AllLive[F.First]].Error]",
+     "signature": "def fold_effect[F: BinaryContract & Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, Z: AnyType = _InferError](var function: F, var initial: F.First, var source: V) raises _EntryError[Z, FoldContract[G, V, F].Error] -> FoldContract[G, V, F].Out where FoldContract[G, V, F].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, V, F].Error], FoldContract[G, V, F].Error]",
      "summary": "Fold in order with an effectful accumulator step; empty input returns the initial value in the effect."
     },
     {
@@ -199886,7 +199886,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[Z, _EffectFold[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Error]",
+     "error": "_EntryError[Z, FoldContract[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error]",
      "parameters": [
       {
        "description": "",
@@ -199949,9 +199949,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_EffectFold[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Out"
+      "type": "FoldContract[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o]].Out"
      },
-     "signature": "def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, F: _Binary[A, B, R], Z: AnyType = _InferError](ref[o] function: F, var initial: A, var source: V) raises _EntryError[Z, _EffectFold[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Error] -> _EffectFold[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Out where FoldContract[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[Z, _EffectFold[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Error], _EffectFold[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A]].Error]",
+     "signature": "def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, F: _Binary[A, B, R], Z: AnyType = _InferError](ref[o] function: F, var initial: A, var source: V) raises _EntryError[Z, FoldContract[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error] -> FoldContract[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o]].Out where FoldContract[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error], FoldContract[G, V, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error]",
      "summary": "Fold in order with an effectful accumulator step; empty input returns the initial value in the effect."
     },
     {
@@ -199979,7 +199979,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[Z, _EffectFold[G, V, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Error]",
+     "error": "_EntryError[Z, FoldContract[G, V, _NativeBinaryRef[A, B, R, X, F, True, o]].Error]",
      "parameters": [
       {
        "description": "",
@@ -200049,9 +200049,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_EffectFold[G, V, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Out"
+      "type": "FoldContract[G, V, _NativeBinaryRef[A, B, R, X, F, True, o]].Out"
      },
-     "signature": "def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X], Z: AnyType = _InferError](ref[o] function: F, var initial: A, var source: V) raises _EntryError[Z, _EffectFold[G, V, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Error] -> _EffectFold[G, V, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Out where FoldContract[G, V, _NativeBinaryRef[A, B, R, X, F, True, o]].Compatible and _ErrorCompatible[_EntryError[Z, _EffectFold[G, V, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Error], _EffectFold[G, V, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A]].Error]",
+     "signature": "def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X], Z: AnyType = _InferError](ref[o] function: F, var initial: A, var source: V) raises _EntryError[Z, FoldContract[G, V, _NativeBinaryRef[A, B, R, X, F, True, o]].Error] -> FoldContract[G, V, _NativeBinaryRef[A, B, R, X, F, True, o]].Out where FoldContract[G, V, _NativeBinaryRef[A, B, R, X, F, True, o]].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, V, _NativeBinaryRef[A, B, R, X, F, True, o]].Error], FoldContract[G, V, _NativeBinaryRef[A, B, R, X, F, True, o]].Error]",
      "summary": "Fold in order with an effectful accumulator step; empty input returns the initial value in the effect."
     }
    ],
