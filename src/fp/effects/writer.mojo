@@ -7,7 +7,7 @@ it. Logs combine in execution order.
 """
 from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, rebind, downcast
-from fp.algebra.protocols import ApplicativeError, ErrorMapping, Monad, Monoid, _Accumulate, _Append, _pure, _start_as, _combine_as
+from fp.algebra.protocols import ApplicativeError, ErrorMapping, Monad, Monoid, _Accumulate, _AccumulatePair, _Append, _pure, _start_as
 from fp.algebra.instances import IdentityFamily
 from fp.callables.protocols import (BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, Unary, OnceUnary, MutableUnary,
                                     OnceBinary, MutableBinary, OnceThunk)
@@ -263,18 +263,8 @@ struct _WriterAcc[W: Monoid, K: _Accumulate](_Accumulate):
         comptime assert _ErrorCompatible[Self.Error, Self.W.Error] and _ErrorCompatible[Self.Error, Self.K.Error]
         if not Self.K.live(acc[1]):
             return acc^
-        var log_slot = MaybeUninit[Self.W.Value]()
-        var acc_slot = MaybeUninit[Self.K.Acc]()
-        var next_slot = MaybeUninit[Self.W.Value]()
-        var item_slot = MaybeUninit[Self.K.Item]()
-        _take_pair(acc^, log_slot, acc_slot)
-        var log_part = log_slot^.unsafe_assume_init()
-        var acc_part = acc_slot^.unsafe_assume_init()
-        _take_pair(item^, next_slot, item_slot)
-        var next_part = next_slot^.unsafe_assume_init()
-        var item_part = item_slot^.unsafe_assume_init()
-        var log = _append_log_as[Self.Error, Self.W](log_part^, next_part^)
-        return Tuple(log^, _combine_as[Self.Error, Self.K](acc_part^, item_part^))
+        return _binary_once_as[Self.Error](
+            _WriterCombine[Self.W, _AccumulatePair[Self.K]](_AccumulatePair[Self.K]()), acc^, item^)
 
 
 @fieldwise_init

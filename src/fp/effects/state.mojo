@@ -8,7 +8,7 @@ from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, rebind, downcast
 from std.utils import Variant
 from fp.algebra.errors import _Continue
-from fp.algebra.protocols import (_pure, ApplicativeError, ErrorMapping, _UnaryView, Monad, _Accumulate, _LiveAccumulator, _BindFirst, _Lazy, _Item, _iterator, _next_item, _start_as)
+from fp.algebra.protocols import (_pure, ApplicativeError, ErrorMapping, _UnaryView, Monad, _Accumulate, _AccumulatePair, _LiveAccumulator, _BindFirst, _Lazy, _Item, _iterator, _next_item, _start_as)
 from fp.algebra.instances import IdentityFamily
 from fp.callables.protocols import (BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, Unary, OnceUnary, MutableUnary, Binary, MutableBinary)
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
@@ -292,13 +292,8 @@ struct _FoldState[K: _Accumulate, S: Movable & Deinitable](
     comptime Error = Self.K.Error
     @staticmethod
     def _fold(var acc: Self.K.Acc, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        var value_slot = MaybeUninit[Self.K.Item]()
-        var state_slot = MaybeUninit[Self.S]()
-        _take_pair(arg^, value_slot, state_slot)
-        var value_part = value_slot^.unsafe_assume_init()
-        var state_part = state_slot^.unsafe_assume_init()
-        var combined = Self.K.combine(acc^, value_part^)
-        return Tuple(combined^, state_part^)
+        comptime F = _BindFirst[_AccumulatePair[Self.K]]
+        return call_once(_MapFirst[F, Self.S](F(_AccumulatePair[Self.K](), acc^)), arg^)
     def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         return Self._fold(self.acc^, arg^)
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:

@@ -1675,6 +1675,27 @@ generated-signature check. Reports retain unchanged inputs and no audit
 failures. Strict documentation checks retain 318 exports and 81 examples.
 Evidence is in `.cache/quality-cycle23/qualified-main/`.
 
+### Accumulators reuse product operations
+
+State's `_FoldState` now combines the carried accumulator through `_BindFirst`
+and `_MapPair`; Writer's accumulator delegates the pair combination to
+`_WriterCombine`. Their outer policies retain liveness, initialization, and
+receiver ownership. Writer still checks `K.live` exactly once before combining
+logs or values, including the stopped path. State still copies its saved
+accumulator only for a repeated call and does not become a copyable callback.
+
+This leaves product movement and callback invocation with their existing
+owners. Twelve old/new traces match for log failure, accumulator failure,
+stopped accumulation, and repeated State folds. Maintained controls check the
+native error codes, destruction order, and retained initial accumulator across
+two calls. No public API, native storage, or copyability requirement changes.
+
+Qualification passes four source/package checks at O0/O3, 15 Writer programs,
+24 State programs, 34 traversal programs, all 48 tooling tests, and the
+generated-signature check. Reports retain unchanged inputs and no audit
+failures. Strict documentation checks retain 318 exports and 81 examples.
+Evidence is in `.cache/quality-cycle24/qualified-main/`.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.
