@@ -419,7 +419,9 @@ Selected `recover` and `or_else` honor `ApplicativeError`, including deferred
 transformers and custom families backed by native Result storage. Value
 recovery delegates through the existing `_Recovered` adapter and family
 primitive. Canonical Result recovery and intrinsic Result calls under
-non-error families retain their existing behavior.
+non-error families retain their existing behavior. Here a non-error family
+means one with neither `ApplicativeError` nor `ErrorMapping`; native Result
+storage does not grant a mapping-only family recovery.
 
 `functions._recovery` owns the selected `or_else` distinction: canonical Result
 and legacy non-error-family Result calls may change the stored-error type;
@@ -434,11 +436,12 @@ clients. It belongs to the syntax layer because the type-changing Result case
 is broader than the `ApplicativeError` primitive's contract. Choosing the
 policy before native callback admission avoids asking overload resolution to
 prove whether two still-generic stored-error types are equal or different.
-Library handlers use one selected entry. Native admission distinguishes
-error-capable families from their exact complement: Mojo cannot use a generic
-non-error-family proof to resolve the policy's projected callback input.
-The intrinsic Result boundary spells that known input directly, preserving
-existing generic forwards. Both admissions use the same execution policy.
+Library handlers use one selected entry. Native admission separates
+`ApplicativeError` families from intrinsic Result calls under families with
+neither error capability. Mojo cannot use a generic non-error-family proof to
+resolve the policy's projected callback input. The intrinsic Result boundary
+spells that known input directly; its generic wrappers forward both negative
+capability proofs. Both admissions use the same execution policy.
 
 Previously, Result storage could bypass an explicitly selected error family's
 recovery implementation. Honoring that family intentionally corrects this
@@ -446,6 +449,23 @@ behavior. A generic wrapper over an entirely unknown family must project
 `OrElseContract.Family`, `Out` and `Error` instead of promising that every family
 returns the handler's native Result and raises only the handler's error.
 Ordinary canonical Result calls keep their existing type-changing behavior.
+
+The same boundary applies to conditional recovery, error observation, success
+validation, outcome handling and whole-outcome observation. A mapping-only
+family keeps `map`, `map_err` and `map_both`, while these operations require
+`ApplicativeError` and, where documented, Monad. This corrects the previous
+fallback that could silently discard a mapping-only family's policy by
+reselecting Result. `.get()` followed by `pipeline(...)`, or explicit
+`pipeline[ResultFamily[E]](value)`, makes that policy choice deliberate for a
+native Result carrier. Public contract-based wrappers still forward
+`Compatible`; no additional negative proof is needed at that boundary.
+
+Maintained `context_error_capability_*` fixtures cover twenty ordinary native
+and library rejections across the ten affected methods. The positive client
+checks unsupported `OrElseContract`, `RedeemContract` and `RedeemWithContract`
+metadata, mapping continuation, and the same callback shapes under canonical
+Result, explicit reselection and Identity's intrinsic fallback. No invalid
+call relies on explicit callback type bindings.
 
 ### Selected error observation
 
@@ -670,11 +690,10 @@ Qualify and commit each complete pass separately. No CI work is part of this
 sequence. Resource scopes and fallible source advancement remain later design
 work, after these improvements to the existing API.
 
-Stored-error mapping has a qualified core for Result, Validation and custom
-dictionaries, with all five transformer implementations described below.
-Resource scopes and source advancement remain later design work. Qualify normal
-and invalid user calls at O0/O3 through source and packages before publishing
-each extension.
+Stored-error mapping is qualified for Result, Validation, custom dictionaries
+and all five transformers. Maintained source/package O0/O3 checks cover normal
+and invalid calls, including the boundary between mapping and recovery.
+Resource scopes and source advancement remain later design work.
 
 ### Proposed stored-error rebinding
 
@@ -697,8 +716,10 @@ protocol below reflects this qualified change from the initial design.
 
 Selected custom families own mapping even when their storage is native
 Result. A family with ApplicativeError but without ErrorMapping rejects these
-operations normally. The intrinsic Result fallback requires neither
-capability; generic wrappers must forward both negative capability proofs.
+operations normally. Conversely, a mapping-only family cannot borrow
+recovery or other error operations from Result storage. The intrinsic Result
+fallback consistently requires neither capability; generic intrinsic wrappers
+must forward both negative capability proofs.
 `ApplicativeError` cannot supply error rebinding: its failure and recovery
 primitives intentionally preserve one selected error type.
 `RebindingFunctor.WithElement` changes selection metadata, not a carrier or
@@ -1065,22 +1086,23 @@ base-policy changes remain subject to the source family's contract.
    one-shot cleanup. Canonical and proven intrinsic Result generic forwarding
    remain supported. Required explicit default-policy declarations replace
    the compiler-opaque inherited default.
-3. **Implemented:** ResultT and OptionalT delegate through existing inner
+3. **Complete:** ResultT and OptionalT delegate through existing inner
    adapters and base owners. Maintained clients cover interleaved branch order,
    outer failure/absence skipping, exact additional base errors, nested selected
    channels, branching callback state, ownership, rebinding bases and invalid
    non-Monad defaults. Conditional source/target witnesses keep ordinary alias
    calls free of casts and preserve positional bindings.
-4. **Implemented:** Reader/State/Writer reuse their existing transport with
+4. **Complete:** Reader/State/Writer reuse their existing transport with
    an admitted destination and one shared base operation. Acceptance gates
    cover custom construction versus execution errors, actual borrowed run
    origins, move-only state/log cleanup and unopened-action disposal. Mapping
    adds no rollback or copying requirement. Existing local/listen/censor
    consumers retain their entry points and remain regression gates.
-5. For each transformer extension, add maintained generic/user examples and
-   document family obligations. Run source/package O0/O3 boundaries and
-   bounded cold-compilation comparisons, then publish complete passes
-   separately. No CI or compiler work is part of this sequence.
+5. **Complete for these families:** maintained generic/user examples and
+   documented family obligations accompany each extension. Source/package
+   O0/O3 matrices and bounded cold comparisons are recorded below; complete
+   passes are published separately. No CI or compiler work is part of this
+   sequence.
 
 #### ResultT and OptionalT qualification
 
@@ -1124,6 +1146,22 @@ for the other two clients; it does not establish a general performance trend.
 | Result `map_both` | 6.89 s | 6.67 s |
 | Result `map_err` | 4.26 s | 4.49 s |
 | Invalid `map_both` input | 1.02 s | 0.98 s |
+
+#### Mapping-only capability boundary qualification
+
+The final policy correction passed 84 source/package O0/O3 checks: all ten
+unsupported recovery/observation/validation/outcome operations reject ordinary
+native and library calls, while positive controls retain canonical Result,
+Identity fallback, explicit Result selection and mapping-only continuation.
+The same valid callback shapes appear in both rejection and acceptance controls.
+Public outcome metadata also rejects unsupported mapping-only selections
+without evaluating an unavailable recovery capability.
+
+Seven packaged generic regression programs, 46 tooling tests and strict
+documentation checks passed with unchanged report inputs and zero audit
+failures. Public contract-based wrappers retain their `Compatible` witness;
+intrinsic generic wrappers now prove absence of both stored-error capabilities.
+The documentation inventory remains 77 examples and 318 public exports.
 
 ### Resource scopes
 

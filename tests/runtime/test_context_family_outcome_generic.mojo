@@ -1,5 +1,5 @@
 """Selected outcome contracts keep family, output and native error forwarding public."""
-from fp.algebra import Functor, Applicative, ApplicativeError, Monad, IdentityFamily, ResultFamily
+from fp.algebra import Functor, Applicative, ApplicativeError, ErrorMapping, Monad, IdentityFamily, ResultFamily
 from fp.callables import Unary, UnaryContract
 from fp.functions import Pipeline, pipeline, RedeemContract, RedeemWithContract
 from fp.data import Result, Ok, Err
@@ -23,11 +23,11 @@ def native_effects[A: Movable & Deinitable, F: Movable & Deinitable, R: Movable 
     return pipeline(source^).raising[E]().redeem_with(on_ok,on_err).get()
 
 
-def intrinsic_values[A: Movable & Deinitable, F: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Functor, H: def(var A) raises E -> R, K: def(var F) raises E -> R](var source: Result[A,F], on_ok: H, on_err: K) raises E -> Result[R,F] where not conforms_to(I,ApplicativeError):
+def intrinsic_values[A: Movable & Deinitable, F: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Functor, H: def(var A) raises E -> R, K: def(var F) raises E -> R](var source: Result[A,F], on_ok: H, on_err: K) raises E -> Result[R,F] where not conforms_to(I,ApplicativeError) and not conforms_to(I, ErrorMapping):
     return pipeline[I](source^).raising[E]().redeem(on_ok,on_err).get()
 
 
-def intrinsic_effects[A: Movable & Deinitable, F: Movable & Deinitable, R: Movable & Deinitable, G: Movable & Deinitable, E: Movable & Deinitable, //, I: Functor, H: def(var A) raises E -> Result[R,G], K: def(var F) raises E -> Result[R,G]](var source: Result[A,F], on_ok: H, on_err: K) raises E -> Result[R,G] where not conforms_to(I,ApplicativeError):
+def intrinsic_effects[A: Movable & Deinitable, F: Movable & Deinitable, R: Movable & Deinitable, G: Movable & Deinitable, E: Movable & Deinitable, //, I: Functor, H: def(var A) raises E -> Result[R,G], K: def(var F) raises E -> Result[R,G]](var source: Result[A,F], on_ok: H, on_err: K) raises E -> Result[R,G] where not conforms_to(I,ApplicativeError) and not conforms_to(I, ErrorMapping):
     return pipeline[I](source^).raising[E]().redeem_with(on_ok,on_err).get()
 
 
@@ -65,7 +65,7 @@ def witness_effect[I:Functor,V:Movable & Deinitable,H:UnaryContract & Movable & 
 def mixed[A:Movable & Deinitable,E:Movable & Deinitable,R:Movable & Deinitable,X:Movable & Deinitable,//,H:def(var A)->R,K:def(var E) raises X ->R](var v:Result[A,E],h:H,k:K) raises X ->Result[R,E]:
     return pipeline(v^).raising[X]().redeem(h,k).get()
 
-def mixed_intrinsic[A:Movable & Deinitable,E:Movable & Deinitable,R:Movable & Deinitable,X:Movable & Deinitable,//,I:Functor,H:def(var A) raises X ->R,K:def(var E)->R](var v:Result[A,E],h:H,k:K) raises X ->Result[R,E] where not conforms_to(I,ApplicativeError):
+def mixed_intrinsic[A:Movable & Deinitable,E:Movable & Deinitable,R:Movable & Deinitable,X:Movable & Deinitable,//,I:Functor,H:def(var A) raises X ->R,K:def(var E)->R](var v:Result[A,E],h:H,k:K) raises X ->Result[R,E] where not conforms_to(I,ApplicativeError) and not conforms_to(I, ErrorMapping):
     return pipeline[I](v^).raising[X]().redeem(h,k).get()
 
 def mixed_effect[A:Movable & Deinitable,E:Movable & Deinitable,R:Movable & Deinitable,G:Movable & Deinitable,X:Movable & Deinitable,//,H:def(var A)->Result[R,G],K:def(var E) raises X ->Result[R,G]](var v:Result[A,E],h:H,k:K) raises X ->Result[R,G]:

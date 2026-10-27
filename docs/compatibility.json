@@ -405,7 +405,7 @@
         "or_else"
       ],
       "status": "selected",
-      "families": "Selected ApplicativeError, including native, custom and deferred families; intrinsic Result recovery remains available under non-error families",
+      "families": "Selected ApplicativeError, including native, custom and deferred families; intrinsic Result recovery remains available under families with neither ApplicativeError nor ErrorMapping",
       "callbacks": "Handlers consume stored errors; native closures borrowed, stored thin pointers owned, library receivers preserved",
       "ownership": "Success skips the handler; single-use carriers move owned captures, branching families require repeatable handlers",
       "errors": "Exact family construction errors; deferred handler errors remain deferred. Canonical Result or_else may change the stored-error type and output family",
@@ -414,13 +414,20 @@
         "src/fp/functions/_recovery.mojo",
         "src/fp/algebra/errors.mojo",
         "src/fp/algebra/protocols.mojo",
-        "src/fp/data/_result.mojo"
+        "src/fp/data/_result.mojo",
+        "src/fp/functions/context.mojo",
+        "scripts/generate_context.py"
       ],
       "evidence": [
         "docs/examples/selected_recovery.mojo",
         "tests/runtime/test_context_family_recovery.mojo",
         "tests/runtime/test_context_result_recover.mojo",
-        "tests/runtime/test_context_result_or_else.mojo"
+        "tests/runtime/test_context_result_or_else.mojo",
+        "tests/runtime/test_context_error_capability.mojo",
+        "tests/compile_fail/context_error_capability_recover_native.mojo",
+        "tests/compile_fail/context_error_capability_recover_library.mojo",
+        "tests/compile_fail/context_error_capability_or_else_native.mojo",
+        "tests/compile_fail/context_error_capability_or_else_library.mojo"
       ]
     },
     {
@@ -430,19 +437,26 @@
         "flat_tap_err"
       ],
       "status": "selected",
-      "families": "Selected ApplicativeError, including Validation, custom and deferred families; intrinsic Result calls remain available under non-error families",
+      "families": "Selected ApplicativeError, including Validation, custom and deferred families; intrinsic Result calls remain available under families with neither ApplicativeError nor ErrorMapping",
       "callbacks": "Borrowing observers; native closures borrowed, stored thin pointers owned, library receiver modes preserved",
       "ownership": "Success skips the observer; branching retains errors under the existing family copy rules; ordinary observation discards callback output",
       "errors": "Exact construction and deferred native errors; Result observer failures replace the original, Validation accumulates observer-before-original",
       "timing": "Selected family owns observation, failure reconstruction and combination; deferred effects remain deferred",
       "owner": [
         "src/fp/algebra/errors.mojo",
-        "src/fp/algebra/protocols.mojo"
+        "src/fp/algebra/protocols.mojo",
+        "src/fp/functions/context.mojo",
+        "scripts/generate_context.py"
       ],
       "evidence": [
         "docs/examples/selected_error_observation.mojo",
         "tests/runtime/test_context_family_observation.mojo",
-        "tests/runtime/test_context_scope_generic.mojo"
+        "tests/runtime/test_context_scope_generic.mojo",
+        "tests/runtime/test_context_error_capability.mojo",
+        "tests/compile_fail/context_error_capability_tap_err_native.mojo",
+        "tests/compile_fail/context_error_capability_tap_err_library.mojo",
+        "tests/compile_fail/context_error_capability_flat_tap_err_native.mojo",
+        "tests/compile_fail/context_error_capability_flat_tap_err_library.mojo"
       ]
     },
     {
@@ -452,20 +466,27 @@
         "or_else_if"
       ],
       "status": "selected",
-      "families": "Selected ApplicativeError, including Validation, custom and deferred families; intrinsic Result calls remain available under non-error families",
+      "families": "Selected ApplicativeError, including Validation, custom and deferred families; intrinsic Result calls remain available under families with neither ApplicativeError nor ErrorMapping",
       "callbacks": "Borrowing Bool predicate and consuming value or effect handler; native closures borrowed, stored thin pointers owned, library receivers preserved",
       "ownership": "Success skips both callbacks; only matching failures invoke the handler; family repeatability and move rules apply",
       "errors": "Exact family construction errors; deferred predicate, handler and failure-constructor errors remain deferred; callback native errors agree unless one never raises",
       "timing": "Selected family owns recovery and unmatched failure reconstruction; deferred effects remain deferred",
       "owner": [
         "src/fp/algebra/errors.mojo",
-        "src/fp/algebra/protocols.mojo"
+        "src/fp/algebra/protocols.mojo",
+        "src/fp/functions/context.mojo",
+        "scripts/generate_context.py"
       ],
       "evidence": [
         "docs/examples/selected_conditional_recovery.mojo",
         "tests/runtime/test_context_family_conditional.mojo",
         "tests/runtime/test_context_family_conditional_generic.mojo",
-        "tests/runtime/test_context_family_conditional_ownership.mojo"
+        "tests/runtime/test_context_family_conditional_ownership.mojo",
+        "tests/runtime/test_context_error_capability.mojo",
+        "tests/compile_fail/context_error_capability_recover_if_native.mojo",
+        "tests/compile_fail/context_error_capability_recover_if_library.mojo",
+        "tests/compile_fail/context_error_capability_or_else_if_native.mojo",
+        "tests/compile_fail/context_error_capability_or_else_if_library.mojo"
       ]
     },
     {
@@ -474,21 +495,26 @@
         "ensure"
       ],
       "status": "selected",
-      "families": "Selected ApplicativeError and Monad, including custom and deferred families; Validation has no Monad; intrinsic Result calls remain available under non-error families",
+      "families": "Selected ApplicativeError and Monad, including custom and deferred families; Validation has no Monad; intrinsic Result calls remain available under families with neither ApplicativeError nor ErrorMapping",
       "callbacks": "Borrowing Bool predicate and borrowing stored-error factory; native closures borrowed, stored thin pointers owned, library receivers preserved",
       "ownership": "Existing failures skip both callbacks; accepted successes skip the factory; family bind admission and receiver rules apply",
       "errors": "Exact family bind construction errors; deferred predicate, factory and failure-constructor errors remain deferred",
       "timing": "Selected family owns bind and failure construction; deferred effects remain deferred",
       "owner": [
         "src/fp/algebra/_outcomes.mojo",
-        "src/fp/algebra/protocols.mojo"
+        "src/fp/algebra/protocols.mojo",
+        "src/fp/functions/context.mojo",
+        "scripts/generate_context.py"
       ],
       "evidence": [
         "docs/examples/selected_validation_workflow.mojo",
         "tests/runtime/test_context_family_ensure.mojo",
         "tests/runtime/test_context_family_ensure_native.mojo",
         "tests/runtime/test_context_family_ensure_ownership.mojo",
-        "tests/runtime/test_context_result_ensure.mojo"
+        "tests/runtime/test_context_result_ensure.mojo",
+        "tests/runtime/test_context_error_capability.mojo",
+        "tests/compile_fail/context_error_capability_ensure_native.mojo",
+        "tests/compile_fail/context_error_capability_ensure_library.mojo"
       ]
     },
     {
@@ -498,7 +524,7 @@
         "redeem_with"
       ],
       "status": "selected",
-      "families": "ApplicativeError for values, plus Monad for effects; canonical and intrinsic Result preserve type-changing effect handlers",
+      "families": "ApplicativeError for values, plus Monad for effects; canonical Result and intrinsic Result under families with neither ApplicativeError nor ErrorMapping preserve type-changing effect handlers",
       "callbacks": "Both handlers consume their original payload; native closures borrowed, stored thin pointers owned, library receivers preserved",
       "ownership": "Only the original branch selects a handler; inactive callbacks are disposed; branching requires repeatable handlers",
       "errors": "Exact family construction and deferred run errors; returned stored failures and native raises never invoke the opposite arm",
@@ -507,14 +533,21 @@
         "src/fp/functions/_outcomes.mojo",
         "src/fp/functions/_recovery.mojo",
         "src/fp/algebra/_outcomes.mojo",
-        "src/fp/data/_result.mojo"
+        "src/fp/data/_result.mojo",
+        "src/fp/functions/context.mojo",
+        "scripts/generate_context.py"
       ],
       "evidence": [
         "docs/examples/selected_outcomes.mojo",
         "tests/runtime/test_context_family_outcome.mojo",
         "tests/runtime/test_context_family_outcome_generic.mojo",
         "tests/runtime/test_context_family_outcome_selection.mojo",
-        "tests/runtime/test_context_family_outcome_ownership.mojo"
+        "tests/runtime/test_context_family_outcome_ownership.mojo",
+        "tests/runtime/test_context_error_capability.mojo",
+        "tests/compile_fail/context_error_capability_redeem_native.mojo",
+        "tests/compile_fail/context_error_capability_redeem_library.mojo",
+        "tests/compile_fail/context_error_capability_redeem_with_native.mojo",
+        "tests/compile_fail/context_error_capability_redeem_with_library.mojo"
       ]
     },
     {
@@ -523,7 +556,7 @@
         "attempt_tap"
       ],
       "status": "selected",
-      "families": "Selected ApplicativeError and Monad, including custom and deferred families; intrinsic Result behavior remains under non-error families",
+      "families": "Selected ApplicativeError and Monad, including custom and deferred families; intrinsic Result behavior remains under families with neither ApplicativeError nor ErrorMapping",
       "callbacks": "Observer borrows the exact selected Result and returns an effect in that family; native closures borrowed, stored thin pointers owned, library receivers preserved",
       "ownership": "Successful observer branches retain the original outcome; empty effects remain empty; branching requires repeatable observers and copyable retained outcomes; single-use paths admit move-only values",
       "errors": "Exact family construction and deferred observer/restoration errors; observer stored failures replace the original outcome",
@@ -531,13 +564,18 @@
       "owner": [
         "src/fp/algebra/_outcomes.mojo",
         "src/fp/algebra/_sequencing.mojo",
-        "src/fp/data/_result.mojo"
+        "src/fp/data/_result.mojo",
+        "src/fp/functions/context.mojo",
+        "scripts/generate_context.py"
       ],
       "evidence": [
         "docs/examples/selected_outcome_observation.mojo",
         "tests/runtime/test_context_family_attempt_tap.mojo",
         "tests/runtime/test_context_family_attempt_tap_generic.mojo",
-        "tests/ownership/test_context_family_attempt_tap_ownership.mojo"
+        "tests/ownership/test_context_family_attempt_tap_ownership.mojo",
+        "tests/runtime/test_context_error_capability.mojo",
+        "tests/compile_fail/context_error_capability_attempt_tap_native.mojo",
+        "tests/compile_fail/context_error_capability_attempt_tap_library.mojo"
       ]
     },
     {
@@ -584,7 +622,8 @@
         "tests/ownership/test_context_transport_error_mapping_ownership.mojo",
         "tests/compile_fail/context_transport_error_mapping_default_reader.mojo",
         "tests/compile_fail/context_transport_error_mapping_default_state.mojo",
-        "tests/compile_fail/context_transport_error_mapping_default_writer.mojo"
+        "tests/compile_fail/context_transport_error_mapping_default_writer.mojo",
+        "tests/runtime/test_context_error_capability.mojo"
       ]
     },
     {

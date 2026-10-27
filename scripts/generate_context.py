@@ -970,10 +970,10 @@ def methods(*, fold_stage=False):
             conditions = [f"conforms_to(Self.V, _ResultType)", f"Self.V == {Source}"] + sum(
                 (c["conditions"] for c in callbacks), []
             )
-            if name in ("recover", "or_else", "tap_err", "flat_tap_err", "recover_if", "or_else_if", "ensure", "redeem", "redeem_with", "attempt_tap"):
-                conditions += ["not conforms_to(Self.I, ApplicativeError)"]
-            if name in ("map_err", "map_both"):
-                conditions += ["not conforms_to(Self.I, ApplicativeError)", "not conforms_to(Self.I, ErrorMapping)"]
+            # A selected error channel owns its policy even when it supports
+            # mapping without recovery. Intrinsic Result fallback is reserved
+            # for families that declare neither stored-error capability.
+            conditions += ["not conforms_to(Self.I, ApplicativeError)", "not conforms_to(Self.I, ErrorMapping)"]
             R = a["result"]
             result = operation.result(T, Err, R, b["result"] if two else "", value=lambda r: f"_Success[{r}]")
             conditions += operation.first_constraints(T, Err, R,

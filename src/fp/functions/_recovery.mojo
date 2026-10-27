@@ -1,6 +1,6 @@
 """Selected recovery metadata; family and Result primitives own execution."""
 from std.builtin.rebind import downcast, rebind_var
-from fp.algebra.protocols import Functor, ApplicativeError
+from fp.algebra.protocols import Functor, ApplicativeError, ErrorMapping
 from fp.algebra.instances import ResultFamily
 from fp.callables.protocols import UnaryContract
 from fp.data._result import Result, _ResultType
@@ -45,8 +45,9 @@ struct _FamilyOrElse[I: ApplicativeError](_OrElsePolicy):
 
 struct _RecoverySelection[I: Functor, V: Movable & Deinitable]:
     # Canonical Result and legacy intrinsic Result methods can change the
-    # stored-error type. Error-capable custom families always own recovery.
-    comptime Intrinsic = (not conforms_to(Self.I, ApplicativeError) or Self.I == ResultFamily[_RecoveryFailure[Self.V]]) if conforms_to(Self.V, _ResultType) else False
+    # stored-error type. A custom family that selects an error channel needs
+    # ApplicativeError for recovery; mapping alone does not permit fallback.
+    comptime Intrinsic = ((not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping)) or Self.I == ResultFamily[_RecoveryFailure[Self.V]]) if conforms_to(Self.V, _ResultType) else False
     comptime Supported = Self.Intrinsic or conforms_to(Self.I, ApplicativeError)
     comptime Policy = downcast[_IntrinsicOrElse if Self.Intrinsic else _FamilyOrElse[downcast[Self.I,ApplicativeError]], _OrElsePolicy]
     comptime Input = _RecoveryFailure[Self.V] if Self.Intrinsic else downcast[Self.I,ApplicativeError].Failure

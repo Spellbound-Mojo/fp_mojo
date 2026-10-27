@@ -1,5 +1,5 @@
 """Generic conditional recovery forwards public contracts and native errors."""
-from fp.algebra import Functor, Applicative, ApplicativeError, IdentityFamily, RecoverIfContract, OrElseIfContract, ResultFamily
+from fp.algebra import Functor, Applicative, ApplicativeError, ErrorMapping, IdentityFamily, RecoverIfContract, OrElseIfContract, ResultFamily
 from fp.callables import BorrowCallContract, BorrowCallable, UnaryContract, Unary
 from fp.functions import pipeline
 from fp.data import Result, Ok, Err
@@ -43,11 +43,11 @@ def mixed_predicate[A: Movable & Deinitable, F: Movable & Deinitable, E: Movable
     return pipeline(source^).raising[E]().recover_if(predicate,handler).get()
 
 
-def intrinsic_recovered[A: Movable & Deinitable, F: Movable & Deinitable, E: Movable & Deinitable, //, I: Functor, P: def(F) raises E -> Bool, H: def(var F) raises E -> A](var source: Result[A,F], predicate: P, handler: H) raises E -> Result[A,F] where not conforms_to(I,ApplicativeError):
+def intrinsic_recovered[A: Movable & Deinitable, F: Movable & Deinitable, E: Movable & Deinitable, //, I: Functor, P: def(F) raises E -> Bool, H: def(var F) raises E -> A](var source: Result[A,F], predicate: P, handler: H) raises E -> Result[A,F] where not conforms_to(I,ApplicativeError) and not conforms_to(I, ErrorMapping):
     return pipeline[I](source^).raising[E]().recover_if(predicate,handler).get()
 
 
-def intrinsic_replaced[A: Movable & Deinitable, F: Movable & Deinitable, E: Movable & Deinitable, //, I: Functor, P: def(F) raises E -> Bool, H: def(var F) raises E -> Result[A,F]](var source: Result[A,F], predicate: P, handler: H) raises E -> Result[A,F] where not conforms_to(I,ApplicativeError):
+def intrinsic_replaced[A: Movable & Deinitable, F: Movable & Deinitable, E: Movable & Deinitable, //, I: Functor, P: def(F) raises E -> Bool, H: def(var F) raises E -> Result[A,F]](var source: Result[A,F], predicate: P, handler: H) raises E -> Result[A,F] where not conforms_to(I,ApplicativeError) and not conforms_to(I, ErrorMapping):
     return pipeline[I](source^).raising[E]().or_else_if(predicate,handler).get()
 
 

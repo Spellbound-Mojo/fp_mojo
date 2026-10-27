@@ -92,10 +92,23 @@ Custom families implement `ErrorMapping` to admit their own target policies and
 exact construction errors. A custom `ApplicativeError` family without this
 capability cannot use Result storage to bypass its policy. Intrinsic Result
 calls under a family with neither error capability remain supported; generic
-intrinsic wrappers must
-prove both `not conforms_to(I, ApplicativeError)` and
+intrinsic wrappers must prove both `not conforms_to(I, ApplicativeError)` and
 `not conforms_to(I, ErrorMapping)`. Existing positional callback bindings retain
 their meaning; use the trailing `Target` binding by name when needed.
+
+This fallback boundary also applies to `recover`, `or_else`, `tap_err`,
+`flat_tap_err`, `recover_if`, `or_else_if`, `ensure`, `redeem`, `redeem_with` and
+`attempt_tap`. An `ErrorMapping`-only family retains `map`, `map_err` and
+`map_both`; these other operations require `ApplicativeError`, plus Monad where
+specified below. Native Result storage never silently reselects `ResultFamily`
+for a family missing that capability. To deliberately use the carrier's Result
+semantics, extract it with `.get()` and pass it to `pipeline(...)`, or select
+`pipeline[ResultFamily[E]](value)` explicitly.
+
+Generic intrinsic Result wrappers must forward both negative capability
+proofs for these operations too. Generic wrappers using public contracts keep
+their existing `Compatible` proof; `OrElseContract`, `RedeemContract` and
+`RedeemWithContract` report `False` for an unsupported mapping-only selection.
 
 `recover(handler)` replaces a stored failure with a payload; `or_else(handler)`
 replaces it with another effect. Both honor the selected `ApplicativeError`
@@ -106,9 +119,10 @@ Deferred handler errors occur when the resulting computation runs.
 
 Canonical Result pipelines also preserve their existing `or_else` behavior:
 the replacement Result may change the stored-error type, selecting the matching
-output `ResultFamily`. Intrinsic Result calls under a non-error family, such as
-an explicit Identity selection, retain this behavior. Other error-capable
-families retain their selected stored-error layer.
+output `ResultFamily`. Intrinsic Result calls under a family with neither
+`ApplicativeError` nor `ErrorMapping`, such as an explicit Identity selection,
+retain this behavior. Other error-capable families retain their selected
+stored-error layer.
 
 Generic value-returning recovery can use `fp.algebra.RecoverContract` with an
 `ApplicativeError` family. For selected `or_else`, use

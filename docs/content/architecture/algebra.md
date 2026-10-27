@@ -368,6 +368,14 @@ success adapter, preserving absence. ReaderT, StateT and WriterT share the
 callbacks and delegates admission and execution to `MapBothContract` and the
 checked base runner. A mapping-only base needs no `ApplicativeError` witness.
 
+Selected error operations also respect that capability boundary. Native Result
+storage grants no recovery, observation, validation or outcome handling to an
+`ErrorMapping`-only family. Intrinsic Result fallback requires the selected
+family to implement neither `ApplicativeError` nor `ErrorMapping`; canonical
+Result implements the capabilities directly. Thus mapping can be available
+without recovery, including for State with move-only state. Explicitly
+extracting and reselecting a native Result opts into that carrier's own policy.
+
 The existing `_ReaderHoist` and `_StateHoist` accept an admitted destination
 family while keeping their original source action and execution code. Their
 three-parameter `_Hoisted` and `_hoist` entry points retain the original family

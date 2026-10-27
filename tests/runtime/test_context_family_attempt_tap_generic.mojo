@@ -1,5 +1,5 @@
 """AttemptTapContract forwards combined and component proofs without private adapters."""
-from fp.algebra import Functor,ApplicativeError,Monad,ResultFamily,IdentityFamily,AttemptTapContract
+from fp.algebra import Functor,ApplicativeError, ErrorMapping,Monad,ResultFamily,IdentityFamily,AttemptTapContract
 from fp.callables import BorrowCallContract,BorrowCallable
 from fp.effects import Reader,ReaderT,ResultT,run
 from fp.functions import pipeline,Pipeline
@@ -38,7 +38,7 @@ def generic[A:Movable & Deinitable,E:Movable & Deinitable,R:Movable & Deinitable
     return pipeline(source^).raising[X]().attempt_tap(observer).get()
 
 
-def intrinsic[A:Movable & Deinitable,E:Movable & Deinitable,R:Movable & Deinitable,X:Movable & Deinitable,o:ImmOrigin,//,I:Functor,F:def(Result[A,E]) raises X -> Result[R,E]](var source:Result[A,E],ref[o] observer:F) raises X -> Result[A,E] where not conforms_to(I,ApplicativeError):
+def intrinsic[A:Movable & Deinitable,E:Movable & Deinitable,R:Movable & Deinitable,X:Movable & Deinitable,o:ImmOrigin,//,I:Functor,F:def(Result[A,E]) raises X -> Result[R,E]](var source:Result[A,E],ref[o] observer:F) raises X -> Result[A,E] where not conforms_to(I,ApplicativeError) and not conforms_to(I, ErrorMapping):
     return pipeline[I](source^).raising[X]().attempt_tap(observer).get()
 
 

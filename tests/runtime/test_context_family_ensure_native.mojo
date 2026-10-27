@@ -1,6 +1,6 @@
 """Family ensure admits native/library mixtures and preserves generic errors."""
 from fp.functions import pipeline
-from fp.algebra import Functor, ApplicativeError, IdentityFamily, ResultFamily
+from fp.algebra import Functor, ApplicativeError, ErrorMapping, IdentityFamily, ResultFamily
 from fp.data import Result, Ok
 from fp.effects import Reader, ResultT, run
 from std.testing import assert_equal
@@ -12,7 +12,7 @@ def generic[A: Movable & Deinitable, E: Movable & Deinitable, X: Movable & Deini
     return pipeline(source^).raising[X]().ensure(predicate,factory).get()
 
 
-def intrinsic[A: Movable & Deinitable, E: Movable & Deinitable, X: Movable & Deinitable, P: def(A) raises X -> Bool, G: def(A) raises X -> E, //, I: Functor](var source: Result[A,E], predicate: P, factory: G) raises X -> Result[A,E] where not conforms_to(I,ApplicativeError):
+def intrinsic[A: Movable & Deinitable, E: Movable & Deinitable, X: Movable & Deinitable, P: def(A) raises X -> Bool, G: def(A) raises X -> E, //, I: Functor](var source: Result[A,E], predicate: P, factory: G) raises X -> Result[A,E] where not conforms_to(I,ApplicativeError) and not conforms_to(I, ErrorMapping):
     return pipeline[I](source^).raising[X]().ensure(predicate,factory).get()
 
 
