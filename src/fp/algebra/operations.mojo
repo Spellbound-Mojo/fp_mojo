@@ -11,7 +11,7 @@ from fp.callables._views import _UnaryViewable
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract
 from fp.callables.native import _NativeUnaryRef, _Unary, _RaisingUnary
 from fp._internal.errors import _ErrorCompatible, _propagate_error
-from .protocols import Functor, Applicative, Monad, Traversable, Monoid, Semigroup, _pure
+from .protocols import Functor, Applicative, Monad, Traversable, Monoid, Semigroup, _pure, _map_as, _flat_map_as
 from .contracts import MapContract, BindContract, TraverseContract, FilterContract, CombineContract
 
 
@@ -262,11 +262,8 @@ def _map_native[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & D
     # equate with A/R/E inside a generic family's associated error alias.
     comptime D = _NativeUnaryRef[A, R, E, F, raising, o]
     comptime assert I.MapError[V, D] == I.MapError[V, _ErrorProbe[A, R, E]]
-    try:
-        return I.map(D(Pointer(to=f)), value^)
-    except error:
-        comptime assert _ErrorCompatible[Raised, type_of(error)]
-        _propagate_error[Raised](error^)
+    comptime assert _ErrorCompatible[Raised, I.MapError[V, D]]
+    return _map_as[Raised, I](D(Pointer(to=f)), value^)
 
 
 @always_inline
@@ -277,11 +274,8 @@ def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Dein
     comptime D = _NativeUnaryRef[A, R, Never, F, False, o]
     comptime Raised = I.BindError[V, _ErrorProbe[A, R, Never]]
     comptime assert I.BindError[V, D] == Raised
-    try:
-        return I.flat_map(D(Pointer(to=f)), value^)
-    except error:
-        comptime assert _ErrorCompatible[Raised, type_of(error)]
-        _propagate_error[Raised](error^)
+    comptime assert _ErrorCompatible[Raised, I.BindError[V, D]]
+    return _flat_map_as[Raised, I](D(Pointer(to=f)), value^)
 
 
 @always_inline
@@ -293,11 +287,8 @@ def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Dein
     comptime D = _NativeUnaryRef[A, R, E, F, True, o]
     comptime Raised = _EntryError[X, I.BindError[V, _ErrorProbe[A, R, E]]]
     comptime assert I.BindError[V, D] == I.BindError[V, _ErrorProbe[A, R, E]]
-    try:
-        return I.flat_map(D(Pointer(to=f)), value^)
-    except error:
-        comptime assert _ErrorCompatible[Raised, type_of(error)]
-        _propagate_error[Raised](error^)
+    comptime assert _ErrorCompatible[Raised, I.BindError[V, D]]
+    return _flat_map_as[Raised, I](D(Pointer(to=f)), value^)
 
 
 def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //,

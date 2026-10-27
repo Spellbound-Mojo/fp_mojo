@@ -5,7 +5,7 @@ from fp.callables.invoke import call_repeated, invoke_borrowed, RepeatableThunk,
 from fp.callables._receiver import _thunk_once_as, _unary_repeated_as
 from fp.callables._identity import Identity
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from .protocols import Monad, _LiveAccumulator, Monoid, _AccumulatePair, _BindFirst, _start_as
+from .protocols import Monad, _LiveAccumulator, Monoid, _AccumulatePair, _BindFirst, _start_as, _map_as, _flat_map_as
 from ._accumulation import _Combine
 from ._admission import _MapCompatible
 
@@ -92,11 +92,8 @@ def _if_effect[G: Monad, V: Movable & Deinitable, L: ThunkContract & Movable & D
     var condition: V, var on_true: L, var on_false: R
 ) raises E -> G.Bound[V, _IfEffect[G, L, R]]:
     comptime assert G.Element[V] == Bool, "if_effect: Bool condition required"
-    try:
-        return G.flat_map(_IfEffect[G, L, R](on_true^, on_false^), condition^)
-    except error:
-        comptime assert _ErrorCompatible[E, type_of(error)]
-        _propagate_error[E](error^)
+    comptime assert _ErrorCompatible[E, G.BindError[V, _IfEffect[G, L, R]]]
+    return _flat_map_as[E, G](_IfEffect[G, L, R](on_true^, on_false^), condition^)
 
 
 @fieldwise_init
@@ -130,11 +127,7 @@ struct _FoldMappedStep[G: Monad, M: Monoid, F: UnaryContract & Movable & Deinita
         # The canonical owned partial copies the accumulator only when the
         # selected family requires repeated branches; single-use maps move it.
         var combine = Self.Combine(_AccumulatePair[_Combine[Self.M]](), first^)
-        try:
-            return Self.G.map(combine^, produced^)
-        except error:
-            comptime assert _ErrorCompatible[Self.Error, type_of(error)]
-            _propagate_error[Self.Error](error^)
+        return _map_as[Self.Error, Self.G](combine^, produced^)
 
 
 def _fold_map_effect[G: Monad, M: Monoid, V: Movable & Deinitable,

@@ -1718,6 +1718,28 @@ the generated-signature check. Reports retain unchanged inputs and no audit
 failures. Strict documentation checks retain 318 exports and 81 examples.
 Evidence is in `.cache/quality-cycle25/qualified-main/`.
 
+### Derived and native entries share primitive forwarding
+
+The shared primitive error adapters also serve native map/bind entries,
+conditional effects, mapped effect folds, traversal postprocessing, and n-ary
+products. Nine additional try/propagate implementations now delegate to the
+protocol owner. Call sites retain explicit compatibility proofs, including
+native callback error-shape equalities and n-ary carrier-type assertions.
+
+Public native signatures and positional bindings are unchanged. Product
+operands still move into optional slots before sequencing, so an early error
+cleans unvisited operands. Lazy combination order, deferred execution, borrowed
+callback lifetimes, and exact native error origins remain unchanged. Prototype
+checks cover 44 source/package n-ary checks at O0/O3, 34 traversal programs,
+five effect-query programs, and 132 generic clients.
+
+The full checkpoint passes 44 source/package checks at O0/O3, all 715
+programs (713 checked programs and two benchmarks), all 1,608 rejection
+fixtures, all 48 tooling tests, and the generated-signature check. Compiler
+reports retain unchanged inputs and no audit failures. Regenerating the API
+metadata produces no changes; strict documentation checks retain 318 exports
+and 81 examples. Evidence is in `.cache/quality-cycle26/qualified-main/`.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

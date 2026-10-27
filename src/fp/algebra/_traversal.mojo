@@ -4,7 +4,7 @@ from std.builtin.rebind import downcast, rebind, rebind_var
 from fp.callables.protocols import Unary, UnaryContract, BorrowCallContract
 from fp.callables._transforms import _Fill
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from .protocols import Applicative, Traversable, Monad, FunctorFilter, _Accumulate
+from .protocols import Applicative, Traversable, Monad, FunctorFilter, _Accumulate, _map_as
 from ._sequencing import _EffectRetain
 from ._derived import flatten
 from .filtering import compact
@@ -76,11 +76,8 @@ def _traverse_then[S: Traversable, G: Applicative, V: Movable & Deinitable,
     # Postprocessing belongs inside G: failures skip it and deferred targets
     # defer it. No assumptions about the target's representation or timing.
     var produced = _traverse_as[S, G, V, F, Raised](function^, source^)
-    try:
-        return G.map(finish^, produced^)
-    except error:
-        comptime assert _ErrorCompatible[Raised, type_of(error)]
-        _propagate_error[Raised](error^)
+    comptime assert _ErrorCompatible[Raised, G.MapError[S.Traversed[G, V, F], H]]
+    return _map_as[Raised, G](finish^, produced^)
 
 
 @fieldwise_init

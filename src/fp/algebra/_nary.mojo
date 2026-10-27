@@ -1,10 +1,10 @@
 """N-ary combination derived once from Applicative map and map2_lazy."""
 from std.builtin.variadics import TypeList
 from std.builtin.rebind import rebind_var, rebind
-from fp.algebra.protocols import Applicative
+from fp.algebra.protocols import Applicative, _map_as, _map2_lazy_as
 from fp.callables.protocols import Unary, UnaryContract, Binary
 from fp.callables._transforms import _ValueThunk
-from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
+from fp._internal.errors import _CommonError, _ErrorCompatible
 from fp.algebra._admission import _CarrierCompatible
 
 from fp.callables.products import _OptionalCell
@@ -49,12 +49,8 @@ struct _ProductRun[I: Applicative, V: Movable & Deinitable, *Ws: Movable & Deini
         else:
             comptime assert Self.Slots[index] == Optional[Self.Ws[index]]
             var next_value = rebind[Optional[Self.Ws[index]]](cells[index]).unsafe_take()
-            var joined: Self.I.Combined[Current,Self.Step[index+1],_ValueThunk[Self.Ws[index]]]
-            try:
-                joined = Self.I.map2_lazy(Self.Step[index+1](), value^, _ValueThunk(next_value^))
-            except error:
-                comptime assert _ErrorCompatible[X,type_of(error)]
-                _propagate_error[X](error^)
+            comptime assert _ErrorCompatible[X, Self.I.CombineError[Current, Self.Step[index+1], _ValueThunk[Self.Ws[index]]]]
+            var joined = _map2_lazy_as[X, Self.I](Self.Step[index+1](), value^, _ValueThunk(next_value^))
             return Self.step[index+1,Out,X](joined^,cells)
     @staticmethod
     def run[Out: Movable & Deinitable, X: Movable & Deinitable](var first: Self.V, var others: Tuple[*Self.Ws]) raises X -> Out:
@@ -64,12 +60,8 @@ struct _ProductRun[I: Applicative, V: Movable & Deinitable, *Ws: Movable & Deini
             comptime assert Self.Slots[index] == Optional[Self.Ws[index]]
             rebind[Optional[Self.Ws[index]]](cells[index]) = Optional(value^)
         others^.consume_elements(store)
-        var start: Self.I.Mapped[Self.V, _Singleton[Self.I.Element[Self.V]]]
-        try:
-            start = Self.I.map(_Singleton[Self.I.Element[Self.V]](),first^)
-        except error:
-            comptime assert _ErrorCompatible[X,type_of(error)]
-            _propagate_error[X](error^)
+        comptime assert _ErrorCompatible[X, Self.I.MapError[Self.V, _Singleton[Self.I.Element[Self.V]]]]
+        var start = _map_as[X, Self.I](_Singleton[Self.I.Element[Self.V]](), first^)
         return Self.step[0,Out,X](start^,cells)
 
 
@@ -81,11 +73,8 @@ def _map_n_as[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, 
     comptime assert F.Arg == _ProductRun[I,V,*Ws].Payload, "map_n: exact tuple payload required"
     var combined = _ProductRun[I,V,*Ws].run[Product,X](first^,others^)
     comptime assert I.Mapped[Product,F] == Out
-    try:
-        return rebind_var[Out](I.map(function^,combined^))
-    except error:
-        comptime assert _ErrorCompatible[X,type_of(error)]
-        _propagate_error[X](error^)
+    comptime assert _ErrorCompatible[X, I.MapError[Product, F]]
+    return rebind_var[Out](_map_as[X, I](function^, combined^))
 
 
 # --- n-ary type inference (generated) ---
