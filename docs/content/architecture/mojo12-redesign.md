@@ -2688,6 +2688,27 @@ five sequencing and 142 generic programs, 30 declared rejection fixtures and the
 four-route documentation example. All inputs remained unchanged; the 48 tooling
 tests, generated-source checks and strict documentation build passed.
 
+### Layer error mapping and lifting project their operation contracts
+
+The inner mapping adapters now project result and native error metadata through
+`MapContract` or `MapBothContract`. OptionalT stores one base error-mapping
+descriptor; ResultT stores one base map descriptor and reuses its inner adapter's
+error-mapping contract. Their existing target-policy guards, admission, output
+and error aliases retain the same underlying family projections. Both lift
+implementations also select their mapping metadata once.
+
+This completes the layer metadata consolidation without adding a runtime
+adapter, public type or overload. All 38 function bodies are identical to the
+previous pass. Stored errors stay distinct from native callback errors; base
+policy transitions, origins, receiver modes and deferred timing remain owned by
+the same family primitives.
+
+Qualification passed 76 layer error-mapping and 48 capability source/package
+checks at O0/O3, 14 error-mapping programs, seven layer programs, 142 generic
+programs and 46 declared rejection fixtures. All inputs remained unchanged.
+The public API snapshot is current; generated-source checks, all 48 tooling tests
+and strict documentation checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

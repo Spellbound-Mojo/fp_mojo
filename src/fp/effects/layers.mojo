@@ -36,8 +36,9 @@ struct _InnerMap[N: Applicative, F: UnaryContract & Movable & Deinitable](
     """Map a layer's inner Optional or Result carrier with the inner family."""
     var function: Self.F
     comptime Arg = Self.N.Pure[Self.F.Arg]
-    comptime Out = Self.N.Mapped[Self.N.Pure[Self.F.Arg], Self.F]
-    comptime Error = Self.N.MapError[Self.N.Pure[Self.F.Arg], Self.F]
+    comptime _Map = MapContract[Self.N, Self.Arg, Self.F]
+    comptime Out = Self._Map.Out
+    comptime Error = Self._Map.Error
     def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         return Self.N.map(self.function^, arg^)
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
@@ -61,8 +62,9 @@ struct _InnerBimap[E: Movable & Deinitable,
     comptime Arg = Result[Self.F.Arg,Self.E]
     comptime Inner = ResultFamily[Self.E]
     comptime Target = ResultFamily[Self.G.Out]
-    comptime Out = Self.Inner.Bimapped[Self.Target,Self.Arg,Self.F,Self.G]
-    comptime Error = Self.Inner.BimapError[Self.Target,Self.Arg,Self.F,Self.G]
+    comptime Operation = MapBothContract[Self.Inner,Self.Arg,Self.F,Self.G,Self.Target]
+    comptime Out = Self.Operation.Out
+    comptime Error = Self.Operation.Error
     def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         return Self.Inner.bimap[Self.Target](self.on_ok^,self.on_err^,arg^)
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
@@ -192,13 +194,14 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
     # Reuse layer metadata, but require the exact OptionalT constructor before
     # allowing the base to decide a source-to-target policy transition.
     comptime _TargetBase[Target: ErrorMapping] = downcast[downcast[Target,_CapabilityLifting].Base,Monad & ErrorMapping]
+    comptime _BimapOp[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = MapBothContract[Self._Mapping,V,_InnerMap[OptionalFamily,F],G,Self._TargetBase[Target]]
     comptime BimapCompatible[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = (
         (Target == OptionalT[Self._TargetBase[Target]] and
-         MapBothContract[Self._Mapping,V,_InnerMap[OptionalFamily,F],G,Self._TargetBase[Target]].Compatible)
+         Self._BimapOp[Target,V,F,G].Compatible)
         if conforms_to(Target,_CapabilityLifting) and conforms_to(downcast[Target,_CapabilityLifting].Base,ErrorMapping) else False
     )
-    comptime Bimapped[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Self._Mapping.Bimapped[Self._TargetBase[Target],V,_InnerMap[OptionalFamily,F],G]
-    comptime BimapError[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Self._Mapping.BimapError[Self._TargetBase[Target],V,_InnerMap[OptionalFamily,F],G]
+    comptime Bimapped[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Self._BimapOp[Target,V,F,G].Out
+    comptime BimapError[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Self._BimapOp[Target,V,F,G].Error
     @staticmethod
     def bimap[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](var on_ok: F, var on_err: G, var source: V) raises Self.BimapError[Target,V,F,G] -> Self.Bimapped[Target,V,F,G]:
         comptime assert Self.BimapCompatible[Target,V,F,G]
@@ -248,8 +251,9 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
     comptime _LoopError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Self.M._LoopError[V, F, _OptionalAcc[K]]
     comptime _JoinCompatible[L: Movable & Deinitable, Q: Movable & Deinitable] = Self.CarrierCompatible[L] and Self.CarrierCompatible[Q] and Self.M._JoinCompatible[L, Q]
     comptime _Joined[L: Movable & Deinitable, Q: Movable & Deinitable] = Self.M._Joined[L, Q]
-    comptime Lifted[V: Movable & Deinitable] = Self.M.Mapped[V, _Present[Self.M.Element[V]]]
-    comptime LiftError[V: Movable & Deinitable] = Self.M.MapError[V, _Present[Self.M.Element[V]]]
+    comptime _LiftOp[V: Movable & Deinitable] = MapContract[Self.M,V,_Present[Self.M.Element[V]]]
+    comptime Lifted[V: Movable & Deinitable] = Self._LiftOp[V].Out
+    comptime LiftError[V: Movable & Deinitable] = Self._LiftOp[V].Error
 
     @staticmethod
     def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V
@@ -319,14 +323,15 @@ struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, Erro
     )
     # A non-Monad rebound retains a real candidate without inventing capability;
     # raw-base admission below rejects it even when the stored error is unchanged.
+    comptime _BimapOp[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = MapContract[Self.M,V,_InnerBimap[Self.E,F,G]]
     comptime BimapCompatible[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = (
         (Target == Self.DefaultErrorTarget[F.Out,G.Out] and
-         MapBothContract[ResultFamily[Self.E],Result[F.Arg,Self.E],F,G].Compatible and
-         MapContract[Self.M,V,_InnerBimap[Self.E,F,G]].Compatible)
+         _InnerBimap[Self.E,F,G].Operation.Compatible and
+         Self._BimapOp[V,F,G].Compatible)
         if conforms_to(Self._ErrorTargetBase[F.Out,G.Out],Monad) else False
     )
-    comptime Bimapped[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Self.M.Mapped[V,_InnerBimap[Self.E,F,G]]
-    comptime BimapError[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Self.M.MapError[V,_InnerBimap[Self.E,F,G]]
+    comptime Bimapped[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Self._BimapOp[V,F,G].Out
+    comptime BimapError[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Self._BimapOp[V,F,G].Error
     @staticmethod
     def bimap[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](var on_ok: F, var on_err: G, var source: V) raises Self.BimapError[Target,V,F,G] -> Self.Bimapped[Target,V,F,G]:
         comptime assert Self.BimapCompatible[Target,V,F,G]
@@ -375,8 +380,9 @@ struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, Erro
     comptime _LoopError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Self.M._LoopError[V, F, _ResultAcc[K, Self.E]]
     comptime _JoinCompatible[L: Movable & Deinitable, Q: Movable & Deinitable] = Self.CarrierCompatible[L] and Self.CarrierCompatible[Q] and Self.M._JoinCompatible[L, Q]
     comptime _Joined[L: Movable & Deinitable, Q: Movable & Deinitable] = Self.M._Joined[L, Q]
-    comptime Lifted[V: Movable & Deinitable] = Self.M.Mapped[V, _OkOf[Self.M.Element[V], Self.E]]
-    comptime LiftError[V: Movable & Deinitable] = Self.M.MapError[V, _OkOf[Self.M.Element[V], Self.E]]
+    comptime _LiftOp[V: Movable & Deinitable] = MapContract[Self.M,V,_OkOf[Self.M.Element[V], Self.E]]
+    comptime Lifted[V: Movable & Deinitable] = Self._LiftOp[V].Out
+    comptime LiftError[V: Movable & Deinitable] = Self._LiftOp[V].Error
 
     @staticmethod
     def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V
