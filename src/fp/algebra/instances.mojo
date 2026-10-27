@@ -14,10 +14,10 @@ from fp.iteration._terminal import _append
 from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible, _propagate_error
 from fp.callables._receiver import _unary_repeated_as
 from ._branches import _OptionalGuard, _ResultGuard, _TraverseBranch
-from ._result_accumulation import _result_map2, _result_loop, _FirstError
+from ._result_accumulation import _result_map2, _result_loop, _ResultLoopCompatible, _FirstError
 from .filtering import _Select, _Keep
 from .protocols import (Functor, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Filterable, FunctorFilter, _Lifting, _Accumulate, _Present, _Item, _iterator,
-                        _next_item, _start_as, _combine_as, _map_accumulate, _Append)
+                        _next_item, _start_as, _combine_as, _map_accumulate, _Append, _LinearLoopCompatible, _LinearProducerCompatible)
 
 
 comptime _ListElement[V: Movable & Deinitable] = downcast[downcast[V, IterableOwned].IteratorOwnedType.Element, Movable & Deinitable]
@@ -55,6 +55,8 @@ struct IdentityFamily(Monad, Traversable):
 
     `Reader[R]`, `State[S]` and `Writer[W]` are their transformers over it.
     """
+    comptime _LoopCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = _LinearLoopCompatible[V, F, K.Item, K.Error]
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self._LoopCompatible[V, F, _Append[F.Out]]
     comptime Element[V: Movable & Deinitable] = V
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Out
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
@@ -194,7 +196,8 @@ struct OptionalFamily(Monad, Traversable, Filterable, FunctorFilter, _Lifting):
     comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == Optional[F.Arg]
     comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.MapCompatible[V, F] and Self.CarrierCompatible[F.Out]
     comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = V == Optional[F.First] and R.Out == Optional[F.Second]
-    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out]
+    comptime _LoopCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = _LinearLoopCompatible[V, F, Optional[K.Item], K.Error]
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out] & _LinearProducerCompatible[V, F, Never]
     comptime Element[V: Movable & Deinitable] = _ListElement[V]
     comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = V
     comptime FilterError[V: Movable & Deinitable, P: BorrowCallable] = P.Failure
@@ -464,7 +467,8 @@ struct ResultFamily[E: Movable & Deinitable](Monad, ApplicativeError, ErrorMappi
         Self.Element[V] == F.First and Self.Element[R.Out] == F.Second
     )
     """Require both Results and both callback inputs to match the selected family."""
-    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self._ErrorCarrier[F.Out]
+    comptime _LoopCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = _ResultLoopCompatible[V, F, K, Self.E]
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self._ErrorCarrier[F.Out] & _LinearProducerCompatible[V, F, Never]
     """Require each produced Result to retain the selected stored error and origins."""
     comptime Failed[A: Movable & Deinitable] = Result[A, Self.E]
     comptime FailError[A: Movable & Deinitable] = Never
@@ -477,7 +481,7 @@ struct ResultFamily[E: Movable & Deinitable](Monad, ApplicativeError, ErrorMappi
     comptime Combined[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = Result[F.Out, Self.E]
     comptime CombineError[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = _CommonError[F.Error, R.Error]
     comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = (
-        (Self.MapCompatible[V, F] and Self.CollectCompatible[V, F] and Self.Element[V] == F.Arg)
+        (Self.MapCompatible[V, F] and Self._ErrorCarrier[F.Out] and Self.Element[V] == F.Arg)
         if conforms_to(F.Out, _ResultType) else False
     )
     """Require the callback to return a Result with the same stored error and origins."""

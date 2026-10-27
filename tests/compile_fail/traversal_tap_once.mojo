@@ -1,4 +1,4 @@
-# error: repeatable
+# error: no matching method in call to 'traverse_tap'
 from fp.functions import piped
 from fp.algebra import OptionalFamily
 from fp.callables import BorrowOnceCallable

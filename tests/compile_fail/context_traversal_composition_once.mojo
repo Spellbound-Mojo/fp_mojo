@@ -1,4 +1,4 @@
-# error: repeatable
+# error: no matching method in call to 'traverse_filter'
 from fp.functions import pipeline
 from fp.algebra import OptionalFamily
 from fp.callables import OnceUnary

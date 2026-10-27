@@ -1523,6 +1523,39 @@ former deferred-shape rejection fixtures now test a genuinely incompatible
 Reader/State target, while successful Reader traversal is a maintained runtime
 case. Evidence is retained in `.cache/quality-cycle17/qualified-main/`.
 
+### Linear collection admission
+
+Identity, Optional, Result and Validation declare the requirements of their
+existing repeated collection loops. A shared predicate checks an iterable or
+iterator source, its item type, a repeatable producer and compatible native
+exceptions. Custom accumulators additionally require the produced item to match
+and, for validation, compatible diagnostic-policy exceptions. These linear
+loops impose no copying on payloads, captures or accumulator state.
+
+Collection combines independently guarded carrier and producer predicates with
+eager Boolean conjunction. This preserves generic caller evidence without
+requiring structural bounds or reconstructing an append accumulator through the
+callback's result. Explicit policy error types keep the original native-error
+equalities visible. Result binding uses carrier membership directly, preserving
+consuming callbacks independently of repeated collection.
+
+A custom Traversable whose implementation maps or combines a fixed number of
+effects declares those operations in `TargetCompatible`; the default describes
+collection. The maintained custom single-Result and two-value examples now do
+so. Ordinary calls retain their syntax. Invalid consuming callbacks in repeated
+traversal reject at overload selection instead of inside the execution loop.
+
+Qualification on Mojo 1.2.0 passed 24 source/package O0/O3 boundary checks
+and 701 packaged programs (699 checked clients and two benchmarks). All 1,601
+negative calls reject; the full run matched 1,600 diagnostic expectations and
+identified one further obsolete body-assertion expectation. That fixture now
+expects overload rejection and is verified separately without changing its call.
+The earlier six traversal expectations were updated for the same reason.
+Inputs and packages remained unchanged within each run; the full rejection
+report retains the two audit findings caused by that stale expectation.
+Evidence is retained in `.cache/quality-cycle18/qualified-main/` and the focused
+follow-up under `.cache/quality-cycle18/diagnostic-followup/`.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

@@ -72,6 +72,13 @@ callbacks and move-only results even though Cartesian collection does not.
 `CollectCompatible` projection still describes direct target collection and may
 be false for a valid single-value traversal.
 
+Direct collection into Identity, Optional, Result and Validation requires a
+repeatable producer and a matching iterable item type. These linear targets
+accept move-only inputs, outputs and captures. Validation additionally checks
+that producer and diagnostic-policy exceptions have compatible native types.
+The same requirements apply when a List source collects into these targets;
+single-value sources retain their consuming-callback support.
+
 Generic wrappers abstract over both families should forward
 `TraverseContract[S, G, V, F].Compatible`. Existing wrappers that spell component
 predicates replace `G.CollectCompatible[V, F]` with

@@ -1,4 +1,4 @@
-# error: repeatable
+# error: no matching method in call to 'par_traverse'
 from fp.callables import OnceUnary
 from fp.functions import piped
 from fp.data import Result,Ok

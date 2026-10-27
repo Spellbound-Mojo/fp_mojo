@@ -1762,6 +1762,10 @@
    "aliases": [
     {
      "description": "",
+     "name": "CollectCompatible"
+    },
+    {
+     "description": "",
      "name": "Element"
     },
     {
@@ -1811,10 +1815,6 @@
     {
      "description": "Admission for combination, including family-specific carrier and error origins.",
      "name": "CombineCompatible"
-    },
-    {
-     "description": "Admission for collection into this family; collecting source traversals forward this predicate.",
-     "name": "CollectCompatible"
     },
     {
      "description": "The carrier `collect` returns: this family's carrier of a `List`.",
@@ -5520,7 +5520,7 @@
      "name": "CombineCompatible"
     },
     {
-     "description": "Use the Result family's admission for each produced validation result.",
+     "description": "Require a repeatable producer with the selected Result carrier and compatible native errors.",
      "name": "CollectCompatible"
     },
     {

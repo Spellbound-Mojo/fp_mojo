@@ -89,6 +89,13 @@ struct TwoFamily(Traversable):
     comptime Element[V: Movable & Deinitable] = _CellItem[V]
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Two[F.Out]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
+    # This source combines exactly two produced effects; it never collects V.
+    comptime TargetCompatible[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = (
+        RepeatableUnary[F] and G.CarrierCompatible[F.Out] and
+        G.CombineCompatible[F.Out, _Pair[G.Element[F.Out]], _Later[F]] and
+        ((F.Error == Never) | (G.CombineError[F.Out, _Pair[G.Element[F.Out]], _Later[F]] == Never) |
+         (F.Error == G.CombineError[F.Out, _Pair[G.Element[F.Out]], _Later[F]]))
+    )
     comptime Traversed[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = G.Combined[F.Out, _Pair[G.Element[F.Out]], _Later[F]]
     comptime TraverseError[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _Either[
         F.Error, G.CombineError[F.Out, _Pair[G.Element[F.Out]], _Later[F]]]

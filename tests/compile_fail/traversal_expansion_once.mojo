@@ -1,4 +1,4 @@
-# error: repeatable
+# error: no matching method in call to 'filter_effect'
 from fp.functions import piped
 from fp.algebra import OptionalFamily, ListFamily
 from fp.callables import BorrowOnceCallable

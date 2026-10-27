@@ -762,15 +762,19 @@ admission in their `where` clauses. `Functor.MapCompatible[V, F]`,
 origins, callback-result types, and compatible native errors. Result overrides
 them to require its exact stored error type and origins. Mapping checks the
 source carrier; combination checks both carriers and both callback payloads;
-collection checks every produced carrier. Validation delegates these checks to
-ResultFamily with the policy's error type, so accumulation and sequential
-combination share one carrier contract. Mapping and binding also require
+collection checks every produced carrier and the actual repeated loop.
+Identity, Optional, Result and Validation share linear producer admission:
+iterable item equality, a repeatable receiver, and compatible native errors.
+Their custom-accumulator admission also checks the produced item; no copies are
+required. Validation retains Result carrier admission and adds its diagnostic
+policy's native error to collection admission. Binding checks carrier membership
+independently, so a consuming callback remains valid for a single Result. Mapping and binding also require
 `I.Element[V] == F.Arg` at the call boundary.
 
 Generic forwarding signatures must now carry the corresponding predicates.
 For example, a wrapper around `map[I](f^, value^)` returning `I.Mapped[V, F]`
 needs `where I.Element[V] == F.Arg and I.MapCompatible[V, F]`; a wrapper around
-`traverse[S, G]` needs `where S.Element[V] == F.Arg and G.CollectCompatible[V, F]`. Bind uses the same
+`traverse[S, G]` needs `where S.Element[V] == F.Arg and S.TargetCompatible[G, V, F]`. Bind uses the same
 input equality with `I.BindCompatible[V, F]`. The generic integration test
 exercises these public contracts through source and precompiled imports.
 Concrete families that use the defaults keep their existing behavior.

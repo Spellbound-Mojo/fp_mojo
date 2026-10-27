@@ -28,6 +28,8 @@ def select(var value: Int) raises Int -> Optional[Optional[Int]]:
 struct ResultTraversalFailure(Traversable):
     """An explicit Result source keeps its own traversal error contract."""
     comptime Native = ResultFamily[String]
+    # This custom source delegates a single-value shape, not collection.
+    comptime TargetCompatible[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.Native.TargetCompatible[G,V,F]
     comptime Element[V: Movable & Deinitable] = Self.Native.Element[V]
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.Native.Mapped[V,F]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.Native.MapError[V,F]

@@ -17,7 +17,7 @@ from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, Repea
 from fp.callables._receiver import _unary_repeated_as, _thunk_once_as
 from fp.iteration._advance import _next_optional, _Source, _source
 from fp.iteration._terminal import _append
-from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
+from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible, _propagate_error
 from fp.callables._identity import Identity
 from fp.data._result import _ResultType
 from fp.callables._receiver import _binary_repeated_as
@@ -669,6 +669,22 @@ def _combine_as[E: Movable & Deinitable, K: _Accumulate](var acc: K.Acc, var ite
         return K.combine(acc^, item^)
     except error:
         _propagate_error[E](error^)
+
+
+# Admission for the existing linear pull/call/accumulate owner. Unlike List's
+# Cartesian loop, linear loops do not copy payloads, accumulators or captures.
+# Collection checks its carrier separately, so generic equality evidence need
+# not cross an accumulator item projection. Custom loops also check that item.
+comptime _LinearProducerCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable,
+                                   Failure: Movable & Deinitable] = (
+    (_Item[V] == F.Arg) & _CommonErrorCompatible[F.Error, Failure]
+) if (conforms_to(V, Iterator) or conforms_to(V, IterableOwned)) and RepeatableUnary[F] else False
+
+
+comptime _LinearLoopCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable,
+                               Item: Movable & Deinitable, Failure: Movable & Deinitable] = (
+    _LinearProducerCompatible[V, F, Failure] & (F.Out == Item)
+)
 
 
 def _map_accumulate[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate,

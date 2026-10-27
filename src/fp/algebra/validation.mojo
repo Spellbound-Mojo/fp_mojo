@@ -1,9 +1,9 @@
 """Accumulating Result validation using the existing Applicative machinery."""
 from std.builtin.rebind import downcast, rebind_var
-from .protocols import Semigroup, ApplicativeError, ErrorMapping, _Accumulate
+from .protocols import Semigroup, ApplicativeError, ErrorMapping, _Accumulate, _LinearProducerCompatible
 from .instances import ResultFamily, _ListElement
 from .monoids import ListMonoid
-from ._result_accumulation import _result_map2, _AccumulatingErrors, _result_loop
+from ._result_accumulation import _result_map2, _AccumulatingErrors, _result_loop, _ResultLoopCompatible
 from fp.data._result import Result, _ResultType
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract
 from fp._internal.errors import _CommonError
@@ -49,8 +49,11 @@ struct ValidationFamily[S: Semigroup](ApplicativeError, ErrorMapping, _Validatio
     """Use the Result family's exact stored-error and origin admission for mapping."""
     comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = ResultFamily[Self.S.Value].CombineCompatible[V, F, R]
     """Use the Result family's carrier and payload admission before combining errors."""
-    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = ResultFamily[Self.S.Value].CollectCompatible[V, F]
-    """Use the Result family's admission for each produced validation result."""
+    comptime _LoopCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = _ResultLoopCompatible[V, F, K, Self.S.Value, Self.S.Error]
+    # Both predicates guard their own projections. Eager Boolean composition
+    # preserves caller evidence for the carrier and exact native error.
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out] & _LinearProducerCompatible[V, F, Self.S.Error]
+    """Require a repeatable producer with the selected Result carrier and compatible native errors."""
     comptime Failed[A: Movable & Deinitable] = ResultFamily[Self.S.Value].Failed[A]
     comptime FailError[A: Movable & Deinitable] = Never
     comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = ResultFamily[Self.S.Value].Handled[V, H]

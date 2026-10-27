@@ -1,5 +1,5 @@
 """Result error policies and accumulation over the shared native pull loop."""
-from .protocols import Semigroup, _Accumulate, _map_accumulate, _start_as, _AccumulatePair
+from .protocols import Semigroup, _Accumulate, _map_accumulate, _start_as, _AccumulatePair, _LinearLoopCompatible
 from fp.data._result import Result, Ok, Err, _transform_result_owned
 from std.builtin.rebind import rebind_var
 from fp.callables.protocols import BinaryContract, ThunkContract
@@ -8,7 +8,7 @@ from fp.callables._receiver import _thunk_once_as
 from fp._internal.errors import _propagate_error
 from fp.callables.protocols import UnaryContract, Binary
 from fp.callables._transforms import _ValueThunk
-from fp._internal.errors import _CommonError, _ErrorCompatible
+from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible
 
 
 trait _ResultPolicy(Semigroup):
@@ -52,6 +52,16 @@ struct _ResultAccumulator[K: _Accumulate, P: _ResultPolicy](_Accumulate):
             return acc^
         return _result_map2[Self.P.Value, P=Self.P, X=Self.Error](
             _AccumulatePair[Self.K](), acc^, _ValueThunk(item^))
+
+
+# Keep the stored and native policy types explicit at generic admission.
+# Projecting them through a policy instance hides caller equality evidence.
+comptime _ResultLoopCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable,
+                               K: _Accumulate, Stored: Movable & Deinitable,
+                               PolicyError: Movable & Deinitable = Never] = (
+    _CommonErrorCompatible[PolicyError, K.Error] & _CommonErrorCompatible[F.Error, PolicyError] &
+    _LinearLoopCompatible[V, F, Result[K.Item, Stored], K.Error]
+)
 
 
 def _result_loop[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable,
