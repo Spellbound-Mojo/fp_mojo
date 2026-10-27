@@ -7,7 +7,7 @@ it. Logs combine in execution order.
 """
 from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, rebind, downcast
-from fp.algebra.protocols import ApplicativeError, ErrorMapping, Monad, Monoid, _Accumulate, _Append, _start_as, _combine_as
+from fp.algebra.protocols import ApplicativeError, ErrorMapping, Monad, Monoid, _Accumulate, _Append, _pure, _start_as, _combine_as
 from fp.algebra.instances import IdentityFamily
 from fp.callables.protocols import (BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, Unary, OnceUnary, MutableUnary,
                                     OnceBinary, MutableBinary, OnceThunk)
@@ -327,6 +327,17 @@ struct _WriterAcc[W: Monoid, K: _Accumulate](_Accumulate):
         return Tuple(log^, _combine_as[Self.Error, Self.K](acc_part^, item_part^))
 
 
+@fieldwise_init
+struct _WriterPure[M: Monad, W: Monoid, A: Movable & Deinitable](Unary, Copyable, Defaultable):
+    """Create the log before base injection, retaining the native tuple carrier."""
+    comptime Arg = Self.A
+    comptime Out = WriterT[Self.M, Self.W].Pure[Self.A]
+    def call(self, var value: Self.Arg) -> Self.Out:
+        comptime assert Self.W.Error == Never, "WriterT: pure requires a monoid whose empty does not raise"
+        var log = _empty_as[Never, Self.W]()
+        return Self.Out(_pure[Self.M](Tuple(log^, value^)))
+
+
 struct WriterT[M: Monad, W: Monoid](WriterFamily, Censor, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError), ErrorMapping where conforms_to(M, ErrorMapping)):
     """Writer over the base Monad `M`: a value is `M`'s carrier of `(log, payload)`, and the monoid `W` accumulates the log.
 
@@ -361,7 +372,7 @@ struct WriterT[M: Monad, W: Monoid](WriterFamily, Censor, _LocalLifting, Applica
             A Writer carrier of NoneType.
         """
         var nothing: NoneType = None
-        return Self.Told(Self.M.pure(Tuple(log^, nothing)))
+        return Self.Told(_pure[Self.M](Tuple(log^, nothing)))
 
     @staticmethod
     def listen[V: Movable & Deinitable](var value: V) raises Self.ListenError[V] -> Self.Listened[V]:
@@ -568,6 +579,7 @@ struct WriterT[M: Monad, W: Monoid](WriterFamily, Censor, _LocalLifting, Applica
         Self, F.Out, Self.M.Mapped[_Value[V].Storage, _MapValue[Self.W.Value, F]]]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.MapError[
         _Value[V].Storage, _MapValue[Self.W.Value, F]]
+    comptime _PureAction[A: Movable & Deinitable] = _WriterPure[Self.M, Self.W, A]
     comptime Pure[A: Movable & Deinitable] = WriterValue[Self, A, Self.M.Pure[Tuple[Self.W.Value, A]]]
     comptime Combined[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable] = WriterValue[
         Self, F.Out, Self.M.Combined[_Value[V].Storage, _WriterCombine[Self.W, F], _Unwrap[G]]]
@@ -624,13 +636,7 @@ struct WriterT[M: Monad, W: Monoid](WriterFamily, Censor, _LocalLifting, Applica
         Returns:
             The Writer value.
         """
-        comptime assert Self.W.Error == Never, "WriterT: pure requires a monoid whose empty does not raise"
-        var log: Self.W.Value
-        try:
-            log = Self.W.empty()
-        except error:
-            _propagate_error[Never](error^)
-        return Self.Pure[A](Self.M.pure(Tuple(log^, value^)))
+        return _pure[Self](value^)
 
     @staticmethod
     def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable](

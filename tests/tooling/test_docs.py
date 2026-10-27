@@ -13,7 +13,7 @@ class DocumentationContractTests(unittest.TestCase):
         result = docs_contract.audit_docs()
         self.assertEqual(result['exports'], 318)
         self.assertEqual(result['modules'], 10)
-        self.assertEqual(result['examples'], 80)
+        self.assertEqual(result['examples'], 81)
 
     def test_relocated_identity_keeps_its_public_reference(self):
         rendered = docs_contract.package_page('functions', 'reference/functions.md')

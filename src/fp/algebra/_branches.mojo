@@ -1,6 +1,7 @@
 """Branch selection shared by single-value traversal and transformers."""
+
 from std.builtin.rebind import rebind_var, downcast
-from fp.algebra.protocols import Applicative, _UnaryView
+from fp.algebra.protocols import _pure, Applicative, _UnaryView
 from fp.callables.protocols import UnaryContract, OnceUnary, MutableUnary
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary
 from fp.callables._receiver import _unary_once_as
@@ -24,12 +25,12 @@ struct _OptionalGuard[M: Applicative, F: UnaryContract & Movable & Deinitable](
     comptime Error = Self.F.Error
     def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         if not arg:
-            return Self.M._join_left[Self.Absent, Self.F.Out](Self.M.pure(Optional[Self.B]()))
+            return Self.M._join_left[Self.Absent, Self.F.Out](_pure[Self.M](Optional[Self.B]()))
         return Self.M._join_right[Self.Absent, Self.F.Out](call_once(self.function^, arg.unsafe_take()))
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert RepeatableUnary[Self.F]
         if not arg:
-            return Self.M._join_left[Self.Absent, Self.F.Out](Self.M.pure(Optional[Self.B]()))
+            return Self.M._join_left[Self.Absent, Self.F.Out](_pure[Self.M](Optional[Self.B]()))
         return Self.M._join_right[Self.Absent, Self.F.Out](call_repeated(self.function, arg.unsafe_take()))
 
 
@@ -52,7 +53,7 @@ struct _ResultGuard[M: Applicative, E: Movable & Deinitable, F: UnaryContract & 
 
     @staticmethod
     def _preserve[P: Movable & Deinitable](var payload: P, var unused: NoneType) capturing -> Self.Out:
-        return Self.M._join_left[Self.Absent, Self.F.Out](Self.M.pure(
+        return Self.M._join_left[Self.Absent, Self.F.Out](_pure[Self.M](
             _transformed[Self.B, Self.E, P, not Self.success, True](payload^)))
 
     @staticmethod

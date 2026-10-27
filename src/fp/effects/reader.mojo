@@ -4,11 +4,12 @@ Each operation is one struct whose run delegates to the base family. A result
 that retains the environment, such as a bind over a deferred base, carries the
 environment origin in its type.
 """
+
 from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, downcast
 from std.utils import Variant
 from fp.algebra.errors import _Continue
-from fp.algebra.protocols import ApplicativeError, ErrorMapping, Monad, _Accumulate, _LiveAccumulator
+from fp.algebra.protocols import _pure, ApplicativeError, ErrorMapping, Monad, _Accumulate, _LiveAccumulator
 from fp.algebra.instances import IdentityFamily
 from fp.callables.protocols import (UnaryContract, BinaryContract, ThunkContract, OnceUnary, MutableUnary,
                                     OnceThunk, MutableBinary, BorrowCallContract, BorrowCallable, BorrowOnceCallable)
@@ -41,7 +42,7 @@ struct _ReaderPure[M: Monad, R: AnyType, T: Movable & Deinitable](ReaderAction, 
     comptime Value = Self.T
     comptime Out[o: ImmOrigin] = Self.M.Pure[Self.T]
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) -> Self.Out[o]:
-        return Self.M.pure(self.value^)
+        return _pure[Self.M](self.value^)
 
 
 @fieldwise_init
@@ -77,7 +78,7 @@ struct _ReaderAsk[M: Monad, R: Copyable & Deinitable](ReaderAction, Copyable, De
     comptime Value = Self.R
     comptime Out[o: ImmOrigin] = Self.M.Pure[Self.R]
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) -> Self.Out[o]:
-        return Self.M.pure(env.copy())
+        return _pure[Self.M](env.copy())
 
 
 @fieldwise_init

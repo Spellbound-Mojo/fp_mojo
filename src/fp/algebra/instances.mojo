@@ -3,6 +3,7 @@
 Identity is the bare value; Optional, Result and List keep their own storage.
 Result transformations use the owned transformation of the Result methods.
 """
+
 from std.builtin.rebind import rebind_var, rebind, downcast
 from std.iter import IterableOwned, Iterator
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, Unary, BorrowCallable
@@ -16,7 +17,7 @@ from fp.callables._receiver import _unary_repeated_as
 from ._branches import _OptionalGuard, _ResultGuard, _TraverseBranch
 from ._result_accumulation import _result_map2, _result_loop, _ResultLoopCompatible, _FirstError
 from .filtering import _Select, _Keep
-from .protocols import (Functor, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Filterable, FunctorFilter, _Lifting, _Accumulate, _Present, _Item, _iterator,
+from .protocols import (_pure, Functor, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Filterable, FunctorFilter, _Lifting, _Accumulate, _Present, _Item, _iterator,
                         _next_item, _start_as, _combine_as, _map_accumulate, _Append, _LinearLoopCompatible, _LinearProducerCompatible)
 
 
@@ -688,7 +689,7 @@ struct ResultFamily[E: Movable & Deinitable](Monad, ApplicativeError, ErrorMappi
         Returns:
             `Ok(value)`.
         """
-        return Self.pure(value^)
+        return _pure[Self](value^)
 
 
 struct ListFamily(Monad, Traversable, Filterable, FunctorFilter):

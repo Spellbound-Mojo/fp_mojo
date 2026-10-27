@@ -1,6 +1,6 @@
 """Public algebra operations: the instance is explicit, operands are inferred.
 
-Each entry forwards to the instance's static method. `map`, `flat_map` and
+Entries use the instance's primitive or its associated pure constructor. `map`, `flat_map` and
 `traverse` also accept native functions and closures directly, for every
 instance; generic code that forwards a raising native callback names its error
 type with `X=`.
@@ -11,7 +11,7 @@ from fp.callables._views import _UnaryViewable
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract
 from fp.callables.native import _NativeUnaryRef, _Unary, _RaisingUnary
 from fp._internal.errors import _ErrorCompatible, _propagate_error
-from .protocols import Functor, Applicative, Monad, Traversable, Monoid, Semigroup
+from .protocols import Functor, Applicative, Monad, Traversable, Monoid, Semigroup, _pure
 from .contracts import MapContract, BindContract, TraverseContract, FilterContract, CombineContract
 
 
@@ -65,7 +65,7 @@ def pure[A: Movable & Deinitable, //, I: Applicative](var value: A) -> I.Pure[A]
     Returns:
         `I.Pure[A]`, the carrier holding `value`.
     """
-    return I.pure(value^)
+    return _pure[I](value^)
 
 
 def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //,

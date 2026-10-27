@@ -7,11 +7,12 @@ and the right operand, keeping the base's earlier effects. The right operand is
 produced at most once. Over IdentityFamily the aliases are the native Optional
 and Result families.
 """
+
 from fp.algebra._branches import _OptionalGuard, _ResultGuard
 from fp.algebra._result_accumulation import _ResultAccumulator, _FirstError
 from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, rebind, downcast
-from fp.algebra.protocols import (Monad, Applicative, ApplicativeError, ErrorMapping, _CALLBACK_ADMISSION, _RecoveryShape, _MappedFamily, _Lifting, _Accumulate, _Append, _Present, _BindFirst, _Lazy, _UnaryView)
+from fp.algebra.protocols import (_pure, Monad, Applicative, ApplicativeError, ErrorMapping, _CALLBACK_ADMISSION, _RecoveryShape, _MappedFamily, _Lifting, _Accumulate, _Append, _Present, _BindFirst, _Lazy, _UnaryView)
 from fp.algebra.contracts import MapContract
 from fp.algebra.error_mapping import MapBothContract
 from fp.algebra.instances import IdentityFamily, OptionalFamily, ResultFamily, _OkOf
@@ -235,7 +236,7 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
 
     @staticmethod
     def pure[A: Movable & Deinitable](var value: A) -> Self.Pure[A]:
-        return Self.M.pure(Optional(value^))
+        return _pure[Self.M](Optional(value^))
 
     @staticmethod
     def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable](
@@ -319,7 +320,7 @@ struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, Erro
 
     @staticmethod
     def fail[A: Movable & Deinitable](var error: Self.Failure) -> Self.Failed[A]:
-        return Self.M.pure(ResultFamily[Self.E].fail[A](error^))
+        return _pure[Self.M](ResultFamily[Self.E].fail[A](error^))
 
     @staticmethod
     def or_else[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V
@@ -361,7 +362,7 @@ struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, Erro
 
     @staticmethod
     def pure[A: Movable & Deinitable](var value: A) -> Self.Pure[A]:
-        return Self.M.pure(Result[A, Self.E](Ok(value^)))
+        return _pure[Self.M](Result[A, Self.E](Ok(value^)))
 
     @staticmethod
     def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable](

@@ -1,5 +1,6 @@
 """Stored failures and recovery derived from the selected family's capability."""
-from .protocols import _CALLBACK_ADMISSION, Functor, Applicative, ApplicativeError, ErrorMapping, Monad
+
+from .protocols import _pure, _CALLBACK_ADMISSION, Functor, Applicative, ApplicativeError, ErrorMapping, Monad
 from .error_mapping import MapErrContract, _map_err
 from .instances import ResultFamily
 from fp.data._result import Result, _ResultType
@@ -54,10 +55,10 @@ struct _Recovered[I: Applicative, H: UnaryContract & Movable & Deinitable](
     comptime Out = Self.I.Pure[Self.H.Out]
     comptime Error = Self.H.Error
     def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        return Self.I.pure(call_once(self.handler^, arg^))
+        return _pure[Self.I](call_once(self.handler^, arg^))
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert RepeatableUnary[Self.H], "recover: branching requires a repeatable handler"
-        return Self.I.pure(call_repeated(self.handler, arg^))
+        return _pure[Self.I](call_repeated(self.handler, arg^))
 
 
 struct RecoverContract[I: ApplicativeError, V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable]:

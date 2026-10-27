@@ -1600,6 +1600,40 @@ and 48 tooling tests. Inputs and packages remained unchanged and reports have
 no audit failures. Strict documentation checks cover 318 exports and 80
 examples. Evidence is in `.cache/quality-cycle20/qualified-main/`.
 
+### Concrete payload constructors for pure
+
+The public `pure[I](value)` operation and internal family composition now call
+one `_pure` owner. Applicative's private `_PureAction[A]` selects an existing
+Unary callable whose argument is `A`, result is exactly `Pure[A]`, and error is
+`Never`. The default adapts the dictionary's static `pure`, preserving existing
+custom families. Writer supplies `_WriterPure`, which creates the empty log
+before injecting the native `(log, value)` tuple into the base; its concrete
+static `pure` delegates to that same owner. No callback annotation, storage
+wrapper, copied payload or new public argument is introduced.
+
+This separates payload specialization from generic method-witness lookup. Mojo
+1.2 fails that lookup for an abstract Writer/Optional dictionary whose produced
+carrier nests a native Tuple. A reduced program reproduces the failure without
+importing this library. Fixed-field records avoid it but would change native
+storage; type projections and alternate trait bounds do not solve it. Direct
+abstract `I.pure` calls retain that compiler limitation. Public `pure[I]` and
+library composition now use the concrete callable path, including Reader,
+State, Optional and Result layers around Writer/Optional.
+
+The constructor retains exact return types, borrowed origins, native `Never`,
+log initialization order and move-only payloads. Maintained controls cover
+four Writer bases, nested effects, discarding pending actions, owned state,
+and rejecting a borrowed local that would escape. Ordinary concrete dictionary
+calls and all existing positional public bindings remain available.
+
+Qualification passes 20 source/package checks at O0/O3, all 710 programs
+(708 checked programs and two benchmarks), and all 1,606 rejection fixtures.
+The reports retain unchanged inputs and no audit failures. The added executable
+example raises the reviewed documentation inventory to 81 examples; its old
+80-example tooling assertion is updated separately from the compiler checks.
+Evidence is in `.cache/quality-cycle21/qualified-main2/`, with the corrected
+tooling and final documentation checks alongside it.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

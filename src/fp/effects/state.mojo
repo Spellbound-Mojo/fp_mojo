@@ -3,11 +3,12 @@
 A run consumes the state and returns the base carrier of Tuple[value, state].
 Each operation is one struct whose run delegates to the base family.
 """
+
 from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, rebind, downcast
 from std.utils import Variant
 from fp.algebra.errors import _Continue
-from fp.algebra.protocols import (ApplicativeError, ErrorMapping, _UnaryView, Monad, _Accumulate, _LiveAccumulator, _BindFirst, _Lazy, _Item, _iterator, _next_item, _start_as)
+from fp.algebra.protocols import (_pure, ApplicativeError, ErrorMapping, _UnaryView, Monad, _Accumulate, _LiveAccumulator, _BindFirst, _Lazy, _Item, _iterator, _next_item, _start_as)
 from fp.algebra.instances import IdentityFamily
 from fp.callables.protocols import (BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, Unary, OnceUnary, MutableUnary, Binary, MutableBinary)
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
@@ -32,7 +33,7 @@ struct _StatePure[M: Monad, S: Movable & Deinitable, T: Movable & Deinitable](St
     comptime Value = Self.T
     comptime Out = Self.M.Pure[Tuple[Self.T, Self.S]]
     def run(deinit self, var state: Self.State) -> Self.Out:
-        return Self.M.pure(Tuple(self.value^, state^))
+        return _pure[Self.M](Tuple(self.value^, state^))
 
 
 @fieldwise_init
@@ -57,7 +58,7 @@ struct _StateGet[M: Monad, S: Copyable & Deinitable](StateAction, Copyable, Defa
     comptime Out = Self.M.Pure[Tuple[Self.S, Self.S]]
     def run(deinit self, var state: Self.State) -> Self.Out:
         var copy = state.copy()
-        return Self.M.pure(Tuple(copy^, state^))
+        return _pure[Self.M](Tuple(copy^, state^))
 
 
 @fieldwise_init
@@ -74,7 +75,7 @@ struct _StateModify[M: Monad, S: Movable & Deinitable, F: UnaryContract & Movabl
         comptime assert Self.F.Arg == Self.S and Self.F.Out == Self.S, "modify: the callback must map the state to a new state"
         var updated = rebind_var[Self.S](call_once(self.function^, rebind_var[Self.F.Arg](state^)))
         var nothing: NoneType = None
-        return Self.M.pure(Tuple(nothing, updated^))
+        return _pure[Self.M](Tuple(nothing, updated^))
 
 
 @fieldwise_init

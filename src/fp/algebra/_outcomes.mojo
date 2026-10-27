@@ -1,4 +1,5 @@
 """Validation and outcome composition derived from existing family operations."""
+
 from std.builtin.rebind import downcast, rebind_var
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
 from fp.callables.protocols import Unary, UnaryContract, OnceUnary, MutableUnary, BorrowCallContract
@@ -6,7 +7,7 @@ from fp.callables.invoke import RepeatableUnary
 from fp.callables._receiver import _RepeatableBorrow, _MutableBorrowRef, _MutableUnaryRef, _unary_once_as, _borrow_once_as
 from fp.callables._conditional import _guard_owned
 from fp.data._result import Result, _transformed, _fold_result_owned
-from .protocols import Applicative, ApplicativeError, Monad
+from .protocols import _pure, Applicative, ApplicativeError, Monad
 from ._adapt import _map_as, _or_else_as, _flat_map_as
 from .errors import _Recovered
 from ._sequencing import _EffectRetain
@@ -71,7 +72,7 @@ struct _Ensure[I: ApplicativeError, A: Movable & Deinitable,
         comptime assert Self.G.Payload == Self.A and Self.G.Result == Self.I.Failure
         comptime assert _ErrorCompatible[Self.Error, Self.G.Failure] and _ErrorCompatible[Self.Error, Self.I.FailError[Self.A]], "ensure: incompatible native errors"
         def keep(var value: Self.A) raises Self.Error capturing -> Self.Out:
-            return Self.I._join_left[Self.I.Pure[Self.A], Self.I.Failed[Self.A]](Self.I.pure(value^))
+            return Self.I._join_left[Self.I.Pure[Self.A], Self.I.Failed[Self.A]](_pure[Self.I](value^))
         def reject(var value: Self.A, var factory: Self.G) raises Self.Error capturing -> Self.Out:
             var error = _borrow_once_as[Self.Error](value, factory^)
             try:
@@ -186,7 +187,7 @@ struct _Restore[I: ApplicativeError, A: Movable & Deinitable](Unary, Copyable, D
     comptime Error = Self.I.FailError[Self.A]
     def call(self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         def success(var value: Self.A, var unused: NoneType) raises Never capturing -> Self.Out:
-            return Self.I._join_left[Self.I.Pure[Self.A], Self.I.Failed[Self.A]](Self.I.pure(value^))
+            return Self.I._join_left[Self.I.Pure[Self.A], Self.I.Failed[Self.A]](_pure[Self.I](value^))
         def failure(var error: Self.I.Failure, var unused: NoneType) raises Self.Error capturing -> Self.Out:
             return Self.I._join_right[Self.I.Pure[Self.A], Self.I.Failed[Self.A]](Self.I.fail[Self.A](error^))
         return _fold_result_owned[Self.A, Self.I.Failure, Self.Out, Self.Error, Never, Self.Error,

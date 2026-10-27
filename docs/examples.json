@@ -239,6 +239,9 @@
     },
     "docs/examples/single_value_deferred.mojo": {
       "stdout": "deferred single traversal: answer=17; absent=True\n"
+    },
+    "docs/examples/pure_construction.mojo": {
+      "stdout": "pure construction: direct=7; deferred=11\n"
     }
   },
   "version": 1

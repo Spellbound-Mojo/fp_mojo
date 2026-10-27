@@ -58,6 +58,18 @@ input-equality check. Existing family predicates and generic forwarding syntax
 continue to work; the legacy free-traversal boundary retains its input
 requirement and checks the target operations chosen by the source.
 
+Use `pure[I](value^)` when introducing a payload through a generic family.
+It retains the family's exact `Pure[A]` type and transfers ownership without
+requiring a copy. The library selects a constructor for the concrete payload;
+existing custom dictionaries continue to use their static `pure` implementation.
+
+<!-- example: docs/examples/pure_construction.mojo -->
+
+On Mojo 1.2, a direct abstract dictionary call such as `I.pure(value^)` can still
+fail compiler witness selection for Writer over Optional. The public
+`pure[I](value^)` function and composed library operations avoid that boundary.
+Concrete dictionary calls keep their existing syntax.
+
 `Applicative.CarrierCompatible[V]` checks a produced carrier, including its
 stored-error type and origins. `Traversable.TraverseCompatible[V, F]` checks a
 source and callback. A selected traversal also checks `S.Element[V] == F.Arg`

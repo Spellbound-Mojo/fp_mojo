@@ -2,8 +2,10 @@
 
 An instance's associated types name only its own parameters and the types of
 the values and callbacks it receives, so naming an instance evaluates no other
-operation. Operations are static methods; the free functions in `operations`
-forward to them. Callbacks use the fixed-arity protocols of `fp.callables`.
+operation. Operations are static methods; pure construction additionally has
+an associated callable per payload. Public operations and composed families use
+that concrete constructor, while existing dictionaries retain the static pure
+default. Callbacks use the fixed-arity protocols of `fp.callables`.
 """
 from std.builtin.rebind import rebind_var, downcast
 from std.iter import IterableOwned, Iterator
@@ -14,7 +16,7 @@ from fp.callables._receiver import _MutableUnaryRef as _UnaryView
 from fp.callables.protocols import (UnaryContract, BinaryContract, ThunkContract,
                                     Unary, Binary, OnceUnary, MutableUnary, OnceThunk, BorrowCallable)
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
-from fp.callables._receiver import _unary_repeated_as, _thunk_once_as
+from fp.callables._receiver import _unary_repeated_as, _thunk_once_as, _unary_once_as
 from fp.iteration._advance import _next_optional, _Source, _source
 from fp.iteration._terminal import _append
 from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible, _propagate_error
@@ -204,6 +206,22 @@ trait FunctorFilter(Functor):
         ...
 
 
+@fieldwise_init
+struct _FamilyPure[I: Applicative, A: Movable & Deinitable](Unary, Copyable, Defaultable):
+    """Default constructor adapter for existing family dictionaries."""
+    comptime Arg = Self.A
+    comptime Out = Self.I.Pure[Self.A]
+    def call(self, var value: Self.Arg) -> Self.Out:
+        return Self.I.pure(value^)
+
+
+def _pure[I: Applicative, A: Movable & Deinitable](var value: A) -> I.Pure[A]:
+    """Invoke the concrete payload constructor with the ordinary pure contract."""
+    comptime F = I._PureAction[A]
+    comptime assert F.Arg == A and F.Out == I.Pure[A] and F.Error == Never
+    return rebind_var[I.Pure[A]](_unary_once_as[Never](F(), rebind_var[F.Arg](value^)))
+
+
 trait Applicative(Functor):
     """A `Functor` that can introduce a payload (`pure`) and combine independent computations (`map2_lazy`).
 
@@ -246,6 +264,10 @@ trait Applicative(Functor):
     """
     comptime Pure[A: Movable & Deinitable]: Movable & Deinitable
     """The carrier `pure` returns for a payload `A`."""
+    # A payload-specific constructor has a non-generic call signature. This
+    # avoids generic method witness selection through a nested native Tuple.
+    # Existing families retain their pure implementation through the default.
+    comptime _PureAction[A: Movable & Deinitable]: Unary & Defaultable = _FamilyPure[Self, A]
     comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable]: Bool = True
     """Admission for combination, including family-specific carrier and error origins."""
     comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Bool = True
@@ -350,7 +372,7 @@ trait Applicative(Functor):
         var iterator = _iterator(source^)
         var start = _start_as[E, K]()
         var live = K.live(start)
-        var result = Self.pure(start^)
+        var result = _pure[Self](start^)
         while live:
             # The fold records whether a branch is still live. A skipped right
             # operand leaves `ended` set: once the accumulator has failed or
@@ -806,7 +828,7 @@ struct _Pull[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable
         var item = _next_item[Self.V](self.source[])
         if not item:
             self.ended[] = True
-            return rebind_var[Self.Out](Self.G.pure(Optional[Self.B]()))
+            return rebind_var[Self.Out](_pure[Self.G](Optional[Self.B]()))
         self.ended[] = False
         comptime ME = Self.G.MapError[Self.F.Out, _Present[Self.B]]
         comptime assert _ErrorCompatible[Self.Error, Self.F.Error] and _ErrorCompatible[Self.Error, ME]
@@ -858,7 +880,7 @@ struct _Step[M: Monad, F: BinaryContract & Movable & Deinitable, K: _LiveAccumul
         comptime assert Self.F.First == Self.Arg
         comptime assert RepeatableBinary[Self.F], "fold_effect: step must be repeatable"
         if not Self.K.live(arg):
-            return Self.M._join_left[Self.M.Pure[Self.K.Acc], Self.F.Out](Self.M.pure(arg^))
+            return Self.M._join_left[Self.M.Pure[Self.K.Acc], Self.F.Out](_pure[Self.M](arg^))
         var produced = _binary_repeated_as[Self.Error](function, rebind_var[Self.F.First](arg^), item^)
         return Self.M._join_right[Self.M.Pure[Self.K.Acc], Self.F.Out](produced^)
 
@@ -889,7 +911,7 @@ def _bind_loop[M: Monad, V: Movable & Deinitable, P: UnaryContract & Movable & D
     comptime assert M.Element[F.Out] == K.Acc, "fold_effect: step must preserve the accumulator type"
     comptime assert _ErrorCompatible[E, P.Error] and _ErrorCompatible[E, F.Error], "fold_effect: incompatible native errors"
     var iterator = _iterator(source^)
-    var result = M.pure(initial^)
+    var result = _pure[M](initial^)
     while True:
         var live = False
         comptime Probe = _Probe[K, origin_of(live)]
