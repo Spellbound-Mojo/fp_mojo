@@ -9,6 +9,7 @@ from native_signatures import (
     factory_pointer,
     native_dispatch,
     native_adapter,
+    NATIVE_INVOCATIONS,
     variants,
 )
 
@@ -17,23 +18,8 @@ OUTPUT = ROOT / "src/fp/callables/native.mojo"
 ADAPTER_START = "# --- native unary admission (generated) ---\n"
 ADAPTER_END = "# --- end native unary admission ---\n"
 
-# These are the existing invocation owners. Capture delegates matching shapes
-# here and uses the same emitter for its remaining mixed-convention bundles.
-VIEWS = {
-    "thunk": ("", [], [], False, False),
-    "unary": ("o", ["A"], ["value"], False, False),
-    "borrow": ("r", ["P"], ["payload"], False, False),
-    "binary": ("oo", ["A", "B"], ["first", "second"], False, False),
-    "keywords": ("", [], [], True, False),
-    "mutating": ("m", ["A"], ["value"], False, True),
-    "mut_owned": ("mo", ["A", "B"], ["first", "second"], False, True),
-    "mutating_keywords": ("m", ["A"], ["first"], True, True),
-    "mut_owned_keywords": ("mo", ["A", "B"], ["first", "second"], True, True),
-}
-
-
 def markers(name):
-    indent = "        " if VIEWS[name][-1] else "    "
+    indent = "        " if NATIVE_INVOCATIONS[name].view else "    "
     return (
         indent + f"# --- native invocation: {name} (generated) ---\n",
         indent + "# --- end native invocation ---\n",
@@ -41,7 +27,9 @@ def markers(name):
 
 
 def body(name):
-    shape, types, values, keywords, view = VIEWS[name]
+    invocation = NATIVE_INVOCATIONS[name]
+    shape, types, values = invocation.shape, invocation.types, invocation.values
+    keywords, view = invocation.keywords, invocation.view
     prefix = "Self." if view else ""
     prefix_body = ""
     if name in ("unary", "borrow"):
@@ -131,7 +119,7 @@ def unary_factories():
 
 def source(text=None):
     text = OUTPUT.read_text() if text is None else text
-    for name in VIEWS:
+    for name in NATIVE_INVOCATIONS:
         start, end = markers(name)
         before, remaining = text.split(start, 1)
         _, after = remaining.split(end, 1)

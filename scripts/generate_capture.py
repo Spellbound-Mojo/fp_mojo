@@ -13,6 +13,7 @@ from native_signatures import (
     argument,
     factory_pointer,
     native_dispatch,
+    native_invocation,
 )
 from pathlib import Path
 
@@ -110,44 +111,16 @@ def native(shape, kw):
     ]
     shape_type = storage_type(shape, kw)
     header = f'def _invoke_{nm}[{", ".join(ps)}](function: F, var arguments: {shape_type}) raises E -> R:\n'
-    known = {
-        (
-            "OO",
-            False,
-        ): "_call_native_binary[A, B, R, E, F, raising](function, arguments.a_value^, arguments.b_value^)",
-        ("O", False): "_call_native[A, R, E, F, raising](function, arguments.a_value^)",
-        (
-            "R",
-            False,
-        ): "_call_native_borrow[A, R, E, F, raising](function, arguments.a_value[])",
-        (
-            "M",
-            False,
-        ): "_NativeMutatingRef[A, R, E, F, raising, origin_of(function)](Pointer(to=function)).invoke(arguments.a_value[])",
-        (
-            "MO",
-            False,
-        ): "_NativeMutOwnedRef[A, B, R, E, F, raising, origin_of(function)](Pointer(to=function)).invoke(arguments.a_value[], arguments.b_value^)",
-        ("Z", False): "_call_native_thunk[R, E, F, raising](function)",
-        (
-            "K",
-            True,
-        ): "_call_native_keywords[K, R, E, F, raising](function, **arguments.options^)",
-        (
-            "MK",
-            True,
-        ): "_NativeMutatingKeywordsRef[A, K, R, E, F, raising, origin_of(function)](Pointer(to=function)).invoke(arguments.a_value[], **arguments.options^)",
-        (
-            "MOK",
-            True,
-        ): "_NativeMutOwnedKeywordsRef[A, B, K, R, E, F, raising, origin_of(function)](Pointer(to=function)).invoke(arguments.a_value[], arguments.b_value^, **arguments.options^)",
-    }
-    if (nm, kw) in known:
-        return header + "    return " + known[nm, kw] + "\n\n"
     values = [
         "arguments." + c.lower() + "_value" + ("[]" if m != "o" else "")
         for c, m in zip("AB", shape)
     ]
+    delegated = native_invocation(
+        shape, list("AB"[: len(shape)]), values,
+        keyword="K" if kw else None, keyword_value="arguments.options",
+    )
+    if delegated is not None:
+        return header + "    return " + delegated + "\n\n"
     return (
         header
         + native_dispatch(

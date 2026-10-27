@@ -2935,6 +2935,31 @@ tests; and strict documentation validation. Recorded inputs and package hashes
 remained unchanged. The full rejection gate restarted in a fresh output bundle
 after an environment interruption; its final completed report owns the result.
 
+### Capture delegates through the shared native invocation catalog
+
+The native-signature catalog now records each of the nine existing invocation
+owners: thunk, owned unary, borrowed unary, binary, keyword pack, and the four
+mutable reference forms. The native boundary generator uses those same shape,
+operand and reference-view descriptions when rendering the owner bodies.
+Capture and the native tuple adapters select a matching owner from this catalog instead of maintaining a
+second shape table with complete handwritten invocation strings. Unary and
+binary tuple adapters use the same lookup; larger arities retain their existing
+finite-signature dispatch.
+
+Call spelling derives consumed operand markers and keyword-pack transfer from
+the recorded conventions. Native reference views retain the callback's actual
+origin and borrow it through the existing Pointer constructor. Mixed shapes
+without an existing owner still use native_dispatch in their argument bundle.
+No additional native boundary, adapter, storage or catch implementation is added.
+
+All 107 Mojo source files remain byte-identical to the preceding qualified
+architecture. Existing generator-parity tests cover both Capture outputs and
+the native invocation source, including every generated mixed convention.
+
+Qualification passed all generator-parity checks, 49 tooling tests in the pinned
+environment and strict documentation validation. The verified source hashes
+match the preceding pass for every Mojo module.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

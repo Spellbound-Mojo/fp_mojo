@@ -1,5 +1,5 @@
 """Native n-argument boundaries and bounded type inference; execution is shared."""
-from native_signatures import thin_dispatch
+from native_signatures import thin_dispatch, native_invocation
 
 MD = 'Movable & Deinitable'
 MAX = 8
@@ -96,9 +96,13 @@ struct _NativeNary{n}[{params}, R: {MD}, X: {MD}, F: {MD}, raising: Bool, o: Imm
         out.extend(f'        var a{i} = slot{i}^.unsafe_assume_init()\n' for i in range(n))
         values=', '.join(f'a{i}^' for i in range(n))
         own=', '.join('Self.'+a for a in names)
-        if n<=2:
-            fn='_call_native' if n==1 else '_call_native_binary'
-            out.append(f'        return {fn}[{own}, Self.R, Self.X, Self.F, Self.raising](self.function[], {values})\n')
+        invocation = native_invocation(
+            "o" * n, ["Self." + name for name in names],
+            [f"a{i}" for i in range(n)], result="Self.R", error="Self.X",
+            function_type="Self.F", function="self.function[]", raising="Self.raising",
+        )
+        if invocation is not None:
+            out.append(f'        return {invocation}\n')
         else:
             out.append(thin_invocation(names))
             for raising in (True,False):

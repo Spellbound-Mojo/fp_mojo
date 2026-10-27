@@ -154,6 +154,60 @@ def callback(mode, kind, arg="function", second=False):
 
 
 @dataclass(frozen=True)
+class NativeInvocation:
+    """An existing invocation boundary and the operands it consumes or borrows."""
+
+    shape: str
+    types: tuple[str, ...]
+    values: tuple[str, ...]
+    owner: str
+    keywords: bool = False
+    view: bool = False
+
+
+NATIVE_INVOCATIONS = {
+    "thunk": NativeInvocation("", (), (), "_call_native_thunk"),
+    "unary": NativeInvocation("o", ("A",), ("value",), "_call_native"),
+    "borrow": NativeInvocation("r", ("P",), ("payload",), "_call_native_borrow"),
+    "binary": NativeInvocation("oo", ("A", "B"), ("first", "second"), "_call_native_binary"),
+    "keywords": NativeInvocation("", (), (), "_call_native_keywords", keywords=True),
+    "mutating": NativeInvocation("m", ("A",), ("value",), "_NativeMutatingRef", view=True),
+    "mut_owned": NativeInvocation("mo", ("A", "B"), ("first", "second"), "_NativeMutOwnedRef", view=True),
+    "mutating_keywords": NativeInvocation("m", ("A",), ("first",), "_NativeMutatingKeywordsRef", keywords=True, view=True),
+    "mut_owned_keywords": NativeInvocation("mo", ("A", "B"), ("first", "second"), "_NativeMutOwnedKeywordsRef", keywords=True, view=True),
+}
+
+
+def native_invocation(shape, payloads, values, *, keyword=None, keyword_value="values",
+                      result="R", error="E", function_type="F", function="function",
+                      raising="raising"):
+    """Delegate a matching shape to its existing owner, or return None.
+
+    Values are lvalues; consuming conventions and the owned keyword pack supply
+    their move markers here. Missing mixed shapes retain native_dispatch in the
+    argument bundle. This function describes calls, never their execution.
+    """
+    shape = "".join(shape)
+    owner = next((item for item in NATIVE_INVOCATIONS.values()
+                  if item.shape == shape and item.keywords == (keyword is not None)), None)
+    if owner is None:
+        return None
+    assert len(payloads) == len(values) == len(shape)
+    parameters = [*payloads, *([keyword] if keyword is not None else []),
+                  result, error, function_type, raising]
+    arguments = [value + ("^" if mode == "o" else "")
+                 for value, mode in zip(values, shape)]
+    if keyword is not None:
+        arguments.append(f"**{keyword_value}^")
+    if owner.view:
+        parameters.append(f"origin_of({function})")
+        adapter = owner.owner + "[" + ", ".join(parameters) + "]"
+        return f"{adapter}(Pointer(to={function})).invoke({', '.join(arguments)})"
+    arguments.insert(0, function)
+    return owner.owner + "[" + ", ".join(parameters) + "](" + ", ".join(arguments) + ")"
+
+
+@dataclass(frozen=True)
 class Operand:
     type: str
     convention: str
