@@ -3200,6 +3200,27 @@ all 53 tooling tests. All 107 library Mojo files remain byte-identical to the
 preceding candidate. The embedded example remains the maintained source used
 by the recovery qualification; no separate code sample was introduced.
 
+### Filtering contracts live below derived traversal
+
+FilterContract and FilterMapContract now live in the primitive metadata module
+and are re-exported through their existing public routes. Their complete
+declarations are byte-identical. Filtering imports that lower owner, and the
+existing traversal compaction callback projects its output and native error
+from FilterMapContract instead of reconstructing those family types.
+
+Public exports and signatures are unchanged; the reviewed inventory records
+only the two physical provider moves. Filter inversion keeps its adapted
+predicate, and filter-map keeps its original input-only admission. The module
+DAG guard continues to keep primitive metadata below derived algebra, effects
+and fluent functions. No callback or execution boundary is added.
+
+Qualification passed 20 selection and 128 traversal-composition boundary
+checks across source/package O0/O3, 197 selected programs, 94 expected
+rejection fixtures and all four builds/runs of the selection-contract example.
+Generator parity, all 53 tooling tests, regenerated API/export inventories and
+strict documentation validation passed. The API review found only the two
+provider-path changes; both moved contract declarations remain byte-identical.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

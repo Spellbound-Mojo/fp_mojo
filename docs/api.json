@@ -1515,7 +1515,7 @@
      "variadic": false
     }
    ],
-   "provider": "algebra/contracts",
+   "provider": "algebra/_primitive_contracts",
    "signature": "struct FilterContract[I: Filterable, V: Movable & Deinitable, P: BorrowCallable, inverted: Bool = False]",
    "summary": "The admission, output and exact error of borrowing predicate selection.",
    "traits": []
@@ -1570,7 +1570,7 @@
      "variadic": false
     }
    ],
-   "provider": "algebra/contracts",
+   "provider": "algebra/_primitive_contracts",
    "signature": "struct FilterMapContract[I: FunctorFilter, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]",
    "summary": "Result metadata for filter_map and its fluent continuation.",
    "traits": []

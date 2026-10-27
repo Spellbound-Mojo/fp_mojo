@@ -11967,19 +11967,19 @@
       "declarations": [
         "struct FilterMapContract[I: FunctorFilter, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]:"
       ],
-      "provider": "algebra/contracts"
-    },
-    "algebra.TraverseContract": {
-      "kind": "type or alias",
-      "declarations": [
-        "struct TraverseContract[S: Traversable, G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]:"
-      ],
-      "provider": "algebra/contracts"
+      "provider": "algebra/_primitive_contracts"
     },
     "algebra.FilterContract": {
       "kind": "type or alias",
       "declarations": [
         "struct FilterContract[I: Filterable, V: Movable & Deinitable, P: BorrowCallable, inverted: Bool = False]:"
+      ],
+      "provider": "algebra/_primitive_contracts"
+    },
+    "algebra.TraverseContract": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct TraverseContract[S: Traversable, G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]:"
       ],
       "provider": "algebra/contracts"
     },

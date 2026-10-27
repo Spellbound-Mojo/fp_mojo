@@ -1,5 +1,5 @@
 """Derived traversal policies over the canonical family traversal and loop."""
-from ._primitive_contracts import BindContract, MapContract
+from ._primitive_contracts import BindContract, MapContract, FilterMapContract
 from fp.algebra._admission import _BindCompatible
 from std.builtin.rebind import downcast, rebind, rebind_var
 from fp.callables.protocols import Unary, UnaryContract, BorrowCallContract
@@ -47,8 +47,9 @@ struct _FlattenAfter[S: Monad, V: Movable & Deinitable](Unary, Copyable, Default
 struct _CompactAfter[S: FunctorFilter, V: Movable & Deinitable](Unary, Copyable, Defaultable):
     """Keep present payloads after traversal using the source's filtering owner."""
     comptime Arg = Self.V
-    comptime Out = Self.S.MapFiltered[Self.V, Identity[Self.S.Element[Self.V]]]
-    comptime Error = Self.S.MapFilterError[Self.V, Identity[Self.S.Element[Self.V]]]
+    comptime _Operation = FilterMapContract[Self.S, Self.V, Identity[Self.S.Element[Self.V]]]
+    comptime Out = Self._Operation.Out
+    comptime Error = Self._Operation.Error
     def call(self, var value: Self.V) raises Self.Error -> Self.Out:
         return compact[Self.S](value^)
 

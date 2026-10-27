@@ -5,7 +5,7 @@ from fp.callables.protocols import BorrowCallable, Unary
 from fp.iteration._callbacks import _predicate_callable
 from fp.callables.native import _Borrowing, _RaisingBorrowing, _NativeBorrowRef
 from .protocols import Filterable, FunctorFilter, _Accumulate
-from .contracts import FilterContract
+from ._primitive_contracts import FilterContract
 from fp.callables.protocols import UnaryContract
 from fp.callables.native import _Unary, _RaisingUnary, _NativeUnaryRef
 from fp.callables._identity import Identity

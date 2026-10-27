@@ -7,11 +7,10 @@ opaque until the operation is specialized. These descriptors store no values,
 adapt no callbacks and introduce no additional invocation boundary.
 """
 from std.builtin.rebind import downcast
-from ._primitive_contracts import MapContract, BindContract, CombineContract
-from .protocols import _MappedFamily, Functor, Monad, Traversable, Applicative, Filterable, FunctorFilter
+from ._primitive_contracts import MapContract, BindContract, CombineContract, FilterMapContract, FilterContract
+from .protocols import Functor, Monad, Traversable, Applicative
 from fp.iteration._advance import _OwnedElement
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallable, _ErrorProbe
-from fp.callables._predicates import _FilterPredicate
 from fp.callables._transforms import _ValueThunk, _Pair, _Apply
 from .protocols import Monoid, _AllLive, _LiveAccumulator
 from ._accumulation import _FoldMappedStep, _SearchStep, _FirstPresent, _BoolLive, _PredicateStep
@@ -20,31 +19,6 @@ from fp.callables.invoke import RepeatableUnary, RepeatableBinary, _OnceUnaryAva
 from fp._internal.errors import _CommonError, _ErrorCompatible
 from fp.callables._identity import Identity
 from fp.iteration._advance import _Source
-
-
-struct FilterMapContract[I: FunctorFilter, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]:
-    """Result metadata for filter_map and its fluent continuation.
-
-    The family primitive owns Optional-result admission and invocation. This
-    descriptor exposes the existing selected signature's input constraint as
-    Compatible; it does not add map's carrier proof to
-    filtering. The legacy free function keeps its existing admission policy.
-
-    Parameters:
-        I: The source family supporting filter_map.
-        V: The complete source carrier type, including origins.
-        F: The library callback type, with its Optional result and native error.
-    """
-    comptime InputCompatible = Self.I.Element[Self.V] == Self.F.Arg
-    """Exact input payload equality, including origins."""
-    comptime Compatible = Self.InputCompatible
-    """The selected filter_map signature's admission; family primitives check representation and receiver requirements."""
-    comptime Family = _MappedFamily[Self.I.MapFilteredFamily, _OwnedElement[Self.F.Out]]
-    """The output shape family, rebound to the present transformed payload."""
-    comptime Out = Self.I.MapFiltered[Self.V, Self.F]
-    """The carrier of present transformed payloads."""
-    comptime Error = Self.I.MapFilterError[Self.V, Self.F]
-    """The family's exact construction error."""
 
 
 struct TraverseContract[S: Traversable, G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]:
@@ -82,36 +56,6 @@ struct TraverseContract[S: Traversable, G: Applicative, V: Movable & Deinitable,
     """The exact traversal result, retaining source shape and target effect."""
     comptime Error = Self.S.TraverseError[Self.G, Self.V, Self.F]
     """The exact native error raised when constructing the traversal."""
-
-
-struct FilterContract[I: Filterable, V: Movable & Deinitable, P: BorrowCallable, inverted: Bool = False]:
-    """The admission, output and exact error of borrowing predicate selection.
-
-    Forward `Compatible` in a generic wrapper of `filter` or `filter_not`.
-    Inversion changes the predicate supplied to the family, so its associated
-    output and error must be projected using that adapted predicate too.
-    Filtering does not require the family to implement Functor.
-
-    Parameters:
-        I: The selected Filterable family.
-        V: The complete consumed carrier type, including origins.
-        P: The repeatable borrowing predicate type.
-        inverted: Select filter_not semantics; False selects filter.
-    """
-    comptime InputCompatible = Self.I.Element[Self.V] == Self.P.Payload
-    """Exact predicate payload equality, including embedded origins."""
-    comptime PredicateCompatible = Self.P.Result == Bool
-    """The predicate returns the native Bool type."""
-    comptime Compatible = Self.InputCompatible and Self.PredicateCompatible
-    """The complete checked filtering admission."""
-    comptime Family = downcast[Self.I.FilteredFamily, Functor]
-    """The output Functor; project only when FilteredFamily conforms to Functor."""
-    comptime Predicate = _FilterPredicate[Self.P, Self.inverted]
-    """The predicate supplied to the family after optional inversion."""
-    comptime Out = Self.I.Filtered[Self.V, Self.Predicate]
-    """The exact carrier produced by the family."""
-    comptime Error = Self.I.FilterError[Self.V, Self.Predicate]
-    """The exact construction error, including predicate-dependent family errors."""
 
 
 comptime Map2Contract[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & Movable & Deinitable] = CombineContract[I, V, F, _ValueThunk[W]]
