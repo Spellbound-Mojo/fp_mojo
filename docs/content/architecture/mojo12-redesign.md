@@ -2728,6 +2728,33 @@ checks at O0/O3, 25 State programs, the generic capability client and 43 declare
 rejection fixtures. All inputs remained unchanged. The public API snapshot,
 generated sources, all 48 tooling tests and strict documentation checks passed.
 
+### Finite n-ary metadata reuses combination contracts
+
+The bounded product metadata generator selects one `MapContract` for its initial
+singleton mapping and one `Map2Contract` for each subsequent operand. Result and
+native-error projections reuse that descriptor instead of independently spelling
+the same callback, carrier and combination. The final tuple callback likewise
+uses one mapping descriptor. The native arity boundaries and shared runtime
+product construction are unchanged.
+
+An initial conditional descriptor alias lost its `Out` and `Error` members to
+Mojo's common inferred type. The adopted representation keeps each descriptor
+concrete and guards only its projections with the existing operand-count check.
+It retains finite inference and does not reintroduce recursive variadic metadata.
+Missing operand types remain unevaluated at the guarded projections. Public
+signatures, positional bindings, ownership, origins and native error composition
+retain their previous contracts.
+
+Existing clients exercise all native arities, larger library tuples, generic and
+third-party families, deferred effects, validation order and move-only cleanup.
+
+Qualification passed 44 native n-ary and 12 staged n-ary source/package checks
+at O0/O3, two fluent-combination programs, five parallel-validation programs and
+14 declared fluent rejection fixtures. All inputs remained unchanged. The
+current API snapshot, generated-source checks, all 48 tooling tests and strict
+documentation checks passed. The generated metadata block is 23% smaller while
+its shared execution prefix and native call boundaries remain identical.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.
