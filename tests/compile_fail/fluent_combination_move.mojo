@@ -1,4 +1,4 @@
-# error: List combination copies each element into every pair
+# error: no matching method in call to 'product'
 from fp.functions import piped
 @fieldwise_init
 struct FCResource(Movable):

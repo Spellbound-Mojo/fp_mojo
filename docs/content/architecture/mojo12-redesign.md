@@ -1353,6 +1353,43 @@ Public declaration changes are limited to native map/bind admission and
 `Piped.map`; parameter ordering and ordinary call syntax are preserved. Reports
 and retained failed investigations are in `.cache/quality-cycle13/`.
 
+### Shared lazy combination and branch admission
+
+OptionalT and ResultT combination use their existing bind guards to preserve
+absence or stored errors and join base carriers. `_LayerRight` owns the remaining
+common work: retaining the lazy right operand, forcing it at most once, copying
+its cached carrier and the combiner when the base branches, and mapping a bound
+left payload over the right carrier. The guards and `_Lazy` retain their existing
+ownership and execution responsibilities; no second traversal or new dispatch
+mode is introduced.
+
+Combination admission follows both base primitives that execute: bind of the
+guard, and map of the right continuation. Their receiver conformances encode
+branch-specific copying requirements. A single-execution base still accepts
+consuming callbacks and move-only payloads/captures. The right factory need not
+be copyable; only a branched cached value needs copies. Native construction errors
+are checked at the continuation boundary without changing deferred run errors.
+Direct List combination declares its existing repeatable-combiner and copyable
+operand requirements through the same public contract. Native List map2, product
+and ap forward that family predicate; generic wrappers forward the public
+combination contract. Ordinary calls and positional type bindings stay intact.
+
+Traversal and generic accumulation admission are a separate follow-up, because
+their accumulator policies have different copying requirements.
+
+Qualification on Mojo 1.2.0 includes 100 source/package O0/O3 boundary checks,
+1,578 rejection fixtures, 46 tooling tests, generator consistency, and strict
+public documentation checks (318 exports and 78 examples). The complete suite
+passed 687 checked programs and two benchmark programs before the final
+compile-time diagnostic refresh; the refreshed package passed the boundary and
+rejection gates. All successful reports retained unchanged inputs and no audit
+failures. Runtime controls cover Cartesian order, mutable combiner state, lazy
+right production and skipped branches; 24 ownership scenarios cover consuming
+captures, abandonment and exact native exceptions. Ordinary native, callable and
+generic fluent calls are maintained controls. The first rejection run found two
+legacy diagnostic regressions, now fixed in their assertion owners; its raw
+report remains alongside final evidence in `.cache/quality-cycle14/`.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

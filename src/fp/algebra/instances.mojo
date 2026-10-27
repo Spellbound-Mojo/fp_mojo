@@ -6,7 +6,7 @@ Result transformations use the owned transformation of the Result methods.
 from std.builtin.rebind import rebind_var, rebind, downcast
 from std.iter import IterableOwned, Iterator
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, Unary, BorrowCallable
-from fp.callables.invoke import RepeatableUnary, RepeatableBinary, call_once, call_repeated
+from fp.callables.invoke import RepeatableUnary, RepeatableBinary, _OnceThunkAvailable, call_once, call_repeated
 from fp.callables._receiver import _unary_once_as, _binary_once_as, _binary_repeated_as, _thunk_once_as
 from fp.data._result import Result, Ok, Err, _ResultType, _transform_result_owned
 from fp.iteration._advance import _next_optional
@@ -700,7 +700,11 @@ struct ListFamily(Monad, Traversable, Filterable, FunctorFilter):
     comptime CarrierCompatible[V: Movable & Deinitable] = V == List[Self.Element[V]] if conforms_to(V, IterableOwned) else False
     comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == List[F.Arg] and RepeatableUnary[F]
     comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.MapCompatible[V, F] and Self.CarrierCompatible[F.Out]
-    comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = V == List[F.First] and R.Out == List[F.Second]
+    comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = (
+        V == List[F.First] and R.Out == List[F.Second] and RepeatableBinary[F] and
+        conforms_to(F.First, Copyable) and conforms_to(F.Second, Copyable) and
+        _OnceThunkAvailable[R] and _CommonErrorCompatible[F.Error,R.Error]
+    )
     comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out]
     comptime TraverseCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.Element[V] == F.Arg if conforms_to(V, Iterator) or conforms_to(V, IterableOwned) else False
     comptime Element[V: Movable & Deinitable] = _Item[V]
@@ -834,11 +838,12 @@ struct ListFamily(Monad, Traversable, Filterable, FunctorFilter):
         Raises:
             The combiner's or the thunk's error.
         """
-        comptime assert Self.CombineCompatible[V, F, R], "map2: same family required"
         comptime assert RepeatableBinary[F], "List combination requires a repeatable callback"
         comptime assert conforms_to(F.First, Copyable) and conforms_to(F.Second, Copyable), "List combination copies each element into every pair"
         comptime E = Self.CombineError[V, F, R]
         comptime assert _ErrorCompatible[E, F.Error] and _ErrorCompatible[E, R.Error], "map2: incompatible native errors"
+        # Primitive callers retain specific diagnostics before aggregate admission.
+        comptime assert Self.CombineCompatible[V, F, R], "map2: same family required"
         comptime L = downcast[F.First, Copyable & Deinitable]
         comptime S = downcast[F.Second, Copyable & Deinitable]
         var firsts = rebind_var[List[F.First]](left^)

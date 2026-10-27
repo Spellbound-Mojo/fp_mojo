@@ -14,9 +14,9 @@ from fp.algebra.contracts import MapContract
 from fp.algebra.error_mapping import MapBothContract
 from fp.algebra.instances import IdentityFamily, OptionalFamily, ResultFamily, _OkOf
 from fp.callables.protocols import BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, OnceUnary, MutableUnary
-from fp.callables.invoke import call_once, call_repeated, RepeatableUnary
+from fp.callables.invoke import _OnceBinaryAvailable, _OnceThunkAvailable, call_once, call_repeated, RepeatableUnary
 from fp.data._result import Result, Ok, Err, _fold_result_owned, _transformed
-from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
+from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible, _propagate_error
 from .protocols import Local, Listen, _CarrierOp, _LocalLifting, _CapabilityLifting
 from ._adapt import _map_as
 from ._transport import _LocalOp, _ListenMapped, _ListenSum
@@ -137,35 +137,37 @@ struct _ResultGuard[M: Monad, E: Movable & Deinitable, F: UnaryContract & Movabl
 
 
 @fieldwise_init
-struct _OptionalCombine[M: Monad, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable](
+struct _LayerRight[M: Monad, N: Applicative, F: BinaryContract & Movable & Deinitable,
+                   G: ThunkContract & Movable & Deinitable](
     OnceUnary, MutableUnary where conforms_to(F, Copyable) and conforms_to(G.Out, Copyable)
 ):
-    """OptionalT map2 step: absence returns the base's pure absence and skips
-    the right operand; presence produces it once and maps the inner combination."""
+    """Produce a lazy right operand and map combination over its inner layer.
+
+    Existing Optional/Result guards own skipped branches and base joins. This
+    continuation alone owns the cached right operand and callback copying.
+    """
     var function: Self.F
     var right: _Lazy[Self.G]
-    comptime Apply = _InnerMap[OptionalFamily, _BindFirst[Self.F]]
-    comptime Absent = Self.M.Pure[Optional[Self.F.Out]]
-    comptime Present = Self.M.Mapped[Self.G.Out, Self.Apply]
-    comptime Arg = Optional[Self.F.First]
-    comptime Out = Self.M._Joined[Self.Absent, Self.Present]
+    comptime Apply = _InnerMap[Self.N, _BindFirst[Self.F]]
+    comptime Arg = Self.F.First
+    comptime Out = Self.M.Mapped[Self.G.Out, Self.Apply]
     comptime Error = _CommonError[Self.G.Error, Self.M.MapError[Self.G.Out, Self.Apply]]
+    comptime Compatible = (
+        _OnceBinaryAvailable[Self.F] and _OnceThunkAvailable[Self.G] and
+        Self.M.MapCompatible[Self.G.Out,Self.Apply] and
+        _CommonErrorCompatible[Self.G.Error,Self.M.MapError[Self.G.Out,Self.Apply]]
+    )
     @staticmethod
-    def _apply(var function: Self.F, var first: Self.F.First, var right: Self.G.Out) raises Self.Error -> Self.Out:
+    def _apply(var function: Self.F, var first: Self.Arg, var right: Self.G.Out) raises Self.Error -> Self.Out:
         comptime assert _ErrorCompatible[Self.Error, Self.M.MapError[Self.G.Out, Self.Apply]]
-        var mapped = _map_as[Self.Error, Self.M](Self.Apply(_BindFirst[Self.F](function^, first^)), right^)
-        return Self.M._join_right[Self.Absent, Self.Present](mapped^)
-    def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
+        return _map_as[Self.Error, Self.M](Self.Apply(_BindFirst[Self.F](function^, first^)), right^)
+    def call_once(deinit self, var first: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert _ErrorCompatible[Self.Error, Self.G.Error]
-        if not arg:
-            return Self.M._join_left[Self.Absent, Self.Present](Self.M.pure(Optional[Self.F.Out]()))
         var right = self.right^.take[Self.Error]()
-        return Self._apply(self.function^, arg.unsafe_take(), right^)
-    def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
+        return Self._apply(self.function^, first^, right^)
+    def call_mut(mut self, var first: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert conforms_to(Self.F, Copyable), "map2: repeated branches copy the callback and the right operand"
         comptime assert _ErrorCompatible[Self.Error, Self.G.Error]
-        if not arg:
-            return Self.M._join_left[Self.Absent, Self.Present](Self.M.pure(Optional[Self.F.Out]()))
         var right: Self.G.Out
         try:
             right = self.right.copy_value()
@@ -173,50 +175,11 @@ struct _OptionalCombine[M: Monad, F: BinaryContract & Movable & Deinitable, G: T
             _propagate_error[Self.Error](error^)
         comptime C = downcast[Self.F, Copyable & Deinitable]
         var function = rebind_var[Self.F](rebind[C](self.function).copy())
-        return Self._apply(function^, arg.unsafe_take(), right^)
+        return Self._apply(function^, first^, right^)
 
 
-@fieldwise_init
-struct _ResultCombine[M: Monad, E: Movable & Deinitable, F: BinaryContract & Movable & Deinitable,
-                      G: ThunkContract & Movable & Deinitable](
-    OnceUnary, MutableUnary where conforms_to(F, Copyable) and conforms_to(G.Out, Copyable)
-):
-    """ResultT map2 step: a stored error returns the base's pure error and skips
-    the right operand; success produces it once and maps the inner combination."""
-    var function: Self.F
-    var right: _Lazy[Self.G]
-    comptime Apply = _InnerMap[ResultFamily[Self.E], _BindFirst[Self.F]]
-    comptime Absent = Self.M.Pure[Result[Self.F.Out, Self.E]]
-    comptime Present = Self.M.Mapped[Self.G.Out, Self.Apply]
-    comptime Arg = Result[Self.F.First, Self.E]
-    comptime Out = Self.M._Joined[Self.Absent, Self.Present]
-    comptime Error = _CommonError[Self.G.Error, Self.M.MapError[Self.G.Out, Self.Apply]]
-    @staticmethod
-    def _apply(var function: Self.F, var first: Self.F.First, var right: Self.G.Out) raises Self.Error -> Self.Out:
-        comptime assert _ErrorCompatible[Self.Error, Self.M.MapError[Self.G.Out, Self.Apply]]
-        var mapped = _map_as[Self.Error, Self.M](Self.Apply(_BindFirst[Self.F](function^, first^)), right^)
-        return Self.M._join_right[Self.Absent, Self.Present](mapped^)
-    def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        comptime assert _ErrorCompatible[Self.Error, Self.G.Error]
-        if arg.is_err():
-            var stored = arg^._take_err()
-            return Self.M._join_left[Self.Absent, Self.Present](Self.M.pure(Result[Self.F.Out, Self.E](Err(stored^))))
-        var right = self.right^.take[Self.Error]()
-        return Self._apply(self.function^, arg^._take_ok(), right^)
-    def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        comptime assert conforms_to(Self.F, Copyable), "map2: repeated branches copy the callback and the right operand"
-        comptime assert _ErrorCompatible[Self.Error, Self.G.Error]
-        if arg.is_err():
-            var stored = arg^._take_err()
-            return Self.M._join_left[Self.Absent, Self.Present](Self.M.pure(Result[Self.F.Out, Self.E](Err(stored^))))
-        var right: Self.G.Out
-        try:
-            right = self.right.copy_value()
-        except error:
-            _propagate_error[Self.Error](error^)
-        comptime C = downcast[Self.F, Copyable & Deinitable]
-        var function = rebind_var[Self.F](rebind[C](self.function).copy())
-        return Self._apply(function^, arg^._take_ok(), right^)
+comptime _OptionalCombine[M: Monad, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable] = _OptionalGuard[M, _LayerRight[M, OptionalFamily, F, G]]
+comptime _ResultCombine[M: Monad, E: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable] = _ResultGuard[M, E, _LayerRight[M, ResultFamily[E], F, G]]
 
 
 struct _OptionalAcc[K: _Accumulate](_Accumulate):
@@ -327,7 +290,9 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
     comptime CarrierCompatible[V: Movable & Deinitable] = Self.M.CarrierCompatible[V] and OptionalFamily.CarrierCompatible[Self.M.Element[V]]
     comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.MapCompatible[V,_InnerMap[OptionalFamily,F]] if Self.CarrierCompatible[V] else False
     comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.BindCompatible[V,_OptionalGuard[Self.M,F]] if _CarrierBind[Self,V,F] else False
-    comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable] = _CarrierCombine[Self, V, F, G]
+    comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable] = (
+        _LayerRight[Self.M,OptionalFamily,F,G].Compatible and Self.M.BindCompatible[V,_OptionalCombine[Self.M,F,G]]
+    ) if _CarrierCombine[Self,V,F,G] else False
     comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out]
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.Mapped[V, _InnerMap[OptionalFamily, F]]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.MapError[V, _InnerMap[OptionalFamily, F]]
@@ -359,7 +324,7 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
         var f: F, var left: V, var right: G
     ) raises Self.CombineError[V, F, G] -> Self.Combined[V, F, G]:
         comptime assert Self.CombineCompatible[V, F, G], _LAYER
-        return Self.M.flat_map(_OptionalCombine[Self.M, F, G](f^, _Lazy[G](right^)), left^)
+        return Self.M.flat_map(_OptionalCombine[Self.M, F, G](_LayerRight[Self.M, OptionalFamily, F, G](f^, _Lazy[G](right^))), left^)
 
     @staticmethod
     def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V
@@ -449,7 +414,9 @@ struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, Erro
     comptime CarrierCompatible[V: Movable & Deinitable] = Self.M.CarrierCompatible[V] and ResultFamily[Self.E].CarrierCompatible[Self.M.Element[V]]
     comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.MapCompatible[V,_InnerMap[ResultFamily[Self.E],F]] if Self.CarrierCompatible[V] else False
     comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.BindCompatible[V,_ResultGuard[Self.M,Self.E,F]] if _CarrierBind[Self,V,F] else False
-    comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable] = _CarrierCombine[Self, V, F, G]
+    comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable] = (
+        _LayerRight[Self.M,ResultFamily[Self.E],F,G].Compatible and Self.M.BindCompatible[V,_ResultCombine[Self.M,Self.E,F,G]]
+    ) if _CarrierCombine[Self,V,F,G] else False
     comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out]
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.Mapped[V, _InnerMap[ResultFamily[Self.E], F]]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.MapError[V, _InnerMap[ResultFamily[Self.E], F]]
@@ -481,7 +448,7 @@ struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, Erro
         var f: F, var left: V, var right: G
     ) raises Self.CombineError[V, F, G] -> Self.Combined[V, F, G]:
         comptime assert Self.CombineCompatible[V, F, G], _LAYER
-        return Self.M.flat_map(_ResultCombine[Self.M, Self.E, F, G](f^, _Lazy[G](right^)), left^)
+        return Self.M.flat_map(_ResultCombine[Self.M, Self.E, F, G](_LayerRight[Self.M, ResultFamily[Self.E], F, G](f^, _Lazy[G](right^))), left^)
 
     @staticmethod
     def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V

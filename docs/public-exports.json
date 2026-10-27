@@ -2435,16 +2435,16 @@
             "sha256": "750bb1e996b952ec17059a8d5a90191ae042be2e7773d464ea628d603cb17a8c"
           },
           {
-            "signature": "def map2[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable, //](deinit self, var other: W, var function: F) raises F.Error -> Piped[List[F.Out]] where Self.Value == List[F.First] and W == List[F.Second]:",
-            "sha256": "5ab65b7333a511d86ce4e0b7fdefeddfd79fc08b68f221d1db218a590cc753ab"
+            "signature": "def map2[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable, //](deinit self, var other: W, var function: F) raises F.Error -> Piped[List[F.Out]] where Self.Value == List[F.First] and _CombineCompatible[ListFamily, List[F.First], F, _ValueThunk[List[F.Second]]] and W == List[F.Second]:",
+            "sha256": "e34a8d298e8eaa6e5e68f13036b53c2f9d02875c33b1c1bc3c5b1873b1f4a869"
           },
           {
-            "signature": "def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, F: _Binary[A, B, R]](deinit self, var other: W, ref[o] function: F) raises Never -> Piped[List[R]] where Self.Value == List[A] and W == List[B]:",
-            "sha256": "1c4351bcff172a67e7154897dec3c9bc36cf6d22b3e7d84b303ee767c576c27a"
+            "signature": "def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, F: _Binary[A, B, R]](deinit self, var other: W, ref[o] function: F) raises Never -> Piped[List[R]] where Self.Value == List[A] and _CombineCompatible[ListFamily, List[A], _NativeBinaryRef[A, B, R, Never, F, False, o], _ValueThunk[List[B]]] and W == List[B]:",
+            "sha256": "cc0db1ab173323b358630265b02fd1abf4ae68957d554491f443b4a132ef88d1"
           },
           {
-            "signature": "def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X]](deinit self, var other: W, ref[o] function: F) raises X -> Piped[List[R]] where Self.Value == List[A] and W == List[B]:",
-            "sha256": "ab16697af9213ab9f0123f761893e762afc424d4dd0790793381025a3e56748f"
+            "signature": "def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X]](deinit self, var other: W, ref[o] function: F) raises X -> Piped[List[R]] where Self.Value == List[A] and _CombineCompatible[ListFamily, List[A], _NativeBinaryRef[A, B, R, X, F, True, o], _ValueThunk[List[B]]] and W == List[B]:",
+            "sha256": "19887a66db4c319a3f25e35ce56772ddb37ebba412dddc7c0bdf7a0cb8cc93a8"
           },
           {
             "signature": "def map2[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable, //](deinit self, var other: W, var function: F) raises F.Error -> Piped[Optional[F.Out]] where Self.Value == Optional[F.First] and W == Optional[F.Second]:",
@@ -2477,8 +2477,8 @@
             "sha256": "6fe7aed4c7c1f5b7c51588a9243d1663e2fbbaa4f6bf10ff230a3244147742b2"
           },
           {
-            "signature": "def product[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var other: List[U]) -> Piped[List[Tuple[T, U]]] where Self.Value == List[T]:",
-            "sha256": "c6d3f8620ffabf47b1694d95f73274b21b6b4c0217c91adcccd21b831fcdb69f"
+            "signature": "def product[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var other: List[U]) -> Piped[List[Tuple[T, U]]] where Self.Value == List[T] and _CombineCompatible[ListFamily, List[T], _Pair[ListFamily.Element[List[T]], ListFamily.Element[List[U]]], _ValueThunk[List[U]]]:",
+            "sha256": "d43cfd467e20e4b442296a86cbadeb932fb2145d369defc0f83adddde772625e"
           },
           {
             "signature": "def product[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var other: Optional[U]) -> Piped[Optional[Tuple[T, U]]] where Self.Value == Optional[T]:",
@@ -2495,8 +2495,8 @@
             "sha256": "a453fcfce04aabfe89e28b2c29ac8b0f9b706d7973ccf1ee96a08e6d51a55130"
           },
           {
-            "signature": "def ap[A: Movable & Deinitable](deinit self, var values: List[A]) raises downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Error -> Piped[List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Out]] where conforms_to(ListFamily.Element[Self.Value], UnaryContract) and Self.Value == List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable]] and A == downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Arg:",
-            "sha256": "61d48fc0629c8f614255006d9961f645b96c1b9e3a559d522be14b281ccf0651"
+            "signature": "def ap[A: Movable & Deinitable](deinit self, var values: List[A]) raises downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Error -> Piped[List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Out]] where conforms_to(ListFamily.Element[Self.Value], UnaryContract) and Self.Value == List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable]] and A == downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Arg and _CombineCompatible[ListFamily, List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable]], _Apply[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable]], _ValueThunk[List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Arg]]]:",
+            "sha256": "77af06b8d548ae6c0fec3d87076ff343ec1171f28181508f1e37fd27cad79424"
           },
           {
             "signature": "def ap[A: Movable & Deinitable](deinit self, var values: Optional[A]) raises downcast[OptionalFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Error -> Piped[Optional[downcast[OptionalFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Out]] where conforms_to(OptionalFamily.Element[Self.Value], UnaryContract) and Self.Value == Optional[downcast[OptionalFamily.Element[Self.Value], UnaryContract & Movable & Deinitable]] and A == downcast[OptionalFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Arg:",

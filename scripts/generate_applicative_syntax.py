@@ -35,7 +35,8 @@ def methods(carrier=None, result=False):
             output=carrier.value(r) if carrier else f'{family}.Combined[{left}, {cb}, _ValueThunk[{right}]]'
             raised=(error if native else 'F.Error') if carrier else f'I.CombineError[{left}, {cb}, _ValueThunk[{right}]]'
             condition=f'Self.Value == {left}' if carrier else f'I.Element[Self.Value] == {a} and I.Element[W] == {b}'
-            if not carrier: condition += f' and _CombineCompatible[I, {left}, {cb}, _ValueThunk[{right}]]'
+            if not carrier or carrier.name == 'List':
+                condition += f' and _CombineCompatible[{family}, {left}, {cb}, _ValueThunk[{right}]]'
             value=f'rebind_var[{left}](self.value^)' if carrier else 'self.value^'
             body=f'return Piped(_map2_as[{family}, X={raised}]({build}, {value}, other^))'
             output=f'Piped[{output}]'
@@ -58,8 +59,13 @@ def methods(carrier=None, result=False):
         cb=f'_Pair[{family}.Element[{left}], {family}.Element[{right}]]'
         output='Piped['+(carrier.value('Tuple[T, U]') if carrier else f'I.Combined[{left}, {cb}, _ValueThunk[{right}]]')+']'
         where=f' where Self.Value == {left}' if carrier else f' where _CombineCompatible[I, {left}, {cb}, _ValueThunk[{right}]]'
+        if carrier and carrier.name == 'List':
+            where += f' and _CombineCompatible[{family}, {left}, {cb}, _ValueThunk[{right}]]'
         value=f'rebind_var[{left}](self.value^)' if carrier else 'self.value^'
         body=f'return Piped(_family_product[{family}]({value}, other^))'
+        if carrier and carrier.name == 'List':
+            # Fixed native result/error types use the same checked bridge as map2.
+            body=f'return Piped(_map2_as[{family}, X=Never]({cb}(), {value}, other^))'
         raised='' if carrier else f' raises I.CombineError[{left}, {cb}, _ValueThunk[{right}]]'
     out.append(f'''
     def product[{', '.join(params)}](deinit self, var other: {right}){raised} -> {output}{where}:
@@ -87,6 +93,8 @@ def ap_method(carrier=None, result=False):
         output = f'Piped[{carrier.value(function + ".Out")}]'
         raised = f'{function}.Error'
         condition = f'conforms_to({family}.Element[Self.Value], UnaryContract) and Self.Value == {left} and A == {function}.Arg'
+        if carrier.name == 'List':
+            condition += f' and _CombineCompatible[{family}, {left}, _Apply[{function}], _ValueThunk[{carrier.value(function + ".Arg")}]]'
         body = f'return Piped(_map2_as[{family}, X={raised}](_Apply[{function}](), rebind_var[{left}](self.value^), rebind_var[{carrier.value(function + ".Arg")}](values^)))'
     else:
         function = 'downcast[I.Element[Self.Value], UnaryContract & Movable & Deinitable]'

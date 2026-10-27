@@ -120,6 +120,8 @@ Parameters:
 
 # The same receiver alternatives selected by call_once, exposed to admission.
 comptime _OnceUnaryAvailable[F: UnaryContract] = conforms_to(F, OnceUnary) or RepeatableUnary[F]
+comptime _OnceBinaryAvailable[F: BinaryContract] = conforms_to(F, OnceBinary) or RepeatableBinary[F]
+comptime _OnceThunkAvailable[F: ThunkContract] = conforms_to(F, OnceThunk) or RepeatableThunk[F]
 
 
 def call_once[F: UnaryContract & Movable & Deinitable](var f: F, var arg: F.Arg) raises F.Error -> F.Out:

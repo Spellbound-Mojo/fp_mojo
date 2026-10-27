@@ -40,6 +40,16 @@ predicate supplied to the family, including inversion. `CombineContract`
 describes a binary callback and a lazy right-hand thunk; it preserves the
 family's exact construction error and does not evaluate the thunk.
 
+Cartesian List combination requires a repeatable binary callback and copyable
+operands. Its right-hand factory is invoked at most once and may consume its
+captures. OptionalT and ResultT check the actual base mapping and binding
+operations, so a branching base additionally requires copyable callback captures
+and a copyable cached right carrier. These requirements are represented by
+`CombineContract.Compatible` and apply equally to fluent `map2`, `product` and
+`ap`. A generic wrapper can forward that one predicate; callers do not need
+explicit callback types. Single-execution bases retain consuming callbacks and
+move-only values.
+
 <!-- example: docs/examples/selection_contracts.mojo -->
 
 The component predicates remain available for generic implementations that

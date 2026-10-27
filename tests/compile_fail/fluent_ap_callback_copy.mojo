@@ -1,4 +1,4 @@
-# error: List combination copies each element into every pair
+# error: no matching method in call to 'ap'
 from fp.functions import piped
 from fp.callables import OnceUnary
 @fieldwise_init

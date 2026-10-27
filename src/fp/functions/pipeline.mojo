@@ -3887,7 +3887,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Combine 8 operands and call the native callback with separate arguments."""
         return Piped(_map_n_as[ValidationFamily[S], ValidationFamily[S].Pure[_ProductRun[ValidationFamily[S], Self.Value, W0, W1, W2, W3, W4, W5, W6].Payload], ValidationFamily[S].Pure[R], _CommonError[S.Error, X]](_NativeNary8[A0, A1, A2, A3, A4, A5, A6, A7, R, X, F, True, o](Pointer(to=function)), self.value^, others^))
 
-    def map2[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable, //](deinit self, var other: W, var function: F) raises F.Error -> Piped[List[F.Out]] where Self.Value == List[F.First] and W == List[F.Second]:
+    def map2[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable, //](deinit self, var other: W, var function: F) raises F.Error -> Piped[List[F.Out]] where Self.Value == List[F.First] and _CombineCompatible[ListFamily, List[F.First], F, _ValueThunk[List[F.Second]]] and W == List[F.Second]:
         """Combine two already evaluated carriers, following their Applicative semantics.
 
         Parameters:
@@ -3906,15 +3906,15 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_map2_as[ListFamily, X=F.Error](function^, rebind_var[List[F.First]](self.value^), rebind_var[List[F.Second]](other^)))
 
-    def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, F: _Binary[A, B, R]](deinit self, var other: W, ref[o] function: F) raises Never -> Piped[List[R]] where Self.Value == List[A] and W == List[B]:
+    def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, F: _Binary[A, B, R]](deinit self, var other: W, ref[o] function: F) raises Never -> Piped[List[R]] where Self.Value == List[A] and _CombineCompatible[ListFamily, List[A], _NativeBinaryRef[A, B, R, Never, F, False, o], _ValueThunk[List[B]]] and W == List[B]:
         """Combine two already evaluated carriers, following their Applicative semantics."""
         return Piped(_map2_as[ListFamily, X=Never](_NativeBinaryRef[A, B, R, Never, F, False, o](Pointer(to=function)), rebind_var[List[A]](self.value^), rebind_var[List[B]](other^)))
 
-    def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X]](deinit self, var other: W, ref[o] function: F) raises X -> Piped[List[R]] where Self.Value == List[A] and W == List[B]:
+    def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, X: Movable & Deinitable, F: _RaisingBinary[A, B, R, X]](deinit self, var other: W, ref[o] function: F) raises X -> Piped[List[R]] where Self.Value == List[A] and _CombineCompatible[ListFamily, List[A], _NativeBinaryRef[A, B, R, X, F, True, o], _ValueThunk[List[B]]] and W == List[B]:
         """Combine two already evaluated carriers, following their Applicative semantics."""
         return Piped(_map2_as[ListFamily, X=X](_NativeBinaryRef[A, B, R, X, F, True, o](Pointer(to=function)), rebind_var[List[A]](self.value^), rebind_var[List[B]](other^)))
 
-    def product[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var other: List[U]) -> Piped[List[Tuple[T, U]]] where Self.Value == List[T]:
+    def product[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var other: List[U]) -> Piped[List[Tuple[T, U]]] where Self.Value == List[T] and _CombineCompatible[ListFamily, List[T], _Pair[ListFamily.Element[List[T]], ListFamily.Element[List[U]]], _ValueThunk[List[U]]]:
         """Combine two already evaluated carriers into pairs, following their Applicative semantics.
 
         Parameters:
@@ -3927,9 +3927,9 @@ struct Piped[Value: Movable & Deinitable](Movable):
         Returns:
             The carrier of pairs. List copies elements for its Cartesian product; Result and Optional move their payloads without copying.
         """
-        return Piped(_family_product[ListFamily](rebind_var[List[T]](self.value^), other^))
+        return Piped(_map2_as[ListFamily, X=Never](_Pair[ListFamily.Element[List[T]], ListFamily.Element[List[U]]](), rebind_var[List[T]](self.value^), other^))
 
-    def ap[A: Movable & Deinitable](deinit self, var values: List[A]) raises downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Error -> Piped[List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Out]] where conforms_to(ListFamily.Element[Self.Value], UnaryContract) and Self.Value == List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable]] and A == downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Arg:
+    def ap[A: Movable & Deinitable](deinit self, var values: List[A]) raises downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Error -> Piped[List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Out]] where conforms_to(ListFamily.Element[Self.Value], UnaryContract) and Self.Value == List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable]] and A == downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Arg and _CombineCompatible[ListFamily, List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable]], _Apply[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable]], _ValueThunk[List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Arg]]]:
         """Apply the callbacks in this carrier to an already evaluated carrier of arguments.
 
         Parameters:

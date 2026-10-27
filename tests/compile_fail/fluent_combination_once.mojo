@@ -1,4 +1,4 @@
-# error: List combination requires a repeatable callback
+# error: no matching method in call to 'map2'
 from fp.functions import piped
 from fp.callables import OnceBinary
 @fieldwise_init

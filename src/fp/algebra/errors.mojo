@@ -272,7 +272,7 @@ struct _ObserveFailure[I: ApplicativeError, A: Movable & Deinitable, V: Movable 
     comptime Out = Self.I.Combined[Self.Voided, Self.Join, Self.Next]
     comptime Error = _CommonError[Self.Discard.Error, Self.I.CombineError[Self.Voided, Self.Join, Self.Next]]
     def call(self, var original: Self.First, var observed: Self.V) raises Self.Error -> Self.Out:
-        comptime assert Self.Compatible
+        comptime assert Self.Compatible, _CALLBACK_ADMISSION
         comptime assert _ErrorCompatible[Self.Error, Self.Discard.Error]
         comptime assert _ErrorCompatible[Self.Error, Self.I.CombineError[Self.Voided, Self.Join, Self.Next]], "error observation: incompatible native errors"
         var discarded = _unary_once_as[Self.Error](Self.Discard(), observed^)
