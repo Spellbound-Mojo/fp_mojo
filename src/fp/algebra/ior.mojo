@@ -7,8 +7,9 @@ from fp.callables.invoke import call_once
 from fp.callables._receiver import _unary_once_as, _binary_once_as, _thunk_once_as
 from fp.callables._transforms import _ValueThunk
 from fp._internal.errors import _CommonError, _ErrorCompatible
-from .protocols import (Applicative, Monad, Semigroup, _Accumulate, _SemigroupBinary,
+from .protocols import (Applicative, Monad, Semigroup, _Accumulate, _combine_as,
                         _AccumulatePair, _map_accumulate, _start_as)
+from ._accumulation import _OptionalCombine
 
 
 comptime _IorDiagnostics[V: Movable & Deinitable] = downcast[downcast[V, _ChoiceType].Of, _IorData].Diagnostics
@@ -25,12 +26,9 @@ def _ior_merge[S: Semigroup, X: Movable & Deinitable](
 ) raises X -> Optional[S.Value]:
     """Combine present diagnostics in order; absence never requires an identity."""
     comptime assert _ErrorCompatible[X, S.Error]
-    if not earlier:
-        return later^
     if not later:
         return earlier^
-    return Optional(_binary_once_as[X](
-        _SemigroupBinary[S](), earlier.unsafe_take(), later.unsafe_take()))
+    return _combine_as[X, _OptionalCombine[S]](earlier^, later.unsafe_take())
 
 
 def _ior_map[E: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](

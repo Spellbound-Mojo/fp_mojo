@@ -2076,6 +2076,24 @@ rejection fixtures and 63 fold rejection fixtures. Categories overlap. Reports
 retained unchanged inputs and no audit failures. Generated sources, all 48 tooling
 tests, refreshed API metadata and strict documentation checks passed.
 
+### Optional semigroup accumulation has one policy owner
+
+Optional combination now lives with the shared accumulation policies. Consuming
+`combine_all_optional` terminals and Ior diagnostic merging use that same policy:
+an empty accumulator takes the first value, while two present values use ordered
+Semigroup combination. Ior retains its absent-right fast path. Neither operation
+requires a Monoid identity, copies values or changes native error types.
+
+All 35 baseline/candidate traces match. Maintained terminal checks cover empty,
+single-element and multi-element inputs, returned presence and first value,
+policy failure, and destruction of elements that were never visited. Qualification
+passed four source/package ownership checks at O0/O3, 10 terminal programs,
+six reduction programs, 16 Ior programs, five parallel-validation programs and
+133 generic clients. Rejection groups passed 31 terminal, 32 reduction, 18 Ior and
+15 accumulation fixtures; categories overlap. Reports retained unchanged inputs
+and no audit failures. Generated sources, all 48 tooling tests and strict
+documentation checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

@@ -2,6 +2,7 @@ from std.testing import assert_equal
 from fp.algebra import Semigroup, ValidationFamily, ResultFamily, combine, map2
 from fp.algebra.ior import _ior_merge
 from fp.data import Result, Ok, Err
+from fp.iteration import combine_all_optional
 from fp.callables import OnceBinary
 from std.memory import ArcPointer
 
@@ -90,6 +91,29 @@ def sequential() raises:
     _ = value^
     assert_equal(trace[], "321")
 
+def terminal[fail: Bool](size: Int) raises:
+    var trace = ArcPointer(String())
+    var values = List[Owner]()
+    for index in range(size): values.append(Owner(index + 1, trace))
+    var code = 0
+    var present = False
+    var first = 0
+    try:
+        var result = combine_all_optional[Merge[fail]](values^)
+        present = Bool(result)
+        if result: first = result.value().id
+        _ = result^
+    except error: code = error
+    var failed = fail and size > 1
+    assert_equal(code, 71 if failed else 0)
+    assert_equal(present, size > 0 and not failed)
+    assert_equal(first, 1 if size > 0 and not failed else 0)
+    var expected = ""
+    if size == 1: expected = "1"
+    elif size == 2: expected = "2s1"
+    elif size == 3: expected = "2s13" if fail else "2s3s1"
+    assert_equal(trace[], expected)
+
 struct Borrowed[o: ImmOrigin](Semigroup):
     comptime Value = Pointer[Int, Self.o]
     comptime Error = Self.Value
@@ -124,6 +148,9 @@ def main() raises:
             validation[False, True](left, right)
             validation[True, True](left, right)
     sequential()
+    for size in range(4):
+        terminal[False](size)
+        terminal[True](size)
     var success = 1
     var failure = -1
     origins(success)

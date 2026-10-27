@@ -10,7 +10,7 @@ from fp.algebra._traversal import _Discard
 from fp._internal.errors import _CommonError, _ErrorCompatible
 from ._advance import _Source, _source
 from .adapters import collect_list, any as _any
-from fp.algebra._accumulation import _Combine
+from fp.algebra._accumulation import _Combine, _OptionalCombine
 
 
 struct _Count[T: Movable & Deinitable](_Accumulate):
@@ -53,20 +53,6 @@ struct _EqualTo[T: Equatable & Movable & Deinitable, o: ImmOrigin](BorrowCallabl
     var value: Pointer[Self.T, Self.o]
     def invoke(self, ref payload: Self.T) capturing -> Bool:
         return payload == self.value[]
-
-
-struct _OptionalCombine[S: Semigroup](_Accumulate):
-    comptime Acc = Optional[Self.S.Value]
-    comptime Item = Self.S.Value
-    comptime Error = Self.S.Error
-    @staticmethod
-    def start() -> Self.Acc: return None
-    @staticmethod
-    def live(ref acc: Self.Acc) -> Bool: return True
-    @staticmethod
-    def combine(var acc: Self.Acc, var item: Self.Item) raises Self.Error -> Self.Acc:
-        if not acc: return Optional(item^)
-        return Optional(Self.S.combine(acc.unsafe_take(), item^))
 
 
 struct _CollectFold[M: Monoid](_Accumulate):
