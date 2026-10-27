@@ -47,12 +47,7 @@ struct _FamilyOutcome[I: ApplicativeError, effect: Bool](_OutcomePolicy):
     comptime _Operation[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable, K: UnaryContract & Movable & Deinitable] = _Redeem[Self.I,V,H,K,Self.effect]
     # Admit the same operations the existing execution owner performs. Custom
     # primitives may rely on these predicates without reasserting them in-body.
-    comptime OperationCompatible[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable, K: UnaryContract & Movable & Deinitable] = (
-        Self.I.MapCompatible[V, Self._Operation[V,H,K].Capture.Wrap] and
-        Self.I._Handles[Self._Operation[V,H,K].Capture.Mapped, Self._Operation[V,H,K].Capture.Recover] and
-        (Self._Operation[V,H,K].M.BindCompatible[Self._Operation[V,H,K].Capture.Out, Self._Operation[V,H,K].Fold] if Self.effect else
-         Self.I.MapCompatible[Self._Operation[V,H,K].Capture.Out, Self._Operation[V,H,K].Fold])
-    )
+    comptime OperationCompatible[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable, K: UnaryContract & Movable & Deinitable] = Self._Operation[V,H,K].OperationCompatible
     comptime Family[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable, K: UnaryContract & Movable & Deinitable] = Self.I if Self.effect else _MappedFamily[Self.I,H.Out]
     comptime Out[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable, K: UnaryContract & Movable & Deinitable] = Self._Operation[V,H,K].Out
     comptime Error[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable, K: UnaryContract & Movable & Deinitable] = Self._Operation[V,H,K].Error

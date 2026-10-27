@@ -2884,6 +2884,32 @@ and one generic-capability program; and all 26 selected rejection cases.
 Snapshots remained unchanged with no audit failures. Generator parity, all 49
 tooling tests, API freshness and strict documentation validation also passed.
 
+### Outcome execution plans own their primitive admission
+
+Validation, materialization, redemption and whole-outcome observation now
+project map and bind metadata from the primitive contracts. Each operation
+keeps a concrete descriptor; effectful redemption selects its projections
+without creating a conditional descriptor type. Public contract predicates
+retain the same family checks and their existing callback requirements.
+
+Materialization owns its map and recovery admission alongside its two execution
+steps. Redemption combines that admission with its final map or bind. The
+selected outcome policy forwards this complete operation predicate instead of
+reconstructing the execution plan through private callback types. Whole-outcome
+observation similarly shares the descriptors that calculate its observed and
+restored carrier types. The native error order and deferred timing are unchanged.
+
+All 14 function bodies across the two modules are byte-identical. Five focused
+programs passed for ensure, generic outcome forwarding, owned handlers, generic
+whole-outcome observation and its owned observer cleanup. Public parameters,
+return types and ordinary call syntax are preserved.
+
+Qualification passed 76 outcome, 52 whole-outcome observation and 48 validation
+source/package checks at O0 and O3; 142 generic, five shared-outcome and six
+error-observation programs; and all 34 selected rejection cases. Input snapshots
+remained unchanged with no audit failures. Generator parity, all 49 tooling
+tests, API freshness and strict documentation validation also passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

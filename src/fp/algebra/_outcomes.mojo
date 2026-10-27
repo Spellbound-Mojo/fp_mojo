@@ -8,6 +8,7 @@ from fp.callables._receiver import _RepeatableBorrow, _MutableBorrowRef, _Mutabl
 from fp.callables._conditional import _guard_owned
 from fp.data._result import Result, _transformed, _fold_result_owned
 from .protocols import _pure, Applicative, ApplicativeError, Monad
+from ._primitive_contracts import MapContract, BindContract
 from ._adapt import _fail_as, _map_as, _or_else_as, _flat_map_as
 from .errors import _Recovered
 from ._sequencing import _EffectRetain
@@ -44,15 +45,16 @@ struct EnsureContract[I: ApplicativeError & Monad, V: Movable & Deinitable,
     """The source belongs to the selected stored-error layer."""
     comptime CallbackErrorsCompatible = Self.P.Failure == Never or Self.G.Failure == Never or Self.P.Failure == Self.G.Failure
     """The callbacks share an exact native error type or cannot raise."""
-    comptime BindCompatible = Self.I.BindCompatible[Self.V, Self.Continuation]
+    comptime _Bind = BindContract[Self.I, Self.V, Self.Continuation]
+    comptime BindCompatible = Self._Bind.FamilyCompatible
     """The selected family's admission of the existing validation continuation."""
     comptime Compatible = Self.InputCompatible and Self.PredicateCompatible and Self.FailureCompatible and Self.CarrierCompatible and Self.CallbackErrorsCompatible and Self.BindCompatible
     """Selected ensure admission; legacy Piped keeps its original predicates."""
     comptime Family = Self.I
     """The unchanged family for fluent continuation."""
-    comptime Out = Self.I.Bound[Self.V, Self.Continuation]
+    comptime Out = Self._Bind.Out
     """The family's exact validated carrier, including deferred representations."""
-    comptime Error = Self.I.BindError[Self.V, Self.Continuation]
+    comptime Error = Self._Bind.Error
     """The native construction error; deferred run errors remain with the carrier."""
 
 
@@ -98,9 +100,12 @@ struct _Materialize[I: ApplicativeError, V: Movable & Deinitable]:
     comptime A = Self.I.Element[Self.V]
     comptime Wrap = _OutcomeCase[Self.A, Self.I.Failure, True]
     comptime Recover = _Recovered[Self.I, _OutcomeCase[Self.A, Self.I.Failure, False]]
-    comptime Mapped = Self.I.Mapped[Self.V, Self.Wrap]
+    comptime _Map = MapContract[Self.I, Self.V, Self.Wrap]
+    comptime Mapped = Self._Map.Out
+    comptime MapCompatible = Self._Map.FamilyCompatible
+    comptime HandleCompatible = Self.I._Handles[Self.Mapped, Self.Recover]
     comptime Out = Self.I.Handled[Self.Mapped, Self.Recover]
-    comptime Error = _CommonError[Self.I.MapError[Self.V, Self.Wrap], Self.I.HandleError[Self.Mapped, Self.Recover]]
+    comptime Error = _CommonError[Self._Map.Error, Self.I.HandleError[Self.Mapped, Self.Recover]]
     @staticmethod
     def apply[X: Movable & Deinitable](var source: Self.V) raises X -> Self.Out:
         comptime assert _ErrorCompatible[X, Self.I.MapError[Self.V, Self.Wrap]]
@@ -157,8 +162,11 @@ struct _Redeem[I: ApplicativeError, V: Movable & Deinitable,
     comptime Capture = _Materialize[Self.I, Self.V]
     comptime Fold = _OutcomeFold[Self.I, Self.I.Element[Self.V], Self.H, Self.K, Self.effect]
     comptime M = downcast[Self.I, Monad]
-    comptime Out = Self.M.Bound[Self.Capture.Out, Self.Fold] if Self.effect else Self.I.Mapped[Self.Capture.Out, Self.Fold]
-    comptime StepError = Self.M.BindError[Self.Capture.Out, Self.Fold] if Self.effect else Self.I.MapError[Self.Capture.Out, Self.Fold]
+    comptime _Map = MapContract[Self.I, Self.Capture.Out, Self.Fold]
+    comptime _Bind = BindContract[Self.M, Self.Capture.Out, Self.Fold]
+    comptime OperationCompatible = Self.Capture.MapCompatible and Self.Capture.HandleCompatible and (Self._Bind.FamilyCompatible if Self.effect else Self._Map.FamilyCompatible)
+    comptime Out = Self._Bind.Out if Self.effect else Self._Map.Out
+    comptime StepError = Self._Bind.Error if Self.effect else Self._Map.Error
     comptime Error = _CommonError[Self.Capture.Error, Self.StepError]
     @staticmethod
     def apply(var source: Self.V, var on_ok: Self.H, var on_err: Self.K) raises Self.Error -> Self.Out:
@@ -193,10 +201,12 @@ struct _AttemptTap[I: ApplicativeError & Monad, V: Movable & Deinitable, C: Borr
     comptime Capture = _Materialize[Self.I, Self.V]
     comptime Outcome = Result[Self.I.Element[Self.V], Self.I.Failure]
     comptime Retain = _EffectRetain[Self.Outcome, Self.I, Self.C]
-    comptime Observed = Self.I.Bound[Self.Capture.Out, Self.Retain]
+    comptime _ObserveOperation = BindContract[Self.I, Self.Capture.Out, Self.Retain]
+    comptime Observed = Self._ObserveOperation.Out
     comptime Restore = _Restore[Self.I, Self.I.Element[Self.V]]
-    comptime Out = Self.I.Bound[Self.Observed, Self.Restore]
-    comptime Error = _CommonError[Self.Capture.Error, _CommonError[Self.I.BindError[Self.Capture.Out, Self.Retain], Self.I.BindError[Self.Observed, Self.Restore]]]
+    comptime _RestoreOperation = BindContract[Self.I, Self.Observed, Self.Restore]
+    comptime Out = Self._RestoreOperation.Out
+    comptime Error = _CommonError[Self.Capture.Error, _CommonError[Self._ObserveOperation.Error, Self._RestoreOperation.Error]]
     @staticmethod
     def apply(var source: Self.V, var inspect: Self.C) raises Self.Error -> Self.Out:
         comptime assert _ErrorCompatible[Self.Error, Self.Capture.Error]
@@ -230,13 +240,13 @@ struct AttemptTapContract[I: ApplicativeError & Monad, V: Movable & Deinitable,
     """The input belongs to the selected stored-error layer."""
     comptime ObserverCompatible = Self.I._ErrorCarrier[Self.C.Result]
     """The observer produces a carrier in the selected stored-error layer."""
-    comptime MaterializeMapCompatible = Self.I.MapCompatible[Self.V, Self._Plan.Capture.Wrap]
+    comptime MaterializeMapCompatible = Self._Plan.Capture.MapCompatible
     """Family map admission for exposing each success as a native Result."""
-    comptime MaterializeHandleCompatible = Self.I._Handles[Self._Plan.Capture.Mapped, Self._Plan.Capture.Recover]
+    comptime MaterializeHandleCompatible = Self._Plan.Capture.HandleCompatible
     """Family recovery admission for exposing each selected failure."""
-    comptime ObserveBindCompatible = Self.I.BindCompatible[Self._Plan.Capture.Out, Self._Plan.Retain]
+    comptime ObserveBindCompatible = Self._Plan._ObserveOperation.FamilyCompatible
     """Family bind admission for observing and retaining the native outcome."""
-    comptime RestoreBindCompatible = Self.I.BindCompatible[Self._Plan.Observed, Self._Plan.Restore]
+    comptime RestoreBindCompatible = Self._Plan._RestoreOperation.FamilyCompatible
     """Family bind admission for restoring each retained outcome."""
     comptime FamilyCompatible = Self.SourceCompatible and Self.ObserverCompatible and Self.MaterializeMapCompatible and Self.MaterializeHandleCompatible and Self.ObserveBindCompatible and Self.RestoreBindCompatible
     """Carrier and primitive admission without repeating callback input equality."""
