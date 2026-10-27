@@ -280,10 +280,27 @@ public `downcast[I, ErrorMapping]` witness throughout. Native raises remain
 native, callback receivers retain their ownership rules, and all payload/error
 equalities include origins.
 
-ResultFamily and ValidationFamily implement this capability. Custom families
-can adopt it independently of recovery. Transformer implementations are not yet
-provided; the [stored-error design](../architecture/mojo12-redesign.md#proposed-stored-error-rebinding)
-defines their remaining requirements.
+ResultFamily, ValidationFamily and ResultT implement this capability.
+`ResultT[M, E]` maps the inner Result through one `M.map`; `M` need not implement
+`ErrorMapping`. `OptionalT[M]` lifts it from a base Monad that does, including a
+mapping-only base without `ApplicativeError`. Its success adapter preserves
+Optional absence. Custom families can adopt mapping independently of recovery.
+ReaderT, StateT and WriterT instances remain planned in the
+[stored-error design](../architecture/mojo12-redesign.md#proposed-stored-error-rebinding).
+
+A transformer validates the raw proposed base before wrapping it: the resulting
+base must still be a Monad. A well-formed `DefaultErrorTarget` candidate alone
+does not prove `OperationCompatible`. OptionalT can use a different explicit
+Monad target admitted by its base; ResultT retains its deterministic base policy
+and any valid `RebindingFunctor` payload reselection.
+
+For conditional source and destination aliases, generic selected wrappers keep
+`I` and `Target` bounded by `Functor`, require their full `ErrorMapping`
+conformance, and form `MapBothContract[downcast[I, ErrorMapping], V, F, G,
+downcast[Target, ErrorMapping]]`. Forward its `Compatible` predicate and exact
+`Family`, `Out` and `Error` projections. `MapErrContract` follows the same
+pattern. These contracts remain capability-bound; `Pipeline` admits the
+conditional aliases through a guarded `Functor` boundary.
 
 <!-- example: docs/examples/selected_error_mapping.mojo -->
 

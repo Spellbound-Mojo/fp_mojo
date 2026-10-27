@@ -64,6 +64,39 @@ handlers supply their own log when the base fails, and OptionalT leaves absence
 unchanged. See the [recovery reference](combinators.md#recover-a-selected-error-layer)
 for the runnable comparison and ownership rules.
 
+## Map a selected stored error
+
+`pipeline[ResultT[M, E]](value).map_err(transform)` changes the selected inner
+error type. `map_both(on_ok, on_err)` transforms each original success or error
+in one base traversal, preserving their order. Outer base failures skip both
+callbacks. The base need not implement `ErrorMapping`; mapping uses its existing
+map operation and retains its policy.
+
+`OptionalT[M]` supports these operations when its base Monad implements
+`ErrorMapping`, including a base without recovery. An absent Optional skips the
+success callback and remains absent; the error callback handles the base's
+selected failure. The two layers also compose with each other.
+
+<!-- example: docs/examples/selected_layer_error_mapping.mojo -->
+
+Destinations retain a Monad base. OptionalT normally wraps the base's default
+error target, but rejects a raw candidate that lacks Monad. A permitted explicit
+target such as `Target=OptionalT[ResultFamily[Int]]` can select a valid base.
+ResultT preserves its base policy and rebinds payload-dependent metadata only
+when the rebound base remains a Monad. `Target` follows existing callback
+bindings, so their positional meanings stay unchanged.
+
+Deferred bases keep callback execution and native execution errors deferred.
+Construction errors retain their separate exact type. Discarding an unopened
+computation disposes its captures without invoking either callback; branching
+bases retain their existing repeatability requirements. Conditional source and
+target aliases use the public capability witnesses described in the
+[algebra reference](algebra.md).
+
+ReaderT, StateT and WriterT error mapping remains a separate planned extension.
+`ResultT[Reader[...], E]` already works by mapping its selected inner Result over
+the deferred Reader base.
+
 ## Program against environment capabilities
 
 `Ask` reads a selected environment, and `Local` extends it with a temporary

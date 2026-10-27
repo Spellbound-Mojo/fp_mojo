@@ -54,11 +54,34 @@ not combine errors or invoke the other callback after a native raise.
 
 <!-- example: docs/examples/selected_error_mapping.mojo -->
 
+`ResultT[M, E]` changes its selected inner error through one base map, preserving
+callback order and leaving outer failures untouched. Its base need not support
+`ErrorMapping`. `OptionalT[M]` maps the base's selected error when that Monad
+supports `ErrorMapping`; an absent Optional stays absent. Deferred bases keep
+mapping deferred. ReaderT, StateT and WriterT error-mapping instances remain
+planned extensions.
+
+<!-- example: docs/examples/selected_layer_error_mapping.mojo -->
+
+A layer's proposed destination base must remain a Monad. `OptionalT` accepts an
+explicit permitted target, such as `Target=OptionalT[ResultFamily[Int]]`, even
+when its base's default candidate cannot support the layer. `ResultT` keeps its
+base policy and reselects payload-dependent base metadata where needed.
+
+`Pipeline` accepts `Target: Functor` and checks its `ErrorMapping` capability
+before admission. Conditional aliases such as `OptionalT[...]` therefore work
+as ordinary explicit targets without a cast. The public `MapBothContract` and
+`MapErrContract` retain their `ErrorMapping` bounds. Generic wrappers over
+conditional source or target families use `Functor` bounds, require
+`conforms_to(I, ErrorMapping)` and `conforms_to(Target, ErrorMapping)`, and use
+the same public `downcast` witnesses in the contract. Forward the full selected
+family's capability; a proof about only its base does not replace that witness.
+
 Custom families implement `ErrorMapping` to admit their own target policies and
 exact construction errors. A custom `ApplicativeError` family without this
-capability cannot use Result storage to bypass its policy. Transformer
-implementations remain future work. Intrinsic Result calls under a family with
-neither error capability remain supported; generic intrinsic wrappers must
+capability cannot use Result storage to bypass its policy. Intrinsic Result
+calls under a family with neither error capability remain supported; generic
+intrinsic wrappers must
 prove both `not conforms_to(I, ApplicativeError)` and
 `not conforms_to(I, ErrorMapping)`. Existing positional callback bindings retain
 their meaning; use the trailing `Target` binding by name when needed.

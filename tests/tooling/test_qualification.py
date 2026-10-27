@@ -75,6 +75,26 @@ class QualificationTests(unittest.TestCase):
             self.assertEqual(input_changes(before, inputs(root)), ['docs/content/index.md', 'docs/content/new.md'])
             self.assertEqual(input_changes({'removed': 'hash'}, {}), ['removed'])
 
+    def test_shared_fixture_alias_retargeting_changes_inputs(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / '.cache') as folder:
+            root = Path(folder)
+            for name in ('README.md', 'pixi.toml', 'pixi.lock',
+                         'tests/first/__init__.mojo', 'tests/second/__init__.mojo'):
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text('identical content')
+            alias = root / 'tests/runtime/shared'
+            alias.parent.mkdir()
+            alias.symlink_to('../first', target_is_directory=True)
+            before = inputs(root)
+            self.assertIn('tests/runtime/shared', before)
+            alias.unlink()
+            alias.symlink_to('../second', target_is_directory=True)
+            self.assertEqual(input_changes(before, inputs(root)), ['tests/runtime/shared'])
+            before = inputs(root)
+            (root / 'tests/second/__init__.mojo').write_text('changed content')
+            self.assertEqual(input_changes(before, inputs(root)), ['tests/second/__init__.mojo'])
+
     def test_concurrent_runs_cannot_share_executables_or_report_directory(self):
         with tempfile.TemporaryDirectory(dir=ROOT / '.cache') as folder:
             parent = Path(folder)

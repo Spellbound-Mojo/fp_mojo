@@ -9,13 +9,15 @@ and Result families.
 """
 from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, rebind, downcast
-from fp.algebra.protocols import (Monad, Applicative, ApplicativeError, _Lifting, _Accumulate, _Present, _BindFirst, _Lazy, _UnaryView)
+from fp.algebra.protocols import (Monad, Applicative, ApplicativeError, ErrorMapping, _MappedFamily, _Lifting, _Accumulate, _Present, _BindFirst, _Lazy, _UnaryView)
+from fp.algebra.contracts import MapContract
+from fp.algebra.error_mapping import MapBothContract
 from fp.algebra.instances import IdentityFamily, OptionalFamily, ResultFamily, _OkOf
 from fp.callables.protocols import BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, OnceUnary, MutableUnary
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary
 from fp.data._result import Result, Ok, Err, _fold_result_owned, _transformed
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from .protocols import Local, Listen, _CarrierOp, _LocalLifting
+from .protocols import Local, Listen, _CarrierOp, _LocalLifting, _CapabilityLifting
 from ._adapt import _map_as
 from ._transport import _LocalOp, _ListenMapped, _ListenSum
 
@@ -41,6 +43,30 @@ struct _InnerMap[N: Applicative, F: UnaryContract & Movable & Deinitable](
         comptime assert Self.N.Mapped[Self.Arg, View] == Self.Out
         comptime assert _ErrorCompatible[Self.Error, Self.N.MapError[Self.Arg, View]]
         return rebind_var[Self.Out](_map_as[Self.Error, Self.N](View(Pointer(to=self.function)), arg^))
+
+
+@fieldwise_init
+struct _InnerBimap[E: Movable & Deinitable,
+                   F: UnaryContract & Movable & Deinitable,
+                   G: UnaryContract & Movable & Deinitable](
+    OnceUnary, MutableUnary where RepeatableUnary[F] and RepeatableUnary[G],
+    Copyable where conforms_to(F, Copyable) and conforms_to(G, Copyable)
+):
+    """One base-map callback; Result remains the owner of its original branch."""
+    var on_ok: Self.F
+    var on_err: Self.G
+    comptime Arg = Result[Self.F.Arg,Self.E]
+    comptime Inner = ResultFamily[Self.E]
+    comptime Target = ResultFamily[Self.G.Out]
+    comptime Out = Self.Inner.Bimapped[Self.Target,Self.Arg,Self.F,Self.G]
+    comptime Error = Self.Inner.BimapError[Self.Target,Self.Arg,Self.F,Self.G]
+    def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
+        return Self.Inner.bimap[Self.Target](self.on_ok^,self.on_err^,arg^)
+    def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
+        comptime assert RepeatableUnary[Self.F] and RepeatableUnary[Self.G]
+        var on_ok = _UnaryView[Self.F,origin_of(self.on_ok)](Pointer(to=self.on_ok))
+        var on_err = _UnaryView[Self.G,origin_of(self.on_err)](Pointer(to=self.on_err))
+        return Self.Inner.bimap[Self.Target](on_ok^,on_err^,arg^)
 
 
 @fieldwise_init
@@ -236,7 +262,7 @@ struct _ResultAcc[K: _Accumulate, E: Movable & Deinitable](_Accumulate):
         return Result[Self.K.Acc, Self.E](Ok(Self.K.combine(current^, item^._take_ok())))
 
 
-struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError)):
+struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError), ErrorMapping where conforms_to(M, ErrorMapping)):
     """OptionalT over a base other than Identity: a value is M's carrier of Optional[A]."""
     comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = Self.CarrierCompatible[V] and H.Compatible[V]
     comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = H.Applied[V]
@@ -254,8 +280,31 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
         comptime assert C.Family == Self.Base and Self._ScopeCompatible[C, V]
         return Self._hoist[Self.Element[V]](_LocalOp[C, F](f^), value^)
 
+    comptime _Mapping = downcast[Self.M,ErrorMapping]
+    comptime ErrorCarrierCompatible[V: Movable & Deinitable] = Self.CarrierCompatible[V] and Self._Mapping.ErrorCarrierCompatible[V]
+    comptime _ErrorTargetBase[A: Movable & Deinitable, E: Movable & Deinitable] = Self._Mapping.DefaultErrorTarget[Optional[A],E]
+    # Preserve an unwrappable base candidate for ordinary layer-policy rejection.
+    comptime DefaultErrorTarget[A: Movable & Deinitable, E: Movable & Deinitable] = (
+        _OptionalT[downcast[Self._ErrorTargetBase[A,E],Monad & ErrorMapping]]
+        if conforms_to(Self._ErrorTargetBase[A,E],Monad) else Self._ErrorTargetBase[A,E]
+    )
+    # Reuse layer metadata, but require the exact OptionalT constructor before
+    # allowing the base to decide a source-to-target policy transition.
+    comptime _TargetBase[Target: ErrorMapping] = downcast[downcast[Target,_CapabilityLifting].Base,Monad & ErrorMapping]
+    comptime BimapCompatible[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = (
+        (Target == OptionalT[Self._TargetBase[Target]] and
+         MapBothContract[Self._Mapping,V,_InnerMap[OptionalFamily,F],G,Self._TargetBase[Target]].Compatible)
+        if conforms_to(Target,_CapabilityLifting) and conforms_to(downcast[Target,_CapabilityLifting].Base,ErrorMapping) else False
+    )
+    comptime Bimapped[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Self._Mapping.Bimapped[Self._TargetBase[Target],V,_InnerMap[OptionalFamily,F],G]
+    comptime BimapError[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Self._Mapping.BimapError[Self._TargetBase[Target],V,_InnerMap[OptionalFamily,F],G]
+    @staticmethod
+    def bimap[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](var on_ok: F, var on_err: G, var source: V) raises Self.BimapError[Target,V,F,G] -> Self.Bimapped[Target,V,F,G]:
+        comptime assert Self.BimapCompatible[Target,V,F,G]
+        return Self._Mapping.bimap[Self._TargetBase[Target]](_InnerMap[OptionalFamily,F](on_ok^),on_err^,source^)
+
     comptime _Errors = downcast[Self.M, ApplicativeError]
-    comptime Failure = Self._Errors.Failure
+    comptime Failure = Self._Mapping.Failure if conforms_to(Self.M,ErrorMapping) else Self._Errors.Failure
     comptime _ErrorCarrier[V: Movable & Deinitable] = Self.CarrierCompatible[V] and Self._Errors._ErrorCarrier[V]
     comptime Failed[A: Movable & Deinitable] = Self._Errors.Failed[Optional[A]]
     comptime FailError[A: Movable & Deinitable] = Self._Errors.FailError[Optional[A]]
@@ -264,7 +313,8 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
 
     @staticmethod
     def fail[A: Movable & Deinitable](var error: Self.Failure) raises Self.FailError[A] -> Self.Failed[A]:
-        return Self._Errors.fail[Optional[A]](error^)
+        comptime assert Self.Failure == Self._Errors.Failure
+        return Self._Errors.fail[Optional[A]](rebind_var[Self._Errors.Failure](error^))
 
     @staticmethod
     def or_else[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V) raises Self.HandleError[V, H] -> Self.Handled[V, H]:
@@ -334,7 +384,7 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
         return Self.M.map(_Present[Self.M.Element[V]](), value^)
 
 
-struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, _LocalLifting):
+struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, ErrorMapping, _LocalLifting):
     """ResultT over a base other than Identity: a value is M's carrier of Result[A, E]."""
     comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = Self.CarrierCompatible[V] and H.Compatible[V]
     comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = H.Applied[V]
@@ -351,6 +401,29 @@ struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, _Loc
     def _scope[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](var f: F, var value: V) raises Self._ScopeError[C, V, F] -> Self._Scoped[C, V, F]:
         comptime assert C.Family == Self.Base and Self._ScopeCompatible[C, V]
         return Self._hoist[Self.Element[V]](_LocalOp[C, F](f^), value^)
+
+    comptime ErrorCarrierCompatible[V: Movable & Deinitable] = Self.CarrierCompatible[V]
+    # Error rebinding changes this inner Result; the base keeps its policy and
+    # only reselects payload-dependent metadata through its existing owner.
+    comptime _ErrorTargetBase[A: Movable & Deinitable, U: Movable & Deinitable] = _MappedFamily[Self.M,Result[A,U]]
+    comptime DefaultErrorTarget[A: Movable & Deinitable, U: Movable & Deinitable] = (
+        ResultT[downcast[Self._ErrorTargetBase[A,U],Monad],U]
+        if conforms_to(Self._ErrorTargetBase[A,U],Monad) else ResultT[Self.M,U]
+    )
+    # A non-Monad rebound retains a real candidate without inventing capability;
+    # raw-base admission below rejects it even when the stored error is unchanged.
+    comptime BimapCompatible[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = (
+        (Target == Self.DefaultErrorTarget[F.Out,G.Out] and
+         MapBothContract[ResultFamily[Self.E],Result[F.Arg,Self.E],F,G].Compatible and
+         MapContract[Self.M,V,_InnerBimap[Self.E,F,G]].Compatible)
+        if conforms_to(Self._ErrorTargetBase[F.Out,G.Out],Monad) else False
+    )
+    comptime Bimapped[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Self.M.Mapped[V,_InnerBimap[Self.E,F,G]]
+    comptime BimapError[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Self.M.MapError[V,_InnerBimap[Self.E,F,G]]
+    @staticmethod
+    def bimap[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](var on_ok: F, var on_err: G, var source: V) raises Self.BimapError[Target,V,F,G] -> Self.Bimapped[Target,V,F,G]:
+        comptime assert Self.BimapCompatible[Target,V,F,G]
+        return Self.M.map(_InnerBimap[Self.E,F,G](on_ok^,on_err^),source^)
 
     comptime Failure = Self.E
     comptime _ErrorCarrier[V: Movable & Deinitable] = Self.CarrierCompatible[V]
@@ -442,7 +515,7 @@ Parameters:
     M: The base Monad.
 """
 
-comptime ResultT[M: Monad, E: Movable & Deinitable]: Monad & ApplicativeError & _Lifting = ResultFamily[E] if M == IdentityFamily else _ResultT[M, E]
+comptime ResultT[M: Monad, E: Movable & Deinitable]: Monad & ApplicativeError & ErrorMapping & _Lifting = ResultFamily[E] if M == IdentityFamily else _ResultT[M, E]
 """Result over the base Monad `M`: a value is `M`'s carrier of `Result[A, E]`; over Identity, `ResultFamily[E]`.
 
 A stored error skips later callbacks and right operands and keeps the base's

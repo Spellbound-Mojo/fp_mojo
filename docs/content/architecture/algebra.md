@@ -356,6 +356,31 @@ branch-selection implementation.
   Writer value stays deferred; `run_writer` unwraps it without running it.
   `pure` over WriterT requires a monoid whose `empty` does not raise.
 
+### Map one stored-error channel
+
+`ErrorMapping` supplies one two-arm primitive, independently of recovery.
+ResultFamily and ValidationFamily delegate to the existing Result fold.
+ResultT maps each inner Result through one base `map`, preserving interleaved
+success/error callback order; its base need not implement `ErrorMapping`.
+OptionalT uses a mapping-capable base's primitive with the existing Optional
+success adapter, preserving absence. Reader/State/Writer instances remain
+planned transport extensions.
+
+The source admits an exact destination policy. ResultT reselects the base's
+payload metadata through `RebindingFunctor` where needed; OptionalT asks its
+base for the destination error policy. A raw proposed base must remain a Monad
+before it can support the layer. An invalid default is rejected; OptionalT
+can still accept an explicit permitted Monad target. Native exceptions retain
+their construction or deferred execution timing, and neither operation adds a
+second traversal or a recovery stage.
+
+The selected Pipeline target boundary accepts a Functor with an explicit
+`ErrorMapping` conformance check. This admits conditional OptionalT aliases
+without changing their Identity collapse or requiring casts at ordinary calls.
+Core contracts remain capability-bound; generic wrappers use the full source
+and target family witnesses described in the
+[stored-error design](mojo12-redesign.md#proposed-stored-error-rebinding).
+
 ### Choice between computations
 
 A layer's bind step returns either the callback's computation or `pure` of the

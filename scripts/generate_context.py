@@ -914,6 +914,9 @@ def methods(*, fold_stage=False):
     # Stored-error rebinding belongs to the selected dictionary, even when its
     # carrier is a native Result. Target follows every existing positional
     # callback binding and is admitted by the same checked family contract.
+    # Bind the target before proving its capability: conditional family aliases
+    # may expose only Functor at parameter binding. Contract and execution use
+    # the same ErrorMapping witness after admission.
     family = "_MappingErrors[Self.I]"
     for name in ("map_err", "map_both"):
         operation = RESULT_OPERATIONS[name]
@@ -931,11 +934,12 @@ def methods(*, fold_stage=False):
             success = a["result"] if two else "Self.I.Element[Self.V]"
             failure = b["result"] if two else a["result"]
             params = callback_parameters(callbacks)
-            params += [f"Target: ErrorMapping = {family}.DefaultErrorTarget[{success}, {failure}]"]
+            params += [f"Target: Functor = {family}.DefaultErrorTarget[{success}, {failure}]"]
             contract_name = "MapBothContract" if two else "MapErrContract"
             types = ", ".join(cb["adapter_type"] for cb in callbacks)
-            contract = f"{contract_name}[{family}, Self.V, {types}, Target]"
-            conditions = ["conforms_to(Self.I, ErrorMapping)", contract + ".Compatible"]
+            target = "_MappingErrors[Target]"
+            contract = f"{contract_name}[{family}, Self.V, {types}, {target}]"
+            conditions = ["conforms_to(Self.I, ErrorMapping)", "conforms_to(Target, ErrorMapping)", contract + ".Compatible"]
             for cb in callbacks:
                 if cb["adapter_type"] not in ("C", "G"):
                     conditions += cb["conditions"]
@@ -944,7 +948,7 @@ def methods(*, fold_stage=False):
             emit(name, {"prelude": prelude}, params,
                  ", ".join(cb["argument"] for cb in callbacks),
                  contract + ".Out", contract + ".Error", contract + ".Family", conditions,
-                 f"_{name}[{family}, Self.V, {types}, Target]({built}, self.value^)",
+                 f"_{name}[{family}, Self.V, {types}, {target}]({built}, self.value^)",
                  "Map the selected stored-error channel through its family's admitted destination policy.")
 
     for name, operation in RESULT_OPERATIONS.items():
@@ -992,7 +996,7 @@ def methods(*, fold_stage=False):
             params = callback_parameters(callbacks)
             family = f"ResultFamily[_Failure[{result}]]"
             if name in ("map_err", "map_both"):
-                params += [f"Target: ErrorMapping = {family}"]
+                params += [f"Target: Functor = {family}"]
                 conditions += [f"Target == {family}"]
                 family = "Target"
             target = f"Pipeline[{family}, {result}, Self.E]"

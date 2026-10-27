@@ -51,11 +51,20 @@ def sha(path):
 
 def inputs(root=ROOT):
     paths = [p for folder in ('src', 'tests', 'scripts', 'benchmarks', '.github')
-             for p in (root / folder).rglob('*') if p.is_file() and '__pycache__' not in p.parts]
-    paths += [p for p in (root / 'docs').rglob('*') if p.is_file() and '__pycache__' not in p.parts]
+             for p in (root / folder).rglob('*') if (p.is_file() or p.is_symlink()) and '__pycache__' not in p.parts]
+    paths += [p for p in (root / 'docs').rglob('*') if (p.is_file() or p.is_symlink()) and '__pycache__' not in p.parts]
     paths += [root / name for name in ('README.md', 'pixi.toml', 'pixi.lock')]
     paths += [root / 'mkdocs.yml'] if (root / 'mkdocs.yml').is_file() else []
-    return {str(p.relative_to(root)): sha(p) for p in sorted(paths)}
+    def digest(path):
+        if not path.is_symlink():
+            return sha(path)
+        # Shared fixture directories are walked at their real repository path.
+        # Also record alias routing so retargeting a link changes the snapshot.
+        data = b'symlink\0' + os.readlink(path).encode()
+        if path.is_file():
+            data += b'\0' + path.read_bytes()
+        return hashlib.sha256(data).hexdigest()
+    return {str(p.relative_to(root)): digest(p) for p in sorted(paths)}
 
 
 def input_changes(before, after):

@@ -171,6 +171,9 @@
     "docs/examples/selected_error_observation.mojo": {
       "stdout": "before run: 0\ndeferred: 24 ; observed: 1\nResult observer: audit\nValidation observer: audit original\n"
     },
+    "docs/examples/selected_layer_error_mapping.mojo": {
+      "stdout": "error: first\nvalue: 2\nerror: last\noutputs: 5 20 4\nstill absent: True\n"
+    },
     "docs/examples/selected_outcome_observation.mojo": {
       "stdout": "before run: 0\nrecovered: 10 ; observed: 1\naccepted: 6 ; observed: 2\nobserver failure: audit failed\n"
     },

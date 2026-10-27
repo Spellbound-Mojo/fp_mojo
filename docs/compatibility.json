@@ -547,23 +547,32 @@
         "map_err"
       ],
       "status": "selected",
-      "families": "Selected ErrorMapping: ResultFamily, ValidationFamily and custom families; transformers not yet implemented; intrinsic Result remains under families with neither ErrorMapping nor ApplicativeError",
-      "callbacks": "Consuming branch callbacks; native closures borrowed, stored thin pointers owned, library receivers preserved; optional Target follows existing bindings",
+      "families": "Selected ErrorMapping: ResultFamily, ValidationFamily, ResultT, OptionalT over a mapping-capable Monad, and custom families; ReaderT/StateT/WriterT mapping remains planned; intrinsic Result remains under families with neither ErrorMapping nor ApplicativeError",
+      "callbacks": "Consuming branch callbacks; native closures borrowed, stored thin pointers owned, library receivers preserved; optional Target follows existing positional bindings and admits Functor aliases with an ErrorMapping capability check",
       "ownership": "One original branch consumes its payload and invokes its callback; unused owners are destroyed; exact payload/error origins remain in the destination",
       "errors": "Exact family construction and callback errors remain native; stored error type changes select an admitted destination",
-      "timing": "One two-arm family primitive; no second traversal, recovery or accumulation during mapping",
+      "timing": "One two-arm family primitive; ResultT uses one base map and OptionalT delegates to base bimap with the existing Optional success adapter; deferred bases retain deferred execution; no recovery or accumulation during mapping",
       "owner": [
         "src/fp/algebra/error_mapping.mojo",
         "src/fp/algebra/instances.mojo",
         "src/fp/algebra/validation.mojo",
-        "src/fp/data/_result.mojo"
+        "src/fp/data/_result.mojo",
+        "src/fp/effects/layers.mojo",
+        "src/fp/functions/context.mojo"
       ],
       "evidence": [
         "docs/examples/selected_error_mapping.mojo",
         "tests/runtime/test_context_error_mapping_native.mojo",
         "tests/ownership/test_context_error_mapping_ownership.mojo",
         "tests/runtime/test_context_result_map_err.mojo",
-        "tests/runtime/test_context_result_map_both.mojo"
+        "tests/runtime/test_context_result_map_both.mojo",
+        "docs/examples/selected_layer_error_mapping.mojo",
+        "tests/runtime/test_context_layer_error_mapping.mojo",
+        "tests/runtime/test_context_layer_error_mapping_generic.mojo",
+        "tests/ownership/test_context_layer_error_mapping_ownership.mojo",
+        "tests/compile_fail/context_layer_error_mapping_optional_default_capability.mojo",
+        "tests/compile_fail/context_layer_error_mapping_rebound_same_error.mojo",
+        "tests/compile_fail/context_layer_error_mapping_guarded_target.mojo"
       ]
     },
     {
