@@ -445,10 +445,10 @@ def methods(*, fold_stage=False):
                                   accumulator="Self.A", initial="self.initial^",
                                   monoid="M" if mapped_fold else "",
                                   retained=f"_TraverseTap[{plan_element}, J, {c}, True]" if borrowing else "")
-            if mapped_fold or operation.searching:
-                contract = (f"FoldMapContract[J, M, Self.V, {c}]" if mapped_fold else
-                            f"FindMapContract[J, Self.V, {c}]" if name == "find_map_effect" else
-                            f"FindContract[J, Self.V, {c}]")
+            # Seeded folds retain their existing staged declaration. Other
+            # checked terminals share the contract selected by the operation.
+            if plan.contract and not folding:
+                contract = plan.contract
                 admission = cb["conditions"]
                 if name == "find_effect":
                     # The public proof owns this equality; retain all native
@@ -459,9 +459,7 @@ def methods(*, fold_stage=False):
                 result, error = contract + ".Out", contract + ".Error"
             else:
                 conditions += [f"J.Element[{result}] == {plan.payload}", f"{plan.types}.Compatible"]
-                if operation.searching:
-                    conditions += [f"RepeatableUnary[{plan.callback}]"]
-                elif folding:
+                if folding:
                     conditions += [f"RepeatableBinary[{c}]"]
                 result, error = plan.result, plan.error
             expr = plan.invoke(error, "self.value^")

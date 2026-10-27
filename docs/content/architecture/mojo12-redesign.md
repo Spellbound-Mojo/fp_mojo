@@ -2326,6 +2326,27 @@ all four source/package O0/O3 checks. Reports retained unchanged inputs and no
 audit failures. Generated sources, all 48 tooling tests and strict documentation
 checks passed.
 
+### Operation descriptions own public contract selection
+
+Effect-reduction descriptions now select their public contract alongside their
+existing execution plan. Both syntax generators consume that selection, so a
+new operation cannot silently use different contract names or argument order in
+free and selected APIs. The description records the original callback before
+retention wraps it; execution continues to use the adapted callback.
+
+The generators retain native signature and error admission locally, including
+Array buffering and the existing staged seeded-fold declaration. Unreachable
+fallback predicates were removed from the search generator. Regenerating plain
+and selected syntax produced byte-identical Mojo sources, including all public
+signatures and bodies. No library behavior or public API changed.
+
+The first tooling attempt found that the isolated prototype lacked its temporary
+cache directory. Creating that runner directory changed no project inputs;
+all 48 tooling tests then passed. The initial setup log is retained. Generator
+consistency and strict documentation checks passed. This pass inherits the
+preceding borrowing-search qualification because all library sources are
+byte-identical.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

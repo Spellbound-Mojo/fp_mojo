@@ -202,6 +202,7 @@ class EffectReduction:
     mode: str
     accumulation: str
     all_values: bool = False
+    contract_name: str = ""
 
     @property
     def borrowing(self):
@@ -221,6 +222,12 @@ class EffectReduction:
 
     def bind(self, family, source, element, callback, build, result, *,
              accumulator="", initial="", monoid="", retained=""):
+        # Public contracts describe the original callback. The execution plan
+        # may then wrap it for retention or accumulation without changing that
+        # admission identity.
+        contract_arguments = [family, *([monoid] if self.mapped else []), source, callback]
+        contract = (f"{self.contract_name}[{', '.join(contract_arguments)}]"
+                    if self.contract_name else None)
         # The caller supplies the exact retention alias used by its admission
         # surface. Both aliases delegate to the same existing runtime owner.
         if self.accumulation == "bool":
@@ -250,7 +257,7 @@ class EffectReduction:
         else:
             raise ValueError(f"Unknown effectful accumulation policy: {self.accumulation}")
         return EffectReductionPlan(family, source, callback, step, policy,
-                                   initial, build, payload, monoid)
+                                   initial, build, payload, monoid, contract)
 
 
 @dataclass(frozen=True)
@@ -264,6 +271,7 @@ class EffectReductionPlan:
     build: str
     payload: str
     monoid: str
+    contract: str | None
 
     @property
     def types(self):
@@ -289,12 +297,12 @@ class EffectReductionPlan:
 EFFECT_REDUCTIONS = {
     op.name: op
     for op in (
-        EffectReduction("fold_effect", "binary", "fold"),
+        EffectReduction("fold_effect", "binary", "fold", contract_name="FoldContract"),
         EffectReduction("any_effect", "borrow", "bool"),
         EffectReduction("all_effect", "borrow", "bool", all_values=True),
-        EffectReduction("find_effect", "borrow", "present"),
-        EffectReduction("find_map_effect", "owned", "present"),
-        EffectReduction("fold_map_effect", "owned", "monoid"),
+        EffectReduction("find_effect", "borrow", "present", contract_name="FindContract"),
+        EffectReduction("find_map_effect", "owned", "present", contract_name="FindMapContract"),
+        EffectReduction("fold_map_effect", "owned", "monoid", contract_name="FoldMapContract"),
     )
 }
 

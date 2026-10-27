@@ -50,7 +50,7 @@ def folds(mode, array=False):
                 value = f'_take_array(rebind_var[Array[{elem}, N]]({value}))'
             plan = operation.bind('G', source, elem, cb, build, effect,
                                   accumulator=acc, initial='initial^')
-            contract = f'FoldContract[G, {source}, {cb}]' if fold else plan.types
+            contract = plan.contract or plan.types
             error = f'{contract}.Error'
             raised = f'_EntryError[{hint}, {error}]'
             if fold:
@@ -162,24 +162,18 @@ def searches(mode, array=False):
             plan = operation.bind('G', source, elem, cb, build, effect,
                                   monoid='M' if folding else '',
                                   retained=f'_EffectRetain[{elem}, G, {cb}, True]' if borrowing else '')
-            contract = (f'FoldMapContract[G, M, {source}, {cb}]' if folding else
-                        f'FindMapContract[G, {source}, {cb}]' if name == 'find_map_effect' else
-                        f'FindContract[G, {source}, {cb}]')
-            actual = contract + '.Error' if contract else plan.error
+            contract = plan.contract
+            assert contract, "Effectful searches require a public operation contract"
+            actual = contract + '.Error'
             raised=f'_EntryError[X, {actual}]'
-            if contract:
-                condition = (condition + ' and ' if array else '') + contract + '.Compatible'
-            else:
-                condition+=f' and G.Element[{effect}] == {plan.payload}'
-                condition+=f' and _CarrierCompatible[G, {effect}] and RepeatableUnary[{plan.callback}]'
-                condition+=f' and {plan.types}.Compatible'
+            condition = (condition + ' and ' if array else '') + contract + '.Compatible'
             # Generic forwarding can prove the native callback error directly;
             # deferred families instead admit their construction error. The
             # shared fold boundary checks every actual family error.
             condition+=f' and (_ErrorCompatible[{raised}, {fe}] or _ErrorCompatible[{raised}, {actual}])'
             if folding: condition+=f' and _ErrorCompatible[{raised}, M.Error]'
             call = plan.invoke(raised, value)
-            result = contract + '.Out' if contract else plan.result
+            result = contract + '.Out'
             args=[arg]+(['var source: V'] if mode=='free' else [])
             if mode!='free':args.insert(0,'deinit self')
             if mode=='piped':result=f'Piped[{result}]';call=f'Piped({call})'
