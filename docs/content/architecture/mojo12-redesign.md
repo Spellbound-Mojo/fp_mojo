@@ -2860,6 +2860,30 @@ and three mapped-fold programs; and 49 rejection cases. All input snapshots
 remained unchanged with no audit failures. Generator parity, 49 tooling tests,
 API freshness and strict documentation validation also passed.
 
+### Deferred bind and recovery share operation admission
+
+Reader and State already route continuation execution through `_Continue`,
+which selects ordinary binding or stored-error recovery. That same owner now
+selects family admission, output and native error together. Its binding branch
+projects the primitive `BindContract`; its recovery branch retains the selected
+error family's exact `_Handles`, `Handled` and `HandleError` definitions.
+
+The two recipe types project this shared admission instead of each repeating
+the recovery switch. They still combine source and continuation run proofs,
+preserve Reader environment origins and check compatible native errors. State
+recovery still retains its saved input state through the original copy/move
+boundary. This introduces no public parameter, adapter or changed admission.
+
+All 97 function bodies across the three affected files remain byte-identical.
+Six focused programs passed before qualification, covering recovery admission,
+Reader and State origins, generic lifting and owned error handlers.
+
+Qualification passed 100 deferred-admission, 80 recovery-admission and 24 Reader
+source/package checks at O0 and O3; eight error-capability, 25 State, six Reader
+and one generic-capability program; and all 26 selected rejection cases.
+Snapshots remained unchanged with no audit failures. Generator parity, all 49
+tooling tests, API freshness and strict documentation validation also passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

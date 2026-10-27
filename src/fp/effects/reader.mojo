@@ -186,10 +186,7 @@ struct _ReaderBind[M: Monad, R: AnyType, S: ReaderAction, F: UnaryContract & Mov
     comptime Next[o: ImmOrigin] = _ReaderContinue[Self.Family, Self.F, Self.R, o]
     comptime Out[o: ImmOrigin] = Self.Operation.Out[Self.S.Out[o], Self.Next[o]]
     comptime Error[o: ImmOrigin] = _CommonError[Self.S.Error[o], Self.Operation.Error[Self.S.Out[o], Self.Next[o]]]
-    comptime _BaseCompatible[o: ImmOrigin] = (
-        Self.Operation.Errors._Handles[Self.S.Out[o], Self.Next[o]] if Self.recover
-        else Self.M.BindCompatible[Self.S.Out[o], Self.Next[o]]
-    )
+    comptime _BaseCompatible[o: ImmOrigin] = Self.Operation.FamilyCompatible[Self.S.Out[o], Self.Next[o]]
     comptime _RunCompatible[o: ImmOrigin] = (
         Self.S._RunCompatible[o] & Self.Next[o]._RunCompatible & Self._BaseCompatible[o] &
         _CommonErrorCompatible[Self.S.Error[o], Self.Operation.Error[Self.S.Out[o], Self.Next[o]]]

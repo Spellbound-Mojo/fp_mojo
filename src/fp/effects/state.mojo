@@ -254,7 +254,7 @@ struct _StateBind[M: Monad, S: Movable & Deinitable, A: StateAction, F: UnaryCon
     comptime Operation = _Continue[Self.M, Self.recover]
     comptime Out = Self.Operation.Out[Self.A.Out, Self.Next]
     comptime Error = _CommonError[Self.A.Error, Self.Operation.Error[Self.A.Out, Self.Next]]
-    comptime _BaseCompatible = Self.Operation.Errors._Handles[Self.A.Out, Self.Next] if Self.recover else Self.M.BindCompatible[Self.A.Out, Self.Next]
+    comptime _BaseCompatible = Self.Operation.FamilyCompatible[Self.A.Out, Self.Next]
     comptime _RunCompatible = Self.A._RunCompatible & Self.Next._RunCompatible & Self._BaseCompatible & _CommonErrorCompatible[Self.A.Error, Self.Operation.Error[Self.A.Out, Self.Next]]
 
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:

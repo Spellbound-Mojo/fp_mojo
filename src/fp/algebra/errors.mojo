@@ -2,6 +2,7 @@
 
 from .protocols import _pure, _CALLBACK_ADMISSION, Functor, Applicative, ApplicativeError, ErrorMapping, Monad
 from .error_mapping import MapErrContract, _map_err
+from ._primitive_contracts import BindContract
 from .instances import ResultFamily
 from fp.data._result import Result, _ResultType
 from std.builtin.rebind import downcast, rebind_var
@@ -104,8 +105,10 @@ struct RecoverContract[I: ApplicativeError, V: Movable & Deinitable, H: UnaryCon
 struct _Continue[M: Monad, recover: Bool]:
     """Select the base operation; deferred transformers own only their run boundary."""
     comptime Errors = downcast[Self.M, ApplicativeError]
-    comptime Out[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self.Errors.Handled[V, H] if Self.recover else Self.M.Bound[V, H]
-    comptime Error[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self.Errors.HandleError[V, H] if Self.recover else Self.M.BindError[V, H]
+    comptime _Bind[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = BindContract[Self.M, V, H]
+    comptime FamilyCompatible[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self.Errors._Handles[V, H] if Self.recover else Self._Bind[V, H].FamilyCompatible
+    comptime Out[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self.Errors.Handled[V, H] if Self.recover else Self._Bind[V, H].Out
+    comptime Error[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self.Errors.HandleError[V, H] if Self.recover else Self._Bind[V, H].Error
 
     @staticmethod
     def apply[E: Movable & Deinitable, V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V
