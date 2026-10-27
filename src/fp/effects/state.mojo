@@ -5,6 +5,7 @@ Each operation is one struct whose run delegates to the base family.
 """
 
 from fp.algebra._admission import _CarrierBind, _CarrierCombine
+from fp.algebra.contracts import MapContract, BindContract
 from std.builtin.rebind import rebind_var, rebind, downcast
 from std.utils import Variant
 from fp.algebra.errors import _Continue
@@ -110,9 +111,10 @@ struct _StateLift[M: Monad, S: Movable & Deinitable, V: Movable & Deinitable](St
     comptime State = Self.S
     comptime Value = Self.M.Element[Self.V]
     comptime Pair = _WithState[Self.Value, Self.S]
-    comptime Out = Self.M.Mapped[Self.V, Self.Pair]
-    comptime Error = Self.M.MapError[Self.V, Self.Pair]
-    comptime _RunCompatible = Self.M.MapCompatible[Self.V, Self.Pair]
+    comptime _BaseOp = MapContract[Self.M,Self.V,Self.Pair]
+    comptime Out = Self._BaseOp.Out
+    comptime Error = Self._BaseOp.Error
+    comptime _RunCompatible = Self._BaseOp.FamilyCompatible
 
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
         comptime assert Self._RunCompatible, "run: incompatible State recipe"
@@ -187,9 +189,10 @@ struct _StatePrepare[I: AnyType, M: Monad, S: Movable & Deinitable, F: BinaryCon
     comptime Action = _Action[Self.G.Out]
     comptime Combine = _MapFirst[_BindFirst[Self.F], Self.S]
     comptime Arg = Tuple[Self.F.First, Self.S]
-    comptime Out = Self.M.Mapped[Self.Action.Out, Self.Combine]
-    comptime Error = _CommonError[Self.G.Error, _CommonError[Self.Action.Error, Self.M.MapError[Self.Action.Out, Self.Combine]]]
-    comptime _RunCompatible = Self.Action._RunCompatible & Self.M.MapCompatible[Self.Action.Out, Self.Combine] & _CommonErrorCompatible[Self.Action.Error, Self.M.MapError[Self.Action.Out, Self.Combine]] & _CommonErrorCompatible[Self.G.Error, _CommonError[Self.Action.Error, Self.M.MapError[Self.Action.Out, Self.Combine]]]
+    comptime _BaseOp = MapContract[Self.M,Self.Action.Out,Self.Combine]
+    comptime Out = Self._BaseOp.Out
+    comptime Error = _CommonError[Self.G.Error, _CommonError[Self.Action.Error, Self._BaseOp.Error]]
+    comptime _RunCompatible = Self.Action._RunCompatible & Self._BaseOp.FamilyCompatible & _CommonErrorCompatible[Self.Action.Error, Self._BaseOp.Error] & _CommonErrorCompatible[Self.G.Error, _CommonError[Self.Action.Error, Self._BaseOp.Error]]
 
     @staticmethod
     def _combine(var action: Self.Action, var function: Self.F, var arg: Self.Arg) raises Self.Error -> Self.Out:
@@ -226,9 +229,10 @@ struct _StateMap[M: Monad, S: Movable & Deinitable, A: StateAction, F: UnaryCont
     comptime State = Self.S
     comptime Value = Self.F.Out
     comptime Step = _MapFirst[Self.F, Self.S]
-    comptime Out = Self.M.Mapped[Self.A.Out, Self.Step]
-    comptime Error = _CommonError[Self.A.Error, Self.M.MapError[Self.A.Out, Self.Step]]
-    comptime _RunCompatible = Self.A._RunCompatible & Self.M.MapCompatible[Self.A.Out, Self.Step] & _CommonErrorCompatible[Self.A.Error, Self.M.MapError[Self.A.Out, Self.Step]]
+    comptime _BaseOp = MapContract[Self.M,Self.A.Out,Self.Step]
+    comptime Out = Self._BaseOp.Out
+    comptime Error = _CommonError[Self.A.Error, Self._BaseOp.Error]
+    comptime _RunCompatible = Self.A._RunCompatible & Self._BaseOp.FamilyCompatible & _CommonErrorCompatible[Self.A.Error, Self._BaseOp.Error]
 
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
         comptime assert Self._RunCompatible, "run: incompatible State recipe"
@@ -284,9 +288,10 @@ struct _StateCombine[M: Monad, S: Movable & Deinitable, A: StateAction, F: Binar
     comptime State = Self.S
     comptime Value = Self.F.Out
     comptime Next = _StatePrepare[Self.Family, Self.M, Self.S, Self.F, Self.G]
-    comptime Out = Self.M.Bound[Self.A.Out, Self.Next]
-    comptime Error = _CommonError[Self.A.Error, Self.M.BindError[Self.A.Out, Self.Next]]
-    comptime _RunCompatible = Self.A._RunCompatible & Self.Next._RunCompatible & Self.M.BindCompatible[Self.A.Out, Self.Next] & _CommonErrorCompatible[Self.A.Error, Self.M.BindError[Self.A.Out, Self.Next]]
+    comptime _BaseOp = BindContract[Self.M,Self.A.Out,Self.Next]
+    comptime Out = Self._BaseOp.Out
+    comptime Error = _CommonError[Self.A.Error, Self._BaseOp.Error]
+    comptime _RunCompatible = Self.A._RunCompatible & Self.Next._RunCompatible & Self._BaseOp.FamilyCompatible & _CommonErrorCompatible[Self.A.Error, Self._BaseOp.Error]
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
         comptime assert Self._RunCompatible, "run: incompatible State recipe"
         comptime assert _Action[Self.G.Out].Family == Self.Family, _FAMILY_MISMATCH
@@ -331,9 +336,10 @@ struct _StateTraverseStep[I: AnyType, M: Monad, S: Movable & Deinitable, K: _Acc
     comptime First = Tuple[Self.K.Acc, Self.S]
     comptime Second = Self.A
     comptime Fold = _FoldState[Self.K, Self.S]
-    comptime Out = Self.M.Mapped[Self.A.Out, Self.Fold]
-    comptime Error = _CommonError[Self.A.Error, Self.M.MapError[Self.A.Out, Self.Fold]]
-    comptime _RunCompatible = Self.A._RunCompatible & Self.M.MapCompatible[Self.A.Out, Self.Fold] & (Self.M.Pure[Self.First] == Self.Out) & _CommonErrorCompatible[Self.A.Error, Self.M.MapError[Self.A.Out, Self.Fold]]
+    comptime _BaseOp = MapContract[Self.M,Self.A.Out,Self.Fold]
+    comptime Out = Self._BaseOp.Out
+    comptime Error = _CommonError[Self.A.Error, Self._BaseOp.Error]
+    comptime _RunCompatible = Self.A._RunCompatible & Self._BaseOp.FamilyCompatible & (Self.M.Pure[Self.First] == Self.Out) & _CommonErrorCompatible[Self.A.Error, Self._BaseOp.Error]
 
     def call(self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out:
         comptime assert Self.A.Family == Self.I, _FAMILY_MISMATCH

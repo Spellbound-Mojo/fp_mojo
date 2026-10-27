@@ -2709,6 +2709,25 @@ programs and 46 declared rejection fixtures. All inputs remained unchanged.
 The public API snapshot is current; generated-source checks, all 48 tooling tests
 and strict documentation checks passed.
 
+### State recipe metadata selects one base operation
+
+State lifting, mapping, combination preparation, combination and traversal steps
+now project their base admission, result and native error through `MapContract`
+or `BindContract`. Each recipe selects its adapted callback once in `_BaseOp`;
+its child-action requirements and common native error composition remain local.
+Family-only admission preserves the previous run predicate without adding input
+constraints that would reduce deferred projections prematurely.
+
+All function bodies and native-error assertions are identical to the previous
+pass. The change adds no runtime boundary or public API. Existing tests qualify
+owned state transfer, deferred failure timing, callback repetition, branching,
+embedded origins and generic capability forwarding.
+
+Qualification passed 100 deferred-admission and 76 combination source/package
+checks at O0/O3, 25 State programs, the generic capability client and 43 declared
+rejection fixtures. All inputs remained unchanged. The public API snapshot,
+generated sources, all 48 tooling tests and strict documentation checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.
