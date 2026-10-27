@@ -1,9 +1,8 @@
 """Result error policies and accumulation over the shared native pull loop."""
-from .protocols import Semigroup, _SemigroupBinary, _Accumulate, _map_accumulate, _start_as, _AccumulatePair, _LinearLoopCompatible
+from .protocols import _BindFirst, Semigroup, _SemigroupBinary, _Accumulate, _map_accumulate, _start_as, _AccumulatePair, _LinearLoopCompatible
 from fp.data._result import Result, Ok, Err, _transform_result_owned
 from std.builtin.rebind import rebind_var
 from fp.callables.protocols import BinaryContract, ThunkContract
-from fp.callables.invoke import call_once
 from fp.callables._receiver import _thunk_once_as, _binary_once_as
 from fp._internal.errors import _propagate_error
 from fp.callables.protocols import UnaryContract, Binary
@@ -86,32 +85,15 @@ struct _ResultRight[F: BinaryContract & Movable & Deinitable, R: ThunkContract &
     def _combine(var function: Self.F, var first: Self.F.First, var second: Result[Self.F.Second, Self.S]) raises Self.Error -> Result[Self.F.Out, Self.S]:
         comptime assert _ErrorCompatible[Self.Error, Self.F.Error]
         try:
-            return _transform_result_owned[Self.F.Second, Self.S, Self.F.Out, Self.S, Self.F.Error, True, True,
-                Self.F.Second, Self.F.Out, _ResultLeft[Self.F, Self.S], _result_combine[Self.F, Self.S]](
-                second^, _ResultLeft[Self.F, Self.S](function^, first^))
+            return second^.map(_BindFirst[Self.F](function^, first^))
         except error:
             _propagate_error[Self.Error](error^)
-
-
-@fieldwise_init
-struct _ResultLeft[F: BinaryContract & Movable & Deinitable, S: Movable & Deinitable](Movable):
-    """Context for the right success: the callback and the left payload."""
-    var f: Self.F
-    var first: Self.F.First
-    def apply(deinit self, var second: Self.F.Second) raises Self.F.Error -> Self.F.Out:
-        return call_once(self.f^, self.first^, second^)
 
 
 def _result_right[F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, S: Movable & Deinitable, X: Movable & Deinitable](
     var first: F.First, var context: _ResultRight[F, R, S, X]
 ) raises X capturing -> Result[F.Out, S]:
     return context^.apply(first^)
-
-
-def _result_combine[F: BinaryContract & Movable & Deinitable, S: Movable & Deinitable](
-    var second: F.Second, var context: _ResultLeft[F, S]
-) raises F.Error capturing -> F.Out:
-    return context^.apply(second^)
 
 
 def _result_map2[E: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, P: _ResultPolicy = _FirstError[E], X: Movable & Deinitable = _CommonError[_CommonError[F.Error, R.Error], P.Error]](

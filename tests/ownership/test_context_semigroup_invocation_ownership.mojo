@@ -136,6 +136,63 @@ def origins[o: ImmOrigin](ref[o] value: Int) raises:
     assert_equal(correct, True)
     assert_equal(caught, value < 0)
 
+@fieldwise_init
+struct OwnedCombine[fail: Bool](OnceBinary):
+    var owner: Owner
+    comptime First = Owner
+    comptime Second = Owner
+    comptime Out = Owner
+    comptime Error = Int
+    def call_once(deinit self, var first: Owner, var second: Owner) raises Int -> Owner:
+        self.owner.trace[] += "f"
+        if Self.fail: raise 83
+        return first^
+
+def values[accumulating: Bool, policy_fail: Bool, callback_fail: Bool](left: Bool, right: Bool) raises:
+    var trace = ArcPointer(String())
+    comptime R = Result[Owner,Owner]
+    var first: R
+    var second: R
+    if left: first = Ok(Owner(1,trace))
+    else: first = Err(Owner(1,trace))
+    if right: second = Ok(Owner(2,trace))
+    else: second = Err(Owner(2,trace))
+    var code = 0
+    var kind = 0
+    var retained = 0
+    try:
+        var result: R
+        comptime if accumulating:
+            result = map2[ValidationFamily[Merge[policy_fail]]](OwnedCombine[callback_fail](Owner(3,trace)),first^,second^)
+        else:
+            result = map2[ResultFamily[Owner]](OwnedCombine[callback_fail](Owner(3,trace)),first^,second^)
+        if result.is_ok():
+            kind = 1
+            retained = result._ok().value.id
+        else:
+            kind = 2
+            retained = result._err().value.id
+        _ = result^
+    except error: code = error
+    var expected_code = 0
+    var expected_kind = 2
+    var expected_retained = 2 if left else 1
+    var expected_trace = "312" if left else "321"
+    if left and right:
+        expected_code = 83 if callback_fail else 0
+        expected_kind = 0 if callback_fail else 1
+        expected_retained = 0 if callback_fail else 1
+        expected_trace = "2f31"
+    elif accumulating and not left and not right:
+        expected_code = 71 if policy_fail else 0
+        expected_kind = 0 if policy_fail else 2
+        expected_retained = 0 if policy_fail else 1
+        expected_trace = "2s13" if policy_fail else "2s31"
+    assert_equal(code,expected_code)
+    assert_equal(kind,expected_kind)
+    assert_equal(retained,expected_retained)
+    assert_equal(trace[],expected_trace)
+
 def main() raises:
     direct[False]()
     direct[True]()
@@ -155,3 +212,11 @@ def main() raises:
     var failure = -1
     origins(success)
     origins(failure)
+    for left in [False,True]:
+        for right in [False,True]:
+            values[True,False,False](left,right)
+            values[True,True,False](left,right)
+            values[True,False,True](left,right)
+            values[True,True,True](left,right)
+            values[False,False,False](left,right)
+            values[False,False,True](left,right)

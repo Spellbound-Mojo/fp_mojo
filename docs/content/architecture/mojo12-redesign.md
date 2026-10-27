@@ -2152,6 +2152,26 @@ rejection fixtures. Categories overlap. Reports retained unchanged inputs and
 no audit failures. Generated sources, all 48 tooling tests and strict
 documentation checks passed.
 
+### Result combination reuses callable binding and mapping
+
+After producing the right operand, Result combination binds the left success
+through the existing first-argument callable and maps that callable through the
+right Result. Result's map continues to own success selection and error retention.
+The duplicate left-payload context and native callback bridge are removed.
+Lazy-right evaluation, single-use callbacks and native errors are unchanged.
+
+All 59 baseline/candidate traces match. The 24 added owned-payload cases cover
+every success/error pairing for ordinary Result and accumulating Validation,
+callback failure and policy failure. Maintained checks assert the returned branch,
+retained owner, exact error and destruction order. Qualification passed four
+source/package ownership checks at O0/O3, five parallel-validation programs,
+72 Result programs, 133 generic clients, five algebra-Result rejection fixtures,
+44 Validation rejection fixtures and 15 accumulation rejection fixtures.
+Categories overlap. An initial runner selection named a nonexistent rejection
+group; the corrected groups passed without changing fixtures. Reports retained
+unchanged inputs and no audit failures. Generated sources, all 48 tooling tests
+and strict documentation checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.
