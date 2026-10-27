@@ -113293,6 +113293,302 @@
       },
       "signature": "def get_or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and R == _Success[Self.V]",
       "summary": "Return the success value or invoke a default factory only on Err."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "make_default",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C.Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "ThunkContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "OptionalFamily.Element[Self.V]"
+      },
+      "signature": "def get_or_else[C: ThunkContract & Movable & Deinitable](deinit self, var make_default: C) raises C.Error -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and C.Out == OptionalFamily.Element[Self.V]",
+      "summary": "Return the present Optional value or invoke a default factory only on absence."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "make_default",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def() -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "OptionalFamily.Element[Self.V]"
+      },
+      "signature": "def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] make_default: C) raises Never -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and R == OptionalFamily.Element[Self.V]",
+      "summary": "Return the present Optional value or invoke a default factory only on absence."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "make_default",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def() raises Self.E -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "OptionalFamily.Element[Self.V]"
+      },
+      "signature": "def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Self.E -> R](deinit self, ref[o] make_default: C) raises Self.E -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and R == OptionalFamily.Element[Self.V]",
+      "summary": "Return the present Optional value or invoke a default factory only on absence."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "make_default",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def() raises Never -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "OptionalFamily.Element[Self.V]"
+      },
+      "signature": "def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Never -> R](deinit self, ref[o] make_default: C) raises Never -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and Self.E != Never and R == OptionalFamily.Element[Self.V]",
+      "summary": "Return the present Optional value or invoke a default factory only on absence."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "make_default",
+        "type": "def() thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "OptionalFamily.Element[Self.V]"
+      },
+      "signature": "def get_or_else[R: Movable & Deinitable](deinit self, make_default: def() thin -> R) raises Never -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and not conforms_to(R, RegisterPassable) and R == OptionalFamily.Element[Self.V]",
+      "summary": "Return the present Optional value or invoke a default factory only on absence."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "make_default",
+        "type": "def() thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "OptionalFamily.Element[Self.V]"
+      },
+      "signature": "def get_or_else[R: RegisterPassable & Deinitable](deinit self, make_default: def() thin -> R) raises Never -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and R == OptionalFamily.Element[Self.V]",
+      "summary": "Return the present Optional value or invoke a default factory only on absence."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "make_default",
+        "type": "def() raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "X",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "OptionalFamily.Element[Self.V]"
+      },
+      "signature": "def get_or_else[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and R == OptionalFamily.Element[Self.V]",
+      "summary": "Return the present Optional value or invoke a default factory only on absence."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "make_default",
+        "type": "def() raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "X",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "OptionalFamily.Element[Self.V]"
+      },
+      "signature": "def get_or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and _ErrorCompatible[Self.E, X] and R == OptionalFamily.Element[Self.V]",
+      "summary": "Return the present Optional value or invoke a default factory only on absence."
      }
     ],
     "if_effect": [

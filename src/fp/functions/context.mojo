@@ -15,6 +15,7 @@ from fp.algebra.contracts import FoldContract, AnyContract, AllContract, FindCon
 from fp.algebra._admission import _TraverseCompatible, _MapCompatible, _BindCompatible, _CombineCompatible, _CollectCompatible, _CarrierCompatible
 from fp.algebra._sequencing import _EffectRetain
 from fp.algebra._adapt import _flat_map_as
+from fp.algebra._branches import _optional_get_or_else
 from fp.algebra.errors import _tap_err, _recover, _recover_if, _or_else_if, _observe_error, RecoverIfContract, OrElseIfContract, RecoverContract, TapErrContract, FlatTapErrContract
 from fp.algebra._outcomes import EnsureContract, AttemptTapContract, _AttemptTap
 from fp.algebra.error_mapping import MapBothContract, MapErrContract, _map_both, _map_err
@@ -6696,6 +6697,46 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
     def get_or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and R == _Success[Self.V]:
         """Return the success value or invoke a default factory only on Err."""
         return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).get_or_else(_NativeThunk[R, X, def() raises X thin -> R, True](make_default))
+
+    @always_inline
+    def get_or_else[C: ThunkContract & Movable & Deinitable](deinit self, var make_default: C) raises C.Error -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and C.Out == OptionalFamily.Element[Self.V]:
+        """Return the present Optional value or invoke a default factory only on absence."""
+        return rebind_var[OptionalFamily.Element[Self.V]](_optional_get_or_else[C](rebind_var[Optional[C.Out]](self.value^), make_default^))
+
+    @always_inline
+    def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] make_default: C) raises Never -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and R == OptionalFamily.Element[Self.V]:
+        """Return the present Optional value or invoke a default factory only on absence."""
+        return rebind_var[OptionalFamily.Element[Self.V]](_optional_get_or_else[_NativeThunkRef[R, Never, C, False, o]](rebind_var[Optional[R]](self.value^), _NativeThunkRef[R, Never, C, False, o](Pointer(to=make_default))))
+
+    @always_inline
+    def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Self.E -> R](deinit self, ref[o] make_default: C) raises Self.E -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and R == OptionalFamily.Element[Self.V]:
+        """Return the present Optional value or invoke a default factory only on absence."""
+        return rebind_var[OptionalFamily.Element[Self.V]](_optional_get_or_else[_NativeThunkRef[R, Self.E, C, True, o]](rebind_var[Optional[R]](self.value^), _NativeThunkRef[R, Self.E, C, True, o](Pointer(to=make_default))))
+
+    @always_inline
+    def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Never -> R](deinit self, ref[o] make_default: C) raises Never -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and Self.E != Never and R == OptionalFamily.Element[Self.V]:
+        """Return the present Optional value or invoke a default factory only on absence."""
+        return rebind_var[OptionalFamily.Element[Self.V]](_optional_get_or_else[_NativeThunkRef[R, Never, C, True, o]](rebind_var[Optional[R]](self.value^), _NativeThunkRef[R, Never, C, True, o](Pointer(to=make_default))))
+
+    @always_inline
+    def get_or_else[R: Movable & Deinitable](deinit self, make_default: def() thin -> R) raises Never -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and not conforms_to(R, RegisterPassable) and R == OptionalFamily.Element[Self.V]:
+        """Return the present Optional value or invoke a default factory only on absence."""
+        return rebind_var[OptionalFamily.Element[Self.V]](_optional_get_or_else[_NativeThunk[R, Never, def() thin -> R, False]](rebind_var[Optional[R]](self.value^), _NativeThunk[R, Never, def() thin -> R, False](make_default)))
+
+    @always_inline
+    def get_or_else[R: RegisterPassable & Deinitable](deinit self, make_default: def() thin -> R) raises Never -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and R == OptionalFamily.Element[Self.V]:
+        """Return the present Optional value or invoke a default factory only on absence."""
+        return rebind_var[OptionalFamily.Element[Self.V]](_optional_get_or_else[_NativeThunk[R, Never, def() thin -> R, False]](rebind_var[Optional[R]](self.value^), _NativeThunk[R, Never, def() thin -> R, False](make_default)))
+
+    @always_inline
+    def get_or_else[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and R == OptionalFamily.Element[Self.V]:
+        """Return the present Optional value or invoke a default factory only on absence."""
+        return rebind_var[OptionalFamily.Element[Self.V]](_optional_get_or_else[_NativeThunk[R, X, def() raises X thin -> R, True]](rebind_var[Optional[R]](self.value^), _NativeThunk[R, X, def() raises X thin -> R, True](make_default)))
+
+    @always_inline
+    def get_or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and _ErrorCompatible[Self.E, X] and R == OptionalFamily.Element[Self.V]:
+        """Return the present Optional value or invoke a default factory only on absence."""
+        return rebind_var[OptionalFamily.Element[Self.V]](_optional_get_or_else[_NativeThunk[R, X, def() raises X thin -> R, True]](rebind_var[Optional[R]](self.value^), _NativeThunk[R, X, def() raises X thin -> R, True](make_default)))
 
     def to_optional(deinit self) -> Optional[_Success[Self.V]] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]:
         """Consume the native Result carrier, retaining only its success in an Optional.

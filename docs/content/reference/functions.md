@@ -7,7 +7,7 @@ The [pipeline tutorial](../tutorial/pipelines.md) starts with a complete program
 
 Use `.map(transform)` for selected payloads and `.then(stage)` for the whole
 value. Native collection operations execute immediately, and `.get()` extracts
-the stored carrier. Result terminals `value_or`, `get_or_else` and `to_optional`
+the stored carrier. Value terminals `value_or`, `get_or_else` and `to_optional`
 return their final value directly. For a reusable generic wrapper, follow the
 [contract-forwarding guide](../guides/generic-wrappers.md).
 
@@ -453,6 +453,18 @@ as `5830` and prints as `total: $58.30`. With `"19.99"`, `parse_cents` raises
 `PriceError`, no later stage runs, and the program prints
 `invalid price: 19.99`.
 The entry point selects `PriceError` once; subsequent pure stages retain Never.
+
+## Finish an Optional with a lazy default
+
+`pipeline(optional^).get_or_else(make_default)` returns the present payload or
+calls the zero-argument factory on absence. The same spelling finishes a Result
+on its stored error branch. The returned value has the exact payload type and
+no pipeline wrapper. See the [Optional default example](../tutorial/pipelines.md#finish-an-optional-with-a-lazy-default).
+
+Factories that return `NoneType()` can supply an explicit unit payload. A
+procedure with no return value has a different native type; it is not a default
+for `Optional[NoneType]`. Native callback errors use the selected pipeline
+context, while a library factory retains its own error type.
 
 ## Other pipeline entry points
 

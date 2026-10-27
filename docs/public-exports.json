@@ -10218,6 +10218,38 @@
           {
             "signature": "def get_or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and R == _Success[Self.V]:",
             "sha256": "532762a294387451a3b1143f9317b581e0025dbccc4edfaa982ce78c40734935"
+          },
+          {
+            "signature": "def get_or_else[C: ThunkContract & Movable & Deinitable](deinit self, var make_default: C) raises C.Error -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and C.Out == OptionalFamily.Element[Self.V]:",
+            "sha256": "97ffeb504f194de78e20bfa09e25d1b010de080ebde5c8a1bd22d2dea3d43a26"
+          },
+          {
+            "signature": "def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] make_default: C) raises Never -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and R == OptionalFamily.Element[Self.V]:",
+            "sha256": "1550f6b731c8674121b7dd91cfe58b8a3a6f373cb5c8c37309a0dee6e0d544f9"
+          },
+          {
+            "signature": "def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Self.E -> R](deinit self, ref[o] make_default: C) raises Self.E -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and R == OptionalFamily.Element[Self.V]:",
+            "sha256": "b6024106291d1abd6f1a70a54199e3345253abd7cfccb3fe647a39121e479769"
+          },
+          {
+            "signature": "def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Never -> R](deinit self, ref[o] make_default: C) raises Never -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and Self.E != Never and R == OptionalFamily.Element[Self.V]:",
+            "sha256": "422a789ccf5f80230fcb79b1622b533940544bbfdf8be664858e9bcb073cb51b"
+          },
+          {
+            "signature": "def get_or_else[R: Movable & Deinitable](deinit self, make_default: def() thin -> R) raises Never -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and not conforms_to(R, RegisterPassable) and R == OptionalFamily.Element[Self.V]:",
+            "sha256": "61dbddf8e55cfe57ab36f9ac04deb740322ffe66549aee5015db0477b42d8e38"
+          },
+          {
+            "signature": "def get_or_else[R: RegisterPassable & Deinitable](deinit self, make_default: def() thin -> R) raises Never -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and R == OptionalFamily.Element[Self.V]:",
+            "sha256": "a3b38bd92fe08be4183b338dbb90b60b460f7d517920bba360fb1cdf92b7fa5e"
+          },
+          {
+            "signature": "def get_or_else[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and R == OptionalFamily.Element[Self.V]:",
+            "sha256": "c619873b5fafd06b0dd27802d8b0f6645135dcf71b1f4f9327f014e0d4bfaf94"
+          },
+          {
+            "signature": "def get_or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and _ErrorCompatible[Self.E, X] and R == OptionalFamily.Element[Self.V]:",
+            "sha256": "9282d2ec94f524ad4bd16308a1c8c32f97de210d3aa21c2b758b5d5470342a2a"
           }
         ],
         "to_optional": [

@@ -77,6 +77,22 @@ with `.value_or(on_err)` for error-dependent recovery, `.get_or_else(factory)`
 for a lazy default, or `.to_optional()` to retain only success. These return the
 plain value or Optional directly. See [Results and recovery](results.md).
 
+## Finish an Optional with a lazy default
+
+`.get_or_else(make_default)` finishes a native Optional or Result pipeline with
+a plain value. For Optional, the factory runs only when the Optional is empty;
+a present value moves out without calling it. Pass the factory itself, keeping
+expensive defaults lazy:
+
+<!-- example: docs/examples/optional_default.mojo -->
+
+This follows Cats Option's `getOrElse`, with Mojo's explicit zero-argument
+factory. The factory must return exactly the payload type, including origins.
+Nested Optionals stay nested in that payload: a present empty inner Optional
+skips the default. Select native errors with `.raising[MyError]()` as for other
+pipeline callbacks. Library factories retain their declared errors and are
+consumed, including cleanup when skipped; native captured factories are borrowed.
+
 ## Map sequence elements
 
 Use `pipeline(values^).elements()` for Array, Deque, LinkedList or NonEmptyList.

@@ -3,13 +3,22 @@
 from ._primitive_contracts import MapContract
 from std.builtin.rebind import rebind_var, downcast
 from fp.algebra.protocols import _pure, Applicative, _UnaryView
-from fp.callables.protocols import UnaryContract, OnceUnary, MutableUnary
+from fp.callables.protocols import UnaryContract, OnceUnary, MutableUnary, ThunkContract
 from fp.callables.invoke import call_once, RepeatableUnary, _OnceUnaryAvailable
 from fp.callables._receiver import _unary_once_as
 from fp.data._result import Result, _ResultType, _fold_result_owned, _transformed
 from fp.iteration._advance import _OwnedElement
 from fp._internal.errors import _CommonError, _CommonErrorCompatible, _ErrorCompatible
 from ._adapt import _map_as
+
+
+def _optional_get_or_else[C: ThunkContract & Movable & Deinitable](
+    var source: Optional[C.Out], var make_default: C
+) raises C.Error -> C.Out:
+    """Move a present value, or consume the default factory only on absence."""
+    if source:
+        return source.unsafe_take()
+    return call_once(make_default^)
 
 
 @fieldwise_init

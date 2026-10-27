@@ -3370,3 +3370,18 @@ original type and case.
 selects `ResultFamily` for the new stored error. It keeps the selected native
 error independently. This permits `.swap().to_optional()` for error extraction
 and ordinary success combinators on the former error channel.
+
+### Native Optional default extraction
+
+`Pipeline.get_or_else` admits the same zero-argument callback forms for native
+Optional and Result carriers. One generator owns that admission; the concrete
+carrier fixes its payload type before matching the callback. The default must
+return that exact type, preserving nominal identity and borrowed origins.
+
+Optional extraction belongs to `_optional_get_or_else` in `algebra._branches`.
+It consumes a present payload directly and invokes the consumed factory only
+on absence through the existing `call_once` receiver dispatch. Result extraction
+continues through Result's owned fold. Both paths consume skipped library
+factory owners and borrow native closure storage through the established
+adapter. This shares callback admission and invocation without changing when
+Result destroys its stored error.

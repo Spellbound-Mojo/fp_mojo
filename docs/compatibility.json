@@ -743,14 +743,13 @@
       "name": "Result terminals",
       "methods": [
         "value_or",
-        "get_or_else",
         "to_optional"
       ],
       "status": "result_only",
       "families": "A native Result carrier",
-      "callbacks": "Owned unary fallback or zero-argument default; no callback for to_optional.",
+      "callbacks": "Owned unary fallback; no callback for to_optional.",
       "ownership": "Consumes the Result and library callback owners; native closures are borrowed. Returns a plain value or Optional.",
-      "errors": "Selected native error for closures, exact declared library error. Stored errors feed the fallback or are discarded by to_optional.",
+      "errors": "Selected native error for closures, exact declared library error. Stored errors feed value_or or are discarded by to_optional.",
       "timing": "Immediate extraction; fallback callbacks run only on Err.",
       "owner": [
         "src/fp/data/_result.mojo",
@@ -806,6 +805,29 @@
         "tests/runtime/test_result_swap.mojo",
         "tests/ownership/test_result_swap_ownership.mojo",
         "tests/compile_fail/result_swap_origin.mojo"
+      ]
+    },
+    {
+      "name": "Lazy default extraction",
+      "methods": [
+        "get_or_else"
+      ],
+      "status": "selected",
+      "families": "Native Optional or Result carriers",
+      "callbacks": "Zero-argument native closures and thin pointers; shared, mutable or consuming library factories",
+      "ownership": "Consumes the carrier and library factory, including skipped factory owners; native closures are borrowed. Returns the exact payload type.",
+      "errors": "Selected native error for native callbacks; exact declared library error. A stored Result error is discarded by its existing owned fold.",
+      "timing": "Returns a present/successful payload directly; calls the factory only on absence or Err.",
+      "owner": [
+        "src/fp/algebra/_branches.mojo",
+        "src/fp/data/_result.mojo",
+        "src/fp/functions/context.mojo"
+      ],
+      "evidence": [
+        "docs/examples/optional_default.mojo",
+        "tests/runtime/test_optional_default.mojo",
+        "tests/ownership/test_optional_default_ownership.mojo",
+        "tests/compile_fail/optional_default_origin.mojo"
       ]
     }
   ],

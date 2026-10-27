@@ -958,18 +958,25 @@ def methods(*, fold_stage=False):
                  f"_{name}[{family}, Self.V, {types}, {target}]({built}, self.value^)",
                  "Map the selected stored-error channel through its family's admitted destination policy.")
 
-    # These consume a native Result carrier and return the final value, rather
-    # than another pipeline. Callback admission stays with this selected context;
-    # Result owns branch selection, ownership and skipped callback disposal.
+    # Terminals consume native carriers and return the final value. Callback
+    # admission is shared; each carrier owns its branch and cleanup semantics.
     result_conditions = ["conforms_to(Self.V, _ResultType)", f"Self.V == {Source}"]
-    for name, mode, arg, summary in RESULT_TERMINALS:
-        for cb in native_callbacks(mode, Err if mode == "owned" else "", arg):
+    def value_terminal(name, mode, arg, summary, input_type, output_type, source_conditions, invoke):
+        for cb in native_callbacks(mode, input_type, arg):
             params = callback_parameters([cb])
             if params and params[-1] == "//": params.pop()
-            conditions = result_conditions + cb["conditions"] + [f'{cb["result"]} == {T}']
-            body.append(f'\n    @always_inline\n    def {name}[{", ".join(params)}](deinit self, {cb["argument"]}) raises {cb["error"]} -> {T} where {" and ".join(conditions)}:\n'
+            conditions = source_conditions + cb["conditions"] + [f'{cb["result"]} == {output_type}']
+            body.append(f'\n    @always_inline\n    def {name}[{", ".join(params)}](deinit self, {cb["argument"]}) raises {cb["error"]} -> {output_type} where {" and ".join(conditions)}:\n'
                         f'        """{summary}"""\n'
-                        f'        return rebind_var[{Source}](self.value^).{name}({cb["build"]})\n')
+                        f'        return {invoke(cb)}\n')
+    for name, mode, arg, summary in RESULT_TERMINALS:
+        value_terminal(name, mode, arg, summary, Err if mode == "owned" else "", T,
+                       result_conditions, lambda cb: f'rebind_var[{Source}](self.value^).{name}({cb["build"]})')
+    element = "OptionalFamily.Element[Self.V]"
+    value_terminal("get_or_else", "thunk", "make_default",
+                   "Return the present Optional value or invoke a default factory only on absence.",
+                   "", element, ["OptionalFamily.CarrierCompatible[Self.V]"],
+                   lambda cb: f'rebind_var[{element}](_optional_get_or_else[{cb["adapter_type"]}](rebind_var[Optional[{cb["result"]}]](self.value^), {cb["build"]}))')
     body.append(f'\n    def to_optional(deinit self) -> Optional[{T}] where {" and ".join(result_conditions)}:\n'
                 '        """Consume the native Result carrier, retaining only its success in an Optional."""\n'
                 f'        return rebind_var[{Source}](self.value^).to_optional()\n')
