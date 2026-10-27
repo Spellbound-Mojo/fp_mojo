@@ -2582,6 +2582,35 @@ as did the example's four source/package O0/O3 checks. Reports retained
 unchanged inputs and no audit failures. Generated sources, all 48 tooling tests
 and strict documentation checks passed.
 
+### Direct layer transport shares one representation policy
+
+OptionalT and ResultT use their base carrier directly. Their hoisting and local
+scope implementations now delegate to the private `_LayerTransport` owner,
+which defines admission, result and error metadata and performs each consumed
+operation. Concrete family declarations retain their capability signatures and
+existing aliases. Reader, State and Writer retain their representation-specific
+transport implementations.
+
+The shared owner preserves the selected base-family check, source membership,
+operation admission and exact native construction errors. It stores no values
+and creates no replacement carrier. The existing `_LocalOp` remains the owner
+of local-callback validation and invocation. Public API declarations and
+inventory are unchanged.
+
+Two inherited-default prototypes failed under Mojo 1.2, including compiler
+crashes during an existing OptionalT local-scope client. They are retained as
+rejected experiments. Composition passed the focused environment, Writer,
+generic capability and ownership controls. Six baseline/candidate scope traces
+match for OptionalT and ResultT success, native error and abandonment; maintained
+source/package O0/O3 clients assert those cleanup sequences.
+
+All four new ownership and 48 selected-capability source/package O0/O3 checks
+passed. Twenty capability, seven layer and 142 generic programs passed, along
+with 15 environment-capability and 19 Writer-capability rejection fixtures.
+Reports retained unchanged inputs and no audit failures. The public API
+inventory, generated sources, all 48 tooling tests and strict documentation
+checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

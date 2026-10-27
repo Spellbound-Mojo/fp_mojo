@@ -138,23 +138,47 @@ struct _OptionalAcc[K: _Accumulate](_Accumulate):
 comptime _ResultAcc[K: _Accumulate, E: Movable & Deinitable] = _ResultAccumulator[K, _FirstError[E]]
 
 
+struct _LayerTransport[I: Monad & _CapabilityLifting]:
+    """Transport operations through layers represented directly by a base carrier.
+
+    OptionalT and ResultT keep the base carrier's storage and error types.
+    This owner shares their representation policy and consumes each operation
+    once; wrapped or deferred representations define their own transport.
+    """
+    comptime HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = Self.I.CarrierCompatible[V] and H.Compatible[V]
+    comptime Hoisted[V: Movable & Deinitable, H: _CarrierOp] = H.Applied[V]
+    comptime HoistError[V: Movable & Deinitable, H: _CarrierOp] = H.Error[V]
+    @staticmethod
+    def hoist[V: Movable & Deinitable, H: _CarrierOp](var op: H, var value: V) raises Self.HoistError[V,H] -> Self.Hoisted[V,H]:
+        return op^.apply(value^)
+
+    comptime ScopeCompatible[C: Local, V: Movable & Deinitable] = Self.I.CarrierCompatible[V] and C.LocalCompatible[V]
+    comptime Scoped[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Self.Hoisted[V, _LocalOp[C,F]]
+    comptime ScopeError[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = C.LocalError[V,F]
+    @staticmethod
+    def scope[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](var f: F, var value: V) raises Self.ScopeError[C,V,F] -> Self.Scoped[C,V,F]:
+        comptime assert C.Family == Self.I.Base and Self.ScopeCompatible[C,V]
+        return Self.hoist(_LocalOp[C,F](f^),value^)
+
+
+# Concrete family declarations retain their native capability signatures;
+# the shared representation policy and execution live in _LayerTransport.
 struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError), ErrorMapping where conforms_to(M, ErrorMapping)):
     """OptionalT over a base other than Identity: a value is M's carrier of Optional[A]."""
-    comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = Self.CarrierCompatible[V] and H.Compatible[V]
-    comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = H.Applied[V]
-    comptime _HoistError[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = H.Error[V]
+    comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = _LayerTransport[Self].HoistCompatible[V,H]
+    comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = _LayerTransport[Self].Hoisted[V,H]
+    comptime _HoistError[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = _LayerTransport[Self].HoistError[V,H]
     comptime _Listening[C: Listen, A: Movable & Deinitable] = _ListenMapped[C, Optional[A], _ListenSum[OptionalFamily, A, C.Log.Value]]
     @staticmethod
     def _hoist[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp](var op: H, var value: V) raises Self._HoistError[A, V, H] -> Self._Hoisted[A, V, H]:
-        return op^.apply(value^)
+        return _LayerTransport[Self].hoist(op^,value^)
 
-    comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = Self.CarrierCompatible[V] and C.LocalCompatible[V]
-    comptime _Scoped[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Self._Hoisted[Self.Element[V], V, _LocalOp[C, F]]
-    comptime _ScopeError[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = C.LocalError[V, F]
+    comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = _LayerTransport[Self].ScopeCompatible[C,V]
+    comptime _Scoped[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = _LayerTransport[Self].Scoped[C,V,F]
+    comptime _ScopeError[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = _LayerTransport[Self].ScopeError[C,V,F]
     @staticmethod
     def _scope[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](var f: F, var value: V) raises Self._ScopeError[C, V, F] -> Self._Scoped[C, V, F]:
-        comptime assert C.Family == Self.Base and Self._ScopeCompatible[C, V]
-        return Self._hoist[Self.Element[V]](_LocalOp[C, F](f^), value^)
+        return _LayerTransport[Self].scope[C](f^,value^)
 
     comptime _Mapping = downcast[Self.M,ErrorMapping]
     comptime ErrorCarrierCompatible[V: Movable & Deinitable] = Self.CarrierCompatible[V] and Self._Mapping.ErrorCarrierCompatible[V]
@@ -267,21 +291,20 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
 
 struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, ErrorMapping, _LocalLifting):
     """ResultT over a base other than Identity: a value is M's carrier of Result[A, E]."""
-    comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = Self.CarrierCompatible[V] and H.Compatible[V]
-    comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = H.Applied[V]
-    comptime _HoistError[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = H.Error[V]
+    comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = _LayerTransport[Self].HoistCompatible[V,H]
+    comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = _LayerTransport[Self].Hoisted[V,H]
+    comptime _HoistError[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = _LayerTransport[Self].HoistError[V,H]
     comptime _Listening[C: Listen, A: Movable & Deinitable] = _ListenMapped[C, Result[A, Self.E], _ListenSum[ResultFamily[Self.E], A, C.Log.Value]]
     @staticmethod
     def _hoist[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp](var op: H, var value: V) raises Self._HoistError[A, V, H] -> Self._Hoisted[A, V, H]:
-        return op^.apply(value^)
+        return _LayerTransport[Self].hoist(op^,value^)
 
-    comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = Self.CarrierCompatible[V] and C.LocalCompatible[V]
-    comptime _Scoped[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Self._Hoisted[Self.Element[V], V, _LocalOp[C, F]]
-    comptime _ScopeError[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = C.LocalError[V, F]
+    comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = _LayerTransport[Self].ScopeCompatible[C,V]
+    comptime _Scoped[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = _LayerTransport[Self].Scoped[C,V,F]
+    comptime _ScopeError[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = _LayerTransport[Self].ScopeError[C,V,F]
     @staticmethod
     def _scope[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](var f: F, var value: V) raises Self._ScopeError[C, V, F] -> Self._Scoped[C, V, F]:
-        comptime assert C.Family == Self.Base and Self._ScopeCompatible[C, V]
-        return Self._hoist[Self.Element[V]](_LocalOp[C, F](f^), value^)
+        return _LayerTransport[Self].scope[C](f^,value^)
 
     comptime ErrorCarrierCompatible[V: Movable & Deinitable] = Self.CarrierCompatible[V]
     # Error rebinding changes this inner Result; the base keeps its policy and
