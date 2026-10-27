@@ -2193,6 +2193,25 @@ source/package ownership checks at O0/O3 and the full 726-program checkpoint:
 passed. Reports retained unchanged inputs and no audit failures. Generated
 sources, all 48 tooling tests and strict documentation checks passed.
 
+### Optional repeated branches reuse consuming selection
+
+The repeated Optional guard borrows its callback through the existing exclusive
+receiver view, then delegates branch selection to the consuming guard. The
+consuming implementation remains the single owner of absence injection and
+present-value continuation, matching Result's existing architecture. The original
+callback is retained and mutated in place; no callback or payload copy is added.
+
+Six baseline/candidate traces match for shared callbacks and callbacks exposing
+both shared and mutable receivers. Maintained checks require mutable dispatch,
+state persistence across calls and reuse after a raised error. Separate controls
+retain distinct borrowed result and error origins and skip callbacks on absence.
+Six focused O0 programs passed. Qualification passed four source/package ownership
+checks at O0/O3, 10 Optional programs, two layer programs, 34 traversal programs,
+133 generic clients, 54 Optional rejection fixtures and 55 traversal rejection
+fixtures. Categories overlap. Reports retained unchanged inputs and no audit
+failures. Generated sources, all 48 tooling tests and strict documentation
+checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

@@ -3,7 +3,7 @@
 from std.builtin.rebind import rebind_var, downcast
 from fp.algebra.protocols import _pure, Applicative, _UnaryView
 from fp.callables.protocols import UnaryContract, OnceUnary, MutableUnary
-from fp.callables.invoke import call_once, call_repeated, RepeatableUnary
+from fp.callables.invoke import call_once, RepeatableUnary
 from fp.callables._receiver import _unary_once_as
 from fp.data._result import Result, _ResultType, _fold_result_owned, _transformed
 from fp.iteration._advance import _OwnedElement
@@ -29,9 +29,10 @@ struct _OptionalGuard[M: Applicative, F: UnaryContract & Movable & Deinitable](
         return Self.M._join_right[Self.Absent, Self.F.Out](call_once(self.function^, arg.unsafe_take()))
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert RepeatableUnary[Self.F]
-        if not arg:
-            return Self.M._join_left[Self.Absent, Self.F.Out](_pure[Self.M](Optional[Self.B]()))
-        return Self.M._join_right[Self.Absent, Self.F.Out](call_repeated(self.function, arg.unsafe_take()))
+        comptime View = _UnaryView[Self.F, origin_of(self.function)]
+        comptime Guard = _OptionalGuard[Self.M, View]
+        comptime assert Guard.Arg == Self.Arg and Guard.Out == Self.Out
+        return rebind_var[Self.Out](Guard(View(Pointer(to=self.function))).call_once(rebind_var[Guard.Arg](arg^)))
 
 
 @fieldwise_init
