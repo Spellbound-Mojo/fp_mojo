@@ -39,16 +39,24 @@ tooling does this for you).
 Run from the repository root. Commands with `--output` need a directory that
 does not exist yet; use a new name under `.cache/` each time.
 
-| Command | Checks | Time |
+| Command | Checks | Compilation workload |
 |---|---|---|
-| `pixi run suite --package .cache/b2` | Every runtime, ownership, law and integration test, every example on the site (with its reviewed output) and the runtime benchmarks, at O3, as four executables | About 2 minutes on 4 cores |
-| `pixi run compile-fail --package .cache/b2` | Every compile-failure fixture is rejected with its declared diagnostics; one compile per fixture, in parallel | About 2 minutes on 4 cores |
-| `pixi run build --output .cache/b1` | Builds a source package in `<output>/fp/`, precompiles the whole package with `--Werror`, then runs `docs/examples/algebra_core.mojo` against it | About 15 s |
-| `pixi run build --format precompiled --output .cache/b2` | The same with `fp.mojoc` | About 15 s |
-| `pixi run -e docs docs-check` | Strict MkDocs build, then links, anchors, assets and the search index | Seconds |
-| `pixi run boundaries-test --output .cache/native-admission --jobs 4` | Capture and selected Pipeline tests through source and fresh package imports at O0/O3, including rejection diagnostics and lifetime controls | About 10–15 minutes on 4 cores |
-| `pixi run docs-test --output .cache/d1 --jobs 4` | Every example on the site through source and package imports at O0 and O3 with `--Werror` | A few minutes |
-| `pixi run python -m unittest discover -s tests/tooling` | Tooling unit tests | Seconds |
+| `pixi run suite --package .cache/b2` | Runtime, ownership, law and integration tests, reviewed example output and benchmark diagnostics at O3 | Four executables; `--jobs` limits concurrent builds |
+| `pixi run compile-fail --package .cache/b2` | Every rejection fixture produces its declared diagnostics | One compile per fixture; `--jobs` limits concurrency |
+| `pixi run build --output .cache/b1` | Builds a source package in `<output>/fp/`, precompiles with `--Werror`, then runs `docs/examples/algebra_core.mojo` against it | Package precompile and a bounded client build/run |
+| `pixi run build --format precompiled --output .cache/b2` | The same with `fp.mojoc` | Package precompile and a bounded client build/run |
+| `pixi run -e docs docs-check` | Strict MkDocs build, then links, anchors, assets and the search index | No Mojo compilation |
+| `pixi run boundaries-test --output .cache/native-admission --jobs 4` | Capture and selected Pipeline tests, including rejection diagnostics and lifetime controls | Fresh package, then source/package builds at O0/O3 per fixture |
+| `pixi run docs-test --output .cache/d1 --jobs 4` | Every example prints its reviewed output with `--Werror` | Fresh package, then four builds and runs per example |
+| `pixi run python -m unittest discover -s tests/tooling` | Tooling unit tests | Python checks, including bounded subprocess/resource controls |
+
+Choose concurrency from the available memory as well as the CPU count. The
+suite builds large groups of programs, while rejection and example runners
+compile separate clients; the same `--jobs` setting does not imply the same
+memory use. Elapsed time also depends on the selected fixtures, optimization,
+compiler cache and competing work. Use retained build/run timings to estimate
+the next comparable run; benchmark diagnostics collected under shared load do
+not establish a performance regression.
 
 `suite` and `compile-fail` test the library a `build` produced: pass its output
 directory to `--package`. `--source` compiles against `src/` instead, and with
@@ -102,6 +110,12 @@ Rules that matter:
 - **Precompile after changing traits or generic signatures.** A package
   precompile type-checks generic declarations that no client instantiates;
   several Mojo 1.1 trait errors appear only there.
+- **Interrupted runs are incomplete evidence.** Keep their partial logs, then
+  start the interrupted gate in a fresh output directory. Individual successful
+  compiles do not replace its final report and audit. Reuse a completed gate only
+  after checking its recorded inputs against the current tree and its package
+  digest against the package being used. See the
+  [runner guarantees](../architecture/verification.md#runner-guarantees).
 - **Stopping a run.** `pkill -f "<pattern>"` also matches your own shell if the
   pattern appears in its command line. Use a bracketed pattern such as
   `pkill -f "scripts/[s]uite.py"`, and stop orphaned `mojo build` children too.

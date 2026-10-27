@@ -91,6 +91,14 @@ keeps its generated drivers, executables and raw build and run logs; its audit
 regenerates the drivers and re-derives every program's outcome from the logs
 instead of trusting the reported flags.
 
+A completed gate is reusable evidence only for its recorded inputs and package.
+Check the final outcome, audit failures, input hashes and package digest before
+carrying it into a later qualification. A missing final report after an
+interruption is incomplete evidence, even if the retained compile logs contain
+successes. Keep that bundle for diagnosis and run the unfinished gate in a fresh
+output directory; completed independent gates need not be repeated when their
+inputs and package still match.
+
 ## Definition of done
 
 A capability is complete when:
