@@ -12,7 +12,7 @@ from fp.algebra.instances import IdentityFamily
 from fp.callables.protocols import (BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, Unary, OnceUnary, MutableUnary,
                                     OnceBinary, MutableBinary, OnceThunk)
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
-from fp.callables._receiver import _unary_once_as, _binary_once_as
+from fp.callables._receiver import _unary_once_as, _binary_once_as, _MutableUnaryRef, _MutableBinaryRef
 from std.memory import MaybeUninit
 from fp.callables.products import _take_pair, _MapPair
 from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible, _propagate_error
@@ -134,18 +134,12 @@ struct _WriterStep[I: WriterFamily, F: UnaryContract & Movable & Deinitable](
         return Self._join(log_part^, next^)
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert RepeatableUnary[Self.F]
-        comptime assert _ErrorCompatible[Self.Error, Self.F.Error]
-        var log_slot = MaybeUninit[Self.W.Value]()
-        var value_slot = MaybeUninit[Self.F.Arg]()
-        _take_pair(arg^, log_slot, value_slot)
-        var log_part = log_slot^.unsafe_assume_init()
-        var value_part = value_slot^.unsafe_assume_init()
-        var next: Self.Next
-        try:
-            next = rebind_var[Self.Next](call_repeated(self.function, value_part^))
-        except error:
-            _propagate_error[Self.Error](error^)
-        return Self._join(log_part^, next^)
+        comptime View = _MutableUnaryRef[Self.F, origin_of(self.function)]
+        comptime Next = _WriterStep[Self.I, View]
+        comptime assert Next.Arg == Self.Arg and Next.Out == Self.Out
+        comptime assert _ErrorCompatible[Self.Error, Next.Error]
+        return rebind_var[Self.Out](_unary_once_as[Self.Error](
+            Next(View(Pointer(to=self.function))), rebind_var[Next.Arg](arg^)))
 
 
 @fieldwise_init
@@ -175,24 +169,12 @@ struct _WriterCombine[W: Monoid, F: BinaryContract & Movable & Deinitable](
         return Tuple(log^, value^)
     def call_mut(mut self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out:
         comptime assert RepeatableBinary[Self.F]
-        comptime assert _ErrorCompatible[Self.Error, Self.F.Error] and _ErrorCompatible[Self.Error, Self.W.Error]
-        var first_log_slot = MaybeUninit[Self.W.Value]()
-        var left_slot = MaybeUninit[Self.F.First]()
-        _take_pair(first^, first_log_slot, left_slot)
-        var first_log = first_log_slot^.unsafe_assume_init()
-        var left = left_slot^.unsafe_assume_init()
-        var second_log_slot = MaybeUninit[Self.W.Value]()
-        var right_slot = MaybeUninit[Self.F.Second]()
-        _take_pair(second^, second_log_slot, right_slot)
-        var second_log = second_log_slot^.unsafe_assume_init()
-        var right = right_slot^.unsafe_assume_init()
-        var log = _append_log_as[Self.Error, Self.W](first_log^, second_log^)
-        var value: Self.F.Out
-        try:
-            value = call_repeated(self.function, left^, right^)
-        except error:
-            _propagate_error[Self.Error](error^)
-        return Tuple(log^, value^)
+        comptime View = _MutableBinaryRef[Self.F, origin_of(self.function)]
+        comptime Next = _WriterCombine[Self.W, View]
+        comptime assert Next.First == Self.First and Next.Second == Self.Second and Next.Out == Self.Out
+        comptime assert _ErrorCompatible[Self.Error, Next.Error]
+        return rebind_var[Self.Out](_binary_once_as[Self.Error](
+            Next(View(Pointer(to=self.function))), rebind_var[Next.First](first^), rebind_var[Next.Second](second^)))
 
 
 @fieldwise_init

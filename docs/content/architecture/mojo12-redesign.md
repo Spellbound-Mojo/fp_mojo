@@ -1696,6 +1696,28 @@ generated-signature check. Reports retain unchanged inputs and no audit
 failures. Strict documentation checks retain 318 exports and 81 examples.
 Evidence is in `.cache/quality-cycle24/qualified-main/`.
 
+### Repeated Writer receivers share consuming execution
+
+Writer binding and pair combination now execute their repeated callbacks
+through the same implementation as consuming calls. `_WriterStep` borrows its
+callback with the existing unary receiver view; `_WriterCombine` uses the
+corresponding binary view in the callable receiver module. These views delegate
+receiver selection to `call_repeated` and preserve the callback's exact argument,
+result, and native error types. No owned callback state is copied.
+
+The consuming implementation continues to own tuple movement, log ordering,
+and failure cleanup. Sixteen old/new traces match, including two calls through
+one mutable callback, log failures before value combination, and callback
+failures before log prefixing. Maintained tests check move-only captures,
+distinct borrowed result/error origins, exact native errors, and rejection of
+an escaping local. Existing receiver and log-copyability contracts remain.
+
+Qualification passes all 12 source/package checks at O0/O3, 17 Writer
+programs, 24 State programs, 132 generic clients, all 48 tooling tests, and
+the generated-signature check. Reports retain unchanged inputs and no audit
+failures. Strict documentation checks retain 318 exports and 81 examples.
+Evidence is in `.cache/quality-cycle25/qualified-main/`.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

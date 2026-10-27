@@ -1,7 +1,7 @@
 """Fixed-arity calls whose error is widened to a caller's common error type."""
 from std.builtin.rebind import downcast, rebind_var, rebind
 from fp._internal.errors import _ErrorCompatible, _propagate_error
-from fp.callables.protocols import UnaryContract, Unary, MutableUnary, OnceUnary, BinaryContract, ThunkContract, BorrowCallContract, BorrowCallable, BorrowOnceCallable
+from fp.callables.protocols import UnaryContract, Unary, MutableUnary, OnceUnary, BinaryContract, OnceBinary, MutableBinary, ThunkContract, BorrowCallContract, BorrowCallable, BorrowOnceCallable
 from fp.callables.invoke import RepeatableUnary, RepeatableBinary, call_once, call_repeated, invoke_borrowed, invoke_borrowed_once
 
 
@@ -28,6 +28,21 @@ struct _MutableUnaryRef[F: UnaryContract & Movable & Deinitable, o: MutOrigin](M
         return call_repeated(self.function[], arg^)
     def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         return self.call_mut(arg^)
+
+
+@fieldwise_init
+struct _MutableBinaryRef[F: BinaryContract & Movable & Deinitable, o: MutOrigin](MutableBinary, OnceBinary):
+    """Borrow a repeated binary receiver across one consuming call boundary."""
+    var function: Pointer[Self.F, Self.o]
+    comptime First = Self.F.First
+    comptime Second = Self.F.Second
+    comptime Out = Self.F.Out
+    comptime Error = Self.F.Error
+    def call_mut(mut self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out:
+        comptime assert RepeatableBinary[Self.F], "the callback must be repeatable"
+        return call_repeated(self.function[], first^, second^)
+    def call_once(deinit self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out:
+        return self.call_mut(first^, second^)
 
 
 trait _MutableBorrow(BorrowCallContract, Movable, Deinitable):
