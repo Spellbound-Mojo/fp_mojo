@@ -554,3 +554,36 @@ the complete contract. Origins of the two payloads remain independent in the
 resulting tuple, and existing positional family bindings still work.
 
 <!-- example: docs/examples/product_contracts.mojo -->
+
+### Contracts for stored callbacks
+
+`ApContract[I, V, W]` describes applying the library callbacks in carrier `V`
+to the arguments in carrier `W`. Generic wrappers can name `Out` and `Error`
+and forward `Compatible` without importing private application or value
+adapters. The descriptor reuses `Map2Contract` and the existing receiver
+availability predicate; it adds no execution or storage layer.
+
+`Compatible` checks the exact input type, both carriers, the family's combination
+policy and a callable receiver. A shared, mutable or consuming receiver is
+supported. Lists form a left-major Cartesian product and require copyable
+callback and argument payloads. Each pair receives its own callback value;
+mutable local callback state is not threaded between pairs. A copyable consuming
+callback can therefore work in a List, while a move-only consuming callback can
+work in a single-value family. Independent shared state inside a callback keeps
+its existing semantics.
+
+Admission components preserve existing generic code. Free `ap` retains
+`OperationCompatible`, generic `Piped.ap` retains `InputCompatible`, and selected
+pipelines retain `ShapeCompatible`. The latter combines input and family checks
+without forcing a receiver proof before specialization. `ReceiverCompatible`
+adds that proof in the complete `Compatible` predicate, so new generic wrappers
+can reject missing receivers at their boundary. Applying the stronger predicate
+to every legacy selected call would reject valid wrappers declared against
+`UnaryContract`; invocation still checks their receiver when specialized.
+
+`Error` names construction errors. Deferred families keep callback errors in the
+returned computation. Exact borrowed input, output and error origins are retained;
+native function values still use their existing library callable adapters.
+Ordinary calls and positional family bindings are unchanged.
+
+<!-- example: docs/examples/ap_contracts.mojo -->

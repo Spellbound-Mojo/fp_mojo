@@ -104,13 +104,13 @@ def ap_method(carrier=None, result=False):
             condition += f' and _CombineCompatible[{family}, {left}, _Apply[{function}], _ValueThunk[{carrier.value(function + ".Arg")}]]'
         body = f'return Piped(_map2_as[{family}, X={raised}](_Apply[{function}](), rebind_var[{left}](self.value^), rebind_var[{carrier.value(function + ".Arg")}](values^)))'
     else:
-        function = 'downcast[I.Element[Self.Value], UnaryContract & Movable & Deinitable]'
+        contract = 'ApContract[I, Self.Value, W]'
         params = [f'W: {MD}', '//', 'I: Applicative']
         right = 'W'
-        cb = f'_Apply[{function}]'
-        output = f'Piped[I.Combined[Self.Value, {cb}, _ValueThunk[W]]]'
-        raised = f'I.CombineError[Self.Value, {cb}, _ValueThunk[W]]'
-        condition = f'conforms_to(I.Element[Self.Value], UnaryContract) and I.Element[W] == {function}.Arg'
+        cb = f'_Apply[{contract}.Function]'
+        output = f'Piped[{contract}.Out]'
+        raised = contract + '.Error'
+        condition = contract + '.InputCompatible'
         body = f'return Piped(_map2_as[I, X={raised}]({cb}(), self.value^, values^))'
     parameters = '[' + ', '.join(params) + ']' if params else ''
     return f'''

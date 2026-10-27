@@ -555,6 +555,85 @@
    "summary": "Admission, result and construction error of any_effect.",
    "traits": []
   },
+  "algebra.ApContract": {
+   "aliases": [
+    {
+     "description": "The callback type projected from the left carrier.",
+     "name": "Function"
+    },
+    {
+     "description": "The left payload declares the library unary callable contract.",
+     "name": "CallableCompatible"
+    },
+    {
+     "description": "Callable membership and exact argument equality, including origins.",
+     "name": "InputCompatible"
+    },
+    {
+     "description": "Legacy free-function admission through the family's combination policy.",
+     "name": "OperationCompatible"
+    },
+    {
+     "description": "Operation admission and membership of both carriers.",
+     "name": "FamilyCompatible"
+    },
+    {
+     "description": "The callback has a consuming, mutable or shared invocation mode.",
+     "name": "ReceiverCompatible"
+    },
+    {
+     "description": "Legacy selected admission; receiver dispatch remains checked at invocation.",
+     "name": "ShapeCompatible"
+    },
+    {
+     "description": "Shape admission plus availability of the stored callback receiver.",
+     "name": "Compatible"
+    },
+    {
+     "description": "The selected family of the result.",
+     "name": "Family"
+    },
+    {
+     "description": "The exact carrier of callback results.",
+     "name": "Out"
+    },
+    {
+     "description": "The exact native construction error; deferred errors stay deferred.",
+     "name": "Error"
+    }
+   ],
+   "description": "The existing pairwise combination and callable dispatcher own execution.\nThis descriptor only names admission and result metadata for generic code.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected Applicative family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Applicative",
+     "variadic": false
+    },
+    {
+     "description": "The complete carrier of library callbacks, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The complete carrier of argument values, including origins.",
+     "inferred": false,
+     "name": "W",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/contracts",
+   "signature": "struct ApContract[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable]",
+   "summary": "The exact contract of applying stored library callbacks to stored values.",
+   "traits": []
+  },
   "algebra.Applicative": {
    "aliases": [
     {
@@ -6390,7 +6469,7 @@
       }
      ],
      "description": "",
-     "error": "I.CombineError[V, _Apply[_Function[I, V]], _Value[W]]",
+     "error": "ApContract[I, V, W].Error",
      "parameters": [
       {
        "description": "The type of the carrier of callbacks, which are library `Unary` values.",
@@ -6418,9 +6497,9 @@
      "raises_doc": "The callbacks' error.",
      "returns": {
       "doc": "The carrier of the results; for lists, every callback applied to every\nvalue in left-major order.",
-      "type": "I.Combined[V, _Apply[_Function[I, V]], _Value[W]]"
+      "type": "ApContract[I, V, W].Out"
      },
-     "signature": "def ap[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var functions: V, var values: W) raises I.CombineError[V, _Apply[_Function[I, V]], _Value[W]] -> I.Combined[V, _Apply[_Function[I, V]], _Value[W]] where _CombineCompatible[I, V, _Apply[_Function[I, V]], _Value[W]]",
+     "signature": "def ap[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var functions: V, var values: W) raises ApContract[I, V, W].Error -> ApContract[I, V, W].Out where ApContract[I, V, W].OperationCompatible",
      "summary": "Apply the callbacks a carrier holds to the values another carrier holds."
     }
    ],
@@ -40700,7 +40779,7 @@
        }
       ],
       "description": "",
-      "error": "I.CombineError[Self.Value, _Apply[downcast[I.Element[Self.Value], UnaryContract & Movable & Deinitable]], _ValueThunk[W]]",
+      "error": "ApContract[I, Self.Value, W].Error",
       "parameters": [
        {
         "description": "The second carrier type, including its origins.",
@@ -40721,9 +40800,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The carrier of callback results. List applies each callback to each value in function-major order; Optional and Result invoke at most once.",
-       "type": "Piped[I.Combined[Self.Value, _Apply[downcast[I.Element[Self.Value], UnaryContract & Movable & Deinitable]], _ValueThunk[W]]]"
+       "type": "Piped[ApContract[I, Self.Value, W].Out]"
       },
-      "signature": "def ap[W: Movable & Deinitable, //, I: Applicative](deinit self, var values: W) raises I.CombineError[Self.Value, _Apply[downcast[I.Element[Self.Value], UnaryContract & Movable & Deinitable]], _ValueThunk[W]] -> Piped[I.Combined[Self.Value, _Apply[downcast[I.Element[Self.Value], UnaryContract & Movable & Deinitable]], _ValueThunk[W]]] where conforms_to(I.Element[Self.Value], UnaryContract) and I.Element[W] == downcast[I.Element[Self.Value], UnaryContract & Movable & Deinitable].Arg",
+      "signature": "def ap[W: Movable & Deinitable, //, I: Applicative](deinit self, var values: W) raises ApContract[I, Self.Value, W].Error -> Piped[ApContract[I, Self.Value, W].Out] where ApContract[I, Self.Value, W].InputCompatible",
       "summary": "Apply the callbacks in this carrier to an already evaluated carrier of arguments."
      },
      {
@@ -91231,7 +91310,7 @@
        }
       ],
       "description": "",
-      "error": "_Combining[Self.I].CombineError[Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]]",
+      "error": "ApContract[_Combining[Self.I], Self.V, W].Error",
       "parameters": [
        {
         "description": "The second carrier type, including its origins.",
@@ -91245,9 +91324,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]], Self.E]"
+       "type": "Pipeline[Self.I, ApContract[_Combining[Self.I], Self.V, W].Out, Self.E]"
       },
-      "signature": "def ap[W: Movable & Deinitable, //](deinit self, var values: W) raises _Combining[Self.I].CombineError[Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]] -> Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]], Self.E] where conforms_to(Self.I, Applicative) and conforms_to(Self.I.Element[Self.V], UnaryContract & Movable & Deinitable) and _CombineCompatible[_Combining[Self.I], Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]] and _CarrierCompatible[_Combining[Self.I], Self.V] and _CarrierCompatible[_Combining[Self.I], W] and _Combining[Self.I].Element[W] == _Function[_Combining[Self.I], Self.V].Arg",
+      "signature": "def ap[W: Movable & Deinitable, //](deinit self, var values: W) raises ApContract[_Combining[Self.I], Self.V, W].Error -> Pipeline[Self.I, ApContract[_Combining[Self.I], Self.V, W].Out, Self.E] where conforms_to(Self.I, Applicative) and ApContract[_Combining[Self.I], Self.V, W].ShapeCompatible",
       "summary": "Apply the stored library callables through the selected Applicative."
      }
     ],

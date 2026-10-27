@@ -2491,8 +2491,8 @@
         ],
         "ap": [
           {
-            "signature": "def ap[W: Movable & Deinitable, //, I: Applicative](deinit self, var values: W) raises I.CombineError[Self.Value, _Apply[downcast[I.Element[Self.Value], UnaryContract & Movable & Deinitable]], _ValueThunk[W]] -> Piped[I.Combined[Self.Value, _Apply[downcast[I.Element[Self.Value], UnaryContract & Movable & Deinitable]], _ValueThunk[W]]] where conforms_to(I.Element[Self.Value], UnaryContract) and I.Element[W] == downcast[I.Element[Self.Value], UnaryContract & Movable & Deinitable].Arg:",
-            "sha256": "a453fcfce04aabfe89e28b2c29ac8b0f9b706d7973ccf1ee96a08e6d51a55130"
+            "signature": "def ap[W: Movable & Deinitable, //, I: Applicative](deinit self, var values: W) raises ApContract[I, Self.Value, W].Error -> Piped[ApContract[I, Self.Value, W].Out] where ApContract[I, Self.Value, W].InputCompatible:",
+            "sha256": "0c3b1426c00b32037d058fd1f8197aac804bb38366a974f64ffefde9a86f083a"
           },
           {
             "signature": "def ap[A: Movable & Deinitable](deinit self, var values: List[A]) raises downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Error -> Piped[List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Out]] where conforms_to(ListFamily.Element[Self.Value], UnaryContract) and Self.Value == List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable]] and A == downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Arg and _CombineCompatible[ListFamily, List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable]], _Apply[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable]], _ValueThunk[List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Arg]]]:",
@@ -4850,8 +4850,8 @@
         ],
         "ap": [
           {
-            "signature": "def ap[W: Movable & Deinitable, //](deinit self, var values: W) raises _Combining[Self.I].CombineError[Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]] -> Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]], Self.E] where conforms_to(Self.I, Applicative) and conforms_to(Self.I.Element[Self.V], UnaryContract & Movable & Deinitable) and _CombineCompatible[_Combining[Self.I], Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]] and _CarrierCompatible[_Combining[Self.I], Self.V] and _CarrierCompatible[_Combining[Self.I], W] and _Combining[Self.I].Element[W] == _Function[_Combining[Self.I], Self.V].Arg:",
-            "sha256": "9575f2ad4b129819937ca8648e9467e271439d8e93452a99ea1dbc27e2bca1e3"
+            "signature": "def ap[W: Movable & Deinitable, //](deinit self, var values: W) raises ApContract[_Combining[Self.I], Self.V, W].Error -> Pipeline[Self.I, ApContract[_Combining[Self.I], Self.V, W].Out, Self.E] where conforms_to(Self.I, Applicative) and ApContract[_Combining[Self.I], Self.V, W].ShapeCompatible:",
+            "sha256": "541f31c660c5ec729284386a552b41aac57007440ea912c419a33b57e0b3c421"
           }
         ],
         "find_map": [
@@ -11997,6 +11997,13 @@
       ],
       "provider": "algebra/contracts"
     },
+    "algebra.ApContract": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct ApContract[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable]:"
+      ],
+      "provider": "algebra/contracts"
+    },
     "algebra.FoldContract": {
       "kind": "type or alias",
       "declarations": [
@@ -15735,8 +15742,8 @@
       "kind": "function",
       "overloads": [
         {
-          "signature": "def ap[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var functions: V, var values: W ) raises I.CombineError[V, _Apply[_Function[I, V]], _Value[W]] -> I.Combined[V, _Apply[_Function[I, V]], _Value[W]] where _CombineCompatible[I, V, _Apply[_Function[I, V]], _Value[W]]:",
-          "sha256": "619b3822709f6b771b7b0630be33fd0cebd695c948f6c7db405a03734276a3d2"
+          "signature": "def ap[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var functions: V, var values: W ) raises ApContract[I, V, W].Error -> ApContract[I, V, W].Out where ApContract[I, V, W].OperationCompatible:",
+          "sha256": "a683599a25ae1985b75c9acfe3fd3b842b5c50d531f62dc4c08ebee380157fd9"
         }
       ],
       "provider": "algebra/_derived"

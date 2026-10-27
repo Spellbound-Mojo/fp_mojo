@@ -2549,6 +2549,39 @@ fluent-combination rejection fixtures and the example's four source/package
 O0/O3 checks passed. Reports retained unchanged inputs and no audit failures.
 Generated sources, all 48 tooling tests and strict documentation checks passed.
 
+### Stored callback application exposes one checked contract
+
+`ApContract[I, V, W]` names the result, construction error and admission of
+applying stored library callbacks to stored arguments. It reuses `Map2Contract`,
+the canonical application callback and receiver-availability predicate. Free,
+generic piped and selected declarations project that metadata. The existing
+pairwise family execution and callback dispatcher remain unchanged.
+
+Receiver evidence has a deliberate boundary. `Compatible` includes receiver
+availability for new generic wrappers; `ShapeCompatible` retains the selected
+method's historical input and family admission. Requiring the stronger predicate
+on that method rejected a valid existing wrapper against `UnaryContract` before
+specialization. The prototype is retained; the adopted split passes that wrapper
+while giving new wrappers an ordinary boundary rejection for missing receivers.
+Free calls retain `OperationCompatible`, and generic piped calls retain
+`InputCompatible`. Native fixed-family signatures and positional bindings remain
+unchanged.
+
+Maintained controls cover shared, mutable and consuming callbacks; copied
+consuming callbacks in Cartesian Lists; move-only single-value callbacks;
+third-party and deferred families; legacy forwarding; and exact borrowed output
+and native-error origins. Fifteen baseline/candidate ownership traces match,
+including skipped carriers, move-only captures and errors, and abandoned Reader
+computations. Nine invalid clients require ordinary callable, argument, receiver,
+copying, carrier, stored-error or origin diagnostics.
+
+All 52 new and 76 existing combination source/package O0/O3 checks passed,
+along with eight combination, four structural, nine applicative and 142 generic
+programs. Ten fluent application and 14 structural rejection fixtures passed,
+as did the example's four source/package O0/O3 checks. Reports retained
+unchanged inputs and no audit failures. Generated sources, all 48 tooling tests
+and strict documentation checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

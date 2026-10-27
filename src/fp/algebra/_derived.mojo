@@ -1,10 +1,9 @@
 """Operations derived from the primitive protocols; no new execution paths."""
 from fp.algebra._admission import _BindCompatible, _CombineCompatible, _CollectCompatible
-from std.builtin.rebind import downcast
-from fp.callables.protocols import UnaryContract, BinaryContract
+from fp.callables.protocols import BinaryContract
 from fp.callables._identity import Identity
 from fp.callables._transforms import _ValueThunk as _Value, _Pair, _Apply
-from .contracts import ProductContract, Map2Contract
+from .contracts import ApContract, ProductContract, Map2Contract, _Function
 from .protocols import Applicative, Monad, Traversable, _map2_lazy_as
 from fp._internal.errors import _ErrorCompatible
 
@@ -21,7 +20,6 @@ def _map2_as[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract
 
 
 comptime _Same[T: Movable & Deinitable] = Identity[T]
-comptime _Function[I: Applicative, V: Movable & Deinitable] = downcast[I.Element[V], UnaryContract & Movable & Deinitable]
 
 
 def map2[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, I: Applicative](
@@ -52,7 +50,7 @@ def map2[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & M
 
 
 def ap[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var functions: V, var values: W
-) raises I.CombineError[V, _Apply[_Function[I, V]], _Value[W]] -> I.Combined[V, _Apply[_Function[I, V]], _Value[W]] where _CombineCompatible[I, V, _Apply[_Function[I, V]], _Value[W]]:
+) raises ApContract[I, V, W].Error -> ApContract[I, V, W].Out where ApContract[I, V, W].OperationCompatible:
     """Apply the callbacks a carrier holds to the values another carrier holds.
 
     Parameters:

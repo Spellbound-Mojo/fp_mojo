@@ -5,7 +5,7 @@ library value such as a `Partial` or a `Composition`. Each stage's own contract
 fixes its types. `piped(value).then(f)` chains stages one call at a time, with no
 stage limit and no promotion.
 """
-from fp.algebra.contracts import ProductContract, Map2Contract, IfContract
+from fp.algebra.contracts import ApContract, ProductContract, Map2Contract, IfContract
 from fp.algebra.contracts import AnyContract, AllContract, FindContract, FindMapContract, FoldMapContract, FoldContract
 from fp.algebra._admission import _MapCompatible, _BindCompatible, _CombineCompatible, _CollectCompatible
 from fp.algebra.validation import ValidationFamily, _ListErrors
@@ -3508,7 +3508,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_family_product[I](self.value^, other^))
 
-    def ap[W: Movable & Deinitable, //, I: Applicative](deinit self, var values: W) raises I.CombineError[Self.Value, _Apply[downcast[I.Element[Self.Value], UnaryContract & Movable & Deinitable]], _ValueThunk[W]] -> Piped[I.Combined[Self.Value, _Apply[downcast[I.Element[Self.Value], UnaryContract & Movable & Deinitable]], _ValueThunk[W]]] where conforms_to(I.Element[Self.Value], UnaryContract) and I.Element[W] == downcast[I.Element[Self.Value], UnaryContract & Movable & Deinitable].Arg:
+    def ap[W: Movable & Deinitable, //, I: Applicative](deinit self, var values: W) raises ApContract[I, Self.Value, W].Error -> Piped[ApContract[I, Self.Value, W].Out] where ApContract[I, Self.Value, W].InputCompatible:
         """Apply the callbacks in this carrier to an already evaluated carrier of arguments.
 
         Parameters:
@@ -3524,7 +3524,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         Raises:
             The exact callback, monoid or family error; Never for a non-raising operation.
         """
-        return Piped(_map2_as[I, X=I.CombineError[Self.Value, _Apply[downcast[I.Element[Self.Value], UnaryContract & Movable & Deinitable]], _ValueThunk[W]]](_Apply[downcast[I.Element[Self.Value], UnaryContract & Movable & Deinitable]](), self.value^, values^))
+        return Piped(_map2_as[I, X=ApContract[I, Self.Value, W].Error](_Apply[ApContract[I, Self.Value, W].Function](), self.value^, values^))
 
     def product_n[I: Applicative, *Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws]) raises _ProductTypes[I, Self.Value, *Ws].Error -> Piped[_ProductTypes[I, Self.Value, *Ws].Out] where Ws.length < 8:
         """Combine the receiver and additional operands into flat tuples.

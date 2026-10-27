@@ -1,5 +1,5 @@
 """Select family and native errors before callback inference; reuse algebra execution."""
-from fp.algebra.contracts import ProductContract, Map2Contract, IfContract
+from fp.algebra.contracts import ApContract, ProductContract, Map2Contract, IfContract
 from std.builtin.rebind import downcast, rebind_var
 from std.collections import StringDict, KeyElement
 from std.hash import Hasher
@@ -18,7 +18,7 @@ from fp.algebra._outcomes import EnsureContract, AttemptTapContract, _AttemptTap
 from fp.algebra.error_mapping import MapBothContract, MapErrContract, _map_both, _map_err
 from ._recovery import OrElseContract, _RecoverySelection, _selected_or_else, _IntrinsicOrElse
 from ._outcomes import RedeemContract, RedeemWithContract, _OutcomeSelection, _IntrinsicOutcome, _selected_redeem
-from fp.algebra._derived import _map2_as, _Function, ap as _context_ap, flatten as _context_flatten
+from fp.algebra._derived import _map2_as, ap as _context_ap, flatten as _context_flatten
 from fp.algebra.operations import _ErrorProbe
 from fp.algebra._nary import _ProductRun, _ProductTypes, _MapNTypes, _map_n_as
 from fp.algebra.filtering import _filter_with, compact as _context_compact
@@ -1795,7 +1795,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, Identity[Self.I.Element[Self.V]]], Self.E](_context_flatten[_Binding[Self.I]](self.value^))
 
     @always_inline
-    def ap[W: Movable & Deinitable, //](deinit self, var values: W) raises _Combining[Self.I].CombineError[Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]] -> Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]], Self.E] where conforms_to(Self.I, Applicative) and conforms_to(Self.I.Element[Self.V], UnaryContract & Movable & Deinitable) and _CombineCompatible[_Combining[Self.I], Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]] and _CarrierCompatible[_Combining[Self.I], Self.V] and _CarrierCompatible[_Combining[Self.I], W] and _Combining[Self.I].Element[W] == _Function[_Combining[Self.I], Self.V].Arg:
+    def ap[W: Movable & Deinitable, //](deinit self, var values: W) raises ApContract[_Combining[Self.I], Self.V, W].Error -> Pipeline[Self.I, ApContract[_Combining[Self.I], Self.V, W].Out, Self.E] where conforms_to(Self.I, Applicative) and ApContract[_Combining[Self.I], Self.V, W].ShapeCompatible:
         """Apply the stored library callables through the selected Applicative.
 
         Parameters:
@@ -1810,7 +1810,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         Raises:
             The exact callback or family error; it never becomes a stored Result error.
         """
-        return Pipeline[Self.I, _Combining[Self.I].Combined[Self.V, _Apply[_Function[_Combining[Self.I], Self.V]], _ValueThunk[W]], Self.E](_context_ap[_Combining[Self.I]](self.value^, values^))
+        return Pipeline[Self.I, ApContract[_Combining[Self.I], Self.V, W].Out, Self.E](_context_ap[_Combining[Self.I]](self.value^, values^))
 
     @always_inline
     def find_map[C: UnaryContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Error -> Pipeline[_NativeFamily[C.Out], C.Out, Self.E] where C.Arg == _FoldElement[Self.V] and C.Out == Optional[_ListElement[C.Out]] and RepeatableUnary[C]:

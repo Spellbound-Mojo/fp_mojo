@@ -9,6 +9,9 @@
     "docs/examples/algebra_traversal.mojo": {
       "stdout": "traverse: items = 3 ; calls = 3\nfailed traversal: present = False ; calls = 2\nsequence: 1 3\nempty traversal: present = True ; items = 0\n"
     },
+    "docs/examples/ap_contracts.mojo": {
+      "stdout": "applied: 7\n"
+    },
     "docs/examples/attempt_adapters.mojo": {
       "stdout": "updated: 11\nconsumed: 4\nmixed: 14\nfailed: True ; balance: -7\n"
     },

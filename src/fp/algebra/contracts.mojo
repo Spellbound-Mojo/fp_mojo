@@ -11,11 +11,11 @@ from .protocols import _MappedFamily, Functor, Monad, Traversable, Applicative, 
 from fp.iteration._advance import _OwnedElement
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallable, _ErrorProbe
 from fp.callables._predicates import _FilterPredicate
-from fp.callables._transforms import _ValueThunk, _Pair
+from fp.callables._transforms import _ValueThunk, _Pair, _Apply
 from .protocols import Monoid, _AllLive, _LiveAccumulator
 from ._accumulation import _FoldMappedStep, _SearchStep, _FirstPresent, _BoolLive, _PredicateStep
 from ._sequencing import _EffectRetain, _IfEffect
-from fp.callables.invoke import RepeatableUnary
+from fp.callables.invoke import RepeatableUnary, _OnceUnaryAvailable
 from fp._internal.errors import _CommonError, _ErrorCompatible
 from fp.callables._identity import Identity
 from fp.iteration._advance import _Source
@@ -233,6 +233,45 @@ Parameters:
     V: The complete left carrier type, including origins.
     W: The complete already evaluated right carrier type, including origins.
 """
+
+
+comptime _Function[I: Applicative, V: Movable & Deinitable] = downcast[I.Element[V], UnaryContract & Movable & Deinitable]
+
+
+struct ApContract[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable]:
+    """The exact contract of applying stored library callbacks to stored values.
+
+    The existing pairwise combination and callable dispatcher own execution.
+    This descriptor only names admission and result metadata for generic code.
+
+    Parameters:
+        I: The selected Applicative family.
+        V: The complete carrier of library callbacks, including origins.
+        W: The complete carrier of argument values, including origins.
+    """
+    comptime Function = _Function[Self.I, Self.V]
+    """The callback type projected from the left carrier."""
+    comptime _Applied = Map2Contract[Self.I, Self.V, Self.W, _Apply[Self.Function]]
+    comptime CallableCompatible = conforms_to(Self.I.Element[Self.V], UnaryContract & Movable & Deinitable)
+    """The left payload declares the library unary callable contract."""
+    comptime InputCompatible = Self.CallableCompatible and Self.I.Element[Self.W] == Self.Function.Arg
+    """Callable membership and exact argument equality, including origins."""
+    comptime OperationCompatible = Self._Applied.OperationCompatible
+    """Legacy free-function admission through the family's combination policy."""
+    comptime FamilyCompatible = Self._Applied.FamilyCompatible
+    """Operation admission and membership of both carriers."""
+    comptime ReceiverCompatible = Self.CallableCompatible and _OnceUnaryAvailable[Self.Function]
+    """The callback has a consuming, mutable or shared invocation mode."""
+    comptime ShapeCompatible = Self.InputCompatible and Self.FamilyCompatible
+    """Legacy selected admission; receiver dispatch remains checked at invocation."""
+    comptime Compatible = Self.ShapeCompatible and Self.ReceiverCompatible
+    """Shape admission plus availability of the stored callback receiver."""
+    comptime Family = Self.I
+    """The selected family of the result."""
+    comptime Out = Self._Applied.Out
+    """The exact carrier of callback results."""
+    comptime Error = Self._Applied.Error
+    """The exact native construction error; deferred errors stay deferred."""
 
 
 struct _EffectFold[G: Monad, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator]:

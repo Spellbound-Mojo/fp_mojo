@@ -369,14 +369,10 @@ def methods(*, fold_stage=False):
         emit(name, {}, [], "", result, error, f"FilterMapContract[{family}, Self.V, {identity}].Family" if name == "compact" else "Self.I", conditions,
              f"_context_{name}[{family}](self.value^)", "Remove one admitted inner layer through the selected source family.")
     family = "_Combining[Self.I]"
-    function = f"_Function[{family}, Self.V]"
-    apply = f"_Apply[{function}]"
-    types = f"Self.V, {apply}, _ValueThunk[W]"
+    contract = f"ApContract[{family}, Self.V, W]"
     emit("ap", {}, [f"W: {MD}", "//"], "var values: W",
-         f"{family}.Combined[{types}]", f"{family}.CombineError[{types}]", "Self.I",
-         ["conforms_to(Self.I, Applicative)", f"conforms_to({element}, UnaryContract & Movable & Deinitable)",
-          f"_CombineCompatible[{family}, {types}]", f"_CarrierCompatible[{family}, Self.V]",
-          f"_CarrierCompatible[{family}, W]", f"{family}.Element[W] == {function}.Arg"],
+         contract + ".Out", contract + ".Error", "Self.I",
+         ["conforms_to(Self.I, Applicative)", contract + ".ShapeCompatible"],
          f"_context_ap[{family}](self.value^, values^)",
          "Apply the stored library callables through the selected Applicative.")
 
