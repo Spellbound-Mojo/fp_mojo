@@ -83,6 +83,18 @@ requirements, while linear searches support move-only retained values.
 
 <!-- example: docs/examples/find_contracts.mojo -->
 
+`AnyContract[I, V, C]` and `AllContract[I, V, C]` describe `any_effect` and
+`all_effect`. Both aliases share one implementation and expose `Compatible`,
+`Out`, `Error`, and the input, output and family component predicates. Generic
+free, piped, iterator and selected-pipeline wrappers use the same proof.
+
+Each live branch stops at its first decisive Bool: True for `any_effect`, False
+for `all_effect`. Empty input lifts False and True respectively. Borrowing
+predicates retain their receiver, captures and exact native errors; absent or
+failed effects and deferred execution remain controlled by the target family.
+
+<!-- example: docs/examples/boolean_contracts.mojo -->
+
 <!-- example: docs/examples/operation_contracts.mojo -->
 
 `FilterContract[I, V, P]` does the same for `filter`; pass `True` as the

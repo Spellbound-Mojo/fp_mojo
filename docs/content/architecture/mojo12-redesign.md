@@ -2347,6 +2347,35 @@ consistency and strict documentation checks passed. This pass inherits the
 preceding borrowing-search qualification because all library sources are
 byte-identical.
 
+### Boolean query contracts share one policy implementation
+
+`AnyContract[I, V, C]` and `AllContract[I, V, C]` are public aliases of one
+Boolean-fold contract. They expose exact input and Bool-carrier admission, the
+target family's dependent-fold requirements, `Out` and construction `Error`.
+The operation descriptions select these contracts for free, piped, iterator and
+selected-pipeline declarations. Existing call syntax, positional type bindings,
+native conventions and explicit-error requirements remain unchanged.
+
+The Boolean stopping policy and borrowed predicate step now live with the other
+accumulation policies. Their implementations are unchanged and their previous
+internal import names remain available. The shared contract selects first-True
+stopping for any and first-False stopping for all; empty inputs lift False and
+True respectively. Family code still owns absence, failure, branching, input
+cleanup and deferred execution.
+
+Maintained controls cover all four routes for both operations, native and
+third-party families, opposite stopping rules, empty identities, absent effects,
+branch order, move-only captures and inputs, exact borrowed error origins, and
+Reader deferral, abandonment and skipped failures. Six existing focused O0
+programs passed. Ten negative clients require ordinary input, output, receiver,
+copying or stored-error diagnostics without explicit callback bindings. All 44
+source/package O0/O3 checks passed, together with five effect-query, four
+effect-search, two effect-combinator and 137 generic programs. The ten new,
+53 effect-query and 16 effect-search rejection fixtures passed; categories overlap.
+The public example passed its four source/package O0/O3 checks. Reports retained
+unchanged inputs and no audit failures. Generated sources, all 48 tooling tests
+and strict documentation checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

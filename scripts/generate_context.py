@@ -450,7 +450,7 @@ def methods(*, fold_stage=False):
             if plan.contract and not folding:
                 contract = plan.contract
                 admission = cb["conditions"]
-                if name == "find_effect":
+                if borrowing:
                     # The public proof owns this equality; retain all native
                     # signature and explicit-error conditions independently.
                     admission = [condition for condition in admission

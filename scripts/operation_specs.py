@@ -298,8 +298,8 @@ EFFECT_REDUCTIONS = {
     op.name: op
     for op in (
         EffectReduction("fold_effect", "binary", "fold", contract_name="FoldContract"),
-        EffectReduction("any_effect", "borrow", "bool"),
-        EffectReduction("all_effect", "borrow", "bool", all_values=True),
+        EffectReduction("any_effect", "borrow", "bool", contract_name="AnyContract"),
+        EffectReduction("all_effect", "borrow", "bool", all_values=True, contract_name="AllContract"),
         EffectReduction("find_effect", "borrow", "present", contract_name="FindContract"),
         EffectReduction("find_map_effect", "owned", "present", contract_name="FindMapContract"),
         EffectReduction("fold_map_effect", "owned", "monoid", contract_name="FoldMapContract"),

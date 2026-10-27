@@ -487,6 +487,74 @@
    "summary": "The bound for constructor fields and results: values that can be moved and destroyed.",
    "traits": []
   },
+  "algebra.AllContract": {
+   "aliases": [],
+   "description": "Forward `Compatible`, return `Out` and raise `Error` in generic wrappers.\nComponent predicates have the same meaning as AnyContract. Each branch stops\nat its first False; empty input lifts True. Both operations share one contract\nimplementation and preserve the family's execution and ownership rules.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The target Monad family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad",
+     "variadic": false
+    },
+    {
+     "description": "The consumed source type, including native origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The repeatable borrowing predicate, including receiver and error.",
+     "inferred": false,
+     "name": "C",
+     "type": "BorrowCallable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/contracts",
+   "signature": "comptime AllContract[I: Monad, V: Movable & Deinitable, C: BorrowCallable] = _PredicateFoldContract[I, V, C, True]",
+   "summary": "Admission, result and construction error of all_effect.",
+   "traits": []
+  },
+  "algebra.AnyContract": {
+   "aliases": [],
+   "description": "Forward `Compatible`, return `Out` and raise `Error` in generic wrappers.\n`InputCompatible` checks exact predicate input, `OutputCompatible` checks its\nfamily carrier of Bool, and `FamilyCompatible` checks dependent-fold admission.\nEach branch stops at its first True; empty input lifts False. The family retains\nbranching, ownership and deferred execution, including native errors and origins.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The target Monad family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad",
+     "variadic": false
+    },
+    {
+     "description": "The consumed source type, including native origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The repeatable borrowing predicate, including receiver and error.",
+     "inferred": false,
+     "name": "C",
+     "type": "BorrowCallable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/contracts",
+   "signature": "comptime AnyContract[I: Monad, V: Movable & Deinitable, C: BorrowCallable] = _PredicateFoldContract[I, V, C, False]",
+   "summary": "Admission, result and construction error of any_effect.",
+   "traits": []
+  },
   "algebra.Applicative": {
    "aliases": [
     {
@@ -10790,7 +10858,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _EffectFold[G, V, _PredicateStep[C], _BoolLive[True]].Error]",
+     "error": "_EntryError[X, AllContract[G, V, C].Error]",
      "parameters": [
       {
        "description": "The borrowing library callback type.",
@@ -10825,9 +10893,9 @@
      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
      "returns": {
       "doc": "The target effect of Bool, stopping each branch at False; empty input lifts True.",
-      "type": "_EffectFold[G, V, _PredicateStep[C], _BoolLive[True]].Out"
+      "type": "AllContract[G, V, C].Out"
      },
-     "signature": "def all_effect[C: BorrowCallable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var function: C, var source: V) raises _EntryError[X, _EffectFold[G, V, _PredicateStep[C], _BoolLive[True]].Error] -> _EffectFold[G, V, _PredicateStep[C], _BoolLive[True]].Out where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and G.Element[C.Result] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _PredicateStep[C], _BoolLive[True]].Error], _EffectFold[G, V, _PredicateStep[C], _BoolLive[True]].Error] and _CarrierCompatible[G, C.Result] and _EffectFold[G, V, _PredicateStep[C], _BoolLive[True]].Compatible",
+     "signature": "def all_effect[C: BorrowCallable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var function: C, var source: V) raises _EntryError[X, AllContract[G, V, C].Error] -> AllContract[G, V, C].Out where AllContract[G, V, C].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, V, C].Error], AllContract[G, V, C].Error]",
      "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
     },
     {
@@ -10848,7 +10916,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Error]",
+     "error": "_EntryError[X, AllContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Error]",
      "parameters": [
       {
        "description": "",
@@ -10904,9 +10972,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Out"
+      "type": "AllContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Out"
      },
-     "signature": "def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Error] -> _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Out where _Source[V].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Error], _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Error] and _CarrierCompatible[G, R] and _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Compatible",
+     "signature": "def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, AllContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> AllContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Out where AllContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Error], AllContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Error]",
      "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
     },
     {
@@ -10927,7 +10995,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Error]",
+     "error": "_EntryError[X, AllContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Error]",
      "parameters": [
       {
        "description": "",
@@ -10990,9 +11058,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Out"
+      "type": "AllContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Out"
      },
-     "signature": "def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Error] -> _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Out where _Source[V].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Error], _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Error] and _CarrierCompatible[G, R] and _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Compatible",
+     "signature": "def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, AllContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Error] -> AllContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Out where AllContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Error], AllContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Error]",
      "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
     }
    ],
@@ -11021,7 +11089,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _EffectFold[G, V, _PredicateStep[C], _BoolLive[False]].Error]",
+     "error": "_EntryError[X, AnyContract[G, V, C].Error]",
      "parameters": [
       {
        "description": "The borrowing library callback type.",
@@ -11056,9 +11124,9 @@
      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
      "returns": {
       "doc": "The target effect of Bool, stopping each branch at True; empty input lifts False.",
-      "type": "_EffectFold[G, V, _PredicateStep[C], _BoolLive[False]].Out"
+      "type": "AnyContract[G, V, C].Out"
      },
-     "signature": "def any_effect[C: BorrowCallable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var function: C, var source: V) raises _EntryError[X, _EffectFold[G, V, _PredicateStep[C], _BoolLive[False]].Error] -> _EffectFold[G, V, _PredicateStep[C], _BoolLive[False]].Out where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and G.Element[C.Result] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _PredicateStep[C], _BoolLive[False]].Error], _EffectFold[G, V, _PredicateStep[C], _BoolLive[False]].Error] and _CarrierCompatible[G, C.Result] and _EffectFold[G, V, _PredicateStep[C], _BoolLive[False]].Compatible",
+     "signature": "def any_effect[C: BorrowCallable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var function: C, var source: V) raises _EntryError[X, AnyContract[G, V, C].Error] -> AnyContract[G, V, C].Out where AnyContract[G, V, C].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, V, C].Error], AnyContract[G, V, C].Error]",
      "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
     },
     {
@@ -11079,7 +11147,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Error]",
+     "error": "_EntryError[X, AnyContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Error]",
      "parameters": [
       {
        "description": "",
@@ -11135,9 +11203,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Out"
+      "type": "AnyContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Out"
      },
-     "signature": "def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Error] -> _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Out where _Source[V].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Error], _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Error] and _CarrierCompatible[G, R] and _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Compatible",
+     "signature": "def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, AnyContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> AnyContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Out where AnyContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Error], AnyContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Error]",
      "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
     },
     {
@@ -11158,7 +11226,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Error]",
+     "error": "_EntryError[X, AnyContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Error]",
      "parameters": [
       {
        "description": "",
@@ -11221,9 +11289,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Out"
+      "type": "AnyContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Out"
      },
-     "signature": "def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Error] -> _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Out where _Source[V].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Error], _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Error] and _CarrierCompatible[G, R] and _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Compatible",
+     "signature": "def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, AnyContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Error] -> AnyContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Out where AnyContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Error], AnyContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Error]",
      "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
     }
    ],
@@ -39705,7 +39773,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, Self.Value, _PredicateStep[C], _BoolLive[True]].Error]",
+      "error": "_EntryError[X, AllContract[G, Self.Value, C].Error]",
       "parameters": [
        {
         "description": "The borrowing library callback type.",
@@ -39733,9 +39801,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The target effect of Bool, stopping each branch at False; empty input lifts True.",
-       "type": "Piped[_EffectFold[G, Self.Value, _PredicateStep[C], _BoolLive[True]].Out]"
+       "type": "Piped[AllContract[G, Self.Value, C].Out]"
       },
-      "signature": "def all_effect[C: BorrowCallable, //, G: Monad, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, _EffectFold[G, Self.Value, _PredicateStep[C], _BoolLive[True]].Error] -> Piped[_EffectFold[G, Self.Value, _PredicateStep[C], _BoolLive[True]].Out] where _Source[Self.Value].Element == downcast[C.Payload, Movable & Deinitable] and G.Element[C.Result] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _PredicateStep[C], _BoolLive[True]].Error], _EffectFold[G, Self.Value, _PredicateStep[C], _BoolLive[True]].Error] and _CarrierCompatible[G, C.Result] and _EffectFold[G, Self.Value, _PredicateStep[C], _BoolLive[True]].Compatible",
+      "signature": "def all_effect[C: BorrowCallable, //, G: Monad, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, AllContract[G, Self.Value, C].Error] -> Piped[AllContract[G, Self.Value, C].Out] where AllContract[G, Self.Value, C].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, Self.Value, C].Error], AllContract[G, Self.Value, C].Error]",
       "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
      },
      {
@@ -39749,7 +39817,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Error]",
+      "error": "_EntryError[X, AllContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -39798,9 +39866,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Piped[_EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Out]"
+       "type": "Piped[AllContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Out]"
       },
-      "signature": "def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Error] -> Piped[_EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Out] where _Source[Self.Value].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Error], _EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Error] and _CarrierCompatible[G, R] and _EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Compatible",
+      "signature": "def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AllContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> Piped[AllContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Out] where AllContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error], AllContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error]",
       "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
      },
      {
@@ -39814,7 +39882,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Error]",
+      "error": "_EntryError[X, AllContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -39870,9 +39938,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Piped[_EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Out]"
+       "type": "Piped[AllContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Out]"
       },
-      "signature": "def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Error] -> Piped[_EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Out] where _Source[Self.Value].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Error], _EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Error] and _CarrierCompatible[G, R] and _EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Compatible",
+      "signature": "def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AllContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error] -> Piped[AllContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Out] where AllContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error], AllContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error]",
       "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
      },
      {
@@ -39886,7 +39954,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, List[downcast[C.Payload, Movable & Deinitable]], _PredicateStep[C], _BoolLive[True]].Error]",
+      "error": "_EntryError[X, AllContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error]",
       "parameters": [
        {
         "description": "The borrowing library callback type.",
@@ -39921,9 +39989,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The target effect of Bool, stopping each branch at False; empty input lifts True.",
-       "type": "Piped[_EffectFold[G, List[downcast[C.Payload, Movable & Deinitable]], _PredicateStep[C], _BoolLive[True]].Out]"
+       "type": "Piped[AllContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Out]"
       },
-      "signature": "def all_effect[C: BorrowCallable, N: Int, //, G: Monad, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, _EffectFold[G, List[downcast[C.Payload, Movable & Deinitable]], _PredicateStep[C], _BoolLive[True]].Error] -> Piped[_EffectFold[G, List[downcast[C.Payload, Movable & Deinitable]], _PredicateStep[C], _BoolLive[True]].Out] where Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N] and G.Element[C.Result] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, List[downcast[C.Payload, Movable & Deinitable]], _PredicateStep[C], _BoolLive[True]].Error], _EffectFold[G, List[downcast[C.Payload, Movable & Deinitable]], _PredicateStep[C], _BoolLive[True]].Error] and _CarrierCompatible[G, C.Result] and _EffectFold[G, List[downcast[C.Payload, Movable & Deinitable]], _PredicateStep[C], _BoolLive[True]].Compatible",
+      "signature": "def all_effect[C: BorrowCallable, N: Int, //, G: Monad, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, AllContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error] -> Piped[AllContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Out] where Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N] and AllContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error], AllContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error]",
       "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
      },
      {
@@ -39937,7 +40005,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Error]",
+      "error": "_EntryError[X, AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -39993,9 +40061,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Piped[_EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Out]"
+       "type": "Piped[AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Out]"
       },
-      "signature": "def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Error] -> Piped[_EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and G.Element[R] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Error], _EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Error] and _CarrierCompatible[G, R] and _EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Compatible",
+      "signature": "def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> Piped[AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error], AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error]",
       "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
      },
      {
@@ -40009,7 +40077,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Error]",
+      "error": "_EntryError[X, AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -40072,9 +40140,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Piped[_EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Out]"
+       "type": "Piped[AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Out]"
       },
-      "signature": "def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Error] -> Piped[_EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and G.Element[R] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Error], _EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Error] and _CarrierCompatible[G, R] and _EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Compatible",
+      "signature": "def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error] -> Piped[AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error], AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error]",
       "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
      }
     ],
@@ -40090,7 +40158,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, Self.Value, _PredicateStep[C], _BoolLive[False]].Error]",
+      "error": "_EntryError[X, AnyContract[G, Self.Value, C].Error]",
       "parameters": [
        {
         "description": "The borrowing library callback type.",
@@ -40118,9 +40186,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The target effect of Bool, stopping each branch at True; empty input lifts False.",
-       "type": "Piped[_EffectFold[G, Self.Value, _PredicateStep[C], _BoolLive[False]].Out]"
+       "type": "Piped[AnyContract[G, Self.Value, C].Out]"
       },
-      "signature": "def any_effect[C: BorrowCallable, //, G: Monad, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, _EffectFold[G, Self.Value, _PredicateStep[C], _BoolLive[False]].Error] -> Piped[_EffectFold[G, Self.Value, _PredicateStep[C], _BoolLive[False]].Out] where _Source[Self.Value].Element == downcast[C.Payload, Movable & Deinitable] and G.Element[C.Result] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _PredicateStep[C], _BoolLive[False]].Error], _EffectFold[G, Self.Value, _PredicateStep[C], _BoolLive[False]].Error] and _CarrierCompatible[G, C.Result] and _EffectFold[G, Self.Value, _PredicateStep[C], _BoolLive[False]].Compatible",
+      "signature": "def any_effect[C: BorrowCallable, //, G: Monad, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, AnyContract[G, Self.Value, C].Error] -> Piped[AnyContract[G, Self.Value, C].Out] where AnyContract[G, Self.Value, C].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, Self.Value, C].Error], AnyContract[G, Self.Value, C].Error]",
       "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
      },
      {
@@ -40134,7 +40202,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Error]",
+      "error": "_EntryError[X, AnyContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -40183,9 +40251,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Piped[_EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Out]"
+       "type": "Piped[AnyContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Out]"
       },
-      "signature": "def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Error] -> Piped[_EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Out] where _Source[Self.Value].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Error], _EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Error] and _CarrierCompatible[G, R] and _EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Compatible",
+      "signature": "def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AnyContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> Piped[AnyContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Out] where AnyContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error], AnyContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error]",
       "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
      },
      {
@@ -40199,7 +40267,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Error]",
+      "error": "_EntryError[X, AnyContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -40255,9 +40323,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Piped[_EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Out]"
+       "type": "Piped[AnyContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Out]"
       },
-      "signature": "def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Error] -> Piped[_EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Out] where _Source[Self.Value].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Error], _EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Error] and _CarrierCompatible[G, R] and _EffectFold[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Compatible",
+      "signature": "def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AnyContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error] -> Piped[AnyContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Out] where AnyContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error], AnyContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error]",
       "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
      },
      {
@@ -40271,7 +40339,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, List[downcast[C.Payload, Movable & Deinitable]], _PredicateStep[C], _BoolLive[False]].Error]",
+      "error": "_EntryError[X, AnyContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error]",
       "parameters": [
        {
         "description": "The borrowing library callback type.",
@@ -40306,9 +40374,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The target effect of Bool, stopping each branch at True; empty input lifts False.",
-       "type": "Piped[_EffectFold[G, List[downcast[C.Payload, Movable & Deinitable]], _PredicateStep[C], _BoolLive[False]].Out]"
+       "type": "Piped[AnyContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Out]"
       },
-      "signature": "def any_effect[C: BorrowCallable, N: Int, //, G: Monad, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, _EffectFold[G, List[downcast[C.Payload, Movable & Deinitable]], _PredicateStep[C], _BoolLive[False]].Error] -> Piped[_EffectFold[G, List[downcast[C.Payload, Movable & Deinitable]], _PredicateStep[C], _BoolLive[False]].Out] where Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N] and G.Element[C.Result] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, List[downcast[C.Payload, Movable & Deinitable]], _PredicateStep[C], _BoolLive[False]].Error], _EffectFold[G, List[downcast[C.Payload, Movable & Deinitable]], _PredicateStep[C], _BoolLive[False]].Error] and _CarrierCompatible[G, C.Result] and _EffectFold[G, List[downcast[C.Payload, Movable & Deinitable]], _PredicateStep[C], _BoolLive[False]].Compatible",
+      "signature": "def any_effect[C: BorrowCallable, N: Int, //, G: Monad, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, AnyContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error] -> Piped[AnyContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Out] where Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N] and AnyContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error], AnyContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error]",
       "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
      },
      {
@@ -40322,7 +40390,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Error]",
+      "error": "_EntryError[X, AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -40378,9 +40446,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Piped[_EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Out]"
+       "type": "Piped[AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Out]"
       },
-      "signature": "def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Error] -> Piped[_EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and G.Element[R] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Error], _EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Error] and _CarrierCompatible[G, R] and _EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Compatible",
+      "signature": "def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> Piped[AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error], AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error]",
       "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
      },
      {
@@ -40394,7 +40462,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Error]",
+      "error": "_EntryError[X, AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -40457,9 +40525,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Piped[_EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Out]"
+       "type": "Piped[AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Out]"
       },
-      "signature": "def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Error] -> Piped[_EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and G.Element[R] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Error], _EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Error] and _CarrierCompatible[G, R] and _EffectFold[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Compatible",
+      "signature": "def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error] -> Piped[AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error], AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error]",
       "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
      }
     ],
@@ -89918,7 +89986,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[C], _BoolLive[True]].Error",
+      "error": "AllContract[J, Self.V, C].Error",
       "parameters": [
        {
         "description": "The first library callback type, retaining its receiver and origins.",
@@ -89939,9 +90007,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[C], _BoolLive[True]].Out, Self.E]"
+       "type": "Pipeline[J, AllContract[J, Self.V, C].Out, Self.E]"
       },
-      "signature": "def all_effect[C: BorrowCallable, //, J: Monad](deinit self, var function: C) raises _EffectFold[J, Self.V, _PredicateStep[C], _BoolLive[True]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[C], _BoolLive[True]].Out, Self.E] where C.Payload == _FoldElement[Self.V] and _CarrierCompatible[J, C.Result] and J.Element[C.Result] == Bool and _EffectFold[J, Self.V, _PredicateStep[C], _BoolLive[True]].Compatible",
+      "signature": "def all_effect[C: BorrowCallable, //, J: Monad](deinit self, var function: C) raises AllContract[J, Self.V, C].Error -> Pipeline[J, AllContract[J, Self.V, C].Out, Self.E] where AllContract[J, Self.V, C].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -89955,7 +90023,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]], _BoolLive[True]].Error",
+      "error": "AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -89990,9 +90058,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]], _BoolLive[True]].Out, Self.E]"
+       "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E]"
       },
-      "signature": "def all_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(_FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]], _BoolLive[True]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]], _BoolLive[True]].Out, Self.E] where _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]], _BoolLive[True]].Compatible",
+      "signature": "def all_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(_FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -90006,7 +90074,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]], _BoolLive[True]].Error",
+      "error": "AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -90041,9 +90109,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]], _BoolLive[True]].Out, Self.E]"
+       "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E]"
       },
-      "signature": "def all_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(_FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]], _BoolLive[True]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]], _BoolLive[True]].Out, Self.E] where _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]], _BoolLive[True]].Compatible",
+      "signature": "def all_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(_FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E] where AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -90057,7 +90125,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]], _BoolLive[True]].Error",
+      "error": "AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -90092,9 +90160,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]], _BoolLive[True]].Out, Self.E]"
+       "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E]"
       },
-      "signature": "def all_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(_FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]], _BoolLive[True]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]], _BoolLive[True]].Out, Self.E] where Self.E != Never and _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]], _BoolLive[True]].Compatible",
+      "signature": "def all_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(_FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E] where Self.E != Never and AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -90108,7 +90176,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]], _BoolLive[True]].Error",
+      "error": "AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -90129,9 +90197,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]], _BoolLive[True]].Out, Self.E]"
+       "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def all_effect[R: Movable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]], _BoolLive[True]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]], _BoolLive[True]].Out, Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]], _BoolLive[True]].Compatible",
+      "signature": "def all_effect[R: Movable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -90145,7 +90213,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]], _BoolLive[True]].Error",
+      "error": "AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -90166,9 +90234,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]], _BoolLive[True]].Out, Self.E]"
+       "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def all_effect[R: RegisterPassable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]], _BoolLive[True]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]], _BoolLive[True]].Out, Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]], _BoolLive[True]].Compatible",
+      "signature": "def all_effect[R: RegisterPassable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -90182,7 +90250,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, Never, def(P) thin -> R, False]], _BoolLive[True]].Error",
+      "error": "AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -90210,9 +90278,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, Never, def(P) thin -> R, False]], _BoolLive[True]].Out, Self.E]"
+       "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def all_effect[P: TrivialRegisterPassable, R: Movable & Deinitable, //, J: Monad](deinit self, function: def(P) thin -> R) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, Never, def(P) thin -> R, False]], _BoolLive[True]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, Never, def(P) thin -> R, False]], _BoolLive[True]].Out, Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, Never, def(P) thin -> R, False]], _BoolLive[True]].Compatible",
+      "signature": "def all_effect[P: TrivialRegisterPassable, R: Movable & Deinitable, //, J: Monad](deinit self, function: def(P) thin -> R) raises AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -90226,7 +90294,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, Never, def(P) thin -> R, False]], _BoolLive[True]].Error",
+      "error": "AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -90254,9 +90322,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, Never, def(P) thin -> R, False]], _BoolLive[True]].Out, Self.E]"
+       "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def all_effect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //, J: Monad](deinit self, function: def(P) thin -> R) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, Never, def(P) thin -> R, False]], _BoolLive[True]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, Never, def(P) thin -> R, False]], _BoolLive[True]].Out, Self.E] where P == _FoldElement[Self.V] and _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, Never, def(P) thin -> R, False]], _BoolLive[True]].Compatible",
+      "signature": "def all_effect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //, J: Monad](deinit self, function: def(P) thin -> R) raises AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where P == _FoldElement[Self.V] and AllContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -90270,7 +90338,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]], _BoolLive[True]].Error",
+      "error": "AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -90298,9 +90366,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]], _BoolLive[True]].Out, Self.E]"
+       "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def all_effect[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) raises X thin -> R) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]], _BoolLive[True]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]], _BoolLive[True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]], _BoolLive[True]].Compatible",
+      "signature": "def all_effect[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) raises X thin -> R) raises AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -90314,7 +90382,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]], _BoolLive[True]].Error",
+      "error": "AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -90342,9 +90410,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]], _BoolLive[True]].Out, Self.E]"
+       "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def all_effect[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) raises X thin -> R) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]], _BoolLive[True]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]], _BoolLive[True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]], _BoolLive[True]].Compatible",
+      "signature": "def all_effect[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) raises X thin -> R) raises AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and AllContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -90358,7 +90426,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], _BoolLive[True]].Error",
+      "error": "AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -90393,9 +90461,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], _BoolLive[True]].Out, Self.E]"
+       "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def all_effect[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(P) raises X thin -> R) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], _BoolLive[True]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], _BoolLive[True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], _BoolLive[True]].Compatible",
+      "signature": "def all_effect[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(P) raises X thin -> R) raises AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -90409,7 +90477,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], _BoolLive[True]].Error",
+      "error": "AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -90444,9 +90512,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], _BoolLive[True]].Out, Self.E]"
+       "type": "Pipeline[J, AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def all_effect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(P) raises X thin -> R) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], _BoolLive[True]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], _BoolLive[True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], _BoolLive[True]].Compatible",
+      "signature": "def all_effect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(P) raises X thin -> R) raises AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and AllContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      }
     ],
@@ -90462,7 +90530,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[C], _BoolLive[False]].Error",
+      "error": "AnyContract[J, Self.V, C].Error",
       "parameters": [
        {
         "description": "The first library callback type, retaining its receiver and origins.",
@@ -90483,9 +90551,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[C], _BoolLive[False]].Out, Self.E]"
+       "type": "Pipeline[J, AnyContract[J, Self.V, C].Out, Self.E]"
       },
-      "signature": "def any_effect[C: BorrowCallable, //, J: Monad](deinit self, var function: C) raises _EffectFold[J, Self.V, _PredicateStep[C], _BoolLive[False]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[C], _BoolLive[False]].Out, Self.E] where C.Payload == _FoldElement[Self.V] and _CarrierCompatible[J, C.Result] and J.Element[C.Result] == Bool and _EffectFold[J, Self.V, _PredicateStep[C], _BoolLive[False]].Compatible",
+      "signature": "def any_effect[C: BorrowCallable, //, J: Monad](deinit self, var function: C) raises AnyContract[J, Self.V, C].Error -> Pipeline[J, AnyContract[J, Self.V, C].Out, Self.E] where AnyContract[J, Self.V, C].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -90499,7 +90567,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]], _BoolLive[False]].Error",
+      "error": "AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -90534,9 +90602,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]], _BoolLive[False]].Out, Self.E]"
+       "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E]"
       },
-      "signature": "def any_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(_FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]], _BoolLive[False]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]], _BoolLive[False]].Out, Self.E] where _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]], _BoolLive[False]].Compatible",
+      "signature": "def any_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(_FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -90550,7 +90618,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]], _BoolLive[False]].Error",
+      "error": "AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -90585,9 +90653,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]], _BoolLive[False]].Out, Self.E]"
+       "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E]"
       },
-      "signature": "def any_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(_FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]], _BoolLive[False]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]], _BoolLive[False]].Out, Self.E] where _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]], _BoolLive[False]].Compatible",
+      "signature": "def any_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(_FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E] where AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Self.E, C, True, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -90601,7 +90669,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]], _BoolLive[False]].Error",
+      "error": "AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -90636,9 +90704,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]], _BoolLive[False]].Out, Self.E]"
+       "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E]"
       },
-      "signature": "def any_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(_FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]], _BoolLive[False]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]], _BoolLive[False]].Out, Self.E] where Self.E != Never and _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]], _BoolLive[False]].Compatible",
+      "signature": "def any_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, C: def(_FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E] where Self.E != Never and AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, True, o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -90652,7 +90720,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]], _BoolLive[False]].Error",
+      "error": "AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -90673,9 +90741,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]], _BoolLive[False]].Out, Self.E]"
+       "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def any_effect[R: Movable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]], _BoolLive[False]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]], _BoolLive[False]].Out, Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]], _BoolLive[False]].Compatible",
+      "signature": "def any_effect[R: Movable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -90689,7 +90757,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]], _BoolLive[False]].Error",
+      "error": "AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -90710,9 +90778,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]], _BoolLive[False]].Out, Self.E]"
+       "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def any_effect[R: RegisterPassable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]], _BoolLive[False]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]], _BoolLive[False]].Out, Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]], _BoolLive[False]].Compatible",
+      "signature": "def any_effect[R: RegisterPassable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Out, Self.E] where not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, Never, def(_FoldElement[Self.V]) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -90726,7 +90794,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, Never, def(P) thin -> R, False]], _BoolLive[False]].Error",
+      "error": "AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -90754,9 +90822,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, Never, def(P) thin -> R, False]], _BoolLive[False]].Out, Self.E]"
+       "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def any_effect[P: TrivialRegisterPassable, R: Movable & Deinitable, //, J: Monad](deinit self, function: def(P) thin -> R) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, Never, def(P) thin -> R, False]], _BoolLive[False]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, Never, def(P) thin -> R, False]], _BoolLive[False]].Out, Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, Never, def(P) thin -> R, False]], _BoolLive[False]].Compatible",
+      "signature": "def any_effect[P: TrivialRegisterPassable, R: Movable & Deinitable, //, J: Monad](deinit self, function: def(P) thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -90770,7 +90838,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, Never, def(P) thin -> R, False]], _BoolLive[False]].Error",
+      "error": "AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -90798,9 +90866,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, Never, def(P) thin -> R, False]], _BoolLive[False]].Out, Self.E]"
+       "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def any_effect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //, J: Monad](deinit self, function: def(P) thin -> R) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, Never, def(P) thin -> R, False]], _BoolLive[False]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, Never, def(P) thin -> R, False]], _BoolLive[False]].Out, Self.E] where P == _FoldElement[Self.V] and _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, Never, def(P) thin -> R, False]], _BoolLive[False]].Compatible",
+      "signature": "def any_effect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //, J: Monad](deinit self, function: def(P) thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where P == _FoldElement[Self.V] and AnyContract[J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -90814,7 +90882,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]], _BoolLive[False]].Error",
+      "error": "AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -90842,9 +90910,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]], _BoolLive[False]].Out, Self.E]"
+       "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def any_effect[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) raises X thin -> R) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]], _BoolLive[False]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]], _BoolLive[False]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]], _BoolLive[False]].Compatible",
+      "signature": "def any_effect[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) raises X thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -90858,7 +90926,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]], _BoolLive[False]].Error",
+      "error": "AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -90886,9 +90954,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]], _BoolLive[False]].Out, Self.E]"
+       "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def any_effect[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) raises X thin -> R) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]], _BoolLive[False]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]], _BoolLive[False]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]], _BoolLive[False]].Compatible",
+      "signature": "def any_effect[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(_FoldElement[Self.V]) raises X thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(_FoldElement[Self.V], TrivialRegisterPassable) and AnyContract[J, Self.V, _NativeBorrow[_FoldElement[Self.V], R, X, def(_FoldElement[Self.V]) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -90902,7 +90970,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], _BoolLive[False]].Error",
+      "error": "AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -90937,9 +91005,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], _BoolLive[False]].Out, Self.E]"
+       "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def any_effect[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(P) raises X thin -> R) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], _BoolLive[False]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], _BoolLive[False]].Out, Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], _BoolLive[False]].Compatible",
+      "signature": "def any_effect[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(P) raises X thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and not conforms_to(R, RegisterPassable) and AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -90953,7 +91021,7 @@
        }
       ],
       "description": "",
-      "error": "_EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], _BoolLive[False]].Error",
+      "error": "AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -90988,9 +91056,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], _BoolLive[False]].Out, Self.E]"
+       "type": "Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def any_effect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(P) raises X thin -> R) raises _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], _BoolLive[False]].Error -> Pipeline[J, _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], _BoolLive[False]].Out, Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and _CarrierCompatible[J, R] and J.Element[R] == Bool and _EffectFold[J, Self.V, _PredicateStep[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], _BoolLive[False]].Compatible",
+      "signature": "def any_effect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad](deinit self, function: def(P) raises X thin -> R) raises AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and AnyContract[J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      }
     ],
@@ -187278,7 +187346,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, Self.I, _PredicateStep[C], _BoolLive[True]].Error]",
+      "error": "_EntryError[X, AllContract[G, Self.I, C].Error]",
       "parameters": [
        {
         "description": "The borrowing library callback type.",
@@ -187306,9 +187374,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The target effect of Bool, stopping each branch at False; empty input lifts True.",
-       "type": "_EffectFold[G, Self.I, _PredicateStep[C], _BoolLive[True]].Out"
+       "type": "AllContract[G, Self.I, C].Out"
       },
-      "signature": "def all_effect[C: BorrowCallable, //, G: Monad, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, _EffectFold[G, Self.I, _PredicateStep[C], _BoolLive[True]].Error] -> _EffectFold[G, Self.I, _PredicateStep[C], _BoolLive[True]].Out where _Source[Self.I].Element == downcast[C.Payload, Movable & Deinitable] and G.Element[C.Result] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _PredicateStep[C], _BoolLive[True]].Error], _EffectFold[G, Self.I, _PredicateStep[C], _BoolLive[True]].Error] and _CarrierCompatible[G, C.Result] and _EffectFold[G, Self.I, _PredicateStep[C], _BoolLive[True]].Compatible",
+      "signature": "def all_effect[C: BorrowCallable, //, G: Monad, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, AllContract[G, Self.I, C].Error] -> AllContract[G, Self.I, C].Out where AllContract[G, Self.I, C].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, Self.I, C].Error], AllContract[G, Self.I, C].Error]",
       "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
      },
      {
@@ -187322,7 +187390,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Error]",
+      "error": "_EntryError[X, AllContract[G, Self.I, _NativeBorrowRef[P, R, Never, F, False, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -187371,9 +187439,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "_EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Out"
+       "type": "AllContract[G, Self.I, _NativeBorrowRef[P, R, Never, F, False, o]].Out"
       },
-      "signature": "def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Error] -> _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Out where _Source[Self.I].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Error], _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Error] and _CarrierCompatible[G, R] and _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Compatible",
+      "signature": "def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AllContract[G, Self.I, _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> AllContract[G, Self.I, _NativeBorrowRef[P, R, Never, F, False, o]].Out where AllContract[G, Self.I, _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, Self.I, _NativeBorrowRef[P, R, Never, F, False, o]].Error], AllContract[G, Self.I, _NativeBorrowRef[P, R, Never, F, False, o]].Error]",
       "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
      },
      {
@@ -187387,7 +187455,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Error]",
+      "error": "_EntryError[X, AllContract[G, Self.I, _NativeBorrowRef[P, R, E, F, True, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -187443,9 +187511,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "_EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Out"
+       "type": "AllContract[G, Self.I, _NativeBorrowRef[P, R, E, F, True, o]].Out"
       },
-      "signature": "def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Error] -> _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Out where _Source[Self.I].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Error], _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Error] and _CarrierCompatible[G, R] and _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Compatible",
+      "signature": "def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AllContract[G, Self.I, _NativeBorrowRef[P, R, E, F, True, o]].Error] -> AllContract[G, Self.I, _NativeBorrowRef[P, R, E, F, True, o]].Out where AllContract[G, Self.I, _NativeBorrowRef[P, R, E, F, True, o]].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, Self.I, _NativeBorrowRef[P, R, E, F, True, o]].Error], AllContract[G, Self.I, _NativeBorrowRef[P, R, E, F, True, o]].Error]",
       "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
      }
     ],
@@ -187611,7 +187679,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, Self.I, _PredicateStep[C], _BoolLive[False]].Error]",
+      "error": "_EntryError[X, AnyContract[G, Self.I, C].Error]",
       "parameters": [
        {
         "description": "The borrowing library callback type.",
@@ -187639,9 +187707,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The target effect of Bool, stopping each branch at True; empty input lifts False.",
-       "type": "_EffectFold[G, Self.I, _PredicateStep[C], _BoolLive[False]].Out"
+       "type": "AnyContract[G, Self.I, C].Out"
       },
-      "signature": "def any_effect[C: BorrowCallable, //, G: Monad, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, _EffectFold[G, Self.I, _PredicateStep[C], _BoolLive[False]].Error] -> _EffectFold[G, Self.I, _PredicateStep[C], _BoolLive[False]].Out where _Source[Self.I].Element == downcast[C.Payload, Movable & Deinitable] and G.Element[C.Result] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _PredicateStep[C], _BoolLive[False]].Error], _EffectFold[G, Self.I, _PredicateStep[C], _BoolLive[False]].Error] and _CarrierCompatible[G, C.Result] and _EffectFold[G, Self.I, _PredicateStep[C], _BoolLive[False]].Compatible",
+      "signature": "def any_effect[C: BorrowCallable, //, G: Monad, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, AnyContract[G, Self.I, C].Error] -> AnyContract[G, Self.I, C].Out where AnyContract[G, Self.I, C].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, Self.I, C].Error], AnyContract[G, Self.I, C].Error]",
       "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
      },
      {
@@ -187655,7 +187723,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Error]",
+      "error": "_EntryError[X, AnyContract[G, Self.I, _NativeBorrowRef[P, R, Never, F, False, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -187704,9 +187772,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "_EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Out"
+       "type": "AnyContract[G, Self.I, _NativeBorrowRef[P, R, Never, F, False, o]].Out"
       },
-      "signature": "def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Error] -> _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Out where _Source[Self.I].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Error], _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Error] and _CarrierCompatible[G, R] and _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Compatible",
+      "signature": "def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AnyContract[G, Self.I, _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> AnyContract[G, Self.I, _NativeBorrowRef[P, R, Never, F, False, o]].Out where AnyContract[G, Self.I, _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, Self.I, _NativeBorrowRef[P, R, Never, F, False, o]].Error], AnyContract[G, Self.I, _NativeBorrowRef[P, R, Never, F, False, o]].Error]",
       "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
      },
      {
@@ -187720,7 +187788,7 @@
        }
       ],
       "description": "",
-      "error": "_EntryError[X, _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Error]",
+      "error": "_EntryError[X, AnyContract[G, Self.I, _NativeBorrowRef[P, R, E, F, True, o]].Error]",
       "parameters": [
        {
         "description": "",
@@ -187776,9 +187844,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "_EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Out"
+       "type": "AnyContract[G, Self.I, _NativeBorrowRef[P, R, E, F, True, o]].Out"
       },
-      "signature": "def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Error] -> _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Out where _Source[Self.I].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Error], _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Error] and _CarrierCompatible[G, R] and _EffectFold[G, Self.I, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Compatible",
+      "signature": "def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AnyContract[G, Self.I, _NativeBorrowRef[P, R, E, F, True, o]].Error] -> AnyContract[G, Self.I, _NativeBorrowRef[P, R, E, F, True, o]].Out where AnyContract[G, Self.I, _NativeBorrowRef[P, R, E, F, True, o]].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, Self.I, _NativeBorrowRef[P, R, E, F, True, o]].Error], AnyContract[G, Self.I, _NativeBorrowRef[P, R, E, F, True, o]].Error]",
       "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
      }
     ],
@@ -196276,7 +196344,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _EffectFold[G, V, _PredicateStep[C], _BoolLive[True]].Error]",
+     "error": "_EntryError[X, AllContract[G, V, C].Error]",
      "parameters": [
       {
        "description": "The borrowing library callback type.",
@@ -196311,9 +196379,9 @@
      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
      "returns": {
       "doc": "The target effect of Bool, stopping each branch at False; empty input lifts True.",
-      "type": "_EffectFold[G, V, _PredicateStep[C], _BoolLive[True]].Out"
+      "type": "AllContract[G, V, C].Out"
      },
-     "signature": "def all_effect[C: BorrowCallable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var function: C, var source: V) raises _EntryError[X, _EffectFold[G, V, _PredicateStep[C], _BoolLive[True]].Error] -> _EffectFold[G, V, _PredicateStep[C], _BoolLive[True]].Out where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and G.Element[C.Result] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _PredicateStep[C], _BoolLive[True]].Error], _EffectFold[G, V, _PredicateStep[C], _BoolLive[True]].Error] and _CarrierCompatible[G, C.Result] and _EffectFold[G, V, _PredicateStep[C], _BoolLive[True]].Compatible",
+     "signature": "def all_effect[C: BorrowCallable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var function: C, var source: V) raises _EntryError[X, AllContract[G, V, C].Error] -> AllContract[G, V, C].Out where AllContract[G, V, C].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, V, C].Error], AllContract[G, V, C].Error]",
      "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
     },
     {
@@ -196334,7 +196402,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Error]",
+     "error": "_EntryError[X, AllContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Error]",
      "parameters": [
       {
        "description": "",
@@ -196390,9 +196458,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Out"
+      "type": "AllContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Out"
      },
-     "signature": "def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Error] -> _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Out where _Source[V].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Error], _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Error] and _CarrierCompatible[G, R] and _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True]].Compatible",
+     "signature": "def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, AllContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> AllContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Out where AllContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Error], AllContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Error]",
      "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
     },
     {
@@ -196413,7 +196481,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Error]",
+     "error": "_EntryError[X, AllContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Error]",
      "parameters": [
       {
        "description": "",
@@ -196476,9 +196544,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Out"
+      "type": "AllContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Out"
      },
-     "signature": "def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Error] -> _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Out where _Source[V].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Error], _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Error] and _CarrierCompatible[G, R] and _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True]].Compatible",
+     "signature": "def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, AllContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Error] -> AllContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Out where AllContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Error], AllContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Error]",
      "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
     }
    ],
@@ -196740,7 +196808,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _EffectFold[G, V, _PredicateStep[C], _BoolLive[False]].Error]",
+     "error": "_EntryError[X, AnyContract[G, V, C].Error]",
      "parameters": [
       {
        "description": "The borrowing library callback type.",
@@ -196775,9 +196843,9 @@
      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
      "returns": {
       "doc": "The target effect of Bool, stopping each branch at True; empty input lifts False.",
-      "type": "_EffectFold[G, V, _PredicateStep[C], _BoolLive[False]].Out"
+      "type": "AnyContract[G, V, C].Out"
      },
-     "signature": "def any_effect[C: BorrowCallable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var function: C, var source: V) raises _EntryError[X, _EffectFold[G, V, _PredicateStep[C], _BoolLive[False]].Error] -> _EffectFold[G, V, _PredicateStep[C], _BoolLive[False]].Out where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and G.Element[C.Result] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _PredicateStep[C], _BoolLive[False]].Error], _EffectFold[G, V, _PredicateStep[C], _BoolLive[False]].Error] and _CarrierCompatible[G, C.Result] and _EffectFold[G, V, _PredicateStep[C], _BoolLive[False]].Compatible",
+     "signature": "def any_effect[C: BorrowCallable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var function: C, var source: V) raises _EntryError[X, AnyContract[G, V, C].Error] -> AnyContract[G, V, C].Out where AnyContract[G, V, C].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, V, C].Error], AnyContract[G, V, C].Error]",
      "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
     },
     {
@@ -196798,7 +196866,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Error]",
+     "error": "_EntryError[X, AnyContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Error]",
      "parameters": [
       {
        "description": "",
@@ -196854,9 +196922,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Out"
+      "type": "AnyContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Out"
      },
-     "signature": "def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Error] -> _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Out where _Source[V].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Error], _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Error] and _CarrierCompatible[G, R] and _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False]].Compatible",
+     "signature": "def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, F: _Borrowing[P, R], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, AnyContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> AnyContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Out where AnyContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Error], AnyContract[G, V, _NativeBorrowRef[P, R, Never, F, False, o]].Error]",
      "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
     },
     {
@@ -196877,7 +196945,7 @@
       }
      ],
      "description": "",
-     "error": "_EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Error]",
+     "error": "_EntryError[X, AnyContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Error]",
      "parameters": [
       {
        "description": "",
@@ -196940,9 +197008,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Out"
+      "type": "AnyContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Out"
      },
-     "signature": "def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Error] -> _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Out where _Source[V].Element == downcast[P, Movable & Deinitable] and G.Element[R] == Bool and _ErrorCompatible[_EntryError[X, _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Error], _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Error] and _CarrierCompatible[G, R] and _EffectFold[G, V, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False]].Compatible",
+     "signature": "def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, AnyContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Error] -> AnyContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Out where AnyContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Error], AnyContract[G, V, _NativeBorrowRef[P, R, E, F, True, o]].Error]",
      "summary": "Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."
     }
    ],

@@ -12,7 +12,7 @@ from fp.iteration._advance import _OwnedElement
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallable
 from fp.callables._predicates import _FilterPredicate
 from .protocols import Monoid, _AllLive, _LiveAccumulator
-from ._accumulation import _FoldMappedStep, _SearchStep, _FirstPresent
+from ._accumulation import _FoldMappedStep, _SearchStep, _FirstPresent, _BoolLive, _PredicateStep
 from ._sequencing import _EffectRetain
 from fp.callables.invoke import RepeatableUnary
 from fp._internal.errors import _CommonError, _ErrorCompatible
@@ -336,3 +336,46 @@ struct FindContract[I: Monad, V: Movable & Deinitable, C: BorrowCallable]:
     """The exact folded carrier of original elements, including deferred computations."""
     comptime Error = Self._Plan.Error
     """The native construction error; deferred execution retains its own errors."""
+
+
+struct _PredicateFoldContract[I: Monad, V: Movable & Deinitable, C: BorrowCallable, all_values: Bool]:
+    """One admission and metadata owner for the two Boolean stopping policies."""
+    comptime _Step = _PredicateStep[Self.C]
+    comptime _Plan = _EffectFold[Self.I, Self.V, Self._Step, _BoolLive[Self.all_values]]
+    comptime InputCompatible = _Source[Self.V].Element == downcast[Self.C.Payload, Movable & Deinitable]
+    comptime OutputCompatible = Self.I.CarrierCompatible[Self.C.Result] and Self.I.Element[Self.C.Result] == Bool
+    comptime FamilyCompatible = Self._Plan.Compatible
+    comptime Compatible = Self.InputCompatible and Self.OutputCompatible and Self.FamilyCompatible
+    comptime Out = Self._Plan.Out
+    comptime Error = Self._Plan.Error
+
+
+comptime AnyContract[I: Monad, V: Movable & Deinitable, C: BorrowCallable] = _PredicateFoldContract[I, V, C, False]
+"""Admission, result and construction error of any_effect.
+
+Forward `Compatible`, return `Out` and raise `Error` in generic wrappers.
+`InputCompatible` checks exact predicate input, `OutputCompatible` checks its
+family carrier of Bool, and `FamilyCompatible` checks dependent-fold admission.
+Each branch stops at its first True; empty input lifts False. The family retains
+branching, ownership and deferred execution, including native errors and origins.
+
+Parameters:
+    I: The target Monad family.
+    V: The consumed source type, including native origins.
+    C: The repeatable borrowing predicate, including receiver and error.
+"""
+
+
+comptime AllContract[I: Monad, V: Movable & Deinitable, C: BorrowCallable] = _PredicateFoldContract[I, V, C, True]
+"""Admission, result and construction error of all_effect.
+
+Forward `Compatible`, return `Out` and raise `Error` in generic wrappers.
+Component predicates have the same meaning as AnyContract. Each branch stops
+at its first False; empty input lifts True. Both operations share one contract
+implementation and preserve the family's execution and ownership rules.
+
+Parameters:
+    I: The target Monad family.
+    V: The consumed source type, including native origins.
+    C: The repeatable borrowing predicate, including receiver and error.
+"""

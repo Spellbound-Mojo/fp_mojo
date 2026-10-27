@@ -21,6 +21,9 @@
     "docs/examples/attempt_selectors.mojo": {
       "stdout": "length: 4\nbalance: 13\nfailed: True ; balance: -8\n"
     },
+    "docs/examples/boolean_contracts.mojo": {
+      "stdout": "any: True\nall: False\n"
+    },
     "docs/examples/callable_pipeline.mojo": {
       "stdout": "total=10\n"
     },

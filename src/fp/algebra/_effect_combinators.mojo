@@ -1,34 +1,13 @@
 """Policies and continuations for effectful reductions and conditional bind."""
-from std.builtin.rebind import downcast, rebind_var
-from fp.callables.protocols import BinaryContract, Binary, ThunkContract, OnceUnary, MutableUnary, BorrowCallable, UnaryContract
-from fp.callables.invoke import invoke_borrowed, RepeatableThunk
+from fp.callables.protocols import BinaryContract, ThunkContract, OnceUnary, MutableUnary, UnaryContract
+from fp.callables.invoke import RepeatableThunk
 from fp.callables._receiver import _ThunkView, _thunk_once_as
 from fp.callables._identity import Identity
 from fp._internal.errors import _CommonError, _ErrorCompatible
 from .protocols import Monad, _LiveAccumulator, Monoid, _start_as, _flat_map_as, _fold_as
-from ._accumulation import _Combine, _FoldMappedStep, _SearchStep
+from ._accumulation import _Combine, _FoldMappedStep, _SearchStep, _BoolLive, _PredicateStep
 from .contracts import _EffectFold
 from .protocols import _AllLive
-
-
-
-
-struct _BoolLive[all_values: Bool](_LiveAccumulator):
-    comptime Acc = Bool
-    @staticmethod
-    def live(ref acc: Bool) -> Bool: return acc == Self.all_values
-
-
-@fieldwise_init
-struct _PredicateStep[C: BorrowCallable](Binary):
-    var predicate: Self.C
-    comptime First = Bool
-    comptime Second = downcast[Self.C.Payload, Movable & Deinitable]
-    comptime Out = Self.C.Result
-    comptime Error = Self.C.Failure
-    def call(self, var first: Bool, var second: Self.Second) raises Self.Error -> Self.Out:
-        comptime assert Self.Second == Self.C.Payload
-        return invoke_borrowed[Self.Error](second, self.predicate)
 
 
 

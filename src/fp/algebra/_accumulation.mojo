@@ -1,7 +1,8 @@
 """Accumulation policies shared by pure and effectful terminals."""
-from .protocols import Semigroup, Monoid, Monad, _Accumulate, _SemigroupBinary, _BindFirst, _map_as
-from fp.callables.protocols import UnaryContract, MutableBinary
-from fp.callables.invoke import RepeatableUnary
+from .protocols import Semigroup, Monoid, Monad, _Accumulate, _SemigroupBinary, _BindFirst, _map_as, _LiveAccumulator
+from fp.callables.protocols import UnaryContract, MutableBinary, Binary, BorrowCallable
+from fp.callables.invoke import RepeatableUnary, invoke_borrowed
+from std.builtin.rebind import downcast
 from fp.callables._receiver import _unary_repeated_as
 from fp._internal.errors import _CommonError, _ErrorCompatible
 
@@ -81,3 +82,21 @@ struct _SearchStep[A: Movable & Deinitable, F: UnaryContract & Movable & Deinita
         # branches are retained by that driver without evaluating this step.
         comptime assert RepeatableUnary[Self.F]
         return _unary_repeated_as[Self.Error](self.function, item^)
+
+
+struct _BoolLive[all_values: Bool](_LiveAccumulator):
+    comptime Acc = Bool
+    @staticmethod
+    def live(ref acc: Bool) -> Bool: return acc == Self.all_values
+
+
+@fieldwise_init
+struct _PredicateStep[C: BorrowCallable](Binary):
+    var predicate: Self.C
+    comptime First = Bool
+    comptime Second = downcast[Self.C.Payload, Movable & Deinitable]
+    comptime Out = Self.C.Result
+    comptime Error = Self.C.Failure
+    def call(self, var first: Bool, var second: Self.Second) raises Self.Error -> Self.Out:
+        comptime assert Self.Second == Self.C.Payload
+        return invoke_borrowed[Self.Error](second, self.predicate)
