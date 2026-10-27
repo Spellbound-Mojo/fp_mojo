@@ -1,7 +1,7 @@
 """Validation and outcome composition derived from existing family operations."""
 
 from std.builtin.rebind import downcast, rebind_var
-from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
+from fp._internal.errors import _CommonError, _ErrorCompatible
 from fp.callables.protocols import Unary, UnaryContract, OnceUnary, MutableUnary, BorrowCallContract
 from fp.callables.invoke import RepeatableUnary
 from fp.callables._receiver import _RepeatableBorrow, _MutableBorrowRef, _MutableUnaryRef, _unary_once_as, _borrow_once_as
@@ -163,19 +163,16 @@ struct _Redeem[I: ApplicativeError, V: Movable & Deinitable,
     @staticmethod
     def apply(var source: Self.V, var on_ok: Self.H, var on_err: Self.K) raises Self.Error -> Self.Out:
         comptime assert _ErrorCompatible[Self.Error, Self.Capture.Error] and _ErrorCompatible[Self.Error, Self.StepError], "outcome: incompatible native errors"
-        try:
-            var captured = Self.Capture.apply[Self.Error](source^)
-            var fold = Self.Fold(on_ok^, on_err^)
-            comptime if Self.effect:
-                comptime assert _ErrorCompatible[Self.Error, Self.M.BindError[Self.Capture.Out, Self.Fold]]
-                comptime assert Self.Out == Self.M.Bound[Self.Capture.Out, Self.Fold]
-                return rebind_var[Self.Out](_flat_map_as[Self.Error, Self.M](fold^, captured^))
-            else:
-                comptime assert _ErrorCompatible[Self.Error, Self.I.MapError[Self.Capture.Out, Self.Fold]]
-                comptime assert Self.Out == Self.I.Mapped[Self.Capture.Out, Self.Fold]
-                return rebind_var[Self.Out](_map_as[Self.Error, Self.I](fold^, captured^))
-        except raised:
-            _propagate_error[Self.Error](raised^)
+        var captured = Self.Capture.apply[Self.Error](source^)
+        var fold = Self.Fold(on_ok^, on_err^)
+        comptime if Self.effect:
+            comptime assert _ErrorCompatible[Self.Error, Self.M.BindError[Self.Capture.Out, Self.Fold]]
+            comptime assert Self.Out == Self.M.Bound[Self.Capture.Out, Self.Fold]
+            return rebind_var[Self.Out](_flat_map_as[Self.Error, Self.M](fold^, captured^))
+        else:
+            comptime assert _ErrorCompatible[Self.Error, Self.I.MapError[Self.Capture.Out, Self.Fold]]
+            comptime assert Self.Out == Self.I.Mapped[Self.Capture.Out, Self.Fold]
+            return rebind_var[Self.Out](_map_as[Self.Error, Self.I](fold^, captured^))
 
 
 @fieldwise_init
@@ -204,12 +201,9 @@ struct _AttemptTap[I: ApplicativeError & Monad, V: Movable & Deinitable, C: Borr
     def apply(var source: Self.V, var inspect: Self.C) raises Self.Error -> Self.Out:
         comptime assert _ErrorCompatible[Self.Error, Self.Capture.Error]
         comptime assert _ErrorCompatible[Self.Error, Self.I.BindError[Self.Capture.Out, Self.Retain]] and _ErrorCompatible[Self.Error, Self.I.BindError[Self.Observed, Self.Restore]], "attempt_tap: incompatible native errors"
-        try:
-            var captured = Self.Capture.apply[Self.Error](source^)
-            var observed = _flat_map_as[Self.Error, Self.I](Self.Retain(inspect^), captured^)
-            return _flat_map_as[Self.Error, Self.I](Self.Restore(), observed^)
-        except raised:
-            _propagate_error[Self.Error](raised^)
+        var captured = Self.Capture.apply[Self.Error](source^)
+        var observed = _flat_map_as[Self.Error, Self.I](Self.Retain(inspect^), captured^)
+        return _flat_map_as[Self.Error, Self.I](Self.Restore(), observed^)
 
 
 struct AttemptTapContract[I: ApplicativeError & Monad, V: Movable & Deinitable,

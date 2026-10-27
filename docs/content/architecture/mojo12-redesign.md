@@ -2133,6 +2133,25 @@ Rejection groups passed 32 ensure, 35 conditional and 33 recovery fixtures;
 categories overlap. Reports retained unchanged inputs and no audit failures.
 Generated sources, all 48 tooling tests and strict documentation checks passed.
 
+### Outcome sequencing avoids redundant error traps
+
+Redeem and whole-outcome observation sequence the existing materialization,
+map and bind adapters directly. Each adapter already raises the selected exact
+native error, so the outer catch-and-rethrow blocks are unnecessary. The native
+error compatibility proofs, family operations and callback timing remain intact.
+This removes a second propagation layer without changing the public API.
+
+All 48 baseline/candidate traces match for ordinary and effectful redemption,
+whole-outcome observation, construction failure before callback invocation,
+bind failure, restoration failure and callback errors. Maintained checks preserve
+owned payload and callback cleanup order on those paths. Six focused O0 programs
+passed. Qualification passed four source/package ownership checks at O0/O3,
+four family-outcome programs, five attempt-tap programs, five shared-outcome
+programs, 133 generic clients, 54 outcome rejection fixtures and 23 attempt-tap
+rejection fixtures. Categories overlap. Reports retained unchanged inputs and
+no audit failures. Generated sources, all 48 tooling tests and strict
+documentation checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.
