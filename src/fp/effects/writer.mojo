@@ -7,7 +7,7 @@ it. Logs combine in execution order.
 """
 from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, rebind, downcast
-from fp.algebra.protocols import ApplicativeError, ErrorMapping, Monad, Monoid, _Accumulate, _start_as, _combine_as
+from fp.algebra.protocols import ApplicativeError, ErrorMapping, Monad, Monoid, _Accumulate, _Append, _start_as, _combine_as
 from fp.algebra.instances import IdentityFamily
 from fp.callables.protocols import (BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, Unary, OnceUnary, MutableUnary,
                                     OnceBinary, MutableBinary, OnceThunk)
@@ -15,7 +15,7 @@ from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, Repea
 from fp.callables._receiver import _unary_once_as, _binary_once_as
 from std.memory import MaybeUninit
 from fp.callables.products import _take_pair
-from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
+from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible, _propagate_error
 from .protocols import Local, Listen, Censor, _CarrierOp, _LocalLifting, WriterFamily, _WriterType
 from ._adapt import _map_as
 from ._transport import _BimapOp, _LocalOp, _ListenMapped, _ListenPair
@@ -557,7 +557,13 @@ struct WriterT[M: Monad, W: Monoid](WriterFamily, Censor, _LocalLifting, Applica
     comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[V]
     comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _CarrierBind[Self, V, F]
     comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable] = _CarrierCombine[Self, V, F, G]
-    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out]
+    # Admission follows the exact adapter and accumulator passed to the base.
+    # Only a base that branches may require copying the log or collected items.
+    comptime _LoopCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = (
+        _CommonErrorCompatible[Self.W.Error, K.Error] &
+        Self.M._LoopCompatible[V, _UnwrapResult[Self, F], _WriterAcc[Self.W, K]]
+    ) if Self.CarrierCompatible[F.Out] else False
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self._LoopCompatible[V, F, _Append[Self.Element[F.Out]]] if Self.CarrierCompatible[F.Out] else False
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = WriterValue[
         Self, F.Out, Self.M.Mapped[_Value[V].Storage, _MapValue[Self.W.Value, F]]]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.M.MapError[

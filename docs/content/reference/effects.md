@@ -15,6 +15,11 @@ operation contracts. Generic wrappers forward these predicates as described
 in [algebra admission](algebra.md). Mapped, bound and conditional computations
 remain valid carriers even when their concrete types differ from `Pure[A]`.
 
+Writer collection checks its actual base loop. Linear bases accept move-only
+logs, payloads and captures; a branching List base requires copyable accumulated
+state. The producer must be repeatable for a repeated collection. A single
+Optional or Result source can still traverse with a consuming producer.
+
 State checks its base carrier of `(payload, state)`, Writer checks its base
 carrier of `(log, payload)`, and OptionalT/ResultT check both the base and inner
 carrier. Reader checks its family and environment at construction; `run`

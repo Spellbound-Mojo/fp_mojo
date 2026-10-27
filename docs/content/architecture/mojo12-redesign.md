@@ -1578,6 +1578,28 @@ documentation checks cover 318 public exports and 80 examples. Evidence is in
 `.cache/quality-cycle19/qualified-main/`; public syntax and signatures are
 unchanged.
 
+### Writer collection follows base loop admission
+
+Writer's collection admission now forwards the actual `_UnwrapResult` producer
+and `_WriterAcc` accumulator to the base's `_LoopCompatible` predicate. It also
+checks the log policy and accumulator's original native errors before their
+common error projection. Carrier membership alone cannot describe repeated
+execution or the copies needed by a branching base.
+
+Identity, Optional and Result bases retain move-only inputs, outputs, logs and
+captures. List's Cartesian base requires only the copies its existing loop
+performs. Consuming callbacks remain valid for single-value source traversal;
+repeated collection rejects them before executing the loop. Generic wrappers
+forward the existing `TraverseContract.Compatible` predicate, with no new
+callback annotations. The algorithm, log order and native representations do
+not change.
+
+Qualification passed all 28 source/package O0/O3 boundary checks, 705 packaged
+programs (703 checked clients and two benchmarks), 1,605 rejection fixtures,
+and 48 tooling tests. Inputs and packages remained unchanged and reports have
+no audit failures. Strict documentation checks cover 318 exports and 80
+examples. Evidence is in `.cache/quality-cycle20/qualified-main/`.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.
