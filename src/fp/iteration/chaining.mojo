@@ -38,7 +38,7 @@ from fp.algebra.instances import _ListElement
 from fp.algebra._traversal import _FlattenAfter, _CompactAfter, _traverse_then, _Discard, _TraverseTap, _traverse_void, _traverse_as, _EffectVoid
 from fp.callables.protocols import BorrowCallContract
 
-from fp.functions.composition import Identity as _Same
+from fp.callables._identity import Identity as _Same
 from fp.callables.native import _Unary, _RaisingUnary, _NativeUnaryRef, _Borrowing, _RaisingBorrowing, _NativeBorrowRef
 from fp.iteration.reductions import _fold_map, _find_map, _extremum, _IntSum, _SIMDSum
 from fp.algebra.protocols import Monoid

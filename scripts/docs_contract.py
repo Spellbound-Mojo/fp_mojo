@@ -7,7 +7,7 @@ from pathlib import Path
 from export_contract import audit_exports
 from fp_tools.runtime import ROOT
 from module_layout import PUBLIC_PACKAGES
-from api_reference import package_markdown
+from api_reference import package_markdown, documentation_owners
 from compatibility_contract import audit_compatibility, compatibility_markdown
 
 CONTENT = ROOT / 'docs/content'
@@ -76,6 +76,7 @@ def render_markdown(text, page):
 def api_problems(package, api):
     from api_reference import primaries
     problems = []
+    owners = documentation_owners(api)
     if not api['packages'][package]['summary']:
         problems.append('package docstring')
     def check(label, overloads):
@@ -90,7 +91,7 @@ def api_problems(package, api):
                 problems.append(f'{label}: raised error')
     for full, entry in api['entries'].items():
         owner, name = full.split('.', 1)
-        if owner != package or entry['provider'].split('/')[0] != package:
+        if owner != package or owners[full] != package:
             continue
         if entry['kind'] == 'function':
             check(name, entry['overloads'])

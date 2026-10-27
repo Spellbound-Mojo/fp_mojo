@@ -15,6 +15,7 @@ SOURCE_MODULES = (
     ('functions', 'functions/_recovery'),
     ('functions', 'functions/_outcomes'),
     ('functions', 'functions/composition'),
+    ('functions', 'callables/_identity'),
     ('functions', 'functions/kleisli'),
     ('functions', 'functions/flipped'),
     ('functions', 'functions/partial'),

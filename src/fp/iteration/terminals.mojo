@@ -3,7 +3,7 @@ from std.builtin.rebind import downcast
 from fp.callables.protocols import UnaryContract, BorrowCallable
 from fp.callables.native import _Unary, _RaisingUnary, _NativeUnaryRef, _Borrowing, _RaisingBorrowing, _NativeBorrowRef
 from fp.callables._transforms import _BorrowedUnary
-from fp.functions.composition import Identity
+from fp.callables._identity import Identity
 from fp.data.non_empty_list import NonEmptyList
 from fp.algebra.protocols import Semigroup, Monoid, _Accumulate, _map_accumulate, _start_as
 from fp.algebra._traversal import _Discard

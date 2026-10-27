@@ -10218,7 +10218,7 @@
           }
         ]
       },
-      "provider": "functions/composition"
+      "provider": "callables/_identity"
     },
     "functions.Kleisli": {
       "kind": "type or alias",

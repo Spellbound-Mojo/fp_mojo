@@ -1,6 +1,7 @@
 """Stored compositions: one tuple of stages, one plan, one pipeline traversal."""
 from std.builtin.variadics import TypeList
 from std.builtin.rebind import downcast, rebind_var
+from fp.callables._identity import Identity
 from fp.callables.protocols import (UnaryContract, Unary, MutableUnary, OnceUnary,
     BinaryContract, Binary, MutableBinary, OnceBinary, ThunkContract, Thunk, MutableThunk, OnceThunk)
 from ._stages import (_Plan, _Arity, _StageIn, _Classify, _SharedCapability, _MutableCapability,
@@ -237,39 +238,6 @@ struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](
             _stored_cell[0](Pointer(to=self)), first^, second^)
         comptime D = _StoredExclusive[Self.reverse, Self.arity, True, origin_of(self), *Self.Fs]
         return rebind_var[Self.Out](_pipe_at[1, Self.Plan.Results, Self.Error, D](head^, Pointer(to=self)))
-
-
-@fieldwise_init
-struct Identity[T: Movable & Deinitable](Unary, ImplicitlyCopyable):
-    """The unary identity on `T`, returned by `flow[T]()` and `compose[T]()`.
-
-    Parameters:
-        T: The value type.
-    """
-    comptime Arg = Self.T
-    comptime Out = Self.T
-
-    def call(self, var arg: Self.Arg) -> Self.Out:
-        """Return the argument unchanged.
-
-        Args:
-            arg: The value, consumed.
-
-        Returns:
-            `arg` itself.
-        """
-        return arg^
-
-    def __call__(self, var arg: Self.T) -> Self.T:
-        """Return the argument unchanged, as `call` does.
-
-        Args:
-            arg: The value, consumed.
-
-        Returns:
-            `arg` itself.
-        """
-        return arg^
 
 
 def flow[T: Movable & Deinitable]() -> Identity[T]:

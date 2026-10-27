@@ -2,7 +2,7 @@
 from fp.algebra._admission import _BindCompatible, _CombineCompatible, _CollectCompatible
 from std.builtin.rebind import downcast
 from fp.callables.protocols import UnaryContract, BinaryContract
-from fp.functions.composition import Identity
+from fp.callables._identity import Identity
 from fp.callables._transforms import _ValueThunk as _Value, _Pair, _Apply
 from .protocols import Applicative, Monad, Traversable
 from fp._internal.errors import _ErrorCompatible, _propagate_error

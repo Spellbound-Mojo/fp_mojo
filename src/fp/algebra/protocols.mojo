@@ -18,7 +18,7 @@ from fp.callables._receiver import _unary_repeated_as, _thunk_once_as
 from fp.iteration._advance import _next_optional, _Source, _source
 from fp.iteration._terminal import _append
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from fp.functions.composition import Identity
+from fp.callables._identity import Identity
 from fp.data._result import _ResultType
 from fp.callables._receiver import _binary_repeated_as
 

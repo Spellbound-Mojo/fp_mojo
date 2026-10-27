@@ -1,7 +1,7 @@
 """Checked stored-error mapping; each family owns one two-arm operation."""
 from .protocols import ErrorMapping
 from fp.callables.protocols import UnaryContract
-from fp.functions.composition import Identity
+from fp.callables._identity import Identity
 
 
 struct MapBothContract[I: ErrorMapping, V: Movable & Deinitable,

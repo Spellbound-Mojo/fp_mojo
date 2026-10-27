@@ -3,7 +3,7 @@ from std.builtin.rebind import downcast, rebind_var
 from fp.callables.protocols import BinaryContract, Binary, ThunkContract, OnceThunk, OnceUnary, MutableUnary, BorrowCallable, UnaryContract, MutableBinary
 from fp.callables.invoke import call_repeated, invoke_borrowed, RepeatableThunk, RepeatableUnary
 from fp.callables._receiver import _thunk_once_as, _unary_repeated_as
-from fp.functions.composition import Identity
+from fp.callables._identity import Identity
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
 from .protocols import Monad, _LiveAccumulator, Monoid, _AccumulatePair, _BindFirst, _start_as
 from ._accumulation import _Combine

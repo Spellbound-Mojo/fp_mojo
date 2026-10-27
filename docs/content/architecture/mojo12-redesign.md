@@ -1448,6 +1448,37 @@ Evidence is retained in `.cache/quality-cycle15/qualified2/` and
 `.cache/quality-cycle15/final/`; the earlier interrupted documentation run is
 marked incomplete rather than counted as qualification.
 
+### Identity ownership in the callable layer
+
+`Identity[T]` is implemented in `callables/_identity`, alongside the callable
+protocol it implements. Composition, algebra, data and iteration import that
+one implementation. `fp.functions.Identity` and the existing composition-module
+import remain the same public type; empty `flow[T]()` and `compose[T]()` still
+return it. The callable operator delegates to `call`, so owned identity has one
+execution method and preserves the exact payload and its origins without copying.
+
+Moving this leaf removes the dependency from Result storage through composition
+into the pipeline execution machinery. The module graph remains acyclic, and
+the architecture test now rejects any dependency from Result storage or the
+identity implementation into `functions`. Public names, signatures and parameter
+order are unchanged; the reviewed declaration provider moves to the callable
+module. This dependency cleanup does not claim a measured compilation speedup.
+
+Reference rendering and completeness checks now share the same public-owner
+lookup. They prefer the provider's package only when it actually exports that
+name; otherwise they select an existing public export. Moving an implementation
+to a private lower layer cannot create a nonexistent reference link or exempt
+its docstrings from validation. Existing re-export links retain their owners.
+
+Qualification passed 694 packaged suite programs (692 checked clients and two
+benchmarks), four source/package O0/O3 identity checks, and 39 composition
+rejection fixtures, with unchanged inputs and no audit failures. Ownership
+controls cover empty flow/compose, public and legacy imports, move-only values,
+exact `Never` and borrowed origins. The documentation-only routing fix followed
+that suite and is covered by two additional regressions, all 48 tooling tests,
+and strict documentation validation for 318 exports and 79 examples. Evidence
+is retained in `.cache/quality-cycle16/qualified/`.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

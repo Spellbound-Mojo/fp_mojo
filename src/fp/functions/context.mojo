@@ -30,7 +30,8 @@ from fp.callables.invoke import call_once, RepeatableUnary, RepeatableBinary
 from fp.callables._nary import _OwnedNativeNary1, _OwnedNativeNary2, _OwnedNativeNary3, _OwnedNativeNary4, _OwnedNativeNary5, _OwnedNativeNary6, _OwnedNativeNary7, _OwnedNativeNary8, _NativeNary1, _NativeNary2, _NativeNary3, _NativeNary4, _NativeNary5, _NativeNary6, _NativeNary7, _NativeNary8
 from fp.callables._transforms import _Apply, _Replace, _TupleWith, _Fill, _ValueThunk, _Pair, _Observe, _BorrowedUnary, _IgnoreInput
 from fp.callables._predicates import _FilterPredicate
-from fp.functions.composition import Identity, Composition
+from fp.callables._identity import Identity
+from fp.functions.composition import Composition
 from fp.iteration._advance import _Source
 from fp.iteration.reductions import _find_map, _fold_map, _extremum, _IntSum, _SIMDSum
 from fp.iteration.folds import fold_left as _context_fold_left, reduce_optional as _context_reduce_optional, fold_until as _context_fold_until

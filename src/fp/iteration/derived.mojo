@@ -1,6 +1,6 @@
 """Derived iterator combinators; callbacks and traversal keep canonical owners."""
 from fp.algebra._admission import _CarrierCompatible
-from fp.functions.composition import Identity as _Same
+from fp.callables._identity import Identity as _Same
 from fp._internal.errors import _CommonError, _ErrorCompatible
 
 from fp.data._result import _ResultType
@@ -16,7 +16,7 @@ from fp.algebra.protocols import Applicative
 from fp.callables._transforms import _Fill, _Replace, _TupleWith, _Observe, _ObserveNative
 from ._advance import _Source, _source
 from .adapters import _Map, _FilterMap
-from fp.functions.composition import Identity
+from fp.callables._identity import Identity
 from fp.algebra.instances import _ListElement, ListFamily
 
 

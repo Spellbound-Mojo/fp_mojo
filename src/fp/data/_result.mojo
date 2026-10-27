@@ -5,7 +5,7 @@ from fp.callables._views import _UnaryViewable
 from fp.callables._retention import _Retain
 from fp.callables._transforms import _Retained, _ObserveOnce
 from fp.callables.protocols import Binary
-from fp.functions.composition import Identity
+from fp.callables._identity import Identity
 from fp.callables.protocols import Unary, OnceUnary, UnaryContract, BorrowCallable, BorrowOnceCallable
 from fp.callables.invoke import call_once, invoke_borrowed, invoke_borrowed_once
 from fp.adt.data import Cases, Data, Value, _ChoiceType

@@ -1,5 +1,5 @@
 """Derived terminal rules over the canonical accumulation driver."""
-from fp.functions.composition import Identity as _Same
+from fp.callables._identity import Identity as _Same
 from fp.callables.native import _Unary, _RaisingUnary, _NativeUnaryRef, _Borrowing, _RaisingBorrowing, _NativeBorrowRef
 from ._advance import _Source
 

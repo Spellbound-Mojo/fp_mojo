@@ -8,7 +8,7 @@ from .protocols import Filterable, FunctorFilter, _Accumulate
 from .contracts import FilterContract
 from fp.callables.protocols import UnaryContract
 from fp.callables.native import _Unary, _RaisingUnary, _NativeUnaryRef
-from fp.functions.composition import Identity
+from fp.callables._identity import Identity
 from fp.callables._transforms import _selected
 
 

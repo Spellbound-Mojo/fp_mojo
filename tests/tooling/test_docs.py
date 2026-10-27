@@ -15,6 +15,19 @@ class DocumentationContractTests(unittest.TestCase):
         self.assertEqual(result['modules'], 10)
         self.assertEqual(result['examples'], 79)
 
+    def test_relocated_identity_keeps_its_public_reference(self):
+        rendered = docs_contract.package_page('functions', 'reference/functions.md')
+        self.assertTrue('{ #Identity .api-name }' in rendered, 'Missing Identity reference entry')
+        self.assertTrue('downloads/src/fp/callables/_identity.mojo' in rendered, 'Missing relocated source link')
+        self.assertFalse('callables.md#Identity' in rendered, 'Identity was linked to its private implementation package')
+        self.assertTrue('callables.md#as_unary' in rendered, 'Missing existing as_unary re-export link')
+        self.assertFalse('{ #as_unary .api-name }' in rendered, 'Duplicate as_unary reference entry')
+
+    def test_relocated_identity_docstring_is_still_audited(self):
+        api = docs_contract.data('api.json')
+        api['entries']['functions.Identity']['summary'] = ''
+        self.assertIn('Identity: summary', docs_contract.api_problems('functions', api))
+
     def test_literal_directive_in_code_is_not_expanded(self):
         text = '# Authoring\n\n```text\n<!-- api: not_a_module -->\n```\n'
         self.assertEqual(docs_contract.render_markdown(text, 'authoring.md'), text)

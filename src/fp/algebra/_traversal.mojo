@@ -8,7 +8,7 @@ from .protocols import Applicative, Traversable, Monad, FunctorFilter, _Accumula
 from ._sequencing import _EffectRetain
 from ._derived import flatten
 from .filtering import compact
-from fp.functions.composition import Identity
+from fp.callables._identity import Identity
 
 
 struct _Discard[T: Movable & Deinitable](_Accumulate):

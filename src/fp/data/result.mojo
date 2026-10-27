@@ -6,7 +6,7 @@ Algebra depends on that leaf; this user-facing adapter may depend on algebra.
 from ._result import Result, Ok, Err, raise_on_err
 from ._attempt import attempt, attempt_kwargs, attempt_once, mutating, consuming, mut_owned, mut_owned_kwargs
 from fp.algebra.instances import ResultFamily
-from fp.functions.composition import Identity
+from fp.callables._identity import Identity
 from std.builtin.rebind import rebind_var
 from std.iter import Iterator
 

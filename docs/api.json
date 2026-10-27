@@ -38445,7 +38445,7 @@
      "variadic": false
     }
    ],
-   "provider": "functions/composition",
+   "provider": "callables/_identity",
    "signature": "struct Identity[T: Movable & Deinitable](Unary, ImplicitlyCopyable)",
    "summary": "The unary identity on `T`, returned by `flow[T]()` and `compose[T]()`.",
    "traits": [
