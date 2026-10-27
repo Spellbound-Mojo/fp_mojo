@@ -354,11 +354,15 @@ source pull. Empty input yields True, False or an absent Optional respectively.
 present Optional inside the effect. An absent outer Optional or stored Result
 error still stops the entire computation according to the target's rules.
 
-`fold_effect[Target](initial).run(step)` binds the initial accumulator before
+`fold_effect(initial).run(step)` infers native Optional, Result and List targets.
+It binds the initial accumulator before
 admitting a consuming binary callback. This ordering lets Mojo diagnose wrong
 argument conventions without inferring the accumulator at the same boundary.
 `run` returns a Pipeline in the target family; `get()` extracts its effect.
 The binding stage owns the source and initial value but evaluates no callback.
+Abandoning it destroys those owners. Explicit `fold_effect[Target](initial)`
+retains the original target selection; an already bound inferred stage also
+accepts `run[Target](step)`. Both forms use the same fold contract and execution.
 Existing `Piped.fold_effect(step, initial)` retains its original syntax.
 `fold_map_effect[Target, Monoid](transform)` consumes items into effectful monoid
 values and combines them in order, starting with the identity.

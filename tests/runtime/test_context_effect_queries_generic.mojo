@@ -14,7 +14,7 @@ def forward_map[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & D
 
 def forward_fold[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, //,
                  F: def(var A, var B) raises E -> Optional[A]](ref function: F, var initial: A, var source: List[B]) raises E -> Optional[A]:
-    return pipeline(source^).raising[E]().fold_effect[OptionalFamily](initial^).run(function).get()
+    return pipeline(source^).raising[E]().fold_effect(initial^).run(function).get()
 
 def forward_monoid[A: Movable & Deinitable, E: Movable & Deinitable, //,
                    F: def(var A) raises E -> Optional[String]](ref function: F, var source: List[A]) raises E -> Optional[String]:

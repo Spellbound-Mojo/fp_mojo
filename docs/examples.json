@@ -111,6 +111,9 @@
     "docs/examples/if_contracts.mojo": {
       "stdout": "selected: 14\n"
     },
+    "docs/examples/inferred_fold.mojo": {
+      "stdout": "total: 16\nerror: negative amount\nsteps: 2\n"
+    },
     "docs/examples/inferred_queries.mojo": {
       "stdout": "any: True\nall: False\nfirst: 2\nlabel: item-3\n"
     },

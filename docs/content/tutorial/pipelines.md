@@ -135,6 +135,24 @@ execution. Native callback errors still use the pipeline's selected error type.
 See [effectful queries and folds](../reference/functions.md#select-family-and-native-errors-before-callbacks)
 for source consumption, empty answers and the explicit fold interfaces.
 
+## Fold with effects
+
+Use `.fold_effect(initial).run(step)` to reduce a source when each step returns
+an Optional, Result or List. The initial value fixes the accumulator type before
+the callback is matched; the callback result supplies the native effect family:
+
+<!-- example: docs/examples/inferred_fold.mojo -->
+
+The step consumes the accumulator and one item, returning the same accumulator
+type inside its effect. Empty input returns the initial value in that effect
+without calling the step. Optional and Result folds stop on absence or a stored
+error. Native errors remain separately selected with `.raising[E]()`.
+
+Binding consumes the source and accumulator without evaluating a callback. The
+stage runs once; abandoning it releases both inputs. Move-only accumulators and
+borrowed origins are preserved. Use `.fold_effect[Target](initial).run(step)` to
+select a custom or deferred Monad policy explicitly.
+
 ## Choose a constant or lazy default
 
 Use `.get_or(value)` to finish an Optional or Result pipeline with an already

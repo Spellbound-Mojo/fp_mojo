@@ -1,6 +1,6 @@
 """Searches retain unique owners and clean up captures, inputs and partial folds."""
 from fp.functions import pipeline
-from fp.algebra import OptionalFamily, ResultFamily, ListMonoid
+from fp.algebra import ResultFamily, ListMonoid
 from fp.data import Result, Ok, Err
 from fp.callables import MutableUnary, MutableBinary
 from fp.effects import Reader, run
@@ -83,7 +83,7 @@ def main() raises:
     _ = pipeline(owners(drops,True)).fold_map_effect[ResultFamily[String], ListMonoid[QueryOwner]](collect).get()
     assert_equal(drops[], 3)
     drops[] = 0
-    assert_equal(Bool(pipeline(owners(drops)).fold_effect[OptionalFamily](List[QueryOwner]()).run(QueryStep(0)).get()), False)
+    assert_equal(Bool(pipeline(owners(drops)).fold_effect(List[QueryOwner]()).run(QueryStep(0)).get()), False)
     assert_equal(drops[], 3)
     comptime Deferred = Reader[Int]
     def later(value: QueryOwner) -> Deferred.Pure[Bool]: return Deferred.pure(value.id == 2)
@@ -100,7 +100,7 @@ def main() raises:
     assert_equal(drops[], 3)
     drops[] = 0
     var initial = QueryOwner(0, drops)
-    var bound = pipeline(owners(drops)).fold_effect[OptionalFamily](initial^)
+    var bound = pipeline(owners(drops)).fold_effect(initial^)
     assert_equal(drops[], 0)
     _ = bound^
     assert_equal(drops[], 4)

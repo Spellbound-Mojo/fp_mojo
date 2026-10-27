@@ -5312,6 +5312,10 @@
         ],
         "fold_effect": [
           {
+            "signature": "def fold_effect[A: Movable & Deinitable, //](deinit self, var initial: A) -> _InferredEffectFoldStage[Self.V, A, Self.E]:",
+            "sha256": "eda23e5806aa93ea79b1f8adacd602b70979ac62698c0490d16b3e4caa91d4d2"
+          },
+          {
             "signature": "def fold_effect[A: Movable & Deinitable, //, J: Monad](deinit self, var initial: A) -> _EffectFoldStage[J, Self.V, A, Self.E]:",
             "sha256": "4db33ceddc9750004482ed51d5a12651a0d6da4c2eb59d731045b1bdaf46ee47"
           }

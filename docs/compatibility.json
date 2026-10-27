@@ -371,16 +371,17 @@
         "fold_map_effect"
       ],
       "status": "selected",
-      "families": "Native source; queries infer native Optional, Result or List Monad targets. Explicit targets retain custom policies; fold targets remain explicit.",
+      "families": "Native source; queries and seeded folds infer native Optional, Result or List Monad targets. Explicit targets retain custom policies; monoid folds keep explicit target and monoid bindings.",
       "callbacks": "Borrowing predicates; consuming unary/binary transformations; repeatable shared or mutable library receivers. Bind fold_effect(initial).run(step).",
-      "ownership": "Moves inputs, retains first matches and releases partial accumulators; Arrays use O(N) temporary List storage.",
+      "ownership": "Moves inputs, retains first matches and releases partial accumulators; Arrays use O(N) temporary List storage. An unexecuted fold binding owns and destroys its source and seed.",
       "errors": "Exact native errors, stored target failures and borrowed origins remain distinct.",
       "timing": "Target owns branch stopping and deferral; monoid identity is constructed before source binding.",
       "owner": [
         "src/fp/algebra/_effect_combinators.mojo",
         "src/fp/algebra/protocols.mojo",
         "src/fp/iteration/_advance.mojo",
-        "src/fp/algebra/instances.mojo"
+        "src/fp/algebra/instances.mojo",
+        "src/fp/functions/context.mojo"
       ],
       "evidence": [
         "tests/runtime/test_context_effect_queries_behavior.mojo",
@@ -391,7 +392,11 @@
         "docs/examples/inferred_queries.mojo",
         "tests/compile_fail/inferred_query_receiver.mojo",
         "tests/compile_fail/inferred_query_non_monad.mojo",
-        "tests/compile_fail/inferred_query_origin.mojo"
+        "tests/compile_fail/inferred_query_origin.mojo",
+        "docs/examples/inferred_fold.mojo",
+        "tests/ownership/test_context_inferred_fold_ownership.mojo",
+        "tests/compile_fail/inferred_fold_reuse.mojo",
+        "tests/compile_fail/inferred_fold_origin.mojo"
       ]
     },
     {

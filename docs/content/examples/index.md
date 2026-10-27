@@ -20,6 +20,7 @@ compile them through source and precompiled package imports at O0 and O3 with
 | `value_defaults.mojo` | Use constants directly and choose when default computation runs | [Pipelines tutorial](../tutorial/pipelines.md#choose-a-constant-or-lazy-default) |
 | `inferred_traversal.mojo` | Gather Optional, Result or List effects without family annotations | [Pipelines tutorial](../tutorial/pipelines.md#gather-effects-without-family-annotations) |
 | `inferred_queries.mojo` | Test and search with effects while inferring native target families | [Pipelines tutorial](../tutorial/pipelines.md#search-with-effects) |
+| `inferred_fold.mojo` | Bind a seed before the step and infer its native effect family | [Pipelines tutorial](../tutorial/pipelines.md#fold-with-effects) |
 | `combinators.mojo` | Shared iterator stages in eager and lazy chains, without wrapper lambdas or type aliases | [Pipelines tutorial](../tutorial/pipelines.md#use-combinators-for-collection-stages) |
 | `chained_pipeline.mojo` | A ten-stage chain with `pipeline(...).raising[E]().then(...)`: plain functions, closures and partials | [fp.functions](../reference/functions.md#chain-ten-stages-with-pipeline) |
 | `kleisli.mojo` | Reusable effectful functions with clean eager and lazy callback syntax | [fp.functions](../reference/functions.md#compose-effectful-functions) |

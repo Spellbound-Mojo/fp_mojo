@@ -1,6 +1,6 @@
 """Stored native pointers retain consumed operand and result calling conventions."""
 from fp.functions import pipeline
-from fp.algebra import OptionalFamily, ListFamily, StringMonoid
+from fp.algebra import OptionalFamily, StringMonoid
 from std.testing import assert_equal
 
 def choose(value: Int) -> Optional[Bool]: return Optional(value == 2)
@@ -27,7 +27,7 @@ def nonraising() -> Int:
     var step: def(var Int, var Int) raises Never thin -> Optional[Int] = never_add
     _ = pipeline(List[Int]([1,2])).raising[Int]().any_effect(predicate).get()
     _ = pipeline(List[Int]([1,2])).raising[Int]().find_map_effect(mapper).get()
-    return pipeline(List[Int]([1,2])).raising[Int]().fold_effect[OptionalFamily](10).run(step).get().value()
+    return pipeline(List[Int]([1,2])).raising[Int]().fold_effect(10).run(step).get().value()
 
 def main() raises:
     assert_equal(nonraising(), 13)
@@ -46,15 +46,15 @@ def main() raises:
     var keeper: def(var String) thin -> Optional[String] = keep_text
     assert_equal(pipeline(List[String](["a","b"])).fold_map_effect[OptionalFamily,StringMonoid](keeper).get().value(), "ab")
     var step: def(var Int,var Int) thin -> Optional[Int] = add
-    assert_equal(pipeline(List[Int]([1,2])).fold_effect[OptionalFamily](10).run(step).get().value(), 13)
+    assert_equal(pipeline(List[Int]([1,2])).fold_effect(10).run(step).get().value(), 13)
     var appender: def(var String,var Int) thin -> Optional[String] = append
-    assert_equal(pipeline(List[Int]([1,2])).fold_effect[OptionalFamily](String("a")).run(appender).get().value(), "a12")
+    assert_equal(pipeline(List[Int]([1,2])).fold_effect(String("a")).run(appender).get().value(), "a12")
     var measure: def(var Int,var String) thin -> Optional[Int] = length
-    assert_equal(pipeline(List[String](["a","bc"])).fold_effect[OptionalFamily](10).run(measure).get().value(), 13)
+    assert_equal(pipeline(List[String](["a","bc"])).fold_effect(10).run(measure).get().value(), 13)
     var joiner: def(var String,var String) thin -> Optional[String] = join
-    assert_equal(pipeline(List[String](["a","b"])).fold_effect[OptionalFamily](String()).run(joiner).get().value(), "ab")
+    assert_equal(pipeline(List[String](["a","b"])).fold_effect(String()).run(joiner).get().value(), "ab")
     var branch: def(var Int,var Int) thin -> List[Int] = alternatives
-    assert_equal(pipeline(List[Int]([1,2])).fold_effect[ListFamily](0).run(branch).get(), List[Int]([3,-1,1,-3]))
+    assert_equal(pipeline(List[Int]([1,2])).fold_effect(0).run(branch).get(), List[Int]([3,-1,1,-3]))
     var bad_predicate: def(Int) raises Int thin -> Optional[Bool] = fail_choose
     var bad_mapper: def(var Int) raises Int thin -> Optional[Optional[Int]] = fail_project
     var bad_step: def(var Int,var Int) raises Int thin -> Optional[Int] = fail_add
@@ -65,6 +65,6 @@ def main() raises:
     try: _ = pipeline(List[Int]([4])).raising[Int]().find_map_effect(bad_mapper).get()
     except error: code = error
     assert_equal(code, 4)
-    try: _ = pipeline(List[Int]([5])).raising[Int]().fold_effect[OptionalFamily](10).run(bad_step).get()
+    try: _ = pipeline(List[Int]([5])).raising[Int]().fold_effect(10).run(bad_step).get()
     except error: code = error
     assert_equal(code, 15)

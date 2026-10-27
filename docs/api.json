@@ -111215,9 +111215,39 @@
         "name": "A",
         "type": "Movable & Deinitable",
         "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An owning fold stage; run(step) returns the target pipeline.",
+       "type": "_InferredEffectFoldStage[Self.V, A, Self.E]"
+      },
+      "signature": "def fold_effect[A: Movable & Deinitable, //](deinit self, var initial: A) -> _InferredEffectFoldStage[Self.V, A, Self.E]",
+      "summary": "Bind the initial accumulator; run(step) infers the native target and admits the callback."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "initial",
+        "type": "A",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
        },
        {
-        "description": "The output family; inferred for whole-value stages, explicit for traversal.",
+        "description": "",
         "inferred": false,
         "name": "J",
         "type": "Monad",
@@ -111227,7 +111257,7 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "An owning fold stage; run(step) returns the target pipeline.",
+       "doc": "",
        "type": "_EffectFoldStage[J, Self.V, A, Self.E]"
       },
       "signature": "def fold_effect[A: Movable & Deinitable, //, J: Monad](deinit self, var initial: A) -> _EffectFoldStage[J, Self.V, A, Self.E]",

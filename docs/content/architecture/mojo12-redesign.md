@@ -22,7 +22,7 @@ are historical evidence.
 | Bind mixed ownership | `Capture[Failure].mutable(state).take(value).run(callback)` | Bind each read, mutable or consuming convention explicitly before matching the callback. |
 | Bind a native keyword pack | `Capture.args(value).kwargs(key=option).run(callback)` | Own a homogeneous pack; an empty pack needs its type or a typed dictionary. |
 | Repeat a stateful native call | `Capture[Failure]().stateful(step, state)` | Own the explicit state and function pointer; `run(input)` retains mutations after captured errors. |
-| Fold in a selected effect | `pipeline(values).fold_effect[Target](initial).run(step)` | Fix the accumulator and target before inferring the mutable or consuming step. |
+| Fold in an effect | `pipeline(values).fold_effect(initial).run(step)` | Fix the accumulator before matching the step; infer native effects or select an explicit target. |
 
 These are call shapes, not additional wrappers or replacement execution
 engines. The [Result tutorial](../tutorial/results.md#bind-arguments-before-the-callback)
@@ -3487,4 +3487,24 @@ callback type bindings keep their positional order.
 The generator selects a required capability without changing carrier recognition
 or operation execution. Ordinary query calls therefore preserve the existing
 source advancement, per-branch stopping, ownership and deferred timing rules.
-Seeded and monoid folds retain their explicit target parameters in this pass.
+Monoid folds retain explicit target and monoid parameters.
+
+### Inferring a staged fold target
+
+`fold_effect(initial)` creates an owning stage whose source and accumulator
+are fixed before `run(step)` matches a callback. The step's result selects a
+native Monad through the same target recognizer as queries. The existing
+`fold_effect[Target](initial)` form still creates the selected stage directly;
+its positional bindings and exact result/error contracts are unchanged.
+
+The inferred stage adapts native callback signatures once and forwards the
+admitted library adapter, source and seed into `_EffectFoldStage`. That stage
+remains the sole fold execution owner. Both admission surfaces are generated
+from the same callback metadata and FoldContract conditions; no iteration,
+error handling, accumulator conversion or cleanup policy is duplicated.
+
+An inferred stage may also receive an explicit target at `run[Target](step)`,
+which preserves custom and deferred policies. Binding itself evaluates no
+callback, and native field ownership releases abandoned sources and seeds.
+The output keeps the selected callback error independently of its stored error
+and preserves accumulator origins, including through deferred execution.
