@@ -12338,7 +12338,7 @@
     "effects.ReaderT": {
       "kind": "type or alias",
       "declarations": [
-        "struct ReaderT[M: Monad, R: AnyType](ReaderFamily, Local, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError)):"
+        "struct ReaderT[M: Monad, R: AnyType](ReaderFamily, Local, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError), ErrorMapping where conforms_to(M, ErrorMapping)):"
       ],
       "methods": {
         "ask": [
@@ -12351,6 +12351,12 @@
           {
             "signature": "def local[V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](var f: F, var value: V) -> Self.Localized[V, F]:",
             "sha256": "725578adb19a95ac2d2e8f2144942c11c51f6712b8969c6d406b105478892108"
+          }
+        ],
+        "bimap": [
+          {
+            "signature": "def bimap[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](var on_ok: F, var on_err: G, var source: V) raises Self.BimapError[Target,V,F,G] -> Self.Bimapped[Target,V,F,G]:",
+            "sha256": "1487c7aa7dc23e4a6e709bd6e7eda69e94ced77b3fbe0a1e4bd6d5c9c4b136af"
           }
         ],
         "fail": [
@@ -12414,7 +12420,7 @@
     "effects.StateT": {
       "kind": "type or alias",
       "declarations": [
-        "struct StateT[M: Monad, S: Movable & Deinitable](StateFamily, Stateful, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable)):"
+        "struct StateT[M: Monad, S: Movable & Deinitable](StateFamily, Stateful, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable), ErrorMapping where conforms_to(M, ErrorMapping)):"
       ],
       "methods": {
         "get": [
@@ -12427,6 +12433,12 @@
           {
             "signature": "def modify[F: UnaryContract & Movable & Deinitable](var f: F) -> Self.Modified[F]:",
             "sha256": "1da198359e3dbdb66dbf7972d095098720e299cb3fb735f0c923d116d5d754cb"
+          }
+        ],
+        "bimap": [
+          {
+            "signature": "def bimap[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](var on_ok: F, var on_err: G, var source: V) raises Self.BimapError[Target,V,F,G] -> Self.Bimapped[Target,V,F,G]:",
+            "sha256": "1487c7aa7dc23e4a6e709bd6e7eda69e94ced77b3fbe0a1e4bd6d5c9c4b136af"
           }
         ],
         "fail": [
@@ -12505,7 +12517,7 @@
     "effects.WriterT": {
       "kind": "type or alias",
       "declarations": [
-        "struct WriterT[M: Monad, W: Monoid](WriterFamily, Censor, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError)):"
+        "struct WriterT[M: Monad, W: Monoid](WriterFamily, Censor, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError), ErrorMapping where conforms_to(M, ErrorMapping)):"
       ],
       "methods": {
         "tell": [
@@ -12524,6 +12536,12 @@
           {
             "signature": "def censor[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) raises Self.CensorError[V, F] -> Self.Censored[V, F]:",
             "sha256": "1961519ad5340aab7429412f4b99d6ce8f80ebe05f4e686632ed731920d98b16"
+          }
+        ],
+        "bimap": [
+          {
+            "signature": "def bimap[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](var on_ok: F, var on_err: G, var source: V) raises Self.BimapError[Target,V,F,G] -> Self.Bimapped[Target,V,F,G]:",
+            "sha256": "1487c7aa7dc23e4a6e709bd6e7eda69e94ced77b3fbe0a1e4bd6d5c9c4b136af"
           }
         ],
         "fail": [

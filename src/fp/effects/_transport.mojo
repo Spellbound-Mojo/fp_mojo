@@ -5,12 +5,31 @@ carrier is reached. No operation here runs a Reader or threads a State.
 """
 from std.builtin.rebind import rebind_var
 from std.memory import MaybeUninit
-from fp.algebra.protocols import Monad
+from fp.algebra.protocols import Monad, ErrorMapping
+from fp.algebra.error_mapping import MapBothContract, _map_both
 from fp.callables.protocols import BorrowCallContract, UnaryContract, Unary
 from fp.callables.products import _take_pair, _WithSecond
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
 from .protocols import Local, Listen, Censor, _CarrierOp
 from ._adapt import _local_as, _map_as
+
+
+@fieldwise_init
+struct _BimapOp[M: ErrorMapping, N: ErrorMapping,
+                F: UnaryContract & Movable & Deinitable,
+                G: UnaryContract & Movable & Deinitable](
+    _CarrierOp, Copyable where conforms_to(F, Copyable) and conforms_to(G, Copyable)
+):
+    """Map the selected base outcome once; transport owns reaching its carrier."""
+    var on_ok: Self.F
+    var on_err: Self.G
+    comptime Contract[V: Movable & Deinitable] = MapBothContract[Self.M,V,Self.F,Self.G,Self.N]
+    comptime Compatible[V: Movable & Deinitable] = Self.Contract[V].Compatible
+    comptime Applied[V: Movable & Deinitable] = Self.Contract[V].Out
+    comptime Error[V: Movable & Deinitable] = Self.Contract[V].Error
+    def apply[V: Movable & Deinitable](deinit self, var value: V) raises Self.Error[V] -> Self.Applied[V]:
+        comptime assert Self.Compatible[V]
+        return _map_both[Self.M,V,Self.F,Self.G,Self.N](self.on_ok^,self.on_err^,value^)
 
 
 @fieldwise_init

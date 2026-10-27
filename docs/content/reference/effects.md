@@ -79,12 +79,24 @@ selected failure. The two layers also compose with each other.
 
 <!-- example: docs/examples/selected_layer_error_mapping.mojo -->
 
-Destinations retain a Monad base. OptionalT normally wraps the base's default
-error target, but rejects a raw candidate that lacks Monad. A permitted explicit
-target such as `Target=OptionalT[ResultFamily[Int]]` can select a valid base.
-ResultT preserves its base policy and rebinds payload-dependent metadata only
-when the rebound base remains a Monad. `Target` follows existing callback
-bindings, so their positional meanings stay unchanged.
+ReaderT, StateT and WriterT lift the same base capability without requiring
+`ApplicativeError`. Reader preserves its exact environment and borrowed run
+origins. State consumes the input state once and maps the returned carrier;
+it neither copies the state nor restarts it after failure. Move-only state can
+therefore support mapping without recovery. Writer preserves the log value and
+monoid, moving the log alongside a transformed success without recombining it.
+
+<!-- example: docs/examples/selected_transport_error_mapping.mojo -->
+
+Destinations retain a Monad base. OptionalT, ReaderT, StateT and WriterT wrap
+the base's default error target only after checking that its actual type
+implements Monad. A non-Monad candidate stays unwrapped and is rejected by the
+layer's target contract. An explicitly permitted Monad destination remains
+available even when the default is unusable. It must retain the exact layer,
+environment, state type or log monoid. ResultT preserves its base policy and
+rebinds payload-dependent metadata only when the rebound base remains a Monad.
+`Target` follows existing callback bindings, so their positional meanings stay
+unchanged.
 
 Deferred bases keep callback execution and native execution errors deferred.
 Construction errors retain their separate exact type. Discarding an unopened
@@ -93,9 +105,12 @@ bases retain their existing repeatability requirements. Conditional source and
 target aliases use the public capability witnesses described in the
 [algebra reference](algebra.md).
 
-ReaderT, StateT and WriterT error mapping remains a separate planned extension.
-`ResultT[Reader[...], E]` already works by mapping its selected inner Result over
-the deferred Reader base.
+Reader and State mapping construction raises Never; their exact native errors
+belong to running the resulting action. Writer mapping exposes its base's
+construction error, while a deferred base stays deferred after `run_writer`.
+The source always executes under its original family; the transformed carrier
+belongs to the admitted destination. `ResultT[Reader[...], E]` instead maps its
+selected inner Result over the Reader base, leaving other error layers intact.
 
 ## Program against environment capabilities
 

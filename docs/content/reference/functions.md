@@ -58,15 +58,26 @@ not combine errors or invoke the other callback after a native raise.
 callback order and leaving outer failures untouched. Its base need not support
 `ErrorMapping`. `OptionalT[M]` maps the base's selected error when that Monad
 supports `ErrorMapping`; an absent Optional stays absent. Deferred bases keep
-mapping deferred. ReaderT, StateT and WriterT error-mapping instances remain
-planned extensions.
+mapping deferred.
 
 <!-- example: docs/examples/selected_layer_error_mapping.mojo -->
 
-A layer's proposed destination base must remain a Monad. `OptionalT` accepts an
-explicit permitted target, such as `Target=OptionalT[ResultFamily[Int]]`, even
-when its base's default candidate cannot support the layer. `ResultT` keeps its
-base policy and reselects payload-dependent base metadata where needed.
+`ReaderT`, `StateT` and `WriterT` also lift mapping from a base Monad with
+`ErrorMapping`, independently of recovery. Reader retains the environment and
+runs the callbacks later. State runs once with its owned state, without copying
+or rolling it back; move-only state supports mapping without supporting
+recovery. Writer retains the exact log and its monoid, including over a deferred
+base. Each operation selects the destination family for fluent continuation.
+
+<!-- example: docs/examples/selected_transport_error_mapping.mojo -->
+
+A layer's proposed destination base must remain a Monad. OptionalT, ReaderT,
+StateT and WriterT check the raw default candidate before wrapping it; an
+unsupported default rejects normally. They can still accept an explicit
+permitted Monad destination, such as `Target=OptionalT[ResultFamily[Int]]`.
+Reader, State and Writer targets retain the exact environment, state type and
+log monoid respectively. `ResultT` keeps its base policy and reselects
+payload-dependent base metadata where needed.
 
 `Pipeline` accepts `Target: Functor` and checks its `ErrorMapping` capability
 before admission. Conditional aliases such as `OptionalT[...]` therefore work

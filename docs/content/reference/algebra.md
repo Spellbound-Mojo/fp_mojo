@@ -280,19 +280,23 @@ public `downcast[I, ErrorMapping]` witness throughout. Native raises remain
 native, callback receivers retain their ownership rules, and all payload/error
 equalities include origins.
 
-ResultFamily, ValidationFamily and ResultT implement this capability.
-`ResultT[M, E]` maps the inner Result through one `M.map`; `M` need not implement
-`ErrorMapping`. `OptionalT[M]` lifts it from a base Monad that does, including a
-mapping-only base without `ApplicativeError`. Its success adapter preserves
-Optional absence. Custom families can adopt mapping independently of recovery.
-ReaderT, StateT and WriterT instances remain planned in the
-[stored-error design](../architecture/mojo12-redesign.md#proposed-stored-error-rebinding).
+ResultFamily, ValidationFamily and all five transformer families support
+this capability. `ResultT[M, E]` maps the inner Result through one `M.map`;
+`M` need not implement `ErrorMapping`. OptionalT, ReaderT, StateT and WriterT
+lift mapping from a base Monad that does, including a mapping-only base without
+`ApplicativeError`. Optional absence, the Reader environment, owned State and
+the Writer log policy remain intact. State mapping needs no copyable state or
+rollback. Reader and State construct deferred actions without raising; Writer
+retains its base's exact construction error and deferred execution contract.
 
 A transformer validates the raw proposed base before wrapping it: the resulting
 base must still be a Monad. A well-formed `DefaultErrorTarget` candidate alone
-does not prove `OperationCompatible`. OptionalT can use a different explicit
-Monad target admitted by its base; ResultT retains its deterministic base policy
-and any valid `RebindingFunctor` payload reselection.
+does not prove `OperationCompatible`. OptionalT, ReaderT, StateT and WriterT
+leave a non-Monad default candidate unwrapped for normal target rejection;
+an explicit permitted Monad target remains available independently of that
+default. ResultT retains its deterministic base policy and any valid
+`RebindingFunctor` payload reselection. Targets cannot change the selected
+layer, environment, state type or log monoid.
 
 For conditional source and destination aliases, generic selected wrappers keep
 `I` and `Target` bounded by `Functor`, require their full `ErrorMapping`

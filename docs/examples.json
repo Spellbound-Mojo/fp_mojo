@@ -186,6 +186,9 @@
     "docs/examples/selected_recovery.mojo": {
       "stdout": "changed error: 5\ndeferred: 14\ngeneric effect: 9\n"
     },
+    "docs/examples/selected_transport_error_mapping.mojo": {
+      "stdout": "before run: 0\nreader error: 7 ; calls: 1\nstate: 4 9\nwriter: saved 5\n"
+    },
     "docs/examples/selected_validation_workflow.mojo": {
       "stdout": "before run: 0\nrecovered: 10 ; observed: 1\naccepted: 6 ; observed: 1\n"
     },

@@ -7,7 +7,7 @@ from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, rebind, downcast
 from std.utils import Variant
 from fp.algebra.errors import _Continue
-from fp.algebra.protocols import (ApplicativeError, _UnaryView, Monad, _Accumulate, _LiveAccumulator, _BindFirst, _Lazy, _Item, _iterator, _next_item, _start_as)
+from fp.algebra.protocols import (ApplicativeError, ErrorMapping, _UnaryView, Monad, _Accumulate, _LiveAccumulator, _BindFirst, _Lazy, _Item, _iterator, _next_item, _start_as)
 from fp.algebra.instances import IdentityFamily
 from fp.callables.protocols import (BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, Unary, OnceUnary, MutableUnary, Binary, MutableBinary)
 from fp.callables.invoke import call_once, call_repeated, RepeatableUnary, RepeatableBinary
@@ -18,7 +18,7 @@ from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
 from .protocols import Stateful, Local, Listen, _CarrierOp, _LocalLifting, StateAction, StateFamily, _EndpointCompatible, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
 from ._adapt import _op_as, _state_run_as, _map_as, _flat_map_as
 
-from ._transport import _LocalOp, _ListenOp, _ListenMapped, _ListenPair
+from ._transport import _BimapOp, _LocalOp, _ListenOp, _ListenMapped, _ListenPair
 
 
 comptime _Action[V: Movable & Deinitable] = downcast[V, StateAction]
@@ -451,13 +451,13 @@ struct _StateChoice[M: Monad, A: StateAction, B: StateAction](
 
 
 @fieldwise_init
-struct _StateHoist[A: Movable & Deinitable, S: StateAction, H: _CarrierOp](
+struct _StateHoist[A: Movable & Deinitable, S: StateAction, H: _CarrierOp, Target: AnyType = S.Family](
     StateAction, Copyable where conforms_to(S, Copyable) and conforms_to(H, Copyable)
 ):
-    """Run the source, then apply one admitted base-carrier operation."""
+    """Run the original source, then apply an operation into the admitted family."""
     var source: Self.S
     var operation: Self.H
-    comptime Family = Self.S.Family
+    comptime Family = Self.Target
     comptime State = Self.S.State
     comptime Value = Self.A
     comptime Out = Self.H.Applied[Self.S.Out]
@@ -470,7 +470,7 @@ struct _StateHoist[A: Movable & Deinitable, S: StateAction, H: _CarrierOp](
         return _op_as[E](self.operation^, base^)
 
 
-struct StateT[M: Monad, S: Movable & Deinitable](StateFamily, Stateful, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable)):
+struct StateT[M: Monad, S: Movable & Deinitable](StateFamily, Stateful, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable), ErrorMapping where conforms_to(M, ErrorMapping)):
     """State over the base Monad `M`: a computation consumes a state `S` when run and returns an `M` carrier of `(value, state)`.
 
     Computations are built as for `ReaderT` and run with `run`. Traversal is one
@@ -523,12 +523,17 @@ struct StateT[M: Monad, S: Movable & Deinitable](StateFamily, Stateful, _LocalLi
         return Self.Modified[F](f^)
 
     comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = Self.CarrierCompatible[V] and H.Compatible[_Action[V].Out] and _ErrorCompatible[_CommonError[_Action[V].Error, H.Error[_Action[V].Out]], H.Error[_Action[V].Out]]
-    comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = _StateHoist[A, _Action[V], H]
+    comptime _HoistedAs[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp, Target: StateFamily] = _StateHoist[A, _Action[V], H, Target]
+    comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = Self._HoistedAs[A,V,H,Self]
     comptime _HoistError[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = Never
     comptime _Listening[C: Listen, A: Movable & Deinitable] = _ListenMapped[C, Tuple[A, Self.S], _ListenPair[Self.S, A, C.Log.Value, False]]
     @staticmethod
     def _hoist[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp](var op: H, var value: V) -> Self._Hoisted[A, V, H]:
-        return Self._Hoisted[A, V, H](rebind_var[_Action[V]](value^), op^)
+        return Self._hoist_as[A,V,H,Self](op^,value^)
+
+    @staticmethod
+    def _hoist_as[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp, Target: StateFamily](var op: H, var value: V) -> Self._HoistedAs[A,V,H,Target]:
+        return Self._HoistedAs[A,V,H,Target](rebind_var[_Action[V]](value^),op^)
 
     comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = Self.CarrierCompatible[V] and C.LocalCompatible[_Action[V].Out]
     comptime _Scoped[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Self._Hoisted[Self.Element[V], V, _LocalOp[C, F]]
@@ -554,8 +559,46 @@ struct StateT[M: Monad, S: Movable & Deinitable](StateFamily, Stateful, _LocalLi
         return Self._hoist[Self.Element[V]](_LocalOp[C, F](f^), value^)
 
     comptime _Errors = downcast[Self.M, ApplicativeError]
-    comptime Failure = Self._Errors.Failure
+    comptime _Mapping = downcast[Self.M, ErrorMapping]
+    # Mapping does not require recovery. Both capabilities share one Failure
+    # when present; an error-mapping-only base uses its own exact witness.
+    comptime Failure = Self._Errors.Failure if conforms_to(Self.M, ApplicativeError) else Self._Mapping.Failure
     comptime _ErrorCarrier[V: Movable & Deinitable] = Self.CarrierCompatible[V] and Self._Errors._ErrorCarrier[_Action[V].Out]
+    comptime ErrorCarrierCompatible[V: Movable & Deinitable] = Self._Mapping.ErrorCarrierCompatible[_Action[V].Out] if Self.CarrierCompatible[V] else False
+    # A base may map into a non-Monad. Retain that real candidate for normal
+    # target rejection; only an actual Monad can be wrapped in this layer.
+    comptime _DefaultErrorBase[A: Movable & Deinitable, E: Movable & Deinitable] = Self._Mapping.DefaultErrorTarget[Tuple[A, Self.S],E]
+    comptime DefaultErrorTarget[A: Movable & Deinitable, E: Movable & Deinitable] = StateT[downcast[Self._DefaultErrorBase[A,E],Monad],Self.S] if conforms_to(Self._DefaultErrorBase[A,E],Monad) else Self._DefaultErrorBase[A,E]
+    comptime _BimapTarget[Target: ErrorMapping] = (Target == StateT[downcast[Target, StateFamily].Base,Self.S] and conforms_to(downcast[Target, StateFamily].Base,ErrorMapping)) if conforms_to(Target,StateFamily) else False
+    comptime _MappingOperation[Target: ErrorMapping, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = _BimapOp[Self._Mapping,downcast[downcast[Target, StateFamily].Base,ErrorMapping],_MapFirst[F, Self.S],G]
+    comptime BimapCompatible[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Self._HoistCompatible[V,Self._MappingOperation[Target,F,G]] if Self._BimapTarget[Target] else False
+    comptime Bimapped[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Self._HoistedAs[F.Out,V,Self._MappingOperation[Target,F,G],downcast[Target,StateFamily]]
+    comptime BimapError[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Self._HoistError[F.Out,V,Self._MappingOperation[Target,F,G]]
+
+    @staticmethod
+    def bimap[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](var on_ok: F, var on_err: G, var source: V) raises Self.BimapError[Target,V,F,G] -> Self.Bimapped[Target,V,F,G]:
+        """Defer one selected base-outcome transformation, retaining owned state.
+
+        Parameters:
+            Target: The admitted destination with the same environment, state or log.
+            V: The source carrier type, including origins.
+            F: The consuming success callback type.
+            G: The consuming stored-error callback type.
+
+        Args:
+            on_ok: The callback selected by an original success.
+            on_err: The callback selected by an original stored error.
+            source: The source carrier, consumed once.
+
+        Returns:
+            A destination State action; construction neither runs nor copies state.
+
+        Raises:
+            Nothing at construction; running preserves the source and base errors.
+        """
+        comptime assert Self.BimapCompatible[Target,V,F,G]
+        return Self._hoist_as[F.Out,V,Self._MappingOperation[Target,F,G],downcast[Target,StateFamily]](Self._MappingOperation[Target,F,G](_MapFirst[F, Self.S](on_ok^),on_err^),source^)
+
     comptime Failed[A: Movable & Deinitable] = _StateFail[Self.M, Self.S, A]
     comptime FailError[A: Movable & Deinitable] = Never
     comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = _StateBind[Self.M, Self.S, _Action[V], H, True]
@@ -574,7 +617,9 @@ struct StateT[M: Monad, S: Movable & Deinitable](StateFamily, Stateful, _LocalLi
         Returns:
             A deferred computation; base failure construction runs only at run.
         """
-        return Self.Failed[A](error^)
+        # Normalize the capability-conditional alias without changing origins.
+        comptime assert Self.Failure == Self._Errors.Failure
+        return Self.Failed[A](rebind_var[Self._Errors.Failure](error^))
 
     @staticmethod
     def or_else[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V) -> Self.Handled[V, H]:

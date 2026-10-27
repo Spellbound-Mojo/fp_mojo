@@ -7,7 +7,7 @@ it. Logs combine in execution order.
 """
 from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from std.builtin.rebind import rebind_var, rebind, downcast
-from fp.algebra.protocols import ApplicativeError, Monad, Monoid, _Accumulate, _start_as, _combine_as
+from fp.algebra.protocols import ApplicativeError, ErrorMapping, Monad, Monoid, _Accumulate, _start_as, _combine_as
 from fp.algebra.instances import IdentityFamily
 from fp.callables.protocols import (BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, Unary, OnceUnary, MutableUnary,
                                     OnceBinary, MutableBinary, OnceThunk)
@@ -18,7 +18,7 @@ from fp.callables.products import _take_pair
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
 from .protocols import Local, Listen, Censor, _CarrierOp, _LocalLifting, WriterFamily, _WriterType
 from ._adapt import _map_as
-from ._transport import _LocalOp, _ListenMapped, _ListenPair
+from ._transport import _BimapOp, _LocalOp, _ListenMapped, _ListenPair
 
 
 comptime _Value[V: Movable & Deinitable] = downcast[V, _WriterType]
@@ -327,7 +327,7 @@ struct _WriterAcc[W: Monoid, K: _Accumulate](_Accumulate):
         return Tuple(log^, _combine_as[Self.Error, Self.K](acc_part^, item_part^))
 
 
-struct WriterT[M: Monad, W: Monoid](WriterFamily, Censor, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError)):
+struct WriterT[M: Monad, W: Monoid](WriterFamily, Censor, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError), ErrorMapping where conforms_to(M, ErrorMapping)):
     """Writer over the base Monad `M`: a value is `M`'s carrier of `(log, payload)`, and the monoid `W` accumulates the log.
 
     Operations use the base's own `map`, `flat_map` and `map2_lazy`, so over a
@@ -404,13 +404,18 @@ struct WriterT[M: Monad, W: Monoid](WriterFamily, Censor, _LocalLifting, Applica
         return Self.Censored[V, F](Self.M.map(_Censor[F, Self.Element[V]](f^), rebind_var[_Value[V]](value^).into_base()))
 
     comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = Self.CarrierCompatible[V] and H.Compatible[_Value[V].Storage]
-    comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = WriterValue[Self, A, H.Applied[_Value[V].Storage]]
+    comptime _HoistedAs[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp, Target: WriterFamily] = WriterValue[Target,A,H.Applied[_Value[V].Storage]]
+    comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = Self._HoistedAs[A,V,H,Self]
     comptime _HoistError[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = H.Error[_Value[V].Storage]
     comptime _Listening[C: Listen, A: Movable & Deinitable] = _ListenMapped[C, Tuple[Self.W.Value, A], _ListenPair[Self.W.Value, A, C.Log.Value, True]]
     @staticmethod
     def _hoist[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp](var op: H, var value: V) raises Self._HoistError[A, V, H] -> Self._Hoisted[A, V, H]:
+        return Self._hoist_as[A,V,H,Self](op^,value^)
+
+    @staticmethod
+    def _hoist_as[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp, Target: WriterFamily](var op: H, var value: V) raises Self._HoistError[A,V,H] -> Self._HoistedAs[A,V,H,Target]:
         var base = rebind_var[_Value[V]](value^).into_base()
-        return Self._Hoisted[A, V, H](op^.apply(base^))
+        return Self._HoistedAs[A,V,H,Target](op^.apply(base^))
 
     comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = Self.CarrierCompatible[V] and C.LocalCompatible[_Value[V].Storage]
     comptime _Scoped[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Self._Hoisted[Self.Element[V], V, _LocalOp[C, F]]
@@ -439,8 +444,46 @@ struct WriterT[M: Monad, W: Monoid](WriterFamily, Censor, _LocalLifting, Applica
         return Self._hoist[Self.Element[V]](_LocalOp[C, F](f^), value^)
 
     comptime _Errors = downcast[Self.M, ApplicativeError]
-    comptime Failure = Self._Errors.Failure
+    comptime _Mapping = downcast[Self.M, ErrorMapping]
+    # Mapping does not require recovery. Both capabilities share one Failure
+    # when present; an error-mapping-only base uses its own exact witness.
+    comptime Failure = Self._Errors.Failure if conforms_to(Self.M, ApplicativeError) else Self._Mapping.Failure
     comptime _ErrorCarrier[V: Movable & Deinitable] = Self.CarrierCompatible[V] and Self._Errors._ErrorCarrier[_Value[V].Storage]
+    comptime ErrorCarrierCompatible[V: Movable & Deinitable] = Self._Mapping.ErrorCarrierCompatible[_Value[V].Storage] if Self.CarrierCompatible[V] else False
+    # A base may map into a non-Monad. Retain that real candidate for normal
+    # target rejection; only an actual Monad can be wrapped in this layer.
+    comptime _DefaultErrorBase[A: Movable & Deinitable, E: Movable & Deinitable] = Self._Mapping.DefaultErrorTarget[Tuple[Self.W.Value, A],E]
+    comptime DefaultErrorTarget[A: Movable & Deinitable, E: Movable & Deinitable] = WriterT[downcast[Self._DefaultErrorBase[A,E],Monad],Self.W] if conforms_to(Self._DefaultErrorBase[A,E],Monad) else Self._DefaultErrorBase[A,E]
+    comptime _BimapTarget[Target: ErrorMapping] = (Target == WriterT[downcast[Target, WriterFamily].Base,Self.W] and conforms_to(downcast[Target, WriterFamily].Base,ErrorMapping)) if conforms_to(Target,WriterFamily) else False
+    comptime _MappingOperation[Target: ErrorMapping, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = _BimapOp[Self._Mapping,downcast[downcast[Target, WriterFamily].Base,ErrorMapping],_MapValue[Self.W.Value, F],G]
+    comptime BimapCompatible[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Self._HoistCompatible[V,Self._MappingOperation[Target,F,G]] if Self._BimapTarget[Target] else False
+    comptime Bimapped[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Self._HoistedAs[F.Out,V,Self._MappingOperation[Target,F,G],downcast[Target,WriterFamily]]
+    comptime BimapError[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Self._HoistError[F.Out,V,Self._MappingOperation[Target,F,G]]
+
+    @staticmethod
+    def bimap[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](var on_ok: F, var on_err: G, var source: V) raises Self.BimapError[Target,V,F,G] -> Self.Bimapped[Target,V,F,G]:
+        """Map one selected base outcome while retaining the exact log policy.
+
+        Parameters:
+            Target: The admitted destination with the same environment, state or log.
+            V: The source carrier type, including origins.
+            F: The consuming success callback type.
+            G: The consuming stored-error callback type.
+
+        Args:
+            on_ok: The callback selected by an original success.
+            on_err: The callback selected by an original stored error.
+            source: The source carrier, consumed once.
+
+        Returns:
+            A destination Writer wrapper around the mapped, possibly deferred base.
+
+        Raises:
+            The exact base mapping construction error; deferred errors stay deferred.
+        """
+        comptime assert Self.BimapCompatible[Target,V,F,G]
+        return Self._hoist_as[F.Out,V,Self._MappingOperation[Target,F,G],downcast[Target,WriterFamily]](Self._MappingOperation[Target,F,G](_MapValue[Self.W.Value, F](on_ok^),on_err^),source^)
+
     comptime Failed[A: Movable & Deinitable] = WriterValue[Self, A, Self._Errors.Failed[Tuple[Self.W.Value, A]]]
     comptime FailError[A: Movable & Deinitable] = Self._Errors.FailError[Tuple[Self.W.Value, A]]
     comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = WriterValue[Self, Self.Element[V], Self._Errors.Handled[_Value[V].Storage, _UnwrapResult[Self, H]]]
@@ -462,7 +505,9 @@ struct WriterT[M: Monad, W: Monoid](WriterFamily, Censor, _LocalLifting, Applica
         Raises:
             The base family's exact native failure-construction error.
         """
-        return Self.Failed[A](Self._Errors.fail[Tuple[Self.W.Value, A]](error^))
+        # Normalize the capability-conditional alias without changing origins.
+        comptime assert Self.Failure == Self._Errors.Failure
+        return Self.Failed[A](Self._Errors.fail[Tuple[Self.W.Value, A]](rebind_var[Self._Errors.Failure](error^)))
 
     @staticmethod
     def or_else[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V) raises Self.HandleError[V, H] -> Self.Handled[V, H]:

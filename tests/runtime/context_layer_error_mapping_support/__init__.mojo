@@ -6,13 +6,13 @@ from std.builtin.rebind import downcast, rebind_var
 trait AbsentMappingShape:
     comptime Payload: Movable & Deinitable
 
-struct MappingMonad[E:Movable & Deinitable](Monad,ErrorMapping):
+struct MappingMonad[E:Movable & Deinitable, throws:Bool=False](Monad,ErrorMapping):
     comptime Base = ResultFamily[Self.E]
     comptime Failure = Self.E
     comptime Element[V:Movable & Deinitable] = Self.Base.Element[V]
     comptime CarrierCompatible[V:Movable & Deinitable] = Self.Base.CarrierCompatible[V]
     comptime ErrorCarrierCompatible[V:Movable & Deinitable] = Self.Base.ErrorCarrierCompatible[V]
-    comptime DefaultErrorTarget[A:Movable & Deinitable,G:Movable & Deinitable] = MappingMonad[G]
+    comptime DefaultErrorTarget[A:Movable & Deinitable,G:Movable & Deinitable] = MappingMonad[G,Self.throws]
     comptime Mapped[V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable] = Self.Base.Mapped[V,F]
     comptime MapError[V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable] = Self.Base.MapError[V,F]
     comptime Pure[A:Movable & Deinitable] = Self.Base.Pure[A]
@@ -20,9 +20,9 @@ struct MappingMonad[E:Movable & Deinitable](Monad,ErrorMapping):
     comptime CombineError[V:Movable & Deinitable,F:BinaryContract & Movable & Deinitable,R:ThunkContract & Movable & Deinitable] = Self.Base.CombineError[V,F,R]
     comptime Bound[V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable] = Self.Base.Bound[V,F]
     comptime BindError[V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable] = Self.Base.BindError[V,F]
-    comptime BimapCompatible[Target:ErrorMapping,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable,G:UnaryContract & Movable & Deinitable] = Target == MappingMonad[G.Out] and Self.Base.BimapCompatible[ResultFamily[G.Out],V,F,G]
-    comptime Bimapped[Target:ErrorMapping,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable,G:UnaryContract & Movable & Deinitable] = Self.Base.Bimapped[ResultFamily[G.Out],V,F,G] if Target == MappingMonad[G.Out] else downcast[Target,AbsentMappingShape].Payload
-    comptime BimapError[Target:ErrorMapping,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable,G:UnaryContract & Movable & Deinitable] = Self.Base.BimapError[ResultFamily[G.Out],V,F,G]
+    comptime BimapCompatible[Target:ErrorMapping,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable,G:UnaryContract & Movable & Deinitable] = Target == MappingMonad[G.Out,Self.throws] and Self.Base.BimapCompatible[ResultFamily[G.Out],V,F,G]
+    comptime Bimapped[Target:ErrorMapping,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable,G:UnaryContract & Movable & Deinitable] = Self.Base.Bimapped[ResultFamily[G.Out],V,F,G] if Target == MappingMonad[G.Out,Self.throws] else downcast[Target,AbsentMappingShape].Payload
+    comptime BimapError[Target:ErrorMapping,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable,G:UnaryContract & Movable & Deinitable] = Int if Self.throws else Self.Base.BimapError[ResultFamily[G.Out],V,F,G]
     @staticmethod
     def pure[A:Movable & Deinitable](var value:A)->Self.Pure[A]:return Self.Base.pure(value^)
     @staticmethod
@@ -32,7 +32,16 @@ struct MappingMonad[E:Movable & Deinitable](Monad,ErrorMapping):
     @staticmethod
     def flat_map[V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable](var f:F,var source:V) raises Self.BindError[V,F] ->Self.Bound[V,F]:return Self.Base.flat_map(f^,source^)
     @staticmethod
-    def bimap[Target:ErrorMapping,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable,G:UnaryContract & Movable & Deinitable](var f:F,var g:G,var source:V) raises Self.BimapError[Target,V,F,G] ->Self.Bimapped[Target,V,F,G]:return rebind_var[Self.Bimapped[Target,V,F,G]](Self.Base.bimap[ResultFamily[G.Out]](f^,g^,source^))
+    def bimap[Target:ErrorMapping,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable,G:UnaryContract & Movable & Deinitable](var f:F,var g:G,var source:V) raises Self.BimapError[Target,V,F,G] ->Self.Bimapped[Target,V,F,G]:
+        comptime if Self.throws:
+            comptime assert Self.BimapError[Target,V,F,G] == Int
+            raise rebind_var[Self.BimapError[Target,V,F,G]](Int(781))
+        else:
+            try:
+                return rebind_var[Self.Bimapped[Target,V,F,G]](Self.Base.bimap[ResultFamily[G.Out]](f^,g^,source^))
+            except error:
+                comptime assert Self.BimapError[Target,V,F,G] == type_of(error)
+                raise rebind_var[Self.BimapError[Target,V,F,G]](error^)
 
 
 

@@ -628,10 +628,10 @@ and retained move-only payloads in branching effects.
 
 Every legacy Piped method now has a selected counterpart in the inventory.
 Equal method names do not imply equal capability coverage: stored-error mapping
-supports Result, Validation, ResultT, OptionalT over a mapping-capable base,
-and custom ErrorMapping dictionaries. ReaderT, StateT and WriterT mapping
-instances remain planned. Extension contracts still matter for custom
-dictionaries and deferred families.
+supports Result, Validation and all five transformer families, plus custom
+ErrorMapping dictionaries. ResultT uses its base map; the other transformers
+require a base Monad with ErrorMapping. Extension contracts still matter for
+custom dictionaries and deferred families.
 
 Future work should start with executable user examples and evaluate annotation
 burden, diagnostics, ownership, and cold compilation cost. Keep legacy bindings
@@ -670,17 +670,19 @@ Qualify and commit each complete pass separately. No CI work is part of this
 sequence. Resource scopes and fallible source advancement remain later design
 work, after these improvements to the existing API.
 
-Stored-error mapping now has a qualified core for Result, Validation and
-custom dictionaries. Transformer implementations remain planned below, along
-with resource scopes and source advancement. Qualify normal and invalid user
-calls at O0/O3 through source and packages before promoting each extension.
+Stored-error mapping has a qualified core for Result, Validation and custom
+dictionaries, with all five transformer implementations described below.
+Resource scopes and source advancement remain later design work. Qualify normal
+and invalid user calls at O0/O3 through source and packages before publishing
+each extension.
 
 ### Proposed stored-error rebinding
 
-**Core and ResultT/OptionalT implemented; Reader/State/Writer extensions
-planned.** `ErrorMapping`, `MapBothContract` and `MapErrContract` support
-selected `map_err` and `map_both` for ResultFamily, ValidationFamily, the two
-sum layers and custom dictionaries. One two-arm primitive owns mapping. Ordinary Result calls infer their destination;
+**Core and all five transformers implemented.** `ErrorMapping`,
+`MapBothContract` and `MapErrContract` support selected `map_err` and `map_both`
+for ResultFamily, ValidationFamily, ResultT, OptionalT, ReaderT, StateT, WriterT
+and custom dictionaries. One two-arm primitive owns mapping. Ordinary Result
+calls infer their destination;
 Validation requires an explicit target when the stored-error type changes.
 Existing positional callback bindings retain their meaning. The target is a
 trailing defaulted binding, conventionally supplied as `Target=...`.
@@ -721,8 +723,10 @@ The new primitive is an algebraic boundary, not another Result dispatcher.
 already owns branch selection, payload movement and unused callback cleanup.
 ResultT delegates one base map to that Result owner; OptionalT delegates to
 the base family's primitive with the existing Optional success-map adapter.
-Reader, State and Writer transport remains planned. Existing `Functor.map` remains its own operation; adopting this
-capability does not replace all mapping with two-arm machinery.
+Reader, State and Writer share `_BimapOp`, which reaches the same checked base
+primitive through their existing transport. Existing `Functor.map` remains its
+own operation; adopting this capability does not replace all mapping with
+two-arm machinery.
 
 `ErrorMapping` extends `Functor` independently of `ApplicativeError`.
 Mapping a stored error does not require failure construction or recovery.
@@ -852,8 +856,9 @@ usability goal, not qualify as acceptable rejections.
 
 #### Family-specific destinations and owners
 
-Result, Validation, ResultT and OptionalT are implemented. ReaderT, StateT
-and WriterT rows specify the remaining planned extensions and execution owners.
+The implemented families use these destination policies and existing execution
+owners. OptionalT, ReaderT, StateT and WriterT require ErrorMapping only from
+their base Monad; that base need not support ApplicativeError.
 
 | Source family | Recommended destination policy | Execution owner |
 |---|---|---|
@@ -872,9 +877,11 @@ Result representation does not make a Validation base a Monad. An explicit
 target cannot silently change the environment, state type, log policy,
 outer error channel or transformer order.
 
-Admission checks the raw proposed base before wrapping it. OptionalT leaves a
-non-Monad default candidate unwrapped, allowing ordinary policy rejection;
-an explicit permitted Monad base can still be selected. ResultT retains a
+Admission checks the raw proposed base before wrapping it. OptionalT, ReaderT,
+StateT and WriterT leave a non-Monad default candidate unwrapped, allowing
+ordinary policy rejection. An explicit permitted Monad base can still be
+selected independently of that default. A downcast never supplies missing
+Monad evidence. ResultT retains a
 well-formed candidate using its original base when payload rebinding proposes
 a non-Monad, but `OperationCompatible` rejects that operation even when the
 stored-error type is unchanged. This candidate keeps metadata valid and never
@@ -907,8 +914,7 @@ execution. Generic runners continue to use the appropriate public Reader,
 State or Writer execution metadata.
 
 For a Reader source action `S`, base family `M`, admitted destination base
-`N`, and callbacks `F` and `G`, the intended projections at run origin `o`
-are:
+`N`, and callbacks `F` and `G`, the projections at run origin `o` are:
 
 ```text
 OutputAction.Family = ReaderT[N, S.Env]
@@ -925,22 +931,29 @@ raise a different error from deferred execution; it must not collapse those
 two stages into one callback error. Reader admission and running retain the
 actual origin checks in addition to the existing witness-origin checks.
 
-Planned State mapping uses the corresponding non-origin-indexed equation with
-the existing success adapter `(A, S) -> (B, S)`. It runs the source once and transforms the
-returned base carrier. It does not save, restore or copy the incoming state,
-including when the source fails. This permits mapping with move-only state
-without promising State recovery. Planned Writer mapping uses its existing `(Log, A) ->
-(Log, B)` adapter and constructs a real destination `WriterValue` around
-the transformed base carrier. It neither copies nor recombines the log just
+State mapping uses the corresponding non-origin-indexed equation with the
+existing `_MapFirst` success adapter `(A, S) -> (B, S)`. It runs the source once
+and transforms the returned base carrier. It does not save, restore or copy
+the incoming state, including when the source fails. This permits mapping with
+move-only state without promising State recovery. Writer mapping uses its
+existing `_MapValue` adapter `(Log, A) -> (Log, B)` and constructs a real
+destination `WriterValue` around the transformed base carrier. It neither
+copies nor recombines the log just
 to change an error. Deferred base actions remain deferred when unwrapped.
 
-The existing Reader and State hoists currently fix `Family` to the source
-family. Their transport must be generalized to an explicitly admitted
-output family before reuse here. The source still runs under its original
-dictionary; no cast may relabel that action. Writer's transport similarly
-needs the destination wrapper family. This is a narrow generalization of
-existing transport, with regressions for current hoist consumers, rather
-than a new interpreter or a parallel family of runners.
+The shared `_BimapOp` in `effects._transport` wraps the base's
+`MapBothContract` and checked runner. Existing Reader and State hoists now
+accept an admitted destination family; their source fields and run bodies
+retain the original action and dictionary. Reader's actual-origin checks keep
+both environment-retaining outputs and native errors intact. Writer's existing
+transport constructs the destination wrapper around the transformed base.
+
+The original three-parameter `_Hoisted` and `_hoist` bindings delegate with
+the source family, retaining local/listen/censor behavior. The new destination
+parameter changes output metadata without relabeling or casting the source
+action. Reader and State construction raises Never; Writer preserves the base
+operation's exact construction error. Deferred base execution stays deferred.
+This generalizes existing transport without adding an interpreter or runner.
 
 Where native Result construction can raise only callback errors, the exact
 error is the existing common error of the two callbacks. Custom families
@@ -967,8 +980,8 @@ family, environment/state witnesses and origin-indexed outputs.
 
 #### User calls and generic clients
 
-The Result, Validation and sum-layer calls are executable in the examples
-above and below. The Reader call in this sketch remains a planned extension:
+The Result, Validation and transformer call shapes are illustrated by the
+examples above and below:
 
 ```text
 pipeline(result).map_err(to_message)
@@ -979,9 +992,8 @@ pipeline[ValidationFamily[ParseErrors]](validation)
     .map_err[Target=ValidationFamily[DisplayErrors]](format_errors)
 ```
 
-The Result calls infer an unambiguous destination. Reader is intended to do
-the same once its transformer instance is qualified. Validation supplies the
-policy that the error value's type cannot determine. `Target` is a trailing
+Result and the transformers infer their declared default destinations.
+Validation supplies the policy that the error value's type cannot determine. `Target` is a trailing
 defaulted binding, supplied by name in examples; existing positional callback
 and native-error bindings keep their meaning.
 
@@ -1004,6 +1016,8 @@ calls still pass the source and target aliases directly. Existing wrappers
 bounded by `ErrorMapping` continue to accept statically capable dictionaries.
 
 <!-- example: docs/examples/selected_layer_error_mapping.mojo -->
+
+<!-- example: docs/examples/selected_transport_error_mapping.mojo -->
 
 Native overloads retain the existing signature owner and selected error
 context. They fix source payload/error inputs before inferring callbacks,
@@ -1036,9 +1050,9 @@ stored pointers and adapters without extra caller type hints.
 The core implementation rejects selected custom-family calls that previously
 discarded their policy. Such dictionaries adopt ErrorMapping explicitly.
 A same-error Validation policy transition also requires an explicit target.
-These compatibility decisions are documented with the selected API. ResultT
-and OptionalT preserve their selected layer; Reader, State and Writer mapping
-remains subject to the planned transport work below.
+These compatibility decisions are documented with the selected API. All five
+transformers preserve the selected layer and its auxiliary types; explicit
+base-policy changes remain subject to the source family's contract.
 
 #### Adoption sequence and acceptance gates
 
@@ -1057,11 +1071,12 @@ remains subject to the planned transport work below.
    channels, branching callback state, ownership, rebinding bases and invalid
    non-Monad defaults. Conditional source/target witnesses keep ordinary alias
    calls free of casts and preserve positional bindings.
-4. Generalize existing Reader/State/Writer transport narrowly. Qualify custom
-   construction versus execution errors, actual borrowed run origins,
-   move-only state/log cleanup, unopened-action disposal and joins. Mapping
-   must not acquire rollback or new copying requirements. Recheck existing
-   transport consumers, including local, listen and censor.
+4. **Implemented:** Reader/State/Writer reuse their existing transport with
+   an admitted destination and one shared base operation. Acceptance gates
+   cover custom construction versus execution errors, actual borrowed run
+   origins, move-only state/log cleanup and unopened-action disposal. Mapping
+   adds no rollback or copying requirement. Existing local/listen/censor
+   consumers retain their entry points and remain regression gates.
 5. For each transformer extension, add maintained generic/user examples and
    document family obligations. Run source/package O0/O3 boundaries and
    bounded cold-compilation comparisons, then publish complete passes
@@ -1087,6 +1102,28 @@ were unchanged. These are local observations, not a general speedup claim.
 | Result `map_both` | 6.64 s | 6.55 s |
 | Result `map_err` | 4.30 s | 4.35 s |
 | Invalid `map_both` input | 0.91 s | 0.95 s |
+
+#### Reader, State and Writer qualification
+
+The transport and shared-helper matrices passed all 84 source/package O0/O3
+checks on the same Linux Mojo 1.2.0 toolchain. Fourteen packaged regression and
+example programs cover existing local/listen/censor/state/recovery consumers;
+46 tooling tests and strict documentation checks also passed. Reports retain
+unchanged inputs and zero audit failures. There are 77 documented examples and
+318 public exports. Layer and transport fixtures now share one mapping-only
+Monad dictionary, including throwing construction and guarded target metadata.
+
+The same bounded cold protocol compared this pass with `4641e39`. All 16
+observations passed with unchanged executable sizes. The small sample shows a
+higher median for the selected-pipeline client and `map_err`, with lower medians
+for the other two clients; it does not establish a general performance trend.
+
+| Existing client | Baseline median | Transport pass median |
+|---|---:|---:|
+| Selected pipeline example | 10.27 s | 11.15 s |
+| Result `map_both` | 6.89 s | 6.67 s |
+| Result `map_err` | 4.26 s | 4.49 s |
+| Invalid `map_both` input | 1.02 s | 0.98 s |
 
 ### Resource scopes
 

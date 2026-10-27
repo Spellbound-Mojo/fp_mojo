@@ -34178,6 +34178,26 @@
     },
     {
      "description": "",
+     "name": "ErrorCarrierCompatible"
+    },
+    {
+     "description": "",
+     "name": "DefaultErrorTarget"
+    },
+    {
+     "description": "",
+     "name": "BimapCompatible"
+    },
+    {
+     "description": "",
+     "name": "Bimapped"
+    },
+    {
+     "description": "",
+     "name": "BimapError"
+    },
+    {
+     "description": "",
      "name": "Failed"
     },
     {
@@ -34299,6 +34319,73 @@
       },
       "signature": "def ask() -> Self.Asked",
       "summary": "Construct a deferred copy of this Reader's environment."
+     }
+    ],
+    "bimap": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback selected by an original success.",
+        "name": "on_ok",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The callback selected by an original stored error.",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The source carrier, consumed once.",
+        "name": "source",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.BimapError[Target,V,F,G]",
+      "parameters": [
+       {
+        "description": "The admitted destination with the same environment, state or log.",
+        "inferred": false,
+        "name": "Target",
+        "type": "ErrorMapping",
+        "variadic": false
+       },
+       {
+        "description": "The source carrier type, including origins.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The consuming success callback type.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The consuming stored-error callback type.",
+        "inferred": false,
+        "name": "G",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "Nothing at construction; running preserves the source and base errors.",
+      "returns": {
+       "doc": "A destination Reader action; source and callbacks run only at run.",
+       "type": "Self.Bimapped[Target,V,F,G]"
+      },
+      "signature": "def bimap[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](var on_ok: F, var on_err: G, var source: V) raises Self.BimapError[Target,V,F,G] -> Self.Bimapped[Target,V,F,G]",
+      "summary": "Defer one selected base-outcome transformation in the same environment."
      }
     ],
     "endpoint": [
@@ -34698,12 +34785,13 @@
     }
    ],
    "provider": "effects/reader",
-   "signature": "struct ReaderT[M: Monad, R: AnyType](ReaderFamily, Local, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError))",
+   "signature": "struct ReaderT[M: Monad, R: AnyType](ReaderFamily, Local, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError), ErrorMapping where conforms_to(M, ErrorMapping))",
    "summary": "Reader over the base Monad `M`: a computation borrows an environment `R` when run and returns an `M` carrier.",
    "traits": [
     "Applicative",
     "ApplicativeError",
     "Ask",
+    "ErrorMapping",
     "Functor",
     "Local",
     "Monad",
@@ -34872,6 +34960,26 @@
     },
     {
      "description": "",
+     "name": "ErrorCarrierCompatible"
+    },
+    {
+     "description": "",
+     "name": "DefaultErrorTarget"
+    },
+    {
+     "description": "",
+     "name": "BimapCompatible"
+    },
+    {
+     "description": "",
+     "name": "Bimapped"
+    },
+    {
+     "description": "",
+     "name": "BimapError"
+    },
+    {
+     "description": "",
      "name": "Failed"
     },
     {
@@ -34975,6 +35083,73 @@
    "fields": [],
    "kind": "struct",
    "methods": {
+    "bimap": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback selected by an original success.",
+        "name": "on_ok",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The callback selected by an original stored error.",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The source carrier, consumed once.",
+        "name": "source",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.BimapError[Target,V,F,G]",
+      "parameters": [
+       {
+        "description": "The admitted destination with the same environment, state or log.",
+        "inferred": false,
+        "name": "Target",
+        "type": "ErrorMapping",
+        "variadic": false
+       },
+       {
+        "description": "The source carrier type, including origins.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The consuming success callback type.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The consuming stored-error callback type.",
+        "inferred": false,
+        "name": "G",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "Nothing at construction; running preserves the source and base errors.",
+      "returns": {
+       "doc": "A destination State action; construction neither runs nor copies state.",
+       "type": "Self.Bimapped[Target,V,F,G]"
+      },
+      "signature": "def bimap[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](var on_ok: F, var on_err: G, var source: V) raises Self.BimapError[Target,V,F,G] -> Self.Bimapped[Target,V,F,G]",
+      "summary": "Defer one selected base-outcome transformation, retaining owned state."
+     }
+    ],
     "endpoint": [
      {
       "args": [
@@ -35374,11 +35549,12 @@
     }
    ],
    "provider": "effects/state",
-   "signature": "struct StateT[M: Monad, S: Movable & Deinitable](StateFamily, Stateful, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable))",
+   "signature": "struct StateT[M: Monad, S: Movable & Deinitable](StateFamily, Stateful, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable), ErrorMapping where conforms_to(M, ErrorMapping))",
    "summary": "State over the base Monad `M`: a computation consumes a state `S` when run and returns an `M` carrier of `(value, state)`.",
    "traits": [
     "Applicative",
     "ApplicativeError",
+    "ErrorMapping",
     "Functor",
     "Monad",
     "StateFamily",
@@ -35672,6 +35848,26 @@
     },
     {
      "description": "",
+     "name": "ErrorCarrierCompatible"
+    },
+    {
+     "description": "",
+     "name": "DefaultErrorTarget"
+    },
+    {
+     "description": "",
+     "name": "BimapCompatible"
+    },
+    {
+     "description": "",
+     "name": "Bimapped"
+    },
+    {
+     "description": "",
+     "name": "BimapError"
+    },
+    {
+     "description": "",
      "name": "Failed"
     },
     {
@@ -35771,6 +35967,73 @@
    "fields": [],
    "kind": "struct",
    "methods": {
+    "bimap": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback selected by an original success.",
+        "name": "on_ok",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The callback selected by an original stored error.",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The source carrier, consumed once.",
+        "name": "source",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.BimapError[Target,V,F,G]",
+      "parameters": [
+       {
+        "description": "The admitted destination with the same environment, state or log.",
+        "inferred": false,
+        "name": "Target",
+        "type": "ErrorMapping",
+        "variadic": false
+       },
+       {
+        "description": "The source carrier type, including origins.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The consuming success callback type.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The consuming stored-error callback type.",
+        "inferred": false,
+        "name": "G",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact base mapping construction error; deferred errors stay deferred.",
+      "returns": {
+       "doc": "A destination Writer wrapper around the mapped, possibly deferred base.",
+       "type": "Self.Bimapped[Target,V,F,G]"
+      },
+      "signature": "def bimap[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](var on_ok: F, var on_err: G, var source: V) raises Self.BimapError[Target,V,F,G] -> Self.Bimapped[Target,V,F,G]",
+      "summary": "Map one selected base outcome while retaining the exact log policy."
+     }
+    ],
     "censor": [
      {
       "args": [
@@ -36217,12 +36480,13 @@
     }
    ],
    "provider": "effects/writer",
-   "signature": "struct WriterT[M: Monad, W: Monoid](WriterFamily, Censor, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError))",
+   "signature": "struct WriterT[M: Monad, W: Monoid](WriterFamily, Censor, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError), ErrorMapping where conforms_to(M, ErrorMapping))",
    "summary": "Writer over the base Monad `M`: a value is `M`'s carrier of `(log, payload)`, and the monoid `W` accumulates the log.",
    "traits": [
     "Applicative",
     "ApplicativeError",
     "Censor",
+    "ErrorMapping",
     "Functor",
     "Listen",
     "Monad",

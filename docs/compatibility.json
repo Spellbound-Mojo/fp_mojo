@@ -547,17 +547,21 @@
         "map_err"
       ],
       "status": "selected",
-      "families": "Selected ErrorMapping: ResultFamily, ValidationFamily, ResultT, OptionalT over a mapping-capable Monad, and custom families; ReaderT/StateT/WriterT mapping remains planned; intrinsic Result remains under families with neither ErrorMapping nor ApplicativeError",
+      "families": "Selected ErrorMapping: ResultFamily, ValidationFamily, ResultT, OptionalT/ReaderT/StateT/WriterT over a mapping-capable Monad, and custom families; mapping does not require ApplicativeError or copyable State; intrinsic Result remains under families with neither ErrorMapping nor ApplicativeError",
       "callbacks": "Consuming branch callbacks; native closures borrowed, stored thin pointers owned, library receivers preserved; optional Target follows existing positional bindings and admits Functor aliases with an ErrorMapping capability check",
-      "ownership": "One original branch consumes its payload and invokes its callback; unused owners are destroyed; exact payload/error origins remain in the destination",
-      "errors": "Exact family construction and callback errors remain native; stored error type changes select an admitted destination",
-      "timing": "One two-arm family primitive; ResultT uses one base map and OptionalT delegates to base bimap with the existing Optional success adapter; deferred bases retain deferred execution; no recovery or accumulation during mapping",
+      "ownership": "One original branch consumes its payload and invokes its callback; unused owners are destroyed; exact payload/error and actual Reader run origins remain in the destination; State runs once without rollback/copy and Writer retains the exact log monoid",
+      "errors": "Exact family construction and callback errors remain native; Reader/State mapping construction is Never and their run errors stay deferred; Writer exposes its base construction error and preserves deferred base errors",
+      "timing": "One two-arm family primitive; ResultT uses one base map, OptionalT its existing success adapter, and Reader/State/Writer one shared _BimapOp through existing hoists/Writer transport; sources run under their original family; raw target bases must be Monad, while explicitly admitted Monad targets remain independent of unusable defaults",
       "owner": [
         "src/fp/algebra/error_mapping.mojo",
         "src/fp/algebra/instances.mojo",
         "src/fp/algebra/validation.mojo",
         "src/fp/data/_result.mojo",
         "src/fp/effects/layers.mojo",
+        "src/fp/effects/_transport.mojo",
+        "src/fp/effects/reader.mojo",
+        "src/fp/effects/state.mojo",
+        "src/fp/effects/writer.mojo",
         "src/fp/functions/context.mojo"
       ],
       "evidence": [
@@ -572,7 +576,15 @@
         "tests/ownership/test_context_layer_error_mapping_ownership.mojo",
         "tests/compile_fail/context_layer_error_mapping_optional_default_capability.mojo",
         "tests/compile_fail/context_layer_error_mapping_rebound_same_error.mojo",
-        "tests/compile_fail/context_layer_error_mapping_guarded_target.mojo"
+        "tests/compile_fail/context_layer_error_mapping_guarded_target.mojo",
+        "docs/examples/selected_transport_error_mapping.mojo",
+        "tests/runtime/test_context_transport_error_mapping.mojo",
+        "tests/runtime/test_context_transport_error_mapping_generic.mojo",
+        "tests/runtime/test_context_transport_error_mapping_origins.mojo",
+        "tests/ownership/test_context_transport_error_mapping_ownership.mojo",
+        "tests/compile_fail/context_transport_error_mapping_default_reader.mojo",
+        "tests/compile_fail/context_transport_error_mapping_default_state.mojo",
+        "tests/compile_fail/context_transport_error_mapping_default_writer.mojo"
       ]
     },
     {

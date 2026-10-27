@@ -1,6 +1,6 @@
 # Algebra and effects
 
-`fp.algebra` defines Functor, Filterable, FunctorFilter, Applicative, ApplicativeError, Monad, Traversable, Semigroup and Monoid
+`fp.algebra` defines Functor, Filterable, FunctorFilter, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Semigroup and Monoid
 interfaces with instances for native values. `fp.effects` builds Reader, State
 and Writer computations on those interfaces and combines effects through monad
 transformers.
@@ -13,7 +13,7 @@ origins remain available to the compiler throughout composition.
 
 | Kind | Members |
 |---|---|
-| Interfaces | `Functor` (`map`), `Filterable` (`filter`), `FunctorFilter` (`filter_map`), `Applicative` (`pure`, `map2_lazy`), `ApplicativeError` (`fail`, `or_else`), `Monad` (`flat_map`), `Traversable` (`traverse`), `Semigroup` (`combine`), `Monoid` (`empty`, `combine`) |
+| Interfaces | `Functor` (`map`), `Filterable` (`filter`), `FunctorFilter` (`filter_map`), `Applicative` (`pure`, `map2_lazy`), `ApplicativeError` (`fail`, `or_else`), `ErrorMapping` (`bimap`), `Monad` (`flat_map`), `Traversable` (`traverse`), `Semigroup` (`combine`), `Monoid` (`empty`, `combine`) |
 | Derived operations | `map2`, `ap`, `flatten`, `sequence`, defined once over the interfaces |
 | Native instances | `IdentityFamily` (a bare value), `OptionalFamily`, `ResultFamily[E]`, `ValidationFamily[S]`, `ListFamily`, using the standard carriers |
 | Monoids | `StringMonoid`, `ListMonoid[A]` |
@@ -363,16 +363,32 @@ ResultFamily and ValidationFamily delegate to the existing Result fold.
 ResultT maps each inner Result through one base `map`, preserving interleaved
 success/error callback order; its base need not implement `ErrorMapping`.
 OptionalT uses a mapping-capable base's primitive with the existing Optional
-success adapter, preserving absence. Reader/State/Writer instances remain
-planned transport extensions.
+success adapter, preserving absence. ReaderT, StateT and WriterT share the
+`_BimapOp` carrier operation in `effects._transport`, which stores both
+callbacks and delegates admission and execution to `MapBothContract` and the
+checked base runner. A mapping-only base needs no `ApplicativeError` witness.
+
+The existing `_ReaderHoist` and `_StateHoist` accept an admitted destination
+family while keeping their original source action and execution code. Their
+three-parameter `_Hoisted` and `_hoist` entry points retain the original family
+through delegation, including for local/listen/censor consumers. Reader checks
+the actual run origin as well as admission witnesses; its output and native
+error keep any environment borrow. State uses `_MapFirst` on `(value, state)`
+and runs its source once, without saving, restoring or copying state. Writer
+uses `_MapValue` on `(log, value)` and the existing unwrap/apply/rewrap transport
+with a destination `WriterValue`; it neither copies nor combines the log.
 
 The source admits an exact destination policy. ResultT reselects the base's
-payload metadata through `RebindingFunctor` where needed; OptionalT asks its
-base for the destination error policy. A raw proposed base must remain a Monad
-before it can support the layer. An invalid default is rejected; OptionalT
-can still accept an explicit permitted Monad target. Native exceptions retain
-their construction or deferred execution timing, and neither operation adds a
-second traversal or a recovery stage.
+payload metadata through `RebindingFunctor` where needed; the other layers
+ask their base for the destination error policy. A raw proposed base must
+implement Monad before it can be wrapped. OptionalT, ReaderT, StateT and
+WriterT leave an unsupported default candidate unwrapped for normal rejection;
+an explicit permitted Monad target remains available. Targets must use the
+same constructor and exact environment, state type or log monoid. Reader and
+State construction raises Never; their run combines source and base-operation
+errors at the actual execution boundary. Writer exposes the base operation's
+exact construction error and retains deferred execution. No new interpreter,
+second traversal or recovery stage is introduced.
 
 The selected Pipeline target boundary accepts a Functor with an explicit
 `ErrorMapping` conformance check. This admits conditional OptionalT aliases
