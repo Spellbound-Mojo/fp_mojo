@@ -2000,6 +2000,24 @@ origins. Qualification passed four source/package ownership checks at O0/O3,
 capability rejection fixtures. Reports retained unchanged inputs and no audit
 failures; generated sources and all 48 tooling tests passed.
 
+### Traversal reuses loop and collection forwarding
+
+The protocol module owns one native-error adapter for the independent `_loop`
+primitive. Default collection and payload-discarding traversal delegate through
+it, retaining the selected family's exact symbolic result and error. The family
+still owns advancement, liveness, accumulation and deferred execution.
+
+NonEmptyList traversal converts its owned source once and delegates to the
+existing List traversal boundary before restoring non-empty successful results.
+List traversal still invokes the target's own `collect`, including custom
+overrides. No loop is replaced by representation inspection, and no payload,
+callback or source is copied by these adapters. Public signatures are unchanged.
+
+Four focused O0 programs passed. Qualification then passed 76 source/package
+accumulation checks at O0/O3, 34 traversal programs, five NonEmptyList programs,
+133 generic clients, all 48 tooling tests and generated-source verification.
+All compiler reports retained unchanged inputs and no audit failures.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

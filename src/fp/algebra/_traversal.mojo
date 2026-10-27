@@ -3,8 +3,8 @@ from fp.algebra._admission import _BindCompatible
 from std.builtin.rebind import downcast, rebind, rebind_var
 from fp.callables.protocols import Unary, UnaryContract, BorrowCallContract
 from fp.callables._transforms import _Fill
-from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from .protocols import Applicative, Traversable, Monad, FunctorFilter, _Accumulate, _map_as, _traverse_as
+from fp._internal.errors import _CommonError, _ErrorCompatible
+from .protocols import Applicative, Traversable, Monad, FunctorFilter, _Accumulate, _map_as, _traverse_as, _loop_as
 from ._sequencing import _EffectRetain
 from ._derived import flatten
 from .filtering import compact
@@ -27,11 +27,7 @@ def _traverse_void[V: Movable & Deinitable, F: UnaryContract & Movable & Deinita
                    Raised: Movable & Deinitable = G._LoopError[V, F, _Discard[G.Element[F.Out]]]](
     var function: F, var source: V
 ) raises Raised -> G._Looped[V, F, _Discard[G.Element[F.Out]]]:
-    try:
-        return G._loop[V, F, _Discard[G.Element[F.Out]]](function^, source^)
-    except error:
-        comptime assert _ErrorCompatible[Raised, type_of(error)]
-        _propagate_error[Raised](error^)
+    return _loop_as[Raised, G, V, F, _Discard[G.Element[F.Out]]](function^, source^)
 
 
 @fieldwise_init

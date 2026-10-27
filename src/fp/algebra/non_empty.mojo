@@ -3,11 +3,12 @@ from std.builtin.rebind import rebind_var
 from std.iter import IterableOwned
 from fp.data.non_empty_list import NonEmptyList
 from fp.callables.protocols import Unary, UnaryContract, BorrowCallable
-from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible, _propagate_error
+from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible
 from .protocols import Traversable, Filterable, FunctorFilter, Applicative, Semigroup
 from .instances import ListFamily, _ListElement
 from .monoids import ListMonoid
 from ._adapt import _map_as
+from .protocols import _traverse_as
 
 
 @fieldwise_init
@@ -167,11 +168,7 @@ struct NonEmptyListFamily(Traversable, Filterable, FunctorFilter):
         """
         comptime assert Self.TraverseCompatible[V, F], "traverse: NonEmptyList source required"
         comptime X = Self.TraverseError[G, V, F]
-        var collected: G.Collected[List[F.Arg], F]
-        try:
-            collected = G.collect(f^, rebind_var[NonEmptyList[F.Arg]](source^).into_list())
-        except error:
-            comptime assert _ErrorCompatible[X, type_of(error)]
-            _propagate_error[X](error^)
+        var collected = _traverse_as[ListFamily, G, List[F.Arg], F, X](
+            f^, rebind_var[NonEmptyList[F.Arg]](source^).into_list())
         comptime assert _ErrorCompatible[X, G.MapError[G.Collected[List[F.Arg], F], _NonEmptyAfter[G.Element[F.Out]]]]
         return _map_as[X, G](_NonEmptyAfter[G.Element[F.Out]](), collected^)

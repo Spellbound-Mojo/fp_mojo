@@ -352,10 +352,7 @@ trait Applicative(Functor):
         """
         comptime K = _Append[Self.Element[F.Out]]
         comptime assert _ErrorCompatible[Self.CollectError[V, F], Self._LoopError[V, F, K]]
-        try:
-            return rebind_var[Self.Collected[V, F]](Self._loop[V, F, K](f^, source^))
-        except error:
-            _propagate_error[Self.CollectError[V, F]](error^)
+        return rebind_var[Self.Collected[V, F]](_loop_as[Self.CollectError[V, F], Self, V, F, K](f^, source^))
     @staticmethod
     def _loop[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate](var f: F, var source: V
     ) raises Self._LoopError[V, F, K] -> Self._Looped[V, F, K]:
@@ -716,6 +713,17 @@ def _traverse_as[S: Traversable, G: Applicative, V: Movable & Deinitable,
     except error:
         comptime assert _ErrorCompatible[Raised, type_of(error)]
         _propagate_error[Raised](error^)
+
+
+def _loop_as[E: Movable & Deinitable, M: Applicative, V: Movable & Deinitable,
+             F: UnaryContract & Movable & Deinitable, K: _Accumulate](var function: F, var source: V
+) raises E -> M._Looped[V, F, K]:
+    # Keep the family's symbolic error and validate the native error it raises.
+    try:
+        return M._loop[V, F, K](function^, source^)
+    except error:
+        comptime assert _ErrorCompatible[E, type_of(error)]
+        _propagate_error[E](error^)
 
 
 def _fold_as[E: Movable & Deinitable, M: Monad, V: Movable & Deinitable,
