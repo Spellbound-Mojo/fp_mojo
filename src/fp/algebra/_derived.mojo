@@ -4,6 +4,7 @@ from std.builtin.rebind import downcast
 from fp.callables.protocols import UnaryContract, BinaryContract
 from fp.callables._identity import Identity
 from fp.callables._transforms import _ValueThunk as _Value, _Pair, _Apply
+from .contracts import Map2Contract
 from .protocols import Applicative, Monad, Traversable, _map2_lazy_as
 from fp._internal.errors import _ErrorCompatible
 
@@ -25,7 +26,7 @@ comptime _Function[I: Applicative, V: Movable & Deinitable] = downcast[I.Element
 
 def map2[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, I: Applicative](
     var f: F, var left: V, var right: W
-) raises I.CombineError[V, F, _Value[W]] -> I.Combined[V, F, _Value[W]] where _CombineCompatible[I, V, F, _Value[W]]:
+) raises Map2Contract[I, V, W, F].Error -> Map2Contract[I, V, W, F].Out where Map2Contract[I, V, W, F].OperationCompatible:
     """Combine two carriers with `f`, where the right one is already computed.
 
     It is `map2_lazy` with a right operand that returns `right`.
@@ -47,7 +48,7 @@ def map2[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & M
     Raises:
         The combiner's error.
     """
-    return _map2_as[I, X=I.CombineError[V, F, _Value[W]]](f^, left^, right^)
+    return _map2_as[I, X=Map2Contract[I, V, W, F].Error](f^, left^, right^)
 
 
 def ap[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var functions: V, var values: W

@@ -11,6 +11,7 @@ from .protocols import _MappedFamily, Functor, Monad, Traversable, Applicative, 
 from fp.iteration._advance import _OwnedElement
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallable, _ErrorProbe
 from fp.callables._predicates import _FilterPredicate
+from fp.callables._transforms import _ValueThunk
 from .protocols import Monoid, _AllLive, _LiveAccumulator
 from ._accumulation import _FoldMappedStep, _SearchStep, _FirstPresent, _BoolLive, _PredicateStep
 from ._sequencing import _EffectRetain, _IfEffect
@@ -198,6 +199,24 @@ struct CombineContract[I: Applicative, V: Movable & Deinitable, F: BinaryContrac
     """The exact carrier produced by the family, including deferred types."""
     comptime Error = Self.I.CombineError[Self.V, Self.F, Self.R]
     """The family's exact construction error, including callback and thunk effects."""
+
+
+comptime Map2Contract[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & Movable & Deinitable] = CombineContract[I, V, F, _ValueThunk[W]]
+"""The combination contract for two already evaluated carriers.
+
+This is CombineContract with the existing owned-value thunk for the right
+operand. It adds no execution path or copying. Generic wrappers can forward
+Compatible and name Out and Error without importing that private adapter.
+Component predicates remain available: the legacy free map2 entry requires
+OperationCompatible, while selected pipelines also check inputs and carriers.
+The family still owns branching, skipping, deferral and callback invocation.
+
+Parameters:
+    I: The selected Applicative family.
+    V: The complete left carrier type, including origins.
+    W: The complete already evaluated right carrier type, including origins.
+    F: The library binary callback, including its receiver and native error.
+"""
 
 
 struct _EffectFold[G: Monad, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator]:

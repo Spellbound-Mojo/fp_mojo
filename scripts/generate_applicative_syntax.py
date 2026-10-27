@@ -32,11 +32,17 @@ def methods(carrier=None, result=False):
             family=carrier.instance(a) if carrier else 'I'
             left=carrier.value(a) if carrier else 'Self.Value'
             right=carrier.value(b) if carrier else 'W'
-            output=carrier.value(r) if carrier else f'{family}.Combined[{left}, {cb}, _ValueThunk[{right}]]'
-            raised=(error if native else 'F.Error') if carrier else f'I.CombineError[{left}, {cb}, _ValueThunk[{right}]]'
-            condition=f'Self.Value == {left}' if carrier else f'I.Element[Self.Value] == {a} and I.Element[W] == {b}'
+            contract = f'Map2Contract[{family}, {left}, {right}, {cb}]' if not native and not carrier else None
+            if contract:
+                output, raised = contract + '.Out', contract + '.Error'
+                condition = contract + '.InputCompatible'
+            else:
+                output=carrier.value(r) if carrier else f'{family}.Combined[{left}, {cb}, _ValueThunk[{right}]]'
+                raised=(error if native else 'F.Error') if carrier else f'I.CombineError[{left}, {cb}, _ValueThunk[{right}]]'
+                condition=f'Self.Value == {left}' if carrier else f'I.Element[Self.Value] == {a} and I.Element[W] == {b}'
             if not carrier or carrier.name == 'List':
-                condition += f' and _CombineCompatible[{family}, {left}, {cb}, _ValueThunk[{right}]]'
+                condition += ' and ' + (contract + '.OperationCompatible' if contract else
+                                       f'_CombineCompatible[{family}, {left}, {cb}, _ValueThunk[{right}]]')
             value=f'rebind_var[{left}](self.value^)' if carrier else 'self.value^'
             body=f'return Piped(_map2_as[{family}, X={raised}]({build}, {value}, other^))'
             output=f'Piped[{output}]'

@@ -3538,6 +3538,47 @@
     "Semigroup"
    ]
   },
+  "algebra.Map2Contract": {
+   "aliases": [],
+   "description": "This is CombineContract with the existing owned-value thunk for the right\noperand. It adds no execution path or copying. Generic wrappers can forward\nCompatible and name Out and Error without importing that private adapter.\nComponent predicates remain available: the legacy free map2 entry requires\nOperationCompatible, while selected pipelines also check inputs and carriers.\nThe family still owns branching, skipping, deferral and callback invocation.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected Applicative family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Applicative",
+     "variadic": false
+    },
+    {
+     "description": "The complete left carrier type, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The complete already evaluated right carrier type, including origins.",
+     "inferred": false,
+     "name": "W",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The library binary callback, including its receiver and native error.",
+     "inferred": false,
+     "name": "F",
+     "type": "BinaryContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/contracts",
+   "signature": "comptime Map2Contract[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & Movable & Deinitable] = CombineContract[I, V, F, _ValueThunk[W]]",
+   "summary": "The combination contract for two already evaluated carriers.",
+   "traits": []
+  },
   "algebra.MapBothContract": {
    "aliases": [
     {
@@ -8637,7 +8678,7 @@
       }
      ],
      "description": "It is `map2_lazy` with a right operand that returns `right`.",
-     "error": "I.CombineError[V, F, _Value[W]]",
+     "error": "Map2Contract[I, V, W, F].Error",
      "parameters": [
       {
        "description": "The left carrier's type.",
@@ -8672,9 +8713,9 @@
      "raises_doc": "The combiner's error.",
      "returns": {
       "doc": "The carrier of the combined payloads.",
-      "type": "I.Combined[V, F, _Value[W]]"
+      "type": "Map2Contract[I, V, W, F].Out"
      },
-     "signature": "def map2[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, I: Applicative](var f: F, var left: V, var right: W) raises I.CombineError[V, F, _Value[W]] -> I.Combined[V, F, _Value[W]] where _CombineCompatible[I, V, F, _Value[W]]",
+     "signature": "def map2[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, I: Applicative](var f: F, var left: V, var right: W) raises Map2Contract[I, V, W, F].Error -> Map2Contract[I, V, W, F].Out where Map2Contract[I, V, W, F].OperationCompatible",
      "summary": "Combine two carriers with `f`, where the right one is already computed."
     }
    ],
@@ -60423,7 +60464,7 @@
        }
       ],
       "description": "",
-      "error": "I.CombineError[Self.Value, F, _ValueThunk[W]]",
+      "error": "Map2Contract[I, Self.Value, W, F].Error",
       "parameters": [
        {
         "description": "The callback type, retaining its receiver, captures and error contract.",
@@ -60451,9 +60492,9 @@
       "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
       "returns": {
        "doc": "The combined carrier; Result keeps the first stored error, Optional requires both values, and List produces a Cartesian product in left-major order.",
-       "type": "Piped[I.Combined[Self.Value, F, _ValueThunk[W]]]"
+       "type": "Piped[Map2Contract[I, Self.Value, W, F].Out]"
       },
-      "signature": "def map2[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](deinit self, var other: W, var function: F) raises I.CombineError[Self.Value, F, _ValueThunk[W]] -> Piped[I.Combined[Self.Value, F, _ValueThunk[W]]] where I.Element[Self.Value] == F.First and I.Element[W] == F.Second and _CombineCompatible[I, Self.Value, F, _ValueThunk[W]]",
+      "signature": "def map2[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](deinit self, var other: W, var function: F) raises Map2Contract[I, Self.Value, W, F].Error -> Piped[Map2Contract[I, Self.Value, W, F].Out] where Map2Contract[I, Self.Value, W, F].InputCompatible and Map2Contract[I, Self.Value, W, F].OperationCompatible",
       "summary": "Combine two already evaluated carriers, following their Applicative semantics."
      },
      {
@@ -115604,7 +115645,7 @@
        }
       ],
       "description": "",
-      "error": "CombineContract[_Combining[Self.I], Self.V, C, _ValueThunk[W]].Error",
+      "error": "Map2Contract[_Combining[Self.I], Self.V, W, C].Error",
       "parameters": [
        {
         "description": "The second carrier type, including its origins.",
@@ -115625,9 +115666,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, C, _ValueThunk[W]].Out, Self.E]"
+       "type": "Pipeline[Self.I, Map2Contract[_Combining[Self.I], Self.V, W, C].Out, Self.E]"
       },
-      "signature": "def map2[W: Movable & Deinitable, C: BinaryContract & Movable & Deinitable](deinit self, var other: W, var function: C) raises CombineContract[_Combining[Self.I], Self.V, C, _ValueThunk[W]].Error -> Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, C, _ValueThunk[W]].Out, Self.E] where conforms_to(Self.I, Applicative) and C.First == Self.I.Element[Self.V] and C.Second == Self.I.Element[W] and CombineContract[_Combining[Self.I], Self.V, C, _ValueThunk[W]].FamilyCompatible",
+      "signature": "def map2[W: Movable & Deinitable, C: BinaryContract & Movable & Deinitable](deinit self, var other: W, var function: C) raises Map2Contract[_Combining[Self.I], Self.V, W, C].Error -> Pipeline[Self.I, Map2Contract[_Combining[Self.I], Self.V, W, C].Out, Self.E] where conforms_to(Self.I, Applicative) and C.First == Self.I.Element[Self.V] and C.Second == Self.I.Element[W] and Map2Contract[_Combining[Self.I], Self.V, W, C].FamilyCompatible",
       "summary": "Combine two evaluated carriers through the selected Applicative family."
      },
      {
@@ -115648,7 +115689,7 @@
        }
       ],
       "description": "",
-      "error": "CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o], _ValueThunk[W]].Error",
+      "error": "Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -115683,9 +115724,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o], _ValueThunk[W]].Out, Self.E]"
+       "type": "Pipeline[Self.I, Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o]].Out, Self.E]"
       },
-      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W]) -> R](deinit self, var other: W, ref[o] function: C) raises CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o], _ValueThunk[W]].Error -> Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o], _ValueThunk[W]].Out, Self.E] where conforms_to(Self.I, Applicative) and CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o], _ValueThunk[W]].FamilyCompatible",
+      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W]) -> R](deinit self, var other: W, ref[o] function: C) raises Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o]].Error -> Pipeline[Self.I, Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, Applicative) and Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, False, o]].FamilyCompatible",
       "summary": "Combine two evaluated carriers through the selected Applicative family."
      },
      {
@@ -115706,7 +115747,7 @@
        }
       ],
       "description": "",
-      "error": "CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o], _ValueThunk[W]].Error",
+      "error": "Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -115741,9 +115782,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o], _ValueThunk[W]].Out, Self.E]"
+       "type": "Pipeline[Self.I, Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o]].Out, Self.E]"
       },
-      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W]) raises Self.E -> R](deinit self, var other: W, ref[o] function: C) raises CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o], _ValueThunk[W]].Error -> Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o], _ValueThunk[W]].Out, Self.E] where conforms_to(Self.I, Applicative) and CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o], _ValueThunk[W]].FamilyCompatible",
+      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W]) raises Self.E -> R](deinit self, var other: W, ref[o] function: C) raises Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o]].Error -> Pipeline[Self.I, Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, Applicative) and Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Self.E, C, True, o]].FamilyCompatible",
       "summary": "Combine two evaluated carriers through the selected Applicative family."
      },
      {
@@ -115764,7 +115805,7 @@
        }
       ],
       "description": "",
-      "error": "CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o], _ValueThunk[W]].Error",
+      "error": "Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -115799,9 +115840,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o], _ValueThunk[W]].Out, Self.E]"
+       "type": "Pipeline[Self.I, Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o]].Out, Self.E]"
       },
-      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W]) raises Never -> R](deinit self, var other: W, ref[o] function: C) raises CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o], _ValueThunk[W]].Error -> Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o], _ValueThunk[W]].Out, Self.E] where conforms_to(Self.I, Applicative) and Self.E != Never and CombineContract[_Combining[Self.I], Self.V, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o], _ValueThunk[W]].FamilyCompatible",
+      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V], var Self.I.Element[W]) raises Never -> R](deinit self, var other: W, ref[o] function: C) raises Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o]].Error -> Pipeline[Self.I, Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, Applicative) and Self.E != Never and Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinaryRef[Self.I.Element[Self.V], Self.I.Element[W], R, Never, C, True, o]].FamilyCompatible",
       "summary": "Combine two evaluated carriers through the selected Applicative family."
      },
      {
@@ -115822,7 +115863,7 @@
        }
       ],
       "description": "",
-      "error": "CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]].Error",
+      "error": "Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -115843,9 +115884,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]].Out, Self.E]"
+       "type": "Pipeline[Self.I, Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, //](deinit self, var other: W, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R) raises CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]].Error -> Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]].Out, Self.E] where conforms_to(Self.I, Applicative) and not conforms_to(R, RegisterPassable) and CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]].FamilyCompatible",
+      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, //](deinit self, var other: W, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R) raises Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False]].Error -> Pipeline[Self.I, Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Applicative) and not conforms_to(R, RegisterPassable) and Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False]].FamilyCompatible",
       "summary": "Combine two evaluated carriers through the selected Applicative family."
      },
      {
@@ -115866,7 +115907,7 @@
        }
       ],
       "description": "",
-      "error": "CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]].Error",
+      "error": "Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -115887,9 +115928,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]].Out, Self.E]"
+       "type": "Pipeline[Self.I, Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def map2[W: Movable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, var other: W, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R) raises CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]].Error -> Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]].Out, Self.E] where conforms_to(Self.I, Applicative) and CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False], _ValueThunk[W]].FamilyCompatible",
+      "signature": "def map2[W: Movable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, var other: W, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R) raises Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False]].Error -> Pipeline[Self.I, Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Applicative) and Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) thin -> R, False]].FamilyCompatible",
       "summary": "Combine two evaluated carriers through the selected Applicative family."
      },
      {
@@ -115910,7 +115951,7 @@
        }
       ],
       "description": "",
-      "error": "CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]].Error",
+      "error": "Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -115938,9 +115979,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]].Out, Self.E]"
+       "type": "Pipeline[Self.I, Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, var other: W, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R) raises CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]].Error -> Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]].Out, Self.E] where conforms_to(Self.I, Applicative) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]].FamilyCompatible",
+      "signature": "def map2[W: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, var other: W, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R) raises Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True]].Error -> Pipeline[Self.I, Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Applicative) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True]].FamilyCompatible",
       "summary": "Combine two evaluated carriers through the selected Applicative family."
      },
      {
@@ -115961,7 +116002,7 @@
        }
       ],
       "description": "",
-      "error": "CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]].Error",
+      "error": "Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -115989,9 +116030,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]].Out, Self.E]"
+       "type": "Pipeline[Self.I, Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def map2[W: Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, var other: W, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R) raises CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]].Error -> Pipeline[Self.I, CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]].Out, Self.E] where conforms_to(Self.I, Applicative) and _ErrorCompatible[Self.E, X] and CombineContract[_Combining[Self.I], Self.V, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True], _ValueThunk[W]].FamilyCompatible",
+      "signature": "def map2[W: Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, var other: W, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R) raises Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True]].Error -> Pipeline[Self.I, Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Applicative) and _ErrorCompatible[Self.E, X] and Map2Contract[_Combining[Self.I], Self.V, W, _NativeBinary[Self.I.Element[Self.V], Self.I.Element[W], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]], var _NativeOwnedArg[Self.I.Element[W]]) raises X thin -> R, True]].FamilyCompatible",
       "summary": "Combine two evaluated carriers through the selected Applicative family."
      }
     ],

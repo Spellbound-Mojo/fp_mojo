@@ -2455,6 +2455,36 @@ public example passed its four source/package O0/O3 checks. Reports retained
 unchanged inputs and no audit failures. Generated sources, all 48 tooling tests
 and strict documentation checks passed.
 
+### Evaluated combinations reuse the lazy combination contract
+
+`Map2Contract[I, V, W, F]` is a public alias of `CombineContract` with the
+existing owned-value thunk for the already evaluated right carrier. Generic
+wrappers can name `Out`, `Error` and `Compatible` without importing that private
+adapter. Free, generic piped and selected declarations project this metadata;
+the existing `_map2_as` bridge and family execution are unchanged.
+
+Component predicates preserve admission rather than silently strengthening
+it. The free function still requires only the family's operation predicate;
+generic Piped calls also require exact inputs; selected calls additionally
+require carrier membership. Native callback boundaries keep their explicit
+signature evidence and positional bindings. The alias creates no new storage,
+invocation boundary or implicit copy.
+
+Maintained controls cover all three routes, legacy operation-only forwarding,
+native and third-party families, mutable Cartesian combination, consuming
+callbacks, exact borrowed output/error origins and deferred execution. Twelve
+baseline/candidate ownership traces match, including skipped right values,
+move-only captures, native failures and abandoned Reader computations. Seven
+new invalid clients require ordinary input, copying, receiver, stored-error or
+origin diagnostics.
+
+All 40 new and 76 existing combination-admission source/package O0/O3 checks
+passed, together with eight combination and 140 generic programs. The four
+additional fluent-combination rejection fixtures and the example's four
+source/package O0/O3 checks passed. Reports retained unchanged inputs and no
+audit failures. Generated sources, all 48 tooling tests and strict documentation
+checks passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

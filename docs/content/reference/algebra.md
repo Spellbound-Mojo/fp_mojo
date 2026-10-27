@@ -517,3 +517,22 @@ This executable example forwards a generic conditional with one admission
 predicate.
 
 <!-- example: docs/examples/if_contracts.mojo -->
+
+### Contracts for already evaluated operands
+
+`Map2Contract[I, V, W, F]` describes combining two existing carriers with a
+library binary callback. It is an alias of `CombineContract` using the library's
+existing owned-value adapter for the right operand. Generic code can name `Out`,
+`Error` and `Compatible` without constructing or importing that private adapter.
+
+This is still eager operand binding: both arguments already exist when `map2`
+is called. The family owns subsequent invocation, branching, short-circuiting
+and deferred execution. No operand or callback gains an implicit copy.
+
+Component predicates preserve existing admission differences. Free `map2`
+uses `OperationCompatible`; generic `Piped.map2` additionally checks exact
+inputs; selected pipelines also require carrier membership. New wrappers may
+forward `Compatible` for the complete proof. Native callback inference and
+existing positional bindings are unchanged.
+
+<!-- example: docs/examples/map2_contracts.mojo -->

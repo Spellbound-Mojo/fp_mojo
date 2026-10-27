@@ -5,7 +5,7 @@ library value such as a `Partial` or a `Composition`. Each stage's own contract
 fixes its types. `piped(value).then(f)` chains stages one call at a time, with no
 stage limit and no promotion.
 """
-from fp.algebra.contracts import IfContract
+from fp.algebra.contracts import Map2Contract, IfContract
 from fp.algebra.contracts import AnyContract, AllContract, FindContract, FindMapContract, FoldMapContract, FoldContract
 from fp.algebra._admission import _MapCompatible, _BindCompatible, _CombineCompatible, _CollectCompatible
 from fp.algebra.validation import ValidationFamily, _ListErrors
@@ -3462,7 +3462,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(I.traverse[G](_Same[I.Element[Self.Value]](), self.value^))
 
-    def map2[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](deinit self, var other: W, var function: F) raises I.CombineError[Self.Value, F, _ValueThunk[W]] -> Piped[I.Combined[Self.Value, F, _ValueThunk[W]]] where I.Element[Self.Value] == F.First and I.Element[W] == F.Second and _CombineCompatible[I, Self.Value, F, _ValueThunk[W]]:
+    def map2[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](deinit self, var other: W, var function: F) raises Map2Contract[I, Self.Value, W, F].Error -> Piped[Map2Contract[I, Self.Value, W, F].Out] where Map2Contract[I, Self.Value, W, F].InputCompatible and Map2Contract[I, Self.Value, W, F].OperationCompatible:
         """Combine two already evaluated carriers, following their Applicative semantics.
 
         Parameters:
@@ -3480,7 +3480,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         Raises:
             The exact callback, monoid or family error; Never for a non-raising operation.
         """
-        return Piped(_map2_as[I, X=I.CombineError[Self.Value, F, _ValueThunk[W]]](function^, self.value^, other^))
+        return Piped(_map2_as[I, X=Map2Contract[I, Self.Value, W, F].Error](function^, self.value^, other^))
 
     def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, I: Applicative, F: _Binary[A, B, R]](deinit self, var other: W, ref[o] function: F) raises I.CombineError[Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _ValueThunk[W]] -> Piped[I.Combined[Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _ValueThunk[W]]] where I.Element[Self.Value] == A and I.Element[W] == B and _CombineCompatible[I, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _ValueThunk[W]]:
         """Combine two already evaluated carriers, following their Applicative semantics."""

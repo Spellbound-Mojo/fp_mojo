@@ -611,8 +611,7 @@ def methods(*, fold_stage=False):
 
     for cb in owning_callbacks("binary", ("Self.I.Element[Self.V]", "Self.I.Element[W]"), "function"):
         family = "_Combining[Self.I]"
-        types = f"Self.V, {cb['adapter_type']}, _ValueThunk[W]"
-        contract = f"CombineContract[{family}, {types}]"
+        contract = f"Map2Contract[{family}, Self.V, W, {cb['adapter_type']}]"
         result, error = contract + ".Out", contract + ".Error"
         conditions = ["conforms_to(Self.I, Applicative)"] + cb["conditions"]
         conditions += [contract + ".FamilyCompatible"]

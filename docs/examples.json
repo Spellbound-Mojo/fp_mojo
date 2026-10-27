@@ -141,6 +141,9 @@
     "docs/examples/kleisli.mojo": {
       "stdout": "accepted: 8\naccepted: 9\naccepted: 12\n"
     },
+    "docs/examples/map2_contracts.mojo": {
+      "stdout": "combined: 7\n"
+    },
     "docs/examples/mapping_error_observation.mojo": {
       "stdout": "before run\nobserved: unavailable\nretained: unavailable\n"
     },
