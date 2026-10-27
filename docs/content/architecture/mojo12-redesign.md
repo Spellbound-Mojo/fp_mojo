@@ -1978,6 +1978,28 @@ O0 programs passed, followed by 24 State execution boundary checks at O0/O3,
 programs. The categories overlap. All reports retained unchanged inputs and no
 audit failures; generated sources and all 48 tooling tests passed.
 
+### Listening reuses carrier and product operations
+
+Lifted listening invokes the selected capability through the existing carrier
+operation adapter. It then uses the existing native pair mapper and owned
+pairing callback to place the observed log beside the payload. The selected
+capability still owns listening; the product layer owns splitting and moving
+pairs. This removes a second native-error catch and nested product-movement
+implementation without adding another capability or public wrapper.
+
+Listening still runs before mapping. A listening failure skips mapping, while
+a mapping failure preserves its own error. Both pair layouts retain their exact
+native origins and move each owned value once. The internal rearrangement adds
+no log-copy requirement beyond the selected capability's contract.
+
+Eight baseline/candidate traces match for both layouts, repeated invocation,
+listening failure and mapping failure. Maintained controls also cover widening
+a non-raising listen into a raising mapper and three distinct borrowed output
+origins. Qualification passed four source/package ownership checks at O0/O3,
+17 Writer programs, 20 capability programs, 133 generic clients and 19 Writer
+capability rejection fixtures. Reports retained unchanged inputs and no audit
+failures; generated sources and all 48 tooling tests passed.
+
 ### Resource scopes
 
 A scope should own acquisition, use and release as one consumed operation.

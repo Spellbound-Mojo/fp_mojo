@@ -8,10 +8,10 @@ from std.memory import MaybeUninit
 from fp.algebra.protocols import Monad, ErrorMapping
 from fp.algebra.error_mapping import MapBothContract, _map_both
 from fp.callables.protocols import BorrowCallContract, UnaryContract, Unary
-from fp.callables.products import _take_pair, _WithSecond
-from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
+from fp.callables.products import _take_pair, _WithSecond, _MapPair, _map_pair
+from fp._internal.errors import _CommonError, _ErrorCompatible
 from .protocols import Local, Listen, Censor, _CarrierOp
-from ._adapt import _local_as, _map_as
+from ._adapt import _local_as, _map_as, _op_as
 
 
 @fieldwise_init
@@ -86,9 +86,7 @@ struct _ListenMapped[C: Listen, P: Movable & Deinitable, F: UnaryContract & Mova
         comptime assert Self.Compatible[V]
         comptime E = Self.Error[V]
         comptime assert _ErrorCompatible[E, Self.C.ListenError[V]] and _ErrorCompatible[E, Self.M.MapError[Self.C.Listened[V], Self.F]]
-        var heard: Self.C.Listened[V]
-        try: heard = Self.C.listen(value^)
-        except error: _propagate_error[E](error^)
+        var heard = _op_as[E](_ListenOp[Self.C](), value^)
         return _map_as[E, Self.M](Self.F(), heard^)
 
 
@@ -106,15 +104,10 @@ struct _ListenPair[X: Movable & Deinitable, A: Movable & Deinitable, L: Movable 
         _take_pair(arg^, pair_slot, log_slot)
         var pair = pair_slot^.unsafe_assume_init()
         var log = log_slot^.unsafe_assume_init()
-        var left_slot = MaybeUninit[Self.Left]()
-        var right_slot = MaybeUninit[Self.Right]()
-        _take_pair(pair^, left_slot, right_slot)
-        var left = left_slot^.unsafe_assume_init()
-        var right = right_slot^.unsafe_assume_init()
-        comptime if Self.first:
-            return rebind_var[Self.Out](Tuple(left^, Tuple(right^, log^)))
-        else:
-            return rebind_var[Self.Out](Tuple(Tuple(left^, log^), right^))
+        comptime Pairing = _WithSecond[Self.A, Self.L]
+        comptime Mapping = _MapPair[Pairing, Self.X, not Self.first]
+        return rebind_var[Self.Out](_map_pair[Self.X, not Self.first](
+            Pairing(log^), rebind_var[Mapping.Arg](pair^)))
 
 
 @fieldwise_init
