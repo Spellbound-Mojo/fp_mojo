@@ -184,6 +184,17 @@ Existing `fold_once` and `fold_owned_once` calls remain supported as explicit
 forms that consume both handler arguments. Ordinary calls no longer need a
 different method name solely because a callback owns captures or mutable state.
 
+## Sequence a reusable factory
+
+`result^.before(factory)` runs an effect on success and keeps the original
+success value; `result^.followed_by(factory)` keeps the factory's Result.
+Both skip the factory on Err. A named shared `Thunk` stays borrowed and can be
+used again. Its Result must have the same stored error type, while a raised
+native error propagates separately. Move a factory with `factory^` to transfer
+its captures, or pass `mut_ref(factory)` to retain mutable state.
+These methods also work through selected pipelines and their family policies;
+see [sequencing effects](functions.md#select-family-and-native-errors-before-callbacks).
+
 ## Capture a thunk’s outcome
 
 <!-- example: docs/examples/attempt_once.mojo -->

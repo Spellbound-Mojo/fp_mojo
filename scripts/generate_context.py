@@ -880,7 +880,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
     element = "Self.I.Element[Self.V]"
     for name in ("flat_tap", "flat_pair_with", "before", "followed_by"):
         operation = SEQUENCING[name]
-        for cb in native_callbacks(operation.mode, element, "function"):
+        for cb in native_callbacks(operation.mode, element, "function", view=operation.mode == "thunk"):
             adapter, built = operation.adapt(element, cb["adapter_type"], cb["build"])
             continuation = operation.continuation(element, family, adapter)
             result = f"{family}.Bound[Self.V, {continuation}]"

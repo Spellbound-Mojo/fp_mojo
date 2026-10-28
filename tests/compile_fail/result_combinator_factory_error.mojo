@@ -1,4 +1,4 @@
-# error: flat_map: callback must return a Result with the same error type
+# error: no matching method
 from fp.data import Result, Ok
 def next_value() -> Result[Int, Int]: return Ok(1)
 def main():

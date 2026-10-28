@@ -270,6 +270,14 @@ stacks. Empty or failed carriers skip callbacks. Branching effects require
 copyable retained originals; single-use effects move them. Construction raises
 the family's exact `BindError`; deferred callback exceptions occur when run.
 
+Pass a named shared `Thunk` to `before` or `followed_by` to reuse its
+captures across selected pipelines. List sequencing calls it once per source
+element; deferred families call it when the resulting computation runs. The
+factory must outlive that computation. A moved or temporary factory keeps its
+own receiver selection, and `mut_ref(factory)` retains mutable state. Direct
+Result sequencing accepts the same named shared factories. Legacy `piped`
+keeps its existing factory ownership forms.
+
 A Validation selection does not support Monad sequencing. Select
 `pipeline[ResultFamily[ErrorType]](value)` for sequential Result behavior.
 Legacy `piped` bindings remain available.

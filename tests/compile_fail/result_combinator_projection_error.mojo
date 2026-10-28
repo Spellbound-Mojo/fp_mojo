@@ -1,4 +1,4 @@
-# error: Result retention: callback must return a Result with the same error type
+# error: no matching method
 from fp.data import Result, Ok
 def project(value: Int) -> Result[Int, Int]: return Ok(value)
 def main():

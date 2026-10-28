@@ -23,7 +23,7 @@ def methods(piped=False):
         conditional, selective = operation.conditional, operation.selective
         mode = primary.mode
         kinds = ('library', 'pure', 'raising')
-        primary_kinds = kinds + (('view',) if mode == 'borrow' else ())
+        primary_kinds = kinds + (('view',) if mode == 'borrow' or (mode == 'thunk' and not piped) else ())
         handler_kinds = kinds + (('view',) if conditional and (
             operation.callbacks[1].mode == 'borrow' or (selective and not piped)) else ())
         combinations = product(primary_kinds, handler_kinds) if conditional else ((k, None) for k in primary_kinds)
@@ -125,7 +125,7 @@ def methods(piped=False):
                 # lets Result use its existing library-callback boundary.
                 adapter = f'_NativeUnaryRef[{cb.payload}, {cb.result}, {cb.error}, C, {kind == "raising"}, o]'
                 body = f'return Piped(rebind_var[{source}](self.value^).{name}({adapter}(Pointer(to=function))))'
-            if mode == 'thunk' and kind != 'library':
+            if mode == 'thunk' and kind in ('pure', 'raising'):
                 if piped:
                     effect = '[X=X]' if kind == 'raising' else ''
                     body = f'return Piped(rebind_var[{source}](self.value^).{name}{effect}(function))'
@@ -140,6 +140,8 @@ def methods(piped=False):
                 doc += '\n\n        '+detail+' Native errors propagate unchanged; they never become stored Err values. Native callbacks are borrowed in place; library callbacks are consumed and use their declared receiver mode.'
                 if mode == 'borrow':
                     doc += ' Shared partial predicates and observers may instead be borrowed by name; an explicit move retains the owning form.'
+                if mode == 'thunk' and not piped:
+                    doc += ' Named shared thunk factories remain borrowed; an explicit move retains the owning form.'
                 if name in ('recover', 'recover_if', 'or_else_if') and not piped:
                     doc += ' Shared callable chains may instead be borrowed by passing their name; an explicit move retains the consuming form.'
                 doc += '\n\n        Parameters:\n'

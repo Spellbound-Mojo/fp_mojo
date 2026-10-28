@@ -28571,7 +28571,7 @@
      "name": "Of"
     }
    ],
-   "description": "`Ok` and `Err` convert to a `Result` wherever its type is known, as in\n`return Ok(value)`; a payload must already have the exact type. `fp.match`\nmatches a `Result` with clauses for `Ok[T]` and `Err[E]`, which borrow the\nstored constructor. It is `Copyable` only when both payloads are, and adds\nconstant tag work and no heap storage.\n\nThe transformations (`map`, `flat_map`, `map_err`, `or_else`) consume the\nResult, so they chain: `parse(text).map(twice).flat_map(check)`. A callback\nnever runs on the inactive case, which passes through unchanged. A native\nerror a callback raises stays a native error: it never becomes the stored\n`Err`, even when the types coincide. Callbacks are plain functions,\nclosures, or library values (`Unary` for the transformations and\n`fold_owned`, `BorrowCallable` for `fold`, and the consuming forms of\n`fold_once` and `fold_owned_once`). A generic wrapper names a raising\ncallback's error with `X=`, as in `value^.map[X=X](callback)`.\n\n`flat_tap` and `flat_pair_with` borrow the success payload for a Result\nprojection, then move the original into the successful output. `followed_by`\nand `before` take zero-argument Result factories, skipped on Err. `ensure`\nborrows an Ok payload for a predicate and, only on rejection, an error\nfactory. `recover` consumes an error to produce an Ok of the same success\ntype, retaining the declared error type. `tap_err` borrows an Err payload\nfor inspection. These operations require no payload copies and run eagerly.\nLibrary callbacks are consumed, including skipped callback owners; native\ncallbacks are borrowed in place.",
+   "description": "`Ok` and `Err` convert to a `Result` wherever its type is known, as in\n`return Ok(value)`; a payload must already have the exact type. `fp.match`\nmatches a `Result` with clauses for `Ok[T]` and `Err[E]`, which borrow the\nstored constructor. It is `Copyable` only when both payloads are, and adds\nconstant tag work and no heap storage.\n\nThe transformations (`map`, `flat_map`, `map_err`, `or_else`) consume the\nResult, so they chain: `parse(text).map(twice).flat_map(check)`. A callback\nnever runs on the inactive case, which passes through unchanged. A native\nerror a callback raises stays a native error: it never becomes the stored\n`Err`, even when the types coincide. Callbacks are plain functions,\nclosures, or library values (`Unary` for the transformations and\n`fold_owned`, `BorrowCallable` for `fold`, and the consuming forms of\n`fold_once` and `fold_owned_once`). A generic wrapper names a raising\ncallback's error with `X=`, as in `value^.map[X=X](callback)`.\n\n`flat_tap` and `flat_pair_with` borrow the success payload for a Result\nprojection, then move the original into the successful output. `followed_by`\nand `before` take zero-argument Result factories, skipped on Err. `ensure`\nborrows an Ok payload for a predicate and, only on rejection, an error\nfactory. `recover` consumes an error to produce an Ok of the same success\ntype, retaining the declared error type. `tap_err` borrows an Err payload\nfor inspection. These operations require no payload copies and run eagerly.\nOwned library callbacks are consumed, including skipped callback owners;\nnamed shared forms and native callbacks are borrowed in place.",
    "fields": [],
    "kind": "struct",
    "methods": {
@@ -28804,7 +28804,7 @@
         "variadic": false
        }
       ],
-      "description": "The factory runs at most once and is skipped on Err. Its Err replaces the success; its Ok payload is discarded. The original payload is moved, never copied. Native errors propagate unchanged; they never become stored Err values. Native callbacks are borrowed in place; library callbacks are consumed and use their declared receiver mode.",
+      "description": "The factory runs at most once and is skipped on Err. Its Err replaces the success; its Ok payload is discarded. The original payload is moved, never copied. Native errors propagate unchanged; they never become stored Err values. Native callbacks are borrowed in place; library callbacks are consumed and use their declared receiver mode. Named shared thunk factories remain borrowed; an explicit move retains the owning form.",
       "error": "C.Error",
       "parameters": [
        {
@@ -28821,7 +28821,7 @@
        "doc": "On success, call a zero-argument factory and retain the original value.",
        "type": "Result[Self.T, Self.E]"
       },
-      "signature": "def before[C: ThunkContract & Movable & Deinitable](deinit self, var function: C) raises C.Error -> Result[Self.T, Self.E]",
+      "signature": "def before[C: ThunkContract & Movable & Deinitable](deinit self, var function: C) raises C.Error -> Result[Self.T, Self.E] where C.Out == Result[downcast[C.Out, _ResultType].Value, Self.E]",
       "summary": "On success, call a zero-argument factory and retain the original value."
      },
      {
@@ -28865,7 +28865,7 @@
        "doc": "",
        "type": "Result[Self.T, Self.E]"
       },
-      "signature": "def before[R: Movable & Deinitable, o: ImmOrigin, //, C: _Thunk[R]](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E]",
+      "signature": "def before[R: Movable & Deinitable, o: ImmOrigin, //, C: _Thunk[R]](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E]",
       "summary": "On success, call a zero-argument factory and retain the original value."
      },
      {
@@ -28916,7 +28916,44 @@
        "doc": "",
        "type": "Result[Self.T, Self.E]"
       },
-      "signature": "def before[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingThunk[R, X]](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E]",
+      "signature": "def before[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingThunk[R, X]](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E]",
+      "summary": "On success, call a zero-argument factory and retain the original value."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_SharedThunkRef[C, o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "Thunk",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Result[Self.T, Self.E]"
+      },
+      "signature": "def before[C: Thunk, o: ImmOrigin](deinit self, ref[o] function: C) raises _SharedThunkRef[C, o].Error -> Result[Self.T, Self.E] where _SharedThunkRef[C, o].Out == Result[downcast[_SharedThunkRef[C, o].Out, _ResultType].Value, Self.E]",
       "summary": "On success, call a zero-argument factory and retain the original value."
      }
     ],
@@ -30234,7 +30271,7 @@
        "doc": "",
        "type": "F.Out"
       },
-      "signature": "def flat_map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) raises F.Error -> F.Out where F.Arg == Self.T",
+      "signature": "def flat_map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) raises F.Error -> F.Out where F.Arg == Self.T and F.Out == Result[downcast[F.Out, _ResultType].Value, Self.E]",
       "summary": "Continue with a library unary callback returning a Result."
      }
     ],
@@ -30266,7 +30303,7 @@
        "doc": "Sequence a borrowed Result projection and retain both success values.",
        "type": "Result[Tuple[Self.T, downcast[C.Result, _ResultType].Value], Self.E]"
       },
-      "signature": "def flat_pair_with[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Result[Tuple[Self.T, downcast[C.Result, _ResultType].Value], Self.E] where C.Payload == Self.T",
+      "signature": "def flat_pair_with[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Result[Tuple[Self.T, downcast[C.Result, _ResultType].Value], Self.E] where C.Payload == Self.T and C.Result == Result[downcast[C.Result, _ResultType].Value, Self.E]",
       "summary": "Sequence a borrowed Result projection and retain both success values."
      },
      {
@@ -30317,7 +30354,7 @@
        "doc": "",
        "type": "Result[Tuple[Self.T, downcast[R, _ResultType].Value], Self.E]"
       },
-      "signature": "def flat_pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: _Borrowing[P, R]](deinit self, ref[o] function: C) raises Never -> Result[Tuple[Self.T, downcast[R, _ResultType].Value], Self.E] where P == Self.T",
+      "signature": "def flat_pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: _Borrowing[P, R]](deinit self, ref[o] function: C) raises Never -> Result[Tuple[Self.T, downcast[R, _ResultType].Value], Self.E] where P == Self.T and R == Result[downcast[R, _ResultType].Value, Self.E]",
       "summary": "Sequence a borrowed Result projection and retain both success values."
      },
      {
@@ -30375,7 +30412,7 @@
        "doc": "",
        "type": "Result[Tuple[Self.T, downcast[R, _ResultType].Value], Self.E]"
       },
-      "signature": "def flat_pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] function: C) raises X -> Result[Tuple[Self.T, downcast[R, _ResultType].Value], Self.E] where P == Self.T",
+      "signature": "def flat_pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] function: C) raises X -> Result[Tuple[Self.T, downcast[R, _ResultType].Value], Self.E] where P == Self.T and R == Result[downcast[R, _ResultType].Value, Self.E]",
       "summary": "Sequence a borrowed Result projection and retain both success values."
      },
      {
@@ -30412,7 +30449,7 @@
        "doc": "",
        "type": "Result[Tuple[Self.T, downcast[C._BorrowView[o].Result, _ResultType].Value], Self.E]"
       },
-      "signature": "def flat_pair_with[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Result[Tuple[Self.T, downcast[C._BorrowView[o].Result, _ResultType].Value], Self.E] where C._BorrowView[o].Payload == Self.T",
+      "signature": "def flat_pair_with[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Result[Tuple[Self.T, downcast[C._BorrowView[o].Result, _ResultType].Value], Self.E] where C._BorrowView[o].Payload == Self.T and C._BorrowView[o].Result == Result[downcast[C._BorrowView[o].Result, _ResultType].Value, Self.E]",
       "summary": "Sequence a borrowed Result projection and retain both success values."
      }
     ],
@@ -30444,7 +30481,7 @@
        "doc": "Sequence a borrowed Result projection and retain the original success value.",
        "type": "Result[Self.T, Self.E]"
       },
-      "signature": "def flat_tap[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Result[Self.T, Self.E] where C.Payload == Self.T",
+      "signature": "def flat_tap[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Result[Self.T, Self.E] where C.Payload == Self.T and C.Result == Result[downcast[C.Result, _ResultType].Value, Self.E]",
       "summary": "Sequence a borrowed Result projection and retain the original success value."
      },
      {
@@ -30495,7 +30532,7 @@
        "doc": "",
        "type": "Result[Self.T, Self.E]"
       },
-      "signature": "def flat_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: _Borrowing[P, R]](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where P == Self.T",
+      "signature": "def flat_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: _Borrowing[P, R]](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where P == Self.T and R == Result[downcast[R, _ResultType].Value, Self.E]",
       "summary": "Sequence a borrowed Result projection and retain the original success value."
      },
      {
@@ -30553,7 +30590,7 @@
        "doc": "",
        "type": "Result[Self.T, Self.E]"
       },
-      "signature": "def flat_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where P == Self.T",
+      "signature": "def flat_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where P == Self.T and R == Result[downcast[R, _ResultType].Value, Self.E]",
       "summary": "Sequence a borrowed Result projection and retain the original success value."
      },
      {
@@ -30590,7 +30627,7 @@
        "doc": "",
        "type": "Result[Self.T, Self.E]"
       },
-      "signature": "def flat_tap[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.T",
+      "signature": "def flat_tap[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.T and C._BorrowView[o].Result == Result[downcast[C._BorrowView[o].Result, _ResultType].Value, Self.E]",
       "summary": "Sequence a borrowed Result projection and retain the original success value."
      }
     ],
@@ -34311,7 +34348,7 @@
         "variadic": false
        }
       ],
-      "description": "The factory runs at most once and is skipped on Err. The preceding success payload is discarded. Native errors propagate unchanged; they never become stored Err values. Native callbacks are borrowed in place; library callbacks are consumed and use their declared receiver mode.",
+      "description": "The factory runs at most once and is skipped on Err. The preceding success payload is discarded. Native errors propagate unchanged; they never become stored Err values. Native callbacks are borrowed in place; library callbacks are consumed and use their declared receiver mode. Named shared thunk factories remain borrowed; an explicit move retains the owning form.",
       "error": "C.Error",
       "parameters": [
        {
@@ -34328,7 +34365,7 @@
        "doc": "On success, call a zero-argument factory and return its Result.",
        "type": "C.Out"
       },
-      "signature": "def followed_by[C: ThunkContract & Movable & Deinitable](deinit self, var function: C) raises C.Error -> C.Out",
+      "signature": "def followed_by[C: ThunkContract & Movable & Deinitable](deinit self, var function: C) raises C.Error -> C.Out where C.Out == Result[downcast[C.Out, _ResultType].Value, Self.E]",
       "summary": "On success, call a zero-argument factory and return its Result."
      },
      {
@@ -34372,7 +34409,7 @@
        "doc": "",
        "type": "R"
       },
-      "signature": "def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, C: _Thunk[R]](deinit self, ref[o] function: C) raises Never -> R",
+      "signature": "def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, C: _Thunk[R]](deinit self, ref[o] function: C) raises Never -> R where R == Result[downcast[R, _ResultType].Value, Self.E]",
       "summary": "On success, call a zero-argument factory and return its Result."
      },
      {
@@ -34423,7 +34460,44 @@
        "doc": "",
        "type": "R"
       },
-      "signature": "def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingThunk[R, X]](deinit self, ref[o] function: C) raises X -> R",
+      "signature": "def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingThunk[R, X]](deinit self, ref[o] function: C) raises X -> R where R == Result[downcast[R, _ResultType].Value, Self.E]",
+      "summary": "On success, call a zero-argument factory and return its Result."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_SharedThunkRef[C, o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "Thunk",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_SharedThunkRef[C, o].Out"
+      },
+      "signature": "def followed_by[C: Thunk, o: ImmOrigin](deinit self, ref[o] function: C) raises _SharedThunkRef[C, o].Error -> _SharedThunkRef[C, o].Out where _SharedThunkRef[C, o].Out == Result[downcast[_SharedThunkRef[C, o].Out, _ResultType].Value, Self.E]",
       "summary": "On success, call a zero-argument factory and return its Result."
      }
     ],
@@ -119016,6 +119090,43 @@
        }
       ],
       "description": "",
+      "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _SharedThunkRef[C, o]]]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "Thunk",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _SharedThunkRef[C, o]]]], Self.E]"
+      },
+      "signature": "def before[C: Thunk, o: ImmOrigin](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _SharedThunkRef[C, o]]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _SharedThunkRef[C, o]]]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], _SharedThunkRef[C, o].Out] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _SharedThunkRef[C, o]]]]",
+      "summary": "Sequence a factory and retain each original payload."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "_Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, False, o]]]]",
       "parameters": [
        {
@@ -156730,6 +156841,43 @@
        "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], C]]], Self.E]"
       },
       "signature": "def followed_by[C: ThunkContract & Movable & Deinitable](deinit self, var function: C) raises _Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], C]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], C]]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], C.Out] and _BindCompatible[_Binding[Self.I], Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], C]]]",
+      "summary": "Sequence a factory and keep its produced payloads."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _SharedThunkRef[C, o]]]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "Thunk",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _SharedThunkRef[C, o]]]], Self.E]"
+      },
+      "signature": "def followed_by[C: Thunk, o: ImmOrigin](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _SharedThunkRef[C, o]]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _SharedThunkRef[C, o]]]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], _SharedThunkRef[C, o].Out] and _BindCompatible[_Binding[Self.I], Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _SharedThunkRef[C, o]]]]",
       "summary": "Sequence a factory and keep its produced payloads."
      },
      {

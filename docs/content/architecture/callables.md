@@ -268,7 +268,7 @@ An explicit move continues through the operation's owned callback overload.
 
 | Operand contract | Admission | Retained receiver |
 |---|---|---|
-| No operands | `Thunk` at immediate default and error factories | `_SharedThunkRef` |
+| No operands | `Thunk` at defaults, error factories and selected sequencing | `_SharedThunkRef` |
 | One owned operand | `_UnaryViewable._View[o]` | `_SharedUnaryRef` for a fixed-output Unary, or Kleisli's origin-indexed view |
 | One borrowed operand | `_BorrowViewable._BorrowView[o]` | `_SharedBorrowRef` for a BorrowCallable |
 | Two owned operands | `_BinaryViewable` | `_SharedBinaryRef` for a fixed-output Binary |
@@ -280,6 +280,18 @@ Only admission is added: Result and `_optional_get_or_else` /
 shared thunk view invokes `call`, even if its owner also supports mutable or
 consuming calls. An explicit move keeps canonical consuming receiver selection;
 `mut_ref` retains canonical mutable receiver selection.
+
+Result sequencing's operation descriptor also supplies its exact stored-error
+admission rule. The direct library `flat_map` boundary checks the same full
+Result equality. Body assertions remain internal invariants; admission proves
+that adapter output and source error origins agree before execution is built.
+
+Direct Result and selected `before` / `followed_by` use the same shared thunk
+view. Their existing `_IgnoreInput` continuation and family retention policy
+still determine whether calls repeat, when they run, which payload survives,
+and which errors are raised. A deferred computation retains the factory's
+origin. Moving that factory before execution is rejected; field updates follow
+Mojo's native reference-capture behavior and are visible at execution.
 
 Unary Partial, NativeUnary and ordinary Composition use the fixed-output view.
 A unary ordinary composition exposes shared admission only when all its stages

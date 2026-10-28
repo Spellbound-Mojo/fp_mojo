@@ -1,5 +1,6 @@
 """Use the same sequencing methods with eager and lazy values."""
-from fp.functions import piped
+from fp.functions import piped, pipeline
+from fp.callables import Thunk
 from fp.iteration import iterated
 from std.testing import assert_equal, assert_false
 
@@ -16,6 +17,13 @@ def next_values() -> List[Int]:
 
 def unavailable() -> Optional[Int]:
     return None
+
+
+@fieldwise_init
+struct NextValues(Thunk):
+    comptime Out = List[Int]
+    var start: Int
+    def call(self) -> List[Int]: return [self.start, self.start + 1]
 
 
 def main() raises:
@@ -39,3 +47,9 @@ def main() raises:
     var missing = piped(Optional(5)).before(unavailable).get()
     assert_false(missing)
     print("optional present:", Bool(missing))
+    var factory = NextValues(7)
+    var first: List[Int] = [1, 2]
+    print("shared before:", pipeline(first^).before(factory).get())
+    var second: List[Int] = [1, 2]
+    print("shared next:", pipeline(second^).followed_by(factory).get())
+    assert_equal(factory.start, 7)

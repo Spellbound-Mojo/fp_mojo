@@ -3439,16 +3439,20 @@
     ],
     "before": [
      {
-      "sha256": "f9b97d10c3fe24b99141ccdc334c4d1cc7be3be92d6dd4e20586ffdc4a20d0ab",
-      "signature": "def before[C: ThunkContract & Movable & Deinitable](deinit self, var function: C) raises C.Error -> Result[Self.T, Self.E]:"
+      "sha256": "c0bad2ddcf2c728f0f31d9ccd13a639fe5400b3773d540e5a7dd9fb729df4ff1",
+      "signature": "def before[C: ThunkContract & Movable & Deinitable](deinit self, var function: C) raises C.Error -> Result[Self.T, Self.E] where C.Out == Result[downcast[C.Out, _ResultType].Value, Self.E]:"
      },
      {
-      "sha256": "67964d0c5d4bc60d035e7d75bcca5d8db6cb7842345b282576b1a3ed73e18056",
-      "signature": "def before[R: Movable & Deinitable, o: ImmOrigin, //, C: _Thunk[R]](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E]:"
+      "sha256": "411713857030731cf7fc10aa7ce94b7d2a364b9df36bf9fa922f2fb1cd4d7ddd",
+      "signature": "def before[R: Movable & Deinitable, o: ImmOrigin, //, C: _Thunk[R]](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E]:"
      },
      {
-      "sha256": "da87ba1b131b817a75fcddaadb0c3277012f69dc9e5ca2d804f995557c03c070",
-      "signature": "def before[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingThunk[R, X]](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E]:"
+      "sha256": "b4d0e303642e61994b5c4bb1cb83e46a60f94dda7495b5f91c2f2fa31329602f",
+      "signature": "def before[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingThunk[R, X]](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E]:"
+     },
+     {
+      "sha256": "95833e665fcb4295edf1321bf547a2c0098710a89cbfda6ae496b7a5e6889586",
+      "signature": "def before[C: Thunk, o: ImmOrigin](deinit self, ref[o] function: C) raises _SharedThunkRef[C, o].Error -> Result[Self.T, Self.E] where _SharedThunkRef[C, o].Out == Result[downcast[_SharedThunkRef[C, o].Out, _ResultType].Value, Self.E]:"
      }
     ],
     "ensure": [
@@ -3531,44 +3535,44 @@
       "signature": "def flat_map[F: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: F ) raises F._View[o].Error -> F._View[o].Out where F._View[o].Arg == Self.T and F._View[o].Out == Result[downcast[F._View[o].Out, _ResultType].Value, Self.E]:"
      },
      {
-      "sha256": "6e4bab6d773de13e2f4c3e532ad96ba75827c2a7af7daa9a9069cdc489a68a11",
-      "signature": "def flat_map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F ) raises F.Error -> F.Out where F.Arg == Self.T:"
+      "sha256": "70570c92b96a735194712a454c8286978f9880a3cb7148c2edb3cc68e71b6b38",
+      "signature": "def flat_map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F ) raises F.Error -> F.Out where F.Arg == Self.T and F.Out == Result[downcast[F.Out, _ResultType].Value, Self.E]:"
      }
     ],
     "flat_pair_with": [
      {
-      "sha256": "93d3e80115f4f70cc36407844fe2380dfae310a01c01b550f0752a44406b6dc7",
-      "signature": "def flat_pair_with[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Result[Tuple[Self.T, downcast[C.Result, _ResultType].Value], Self.E] where C.Payload == Self.T:"
+      "sha256": "2726bb1d15fb1a8ac7a3a0517ec76eaa16565222b5aa85bac425cafad748d1f2",
+      "signature": "def flat_pair_with[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Result[Tuple[Self.T, downcast[C.Result, _ResultType].Value], Self.E] where C.Payload == Self.T and C.Result == Result[downcast[C.Result, _ResultType].Value, Self.E]:"
      },
      {
-      "sha256": "7629325b02dcee37346fb1e4bcade89eab38294b8b5b0f92e0873c35cfe74f8b",
-      "signature": "def flat_pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: _Borrowing[P, R]](deinit self, ref[o] function: C) raises Never -> Result[Tuple[Self.T, downcast[R, _ResultType].Value], Self.E] where P == Self.T:"
+      "sha256": "b2422e8fccda455e1ec71053ca572ee4b33be072318df7b78ff1ecec90e565be",
+      "signature": "def flat_pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: _Borrowing[P, R]](deinit self, ref[o] function: C) raises Never -> Result[Tuple[Self.T, downcast[R, _ResultType].Value], Self.E] where P == Self.T and R == Result[downcast[R, _ResultType].Value, Self.E]:"
      },
      {
-      "sha256": "9e780ef02e6b17c9aef39a277f1f39766f13885e618ecfc2b03ee6548852b500",
-      "signature": "def flat_pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] function: C) raises X -> Result[Tuple[Self.T, downcast[R, _ResultType].Value], Self.E] where P == Self.T:"
+      "sha256": "bdaf6b4bef5ece8dd933542c118c04ff0aedd7cb1a5ed72e6617e44ffc9fb1dc",
+      "signature": "def flat_pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] function: C) raises X -> Result[Tuple[Self.T, downcast[R, _ResultType].Value], Self.E] where P == Self.T and R == Result[downcast[R, _ResultType].Value, Self.E]:"
      },
      {
-      "sha256": "359e4d7bf5920b8c28d7771504c3c657a591ebebbc877c800bde6c6d8a4fc2c1",
-      "signature": "def flat_pair_with[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Result[Tuple[Self.T, downcast[C._BorrowView[o].Result, _ResultType].Value], Self.E] where C._BorrowView[o].Payload == Self.T:"
+      "sha256": "e1f626e39b0d8e5832a742cb8cc9d0fe09b5490032b430b13e329d23379abb57",
+      "signature": "def flat_pair_with[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Result[Tuple[Self.T, downcast[C._BorrowView[o].Result, _ResultType].Value], Self.E] where C._BorrowView[o].Payload == Self.T and C._BorrowView[o].Result == Result[downcast[C._BorrowView[o].Result, _ResultType].Value, Self.E]:"
      }
     ],
     "flat_tap": [
      {
-      "sha256": "f1a6fa1543511d672e480dcd14abff3d129f782a783d7e5a9513eb169a9eba94",
-      "signature": "def flat_tap[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Result[Self.T, Self.E] where C.Payload == Self.T:"
+      "sha256": "1afee24966d3664909587ccca921c065d1daf2283047082f479b6505f3d664e3",
+      "signature": "def flat_tap[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Result[Self.T, Self.E] where C.Payload == Self.T and C.Result == Result[downcast[C.Result, _ResultType].Value, Self.E]:"
      },
      {
-      "sha256": "607a053dd0af9b18752acb8feefa864cf0f8a7ba892fa462d598c7ce208e9a04",
-      "signature": "def flat_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: _Borrowing[P, R]](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where P == Self.T:"
+      "sha256": "31bfcd29d78e3d647b6682bfa3b8fd54392d3698eda08fd1c7aeb9e05a31f789",
+      "signature": "def flat_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: _Borrowing[P, R]](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where P == Self.T and R == Result[downcast[R, _ResultType].Value, Self.E]:"
      },
      {
-      "sha256": "f27d6898d6c2b9924a027f02e4246dfdc166ed34781db2607710b99e6d818aed",
-      "signature": "def flat_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where P == Self.T:"
+      "sha256": "2c870d160c031560089f9b8d268ca8f6224a5a31286fe5b22bbd6433c1434ab9",
+      "signature": "def flat_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where P == Self.T and R == Result[downcast[R, _ResultType].Value, Self.E]:"
      },
      {
-      "sha256": "bfcf8ab457c9c4f4f6045ce8fc87ee5bab41403acf83f1ceda5d7627cc55f8a3",
-      "signature": "def flat_tap[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.T:"
+      "sha256": "ea3400f8e996cd5ef0dc6a2bcbaba0571a7b4638545a7a8214e4e56e6e21a247",
+      "signature": "def flat_tap[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.T and C._BorrowView[o].Result == Result[downcast[C._BorrowView[o].Result, _ResultType].Value, Self.E]:"
      }
     ],
     "flat_tap_err": [
@@ -3863,16 +3867,20 @@
     ],
     "followed_by": [
      {
-      "sha256": "77209dfc8f2f5068dcf92c9eb82bb3597fda539f334d94aab69a520334ca7abc",
-      "signature": "def followed_by[C: ThunkContract & Movable & Deinitable](deinit self, var function: C) raises C.Error -> C.Out:"
+      "sha256": "45ed219c36b946cf395bf4b64ad78851466b976510b300ffd84208d9536956c0",
+      "signature": "def followed_by[C: ThunkContract & Movable & Deinitable](deinit self, var function: C) raises C.Error -> C.Out where C.Out == Result[downcast[C.Out, _ResultType].Value, Self.E]:"
      },
      {
-      "sha256": "0a370b796e186120af7f72f9dd20865f5cee534fbbbc7839626617e2d1aedafb",
-      "signature": "def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, C: _Thunk[R]](deinit self, ref[o] function: C) raises Never -> R:"
+      "sha256": "c558a7ac82422eabdf32cf41d89bd9e10d27ede7b88069f492dc94e7ce503915",
+      "signature": "def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, C: _Thunk[R]](deinit self, ref[o] function: C) raises Never -> R where R == Result[downcast[R, _ResultType].Value, Self.E]:"
      },
      {
-      "sha256": "884d9dd80f0068590caeebefed2829f3be56a31652a897d6fc761c73292dd89c",
-      "signature": "def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingThunk[R, X]](deinit self, ref[o] function: C) raises X -> R:"
+      "sha256": "5902ac2f8a878bb3b212c3bde35dea97235129626600f1d320f44ad22b3516b5",
+      "signature": "def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingThunk[R, X]](deinit self, ref[o] function: C) raises X -> R where R == Result[downcast[R, _ResultType].Value, Self.E]:"
+     },
+     {
+      "sha256": "b089c55c2acef32d1f19408cf65ee70cddef804bfddf915c219561ab30abde39",
+      "signature": "def followed_by[C: Thunk, o: ImmOrigin](deinit self, ref[o] function: C) raises _SharedThunkRef[C, o].Error -> _SharedThunkRef[C, o].Out where _SharedThunkRef[C, o].Out == Result[downcast[_SharedThunkRef[C, o].Out, _ResultType].Value, Self.E]:"
      }
     ],
     "get_or": [
@@ -10933,6 +10941,10 @@
       "signature": "def before[C: ThunkContract & Movable & Deinitable](deinit self, var function: C) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], C]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], C]]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], C.Out] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], C]]]:"
      },
      {
+      "sha256": "48342929b50d9ebbac1ae7110b4c9fbf5c87e63e6206aae9d0e8536e919c85ef",
+      "signature": "def before[C: Thunk, o: ImmOrigin](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _SharedThunkRef[C, o]]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _SharedThunkRef[C, o]]]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], _SharedThunkRef[C, o].Out] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _SharedThunkRef[C, o]]]]:"
+     },
+     {
       "sha256": "8ffa59ee959027383114487cb977e60cb030e529e84fb80c3768bccbe26503ff",
       "signature": "def before[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, False, o]]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, False, o]]]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunkRef[R, Never, C, False, o]]]]:"
      },
@@ -13779,6 +13791,10 @@
      {
       "sha256": "d6f18eef4867bf5f32ddb6d278cfe15b9fbef0d2449c0f9b68121947ce73905c",
       "signature": "def followed_by[C: ThunkContract & Movable & Deinitable](deinit self, var function: C) raises _Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], C]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], C]]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], C.Out] and _BindCompatible[_Binding[Self.I], Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], C]]]:"
+     },
+     {
+      "sha256": "6f96f109edb82ec8fd60bf2a95f059df0ac522c996eb6fcb87e592b25ea4f0da",
+      "signature": "def followed_by[C: Thunk, o: ImmOrigin](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _SharedThunkRef[C, o]]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _SharedThunkRef[C, o]]]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], _SharedThunkRef[C, o].Out] and _BindCompatible[_Binding[Self.I], Self.V, _BorrowedUnary[Self.I.Element[Self.V], _IgnoreInput[Self.I.Element[Self.V], _SharedThunkRef[C, o]]]]:"
      },
      {
       "sha256": "a5d5f6586e4d9fa1e387520fdab7a4aa3895d5c286faeeee6b110814f64d6c05",

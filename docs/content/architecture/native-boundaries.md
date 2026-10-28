@@ -8,6 +8,16 @@ API without a separate review.
 
 ## Mojo 1.2 compatibility
 
+- Direct Result sequencing checks its callback's complete Result type at
+  admission, including the stored error's origins. Before this check, a
+  factory returning a view of one owner could compile through `before` as a
+  Result whose error named another owner, even with the existing body assertion.
+  The moved-factory case reproduced on the committed baseline; the unsafe
+  program was compiled only. `before`, `followed_by`, `flat_tap`,
+  `flat_pair_with` and the library `flat_map` entry point now require this
+  equality in their admission predicates. Invalid origins receive ordinary
+  diagnostics; valid native and library callbacks retain their original types.
+
 - Mixed Result folds use thin signatures for the native handler. A prototype
   with generic native function traits admitted captures but introduced seven
   additional crashes across fourteen invalid-signature probes, so it was not

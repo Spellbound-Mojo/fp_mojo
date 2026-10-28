@@ -726,6 +726,9 @@ RESULT_OPERATIONS = {
                 op.name,
                 (OperationCallback(op.mode, "none" if op.factory else "success"),),
                 output=op.result_output,
+                # Admission must retain stored-error origins before adapters
+                # instantiate; body assertions alone do not establish this.
+                first_rule="same_error",
                 sequence=True,
             )
             for op in SEQUENCING.values()
