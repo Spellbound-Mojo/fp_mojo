@@ -34,6 +34,7 @@ from fp.algebra._traversal import _FlattenAfter, _CompactAfter, _traverse_then, 
 from fp.algebra._derived import _map2_as, product as _family_product
 from fp.callables._transforms import _Pair, _ValueThunk, _Apply
 from fp.callables.native import _Binary, _RaisingBinary, _NativeBinaryRef
+from fp.callables.invoke import RepeatableBorrow
 from fp.callables.protocols import BinaryContract
 
 from fp.iteration.reductions import _FoldMapRun, _FindMapRun, _ExtremumRun, _run_terminal, _IntSum, _SIMDSum
@@ -5243,7 +5244,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == List[downcast[P, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[List[downcast[P, Movable & Deinitable]]](self.value^)))
 
-    def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == List[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+    def min_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == List[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]:
         """Return the element with the smallest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == List[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, True](function^), rebind_var[List[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
@@ -5279,7 +5280,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == List[downcast[P, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[List[downcast[P, Movable & Deinitable]]](self.value^)))
 
-    def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == List[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+    def max_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == List[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]:
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == List[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, False](function^), rebind_var[List[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
@@ -5418,7 +5419,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Array[downcast[P, Movable & Deinitable], N]
         return Piped(_array_terminal(_ExtremumRun[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Array[downcast[P, Movable & Deinitable], N]](self.value^)))
 
-    def min_by[C: BorrowCallable, N: Int, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+    def min_by[C: BorrowCallContract & Movable & Deinitable, N: Int, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]:
         """Return the element with the smallest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N]
         return Piped(_array_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, True](function^), rebind_var[Array[downcast[C.Payload, Movable & Deinitable], N]](self.value^)))
@@ -5438,7 +5439,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Array[downcast[P, Movable & Deinitable], N]
         return Piped(_array_terminal(_ExtremumRun[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Array[downcast[P, Movable & Deinitable], N]](self.value^)))
 
-    def max_by[C: BorrowCallable, N: Int, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+    def max_by[C: BorrowCallContract & Movable & Deinitable, N: Int, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]:
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N]
         return Piped(_array_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, False](function^), rebind_var[Array[downcast[C.Payload, Movable & Deinitable], N]](self.value^)))
@@ -5554,7 +5555,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Deque[downcast[P, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Deque[downcast[P, Movable & Deinitable]]](self.value^)))
 
-    def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+    def min_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]:
         """Return the element with the smallest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, True](function^), rebind_var[Deque[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
@@ -5574,7 +5575,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Deque[downcast[P, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Deque[downcast[P, Movable & Deinitable]]](self.value^)))
 
-    def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+    def max_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]:
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, False](function^), rebind_var[Deque[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
@@ -5690,7 +5691,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == LinkedList[downcast[P, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[LinkedList[downcast[P, Movable & Deinitable]]](self.value^)))
 
-    def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+    def min_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]:
         """Return the element with the smallest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, True](function^), rebind_var[LinkedList[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
@@ -5710,7 +5711,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == LinkedList[downcast[P, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[LinkedList[downcast[P, Movable & Deinitable]]](self.value^)))
 
-    def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+    def max_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]:
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, False](function^), rebind_var[LinkedList[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
@@ -5826,7 +5827,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]
         return Piped(_dict_terminal(_ExtremumRun[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Dict[K, downcast[P, Movable & Deinitable], H]](self.value^)))
 
-    def min_by[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+    def min_by[C: BorrowCallContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]:
         """Return the element with the smallest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H]
         return Piped(_dict_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, True](function^), rebind_var[Dict[K, downcast[C.Payload, Movable & Deinitable], H]](self.value^)))
@@ -5846,7 +5847,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]
         return Piped(_dict_terminal(_ExtremumRun[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Dict[K, downcast[P, Movable & Deinitable], H]](self.value^)))
 
-    def max_by[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+    def max_by[C: BorrowCallContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]:
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H]
         return Piped(_dict_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, False](function^), rebind_var[Dict[K, downcast[C.Payload, Movable & Deinitable], H]](self.value^)))
@@ -5962,7 +5963,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == StringDict[downcast[P, Movable & Deinitable]]
         return Piped(_string_dict_terminal(_ExtremumRun[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[StringDict[downcast[P, Movable & Deinitable]]](self.value^)))
 
-    def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+    def min_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]:
         """Return the element with the smallest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_string_dict_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, True](function^), rebind_var[StringDict[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
@@ -5982,7 +5983,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == StringDict[downcast[P, Movable & Deinitable]]
         return Piped(_string_dict_terminal(_ExtremumRun[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[StringDict[downcast[P, Movable & Deinitable]]](self.value^)))
 
-    def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+    def max_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]:
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_string_dict_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, False](function^), rebind_var[StringDict[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
@@ -6098,7 +6099,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Optional[downcast[P, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Optional[downcast[P, Movable & Deinitable]]](self.value^)))
 
-    def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+    def min_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]:
         """Return the element with the smallest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, True](function^), rebind_var[Optional[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
@@ -6118,7 +6119,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Optional[downcast[P, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Optional[downcast[P, Movable & Deinitable]]](self.value^)))
 
-    def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+    def max_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]:
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, False](function^), rebind_var[Optional[downcast[C.Payload, Movable & Deinitable]]](self.value^)))

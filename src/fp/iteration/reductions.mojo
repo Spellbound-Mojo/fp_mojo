@@ -9,8 +9,9 @@ from std.memory import MaybeUninit
 from fp.algebra._accumulation import _Combine, _FirstPresent
 from fp.algebra.protocols import Monoid, _Accumulate, _map_accumulate, _start_as
 from fp.algebra.instances import _OptionalElement
-from fp.callables.protocols import UnaryContract, BorrowCallable
-from fp.callables._transforms import _Observe
+from fp.callables.protocols import UnaryContract, BorrowCallContract
+from fp.callables.invoke import RepeatableBorrow
+from fp.callables._transforms import _ObserveOnce
 from fp.callables.products import _take_pair
 from fp._internal.errors import _CommonError, _ErrorCompatible
 
@@ -43,7 +44,7 @@ struct _FindMapRun[F: UnaryContract & Movable & Deinitable](_Terminal):
 
 
 @fieldwise_init
-struct _ExtremumRun[T: Movable & Deinitable, C: BorrowCallable, smallest: Bool](_Terminal):
+struct _ExtremumRun[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, smallest: Bool](_Terminal):
     var function: Self.C
     comptime Out = Optional[Self.T]
     comptime Error = Self.C.Failure
@@ -98,12 +99,12 @@ struct _Choose[T: Movable & Deinitable, K: Comparable & Movable & Deinitable, sm
         return acc^
 
 
-def _extremum[V: Movable & Deinitable, T: Movable & Deinitable, C: BorrowCallable, smallest: Bool](
+def _extremum[V: Movable & Deinitable, T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, smallest: Bool](
     var function: C, var source: V
 ) raises C.Failure -> Optional[T]:
     comptime K = downcast[C.Result, Comparable & Movable & Deinitable]
-    comptime assert C.Payload == T and K == C.Result
-    comptime F = _Observe[T, C, True]
+    comptime assert C.Payload == T and K == C.Result and RepeatableBorrow[C]
+    comptime F = _ObserveOnce[T, C, True]
     var result = _map_accumulate[V, F, _Choose[T, K, smallest], C.Failure](
         F(function^), source^, Optional[Tuple[T, K]]())
     if not result:
@@ -237,7 +238,7 @@ def min_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deini
     """Return the element with the smallest key; empty input is absent and ties keep the first."""
     return _extremum[T=downcast[P, Movable & Deinitable], C=_NativeBorrowRef[P, R, E, F, True, o], smallest=True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function)), source^)
 
-def min_by[C: BorrowCallable, V: Movable & Deinitable, //](var function: C, var source: V) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+def min_by[C: BorrowCallContract & Movable & Deinitable, V: Movable & Deinitable, //](var function: C, var source: V) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]:
     """Return the element with the smallest key; empty input is absent and ties keep the first."""
     return _extremum[T=downcast[C.Payload, Movable & Deinitable], C=C, smallest=True](function^, source^)
 
@@ -271,7 +272,7 @@ def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deini
     """Return the element with the largest key; empty input is absent and ties keep the first."""
     return _extremum[T=downcast[P, Movable & Deinitable], C=_NativeBorrowRef[P, R, E, F, True, o], smallest=False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function)), source^)
 
-def max_by[C: BorrowCallable, V: Movable & Deinitable, //](var function: C, var source: V) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+def max_by[C: BorrowCallContract & Movable & Deinitable, V: Movable & Deinitable, //](var function: C, var source: V) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]:
     """Return the element with the largest key; empty input is absent and ties keep the first."""
     return _extremum[T=downcast[C.Payload, Movable & Deinitable], C=C, smallest=False](function^, source^)
 

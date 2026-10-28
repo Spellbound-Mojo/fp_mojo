@@ -29,6 +29,7 @@ from fp.algebra._traversal import _FlattenAfter, _Discard, _EffectVoid, _travers
 from fp.algebra._effect_combinators import _IfEffect, _if_effect, _AllLive, _BoolLive, _PredicateStep, _SearchStep, _EffectFold, _fold_effect, _fold_map_effect
 from fp.algebra._accumulation import _FirstPresent
 from fp.callables.native import _NativeOwnedArg, _NativeUnaryRef, _NativeBorrowRef, _NativeBorrow, _NativeThunkRef, _NativeThunk, NativeUnary, _NativeBinaryRef, _NativeBinary
+from fp.callables.invoke import RepeatableBorrow
 from fp.callables.protocols import UnaryContract, BorrowCallable, BorrowCallContract, ThunkContract, BinaryContract, Binary
 from fp.callables.invoke import call_once, RepeatableUnary, RepeatableBinary
 from fp.callables._nary import _OwnedNativeNary1, _OwnedNativeNary2, _OwnedNativeNary3, _OwnedNativeNary4, _OwnedNativeNary5, _OwnedNativeNary6, _OwnedNativeNary7, _OwnedNativeNary8, _NativeNary1, _NativeNary2, _NativeNary3, _NativeNary4, _NativeNary5, _NativeNary6, _NativeNary7, _NativeNary8
@@ -2155,7 +2156,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E](_fold_map[Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True], _SIMDSum[dtype, size], _CommonError[X, _SIMDSum[dtype, size].Error]](NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True](function), self.value^))
 
     @always_inline
-    def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where C.Payload == _FoldElement[Self.V] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+    def min_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where C.Payload == _FoldElement[Self.V] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]:
         """Reduce the consumed source in order through the canonical terminal driver.
 
         Parameters:
@@ -2233,7 +2234,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E](_extremum[Self.V, _FoldElement[Self.V], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], True](_NativeBorrow[P, R, X, def(P) raises X thin -> R, True](function), self.value^))
 
     @always_inline
-    def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where C.Payload == _FoldElement[Self.V] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+    def max_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where C.Payload == _FoldElement[Self.V] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]:
         """Reduce the consumed source in order through the canonical terminal driver.
 
         Parameters:

@@ -2,8 +2,8 @@
 from fp.data.non_empty_list import NonEmptyList
 from fp.algebra.protocols import Semigroup, _map_accumulate
 from fp.algebra._accumulation import _OptionalCombine
-from fp.callables.protocols import UnaryContract, BinaryContract, BorrowCallable
-from fp.callables.invoke import RepeatableUnary, RepeatableBinary
+from fp.callables.protocols import UnaryContract, BinaryContract, BorrowCallContract
+from fp.callables.invoke import RepeatableUnary, RepeatableBinary, RepeatableBorrow
 from fp.callables.native import NativeUnary, NativeBinary, _Unary, _RaisingUnary, _Binary, _RaisingBinary, _NativeBorrow, _Borrowing, _RaisingBorrowing
 from fp.callables._identity import Identity
 from fp._internal.errors import _CommonError, _ErrorCompatible
@@ -91,8 +91,8 @@ def combine_non_empty[S: Semigroup](var source: NonEmptyList[S.Value]) raises S.
     return reduce_map[S](Identity[S.Value](), source^)
 
 
-def minimum_by_non_empty[T: Movable & Deinitable, C: BorrowCallable](var key: C, var source: NonEmptyList[T]
-) raises C.Failure -> T where C.Payload == T and conforms_to(C.Result, Comparable):
+def minimum_by_non_empty[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var key: C, var source: NonEmptyList[T]
+) raises C.Failure -> T where C.Payload == T and conforms_to(C.Result, Comparable) and RepeatableBorrow[C]:
     """Return the first minimum element of a non-empty source by an owned key.
 
     Keys are computed once per element through the ordinary extremum kernel.
@@ -101,7 +101,7 @@ def minimum_by_non_empty[T: Movable & Deinitable, C: BorrowCallable](var key: C,
 
     Parameters:
         T: The consumed element type, including origins.
-        C: A repeatable borrowing projection with a Comparable result.
+        C: An owned shared or mutable borrowing projection with a Comparable result.
 
     Args:
         key: The key projection, consumed.
@@ -117,13 +117,13 @@ def minimum_by_non_empty[T: Movable & Deinitable, C: BorrowCallable](var key: C,
     return result.unsafe_take()
 
 
-def maximum_by_non_empty[T: Movable & Deinitable, C: BorrowCallable](var key: C, var source: NonEmptyList[T]
-) raises C.Failure -> T where C.Payload == T and conforms_to(C.Result, Comparable):
+def maximum_by_non_empty[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var key: C, var source: NonEmptyList[T]
+) raises C.Failure -> T where C.Payload == T and conforms_to(C.Result, Comparable) and RepeatableBorrow[C]:
     """Return the first maximum element through the ordinary extremum kernel.
 
     Parameters:
         T: The consumed element type, including origins.
-        C: A repeatable borrowing projection with a Comparable result.
+        C: An owned shared or mutable borrowing projection with a Comparable result.
 
     Args:
         key: The key projection, consumed and called once per element.

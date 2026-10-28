@@ -17,6 +17,16 @@ struct EveryOther(BorrowMutableCallable):
         return self.calls % 2 == 0
 
 
+@fieldwise_init
+struct RunningKey(BorrowMutableCallable):
+    comptime Payload = Int
+    comptime Result = Int
+    var calls: Int
+    def invoke_mut(mut self, ref value: Int) -> Int:
+        self.calls += 1
+        return value + self.calls
+
+
 def main():
     var prefix = String("item-")
     def label(var value: Int) {var prefix^} -> String:
@@ -39,3 +49,4 @@ def main():
     print("captured predicate:", iterated(range(5)).filter(selected).collect_list())
     print("reused predicate:", pipeline[Int]([1, 4, 2]).filter(selected).get())
     print("stateful predicate:", iterated(range(5)).filter(EveryOther(0)).collect_list())
+    print("stateful projection:", iterated(range(1, 4)).pair_with(RunningKey(0)).collect_list())

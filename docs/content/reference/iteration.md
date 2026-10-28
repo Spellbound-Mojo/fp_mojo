@@ -169,6 +169,21 @@ once and retain the first element on ties. `find_map` requires an Optional
 result and stops at its first present result. Raised errors keep their exact
 types; callback and Monoid errors must match when both can raise.
 
+Owned key projections can implement `BorrowMutableCallable` directly:
+`min_by(key^, source^)`, `iterated(source^).max_by(key^)`, and the corresponding
+Piped and selected Pipeline methods infer the payload and key types. The
+non-empty variants accept the same callbacks. A repeated call prefers
+`invoke_mut`, retaining one callback state throughout the reduction; a
+shared-only key uses `invoke`. Consuming-only keys are rejected. Native callbacks
+and named shared adapters retain their existing reuse.
+
+Lazy `pair_with` and `tap_each`, including Iter methods, accept the same owned
+shared or mutable borrowing callbacks. They borrow each element once per pull
+and retain the original payload without copying it. `pair_with` retains the
+projection beside it; `tap_each` discards the projection. Lazy callbacks must
+be non-raising. Abandoning an iterator releases its callback and remaining
+source; any returned projection keeps its external origins.
+
 `filter_map(callback)` also infers the present Optional payload for library
 callables, including a moved callback. It supports named partials, native unary
 adapters, shared compositions and compatible shared Kleisli chains. The

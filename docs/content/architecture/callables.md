@@ -75,6 +75,15 @@ Counting uses the existing borrowed-to-owned unary adapter and accumulation
 policy. Owned search admission derives the element directly from the source,
 so ordinary and generic callers do not select a separate element parameter.
 
+Extrema and lazy iterator observation use `_ObserveOnce`'s existing
+repeatable receiver, guarded by `RepeatableBorrow` at admission. Its
+`call_mut` borrows a payload through the canonical borrowing dispatcher,
+then `_observed` retains that payload beside the projection or discards the
+projection. `_extremum` still delegates to `_map_accumulate` and `_Choose`:
+keys are computed once and strict comparison retains the first tie. No
+observer loop, receiver policy, or cleanup path is duplicated. The older
+shared observation adapter remains the owner for shared family observation.
+
 `as_unary(f)` moves a native function or closure into a `NativeUnary`, a `Unary`. `Partial`
 implements `Thunk`, `Unary` or `Binary` when zero, one or two arguments remain;
 `Composition` has the arity of its first-applied stage; `Flipped` is a `Binary`.

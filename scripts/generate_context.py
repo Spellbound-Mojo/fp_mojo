@@ -421,7 +421,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         operation = TERMINALS[name]
         borrowed = operation.borrowing
         for numeric in (("int", "simd") if name == "sum_by" else (None,)):
-            callbacks = borrowing_callbacks(element, "function") if borrowed else owning_callbacks("owned", element, "function", view=True)
+            callbacks = borrowing_callbacks(element, "function", repeatable=False) if borrowed else owning_callbacks("owned", element, "function", view=True)
             for cb in callbacks:
                 c, result, error = cb["adapter_type"], cb["result"], cb["error"]
                 params = list(cb["params"])
@@ -429,6 +429,8 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
                 if "//" not in params: params += ["//"]
                 if borrowed:
                     conditions += [f"conforms_to({result}, Comparable & Movable & Deinitable)"]
+                    # Native and shared-view adapters already guarantee repeatability.
+                    if c == "C": conditions += [f"RepeatableBorrow[{c}]"]
                     result = operation.result(element, result, "")
                     expr = operation.invoke(f"Self.V, {element}, {c}, {operation.smallest}", cb["build"], "self.value^")
                 elif name == "find_map":

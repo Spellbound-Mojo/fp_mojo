@@ -8,12 +8,13 @@ from fp.algebra.operations import _EntryError, _InferError
 from fp.algebra._traversal import _FlattenAfter, _CompactAfter, _traverse_then, _Discard, _TraverseTap, _traverse_void, _traverse_as, _EffectVoid
 from fp.callables._views import _UnaryViewable
 from fp.callables.protocols import BorrowCallContract
+from fp.callables.invoke import RepeatableBorrow
 
 from std.builtin.rebind import downcast
 from fp.callables.protocols import BorrowCallable, UnaryContract
 from fp.callables.native import _Borrowing, _RaisingBorrowing, _NativeBorrowRef, _Unary, _RaisingUnary, _NativeUnaryRef
 from fp.algebra.protocols import Applicative
-from fp.callables._transforms import _Fill, _Replace, _TupleWith, _Observe, _ObserveNative
+from fp.callables._transforms import _Fill, _Replace, _TupleWith, _ObserveOnce, _ObserveNative
 from ._advance import _Source, _source
 from .adapters import _Map, _FilterMap
 from fp.callables._identity import Identity
@@ -139,11 +140,11 @@ def pair_with[P: AnyType, R: Movable & Deinitable, I: Movable & Deinitable, //, 
     return _Map[downcast[P, Movable & Deinitable], Tuple[downcast[P, Movable & Deinitable], R], _Source[I], _ObserveNative[P, R, F, True]](_ObserveNative[P, R, F, True](function^), _source(source^), False)
 
 
-def pair_with[C: BorrowCallable, I: Movable & Deinitable, //, T: Movable & Deinitable = downcast[C.Payload, Movable & Deinitable]](
+def pair_with[C: BorrowCallContract & Movable & Deinitable, I: Movable & Deinitable, //, T: Movable & Deinitable = downcast[C.Payload, Movable & Deinitable]](
     var function: C, var source: I
-) -> _Map[T, Tuple[T, C.Result], _Source[I], _Observe[T, C, True]] where _Source[I].Element == T and C.Payload == T and C.Failure == Never:
+) -> _Map[T, Tuple[T, C.Result], _Source[I], _ObserveOnce[T, C, True]] where _Source[I].Element == T and C.Payload == T and C.Failure == Never and RepeatableBorrow[C]:
     """Borrow each element and pair it with its projection. Calls run lazily; the callback and source are consumed."""
-    return _Map[T, Tuple[T, C.Result], _Source[I], _Observe[T, C, True]](_Observe[T, C, True](function^), _source(source^), False)
+    return _Map[T, Tuple[T, C.Result], _Source[I], _ObserveOnce[T, C, True]](_ObserveOnce[T, C, True](function^), _source(source^), False)
 
 
 def tap_each[P: AnyType, R: Movable & Deinitable, I: Movable & Deinitable, //, F: _Borrowing[P, R]](
@@ -167,11 +168,11 @@ def tap_each[P: AnyType, R: Movable & Deinitable, I: Movable & Deinitable, //, F
     return _Map[downcast[P, Movable & Deinitable], downcast[P, Movable & Deinitable], _Source[I], _ObserveNative[P, R, F, False]](_ObserveNative[P, R, F, False](function^), _source(source^), False)
 
 
-def tap_each[C: BorrowCallable, I: Movable & Deinitable, //, T: Movable & Deinitable = downcast[C.Payload, Movable & Deinitable]](
+def tap_each[C: BorrowCallContract & Movable & Deinitable, I: Movable & Deinitable, //, T: Movable & Deinitable = downcast[C.Payload, Movable & Deinitable]](
     var function: C, var source: I
-) -> _Map[T, T, _Source[I], _Observe[T, C, False]] where _Source[I].Element == T and C.Payload == T and C.Failure == Never:
+) -> _Map[T, T, _Source[I], _ObserveOnce[T, C, False]] where _Source[I].Element == T and C.Payload == T and C.Failure == Never and RepeatableBorrow[C]:
     """Borrow each element and inspect it without changing it. Calls run lazily; the callback and source are consumed."""
-    return _Map[T, T, _Source[I], _Observe[T, C, False]](_Observe[T, C, False](function^), _source(source^), False)
+    return _Map[T, T, _Source[I], _ObserveOnce[T, C, False]](_ObserveOnce[T, C, False](function^), _source(source^), False)
 
 
 def compact[I: Movable & Deinitable, //, T: Movable & Deinitable = _ListElement[downcast[_Source[I].Element, Movable & Deinitable]]](

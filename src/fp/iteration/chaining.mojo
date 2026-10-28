@@ -49,7 +49,7 @@ from fp.algebra.protocols import Monoid
 from fp._internal.errors import _CommonError, _ErrorCompatible
 from fp.callables.protocols import UnaryContract
 from std.builtin.rebind import downcast
-from fp.callables._transforms import _Fill, _Replace, _TupleWith, _Observe, _ObserveNative
+from fp.callables._transforms import _Fill, _Replace, _TupleWith, _ObserveOnce, _ObserveNative
 from fp.iteration.adapters import _Map, _FilterMap
 from fp.iteration.derived import compact as _derived_compact
 from fp.algebra.instances import ListFamily
@@ -1138,8 +1138,8 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """
         return Iter(_derived_pair_with[P=P](function^, self._iterator^))
 
-    def pair_with[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C
-    ) -> Iter[_Map[T, Tuple[T, C.Result], Self.I, _Observe[T, C, True]]] where Self.I.Element == T and C.Payload == T and C.Failure == Never:
+    def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C
+    ) -> Iter[_Map[T, Tuple[T, C.Result], Self.I, _ObserveOnce[T, C, True]]] where Self.I.Element == T and C.Payload == T and C.Failure == Never and RepeatableBorrow[C]:
         """Borrow each element and pair it with its projection. Evaluation is lazy."""
         return Iter(_derived_pair_with[T=T](function^, self._iterator^))
 
@@ -1160,8 +1160,8 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """
         return Iter(_derived_tap_each[P=P](function^, self._iterator^))
 
-    def tap_each[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C
-    ) -> Iter[_Map[T, T, Self.I, _Observe[T, C, False]]] where Self.I.Element == T and C.Payload == T and C.Failure == Never:
+    def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C
+    ) -> Iter[_Map[T, T, Self.I, _ObserveOnce[T, C, False]]] where Self.I.Element == T and C.Payload == T and C.Failure == Never and RepeatableBorrow[C]:
         """Borrow each element and inspect it without changing it. Evaluation is lazy."""
         return Iter(_derived_tap_each[T=T](function^, self._iterator^))
 
@@ -2078,7 +2078,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Return the element with the smallest key; empty input is absent and ties keep the first."""
         return _extremum[T=downcast[P, Movable & Deinitable], C=_NativeBorrowRef[P, R, E, F, True, o], smallest=True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function)), self._iterator^)
 
-    def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+    def min_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]:
         """Return the element with the smallest key; empty input is absent and ties keep the first."""
         return _extremum[T=downcast[C.Payload, Movable & Deinitable], C=C, smallest=True](function^, self._iterator^)
 
@@ -2110,7 +2110,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         return _extremum[T=downcast[P, Movable & Deinitable], C=_NativeBorrowRef[P, R, E, F, True, o], smallest=False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function)), self._iterator^)
 
-    def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable):
+    def max_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]:
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         return _extremum[T=downcast[C.Payload, Movable & Deinitable], C=C, smallest=False](function^, self._iterator^)
 

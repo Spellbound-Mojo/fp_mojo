@@ -55,7 +55,8 @@ For a predicate or observer with mutable state, implement
 `BorrowMutableCallable`. It fixes `Payload`, `Result`, and optional `Failure`
 (`Never` by default), and defines `invoke_mut(mut self, ref payload)`.
 The example's `EveryOther` keeps its counter between filter calls while
-borrowing each input. This needs no native closure capture annotation.
+borrowing each input. `RunningKey` uses the same contract for a projection,
+passed directly to `pair_with`. These need no native closure capture annotation.
 
 `invoke_borrowed_repeated[E](value, callback)` borrows a named callback
 exclusively and preserves its updated state in the caller. It prefers

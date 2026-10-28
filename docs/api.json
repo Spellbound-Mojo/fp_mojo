@@ -20088,7 +20088,7 @@
        "description": "",
        "inferred": true,
        "name": "C",
-       "type": "BorrowCallable",
+       "type": "BorrowCallContract & Movable & Deinitable",
        "variadic": false
       },
       {
@@ -20105,7 +20105,7 @@
       "doc": "",
       "type": "Optional[downcast[C.Payload, Movable & Deinitable]]"
      },
-     "signature": "def max_by[C: BorrowCallable, V: Movable & Deinitable, //](var function: C, var source: V) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+     "signature": "def max_by[C: BorrowCallContract & Movable & Deinitable, V: Movable & Deinitable, //](var function: C, var source: V) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
      "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
     },
     {
@@ -20328,7 +20328,7 @@
        "description": "",
        "inferred": true,
        "name": "C",
-       "type": "BorrowCallable",
+       "type": "BorrowCallContract & Movable & Deinitable",
        "variadic": false
       },
       {
@@ -20345,7 +20345,7 @@
       "doc": "",
       "type": "Optional[downcast[C.Payload, Movable & Deinitable]]"
      },
-     "signature": "def min_by[C: BorrowCallable, V: Movable & Deinitable, //](var function: C, var source: V) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+     "signature": "def min_by[C: BorrowCallContract & Movable & Deinitable, V: Movable & Deinitable, //](var function: C, var source: V) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
      "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
     },
     {
@@ -20489,7 +20489,7 @@
        "description": "",
        "inferred": true,
        "name": "C",
-       "type": "BorrowCallable",
+       "type": "BorrowCallContract & Movable & Deinitable",
        "variadic": false
       },
       {
@@ -20511,9 +20511,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_Map[T, Tuple[T, C.Result], _Source[I], _Observe[T, C, True]]"
+      "type": "_Map[T, Tuple[T, C.Result], _Source[I], _ObserveOnce[T, C, True]]"
      },
-     "signature": "def pair_with[C: BorrowCallable, I: Movable & Deinitable, //, T: Movable & Deinitable = downcast[C.Payload, Movable & Deinitable]](var function: C, var source: I) -> _Map[T, Tuple[T, C.Result], _Source[I], _Observe[T, C, True]] where _Source[I].Element == T and C.Payload == T and C.Failure == Never",
+     "signature": "def pair_with[C: BorrowCallContract & Movable & Deinitable, I: Movable & Deinitable, //, T: Movable & Deinitable = downcast[C.Payload, Movable & Deinitable]](var function: C, var source: I) -> _Map[T, Tuple[T, C.Result], _Source[I], _ObserveOnce[T, C, True]] where _Source[I].Element == T and C.Payload == T and C.Failure == Never and RepeatableBorrow[C]",
      "summary": "Borrow each element and pair it with its projection. Calls run lazily; the callback and source are consumed."
     }
    ],
@@ -21424,7 +21424,7 @@
        "description": "",
        "inferred": true,
        "name": "C",
-       "type": "BorrowCallable",
+       "type": "BorrowCallContract & Movable & Deinitable",
        "variadic": false
       },
       {
@@ -21446,9 +21446,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_Map[T, T, _Source[I], _Observe[T, C, False]]"
+      "type": "_Map[T, T, _Source[I], _ObserveOnce[T, C, False]]"
      },
-     "signature": "def tap_each[C: BorrowCallable, I: Movable & Deinitable, //, T: Movable & Deinitable = downcast[C.Payload, Movable & Deinitable]](var function: C, var source: I) -> _Map[T, T, _Source[I], _Observe[T, C, False]] where _Source[I].Element == T and C.Payload == T and C.Failure == Never",
+     "signature": "def tap_each[C: BorrowCallContract & Movable & Deinitable, I: Movable & Deinitable, //, T: Movable & Deinitable = downcast[C.Payload, Movable & Deinitable]](var function: C, var source: I) -> _Map[T, T, _Source[I], _ObserveOnce[T, C, False]] where _Source[I].Element == T and C.Payload == T and C.Failure == Never and RepeatableBorrow[C]",
      "summary": "Borrow each element and inspect it without changing it. Calls run lazily; the callback and source are consumed."
     }
    ],
@@ -83614,7 +83614,7 @@
         "description": "",
         "inferred": true,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -83624,7 +83624,7 @@
        "doc": "",
        "type": "Piped[Optional[downcast[C.Payload, Movable & Deinitable]]]"
       },
-      "signature": "def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == List[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "signature": "def max_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == List[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
       "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
      },
      {
@@ -83804,7 +83804,7 @@
         "description": "",
         "inferred": true,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        },
        {
@@ -83821,7 +83821,7 @@
        "doc": "",
        "type": "Piped[Optional[downcast[C.Payload, Movable & Deinitable]]]"
       },
-      "signature": "def max_by[C: BorrowCallable, N: Int, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "signature": "def max_by[C: BorrowCallContract & Movable & Deinitable, N: Int, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
       "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
      },
      {
@@ -83994,7 +83994,7 @@
         "description": "",
         "inferred": true,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -84004,7 +84004,7 @@
        "doc": "",
        "type": "Piped[Optional[downcast[C.Payload, Movable & Deinitable]]]"
       },
-      "signature": "def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "signature": "def max_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
       "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
      },
      {
@@ -84170,7 +84170,7 @@
         "description": "",
         "inferred": true,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -84180,7 +84180,7 @@
        "doc": "",
        "type": "Piped[Optional[downcast[C.Payload, Movable & Deinitable]]]"
       },
-      "signature": "def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "signature": "def max_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
       "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
      },
      {
@@ -84374,7 +84374,7 @@
         "description": "",
         "inferred": true,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        },
        {
@@ -84398,7 +84398,7 @@
        "doc": "",
        "type": "Piped[Optional[downcast[C.Payload, Movable & Deinitable]]]"
       },
-      "signature": "def max_by[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "signature": "def max_by[C: BorrowCallContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
       "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
      },
      {
@@ -84578,7 +84578,7 @@
         "description": "",
         "inferred": true,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -84588,7 +84588,7 @@
        "doc": "",
        "type": "Piped[Optional[downcast[C.Payload, Movable & Deinitable]]]"
       },
-      "signature": "def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "signature": "def max_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
       "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
      },
      {
@@ -84754,7 +84754,7 @@
         "description": "",
         "inferred": true,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -84764,7 +84764,7 @@
        "doc": "",
        "type": "Piped[Optional[downcast[C.Payload, Movable & Deinitable]]]"
       },
-      "signature": "def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "signature": "def max_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
       "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
      },
      {
@@ -84932,7 +84932,7 @@
         "description": "",
         "inferred": true,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -84942,7 +84942,7 @@
        "doc": "",
        "type": "Piped[Optional[downcast[C.Payload, Movable & Deinitable]]]"
       },
-      "signature": "def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == List[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "signature": "def min_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == List[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
       "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
      },
      {
@@ -85122,7 +85122,7 @@
         "description": "",
         "inferred": true,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        },
        {
@@ -85139,7 +85139,7 @@
        "doc": "",
        "type": "Piped[Optional[downcast[C.Payload, Movable & Deinitable]]]"
       },
-      "signature": "def min_by[C: BorrowCallable, N: Int, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "signature": "def min_by[C: BorrowCallContract & Movable & Deinitable, N: Int, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
       "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
      },
      {
@@ -85312,7 +85312,7 @@
         "description": "",
         "inferred": true,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -85322,7 +85322,7 @@
        "doc": "",
        "type": "Piped[Optional[downcast[C.Payload, Movable & Deinitable]]]"
       },
-      "signature": "def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "signature": "def min_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
       "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
      },
      {
@@ -85488,7 +85488,7 @@
         "description": "",
         "inferred": true,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -85498,7 +85498,7 @@
        "doc": "",
        "type": "Piped[Optional[downcast[C.Payload, Movable & Deinitable]]]"
       },
-      "signature": "def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "signature": "def min_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
       "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
      },
      {
@@ -85692,7 +85692,7 @@
         "description": "",
         "inferred": true,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        },
        {
@@ -85716,7 +85716,7 @@
        "doc": "",
        "type": "Piped[Optional[downcast[C.Payload, Movable & Deinitable]]]"
       },
-      "signature": "def min_by[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "signature": "def min_by[C: BorrowCallContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
       "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
      },
      {
@@ -85896,7 +85896,7 @@
         "description": "",
         "inferred": true,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -85906,7 +85906,7 @@
        "doc": "",
        "type": "Piped[Optional[downcast[C.Payload, Movable & Deinitable]]]"
       },
-      "signature": "def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "signature": "def min_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
       "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
      },
      {
@@ -86072,7 +86072,7 @@
         "description": "",
         "inferred": true,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -86082,7 +86082,7 @@
        "doc": "",
        "type": "Piped[Optional[downcast[C.Payload, Movable & Deinitable]]]"
       },
-      "signature": "def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "signature": "def min_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
       "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
      },
      {
@@ -170715,7 +170715,7 @@
         "description": "The first library callback type, retaining its receiver and origins.",
         "inferred": true,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -170725,7 +170725,7 @@
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
        "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
       },
-      "signature": "def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where C.Payload == _FoldElement[Self.V] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "signature": "def max_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where C.Payload == _FoldElement[Self.V] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
       "summary": "Reduce the consumed source in order through the canonical terminal driver."
      },
      {
@@ -171212,7 +171212,7 @@
         "description": "The first library callback type, retaining its receiver and origins.",
         "inferred": true,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -171222,7 +171222,7 @@
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
        "type": "Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E]"
       },
-      "signature": "def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where C.Payload == _FoldElement[Self.V] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "signature": "def min_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where C.Payload == _FoldElement[Self.V] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
       "summary": "Reduce the consumed source in order through the canonical terminal driver."
      },
      {
@@ -272023,7 +272023,7 @@
         "description": "",
         "inferred": true,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -272033,7 +272033,7 @@
        "doc": "",
        "type": "Optional[downcast[C.Payload, Movable & Deinitable]]"
       },
-      "signature": "def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "signature": "def max_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
       "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
      },
      {
@@ -272201,7 +272201,7 @@
         "description": "",
         "inferred": true,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -272211,7 +272211,7 @@
        "doc": "",
        "type": "Optional[downcast[C.Payload, Movable & Deinitable]]"
       },
-      "signature": "def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "signature": "def min_by[C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
       "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
      },
      {
@@ -272367,7 +272367,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -272375,9 +272375,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Iter[_Map[T, Tuple[T, C.Result], Self.I, _Observe[T, C, True]]]"
+       "type": "Iter[_Map[T, Tuple[T, C.Result], Self.I, _ObserveOnce[T, C, True]]]"
       },
-      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) -> Iter[_Map[T, Tuple[T, C.Result], Self.I, _Observe[T, C, True]]] where Self.I.Element == T and C.Payload == T and C.Failure == Never",
+      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) -> Iter[_Map[T, Tuple[T, C.Result], Self.I, _ObserveOnce[T, C, True]]] where Self.I.Element == T and C.Payload == T and C.Failure == Never and RepeatableBorrow[C]",
       "summary": "Borrow each element and pair it with its projection. Evaluation is lazy."
      }
     ],
@@ -274763,7 +274763,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -274771,9 +274771,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Iter[_Map[T, T, Self.I, _Observe[T, C, False]]]"
+       "type": "Iter[_Map[T, T, Self.I, _ObserveOnce[T, C, False]]]"
       },
-      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) -> Iter[_Map[T, T, Self.I, _Observe[T, C, False]]] where Self.I.Element == T and C.Payload == T and C.Failure == Never",
+      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) -> Iter[_Map[T, T, Self.I, _ObserveOnce[T, C, False]]] where Self.I.Element == T and C.Payload == T and C.Failure == Never and RepeatableBorrow[C]",
       "summary": "Borrow each element and inspect it without changing it. Evaluation is lazy."
      }
     ],
@@ -285638,7 +285638,7 @@
        "description": "",
        "inferred": true,
        "name": "C",
-       "type": "BorrowCallable",
+       "type": "BorrowCallContract & Movable & Deinitable",
        "variadic": false
       },
       {
@@ -285655,7 +285655,7 @@
       "doc": "",
       "type": "Optional[downcast[C.Payload, Movable & Deinitable]]"
      },
-     "signature": "def max_by[C: BorrowCallable, V: Movable & Deinitable, //](var function: C, var source: V) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+     "signature": "def max_by[C: BorrowCallContract & Movable & Deinitable, V: Movable & Deinitable, //](var function: C, var source: V) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
      "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
     },
     {
@@ -285745,10 +285745,10 @@
        "variadic": false
       },
       {
-       "description": "A repeatable borrowing projection with a Comparable result.",
+       "description": "An owned shared or mutable borrowing projection with a Comparable result.",
        "inferred": false,
        "name": "C",
-       "type": "BorrowCallable",
+       "type": "BorrowCallContract & Movable & Deinitable",
        "variadic": false
       }
      ],
@@ -285758,7 +285758,7 @@
       "doc": "The earliest element having a maximum key, moved without copying.",
       "type": "T"
      },
-     "signature": "def maximum_by_non_empty[T: Movable & Deinitable, C: BorrowCallable](var key: C, var source: NonEmptyList[T]) raises C.Failure -> T where C.Payload == T and conforms_to(C.Result, Comparable)",
+     "signature": "def maximum_by_non_empty[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var key: C, var source: NonEmptyList[T]) raises C.Failure -> T where C.Payload == T and conforms_to(C.Result, Comparable) and RepeatableBorrow[C]",
      "summary": "Return the first maximum element through the ordinary extremum kernel."
     },
     {
@@ -286053,7 +286053,7 @@
        "description": "",
        "inferred": true,
        "name": "C",
-       "type": "BorrowCallable",
+       "type": "BorrowCallContract & Movable & Deinitable",
        "variadic": false
       },
       {
@@ -286070,7 +286070,7 @@
       "doc": "",
       "type": "Optional[downcast[C.Payload, Movable & Deinitable]]"
      },
-     "signature": "def min_by[C: BorrowCallable, V: Movable & Deinitable, //](var function: C, var source: V) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+     "signature": "def min_by[C: BorrowCallContract & Movable & Deinitable, V: Movable & Deinitable, //](var function: C, var source: V) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable) and RepeatableBorrow[C]",
      "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
     },
     {
@@ -286160,10 +286160,10 @@
        "variadic": false
       },
       {
-       "description": "A repeatable borrowing projection with a Comparable result.",
+       "description": "An owned shared or mutable borrowing projection with a Comparable result.",
        "inferred": false,
        "name": "C",
-       "type": "BorrowCallable",
+       "type": "BorrowCallContract & Movable & Deinitable",
        "variadic": false
       }
      ],
@@ -286173,7 +286173,7 @@
       "doc": "The earliest element having a minimum key.",
       "type": "T"
      },
-     "signature": "def minimum_by_non_empty[T: Movable & Deinitable, C: BorrowCallable](var key: C, var source: NonEmptyList[T]) raises C.Failure -> T where C.Payload == T and conforms_to(C.Result, Comparable)",
+     "signature": "def minimum_by_non_empty[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var key: C, var source: NonEmptyList[T]) raises C.Failure -> T where C.Payload == T and conforms_to(C.Result, Comparable) and RepeatableBorrow[C]",
      "summary": "Return the first minimum element of a non-empty source by an owned key."
     },
     {
@@ -286455,7 +286455,7 @@
        "description": "",
        "inferred": true,
        "name": "C",
-       "type": "BorrowCallable",
+       "type": "BorrowCallContract & Movable & Deinitable",
        "variadic": false
       },
       {
@@ -286477,9 +286477,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_Map[T, Tuple[T, C.Result], _Source[I], _Observe[T, C, True]]"
+      "type": "_Map[T, Tuple[T, C.Result], _Source[I], _ObserveOnce[T, C, True]]"
      },
-     "signature": "def pair_with[C: BorrowCallable, I: Movable & Deinitable, //, T: Movable & Deinitable = downcast[C.Payload, Movable & Deinitable]](var function: C, var source: I) -> _Map[T, Tuple[T, C.Result], _Source[I], _Observe[T, C, True]] where _Source[I].Element == T and C.Payload == T and C.Failure == Never",
+     "signature": "def pair_with[C: BorrowCallContract & Movable & Deinitable, I: Movable & Deinitable, //, T: Movable & Deinitable = downcast[C.Payload, Movable & Deinitable]](var function: C, var source: I) -> _Map[T, Tuple[T, C.Result], _Source[I], _ObserveOnce[T, C, True]] where _Source[I].Element == T and C.Payload == T and C.Failure == Never and RepeatableBorrow[C]",
      "summary": "Borrow each element and pair it with its projection. Calls run lazily; the callback and source are consumed."
     }
    ],
@@ -289862,7 +289862,7 @@
        "description": "",
        "inferred": true,
        "name": "C",
-       "type": "BorrowCallable",
+       "type": "BorrowCallContract & Movable & Deinitable",
        "variadic": false
       },
       {
@@ -289884,9 +289884,9 @@
      "raises_doc": "",
      "returns": {
       "doc": "",
-      "type": "_Map[T, T, _Source[I], _Observe[T, C, False]]"
+      "type": "_Map[T, T, _Source[I], _ObserveOnce[T, C, False]]"
      },
-     "signature": "def tap_each[C: BorrowCallable, I: Movable & Deinitable, //, T: Movable & Deinitable = downcast[C.Payload, Movable & Deinitable]](var function: C, var source: I) -> _Map[T, T, _Source[I], _Observe[T, C, False]] where _Source[I].Element == T and C.Payload == T and C.Failure == Never",
+     "signature": "def tap_each[C: BorrowCallContract & Movable & Deinitable, I: Movable & Deinitable, //, T: Movable & Deinitable = downcast[C.Payload, Movable & Deinitable]](var function: C, var source: I) -> _Map[T, T, _Source[I], _ObserveOnce[T, C, False]] where _Source[I].Element == T and C.Payload == T and C.Failure == Never and RepeatableBorrow[C]",
      "summary": "Borrow each element and inspect it without changing it. Calls run lazily; the callback and source are consumed."
     }
    ],

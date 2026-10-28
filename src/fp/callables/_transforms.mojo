@@ -169,7 +169,11 @@ struct _IgnoreInput[T: Movable & Deinitable, F: ThunkContract & Movable & Deinit
 struct _ObserveOnce[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, paired: Bool](
     OnceUnary, MutableUnary where _RepeatableBorrow[C], Copyable where conforms_to(C, Copyable)
 ):
-    """Observe one borrowed payload, retaining ownership for the output."""
+    """Retain each owned payload across a borrowed projection.
+
+    Single-use owners consume the callback; repeated owners require
+    _RepeatableBorrow and keep its mutable receiver between elements.
+    """
     var function: Self.C
     comptime Arg = Self.T
     comptime Out = Tuple[Self.T, Self.C.Result] if Self.paired else Self.T

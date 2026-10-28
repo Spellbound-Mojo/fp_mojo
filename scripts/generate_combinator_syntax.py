@@ -29,7 +29,7 @@ def terminal_methods(mode, carrier=None):
                 element = f'downcast[P, {MD}]' if borrowing else 'A'
                 callback_result = 'R'
             elif kind == 'library':
-                params += [f'C: {callable_protocol("borrow", repeatable=True)}' if borrowing else f'F: {callable_protocol("owned")} & {MD}']
+                params += [f'C: {callable_protocol("borrow")} & {MD}' if borrowing else f'F: {callable_protocol("owned")} & {MD}']
                 metadata = callable_metadata('borrow' if borrowing else 'owned', 'C' if borrowing else 'F')
                 element = f'downcast[{metadata.inputs[0]}, {MD}]' if borrowing else metadata.inputs[0]
                 callback_result = metadata.result
@@ -71,6 +71,7 @@ def terminal_methods(mode, carrier=None):
                 condition = f'_Source[V].Element == {element}' if mode == 'free' else f'Self.I.Element == {element}'
             if numeric and callback_arg: condition += f' and {callback_result} == {numeric_type}'
             if borrowing: condition += f' and conforms_to({callback_result}, Comparable & {MD})'
+            if borrowing and kind == 'library': condition += ' and RepeatableBorrow[C]'
             if name == 'find_map':
                 result, raised = operation.result(element, callback_result, ''), error
                 call = operation.invoke('', build, source)
