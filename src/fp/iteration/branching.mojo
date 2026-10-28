@@ -7,6 +7,7 @@ from std.builtin.rebind import downcast, rebind_var
 from fp._internal.exclusive import _ExclusiveCell, _exclusive
 from fp.callables.products import _take_pair, _OptionalCell
 from fp.callables.protocols import BorrowCallable, UnaryContract
+from fp.callables._views import _UnaryViewable, _BorrowViewable
 from fp.callables.invoke import RepeatableUnary
 from fp.data._result import Result, Ok, Err, _ResultType
 from ._advance import _Source, _source, _next_optional
@@ -329,6 +330,11 @@ def partition[C: BorrowCallable, V: Movable & Deinitable, P: _BufferPolicy](var 
     """
     return _branches[downcast[C.Payload, Movable & Deinitable], downcast[C.Payload, Movable & Deinitable]](_source(source^), _Partition[downcast[C.Payload, Movable & Deinitable], C](predicate^), buffer^)
 
+def partition[C: _BorrowViewable, o: ImmOrigin, V: Movable & Deinitable, P: _BufferPolicy](ref[o] predicate: C, var source: V, *, var buffer: P) -> PartitionBranches[downcast[C._BorrowView[o].Payload, Movable & Deinitable], _Source[V], C._BorrowView[o], P] where _Source[V].Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never:
+    """Lazily split accepted and rejected elements into independent iterators.
+    """
+    return _branches[downcast[C._BorrowView[o].Payload, Movable & Deinitable], downcast[C._BorrowView[o].Payload, Movable & Deinitable]](_source(source^), _Partition[downcast[C._BorrowView[o].Payload, Movable & Deinitable], C._BorrowView[o]](predicate._borrow_view()), buffer^)
+
 def partition_map[T: Movable & Deinitable, U: Movable & Deinitable, V: Movable & Deinitable, P: _BufferPolicy](var function: def(var T) thin -> U, var source: V, *, var buffer: P) -> PartitionMapBranches[T, U, _Source[V], def(var T) thin -> U, P] where _Source[V].Element == T and conforms_to(U, _ResultType):
     """Lazily route Result payloads into independent Ok and Err iterators.
 
@@ -363,6 +369,11 @@ def partition_map[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitab
     """Lazily route Result payloads into independent Ok and Err iterators.
     """
     return _branches[downcast[F.Out, _ResultType].Value, downcast[F.Out, _ResultType].Error](_source(source^), _Classify[F.Arg, F.Out, F](function^), buffer^)
+
+def partition_map[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, P: _BufferPolicy](ref[o] function: F, var source: V, *, var buffer: P) -> PartitionMapBranches[F._View[o].Arg, F._View[o].Out, _Source[V], F._View[o], P] where _Source[V].Element == F._View[o].Arg and conforms_to(F._View[o].Out, _ResultType) and F._View[o].Error == Never and RepeatableUnary[F._View[o]]:
+    """Lazily route Result payloads into independent Ok and Err iterators.
+    """
+    return _branches[downcast[F._View[o].Out, _ResultType].Value, downcast[F._View[o].Out, _ResultType].Error](_source(source^), _Classify[F._View[o].Arg, F._View[o].Out, F._View[o]](function._unary_view()), buffer^)
 
 def unzip[A: Movable & Deinitable, B: Movable & Deinitable, V: Movable & Deinitable, P: _BufferPolicy](var source: V, *, var buffer: P) -> UnzipBranches[A, B, _Source[V], P] where _Source[V].Element == Tuple[A, B]:
     """Lazily split native tuple fields, checking both queues before publishing either field.

@@ -487,6 +487,14 @@ both branches releases the source, callback and queues without further pulls.
 A live but idle branch still counts as a consumer. A wrapper such as `take`
 does not signal abandonment until it releases its underlying branch handle.
 
+Named partial predicates and shared unary classifiers use the canonical
+origin-indexed callback views. The shared state owns the view, and both branch
+handles carry its origin. Moving one handle independently does not release the
+other handle's callback borrow. Releasing a view never destroys the borrowed
+callback; explicit callback moves and temporaries retain the owned route.
+Admission reuses the callback descriptor, and `_Partition` and `_Classify`
+still own routing. No second queue or branching engine is introduced.
+
 Both handles retain the source's and callback's origins. Shared allocation must
 not extend borrowed lifetimes, add Copyable to payloads, or create references
 into another movable handle. Use native shared ownership where suitable, with

@@ -3938,3 +3938,20 @@ source disposal before a failed identity, callback StopIteration propagation,
 no pull after failure, explicit moves and returned views into external owners.
 Generated argument documentation describes ownership according to the selected
 signature instead of saying every library callback is consumed.
+
+### Lazy partitions retain reusable callback views across both handles
+
+Free and Iter `partition` and `partition_map` admission now use the common
+borrowed and owned-operand view descriptors. Named partial predicates and
+shared classifiers retain their exact payload, output and Never contracts;
+existing native, owned library and explicit buffer-policy signatures remain.
+Factories still delegate source normalization, routing and state construction
+to `_source`, `_Partition`, `_Classify` and `_branches`.
+
+Each independently moved branch carries the callback origin through the shared
+state. The owner cannot be moved while a surviving handle can call it. Closing
+or discarding both handles and bounded overflow release views and queued
+payloads without destroying a borrowed callback. Focused checks cover inert
+construction, exact prefix-copy counts, one classification per pull, move-only
+input and output, independently moved handles, closure and overflow cleanup,
+explicitly moved callbacks, output origins and ordinary lifetime rejections.

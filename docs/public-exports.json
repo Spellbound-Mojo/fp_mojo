@@ -13385,6 +13385,10 @@
           {
             "signature": "def partition[C: BorrowCallable, P: _BufferPolicy](deinit self, var predicate: C, *, var buffer: P) -> PartitionBranches[downcast[C.Payload, Movable & Deinitable], Self.I, C, P] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never:",
             "sha256": "be13660cb459099e23d2722800e83b4a7217ab114fde431b791ea0ae6f7cdf66"
+          },
+          {
+            "signature": "def partition[C: _BorrowViewable, o: ImmOrigin, P: _BufferPolicy](deinit self, ref[o] predicate: C, *, var buffer: P) -> PartitionBranches[downcast[C._BorrowView[o].Payload, Movable & Deinitable], Self.I, C._BorrowView[o], P] where Self.I.Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never:",
+            "sha256": "dce964a3fe3149d43adb7d6f44707f20f34a5568a5bd90f097e8503363a52645"
           }
         ],
         "partition_map": [
@@ -13399,6 +13403,10 @@
           {
             "signature": "def partition_map[F: UnaryContract & Movable & Deinitable, P: _BufferPolicy](deinit self, var function: F, *, var buffer: P) -> PartitionMapBranches[F.Arg, F.Out, Self.I, F, P] where Self.I.Element == F.Arg and conforms_to(F.Out, _ResultType) and F.Error == Never and RepeatableUnary[F]:",
             "sha256": "006771ca1f156e6344e096a0efedd148bc6fc01367cfd806e62ccc9eac26a27a"
+          },
+          {
+            "signature": "def partition_map[F: _UnaryViewable, o: ImmOrigin, P: _BufferPolicy](deinit self, ref[o] function: F, *, var buffer: P) -> PartitionMapBranches[F._View[o].Arg, F._View[o].Out, Self.I, F._View[o], P] where Self.I.Element == F._View[o].Arg and conforms_to(F._View[o].Out, _ResultType) and F._View[o].Error == Never and RepeatableUnary[F._View[o]]:",
+            "sha256": "fd23627475b2e65e53ef5e1b0d1c929aea84e7847001160f3c9918c6f8eae99c"
           }
         ],
         "unzip": [
@@ -18438,6 +18446,10 @@
         {
           "signature": "def partition[C: BorrowCallable, V: Movable & Deinitable, P: _BufferPolicy](var predicate: C, var source: V, *, var buffer: P) -> PartitionBranches[downcast[C.Payload, Movable & Deinitable], _Source[V], C, P] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never:",
           "sha256": "f45e0e1acaa6f8c4eb563d050df0006e8beafc9b2073e246ed5567da3a2e131a"
+        },
+        {
+          "signature": "def partition[C: _BorrowViewable, o: ImmOrigin, V: Movable & Deinitable, P: _BufferPolicy](ref[o] predicate: C, var source: V, *, var buffer: P) -> PartitionBranches[downcast[C._BorrowView[o].Payload, Movable & Deinitable], _Source[V], C._BorrowView[o], P] where _Source[V].Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never:",
+          "sha256": "28ffa02220a76c46803fdae27f5de51268b1b6016c3b873abb46c18fcc14f2ec"
         }
       ],
       "provider": "iteration/branching"
@@ -18456,6 +18468,10 @@
         {
           "signature": "def partition_map[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, P: _BufferPolicy](var function: F, var source: V, *, var buffer: P) -> PartitionMapBranches[F.Arg, F.Out, _Source[V], F, P] where _Source[V].Element == F.Arg and conforms_to(F.Out, _ResultType) and F.Error == Never and RepeatableUnary[F]:",
           "sha256": "5b0a6289e47a0d9f65422f841158eae7d02ab39d10f64c1d14db06b05536618e"
+        },
+        {
+          "signature": "def partition_map[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, P: _BufferPolicy](ref[o] function: F, var source: V, *, var buffer: P) -> PartitionMapBranches[F._View[o].Arg, F._View[o].Out, _Source[V], F._View[o], P] where _Source[V].Element == F._View[o].Arg and conforms_to(F._View[o].Out, _ResultType) and F._View[o].Error == Never and RepeatableUnary[F._View[o]]:",
+          "sha256": "f8ea5b0e874578561931e9909e98367c07a3ad14391d62c3ec5fe5ea8b8a9c56"
         }
       ],
       "provider": "iteration/branching"

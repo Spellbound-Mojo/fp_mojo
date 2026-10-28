@@ -106,7 +106,14 @@ required: `Unbounded()` yields raw values; `BoundedFail(n)` yields
 
 `partition` borrows each candidate and routes accepted values first.
 `partition_map` consumes candidates into `Result[A,B]` and routes Ok/Err
-payloads respectively. `unzip` splits native pairs. Each source item is
+payloads respectively. A named unary `partial` can be reused in either
+operation. `partition_map` also accepts reusable native adapters and shared
+compositions. The example uses `evens` for two partitions and `route` for two
+classifications. Their branch handles retain a shared callback borrow; keep
+the callback alive while a branch may still use it. Passing `callback^` or a
+temporary transfers ownership. Both lazy callbacks remain non-raising.
+
+`unzip` splits native pairs. Each source item is
 processed once, in demand order; both outputs of an overflowing pair are
 rejected together. Overflow discards all backlog and releases upstream,
 then gives each live branch one terminal error before permanent exhaustion.

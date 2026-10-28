@@ -110,7 +110,7 @@
     },
     "iteration": {
       "scope": "Lazy native adapters, branches, alignment, scans and consuming terminals.",
-      "restrictions": "Lazy callbacks cannot raise; failures may be stored Result elements. Fallible source advancement and Resource scopes remain future contracts. Named unary partials are reusable in count_where, for_each and collect_fold; the latter two also borrow shared unary adapters and compositions. Immediate terminals preserve callback and Monoid errors and output origins.",
+      "restrictions": "Lazy callbacks cannot raise; failures may be stored Result elements. Fallible source advancement and Resource scopes remain future contracts. Named unary partials are reusable in count_where, for_each and collect_fold; the latter two also borrow shared unary adapters and compositions. Immediate terminals preserve callback and Monoid errors and output origins. Named partial predicates and shared classifiers can be reused in partition/partition_map; both handles retain the callback borrow. Explicit buffer policies remain required.",
       "evidence": [
         "docs/examples/iteration_branching.mojo",
         "docs/examples/iteration_alignment.mojo",
@@ -127,7 +127,18 @@
         "tests/compile_fail/terminal_sink_view_move.mojo",
         "tests/compile_fail/terminal_sink_view_origin.mojo",
         "tests/compile_fail/terminal_sink_view_sink_input.mojo",
-        "tests/compile_fail/terminal_sink_view_sink_result.mojo"
+        "tests/compile_fail/terminal_sink_view_sink_result.mojo",
+        "tests/runtime/test_branch_callback_views.mojo",
+        "tests/ownership/test_branch_callback_views_ownership.mojo",
+        "tests/compile_fail/branch_callback_view_classifier_error.mojo",
+        "tests/compile_fail/branch_callback_view_classifier_lifetime.mojo",
+        "tests/compile_fail/branch_callback_view_classifier_result.mojo",
+        "tests/compile_fail/branch_callback_view_input.mojo",
+        "tests/compile_fail/branch_callback_view_origin.mojo",
+        "tests/compile_fail/branch_callback_view_policy.mojo",
+        "tests/compile_fail/branch_callback_view_predicate_error.mojo",
+        "tests/compile_fail/branch_callback_view_predicate_lifetime.mojo",
+        "tests/compile_fail/branch_callback_view_predicate_result.mojo"
       ]
     },
     "control": {

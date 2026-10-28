@@ -142,7 +142,7 @@
       "stdout": "[both=0,10, left=1]\n[both=0,10, right=11, right=12]\npresent: True True\npresent: True False\n"
     },
     "docs/examples/iteration_branching.mojo": {
-      "stdout": "before consuming: 0\naccepted: 0 2 4\nrejected backlog: 1 3\nclassified: 5\nbounded accepted: 0 2\noverflow(branch=1,capacity=1)\nsibling also failed: True\nafter closing sibling: 0 2 4\n"
+      "stdout": "before consuming: 0\naccepted: 0 2 4\nrejected backlog: 1 3\nclassified: 5\nbounded accepted: 0 2\noverflow(branch=1,capacity=1)\nsibling also failed: True\nafter closing sibling: 0 2 4\nclassified: 0 2\nreused classifier: 2\n"
     },
     "docs/examples/iteration_chaining.mojo": {
       "stdout": "codepoints: 10\n0 4\n1 5\n2 6\n"

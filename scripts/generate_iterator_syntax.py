@@ -170,32 +170,44 @@ def branching(mode):
     detail='Construction pulls nothing and each source item is classified once. Branches are move-only.\nUnbounded queues retain every pending value; BoundedFail yields Result elements,\ndiscards all queued values on overflow and gives each live branch one terminal Err.\nClose a branch to release its queue without draining upstream. Access is sequential;\nreentrant or overlapping access aborts before a second mutable state borrow.'
     for name in ['partition','partition_map']:
         ispart=name=='partition'
-        for kind in ['thin','native','library']:
-            params=([f'T: {MD}']+([] if ispart else [f'U: {MD}'])) if kind!='library' else ([f'C: {callable_protocol("borrow", repeatable=True)}'] if ispart else [f'F: {callable_protocol("owned")} & {MD}'])
+        for kind in ['thin','native','library','view']:
+            shared=callback('borrow' if ispart else 'owned', kind, 'predicate' if ispart else 'function') if kind=='view' else None
+            if shared and not ispart:shared=shared.renamed({'C':'F'})
+            if shared:
+                params=list(shared.parameters)
+            elif kind=='library':
+                params=[f'C: {callable_protocol("borrow", repeatable=True)}'] if ispart else [f'F: {callable_protocol("owned")} & {MD}']
+            else:
+                params=[f'T: {MD}']+([] if ispart else [f'U: {MD}'])
             if mode=='free':params+=[f'V: {MD}']
             params+=['P: _BufferPolicy']
-            metadata=callable_metadata('borrow' if ispart else 'owned', 'C' if ispart else 'F') if kind=='library' else None
+            metadata=callable_metadata('borrow' if ispart else 'owned', shared.type if shared else 'C' if ispart else 'F') if kind in ('library','view') else None
             t='T' if metadata is None else f'downcast[{metadata.inputs[0]}, {MD}]' if ispart else metadata.inputs[0]
             u='U' if metadata is None else metadata.result
-            cb=('def(T) thin -> Bool' if ispart else 'def(var T) thin -> U') if kind=='thin' else ('C' if kind=='library' and ispart else 'F')
+            if shared:
+                cb=shared.type
+            elif kind=='thin':
+                cb='def(T) thin -> Bool' if ispart else 'def(var T) thin -> U'
+            else:
+                cb='C' if kind=='library' and ispart else 'F'
             if kind=='native':params+=['//', 'F: _LazyPredicate[T]' if ispart else 'F: _LazyUnary[T, U]']
             condition=f'{it}.Element == {t}'
             if ispart and metadata:condition+=f' and {metadata.result} == Bool and {metadata.error} == Never'
             if not ispart:condition+=f' and conforms_to({u}, _ResultType)'
-            if not ispart and metadata:condition+=f' and {metadata.error} == Never and RepeatableUnary[F]'
+            if not ispart and metadata:condition+=f' and {metadata.error} == Never and RepeatableUnary[{cb}]'
             result=f'PartitionBranches[{t}, {it}, {cb}, P]' if ispart else f'PartitionMapBranches[{t}, {u}, {it}, {cb}, P]'
-            args=['var '+('predicate' if ispart else 'function')+': '+cb]
+            args=[shared.argument if shared else 'var '+('predicate' if ispart else 'function')+': '+cb]
             if mode=='free':args+=['var source: V']
             else:args.insert(0,'deinit self')
             args+=['*','var buffer: P']
-            value=('predicate' if ispart else 'function')+('' if kind=='thin' else '^')
+            value=shared.build if shared else ('predicate' if ispart else 'function')+('' if kind=='thin' else '^')
             if mode=='free':
                 route=f'_Partition[{t}, {cb}]({value})' if ispart else f'_Classify[{t}, {u}, {cb}]({value})'
                 a=t if ispart else f'downcast[{u}, _ResultType].Value'
                 b=t if ispart else f'downcast[{u}, _ResultType].Error'
                 body=f'return _branches[{a}, {b}](_source({src}), {route}, buffer^)'
             else:
-                forward='[T=T'+('' if ispart else ', U=U')+']' if kind!='library' else ''
+                forward='[T=T'+('' if ispart else ', U=U')+']' if kind in ('thin','native') else ''
                 body=f'return _{name}{forward}({value}, {src}, buffer=buffer^)'
             out+=emit(name,params,args,result,condition,body,'Lazily split accepted and rejected elements into independent iterators.' if ispart else 'Lazily route Result payloads into independent Ok and Err iterators.',detail,indent=ind,docs=kind=='thin')
     params=[f'A: {MD}',f'B: {MD}']+([f'V: {MD}'] if mode=='free' else [])+['P: _BufferPolicy']

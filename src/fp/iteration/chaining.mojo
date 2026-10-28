@@ -635,6 +635,11 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """
         return _partition(predicate^, self._iterator^, buffer=buffer^)
 
+    def partition[C: _BorrowViewable, o: ImmOrigin, P: _BufferPolicy](deinit self, ref[o] predicate: C, *, var buffer: P) -> PartitionBranches[downcast[C._BorrowView[o].Payload, Movable & Deinitable], Self.I, C._BorrowView[o], P] where Self.I.Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never:
+        """Lazily split accepted and rejected elements into independent iterators.
+        """
+        return _partition(predicate._borrow_view(), self._iterator^, buffer=buffer^)
+
     def partition_map[T: Movable & Deinitable, U: Movable & Deinitable, P: _BufferPolicy](deinit self, var function: def(var T) thin -> U, *, var buffer: P) -> PartitionMapBranches[T, U, Self.I, def(var T) thin -> U, P] where Self.I.Element == T and conforms_to(U, _ResultType):
         """Lazily route Result payloads into independent Ok and Err iterators.
 
@@ -667,6 +672,11 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Lazily route Result payloads into independent Ok and Err iterators.
         """
         return _partition_map(function^, self._iterator^, buffer=buffer^)
+
+    def partition_map[F: _UnaryViewable, o: ImmOrigin, P: _BufferPolicy](deinit self, ref[o] function: F, *, var buffer: P) -> PartitionMapBranches[F._View[o].Arg, F._View[o].Out, Self.I, F._View[o], P] where Self.I.Element == F._View[o].Arg and conforms_to(F._View[o].Out, _ResultType) and F._View[o].Error == Never and RepeatableUnary[F._View[o]]:
+        """Lazily route Result payloads into independent Ok and Err iterators.
+        """
+        return _partition_map(function._unary_view(), self._iterator^, buffer=buffer^)
 
     def unzip[A: Movable & Deinitable, B: Movable & Deinitable, P: _BufferPolicy](deinit self, *, var buffer: P) -> UnzipBranches[A, B, Self.I, P] where Self.I.Element == Tuple[A, B]:
         """Lazily split native tuple fields, checking both queues before publishing either field.
