@@ -63,9 +63,11 @@ struct _Plan[*Fs: Movable & Deinitable]:
 
 
 def _type_name[T: AnyType]() -> String:
-    # Reflection spells Never as an internal stub and Int as its SIMD alias.
+    # Keep native names readable instead of exposing reflection's internal stubs.
     comptime if T == Never:
         return "Never"
+    elif T == type_of(None):
+        return "type_of(None) (no return value)"
     elif T == Int:
         return "Int"
     else:

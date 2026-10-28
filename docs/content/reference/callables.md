@@ -16,6 +16,11 @@ including `raises Never` and no-value returns. Native pointers remain implicitly
 copyable; captured closures retain their own copyability and borrowed origins.
 Creating an adapter never invokes the callback.
 
+A procedure with no return value differs from a function returning `NoneType`.
+Pipeline and composition mismatch diagnostics name the former
+`type_of(None) (no return value)`. Declare an explicit `-> NoneType` result
+when the next stage expects a unit payload of that type.
+
 A named `as_unary` adapter can be reused in supported Pipeline, Result and
 iterator callbacks, including with noncopyable captures. The example borrows
 `formatter` twice and then moves it. See [callback reuse](../start/ownership.md#reuse-callbacks-by-name)
