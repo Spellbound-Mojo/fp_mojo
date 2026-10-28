@@ -31018,6 +31018,22 @@
       "summary": "Sequence a borrowed error projection and retain the original error on success."
      }
     ],
+    "flatten": [
+     {
+      "args": [],
+      "description": "For `Result[Result[U, E], E]`, return `Result[U, E]`. Both layers must\nhave the same complete error type, including borrowed origins. Map\ndifferent error types explicitly before flattening. This is bind with\nidentity, as in Cats `FlatMap.flatten`, and never raises a stored error.\nPayloads and errors are moved without copying.",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The inner Result on outer success, or the original outer error.",
+       "type": "Self.T"
+      },
+      "signature": "def flatten(deinit self) -> Self.T where conforms_to(Self.T, _ResultType) and Self.T == Result[downcast[Self.T, _ResultType].Value, Self.E]",
+      "summary": "Remove one nested Result layer, preserving success or either stored error."
+     }
+    ],
     "fold": [
      {
       "args": [

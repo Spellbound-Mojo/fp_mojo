@@ -55,6 +55,21 @@ without copying its payload.
 `pipeline(result^)`, retaining the native error setting. Combine it with
 `to_optional()` to keep only the error; see [working with the error as a value](../tutorial/results.md#work-with-the-error-as-a-value).
 
+## Flatten a nested Result
+
+`nested^.flatten()` removes one layer from `Result[Result[T, E], E]`, returning
+`Result[T, E]`. An outer error passes through; on outer success, the inner
+Result is returned as it is. The method consumes the nested value without
+copying payloads or raising stored errors. No callback or type annotation is
+needed at the call.
+
+This follows [Cats `FlatMap.flatten`](https://typelevel.org/cats/api/cats/FlatMap.html).
+Both layers must use the same complete error type, including origins; use
+`map_err` explicitly when they differ. Borrowed values and errors retain their
+original owners. `pipeline(nested^).flatten()` remains available for a fluent
+continuation. When applying a function that already returns a Result,
+`flat_map(function)` avoids constructing the extra layer in the first place.
+
 ## Reuse Result predicates and observers
 
 Bind a native predicate or observer with `partial`, then pass it by name to

@@ -718,6 +718,20 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """Transform the success value with a library unary callback."""
         return _result_transform[Self.T, Self.E, F.Out, Self.E, F, True, True](function^, self^)
 
+    def flatten(deinit self) -> Self.T where conforms_to(Self.T, _ResultType) and Self.T == Result[downcast[Self.T, _ResultType].Value, Self.E]:
+        """Remove one nested Result layer, preserving success or either stored error.
+
+        For `Result[Result[U, E], E]`, return `Result[U, E]`. Both layers must
+        have the same complete error type, including borrowed origins. Map
+        different error types explicitly before flattening. This is bind with
+        identity, as in Cats `FlatMap.flatten`, and never raises a stored error.
+        Payloads and errors are moved without copying.
+
+        Returns:
+            The inner Result on outer success, or the original outer error.
+        """
+        return self^.flat_map(Identity[Self.T]())
+
     def flat_map[U: Movable & Deinitable, A: Movable & Deinitable, //, F: def(var A) -> Result[U, Self.E]](
         deinit self, function: F
     ) -> Result[U, Self.E] where A == Self.T:

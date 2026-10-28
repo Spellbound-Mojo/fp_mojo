@@ -334,7 +334,15 @@
         "tests/compile_fail/shared_sequencing_flat_map_owned_origin.mojo",
         "tests/compile_fail/shared_sequencing_flat_pair_with_owned_origin.mojo",
         "tests/compile_fail/shared_sequencing_flat_tap_owned_origin.mojo",
-        "tests/compile_fail/shared_sequencing_followed_by_owned_origin.mojo"
+        "tests/compile_fail/shared_sequencing_followed_by_owned_origin.mojo",
+        "tests/runtime/test_result_flatten.mojo",
+        "tests/ownership/test_result_flatten.mojo",
+        "tests/compile_fail/result_flatten_consumed.mojo",
+        "tests/compile_fail/result_flatten_error_type.mojo",
+        "tests/compile_fail/result_flatten_not_nested.mojo",
+        "tests/compile_fail/result_flatten_optional.mojo",
+        "tests/compile_fail/result_flatten_origin.mojo",
+        "tests/compile_fail/result_flatten_output_origin.mojo"
       ]
     },
     "iteration": {

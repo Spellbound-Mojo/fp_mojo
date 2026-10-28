@@ -3632,6 +3632,12 @@
       "signature": "def flat_tap_err[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Result[downcast[C._BorrowView[o].Result, _ResultType].Value, Self.E]:"
      }
     ],
+    "flatten": [
+     {
+      "sha256": "3eb4acac4285d466ced92482c670ebbe898def570ff2e38dd4a553436dab2066",
+      "signature": "def flatten(deinit self) -> Self.T where conforms_to(Self.T, _ResultType) and Self.T == Result[downcast[Self.T, _ResultType].Value, Self.E]:"
+     }
+    ],
     "fold": [
      {
       "sha256": "144da542992e1491bf050e288f08a1ab2ade298b79693ac6c491a21459295362",

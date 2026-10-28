@@ -48,3 +48,8 @@ def main() raises:
     # Both handlers borrow their payload; the pipeline owns its cleanup.
     assert_equal(pipeline(checked(5)).fold(describe, describe_error), "count 5")
     print("summary:", pipeline(checked(-1)).fold(describe, describe_error))
+
+    var nested = checked(6).map(checked)
+    print("flattened:", nested^.flatten().get_or(0))
+    var rejected = checked(-1).map(checked)
+    print("flattened error:", rejected^.flatten().swap().get_or(String()))
