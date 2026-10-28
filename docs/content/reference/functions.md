@@ -703,6 +703,22 @@ one transfers ownership. A mutable-only wrapper uses `call_mut`, and a
 consuming wrapper uses `wrapper^.call_once(pair)` or a compatible operation.
 Composition still passes tuples whole unless this adapter is explicit.
 
+Use `first[Other](callback)` or `second[Other](callback)` to transform just one
+pair element. `Other` is the untouched element's type: for example,
+`first[String](partial(scale, 3))((2, String("order-7")))` yields
+`(6, String("order-7"))`. `second[Int](excited)` changes the label while keeping
+the amount. These follow the pair transformations in Cats' `Strong` abstraction.
+
+Plain unary functions and stored thin pointers work directly; capturing
+closures use `as_unary(closure^)`. Library callables retain their shared,
+mutable and consuming receiver modes. Construction moves only the callback;
+calls consume both input elements and move the untouched one into the output
+without copying it. A native raise drops that untouched value and preserves
+the exact error type. Named shared wrappers support borrowed reuse in unary
+operations. A native no-return callback leaves a `type_of(None)` element in
+the pair, preserving its exact native result type. An explicit `NoneType`
+result stays distinct. In either case the untouched element is retained.
+
 Use `.then(next)` to grow an existing composition one stage at a time. A plain
 function, stored thin pointer or library stage is accepted directly. Move a
 named chain with `chain^.then(next)`; the result owns its stages and construction

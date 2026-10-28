@@ -19,6 +19,8 @@ SOURCE_MODULES = (
     ('functions', 'functions/kleisli'),
     ('functions', 'functions/flipped'),
     ('functions', 'functions/tupled'),
+    ('functions', 'callables/products'),
+    ('functions', 'functions/products'),
     ('functions', 'functions/partial'),
     ('iteration', 'iteration/folds'),
     ('iteration', 'iteration/adapters'),

@@ -1,5 +1,5 @@
 """Reuse ordinary function chains across selected pipeline operations."""
-from fp.functions import pipeline, flow, compose, partial, tupled
+from fp.functions import pipeline, flow, compose, partial, tupled, first, second
 from fp.iteration import iterated
 from fp.data import Result, Ok, Err
 from std.testing import assert_equal
@@ -48,3 +48,7 @@ def main() raises:
     print("combined:", combined(2, 3))
     var charged = flow(with_fee, tupled(add))
     print("pair stage:", charged(6))
+    var tagged = first[String](partial(scale, 3))((2, String("order-7")))
+    print("tagged:", tagged[0], tagged[1])
+    var retitled = second[Int](excited)((6, String("ready")))
+    print("second:", retitled[0], retitled[1])

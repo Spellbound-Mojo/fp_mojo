@@ -4,7 +4,8 @@ Use `pipe(value, f, g)` to apply stages now, `flow(f, g)` or `compose(g, f)` to
 build a reusable composition, and `piped(value).then(f).get()` to chain any
 number of stages one call at a time. `flip` swaps two arguments and `partial`
 binds leading arguments. `tupled(function)` adapts a binary callback to one
-native pair without copying either element.
+native pair without copying either element. `first[Other]` and `second[Other]`
+transform one pair element and move the other through unchanged.
 
 Two-stage `flow` and `compose` can mix a plain function or stored thin pointer
 with a library callable directly, in either position. Compositions own their
@@ -41,6 +42,8 @@ from .composition import Composition, Identity, flow, compose
 from .kleisli import Kleisli, kleisli
 from .flipped import Flipped, FlippedFunction, flip
 from .tupled import Tupled, tupled
+from fp.callables.products import MappedPair
+from .products import first, second
 from .partial import Partial, partial
 
 from .context import Pipeline, pipeline, pipeline_values

@@ -17,6 +17,8 @@ compose(fn, ..., f1, f0)(args)   = fn(...f1(f0(args))...)
 flip(f)(a, b, rest)              = f(b, a, rest)
 partial(f, a, b)(rest)           = f(copy(a), copy(b), rest)
 tupled(f)((a, b))               = f(a, b)
+first[Other](f)((a, b))         = (f(a), b)
+second[Other](f)((a, b))        = (a, f(b))
 ```
 
 These equations describe logical calls. `args` is zero, one or two arguments for
@@ -63,6 +65,28 @@ retain their existing mutable native invocation convention; that branch still
 uses the same `_take_pair` ownership primitive. Adapting a pair never changes
 which receiver mode a consumer requests, promotes an error without the existing
 compatibility proof, or unpacks tuples implicitly in composition.
+
+`first` and `second` follow
+[Cats' `Strong` pair transformations](https://github.com/typelevel/cats/blob/main/core/src/main/scala/cats/arrow/Strong.scala).
+Their public `MappedPair` is the existing product-mapping owner, with
+`_MapPair` retained as an internal alias for State, Writer and effect transport.
+The original mutable and consuming paths still delegate to `_map_pair`.
+A shared path adds only a `_SharedUnaryRef` and delegates to that same function;
+its view marker enables named reuse in supported unary operations.
+
+`_map_pair` remains the sole owner of selecting a pair element, transferring
+both elements through `_take_pair`, invoking the callback and assembling the
+result. Native error unwinding releases the untouched element. No product
+mapping loop or second callback storage has been introduced. The factory's
+`Other` type describes the element that is not transformed; the input callback
+cannot infer that future argument before the pair is supplied.
+
+Native factories use the canonical `native_factories` descriptor, including
+its literal no-value signatures. Native no-return callbacks leave a
+`type_of(None)` element in the returned tuple; explicit `NoneType` stays
+distinct. The same pair mapping owner supports both, including move-only
+untouched elements. Capturing unary closures enter through the existing
+`as_unary` adapter.
 
 ## Pipelines
 

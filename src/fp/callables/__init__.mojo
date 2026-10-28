@@ -16,7 +16,7 @@ implements each receiver mode it supports as its own trait:
 closure into a `NativeUnary`. `BorrowCallable` and `BorrowOnceCallable` borrow
 their argument instead of taking it, and `invoke_borrowed` and
 `invoke_borrowed_once` call them. Errors keep their exact types. `Partial`,
-`Composition`, `Flipped` and `Identity` from `fp.functions` implement these
+`Composition`, `Flipped`, `Tupled`, `MappedPair` and `Identity` from `fp.functions` implement these
 protocols.
 
 `as_binary` stores a plain binary function or thin pointer in `NativeBinary`.
@@ -33,7 +33,8 @@ Where each consumer enters:
 | `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |
 | `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |
 | `flip` | `Binary` values and plain functions with two or more parameters |
-| Owned iteration callbacks, `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |
+| Lazy `map`, `filter_map`, `flat_map`, `scan_left` | Native callbacks and shared or mutable library unary/binary values |
+| `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |
 | Iteration predicates, `while_loop` predicates | Native predicates and `BorrowCallable` |
 | `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |
 | `attempt_once` | `OnceThunk` |

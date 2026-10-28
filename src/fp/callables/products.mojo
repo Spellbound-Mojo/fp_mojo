@@ -1,9 +1,10 @@
 """Move both elements out of a native pair without copying either."""
 from std.builtin.rebind import rebind_var, rebind, downcast
 from std.memory import MaybeUninit
-from .protocols import UnaryContract, OnceUnary, MutableUnary, BinaryContract
+from .protocols import UnaryContract, Unary, OnceUnary, MutableUnary, BinaryContract
 from .invoke import call_once, RepeatableUnary, _OnceBinaryAvailable
-from ._receiver import _MutableUnaryRef, _binary_once_as
+from ._receiver import _MutableUnaryRef, _SharedUnaryRef, _binary_once_as
+from ._views import _UnaryViewable
 from fp._internal.errors import _ErrorCompatible
 
 
@@ -48,19 +49,104 @@ struct _WithSecond[A: Movable & Deinitable, S: Movable & Deinitable](OnceUnary, 
 
 
 @fieldwise_init
-struct _MapPair[F: UnaryContract & Movable & Deinitable, Other: Movable & Deinitable, first: Bool](
-    OnceUnary, MutableUnary where RepeatableUnary[F], Copyable where conforms_to(F, Copyable)
+struct MappedPair[F: UnaryContract & Movable & Deinitable, Other: Movable & Deinitable, first: Bool](
+    OnceUnary, Unary where conforms_to(F, Unary),
+    _UnaryViewable where conforms_to(F, Unary),
+    MutableUnary where RepeatableUnary[F], Copyable where conforms_to(F, Copyable)
 ):
-    """Map one native pair component, moving the untouched component unchanged."""
+    """Transform one pair element and move the other through unchanged.
+
+    Returned by `fp.functions.first` and `fp.functions.second`. The callback
+    moves into the wrapper without being called or copied. Calls consume the
+    pair, apply the callback to its selected element, and return a new pair.
+    The other element needs no copy capability. Exact result and error types,
+    receiver requirements and embedded origins are preserved.
+
+    Named shared wrappers can be reused by borrow in supported unary operations.
+    Move the wrapper to transfer its callback. Mutable calls retain callback
+    state, and consuming calls transfer its captures to the selected invocation.
+
+    Parameters:
+        F: The unary library callback's type.
+        Other: The untouched pair element's type.
+        first: Whether the selected element is first rather than second.
+    """
     var function: Self.F
     comptime Arg = Tuple[Self.F.Arg, Self.Other] if Self.first else Tuple[Self.Other, Self.F.Arg]
     comptime Out = Tuple[Self.F.Out, Self.Other] if Self.first else Tuple[Self.Other, Self.F.Out]
     comptime Error = Self.F.Error
+    comptime _View[o: ImmOrigin] = _SharedUnaryRef[downcast[Self, Unary], o]
+
+    def _unary_view[o: ImmOrigin](ref[o] self) -> Self._View[o]:
+        comptime assert conforms_to(Self.F, Unary)
+        return Self._View[o](Pointer(to=self))
+
+    def call(self, var arg: Self.Arg) raises Self.Error -> Self.Out:
+        """Transform the selected element through a shared callback receiver.
+
+        Args:
+            arg: The native pair, consumed without copying either element.
+
+        Returns:
+            The mapped pair with its untouched element transferred unchanged.
+
+        Raises:
+            The callback's exact error type.
+        """
+        comptime assert conforms_to(Self.F, Unary), "pair mapping: a shared call requires a Unary"
+        comptime C = downcast[Self.F, Unary]
+        ref callback = rebind[C](self.function)
+        comptime V = _SharedUnaryRef[C, origin_of(callback)]
+        comptime assert Self.Arg == _MapPair[V, Self.Other, Self.first].Arg
+        return rebind_var[Self.Out](_map_pair[Self.Other, Self.first](
+            V(Pointer(to=callback)), rebind_var[_MapPair[V, Self.Other, Self.first].Arg](arg^)))
+
     def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
+        """Transform once, consuming the callback and both pair elements.
+
+        Args:
+            arg: The native pair, consumed.
+
+        Returns:
+            The mapped pair with its untouched element transferred unchanged.
+
+        Raises:
+            The callback's exact error type.
+        """
         return _map_pair[Self.Other, Self.first](self.function^, arg^)
+
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        comptime assert RepeatableUnary[Self.F]
+        """Transform with exclusive access, retaining callback state for later calls.
+
+        Args:
+            arg: The native pair, consumed.
+
+        Returns:
+            The mapped pair with its untouched element transferred unchanged.
+
+        Raises:
+            The callback's exact error type.
+        """
+        comptime assert RepeatableUnary[Self.F], "pair mapping: a repeated call requires a shared or mutable Unary"
         return _map_pair[Self.Other, Self.first](_MutableUnaryRef(Pointer(to=self.function)), arg^)
+
+    def __call__(self, var arg: Self.Arg) raises Self.Error -> Self.Out:
+        """Transform through a shared receiver, as `call` does.
+
+        Args:
+            arg: The native pair, consumed.
+
+        Returns:
+            The mapped pair with its untouched element transferred unchanged.
+
+        Raises:
+            The callback's exact error type.
+        """
+        return self.call(arg^)
+
+
+# Preserve the existing internal type spelling for State, Writer and transport.
+comptime _MapPair[F: UnaryContract & Movable & Deinitable, Other: Movable & Deinitable, first: Bool] = MappedPair[F, Other, first]
 
 
 def _map_pair[Other: Movable & Deinitable, first: Bool, F: UnaryContract & Movable & Deinitable](

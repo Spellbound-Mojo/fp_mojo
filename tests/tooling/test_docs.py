@@ -11,9 +11,9 @@ import docs_contract
 class DocumentationContractTests(unittest.TestCase):
     def test_complete_reviewed_inventory(self):
         result = docs_contract.audit_docs()
-        self.assertEqual(result['exports'], 336)
+        self.assertEqual(result['exports'], 347)
         self.assertEqual(result['modules'], 10)
-        self.assertEqual(result['examples'], 108)
+        self.assertEqual(result['examples'], 109)
 
     def test_relocated_identity_keeps_its_public_reference(self):
         rendered = docs_contract.package_page('functions', 'reference/functions.md')

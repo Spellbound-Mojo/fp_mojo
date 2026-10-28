@@ -443,6 +443,40 @@ def tupled_source(path):
     return spliced(path, ''.join(out), TUPLED_START, TUPLED_END, '')
 
 
+def pair_projection_source(path):
+    out = []
+    descriptions = dict(A="The transformed element's type.", R="The callback result type.",
+                        E="The callback error type.", q="The temporary pointer admission borrow's origin.")
+    for name, selected in [('first', 'True'), ('second', 'False')]:
+        for factory in native_factories('owned', ['A'], owner='NativeUnary'):
+            parameters = [*factory.parameters, *factory.pointer.parameters]
+            declarations = [*[f'{key}: {bound}' for key, bound in parameters], '//', 'Other: Movable & Deinitable']
+            where = ' where ' + ' and '.join(factory.pointer.conditions) if factory.pointer.conditions else ''
+            documented = ''.join(f'        {key}: {descriptions[key]}\n' for key, _ in parameters)
+            out.append(f'''def {name}[{", ".join(declarations)}](
+    {factory.argument}
+) -> MappedPair[{factory.adapter}, Other, {selected}]{where}:
+    """Transform the {name} pair element with a plain function or stored thin pointer.
+
+    The untouched element is moved unchanged. Construction stores the pointer;
+    pair transfer and invocation use the same library callback implementation.
+
+    Parameters:
+{documented}        Other: The untouched pair element's type.
+
+    Args:
+        function: The unary native function or stored pointer.
+
+    Returns:
+        A callable transforming only the {name} element of its owned pair.
+    """
+    return {name}[Other]({factory.adapter}(function))
+
+
+''')
+    return spliced(path, ''.join(out), '# --- pair projection native admission (generated) ---\n', '# --- end pair projection native admission ---\n', '')
+
+
 def main():
     import generate_sequencing_syntax as sequencing_syntax
     parser = argparse.ArgumentParser(description=__doc__)
@@ -467,6 +501,7 @@ def main():
         ('iteration/derived.mojo', lambda path: spliced(path, traversal_syntax.methods('free'), traversal_syntax.START, traversal_syntax.END, traversal_syntax.HEADER)),
         ('functions/composition.mojo', composition_source),
         ('functions/tupled.mojo', tupled_source),
+        ('functions/products.mojo', pair_projection_source),
         ('matching/matcher.mojo', lambda path: spliced(path, match_overloads(), MATCH_START, MATCH_END, MATCH_HEADER)),
     ):
         path = ROOT / 'src/fp' / name

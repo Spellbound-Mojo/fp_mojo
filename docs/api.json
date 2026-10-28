@@ -49156,6 +49156,163 @@
     "_UnaryViewable"
    ]
   },
+  "functions.MappedPair": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Arg"
+    },
+    {
+     "description": "",
+     "name": "Out"
+    },
+    {
+     "description": "",
+     "name": "Error"
+    }
+   ],
+   "description": "Returned by `fp.functions.first` and `fp.functions.second`. The callback\nmoves into the wrapper without being called or copied. Calls consume the\npair, apply the callback to its selected element, and return a new pair.\nThe other element needs no copy capability. Exact result and error types,\nreceiver requirements and embedded origins are preserved.\n\nNamed shared wrappers can be reused by borrow in supported unary operations.\nMove the wrapper to transfer its callback. Mutable calls retain callback\nstate, and consuming calls transfer its captures to the selected invocation.",
+   "fields": [
+    {
+     "description": "",
+     "name": "function",
+     "type": "F"
+    }
+   ],
+   "kind": "struct",
+   "methods": {
+    "__call__": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The native pair, consumed.",
+        "name": "arg",
+        "type": "Self.Arg",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The callback's exact error type.",
+      "returns": {
+       "doc": "The mapped pair with its untouched element transferred unchanged.",
+       "type": "Self.Out"
+      },
+      "signature": "def __call__(self, var arg: Self.Arg) raises Self.Error -> Self.Out",
+      "summary": "Transform through a shared receiver, as `call` does."
+     }
+    ],
+    "call": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The native pair, consumed without copying either element.",
+        "name": "arg",
+        "type": "Self.Arg",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The callback's exact error type.",
+      "returns": {
+       "doc": "The mapped pair with its untouched element transferred unchanged.",
+       "type": "Self.Out"
+      },
+      "signature": "def call(self, var arg: Self.Arg) raises Self.Error -> Self.Out",
+      "summary": "Transform the selected element through a shared callback receiver."
+     }
+    ],
+    "call_mut": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The native pair, consumed.",
+        "name": "arg",
+        "type": "Self.Arg",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The callback's exact error type.",
+      "returns": {
+       "doc": "The mapped pair with its untouched element transferred unchanged.",
+       "type": "Self.Out"
+      },
+      "signature": "def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out",
+      "summary": "Transform with exclusive access, retaining callback state for later calls."
+     }
+    ],
+    "call_once": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The native pair, consumed.",
+        "name": "arg",
+        "type": "Self.Arg",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The callback's exact error type.",
+      "returns": {
+       "doc": "The mapped pair with its untouched element transferred unchanged.",
+       "type": "Self.Out"
+      },
+      "signature": "def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out",
+      "summary": "Transform once, consuming the callback and both pair elements."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The unary library callback's type.",
+     "inferred": false,
+     "name": "F",
+     "type": "UnaryContract & Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The untouched pair element's type.",
+     "inferred": false,
+     "name": "Other",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "Whether the selected element is first rather than second.",
+     "inferred": false,
+     "name": "first",
+     "type": "Bool",
+     "variadic": false
+    }
+   ],
+   "provider": "callables/products",
+   "signature": "struct MappedPair[F: UnaryContract & Movable & Deinitable, Other: Movable & Deinitable, first: Bool](OnceUnary, Unary where conforms_to(F, Unary), _UnaryViewable where conforms_to(F, Unary), MutableUnary where RepeatableUnary[F], Copyable where conforms_to(F, Copyable))",
+   "summary": "Transform one pair element and move the other through unchanged.",
+   "traits": [
+    "Copyable",
+    "MutableUnary",
+    "OnceUnary",
+    "Unary",
+    "UnaryContract",
+    "_UnaryViewable"
+   ]
+  },
   "functions.OrElseContract": {
    "aliases": [
     {
@@ -231189,6 +231346,621 @@
    "provider": "functions/composition",
    "summary": ""
   },
+  "functions.first": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The callback, moved into the wrapper.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "The result owns the callback without invoking it. Native no-value output\nremains `type_of(None)` in the pair, distinct from explicit `NoneType`.\nShared, mutable and consuming callback modes retain their meaning.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The untouched second element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The unary library callback's type.",
+       "inferred": false,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable from `Tuple[F.Arg, Other]` to `Tuple[F.Out, Other]`.",
+      "type": "MappedPair[F, Other, True]"
+     },
+     "signature": "def first[Other: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var function: F) -> MappedPair[F, Other, True] where _OnceUnaryAvailable[F]",
+     "summary": "Transform the first element of a native pair, moving the second unchanged."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The temporary pointer admission borrow's origin.",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the first element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, R, Never, type_of(function), False], Other, True]"
+     },
+     "signature": "def first[A: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //, Other: Movable & Deinitable](ref[q] function: def(var A) thin -> R) -> MappedPair[NativeUnary[A, R, Never, type_of(function), False], Other, True]",
+     "summary": "Transform the first pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the first element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, R, Never, type_of(function), False], Other, True]"
+     },
+     "signature": "def first[A: Movable & Deinitable, R: RegisterPassable & Deinitable, //, Other: Movable & Deinitable](function: def(var A) thin -> R) -> MappedPair[NativeUnary[A, R, Never, type_of(function), False], Other, True] where not conforms_to(A, RegisterPassable)",
+     "summary": "Transform the first pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the first element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, R, Never, type_of(function), False], Other, True]"
+     },
+     "signature": "def first[A: RegisterPassable & Deinitable, R: Movable & Deinitable, //, Other: Movable & Deinitable](function: def(var A) thin -> R) -> MappedPair[NativeUnary[A, R, Never, type_of(function), False], Other, True] where not conforms_to(R, RegisterPassable)",
+     "summary": "Transform the first pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the first element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, R, Never, type_of(function), False], Other, True]"
+     },
+     "signature": "def first[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, Other: Movable & Deinitable](function: def(var A) thin -> R) -> MappedPair[NativeUnary[A, R, Never, type_of(function), False], Other, True]",
+     "summary": "Transform the first pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) thin",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The temporary pointer admission borrow's origin.",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the first element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, type_of(None), Never, type_of(function), False], Other, True]"
+     },
+     "signature": "def first[A: Movable & Deinitable, q: ImmOrigin, //, Other: Movable & Deinitable](ref[q] function: def(var A) thin) -> MappedPair[NativeUnary[A, type_of(None), Never, type_of(function), False], Other, True]",
+     "summary": "Transform the first pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) thin",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the first element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, type_of(None), Never, type_of(function), False], Other, True]"
+     },
+     "signature": "def first[A: RegisterPassable & Deinitable, //, Other: Movable & Deinitable](function: def(var A) thin) -> MappedPair[NativeUnary[A, type_of(None), Never, type_of(function), False], Other, True]",
+     "summary": "Transform the first pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The temporary pointer admission borrow's origin.",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the first element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, R, E, type_of(function), True], Other, True]"
+     },
+     "signature": "def first[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //, Other: Movable & Deinitable](ref[q] function: def(var A) raises E thin -> R) -> MappedPair[NativeUnary[A, R, E, type_of(function), True], Other, True]",
+     "summary": "Transform the first pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the first element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, R, E, type_of(function), True], Other, True]"
+     },
+     "signature": "def first[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, Other: Movable & Deinitable](function: def(var A) raises E thin -> R) -> MappedPair[NativeUnary[A, R, E, type_of(function), True], Other, True] where not conforms_to(A, RegisterPassable)",
+     "summary": "Transform the first pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the first element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, R, E, type_of(function), True], Other, True]"
+     },
+     "signature": "def first[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, Other: Movable & Deinitable](function: def(var A) raises E thin -> R) -> MappedPair[NativeUnary[A, R, E, type_of(function), True], Other, True] where not conforms_to(R, RegisterPassable)",
+     "summary": "Transform the first pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the first element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, R, E, type_of(function), True], Other, True]"
+     },
+     "signature": "def first[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, Other: Movable & Deinitable](function: def(var A) raises E thin -> R) -> MappedPair[NativeUnary[A, R, E, type_of(function), True], Other, True]",
+     "summary": "Transform the first pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The temporary pointer admission borrow's origin.",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the first element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, type_of(None), E, type_of(function), True], Other, True]"
+     },
+     "signature": "def first[A: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //, Other: Movable & Deinitable](ref[q] function: def(var A) raises E thin) -> MappedPair[NativeUnary[A, type_of(None), E, type_of(function), True], Other, True]",
+     "summary": "Transform the first pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the first element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, type_of(None), E, type_of(function), True], Other, True]"
+     },
+     "signature": "def first[A: RegisterPassable & Deinitable, E: Movable & Deinitable, //, Other: Movable & Deinitable](function: def(var A) raises E thin) -> MappedPair[NativeUnary[A, type_of(None), E, type_of(function), True], Other, True]",
+     "summary": "Transform the first pair element with a plain function or stored thin pointer."
+    }
+   ],
+   "provider": "functions/products",
+   "summary": ""
+  },
   "functions.flip": {
    "description": "",
    "kind": "function",
@@ -242225,6 +242997,621 @@
     }
    ],
    "provider": "functions/context",
+   "summary": ""
+  },
+  "functions.second": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The callback, moved into the wrapper.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "The result owns the callback without invoking it. Native no-value output\nremains `type_of(None)` in the pair, distinct from explicit `NoneType`.\nShared, mutable and consuming callback modes retain their meaning.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The untouched first element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The unary library callback's type.",
+       "inferred": false,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable from `Tuple[Other, F.Arg]` to `Tuple[Other, F.Out]`.",
+      "type": "MappedPair[F, Other, False]"
+     },
+     "signature": "def second[Other: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var function: F) -> MappedPair[F, Other, False] where _OnceUnaryAvailable[F]",
+     "summary": "Transform the second element of a native pair, moving the first unchanged."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The temporary pointer admission borrow's origin.",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the second element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, R, Never, type_of(function), False], Other, False]"
+     },
+     "signature": "def second[A: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //, Other: Movable & Deinitable](ref[q] function: def(var A) thin -> R) -> MappedPair[NativeUnary[A, R, Never, type_of(function), False], Other, False]",
+     "summary": "Transform the second pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the second element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, R, Never, type_of(function), False], Other, False]"
+     },
+     "signature": "def second[A: Movable & Deinitable, R: RegisterPassable & Deinitable, //, Other: Movable & Deinitable](function: def(var A) thin -> R) -> MappedPair[NativeUnary[A, R, Never, type_of(function), False], Other, False] where not conforms_to(A, RegisterPassable)",
+     "summary": "Transform the second pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the second element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, R, Never, type_of(function), False], Other, False]"
+     },
+     "signature": "def second[A: RegisterPassable & Deinitable, R: Movable & Deinitable, //, Other: Movable & Deinitable](function: def(var A) thin -> R) -> MappedPair[NativeUnary[A, R, Never, type_of(function), False], Other, False] where not conforms_to(R, RegisterPassable)",
+     "summary": "Transform the second pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the second element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, R, Never, type_of(function), False], Other, False]"
+     },
+     "signature": "def second[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, Other: Movable & Deinitable](function: def(var A) thin -> R) -> MappedPair[NativeUnary[A, R, Never, type_of(function), False], Other, False]",
+     "summary": "Transform the second pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) thin",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The temporary pointer admission borrow's origin.",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the second element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, type_of(None), Never, type_of(function), False], Other, False]"
+     },
+     "signature": "def second[A: Movable & Deinitable, q: ImmOrigin, //, Other: Movable & Deinitable](ref[q] function: def(var A) thin) -> MappedPair[NativeUnary[A, type_of(None), Never, type_of(function), False], Other, False]",
+     "summary": "Transform the second pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) thin",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the second element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, type_of(None), Never, type_of(function), False], Other, False]"
+     },
+     "signature": "def second[A: RegisterPassable & Deinitable, //, Other: Movable & Deinitable](function: def(var A) thin) -> MappedPair[NativeUnary[A, type_of(None), Never, type_of(function), False], Other, False]",
+     "summary": "Transform the second pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The temporary pointer admission borrow's origin.",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the second element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, R, E, type_of(function), True], Other, False]"
+     },
+     "signature": "def second[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //, Other: Movable & Deinitable](ref[q] function: def(var A) raises E thin -> R) -> MappedPair[NativeUnary[A, R, E, type_of(function), True], Other, False]",
+     "summary": "Transform the second pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the second element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, R, E, type_of(function), True], Other, False]"
+     },
+     "signature": "def second[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, Other: Movable & Deinitable](function: def(var A) raises E thin -> R) -> MappedPair[NativeUnary[A, R, E, type_of(function), True], Other, False] where not conforms_to(A, RegisterPassable)",
+     "summary": "Transform the second pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the second element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, R, E, type_of(function), True], Other, False]"
+     },
+     "signature": "def second[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, Other: Movable & Deinitable](function: def(var A) raises E thin -> R) -> MappedPair[NativeUnary[A, R, E, type_of(function), True], Other, False] where not conforms_to(R, RegisterPassable)",
+     "summary": "Transform the second pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the second element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, R, E, type_of(function), True], Other, False]"
+     },
+     "signature": "def second[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, Other: Movable & Deinitable](function: def(var A) raises E thin -> R) -> MappedPair[NativeUnary[A, R, E, type_of(function), True], Other, False]",
+     "summary": "Transform the second pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The temporary pointer admission borrow's origin.",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the second element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, type_of(None), E, type_of(function), True], Other, False]"
+     },
+     "signature": "def second[A: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //, Other: Movable & Deinitable](ref[q] function: def(var A) raises E thin) -> MappedPair[NativeUnary[A, type_of(None), E, type_of(function), True], Other, False]",
+     "summary": "Transform the second pair element with a plain function or stored thin pointer."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The unary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "The untouched element is moved unchanged. Construction stores the pointer;\npair transfer and invocation use the same library callback implementation.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The transformed element's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The callback error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The untouched pair element's type.",
+       "inferred": false,
+       "name": "Other",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A callable transforming only the second element of its owned pair.",
+      "type": "MappedPair[NativeUnary[A, type_of(None), E, type_of(function), True], Other, False]"
+     },
+     "signature": "def second[A: RegisterPassable & Deinitable, E: Movable & Deinitable, //, Other: Movable & Deinitable](function: def(var A) raises E thin) -> MappedPair[NativeUnary[A, type_of(None), E, type_of(function), True], Other, False]",
+     "summary": "Transform the second pair element with a plain function or stored thin pointer."
+    }
+   ],
+   "provider": "functions/products",
    "summary": ""
   },
   "functions.tupled": {
@@ -291708,7 +293095,7 @@
    "summary": "Functor, Filterable, FunctorFilter, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Semigroup and Monoid over native values, with explicit instances."
   },
   "callables": {
-   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. `BorrowCallable` and `BorrowOnceCallable` borrow\ntheir argument instead of taking it, and `invoke_borrowed` and\n`invoke_borrowed_once` call them. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped` and `Identity` from `fp.functions` implement these\nprotocols.\n\n`as_binary` stores a plain binary function or thin pointer in `NativeBinary`.\nIt preserves two owned argument types and the exact result and error types.\nNamed adapters can be reused by shared borrow in `zip_with`, `map_with_index`,\n`scan_map` and `scan_left`. The factory does not infer capturing closures.\n`BinarySignature[A, B, R, E].capture(closure)` selects the signature before\ncapturing a binary closure into the same adapter. Its error defaults to `Never`.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Owned iteration callbacks, `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| Iteration predicates, `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `OnceThunk` |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
+   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. `BorrowCallable` and `BorrowOnceCallable` borrow\ntheir argument instead of taking it, and `invoke_borrowed` and\n`invoke_borrowed_once` call them. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped`, `Tupled`, `MappedPair` and `Identity` from `fp.functions` implement these\nprotocols.\n\n`as_binary` stores a plain binary function or thin pointer in `NativeBinary`.\nIt preserves two owned argument types and the exact result and error types.\nNamed adapters can be reused by shared borrow in `zip_with`, `map_with_index`,\n`scan_map` and `scan_left`. The factory does not infer capturing closures.\n`BinarySignature[A, B, R, E].capture(closure)` selects the signature before\ncapturing a binary closure into the same adapter. Its error defaults to `Never`.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Lazy `map`, `filter_map`, `flat_map`, `scan_left` | Native callbacks and shared or mutable library unary/binary values |\n| `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| Iteration predicates, `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `OnceThunk` |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
    "summary": "How the library calls user code: callable protocols, receiver dispatch and native functions as values."
   },
   "combinators": {
@@ -291728,7 +293115,7 @@
    "summary": "Reader, State and Writer computations and the OptionalT and ResultT layers, over any base Monad."
   },
   "functions": {
-   "description": "Use `pipe(value, f, g)` to apply stages now, `flow(f, g)` or `compose(g, f)` to\nbuild a reusable composition, and `piped(value).then(f).get()` to chain any\nnumber of stages one call at a time. `flip` swaps two arguments and `partial`\nbinds leading arguments. `tupled(function)` adapts a binary callback to one\nnative pair without copying either element.\n\nTwo-stage `flow` and `compose` can mix a plain function or stored thin pointer\nwith a library callable directly, in either position. Compositions own their\nstages and preserve their shared, mutable or consuming receiver capabilities.\nInferred two-stage `pipe` also accepts a native/library pair, borrowing its\nshared library stage for immediate execution.\n\nExtend saved compositions with `.then(next)` or adapt a unary chain's inputs\nwith `.compose(before)`. `as_binary(function)` stores a plain binary function\nor thin pointer as a reusable library callback when an adapter is needed.\n\n`Piped.map(transform)` preserves supported native containers, mapping their\npayloads immediately through `fp.algebra`. Use `.map[Family](transform)` for an\nexplicit Functor instance, including third-party containers. `filter(predicate)`\nalso runs immediately, preserving containers that can represent rejection; `fold_left(step, initial)` consumes an iterable\nimmediately and keeps the accumulator in the chain. `get()` extracts the stored\nvalue. Use `then(function)` to transform the whole value and `iterated` for lazy\nelement mapping and filtering.\n\nA stage is a plain function, a closure promoted with `as_unary`, or a library\nvalue that implements `Unary`, such as a `Partial` or a `Composition`. Each\nstage's input must equal the previous stage's result. Values move from stage to\nstage without copies, stages are borrowed, and a raised error stops the chain\nwith its own type; a returned `Result` is ordinary data.\n\n`kleisli[Family](f).then(g)` composes effectful functions through the family's\nmonadic bind. Its `map` transforms successful payloads; ordinary container\n`map(chain)` borrows the chain automatically, including in lazy iterators.",
+   "description": "Use `pipe(value, f, g)` to apply stages now, `flow(f, g)` or `compose(g, f)` to\nbuild a reusable composition, and `piped(value).then(f).get()` to chain any\nnumber of stages one call at a time. `flip` swaps two arguments and `partial`\nbinds leading arguments. `tupled(function)` adapts a binary callback to one\nnative pair without copying either element. `first[Other]` and `second[Other]`\ntransform one pair element and move the other through unchanged.\n\nTwo-stage `flow` and `compose` can mix a plain function or stored thin pointer\nwith a library callable directly, in either position. Compositions own their\nstages and preserve their shared, mutable or consuming receiver capabilities.\nInferred two-stage `pipe` also accepts a native/library pair, borrowing its\nshared library stage for immediate execution.\n\nExtend saved compositions with `.then(next)` or adapt a unary chain's inputs\nwith `.compose(before)`. `as_binary(function)` stores a plain binary function\nor thin pointer as a reusable library callback when an adapter is needed.\n\n`Piped.map(transform)` preserves supported native containers, mapping their\npayloads immediately through `fp.algebra`. Use `.map[Family](transform)` for an\nexplicit Functor instance, including third-party containers. `filter(predicate)`\nalso runs immediately, preserving containers that can represent rejection; `fold_left(step, initial)` consumes an iterable\nimmediately and keeps the accumulator in the chain. `get()` extracts the stored\nvalue. Use `then(function)` to transform the whole value and `iterated` for lazy\nelement mapping and filtering.\n\nA stage is a plain function, a closure promoted with `as_unary`, or a library\nvalue that implements `Unary`, such as a `Partial` or a `Composition`. Each\nstage's input must equal the previous stage's result. Values move from stage to\nstage without copies, stages are borrowed, and a raised error stops the chain\nwith its own type; a returned `Result` is ordinary data.\n\n`kleisli[Family](f).then(g)` composes effectful functions through the family's\nmonadic bind. Its `map` transforms successful payloads; ordinary container\n`map(chain)` borrows the chain automatically, including in lazy iterators.",
    "summary": "Pipelines, compositions, argument flipping and partial application."
   },
   "iteration": {
