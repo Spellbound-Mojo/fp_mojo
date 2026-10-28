@@ -1,6 +1,7 @@
 """Consuming searches, counts, sinks and optional aggregation."""
 from std.builtin.rebind import downcast
 from fp.callables.protocols import UnaryContract, BorrowCallable
+from fp.callables._views import _UnaryViewable, _BorrowViewable
 from fp.callables.native import _Unary, _RaisingUnary, _NativeUnaryRef, _Borrowing, _RaisingBorrowing, _NativeBorrowRef
 from fp.callables._transforms import _BorrowedUnary
 from fp.callables._identity import Identity
@@ -83,7 +84,7 @@ def _for_each[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable](
 
 def _collect_fold[M: Monoid, F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, E: Movable & Deinitable = _CommonError[F.Error, M.Error]](var function: F, var source: V) raises E -> M.Value:
     comptime assert F.Out == Optional[M.Value] and _Source[V].Element == F.Arg
-    comptime assert _ErrorCompatible[E, M.Error] and _ErrorCompatible[E, F.Error]
+    comptime assert _ErrorCompatible[E, M.Error] and _ErrorCompatible[E, F.Error], "collect_fold: callback and monoid error types must match"
     return _map_accumulate[_Source[V], F, _CollectFold[M], E](function^, _source(source^), _start_as[E, _CollectFold[M]]())
 
 # --- iterator expansion syntax (generated) ---
@@ -233,7 +234,8 @@ def count_where[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & 
     """Count accepted candidates, borrowing each once; empty input returns zero.
 
     This is a consuming terminal. Native callbacks are borrowed in place;
-    library callbacks are consumed. Failure stops before the next pull and
+    shared library views borrow their receiver; other library callbacks are
+    consumed. Failure stops before the next pull and
     keeps its exact native type, including callback StopIteration. Move-only
     inputs and results retain their origins; no intermediate collection is built.
 
@@ -245,7 +247,7 @@ def count_where[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & 
         F: The concrete callback type, preserving captures and receiver semantics.
 
     Args:
-        predicate: The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.
+        predicate: The predicate, borrowing each candidate; the selected overload borrows or owns the predicate.
         source: The source, consumed at its current position.
 
     Returns:
@@ -266,11 +268,17 @@ def count_where[C: BorrowCallable, V: Movable & Deinitable](var predicate: C, va
     """
     return _count_where(predicate^, source^)
 
+def count_where[C: _BorrowViewable, o: ImmOrigin, V: Movable & Deinitable](ref[o] predicate: C, var source: V) raises C._BorrowView[o].Failure -> Int where _Source[V].Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and C._BorrowView[o].Result == Bool:
+    """Count accepted candidates, borrowing each once; empty input returns zero.
+    """
+    return _count_where(predicate._borrow_view(), source^)
+
 def for_each[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, F: _Unary[A, R]](ref[o] function: F, var source: V) raises Never -> NoneType where _Source[V].Element == A and R == NoneType:
     """Move each element into a callback returning NoneType, then return None.
 
     This is a consuming terminal. Native callbacks are borrowed in place;
-    library callbacks are consumed. Failure stops before the next pull and
+    shared library views borrow their receiver; other library callbacks are
+    consumed. Failure stops before the next pull and
     keeps its exact native type, including callback StopIteration. Move-only
     inputs and results retain their origins; no intermediate collection is built.
 
@@ -282,7 +290,7 @@ def for_each[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: 
         F: The concrete callback type, preserving captures and receiver semantics.
 
     Args:
-        function: The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.
+        function: The callback, borrowed or owned according to the selected overload; captures retain their native origins.
         source: The source, consumed at its current position.
 
     Returns:
@@ -303,11 +311,17 @@ def for_each[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable](v
     """
     return _for_each(function^, source^)
 
+def for_each[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable](ref[o] function: F, var source: V) raises F._View[o].Error -> NoneType where _Source[V].Element == F._View[o].Arg and F._View[o].Out == NoneType:
+    """Move each element into a callback returning NoneType, then return None.
+    """
+    return _for_each(function._unary_view(), source^)
+
 def collect_fold[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid, F: _Unary[A, R]](ref[o] function: F, var source: V) raises M.Error -> M.Value where _Source[V].Element == A and R == Optional[M.Value]:
     """Map to Optional monoid values, skip absence and combine present values in order.
 
     This is a consuming terminal. Native callbacks are borrowed in place;
-    library callbacks are consumed. Failure stops before the next pull and
+    shared library views borrow their receiver; other library callbacks are
+    consumed. Failure stops before the next pull and
     keeps its exact native type, including callback StopIteration. Move-only
     inputs and results retain their origins; no intermediate collection is built.
 
@@ -320,7 +334,7 @@ def collect_fold[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin,
         F: The concrete callback type, preserving captures and receiver semantics.
 
     Args:
-        function: The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.
+        function: The callback, borrowed or owned according to the selected overload; captures retain their native origins.
         source: The source, consumed at its current position.
 
     Returns:
@@ -340,4 +354,9 @@ def collect_fold[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitabl
     """Map to Optional monoid values, skip absence and combine present values in order.
     """
     return _collect_fold[M=M, E=_CommonError[F.Error, M.Error]](function^, source^)
+
+def collect_fold[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid](ref[o] function: F, var source: V) raises _CommonError[F._View[o].Error, M.Error] -> M.Value where _Source[V].Element == F._View[o].Arg and F._View[o].Out == Optional[M.Value]:
+    """Map to Optional monoid values, skip absence and combine present values in order.
+    """
+    return _collect_fold[M=M, E=_CommonError[F._View[o].Error, M.Error]](function._unary_view(), source^)
 # --- end iterator expansion syntax ---

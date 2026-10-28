@@ -63,6 +63,11 @@ constraints. Move a closure with owned state into a lazy method with
 `callback^`. Generic raising terminal wrappers pass the error explicitly,
 as in `stream^.fold_left[E=E](step, initial^)`.
 
+Named unary partials can also be passed directly to `.count_where(predicate)`,
+`.for_each(sink)` and `.collect_fold[M=Monoid](project)`. These terminals finish
+using the callback before returning, so it can be reused immediately. The sink
+returns None; the optional fold skips absent results and combines present ones.
+
 ## Build a lazy chain and collect it
 
 This program keeps the positive values of `[-1, 1, 3]`, doubles them and

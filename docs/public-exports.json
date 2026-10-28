@@ -13331,6 +13331,10 @@
           {
             "signature": "def count_where[C: BorrowCallable](deinit self, var predicate: C) raises C.Failure -> Int where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool:",
             "sha256": "13c4c2a8688f4492ed7617732d9274d085d4b59e5d5e3c55118f50231e29c909"
+          },
+          {
+            "signature": "def count_where[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) raises C._BorrowView[o].Failure -> Int where Self.I.Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and C._BorrowView[o].Result == Bool:",
+            "sha256": "036fa8b7f1eb2ec0cb7d0997839dee5ca200f671cebb931e5ec8eaee438ed642"
           }
         ],
         "for_each": [
@@ -13345,6 +13349,10 @@
           {
             "signature": "def for_each[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) raises F.Error -> NoneType where Self.I.Element == F.Arg and F.Out == NoneType:",
             "sha256": "5ca9ac4a1cbad58f55a40aa1b4c4b19dd0df0ea6e48a2486a93350477b11debd"
+          },
+          {
+            "signature": "def for_each[F: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: F) raises F._View[o].Error -> NoneType where Self.I.Element == F._View[o].Arg and F._View[o].Out == NoneType:",
+            "sha256": "1f2eff93626eef7b9e3b212b31b95396ea2d98cacda5fba2df8c2f8eff257443"
           }
         ],
         "collect_fold": [
@@ -13359,6 +13367,10 @@
           {
             "signature": "def collect_fold[F: UnaryContract & Movable & Deinitable, //, M: Monoid](deinit self, var function: F) raises _CommonError[F.Error, M.Error] -> M.Value where Self.I.Element == F.Arg and F.Out == Optional[M.Value]:",
             "sha256": "28b891206b4a8bc7b227dd39f763f164d900b945b60a7c15222c6539d5a4432d"
+          },
+          {
+            "signature": "def collect_fold[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> M.Value where Self.I.Element == F._View[o].Arg and F._View[o].Out == Optional[M.Value]:",
+            "sha256": "d417c522aefce34a60c2323fd960d8c15a9b55b0a2883b52835d8091e503bdaf"
           }
         ],
         "partition": [
@@ -18360,6 +18372,10 @@
         {
           "signature": "def count_where[C: BorrowCallable, V: Movable & Deinitable](var predicate: C, var source: V) raises C.Failure -> Int where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool:",
           "sha256": "d98856068dc3280f816b53d39b094ef31dbd2b1beda85d81754d57410967d204"
+        },
+        {
+          "signature": "def count_where[C: _BorrowViewable, o: ImmOrigin, V: Movable & Deinitable](ref[o] predicate: C, var source: V) raises C._BorrowView[o].Failure -> Int where _Source[V].Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and C._BorrowView[o].Result == Bool:",
+          "sha256": "5058299835fbb9c264d2fcc16839c021376832fedd45701c5a44e88eec558fbc"
         }
       ],
       "provider": "iteration/terminals"
@@ -18378,6 +18394,10 @@
         {
           "signature": "def for_each[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable](var function: F, var source: V) raises F.Error -> NoneType where _Source[V].Element == F.Arg and F.Out == NoneType:",
           "sha256": "09d781b7210a37d61f86218c3016d60f22317d481537032caf248f3fe0ce48ac"
+        },
+        {
+          "signature": "def for_each[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable](ref[o] function: F, var source: V) raises F._View[o].Error -> NoneType where _Source[V].Element == F._View[o].Arg and F._View[o].Out == NoneType:",
+          "sha256": "d3a29ec21b57d194d698023393fcc831f222b987dba0af5661d708c8141d0cbe"
         }
       ],
       "provider": "iteration/terminals"
@@ -18396,6 +18416,10 @@
         {
           "signature": "def collect_fold[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, M: Monoid](var function: F, var source: V) raises _CommonError[F.Error, M.Error] -> M.Value where _Source[V].Element == F.Arg and F.Out == Optional[M.Value]:",
           "sha256": "c8e25d994e73e9887ed005d729d42b0640c6826a802cda1e5dc95b6ef32c3d02"
+        },
+        {
+          "signature": "def collect_fold[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid](ref[o] function: F, var source: V) raises _CommonError[F._View[o].Error, M.Error] -> M.Value where _Source[V].Element == F._View[o].Arg and F._View[o].Out == Optional[M.Value]:",
+          "sha256": "600e749ddb35acf9b0c6a6853cc859386c6d1e7b1e1c06c63957664094622377"
         }
       ],
       "provider": "iteration/terminals"

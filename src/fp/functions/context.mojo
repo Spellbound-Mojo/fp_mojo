@@ -76,7 +76,7 @@ struct _EffectFoldStage[J: Monad, V: Movable & Deinitable, A: Movable & Deinitab
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -333,7 +333,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -411,7 +411,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -489,7 +489,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -568,7 +568,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             J: The output family; inferred for whole-value stages, explicit for traversal.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -812,7 +812,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
 
         Args:
             others: The tuple of already evaluated additional carriers, consumed.
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -1401,7 +1401,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             S: The error Semigroup; inferred list errors concatenate in order.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -1942,7 +1942,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -2001,7 +2001,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             M: The Monoid used for the identity and ordered combination of mapped values.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -2059,7 +2059,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -2162,7 +2162,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -2240,7 +2240,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -2351,7 +2351,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -2430,7 +2430,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -2509,7 +2509,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -2588,7 +2588,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -2666,7 +2666,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             M: The Monoid used for the identity and ordered combination of mapped values.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -2791,7 +2791,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             size: The SIMD lane count, inferred from the effect payload.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -3006,7 +3006,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -3065,7 +3065,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -3144,7 +3144,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -3223,7 +3223,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -3297,7 +3297,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -3371,7 +3371,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -3496,7 +3496,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
 
         Args:
             other: The already evaluated second carrier, consumed.
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -3600,7 +3600,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
 
         Args:
             others: The tuple of already evaluated additional carriers, consumed.
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -3898,7 +3898,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -4112,7 +4112,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -4170,7 +4170,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -4228,7 +4228,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -4306,7 +4306,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -4384,7 +4384,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -4437,7 +4437,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -5090,7 +5090,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -5168,7 +5168,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -5226,7 +5226,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -5284,7 +5284,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -5417,7 +5417,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -5497,7 +5497,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
 
         Args:
             predicate: The borrowing Bool predicate.
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -5917,7 +5917,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
 
         Args:
             predicate: The borrowing Bool predicate.
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -7176,7 +7176,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             Target: The destination stored-error family; defaults to the source family's candidate.
 
         Args:
-            function: The callback; closures are borrowed, thin pointers owned, library callables consumed.
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.

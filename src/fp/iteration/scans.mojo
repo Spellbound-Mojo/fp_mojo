@@ -36,7 +36,7 @@ def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Dein
         R: The callback result type.
 
     Args:
-        function: The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.
+        function: The callback, borrowed or owned according to the selected overload; captures retain their native origins.
         initial: The initial carry, consumed; scan_map does not yield it.
         source: The source, consumed at its current position.
 

@@ -99438,7 +99438,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -100026,7 +100026,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -100646,7 +100646,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -101638,7 +101638,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -116874,7 +116874,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -117462,7 +117462,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -118294,7 +118294,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -118882,7 +118882,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -119217,7 +119217,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -119615,7 +119615,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -119950,7 +119950,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -120471,7 +120471,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -120968,7 +120968,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -121960,7 +121960,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -132993,7 +132993,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -133391,7 +133391,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -139365,7 +139365,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -144033,7 +144033,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -144375,7 +144375,7 @@
        },
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -155310,7 +155310,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -156111,7 +156111,7 @@
        },
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -160042,7 +160042,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -160539,7 +160539,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -161036,7 +161036,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -161644,7 +161644,7 @@
        },
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "G",
         "variadic": false
@@ -171287,7 +171287,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -171791,7 +171791,7 @@
        },
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -180150,7 +180150,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -180667,7 +180667,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -181342,7 +181342,7 @@
        },
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "G",
         "variadic": false
@@ -209849,7 +209849,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -210643,7 +210643,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -212583,7 +212583,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -213080,7 +213080,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -213577,7 +213577,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -214930,7 +214930,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -215642,7 +215642,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -216040,7 +216040,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -216438,7 +216438,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -217026,7 +217026,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "description": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "name": "function",
         "type": "C",
         "variadic": false
@@ -229130,7 +229130,7 @@
        },
        {
         "convention": "var",
-        "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "description": "The callback, borrowed or owned according to the selected overload; captures retain their native origins.",
         "name": "function",
         "type": "def(var T) thin -> U",
         "variadic": false
@@ -230103,13 +230103,13 @@
       "args": [
        {
         "convention": "ref[o]",
-        "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "description": "The callback, borrowed or owned according to the selected overload; captures retain their native origins.",
         "name": "function",
         "type": "F",
         "variadic": false
        }
       ],
-      "description": "This is a consuming terminal. Native callbacks are borrowed in place;\nlibrary callbacks are consumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.",
+      "description": "This is a consuming terminal. Native callbacks are borrowed in place;\nshared library views borrow their receiver; other library callbacks are\nconsumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.",
       "error": "M.Error",
       "parameters": [
        {
@@ -230257,6 +230257,50 @@
        "type": "M.Value"
       },
       "signature": "def collect_fold[F: UnaryContract & Movable & Deinitable, //, M: Monoid](deinit self, var function: F) raises _CommonError[F.Error, M.Error] -> M.Value where Self.I.Element == F.Arg and F.Out == Optional[M.Value]",
+      "summary": "Map to Optional monoid values, skip absence and combine present values in order."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[F._View[o].Error, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "M.Value"
+      },
+      "signature": "def collect_fold[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> M.Value where Self.I.Element == F._View[o].Arg and F._View[o].Out == Optional[M.Value]",
       "summary": "Map to Optional monoid values, skip absence and combine present values in order."
      }
     ],
@@ -230408,13 +230452,13 @@
       "args": [
        {
         "convention": "ref[o]",
-        "description": "The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "description": "The predicate, borrowing each candidate; the selected overload borrows or owns the predicate.",
         "name": "predicate",
         "type": "F",
         "variadic": false
        }
       ],
-      "description": "This is a consuming terminal. Native callbacks are borrowed in place;\nlibrary callbacks are consumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.",
+      "description": "This is a consuming terminal. Native callbacks are borrowed in place;\nshared library views borrow their receiver; other library callbacks are\nconsumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.",
       "error": "Never",
       "parameters": [
        {
@@ -230542,6 +230586,43 @@
       },
       "signature": "def count_where[C: BorrowCallable](deinit self, var predicate: C) raises C.Failure -> Int where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool",
       "summary": "Count accepted candidates, borrowing each once; empty input returns zero."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Int"
+      },
+      "signature": "def count_where[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) raises C._BorrowView[o].Failure -> Int where Self.I.Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and C._BorrowView[o].Result == Bool",
+      "summary": "Count accepted candidates, borrowing each once; empty input returns zero."
      }
     ],
     "drop": [
@@ -230595,7 +230676,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "description": "The predicate, borrowing each candidate; the selected overload borrows or owns the predicate.",
         "name": "predicate",
         "type": "def(T) thin -> Bool",
         "variadic": false
@@ -233661,13 +233742,13 @@
       "args": [
        {
         "convention": "ref[o]",
-        "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "description": "The callback, borrowed or owned according to the selected overload; captures retain their native origins.",
         "name": "function",
         "type": "F",
         "variadic": false
        }
       ],
-      "description": "This is a consuming terminal. Native callbacks are borrowed in place;\nlibrary callbacks are consumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.",
+      "description": "This is a consuming terminal. Native callbacks are borrowed in place;\nshared library views borrow their receiver; other library callbacks are\nconsumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.",
       "error": "Never",
       "parameters": [
        {
@@ -233794,6 +233875,43 @@
        "type": "NoneType"
       },
       "signature": "def for_each[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) raises F.Error -> NoneType where Self.I.Element == F.Arg and F.Out == NoneType",
+      "summary": "Move each element into a callback returning NoneType, then return None."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "NoneType"
+      },
+      "signature": "def for_each[F: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: F) raises F._View[o].Error -> NoneType where Self.I.Element == F._View[o].Arg and F._View[o].Out == NoneType",
       "summary": "Move each element into a callback returning NoneType, then return None."
      }
     ],
@@ -233984,7 +234102,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "description": "The callback, borrowed or owned according to the selected overload; captures retain their native origins.",
         "name": "function",
         "type": "def(var Int, var T) thin -> R",
         "variadic": false
@@ -234833,7 +234951,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "description": "The predicate, borrowing each candidate; the selected overload borrows or owns the predicate.",
         "name": "predicate",
         "type": "def(T) thin -> Bool",
         "variadic": false
@@ -234974,7 +235092,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "description": "The callback, borrowed or owned according to the selected overload; captures retain their native origins.",
         "name": "function",
         "type": "def(var T) thin -> U",
         "variadic": false
@@ -235688,7 +235806,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "description": "The callback, borrowed or owned according to the selected overload; captures retain their native origins.",
         "name": "function",
         "type": "def(var A, var T) thin -> R",
         "variadic": false
@@ -236458,7 +236576,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "description": "The predicate, borrowing each candidate; the selected overload borrows or owns the predicate.",
         "name": "predicate",
         "type": "def(T) thin -> Bool",
         "variadic": false
@@ -237651,7 +237769,7 @@
        },
        {
         "convention": "var",
-        "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+        "description": "The callback, borrowed or owned according to the selected overload; captures retain their native origins.",
         "name": "function",
         "type": "def(var A, var B) thin -> R",
         "variadic": false
@@ -238374,7 +238492,7 @@
      "args": [
       {
        "convention": "var",
-       "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "description": "The callback, borrowed or owned according to the selected overload; captures retain their native origins.",
        "name": "function",
        "type": "def(var T) thin -> U",
        "variadic": false
@@ -239547,7 +239665,7 @@
      "args": [
       {
        "convention": "ref[o]",
-       "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "description": "The callback, borrowed or owned according to the selected overload; captures retain their native origins.",
        "name": "function",
        "type": "F",
        "variadic": false
@@ -239560,7 +239678,7 @@
        "variadic": false
       }
      ],
-     "description": "This is a consuming terminal. Native callbacks are borrowed in place;\nlibrary callbacks are consumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.",
+     "description": "This is a consuming terminal. Native callbacks are borrowed in place;\nshared library views borrow their receiver; other library callbacks are\nconsumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.",
      "error": "M.Error",
      "parameters": [
       {
@@ -239743,6 +239861,64 @@
       "type": "M.Value"
      },
      "signature": "def collect_fold[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, M: Monoid](var function: F, var source: V) raises _CommonError[F.Error, M.Error] -> M.Value where _Source[V].Element == F.Arg and F.Out == Optional[M.Value]",
+     "summary": "Map to Optional monoid values, skip absence and combine present values in order."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_CommonError[F._View[o].Error, M.Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "_UnaryViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "M.Value"
+     },
+     "signature": "def collect_fold[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid](ref[o] function: F, var source: V) raises _CommonError[F._View[o].Error, M.Error] -> M.Value where _Source[V].Element == F._View[o].Arg and F._View[o].Out == Optional[M.Value]",
      "summary": "Map to Optional monoid values, skip absence and combine present values in order."
     }
    ],
@@ -240034,7 +240210,7 @@
      "args": [
       {
        "convention": "ref[o]",
-       "description": "The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "description": "The predicate, borrowing each candidate; the selected overload borrows or owns the predicate.",
        "name": "predicate",
        "type": "F",
        "variadic": false
@@ -240047,7 +240223,7 @@
        "variadic": false
       }
      ],
-     "description": "This is a consuming terminal. Native callbacks are borrowed in place;\nlibrary callbacks are consumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.",
+     "description": "This is a consuming terminal. Native callbacks are borrowed in place;\nshared library views borrow their receiver; other library callbacks are\nconsumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.",
      "error": "Never",
      "parameters": [
       {
@@ -240210,6 +240386,57 @@
      },
      "signature": "def count_where[C: BorrowCallable, V: Movable & Deinitable](var predicate: C, var source: V) raises C.Failure -> Int where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool",
      "summary": "Count accepted candidates, borrowing each once; empty input returns zero."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "predicate",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "C._BorrowView[o].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "C",
+       "type": "_BorrowViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Int"
+     },
+     "signature": "def count_where[C: _BorrowViewable, o: ImmOrigin, V: Movable & Deinitable](ref[o] predicate: C, var source: V) raises C._BorrowView[o].Failure -> Int where _Source[V].Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and C._BorrowView[o].Result == Bool",
+     "summary": "Count accepted candidates, borrowing each once; empty input returns zero."
     }
    ],
    "provider": "iteration/terminals",
@@ -240223,7 +240450,7 @@
      "args": [
       {
        "convention": "var",
-       "description": "The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "description": "The predicate, borrowing each candidate; the selected overload borrows or owns the predicate.",
        "name": "predicate",
        "type": "def(T) thin -> Bool",
        "variadic": false
@@ -244113,7 +244340,7 @@
      "args": [
       {
        "convention": "ref[o]",
-       "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "description": "The callback, borrowed or owned according to the selected overload; captures retain their native origins.",
        "name": "function",
        "type": "F",
        "variadic": false
@@ -244126,7 +244353,7 @@
        "variadic": false
       }
      ],
-     "description": "This is a consuming terminal. Native callbacks are borrowed in place;\nlibrary callbacks are consumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.",
+     "description": "This is a consuming terminal. Native callbacks are borrowed in place;\nshared library views borrow their receiver; other library callbacks are\nconsumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.",
      "error": "Never",
      "parameters": [
       {
@@ -244288,6 +244515,57 @@
       "type": "NoneType"
      },
      "signature": "def for_each[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable](var function: F, var source: V) raises F.Error -> NoneType where _Source[V].Element == F.Arg and F.Out == NoneType",
+     "summary": "Move each element into a callback returning NoneType, then return None."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "F._View[o].Error",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_UnaryViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "NoneType"
+     },
+     "signature": "def for_each[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable](ref[o] function: F, var source: V) raises F._View[o].Error -> NoneType where _Source[V].Element == F._View[o].Arg and F._View[o].Out == NoneType",
      "summary": "Move each element into a callback returning NoneType, then return None."
     }
    ],
@@ -244628,7 +244906,7 @@
      "args": [
       {
        "convention": "var",
-       "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "description": "The callback, borrowed or owned according to the selected overload; captures retain their native origins.",
        "name": "function",
        "type": "def(var Int, var T) thin -> R",
        "variadic": false
@@ -245473,7 +245751,7 @@
      "args": [
       {
        "convention": "var",
-       "description": "The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "description": "The predicate, borrowing each candidate; the selected overload borrows or owns the predicate.",
        "name": "predicate",
        "type": "def(T) thin -> Bool",
        "variadic": false
@@ -245662,7 +245940,7 @@
      "args": [
       {
        "convention": "var",
-       "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "description": "The callback, borrowed or owned according to the selected overload; captures retain their native origins.",
        "name": "function",
        "type": "def(var T) thin -> U",
        "variadic": false
@@ -246770,7 +247048,7 @@
      "args": [
       {
        "convention": "var",
-       "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "description": "The callback, borrowed or owned according to the selected overload; captures retain their native origins.",
        "name": "function",
        "type": "def(var A, var T) thin -> R",
        "variadic": false
@@ -247760,7 +248038,7 @@
      "args": [
       {
        "convention": "var",
-       "description": "The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "description": "The predicate, borrowing each candidate; the selected overload borrows or owns the predicate.",
        "name": "predicate",
        "type": "def(T) thin -> Bool",
        "variadic": false
@@ -249303,7 +249581,7 @@
      "args": [
       {
        "convention": "var",
-       "description": "The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.",
+       "description": "The callback, borrowed or owned according to the selected overload; captures retain their native origins.",
        "name": "function",
        "type": "def(var A, var B) thin -> R",
        "variadic": false

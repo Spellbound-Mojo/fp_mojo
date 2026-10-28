@@ -1254,7 +1254,7 @@ def documented(source):
         "Ws": "The additional carrier types, including their origins; at most seven.",
     }
     args = {
-        "function": "The callback; closures are borrowed, thin pointers owned, library callables consumed.",
+        "function": "The callback, borrowed or consumed according to the selected signature; captures retain their native origins.",
         "predicate": "The borrowing Bool predicate.",
         "make_error": "The borrowed-payload factory of a stored Result error.",
         "make_default": "The zero-argument default factory, invoked only on Err.",

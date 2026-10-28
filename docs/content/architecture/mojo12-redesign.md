@@ -3920,3 +3920,21 @@ Rejection fixtures require the actual diagnostic, rather than a matching
 substring in quoted source code. Ownership checks cover noncopyable native
 captures, partial-prefix copy counts, move-only input and output, first-match
 stopping, first-on-tie extrema, callback errors and outputs into external owners.
+
+### Counting, sinks and optional folds share receiver admission
+
+The iterator expansion generator uses the existing callback descriptor to
+admit `_BorrowViewable` predicates for `count_where` and `_UnaryViewable`
+projections for `for_each` and `collect_fold`. Free and Iter forms retain every
+prior signature, including native error and Monoid parameter positions.
+Execution remains in `_count_where`, `_for_each` and `_collect_fold`, using the
+canonical borrowed-payload adapter and accumulation policies.
+
+The callback borrow lasts only through the immediate operation. Empty input
+invokes nothing; optional folding constructs the Monoid identity before
+pulling. Its error compatibility assertion now names the operation. Focused
+checks cover bound-prefix copies, move-only native captures and input/output,
+source disposal before a failed identity, callback StopIteration propagation,
+no pull after failure, explicit moves and returned views into external owners.
+Generated argument documentation describes ownership according to the selected
+signature instead of saying every library callback is consumed.

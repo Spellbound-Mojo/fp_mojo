@@ -52,6 +52,19 @@ starts from the Monoid's identity and combines only present callback results,
 without an intermediate collection. Callback and Monoid failures stop before
 another pull; if both can raise, their error types must match.
 
+A named unary `partial` can be reused in `count_where`, `for_each` and
+`collect_fold`, through either the free functions or Iter methods. The example
+reuses `under_three` for counting, `evens` for optional folds, and `show` as a
+sink. Counting borrows each candidate; sinks and optional folds consume their
+input. `for_each` and `collect_fold` also borrow named native adapters and
+shared compositions. Callback reuse introduces no capture copy; Partial's
+normal bound-argument copies still occur on each native invocation.
+
+These operations complete before releasing the callback borrow. Explicit
+`callback^` arguments transfer ownership. Empty input calls no callback;
+`collect_fold` still constructs the Monoid identity first, and an identity
+failure destroys the source without pulling it.
+
 ## Reuse projections in reductions
 
 <!-- example: docs/examples/reusable_projections.mojo -->

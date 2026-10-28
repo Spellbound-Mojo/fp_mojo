@@ -110,12 +110,24 @@
     },
     "iteration": {
       "scope": "Lazy native adapters, branches, alignment, scans and consuming terminals.",
-      "restrictions": "Lazy callbacks cannot raise; failures may be stored Result elements. Fallible source advancement and Resource scopes remain future contracts.",
+      "restrictions": "Lazy callbacks cannot raise; failures may be stored Result elements. Fallible source advancement and Resource scopes remain future contracts. Named unary partials are reusable in count_where, for_each and collect_fold; the latter two also borrow shared unary adapters and compositions. Immediate terminals preserve callback and Monoid errors and output origins.",
       "evidence": [
         "docs/examples/iteration_branching.mojo",
         "docs/examples/iteration_alignment.mojo",
         "docs/examples/iteration_scan_map.mojo",
-        "docs/examples/iteration_effect_search.mojo"
+        "docs/examples/iteration_effect_search.mojo",
+        "tests/runtime/test_terminal_sink_views.mojo",
+        "tests/ownership/test_terminal_sink_views_ownership.mojo",
+        "tests/compile_fail/terminal_sink_view_arity.mojo",
+        "tests/compile_fail/terminal_sink_view_count_input.mojo",
+        "tests/compile_fail/terminal_sink_view_count_owned.mojo",
+        "tests/compile_fail/terminal_sink_view_count_result.mojo",
+        "tests/compile_fail/terminal_sink_view_fold_error.mojo",
+        "tests/compile_fail/terminal_sink_view_fold_result.mojo",
+        "tests/compile_fail/terminal_sink_view_move.mojo",
+        "tests/compile_fail/terminal_sink_view_origin.mojo",
+        "tests/compile_fail/terminal_sink_view_sink_input.mojo",
+        "tests/compile_fail/terminal_sink_view_sink_result.mojo"
       ]
     },
     "control": {

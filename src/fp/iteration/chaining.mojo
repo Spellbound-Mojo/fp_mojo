@@ -263,7 +263,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
 
         Args:
             other: The second source, consumed at its current position.
-            function: The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.
+            function: The callback, borrowed or owned according to the selected overload; captures retain their native origins.
 
         Returns:
             Iter[ZipWithIterator[A, B, R, Self.I, _Source[W], def(var A, var B) thin -> R]] with the ownership, timing and empty-input behavior described above.
@@ -291,7 +291,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
             R: The callback result type.
 
         Args:
-            function: The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.
+            function: The callback, borrowed or owned according to the selected overload; captures retain their native origins.
             start: The first native Int index; defaults to zero.
 
         Returns:
@@ -320,7 +320,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
             T: The source element type, including origins.
 
         Args:
-            predicate: The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.
+            predicate: The predicate, borrowing each candidate; the selected overload borrows or owns the predicate.
 
         Returns:
             Iter[TakeWhileIterator[T, Self.I, def(T) thin -> Bool]] with the ownership, timing and empty-input behavior described above.
@@ -353,7 +353,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
             T: The source element type, including origins.
 
         Args:
-            predicate: The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.
+            predicate: The predicate, borrowing each candidate; the selected overload borrows or owns the predicate.
 
         Returns:
             Iter[DropWhileIterator[T, Self.I, def(T) thin -> Bool]] with the ownership, timing and empty-input behavior described above.
@@ -483,7 +483,8 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Count accepted candidates, borrowing each once; empty input returns zero.
 
         This is a consuming terminal. Native callbacks are borrowed in place;
-        library callbacks are consumed. Failure stops before the next pull and
+        shared library views borrow their receiver; other library callbacks are
+        consumed. Failure stops before the next pull and
         keeps its exact native type, including callback StopIteration. Move-only
         inputs and results retain their origins; no intermediate collection is built.
 
@@ -494,7 +495,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
             F: The concrete callback type, preserving captures and receiver semantics.
 
         Args:
-            predicate: The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.
+            predicate: The predicate, borrowing each candidate; the selected overload borrows or owns the predicate.
 
         Returns:
             Int with the ownership, timing and empty-input behavior described above.
@@ -514,11 +515,17 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """
         return _count_where(predicate^, self._iterator^)
 
+    def count_where[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) raises C._BorrowView[o].Failure -> Int where Self.I.Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and C._BorrowView[o].Result == Bool:
+        """Count accepted candidates, borrowing each once; empty input returns zero.
+        """
+        return _count_where(predicate._borrow_view(), self._iterator^)
+
     def for_each[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> NoneType where Self.I.Element == A and R == NoneType:
         """Move each element into a callback returning NoneType, then return None.
 
         This is a consuming terminal. Native callbacks are borrowed in place;
-        library callbacks are consumed. Failure stops before the next pull and
+        shared library views borrow their receiver; other library callbacks are
+        consumed. Failure stops before the next pull and
         keeps its exact native type, including callback StopIteration. Move-only
         inputs and results retain their origins; no intermediate collection is built.
 
@@ -529,7 +536,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
             F: The concrete callback type, preserving captures and receiver semantics.
 
         Args:
-            function: The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.
+            function: The callback, borrowed or owned according to the selected overload; captures retain their native origins.
 
         Returns:
             NoneType with the ownership, timing and empty-input behavior described above.
@@ -549,11 +556,17 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """
         return _for_each(function^, self._iterator^)
 
+    def for_each[F: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: F) raises F._View[o].Error -> NoneType where Self.I.Element == F._View[o].Arg and F._View[o].Out == NoneType:
+        """Move each element into a callback returning NoneType, then return None.
+        """
+        return _for_each(function._unary_view(), self._iterator^)
+
     def collect_fold[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises M.Error -> M.Value where Self.I.Element == A and R == Optional[M.Value]:
         """Map to Optional monoid values, skip absence and combine present values in order.
 
         This is a consuming terminal. Native callbacks are borrowed in place;
-        library callbacks are consumed. Failure stops before the next pull and
+        shared library views borrow their receiver; other library callbacks are
+        consumed. Failure stops before the next pull and
         keeps its exact native type, including callback StopIteration. Move-only
         inputs and results retain their origins; no intermediate collection is built.
 
@@ -565,7 +578,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
             F: The concrete callback type, preserving captures and receiver semantics.
 
         Args:
-            function: The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.
+            function: The callback, borrowed or owned according to the selected overload; captures retain their native origins.
 
         Returns:
             M.Value with the ownership, timing and empty-input behavior described above.
@@ -585,6 +598,11 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """
         return _collect_fold[M=M, E=_CommonError[F.Error, M.Error]](function^, self._iterator^)
 
+    def collect_fold[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> M.Value where Self.I.Element == F._View[o].Arg and F._View[o].Out == Optional[M.Value]:
+        """Map to Optional monoid values, skip absence and combine present values in order.
+        """
+        return _collect_fold[M=M, E=_CommonError[F._View[o].Error, M.Error]](function._unary_view(), self._iterator^)
+
     def partition[T: Movable & Deinitable, P: _BufferPolicy](deinit self, var predicate: def(T) thin -> Bool, *, var buffer: P) -> PartitionBranches[T, Self.I, def(T) thin -> Bool, P] where Self.I.Element == T:
         """Lazily split accepted and rejected elements into independent iterators.
 
@@ -599,7 +617,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
             P: The admitted type parameter.
 
         Args:
-            predicate: The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.
+            predicate: The predicate, borrowing each candidate; the selected overload borrows or owns the predicate.
             buffer: The required buffering policy; there is no implicit default.
 
         Returns:
@@ -632,7 +650,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
             P: The admitted type parameter.
 
         Args:
-            function: The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.
+            function: The callback, borrowed or owned according to the selected overload; captures retain their native origins.
             buffer: The required buffering policy; there is no implicit default.
 
         Returns:
@@ -728,7 +746,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
 
         Args:
             other: The second source, consumed at its current position.
-            function: The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.
+            function: The callback, borrowed or owned according to the selected overload; captures retain their native origins.
 
         Returns:
             Iter[AlignWithIterator[A, B, U, Self.I, _Source[W], def(var T) thin -> U]] with the ownership, timing and empty-input behavior described above.
@@ -759,7 +777,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
             R: The callback result type.
 
         Args:
-            function: The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.
+            function: The callback, borrowed or owned according to the selected overload; captures retain their native origins.
             initial: The initial carry, consumed; scan_map does not yield it.
 
         Returns:

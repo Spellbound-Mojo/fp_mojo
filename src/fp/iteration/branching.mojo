@@ -310,7 +310,7 @@ def partition[T: Movable & Deinitable, V: Movable & Deinitable, P: _BufferPolicy
         P: The admitted type parameter.
 
     Args:
-        predicate: The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.
+        predicate: The predicate, borrowing each candidate; the selected overload borrows or owns the predicate.
         source: The source, consumed at its current position.
         buffer: The required buffering policy; there is no implicit default.
 
@@ -345,7 +345,7 @@ def partition_map[T: Movable & Deinitable, U: Movable & Deinitable, V: Movable &
         P: The admitted type parameter.
 
     Args:
-        function: The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.
+        function: The callback, borrowed or owned according to the selected overload; captures retain their native origins.
         source: The source, consumed at its current position.
         buffer: The required buffering policy; there is no implicit default.
 

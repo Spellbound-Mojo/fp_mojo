@@ -139,7 +139,7 @@ def align_with[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & De
         W: The second consumed source type.
 
     Args:
-        function: The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.
+        function: The callback, borrowed or owned according to the selected overload; captures retain their native origins.
         source: The source, consumed at its current position.
         other: The second source, consumed at its current position.
 

@@ -80,7 +80,7 @@ def take_while[T: Movable & Deinitable, V: Movable & Deinitable](var predicate: 
         V: The consumed native iterator or owned collection type.
 
     Args:
-        predicate: The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.
+        predicate: The predicate, borrowing each candidate; the selected overload borrows or owns the predicate.
         source: The source, consumed at its current position.
 
     Returns:
@@ -115,7 +115,7 @@ def drop_while[T: Movable & Deinitable, V: Movable & Deinitable](var predicate: 
         V: The consumed native iterator or owned collection type.
 
     Args:
-        predicate: The predicate, borrowing each candidate; lazy operations own it and terminals borrow native callbacks or consume library callables.
+        predicate: The predicate, borrowing each candidate; the selected overload borrows or owns the predicate.
         source: The source, consumed at its current position.
 
     Returns:

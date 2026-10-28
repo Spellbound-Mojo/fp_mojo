@@ -49,7 +49,7 @@ def zip_with[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Dein
         W: The second consumed source type.
 
     Args:
-        function: The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.
+        function: The callback, borrowed or owned according to the selected overload; captures retain their native origins.
         source: The source, consumed at its current position.
         other: The second source, consumed at its current position.
 
@@ -83,7 +83,7 @@ def map_with_index[T: Movable & Deinitable, R: Movable & Deinitable, V: Movable 
         V: The consumed native iterator or owned collection type.
 
     Args:
-        function: The callback; lazy operations own it and terminals borrow native callbacks or consume library callables.
+        function: The callback, borrowed or owned according to the selected overload; captures retain their native origins.
         source: The source, consumed at its current position.
         start: The first native Int index; defaults to zero.
 
