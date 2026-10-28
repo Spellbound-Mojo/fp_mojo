@@ -31,8 +31,7 @@ a map callback, and the value is destroyed after the call. Declare a parameter
 - **Borrowing APIs** keep the source value and its origins. They never produce a
   reference that outlives the owner.
 - **Consuming APIs** make consumption visible through `var` parameters, `deinit`
-  methods or a separately named operation (`fold_owned`, `attempt_once`,
-  `fold_owned_once`). Consuming an iterator is not the
+  methods or a separately named operation (`fold_owned`, `attempt_once`). Consuming an iterator is not the
   same as consuming the collection it borrows from.
 - **Copying APIs** require `Copyable` only when their semantics need a copy,
   for example the snapshots of `scan_left` or the bound
@@ -53,6 +52,12 @@ values^)` consumes the collection, as `iter(values^)` does, and receives owned
 elements; `iter(values)` borrows it and yields whatever the standard iterator
 yields for a borrowed collection. A collection passed without `^` is an implicit
 copy, which Mojo rejects for `List`.
+
+`Result.fold` borrows the payload; `fold_owned` consumes it. In either method,
+a named shared library handler is borrowed, while a moved or temporary handler
+is consumed. Mix those forms freely, and use `mut_ref(handler)` to retain mutable
+state. Handler ownership is independent of payload ownership; the `_once`
+methods remain available when you want to explicitly consume both handlers.
 
 ## Keep callable state
 

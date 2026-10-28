@@ -145,21 +145,31 @@ call can still crash Mojo 1.2 during inference instead of reporting a type
 error. These four forms cover a subset of the conventions supported by selectors;
 see the [compatibility qualification](../architecture/native-boundaries.md#convention-adapters).
 
-## Consume handlers in a transformation and a fold
+## Fold a Result and choose what to keep
 
 <!-- example: docs/examples/result_once.mojo -->
 
 `Format` is a `OnceUnary` that owns its prefix. `value^.map(formatter^)` moves
 it in and calls it once, turning `Ok(12)` into `Ok("value 12")`.
-`fold_owned_once` consumes both `Show` handlers and calls only the one for the
+`fold_owned` consumes both temporary `Show` handlers and calls only the one for the
 `Ok` branch, which prints `used once: value 12`.
 
-Both `fold_once` and `fold_owned_once` accept shared and mutable handlers too.
-The former borrows the Result payload; the latter moves it into the selected
-handler. Passing `mut_ref(on_ok)` and `mut_ref(on_err)` retains their state.
-The example folds `Ok(12)` this way, then prints handler counts `1 0`: only the
-success handler ran. A consuming receiver takes priority when a handler also
-supports mutable or shared calls.
+Use `fold` to borrow the Result payload or `fold_owned` to move it into the
+selected handler. Either method accepts shared, mutable or consuming library
+handlers. Named shared handlers stay borrowed; moved or temporary handlers are
+consumed, including the one for the inactive branch. A consuming receiver takes
+priority for an owned handler, followed by mutable and shared invocation.
+
+Pass `mut_ref(on_ok)` and `mut_ref(on_err)` to retain mutable state. The example
+folds `Ok(12)` this way, then prints handler counts `1 0`: only the success
+handler ran. Its borrowing fold leaves the source Result available afterward.
+You can mix a named shared handler with a moved or retained mutable handler:
+`shared` remains reusable across the final two calls, which produce `12` and
+`22`. Errors and outputs retain their exact types and origins.
+
+Existing `fold_once` and `fold_owned_once` calls remain supported as explicit
+forms that consume both handler arguments. Ordinary calls no longer need a
+different method name solely because a callback owns captures or mutable state.
 
 ## Capture a thunk’s outcome
 

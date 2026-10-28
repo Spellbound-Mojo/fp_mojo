@@ -36,7 +36,7 @@ original, copy it explicitly.
 | `r^.or_else(g)` | `Ok(value)`, `g` not called | `g(error)`, a `Result[T, F]` |
 | `r.fold(on_ok, on_err)` | `on_ok` borrows the value | `on_err` borrows the error |
 | `r^.fold_owned(on_ok, on_err)` | `on_ok` receives the value | `on_err` receives the error |
-| `r.fold_once` / `r^.fold_owned_once` | As above, consuming both handlers and calling only the selected one | |
+| `r.fold_once` / `r^.fold_owned_once` | Explicit forms consuming both handlers; ordinary folds also accept owners | |
 | `r.is_ok()`, `r.is_err()` | Case test | |
 
 All four methods run through one owned transformation that branches on the
@@ -56,10 +56,9 @@ Two rules hold for every operation:
 A callback can be a native function or closure, a fixed-arity library callable
 such as a partial, or a `BorrowCallable` for borrowed folds. Folds take
 capturing callbacks, which `fp.match` clauses cannot; a match checks every case
-when the program compiles and allows guards. `fold_once` and `fold_owned_once`
-consume both handler owners, call only the selected one and let native
-destruction release the other. Each handler may have a shared, mutable or
-consuming receiver. The existing one-call dispatch selects consuming, then
+when the program compiles and allows guards. Ordinary `fold` and `fold_owned`
+accept borrowed, owned and mixed library handlers; `_once` methods explicitly
+consume both. Each owned handler may have a shared, mutable or consuming receiver. The existing one-call dispatch selects consuming, then
 mutable, then shared; `mut_ref` retains state without changing branch selection.
 Both handlers must be invocable even when one branch is inactive.
 
@@ -86,8 +85,13 @@ constructor independently of the input branch.
 
 `_fold_result_owned` owns the tag selection, payload movement, unused context
 disposal and native error propagation for consuming folds and transformations.
-`fold_owned` supplies borrowed handler contexts; `fold_owned_once` supplies
-owned handlers. Single-branch transformations provide a callback for the active
+All library forms of `fold_owned` delegate to `fold_owned_once`. Borrowed
+handlers become the existing `_SharedUnaryRef`; owners move through unchanged.
+Likewise, library `fold` forms delegate to `fold_once` using `_SharedBorrowRef`
+for borrowed handlers. These views retain their original origins and shared
+receiver choice. They introduce no copying or allocation, and both mixed
+ownership combinations use the same execution owner. Native signatures keep
+their existing admission and invocation bridges. Single-branch transformations provide a callback for the active
 branch and a constructor-preserving callback for the other branch. Borrowing
 folds keep their separate borrow boundary, since they do not extract or destroy
 the source payload.
@@ -281,3 +285,13 @@ Mojo rejects a callback whose type embeds the same exclusive origin as a
 simultaneously passed argument; Ior does not relax native alias checking to
 admit that callback. Compile-failure fixtures cover payload and diagnostic
 origin mismatches as well as exclusive-origin callback aliases.
+
+
+Ordinary Result folds separate the payload's ownership from the handlers'
+ownership. This keeps one operation name for branch selection while using
+Mojo's argument conventions to retain or transfer each handler. Only the chosen
+handler runs, but both must be invocable. Consumed inactive handlers are still
+destroyed; borrowed originals remain available after either branch or an error.
+The common error assertions and receiver availability checks remain in the
+existing `_once` owners. Their diagnostic prefix is `Result fold:` for both
+ordinary and explicit consuming forms.

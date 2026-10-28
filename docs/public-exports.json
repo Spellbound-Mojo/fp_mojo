@@ -3609,6 +3609,18 @@
      {
       "sha256": "bc7a365b9f821d207860cc7c3eb82a96d6614c029058f7777b1a22d2143daed6",
       "signature": "def fold[F: BorrowCallable, G: BorrowCallable](self, on_ok: F, on_err: G ) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure):"
+     },
+     {
+      "sha256": "bf77868f5fbdada796e361ae1f03402417baefcc32ca865735e65a7f036326fb",
+      "signature": "def fold[F: BorrowCallContract & Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](self, var on_ok: F, var on_err: G ) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure):"
+     },
+     {
+      "sha256": "15695416774de9136d0019f81fbf0607b4f516ea504013a8d67b2750e0b4bc58",
+      "signature": "def fold[F: BorrowCallable, G: BorrowCallContract & Movable & Deinitable](self, on_ok: F, var on_err: G ) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure):"
+     },
+     {
+      "sha256": "0c9a361f9765a99de5e749f8eca9d4f5534185bbe33d877365c6d5e748727b70",
+      "signature": "def fold[F: BorrowCallContract & Movable & Deinitable, G: BorrowCallable](self, var on_ok: F, on_err: G ) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure):"
      }
     ],
     "fold_once": [
@@ -3637,6 +3649,18 @@
      {
       "sha256": "6a749b8849f4a713e225f45e5f866393df9a2f067ac50326dd2f0c3770c4d413",
       "signature": "def fold_owned[F: Unary, G: Unary](deinit self, on_ok: F, on_err: G ) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error):"
+     },
+     {
+      "sha256": "6a43cf5857789ccda4b262912dcb0430c6ac9420ec3ce99170c4badcc43033f2",
+      "signature": "def fold_owned[F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var on_ok: F, var on_err: G ) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error):"
+     },
+     {
+      "sha256": "8efbf1ea7cf0492c3d55e46e8ffc0cf4ae677a7f115e359cabfe4fba1eddd3ed",
+      "signature": "def fold_owned[F: Unary, G: UnaryContract & Movable & Deinitable](deinit self, on_ok: F, var on_err: G ) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error):"
+     },
+     {
+      "sha256": "8ba943463236efd9e23ac00d8ea5f3266015e52eb3ce7dd7e47e650e25e2b00c",
+      "signature": "def fold_owned[F: UnaryContract & Movable & Deinitable, G: Unary](deinit self, var on_ok: F, on_err: G ) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error):"
      }
     ],
     "fold_owned_once": [

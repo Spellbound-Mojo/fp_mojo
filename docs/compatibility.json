@@ -236,7 +236,20 @@
         "tests/runtime/test_capture_three_keywords.mojo",
         "tests/ownership/test_capture_three_ownership.mojo",
         "tests/compile_fail/capture_three_alias.mojo",
-        "tests/compile_fail/capture_three_origin.mojo"
+        "tests/compile_fail/capture_three_origin.mojo",
+        "tests/runtime/test_result_fold_ownership.mojo",
+        "tests/ownership/test_result_fold_ownership.mojo",
+        "tests/compile_fail/result_fold_ownership_alias.mojo",
+        "tests/compile_fail/result_fold_ownership_bare_borrowed_inactive.mojo",
+        "tests/compile_fail/result_fold_ownership_bare_owned_inactive.mojo",
+        "tests/compile_fail/result_fold_ownership_borrowed_errors.mojo",
+        "tests/compile_fail/result_fold_ownership_borrowed_output_origin.mojo",
+        "tests/compile_fail/result_fold_ownership_error_origin.mojo",
+        "tests/compile_fail/result_fold_ownership_fold_output_origin.mojo",
+        "tests/compile_fail/result_fold_ownership_inactive_reuse.mojo",
+        "tests/compile_fail/result_fold_ownership_mixed_output.mojo",
+        "tests/compile_fail/result_fold_ownership_owned_output.mojo",
+        "tests/compile_fail/result_fold_ownership_payload.mojo"
       ]
     },
     "iteration": {

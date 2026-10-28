@@ -31160,6 +31160,138 @@
       },
       "signature": "def fold[F: BorrowCallable, G: BorrowCallable](self, on_ok: F, on_err: G) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure)",
       "summary": "Fold with two `BorrowCallable` handlers."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The success handler, consumed.",
+        "name": "on_ok",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The error handler, consumed.",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "Named shared handlers stay borrowed. A moved or temporary handler is\nconsumed, including the inactive handler. Only the selected handler\nruns: consuming receivers take priority, then mutable, then shared.\nPass `mut_ref(handler)` to retain its original state. Shared borrowed\nhandlers keep shared invocation, including when paired with an owner.\nThe Result and its payload remain borrowed throughout the call.",
+      "error": "_ResultFailure[F.Failure, G.Failure]",
+      "parameters": [
+       {
+        "description": "The success handler, with the exact success payload and output types.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The error handler, returning the same output and a compatible error.",
+        "inferred": false,
+        "name": "G",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact common callback error; errors must match or one be Never.",
+      "returns": {
+       "doc": "The selected handler's result, preserving its external origins.",
+       "type": "F.Result"
+      },
+      "signature": "def fold[F: BorrowCallContract & Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](self, var on_ok: F, var on_err: G) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure)",
+      "summary": "Fold with library handlers whose ownership follows their arguments."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The success handler, borrowed.",
+        "name": "on_ok",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The error handler, consumed.",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "Named shared handlers stay borrowed. A moved or temporary handler is\nconsumed, including the inactive handler. Only the selected handler\nruns: consuming receivers take priority, then mutable, then shared.\nPass `mut_ref(handler)` to retain its original state. Shared borrowed\nhandlers keep shared invocation, including when paired with an owner.\nThe Result and its payload remain borrowed throughout the call.",
+      "error": "_ResultFailure[F.Failure, G.Failure]",
+      "parameters": [
+       {
+        "description": "The success handler, with the exact success payload and output types.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallable",
+        "variadic": false
+       },
+       {
+        "description": "The error handler, returning the same output and a compatible error.",
+        "inferred": false,
+        "name": "G",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact common callback error; errors must match or one be Never.",
+      "returns": {
+       "doc": "The selected handler's result, preserving its external origins.",
+       "type": "F.Result"
+      },
+      "signature": "def fold[F: BorrowCallable, G: BorrowCallContract & Movable & Deinitable](self, on_ok: F, var on_err: G) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure)",
+      "summary": "Fold with library handlers whose ownership follows their arguments."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The success handler, consumed.",
+        "name": "on_ok",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "The error handler, borrowed.",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "Named shared handlers stay borrowed. A moved or temporary handler is\nconsumed, including the inactive handler. Only the selected handler\nruns: consuming receivers take priority, then mutable, then shared.\nPass `mut_ref(handler)` to retain its original state. Shared borrowed\nhandlers keep shared invocation, including when paired with an owner.\nThe Result and its payload remain borrowed throughout the call.",
+      "error": "_ResultFailure[F.Failure, G.Failure]",
+      "parameters": [
+       {
+        "description": "The success handler, with the exact success payload and output types.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The error handler, returning the same output and a compatible error.",
+        "inferred": false,
+        "name": "G",
+        "type": "BorrowCallable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact common callback error; errors must match or one be Never.",
+      "returns": {
+       "doc": "The selected handler's result, preserving its external origins.",
+       "type": "F.Result"
+      },
+      "signature": "def fold[F: BorrowCallContract & Movable & Deinitable, G: BorrowCallable](self, var on_ok: F, on_err: G) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure)",
+      "summary": "Fold with library handlers whose ownership follows their arguments."
      }
     ],
     "fold_once": [
@@ -31596,6 +31728,138 @@
       },
       "signature": "def fold_owned[F: Unary, G: Unary](deinit self, on_ok: F, on_err: G) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error)",
       "summary": "Consuming fold with two library `Unary` handlers."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The success handler, consumed.",
+        "name": "on_ok",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The error handler, consumed.",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "Named shared handlers stay borrowed. A moved or temporary handler is\nconsumed, including the inactive handler. Only the selected handler\nruns: consuming receivers take priority, then mutable, then shared.\nPass `mut_ref(handler)` to retain its original state. Shared borrowed\nhandlers keep shared invocation, including when paired with an owner.\nThe Result is consumed and its payload moves into the selected handler.",
+      "error": "_ResultFailure[F.Error, G.Error]",
+      "parameters": [
+       {
+        "description": "The success handler, with the exact success payload and output types.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The error handler, returning the same output and a compatible error.",
+        "inferred": false,
+        "name": "G",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact common callback error; errors must match or one be Never.",
+      "returns": {
+       "doc": "The selected handler's result, preserving its external origins.",
+       "type": "F.Out"
+      },
+      "signature": "def fold_owned[F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var on_ok: F, var on_err: G) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error)",
+      "summary": "Fold with library handlers whose ownership follows their arguments."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The success handler, borrowed.",
+        "name": "on_ok",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The error handler, consumed.",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "Named shared handlers stay borrowed. A moved or temporary handler is\nconsumed, including the inactive handler. Only the selected handler\nruns: consuming receivers take priority, then mutable, then shared.\nPass `mut_ref(handler)` to retain its original state. Shared borrowed\nhandlers keep shared invocation, including when paired with an owner.\nThe Result is consumed and its payload moves into the selected handler.",
+      "error": "_ResultFailure[F.Error, G.Error]",
+      "parameters": [
+       {
+        "description": "The success handler, with the exact success payload and output types.",
+        "inferred": false,
+        "name": "F",
+        "type": "Unary",
+        "variadic": false
+       },
+       {
+        "description": "The error handler, returning the same output and a compatible error.",
+        "inferred": false,
+        "name": "G",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact common callback error; errors must match or one be Never.",
+      "returns": {
+       "doc": "The selected handler's result, preserving its external origins.",
+       "type": "F.Out"
+      },
+      "signature": "def fold_owned[F: Unary, G: UnaryContract & Movable & Deinitable](deinit self, on_ok: F, var on_err: G) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error)",
+      "summary": "Fold with library handlers whose ownership follows their arguments."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The success handler, consumed.",
+        "name": "on_ok",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "The error handler, borrowed.",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "Named shared handlers stay borrowed. A moved or temporary handler is\nconsumed, including the inactive handler. Only the selected handler\nruns: consuming receivers take priority, then mutable, then shared.\nPass `mut_ref(handler)` to retain its original state. Shared borrowed\nhandlers keep shared invocation, including when paired with an owner.\nThe Result is consumed and its payload moves into the selected handler.",
+      "error": "_ResultFailure[F.Error, G.Error]",
+      "parameters": [
+       {
+        "description": "The success handler, with the exact success payload and output types.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The error handler, returning the same output and a compatible error.",
+        "inferred": false,
+        "name": "G",
+        "type": "Unary",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact common callback error; errors must match or one be Never.",
+      "returns": {
+       "doc": "The selected handler's result, preserving its external origins.",
+       "type": "F.Out"
+      },
+      "signature": "def fold_owned[F: UnaryContract & Movable & Deinitable, G: Unary](deinit self, var on_ok: F, on_err: G) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error)",
+      "summary": "Fold with library handlers whose ownership follows their arguments."
      }
     ],
     "fold_owned_once": [

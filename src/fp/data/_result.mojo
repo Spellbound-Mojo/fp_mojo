@@ -15,7 +15,7 @@ from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
 from fp.callables.protocols import BorrowCallContract, ThunkContract
 from fp.callables.native import (_call_native, _call_native_borrow, _Unary, _RaisingUnary, _Borrowing, _RaisingBorrowing,
                                  _NativeBorrowRef, _NativeUnaryRef, _Thunk, _RaisingThunk)
-from fp.callables._receiver import _borrow_once_as, _thunk_once_as, _unary_once_as
+from fp.callables._receiver import _SharedBorrowRef, _SharedUnaryRef, _borrow_once_as, _thunk_once_as, _unary_once_as
 from fp.callables._transforms import _IgnoreInput, _BorrowedUnary, _ValueThunk
 
 
@@ -444,24 +444,174 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
     def fold[F: BorrowCallable, G: BorrowCallable](self, on_ok: F, on_err: G
     ) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure):
         """Fold with two `BorrowCallable` handlers."""
-        comptime Z = _ResultFailure[F.Failure, G.Failure]
-        comptime assert _ErrorCompatible[Z, F.Failure] and _ErrorCompatible[Z, G.Failure]
-        if self.is_ok():
-            return invoke_borrowed[Z](self._ok().value, on_ok)
-        return rebind_var[F.Result](invoke_borrowed[Z](self._err().value, on_err))
+        return self.fold_once(_SharedBorrowRef[F,origin_of(on_ok)](Pointer(to=on_ok)), _SharedBorrowRef[G,origin_of(on_err)](Pointer(to=on_err)))
 
     def fold_owned[F: Unary, G: Unary](deinit self, on_ok: F, on_err: G
     ) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error):
         """Consuming fold with two library `Unary` handlers."""
-        def invoke_ok(var payload: Self.T, function: F) raises F.Error capturing -> F.Out:
-            return function.call(rebind_var[F.Arg](payload^))
-        def invoke_err(var payload: Self.E, function: G) raises G.Error capturing -> F.Out:
-            return rebind_var[F.Out](function.call(rebind_var[G.Arg](payload^)))
-        return _fold_result_owned[Self.T, Self.E, F.Out, _ResultFailure[F.Error, G.Error], F.Error, G.Error,
-            Pointer[F, origin_of(on_ok)], Pointer[G, origin_of(on_err)],
-            _borrowed_transform[Self.T, F.Out, F.Error, F, origin_of(on_ok), invoke_ok],
-            _borrowed_transform[Self.E, F.Out, G.Error, G, origin_of(on_err), invoke_err]](
-                self^, Pointer(to=on_ok), Pointer(to=on_err))
+        return self^.fold_owned_once(_SharedUnaryRef[F,origin_of(on_ok)](Pointer(to=on_ok)), _SharedUnaryRef[G,origin_of(on_err)](Pointer(to=on_err)))
+
+    def fold[F: BorrowCallContract & Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](self, var on_ok: F, var on_err: G
+    ) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure):
+        """Fold with library handlers whose ownership follows their arguments.
+
+        Named shared handlers stay borrowed. A moved or temporary handler is
+        consumed, including the inactive handler. Only the selected handler
+        runs: consuming receivers take priority, then mutable, then shared.
+        Pass `mut_ref(handler)` to retain its original state. Shared borrowed
+        handlers keep shared invocation, including when paired with an owner.
+        The Result and its payload remain borrowed throughout the call.
+
+        Parameters:
+            F: The success handler, with the exact success payload and output types.
+            G: The error handler, returning the same output and a compatible error.
+
+        Args:
+            on_ok: The success handler, consumed.
+            on_err: The error handler, consumed.
+
+        Returns:
+            The selected handler's result, preserving its external origins.
+
+        Raises:
+            The exact common callback error; errors must match or one be Never.
+        """
+        return self.fold_once(on_ok^, on_err^)
+
+    def fold[F: BorrowCallable, G: BorrowCallContract & Movable & Deinitable](self, on_ok: F, var on_err: G
+    ) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure):
+        """Fold with library handlers whose ownership follows their arguments.
+
+        Named shared handlers stay borrowed. A moved or temporary handler is
+        consumed, including the inactive handler. Only the selected handler
+        runs: consuming receivers take priority, then mutable, then shared.
+        Pass `mut_ref(handler)` to retain its original state. Shared borrowed
+        handlers keep shared invocation, including when paired with an owner.
+        The Result and its payload remain borrowed throughout the call.
+
+        Parameters:
+            F: The success handler, with the exact success payload and output types.
+            G: The error handler, returning the same output and a compatible error.
+
+        Args:
+            on_ok: The success handler, borrowed.
+            on_err: The error handler, consumed.
+
+        Returns:
+            The selected handler's result, preserving its external origins.
+
+        Raises:
+            The exact common callback error; errors must match or one be Never.
+        """
+        return self.fold_once(_SharedBorrowRef[F,origin_of(on_ok)](Pointer(to=on_ok)), on_err^)
+
+    def fold[F: BorrowCallContract & Movable & Deinitable, G: BorrowCallable](self, var on_ok: F, on_err: G
+    ) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure):
+        """Fold with library handlers whose ownership follows their arguments.
+
+        Named shared handlers stay borrowed. A moved or temporary handler is
+        consumed, including the inactive handler. Only the selected handler
+        runs: consuming receivers take priority, then mutable, then shared.
+        Pass `mut_ref(handler)` to retain its original state. Shared borrowed
+        handlers keep shared invocation, including when paired with an owner.
+        The Result and its payload remain borrowed throughout the call.
+
+        Parameters:
+            F: The success handler, with the exact success payload and output types.
+            G: The error handler, returning the same output and a compatible error.
+
+        Args:
+            on_ok: The success handler, consumed.
+            on_err: The error handler, borrowed.
+
+        Returns:
+            The selected handler's result, preserving its external origins.
+
+        Raises:
+            The exact common callback error; errors must match or one be Never.
+        """
+        return self.fold_once(on_ok^, _SharedBorrowRef[G,origin_of(on_err)](Pointer(to=on_err)))
+
+    def fold_owned[F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var on_ok: F, var on_err: G
+    ) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error):
+        """Fold with library handlers whose ownership follows their arguments.
+
+        Named shared handlers stay borrowed. A moved or temporary handler is
+        consumed, including the inactive handler. Only the selected handler
+        runs: consuming receivers take priority, then mutable, then shared.
+        Pass `mut_ref(handler)` to retain its original state. Shared borrowed
+        handlers keep shared invocation, including when paired with an owner.
+        The Result is consumed and its payload moves into the selected handler.
+
+        Parameters:
+            F: The success handler, with the exact success payload and output types.
+            G: The error handler, returning the same output and a compatible error.
+
+        Args:
+            on_ok: The success handler, consumed.
+            on_err: The error handler, consumed.
+
+        Returns:
+            The selected handler's result, preserving its external origins.
+
+        Raises:
+            The exact common callback error; errors must match or one be Never.
+        """
+        return self^.fold_owned_once(on_ok^, on_err^)
+
+    def fold_owned[F: Unary, G: UnaryContract & Movable & Deinitable](deinit self, on_ok: F, var on_err: G
+    ) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error):
+        """Fold with library handlers whose ownership follows their arguments.
+
+        Named shared handlers stay borrowed. A moved or temporary handler is
+        consumed, including the inactive handler. Only the selected handler
+        runs: consuming receivers take priority, then mutable, then shared.
+        Pass `mut_ref(handler)` to retain its original state. Shared borrowed
+        handlers keep shared invocation, including when paired with an owner.
+        The Result is consumed and its payload moves into the selected handler.
+
+        Parameters:
+            F: The success handler, with the exact success payload and output types.
+            G: The error handler, returning the same output and a compatible error.
+
+        Args:
+            on_ok: The success handler, borrowed.
+            on_err: The error handler, consumed.
+
+        Returns:
+            The selected handler's result, preserving its external origins.
+
+        Raises:
+            The exact common callback error; errors must match or one be Never.
+        """
+        return self^.fold_owned_once(_SharedUnaryRef[F,origin_of(on_ok)](Pointer(to=on_ok)), on_err^)
+
+    def fold_owned[F: UnaryContract & Movable & Deinitable, G: Unary](deinit self, var on_ok: F, on_err: G
+    ) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error):
+        """Fold with library handlers whose ownership follows their arguments.
+
+        Named shared handlers stay borrowed. A moved or temporary handler is
+        consumed, including the inactive handler. Only the selected handler
+        runs: consuming receivers take priority, then mutable, then shared.
+        Pass `mut_ref(handler)` to retain its original state. Shared borrowed
+        handlers keep shared invocation, including when paired with an owner.
+        The Result is consumed and its payload moves into the selected handler.
+
+        Parameters:
+            F: The success handler, with the exact success payload and output types.
+            G: The error handler, returning the same output and a compatible error.
+
+        Args:
+            on_ok: The success handler, consumed.
+            on_err: The error handler, borrowed.
+
+        Returns:
+            The selected handler's result, preserving its external origins.
+
+        Raises:
+            The exact common callback error; errors must match or one be Never.
+        """
+        return self^.fold_owned_once(on_ok^, _SharedUnaryRef[G,origin_of(on_err)](Pointer(to=on_err)))
 
     def fold_once[F: BorrowCallContract & Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](self, var on_ok: F, var on_err: G
     ) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure):
@@ -488,7 +638,7 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             The error of the handler that ran; both raise one error type, or
             one of them nothing.
         """
-        comptime assert _OnceBorrowAvailable[F] and _OnceBorrowAvailable[G], "Result.fold_once: both handlers must implement a receiver mode"
+        comptime assert _OnceBorrowAvailable[F] and _OnceBorrowAvailable[G], "Result fold: both handlers must implement a receiver mode"
         comptime Z = _ResultFailure[F.Failure, G.Failure]
         comptime assert _ErrorCompatible[Z, F.Failure] and _ErrorCompatible[Z, G.Failure]
         if self.is_ok():
@@ -518,7 +668,7 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             The error of the handler that ran; both raise one error type, or
             one of them nothing.
         """
-        comptime assert _OnceUnaryAvailable[F] and _OnceUnaryAvailable[G], "Result.fold_owned_once: both handlers must implement a receiver mode"
+        comptime assert _OnceUnaryAvailable[F] and _OnceUnaryAvailable[G], "Result fold: both handlers must implement a receiver mode"
         return _fold_result_owned[Self.T, Self.E, F.Out, _ResultFailure[F.Error, G.Error], F.Error, G.Error, F, G,
             _call_transform[Self.T, F], _call_transform[Self.E, G, F.Out]](self^, on_ok^, on_err^)
 
