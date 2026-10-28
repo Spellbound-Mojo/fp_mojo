@@ -1,7 +1,7 @@
-from fp.algebra import ListFamily, ListMonoid, ResultFamily, ValidationFamily, fail
+from fp.algebra import IdentityFamily, ListFamily, ListMonoid, ResultFamily, ValidationFamily, fail
 from fp.data import Result, Ok, Err
 from fp.effects import ResultT
-from fp.functions import piped
+from fp.functions import pipeline, kleisli
 
 
 def fallback(var message: String) -> Int:
@@ -26,7 +26,9 @@ def recovery_validation_observer(errors: List[String]) -> Result[NoneType, List[
 
 def main():
     comptime Errors = ResultFamily[String]
-    var recovered = piped(fail[Errors, Int](String("missing"))).or_else[Errors](retry).get()
+    var restore = kleisli[IdentityFamily](fallback)
+    var retrying = kleisli[Errors](retry)
+    var recovered = pipeline(fail[Errors, Int](String("missing"))).or_else(retrying).get()
     print("retried:", recovered._ok().value)
 
     var entries: List[Result[Int, String]] = [
@@ -34,28 +36,28 @@ def main():
         Result[Int, String](Err(String("missing"))),
         Result[Int, String](Ok(5)),
     ]
-    var values = piped(entries^).recover[ResultT[ListFamily, String]](fallback).get()
+    var values = pipeline[ResultT[ListFamily, String]](entries^).recover(restore).get()
     print("entries:", values[0]._ok().value, values[1]._ok().value, values[2]._ok().value)
 
     comptime Nested = ResultT[Errors, String]
     var outer = Result[Result[Int, String], String](Err(String("connection failed")))
-    var untouched = piped(outer^).recover[Nested](fallback).get()
+    var untouched = pipeline[Nested](outer^).recover(restore).get()
     print("outer:", untouched._err().value)
 
     var failures: List[Result[Int, String]] = [
         Result[Int, String](Err(String("missing"))),
         Result[Int, String](Err(String("denied"))),
     ]
-    var selective = piped(failures^).recover_if[ResultT[ListFamily, String]](is_missing, fallback).get()
+    var selective = pipeline[ResultT[ListFamily, String]](failures^).recover_if(is_missing, fallback).get()
     print("selected:", selective[0]._ok().value, "; kept:", selective[1]._err().value)
-    var retried = piped(fail[Errors, Int](String("missing"))).or_else_if[Errors](is_missing, retry).get()
+    var retried = pipeline(fail[Errors, Int](String("missing"))).or_else_if(is_missing, retry).get()
     print("selected retry:", retried._ok().value)
 
-    var inspected = piped(fail[Errors, Int](String("original"))).tap_err[Errors](recovery_observer).get()
+    var inspected = pipeline(fail[Errors, Int](String("original"))).tap_err(recovery_observer).get()
     print("inspection kept:", inspected._err().value)
-    var observed = piped(fail[Errors, Int](String("original"))).flat_tap_err[Errors](recovery_observer).get()
+    var observed = pipeline(fail[Errors, Int](String("original"))).flat_tap_err(recovery_observer).get()
     print("Result observer:", observed._err().value)
 
     comptime Validation = ValidationFamily[ListMonoid[String]]
-    var accumulated = piped(fail[Validation, Int](List[String](["original"]))).flat_tap_err[Validation](recovery_validation_observer).get()
+    var accumulated = pipeline[Validation](fail[Validation, Int](List[String](["original"]))).flat_tap_err(recovery_validation_observer).get()
     print("Validation observer:", accumulated._err().value)

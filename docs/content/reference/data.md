@@ -29,6 +29,11 @@ These Cats-inspired operations are also terminal methods on `pipeline(result)`;
 they return the value directly. See [finishing with a value](../tutorial/results.md#finish-with-a-value)
 for lazy defaults, ownership and native error selection.
 
+`value_or(handler)`, `recover(handler)` and `or_else(handler)` also borrow
+reusable shared Kleisli handlers without copying their captures. They run only
+on `Err`; a successful value skips the handler. Passing `handler^` instead
+transfers ownership, including disposal when the handler is skipped.
+
 `raise_on_err()` returns the success or raises the stored error with its exact
 type. This also finishes a Result pipeline directly; it consumes the carrier
 without copying its payload.

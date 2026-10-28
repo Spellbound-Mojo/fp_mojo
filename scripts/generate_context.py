@@ -48,6 +48,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
                 adapter_type=cb.type, build=cb.build, result=cb.result,
                 error=cb.error, conditions=[cb.payload + " == " + payload],
                 target=f"_ViewTarget[{C}, {o}]", family=f"_ViewFamily[{C}, {o}]",
+                is_native=False,
             )
         if kind == "library":
             trait = callable_protocol(mode, repeatable=repeatable)
@@ -59,6 +60,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
                 argument=f"var {arg}: {C}",
                 adapter_type=C,
                 build=arg + "^",
+                is_native=False,
                 result=metadata.result,
                 error=metadata.error,
                 conditions=[actual + " == " + wanted
@@ -93,6 +95,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
             build=f"{cb}({arg})" if kind.startswith("thin_") else f"{cb}(Pointer(to={arg}))",
             adapter_type=cb,
             prelude="",
+            is_native=True,
             result=R,
             error=E,
             conditions=["Self.E != Never"] if kind == "never" else [f"_ErrorCompatible[Self.E, {E}]"] if kind == "thin_raising" else [],
@@ -924,11 +927,11 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
     # whether two stored error types are equal. Proven non-error families keep
     # the disjoint Result-shaped native signatures below: Mojo cannot project
     # their input from a conditional policy while matching a generic callback.
-    for cb in native_callbacks("owned", "_RecoverySelection[Self.I, Self.V].Input", "function"):
+    for cb in native_callbacks("owned", "_RecoverySelection[Self.I, Self.V].Input", "function", view=True):
         contract = f"OrElseContract[Self.I, Self.V, {cb['adapter_type']}]"
         # The contract owns library input equality too; requiring the expanded
         # predicate again prevents abstract wrappers forwarding Compatible.
-        conditions = [] if cb["adapter_type"] == "C" else ["conforms_to(Self.I, ApplicativeError)"] + cb["conditions"]
+        conditions = ["conforms_to(Self.I, ApplicativeError)"] + cb["conditions"] if cb["is_native"] else []
         emit("or_else", cb, cb["params"], cb["argument"], contract + ".Out",
              contract + ".Error", contract + ".Family", conditions + [contract + ".Compatible"],
              f"_selected_or_else[Self.I]({cb['build']}, self.value^)",
@@ -936,10 +939,10 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
 
     family = "_Recovering[Self.I]"
     operation = next(op for op in error_operations("recovery") if op.name == "recover")
-    for cb in native_callbacks("owned", family + ".Failure", "function"):
+    for cb in native_callbacks("owned", family + ".Failure", "function", view=True):
         contract = f"RecoverContract[{family}, Self.V, {cb['adapter_type']}]"
         conditions = ["conforms_to(Self.I, ApplicativeError)", contract + ".Compatible"]
-        if cb["adapter_type"] != "C": conditions += cb["conditions"]
+        if cb["is_native"]: conditions += cb["conditions"]
         result, error = contract + ".Out", contract + ".Error"
         emit(operation.name, cb, cb["params"], cb["argument"], result, error,
              "Self.I", conditions,
@@ -1070,7 +1073,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
     # admission is shared; each carrier owns its branch and cleanup semantics.
     result_conditions = ["conforms_to(Self.V, _ResultType)", f"Self.V == {Source}"]
     def value_terminal(name, mode, arg, summary, input_type, output_type, source_conditions, invoke):
-        for cb in native_callbacks(mode, input_type, arg):
+        for cb in native_callbacks(mode, input_type, arg, view=mode == "owned"):
             params = callback_parameters([cb])
             if params and params[-1] == "//": params.pop()
             conditions = source_conditions + cb["conditions"] + [f'{cb["result"]} == {output_type}']

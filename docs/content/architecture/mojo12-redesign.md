@@ -3646,3 +3646,19 @@ symbolic in Mojo 1.2's raises checking, despite referring to the same type.
 Structural admission keeps ordinary calls annotation-free and delegates
 consumption and raising to Result itself. Native Result generic forwarding,
 move-only errors, Never and borrowed origins retain the same contract.
+
+### Reusing recovery handlers
+
+Selected `recover`, `or_else` and the Result terminal `value_or` accept the
+canonical shared unary view. Direct Result methods forward that view to their
+existing consuming implementations. A named shared chain is borrowed, while
+an explicit move retains existing ownership transfer. There is no second
+error branch, fallback loop or capture-storage representation.
+
+The selected recovery contracts own admission for both owned library callbacks
+and views. Only native signatures need their extra signature-equality proofs;
+the generator records that distinction explicitly. This preserves intrinsic
+Result error-type replacement and custom families' selected error channels,
+including mapping-only rejection and deferred transformer timing. Repeated
+families still require repeatable handlers. Move-only failures, captures,
+returned origins and exact native errors follow the same contract as before.

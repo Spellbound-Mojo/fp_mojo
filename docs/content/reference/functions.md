@@ -118,6 +118,12 @@ native Result. Recovery preserves that family's construction errors, timing and
 callback ownership, so the chain can continue with `.map(...)` immediately.
 Deferred handler errors occur when the resulting computation runs.
 
+Both methods also borrow a reusable shared Kleisli handler directly, as does
+the Result terminal `value_or(handler)`. The same handler can be reused by
+direct Result methods. A named chain keeps its captures; `handler^` transfers
+them to the existing consuming form. Deferred recovery retains the borrow
+until execution or disposal, so keep that handler alive and unmoved.
+
 Canonical Result pipelines also preserve their existing `or_else` behavior:
 the replacement Result may change the stored-error type, selecting the matching
 output `ResultFamily`. Intrinsic Result calls under a family with neither
@@ -595,7 +601,8 @@ overrides that choice. Direct `Result.map(chain)` and
 
 `Pipeline.map`, `flat_map`, `filter_map`, `traverse`, `par_traverse`,
 `traverse_filter`, `flat_traverse`, `traverse_void`, `find_map`,
-`find_map_effect`, `fold_map_effect`, `sum_by_effect` and `then` borrow shared
+`find_map_effect`, `fold_map_effect`, `sum_by_effect`, `then`, `recover`,
+`or_else` and `value_or` borrow shared
 chains directly. Passing `chain^` instead transfers ownership when the
 selected operation admits a consuming callback. For example,
 `pipeline[Reader[Int]](action^).map(chain)` retains a borrow until execution,

@@ -1,6 +1,7 @@
 """Return a plain value, compute a lazy default, or keep only a success."""
 from fp.data import Result, Ok, Err
-from fp.functions import pipeline
+from fp.algebra import IdentityFamily
+from fp.functions import pipeline, kleisli
 from std.testing import assert_equal
 
 
@@ -18,8 +19,9 @@ def report(var error: String) -> Int:
 
 
 def main() raises:
-    print("value:", checked(21).map(double).value_or(report))
-    print("fallback:", checked(-1).value_or(report))
+    var explain = kleisli[IdentityFamily](report)
+    print("value:", checked(21).map(double).value_or(explain))
+    print("fallback:", pipeline(checked(-1)).value_or(explain))
 
     var defaults = 0
     def default() {mut defaults} -> Int:

@@ -134,6 +134,8 @@ def methods(piped=False):
             doc = summary
             if kind == 'library' and other in (None, 'library'):
                 doc += '\n\n        '+detail+' Native errors propagate unchanged; they never become stored Err values. Native callbacks are borrowed in place; library callbacks are consumed and use their declared receiver mode.'
+                if name == 'recover' and not piped:
+                    doc += ' Shared callable chains may instead be borrowed by passing their name; an explicit move retains the consuming form.'
                 doc += '\n\n        Parameters:\n'
                 if piped: doc += '            T: The Result success type, including its origins.\n            Failure: The stored error type, including its origins.\n'
                 doc += '            C: The callback type, retaining its receiver, input, result and native error.\n'

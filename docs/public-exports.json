@@ -7424,6 +7424,10 @@
             "sha256": "23ef7c3d9f8b8b479dd1669b51ec50366f3c06f333d71f7aeeab188dc6ef249c"
           },
           {
+            "signature": "def or_else[C: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises OrElseContract[Self.I, Self.V, C._View[o]].Error -> Pipeline[OrElseContract[Self.I, Self.V, C._View[o]].Family, OrElseContract[Self.I, Self.V, C._View[o]].Out, Self.E] where OrElseContract[Self.I, Self.V, C._View[o]].Compatible:",
+            "sha256": "bac313e533b279fb98bc5d1e02b760d0b54ac4c55fac13ae467b69b1c2125af0"
+          },
+          {
             "signature": "def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _RecoverySelection[Self.I, Self.V].Input) -> R](deinit self, ref[o] function: C) raises OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Error -> Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Compatible:",
             "sha256": "9371c280c9ca356c9dea294467851b52823dc9aa31e2a8899801f2544089b9a0"
           },
@@ -7484,6 +7488,10 @@
           {
             "signature": "def recover[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises RecoverContract[_Recovering[Self.I], Self.V, C].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, C].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverContract[_Recovering[Self.I], Self.V, C].Compatible:",
             "sha256": "e786714f0362f025b4efc979d5fc2d28a76c45c2943153a1cfe42f238ac22ac1"
+          },
+          {
+            "signature": "def recover[C: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises RecoverContract[_Recovering[Self.I], Self.V, C._View[o]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, C._View[o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverContract[_Recovering[Self.I], Self.V, C._View[o]].Compatible:",
+            "sha256": "ead9143377cc2895ef0d21178d45eca904ffa2b365e4d69b96fb2ebde7a3dcca"
           },
           {
             "signature": "def recover[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Recovering[Self.I].Failure) -> R](deinit self, ref[o] function: C) raises RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Compatible:",
@@ -10414,6 +10422,10 @@
           {
             "signature": "def value_or[C: UnaryContract & Movable & Deinitable](deinit self, var on_err: C) raises C.Error -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Failure[Self.V] and C.Out == _Success[Self.V]:",
             "sha256": "b7f45e149a6b8f7c564f4f6f87ace10eb976e96bb0a7da43da92e4281144118e"
+          },
+          {
+            "signature": "def value_or[C: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] on_err: C) raises C._View[o].Error -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._View[o].Arg == _Failure[Self.V] and C._View[o].Out == _Success[Self.V]:",
+            "sha256": "4414dc40a96cad1cb45c09fe2a5f2475afdcd3348c4c4a3cad1b7cf80e4b1177"
           },
           {
             "signature": "def value_or[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) -> R](deinit self, ref[o] on_err: C) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]:",
@@ -13358,6 +13370,10 @@
             "sha256": "11b33a5730c780a74f04b94cdba7c0163dbfd4a91f44542592391e0e2ac694de"
           },
           {
+            "signature": "def value_or[F: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] on_err: F ) raises F._View[o].Error -> Self.T where F._View[o].Arg == Self.E and F._View[o].Out == Self.T:",
+            "sha256": "ebccbb127b59cd57d3b96d74c37654a02e6113c1412802ec147c084026f52bdf"
+          },
+          {
             "signature": "def value_or[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: _Unary[A, R]](deinit self, ref[o] on_err: C) raises Never -> Self.T where A == Self.E and R == Self.T:",
             "sha256": "599b777b595784ef5d5c22dbba0fc747b70938af772e50c9a8966a4193c07b64"
           },
@@ -13540,6 +13556,10 @@
           {
             "signature": "def or_else[F: UnaryContract & Movable & Deinitable](deinit self, var function: F ) raises F.Error -> F.Out where F.Arg == Self.E:",
             "sha256": "e7014eefb1b7d870b1f923ed3ae357c386eb608b065331577fd76aeb06c51cfc"
+          },
+          {
+            "signature": "def or_else[F: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: F ) raises F._View[o].Error -> F._View[o].Out where F._View[o].Arg == Self.E:",
+            "sha256": "7e0f237e24fc4398569e2903b1c485f3dade4dfc1cdabd6498ee3239b470f84b"
           }
         ],
         "flat_tap": [
@@ -13648,6 +13668,10 @@
           {
             "signature": "def recover[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingUnary[A, R, X]](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where A == Self.E and R == Self.T:",
             "sha256": "9a327a58d25d906a1ef6bea24071e220f9192dfe51583d7c7623f0ff1ed80bda"
+          },
+          {
+            "signature": "def recover[F: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: F ) raises F._View[o].Error -> Result[Self.T, Self.E] where F._View[o].Arg == Self.E and F._View[o].Out == Self.T:",
+            "sha256": "76479fbf0c8445b32e41f67d8b67b9c32171de4131f818a5527ce9ab0dcb7c90"
           }
         ],
         "tap_err": [

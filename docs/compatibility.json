@@ -480,7 +480,7 @@
       ],
       "status": "selected",
       "families": "Selected ApplicativeError, including native, custom and deferred families; intrinsic Result recovery remains available under families with neither ApplicativeError nor ErrorMapping",
-      "callbacks": "Handlers consume stored errors; native closures borrowed, stored thin pointers owned, library receivers preserved",
+      "callbacks": "Handlers consume stored errors; native closures borrowed, stored thin pointers owned, library receivers preserved Named shared callable chains are borrowed without copying captures; explicit moves retain consuming admission.",
       "ownership": "Success skips the handler; single-use carriers move owned captures, branching families require repeatable handlers",
       "errors": "Exact family construction errors; deferred handler errors remain deferred. Canonical Result or_else may change the stored-error type and output family",
       "timing": "Selected family owns recovery, even when its storage is a native Result",
@@ -501,7 +501,11 @@
         "tests/compile_fail/context_error_capability_recover_native.mojo",
         "tests/compile_fail/context_error_capability_recover_library.mojo",
         "tests/compile_fail/context_error_capability_or_else_native.mojo",
-        "tests/compile_fail/context_error_capability_or_else_library.mojo"
+        "tests/compile_fail/context_error_capability_or_else_library.mojo",
+        "tests/runtime/test_context_recovery_callable_views.mojo",
+        "tests/ownership/test_context_recovery_callable_views_ownership.mojo",
+        "tests/compile_fail/recovery_callable_view_move.mojo",
+        "tests/compile_fail/recovery_callable_view_output.mojo"
       ]
     },
     {
@@ -828,7 +832,7 @@
       ],
       "status": "result_only",
       "families": "A native Result carrier",
-      "callbacks": "Owned unary fallback for value_or; no callback for to_optional or raise_on_err.",
+      "callbacks": "Owned unary fallback for value_or; no callback for to_optional or raise_on_err. Named shared callable chains are borrowed without copying captures; explicit moves retain consuming admission.",
       "ownership": "Consumes the Result and library callback owners; native closures are borrowed. Returns a plain value or Optional.",
       "errors": "Selected native error for closures, exact declared library error. Stored errors feed value_or or are discarded by to_optional. raise_on_err raises the stored error with its exact type and origins, independent of the selected callback error.",
       "timing": "Immediate extraction; fallback callbacks run only on Err.",
@@ -845,7 +849,11 @@
         "tests/runtime/test_pipeline_raise.mojo",
         "tests/ownership/test_pipeline_raise_ownership.mojo",
         "tests/compile_fail/pipeline_raise_effect.mojo",
-        "tests/runtime/test_context_stage_sum_callable_views.mojo"
+        "tests/runtime/test_context_stage_sum_callable_views.mojo",
+        "tests/runtime/test_context_recovery_callable_views.mojo",
+        "tests/ownership/test_context_recovery_callable_views_ownership.mojo",
+        "tests/compile_fail/recovery_callable_view_move.mojo",
+        "tests/compile_fail/recovery_callable_view_output.mojo"
       ]
     },
     {

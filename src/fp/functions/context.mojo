@@ -4984,6 +4984,11 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[OrElseContract[Self.I, Self.V, C].Family, OrElseContract[Self.I, Self.V, C].Out, Self.E](_selected_or_else[Self.I](function^, self.value^))
 
     @always_inline
+    def or_else[C: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises OrElseContract[Self.I, Self.V, C._View[o]].Error -> Pipeline[OrElseContract[Self.I, Self.V, C._View[o]].Family, OrElseContract[Self.I, Self.V, C._View[o]].Out, Self.E] where OrElseContract[Self.I, Self.V, C._View[o]].Compatible:
+        """Recover through the selected family; intrinsic Result may change its stored error."""
+        return Pipeline[OrElseContract[Self.I, Self.V, C._View[o]].Family, OrElseContract[Self.I, Self.V, C._View[o]].Out, Self.E](_selected_or_else[Self.I](function._unary_view(), self.value^))
+
+    @always_inline
     def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _RecoverySelection[Self.I, Self.V].Input) -> R](deinit self, ref[o] function: C) raises OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Error -> Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Compatible:
         """Recover through the selected family; intrinsic Result may change its stored error."""
         return Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Out, Self.E](_selected_or_else[Self.I](_NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o](Pointer(to=function)), self.value^))
@@ -5035,6 +5040,11 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             The exact callback or family error; it never becomes a stored Result error.
         """
         return Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, C].Out, Self.E](_recover[_Recovering[Self.I]](function^, self.value^))
+
+    @always_inline
+    def recover[C: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises RecoverContract[_Recovering[Self.I], Self.V, C._View[o]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, C._View[o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverContract[_Recovering[Self.I], Self.V, C._View[o]].Compatible:
+        """Recover the selected family's stored errors, preserving its timing and carrier."""
+        return Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, C._View[o]].Out, Self.E](_recover[_Recovering[Self.I]](function._unary_view(), self.value^))
 
     @always_inline
     def recover[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Recovering[Self.I].Failure) -> R](deinit self, ref[o] function: C) raises RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Error -> Pipeline[Self.I, RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverContract[_Recovering[Self.I], Self.V, _NativeUnaryRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Compatible:
@@ -7019,6 +7029,11 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             The exact callback or family error; it never becomes a stored Result error.
         """
         return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).value_or(on_err^)
+
+    @always_inline
+    def value_or[C: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] on_err: C) raises C._View[o].Error -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._View[o].Arg == _Failure[Self.V] and C._View[o].Out == _Success[Self.V]:
+        """Return the success value or consume the error to produce a fallback."""
+        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).value_or(on_err._unary_view())
 
     @always_inline
     def value_or[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _Failure[Self.V]) -> R](deinit self, ref[o] on_err: C) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]:
