@@ -688,10 +688,18 @@ first stage's exact result. `flow(add_one, partial(scale, 3))` and
 `compose(partial(scale, 3), add_one)` both produce `9` for input `2`.
 The binary `combine` in the example yields snapshots `[0, 2, 8, 22]`.
 
+Use `.then(next)` to grow an existing composition one stage at a time. A plain
+function, stored thin pointer or library stage is accepted directly. Move a
+named chain with `chain^.then(next)`; the result owns its stages and construction
+runs nothing. The entry arguments stay the same, including for zero-argument
+and binary compositions. The new stage runs last even after `compose`.
+
 The chain owns its stages. Mutable and consuming stages keep those receiver
-requirements, and native errors keep their exact type. Longer mixed chains
-can group two-stage compositions or promote unary native stages with
-`as_unary`; all-library chains remain variadic and all-plain chains support
+requirements, and native errors keep their exact type. Ordinary `.then`
+passes the whole previous output, including an Optional or Result; use Kleisli
+composition to sequence successful payloads through a Monad. Each append
+changes the concrete composition type, so this builds a statically typed chain.
+All-library `flow`/`compose` calls remain variadic and all-plain calls support
 two through eight stages. Capturing unary closures use `as_unary` to become
 stored stages.
 

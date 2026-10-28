@@ -12870,6 +12870,60 @@
         "struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable]("
       ],
       "methods": {
+        "then": [
+          {
+            "signature": "def then[F: Movable & Deinitable](deinit self, var stage: F) -> Self._WithNext[F] where _Once[F]:",
+            "sha256": "8a6028a742e405a8d95e3f51665f5a2ee1c27540aeb4e0897872ea7616c7ac62"
+          },
+          {
+            "signature": "def then[A: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //]( deinit self, ref[q] function: def(var A) thin -> R ) -> Self._WithNext[NativeUnary[A, R, Never, type_of(function), False]]:",
+            "sha256": "cd00a46072a1d7fb2dee9f196b0ddad3261d2b93b976701880902b24ba2f2a8d"
+          },
+          {
+            "signature": "def then[A: Movable & Deinitable, R: RegisterPassable & Deinitable, //]( deinit self, function: def(var A) thin -> R ) -> Self._WithNext[NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable):",
+            "sha256": "1e051902e92b55aa81ae8a60d63e984a76a0cdc7213cee28febce5883447623f"
+          },
+          {
+            "signature": "def then[A: RegisterPassable & Deinitable, R: Movable & Deinitable, //]( deinit self, function: def(var A) thin -> R ) -> Self._WithNext[NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable):",
+            "sha256": "e3d7eb908140f40fdc86bc38c71cd7c46f19e9a9d5bcb9777a5c9c2a62c8a06e"
+          },
+          {
+            "signature": "def then[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //]( deinit self, function: def(var A) thin -> R ) -> Self._WithNext[NativeUnary[A, R, Never, type_of(function), False]]:",
+            "sha256": "a7c41a5bed2d348baaead049e9ee2fc646c35536989f032a6b5e89f45047e794"
+          },
+          {
+            "signature": "def then[A: Movable & Deinitable, q: ImmOrigin, //]( deinit self, ref[q] function: def(var A) thin ) -> Self._WithNext[NativeUnary[A, type_of(None), Never, type_of(function), False]]:",
+            "sha256": "75a3c5f0239464ff5a1e634576c3311931a4f615901175e9aa17afc47a9a18a6"
+          },
+          {
+            "signature": "def then[A: RegisterPassable & Deinitable, //]( deinit self, function: def(var A) thin ) -> Self._WithNext[NativeUnary[A, type_of(None), Never, type_of(function), False]]:",
+            "sha256": "3016dc992ed9697c24273d02dcb8a1c33ceb7a21cc96dd5bc7e01e6a3998aa9b"
+          },
+          {
+            "signature": "def then[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //]( deinit self, ref[q] function: def(var A) raises E thin -> R ) -> Self._WithNext[NativeUnary[A, R, E, type_of(function), True]]:",
+            "sha256": "f2572b746b6514f971b28df2e1468bd1171ece0b8991fa5223479d2730b308b4"
+          },
+          {
+            "signature": "def then[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( deinit self, function: def(var A) raises E thin -> R ) -> Self._WithNext[NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable):",
+            "sha256": "dfa7dfb947aa2f79b52b8866c5dd31899716d5930681b7d872cb1faf2d4da60c"
+          },
+          {
+            "signature": "def then[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //]( deinit self, function: def(var A) raises E thin -> R ) -> Self._WithNext[NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(R, RegisterPassable):",
+            "sha256": "6bb934b37a9dae9f1ac04b6630de4f8f4c3081f818ecfb4c99cd0d2f07478303"
+          },
+          {
+            "signature": "def then[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( deinit self, function: def(var A) raises E thin -> R ) -> Self._WithNext[NativeUnary[A, R, E, type_of(function), True]]:",
+            "sha256": "2a6a342ebf80b6dbd428e96fba93eeeac9186e23644f632d560cc049cb4ddd72"
+          },
+          {
+            "signature": "def then[A: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //]( deinit self, ref[q] function: def(var A) raises E thin ) -> Self._WithNext[NativeUnary[A, type_of(None), E, type_of(function), True]]:",
+            "sha256": "2f99776eefa05996c4fb889957d1e1418f6174cce7636772d0e54c97384c22f9"
+          },
+          {
+            "signature": "def then[A: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( deinit self, function: def(var A) raises E thin ) -> Self._WithNext[NativeUnary[A, type_of(None), E, type_of(function), True]]:",
+            "sha256": "a5d510d5786af9abd9f44144febbef34492148ecf4a98a0a56884f5d9959b2a1"
+          }
+        ],
         "call": [
           {
             "signature": "def call(self) raises Self.Error -> Self.Out:",

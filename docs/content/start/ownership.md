@@ -98,6 +98,11 @@ The composition owns the library stage and a copy of the pointer; no callback
 runs during construction. Unary capturing closures still use `as_unary` when
 stored as composition stages.
 
+Append more stages with `chain^.then(next)`, or chain `.then(...)` calls directly
+on a temporary composition. The old chain and the new stage move into the
+result; no callback runs and no capture is copied. Receiver capabilities still
+follow every stage, including mutable and consuming stages.
+
 For immediate application, `pipe(value, first, second)` accepts a plain
 function or stored thin pointer beside a shared library stage. It borrows
 the library stage for the call, so a named partial remains available afterward.

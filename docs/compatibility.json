@@ -100,7 +100,18 @@
         "tests/compile_fail/mixed_pipe_native_last.mojo",
         "tests/compile_fail/mixed_pipe_once.mojo",
         "tests/compile_fail/mixed_pipe_origin.mojo",
-        "tests/compile_fail/mixed_pipe_void.mojo"
+        "tests/compile_fail/mixed_pipe_void.mojo",
+        "tests/runtime/test_composition_then.mojo",
+        "tests/ownership/test_composition_then_ownership.mojo",
+        "tests/compile_fail/composition_then_arity.mojo",
+        "tests/compile_fail/composition_then_consumed.mojo",
+        "tests/compile_fail/composition_then_copy.mojo",
+        "tests/compile_fail/composition_then_error.mojo",
+        "tests/compile_fail/composition_then_input.mojo",
+        "tests/compile_fail/composition_then_lifetime.mojo",
+        "tests/compile_fail/composition_then_native_convention.mojo",
+        "tests/compile_fail/composition_then_once.mojo",
+        "tests/compile_fail/composition_then_origin.mojo"
       ]
     },
     "adt": {

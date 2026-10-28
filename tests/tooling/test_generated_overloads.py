@@ -35,7 +35,7 @@ class GeneratedOverloadTests(unittest.TestCase):
     def test_sources_match_the_generator(self):
         folder = ROOT/'src/fp/functions'
         for name, render in (('pipeline.mojo', generator.pipeline_source),
-                             ('composition.mojo', lambda path: generator.spliced(path, generator.composition_overloads()))):
+                             ('composition.mojo', generator.composition_source)):
             with self.subTest(module=name):
                 path = folder/name
                 self.assertEqual(path.read_text(), render(path),

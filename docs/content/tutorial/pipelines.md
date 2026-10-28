@@ -272,6 +272,12 @@ directly. `flow(add_one, partial(scale, 3))` adds one and triples the result;
 The example also starts a binary chain with plain `add` and reuses it in
 `scan_left`. No adapter is needed for the plain stage in these pairs.
 
+Extend a composition with `.then(next)`. For example,
+`price^.then(display).then(excited)` moves the existing pricing stages into a
+chain that formats each price and adds `!`. Construction runs no callbacks;
+`rendered(1)` and `rendered(2)` produce `"price=6!"` and `"price=9!"`.
+Appending to a reverse `compose` chain still runs the new stage last.
+
 Use `chain^` when transferring its stages to an operation. A deferred operation
 retains a borrowed chain until it runs or is discarded. Mutable and
 consuming-only chains still require ownership; they are not implicitly shared.

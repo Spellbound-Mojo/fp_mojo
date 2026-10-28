@@ -113,7 +113,9 @@ struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](
     comptime Error: Movable & Deinitable = Self.Plan.Failure
     var _cells: Tuple[*Self.Cells]
 
-    def __init__(out self, var *functions: *Self.Fs):
+    # Construction and append validate through the same planner.
+    @staticmethod
+    def _validate() -> Bool:
         comptime assert Self.Fs.length >= 2, "composition: use flow or compose for zero or one component"
         comptime assert Self.Fs.map[_Classify]().all_conforms_to[_OnceCapability](), "composition: unsupported component; use a Thunk, Unary or Binary value or as_unary, or pass only plain functions whose types line up"
         comptime assert _Arity[Self.Stage[0]] >= 0, "composition: the first stage must be a Thunk, Unary or Binary value or a native function promoted with as_unary, or every stage must be a plain function whose types line up"
@@ -123,12 +125,133 @@ struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](
                                          Self.Plan.StageOut[index], Self.Error,
                                          "compose" if Self.reverse else "flow",
                                          Self.Fs.length - 1 - index if Self.reverse else -1]()
+        return True
+
+    def __init__(out self, var *functions: *Self.Fs):
+        comptime assert Self._validate()
         comptime assert Self.Cells.all_conforms_to[Defaultable]()
         self._cells = Tuple[*Self.Cells]()
         def store[index: Int](var function: Self.Fs[index]) {ref self}:
             comptime assert Self.Cells[index] == Optional[Self.Fs[index]]
             self._cells[index] = rebind_var[Self.Cells[index]](Optional(function^))
         functions^.consume_elements(store)
+
+    comptime _NextStage[F: Movable & Deinitable, index: Int]: Movable & Deinitable = (
+        F if (index == 0 if Self.reverse else index == Self.Fs.length)
+        else Self.Fs[index - 1 if Self.reverse else index]
+    )
+    comptime _Extended[F: Movable & Deinitable] = TypeList.tabulate[Self.Fs.length + 1, Self._NextStage[F, _]]()
+    comptime _WithNext[F: Movable & Deinitable] = Composition[Self.reverse, Self.arity, *Self._Extended[F]]
+
+    def then[F: Movable & Deinitable](deinit self, var stage: F) -> Self._WithNext[F] where _Once[F]:
+        """Append one stage in execution order, consuming this composition.
+
+        Nothing runs during construction. The appended stage receives the
+        current result. Its input must match that exact type, and its raised
+        error must be compatible with the chain. Shared, mutable and consuming
+        receiver modes follow all stages.
+        The existing stage tuple is extended without copying captures or
+        storing the old composition as a nested stage. Reverse compositions
+        also run the new stage last. Move a named chain with `chain^.then(...)`.
+
+        Parameters:
+            F: The appended library stage's type.
+
+        Args:
+            stage: The next stage, moved into the result.
+
+        Returns:
+            A composition with the same entry arguments and one more stage.
+        """
+        comptime Target = Self._WithNext[F]
+        comptime assert Target._validate()
+        # Native concat and tabulate spell symbolic packs differently; assert
+        # their exact cell equality before crossing that expression boundary.
+        comptime if Self.reverse:
+            var cells = Tuple(Optional(stage^)).concat(self._cells^)
+            comptime assert type_of(cells) == Tuple[*Target.Cells]
+            return Target(_cells=rebind_var[Tuple[*Target.Cells]](cells^))
+        else:
+            var cells = self._cells^.concat((Optional(stage^),))
+            comptime assert type_of(cells) == Tuple[*Target.Cells]
+            return Target(_cells=rebind_var[Tuple[*Target.Cells]](cells^))
+
+    # --- composition append admission (generated) ---
+    # Native admission delegates to the same consuming append owner.
+
+    def then[A: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def(var A) thin -> R
+    ) -> Self._WithNext[NativeUnary[A, R, Never, type_of(function), False]]:
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, R, Never, type_of(function), False](function))
+
+    def then[A: Movable & Deinitable, R: RegisterPassable & Deinitable, //](
+        deinit self, function: def(var A) thin -> R
+    ) -> Self._WithNext[NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable):
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, R, Never, type_of(function), False](function))
+
+    def then[A: RegisterPassable & Deinitable, R: Movable & Deinitable, //](
+        deinit self, function: def(var A) thin -> R
+    ) -> Self._WithNext[NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable):
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, R, Never, type_of(function), False](function))
+
+    def then[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](
+        deinit self, function: def(var A) thin -> R
+    ) -> Self._WithNext[NativeUnary[A, R, Never, type_of(function), False]]:
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, R, Never, type_of(function), False](function))
+
+    def then[A: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def(var A) thin
+    ) -> Self._WithNext[NativeUnary[A, type_of(None), Never, type_of(function), False]]:
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, type_of(None), Never, type_of(function), False](function))
+
+    def then[A: RegisterPassable & Deinitable, //](
+        deinit self, function: def(var A) thin
+    ) -> Self._WithNext[NativeUnary[A, type_of(None), Never, type_of(function), False]]:
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, type_of(None), Never, type_of(function), False](function))
+
+    def then[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def(var A) raises E thin -> R
+    ) -> Self._WithNext[NativeUnary[A, R, E, type_of(function), True]]:
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, R, E, type_of(function), True](function))
+
+    def then[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A) raises E thin -> R
+    ) -> Self._WithNext[NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable):
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, R, E, type_of(function), True](function))
+
+    def then[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A) raises E thin -> R
+    ) -> Self._WithNext[NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(R, RegisterPassable):
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, R, E, type_of(function), True](function))
+
+    def then[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A) raises E thin -> R
+    ) -> Self._WithNext[NativeUnary[A, R, E, type_of(function), True]]:
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, R, E, type_of(function), True](function))
+
+    def then[A: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def(var A) raises E thin
+    ) -> Self._WithNext[NativeUnary[A, type_of(None), E, type_of(function), True]]:
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, type_of(None), E, type_of(function), True](function))
+
+    def then[A: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A) raises E thin
+    ) -> Self._WithNext[NativeUnary[A, type_of(None), E, type_of(function), True]]:
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, type_of(None), E, type_of(function), True](function))
+
+    # --- end composition append admission ---
 
     # Shared unary compositions use the same retained receiver as Kleisli
     # leaves. Pipeline admission can borrow the chain without copying stages.
@@ -286,8 +409,9 @@ def flow[*Fs: Movable & Deinitable](var *functions: *Fs) -> Composition[False, _
     needs no adapter; the composition owns both stages without calling them.
 
     Limitations:
-        At most eight plain functions per call. Longer mixed chains group
-        two-stage compositions or promote unary native stages with `as_unary`.
+        At most eight plain functions per call. Longer mixed chains append
+        stages with `.then(...)`, group compositions or promote unary native
+        stages with `as_unary`.
         Capturing unary closures use `as_unary` for stored composition.
 
     Parameters:
@@ -323,8 +447,9 @@ def compose[*Fs: Movable & Deinitable](var *functions: *Fs) -> Composition[True,
     Limitations:
         At most eight plain functions per call. A pair may mix one plain
         function or stored thin pointer with one library callable directly.
-        Longer mixed chains group pairs or promote unary native stages with
-        `as_unary`; capturing unary closures also use `as_unary`.
+        Longer mixed chains append with `.then(...)`, group pairs or promote
+        unary native stages with `as_unary`; capturing unary closures also
+        use `as_unary`.
 
     Parameters:
         Fs: The stage types, in the order they are passed.
