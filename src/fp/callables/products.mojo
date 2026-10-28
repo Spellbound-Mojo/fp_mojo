@@ -128,7 +128,7 @@ struct MappedPair[F: UnaryContract & Movable & Deinitable, Other: Movable & Dein
             The callback's exact error type.
         """
         comptime assert RepeatableUnary[Self.F], "pair mapping: a repeated call requires a shared or mutable Unary"
-        return _map_pair[Self.Other, Self.first](_MutableUnaryRef(Pointer(to=self.function)), arg^)
+        return _map_pair[Self.Other, Self.first](_MutableUnaryRef[Self.F, origin_of(self.function)](Pointer(to=self.function)), arg^)
 
     def __call__(self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         """Transform through a shared receiver, as `call` does.

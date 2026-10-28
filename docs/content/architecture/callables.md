@@ -42,8 +42,13 @@ more than once.
 
 ## Fixed-arity protocols
 
-`UnaryContract`, `BinaryContract` and `ThunkContract` fix the argument, result
-and error types on the callable itself. Each receiver mode is a separate trait:
+`CallContract` owns the common `Out` and `Error` metadata. `UnaryContract`,
+`BinaryContract` and `ThunkContract` inherit it and specify their inputs.
+This gives generic code one result/error identity when an adapter supports
+several arities. A custom type conditionally implementing different arities
+must declare `CallContract` explicitly as their common ancestor, as `Partial`
+and `Composition` do. Ordinary single-arity implementations are unchanged.
+Each receiver mode is a separate trait:
 
 | Arity | Shared | Exclusive | Consuming |
 |---|---|---|---|
@@ -66,6 +71,24 @@ receiver choice. The payload remains borrowed independently of receiver
 mutation. The public contract and invocation owner replace the former private
 mutable-borrow trait and dispatcher; their private import names remain aliases
 for existing internal consumers. There is one receiver and error policy.
+
+`MutableRef` is the shared representation of an exclusive callback reference.
+`mut_ref` infers its type and mutable origin, while the previous internal unary,
+binary, borrowing, and thunk reference names remain aliases. Conditional
+conformances preserve all supported repeatable shapes rather than selecting
+one arity. Each native method signature delegates to the existing invocation
+owner; consuming a reference selects repeated invocation of the original.
+There is no extra allocation, copied capture, or independent receiver policy.
+
+The repeatability predicates accept any type and return false for absent or
+consuming-only capabilities. This makes capability evidence usable across
+generic conditional conformances. `mut_ref` checks the cross-shape disjunction
+with a body assertion: Mojo 1.2 cannot prove that disjunction in a `where`
+clause for generic callers constrained to one shape. Invalid concrete calls
+still fail at compile time with an explicit diagnostic. Exact metadata
+assertions justify the rebinds between generic trait projections; selected-error
+bridges preserve `Never` and each concrete error type. Borrowed-input `Result`
+and `Failure` remain independent of owned-input `Out` and `Error`.
 
 Lazy iterator predicate owners and consuming searches both use
 `iteration._callbacks._predicate_repeated`, which retains exclusive access to

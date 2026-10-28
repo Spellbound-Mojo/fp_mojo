@@ -148,8 +148,8 @@ struct _ConditionalRecovery[I: ApplicativeError, A: Movable & Deinitable,
         return _guard_owned[Self.Arg, Self.C, Self.H, Self.Out, Self.Error, True, keep, apply](arg^, self.predicate^, self.handler^)
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert _RepeatableBorrow[Self.C] and RepeatableUnary[Self.H], "conditional recovery: branching requires repeatable callbacks"
-        var predicate = _MutableBorrowRef(Pointer(to=self.predicate))
-        var handler = _MutableUnaryRef(Pointer(to=self.handler))
+        var predicate = _MutableBorrowRef[Self.C, origin_of(self.predicate)](Pointer(to=self.predicate))
+        var handler = _MutableUnaryRef[Self.H, origin_of(self.handler)](Pointer(to=self.handler))
         return _ConditionalRecovery[Self.I, Self.A, type_of(predicate), type_of(handler)](predicate^, handler^).call_once(arg^)
 
 
@@ -317,7 +317,7 @@ struct _ObserveError[I: ApplicativeError, A: Movable & Deinitable, C: BorrowCall
             return rebind_var[Self.Out](_fail_as[Self.Error, Self.I, Self.A](original^))
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert _RepeatableBorrow[Self.C], "error observation: branching requires a repeatable callback"
-        var callback = _MutableBorrowRef(Pointer(to=self.function))
+        var callback = _MutableBorrowRef[Self.C, origin_of(self.function)](Pointer(to=self.function))
         return _ObserveError[Self.I, Self.A, type_of(callback), Self.effect](callback^).call_once(arg^)
 
 

@@ -17,6 +17,10 @@ implements each receiver mode it supports as its own trait:
 closure into a `NativeUnary`. Borrowing callables read their argument instead
 of taking it. `invoke_borrowed`, `invoke_borrowed_repeated` and
 `invoke_borrowed_once` provide shared, repeated exclusive and consuming calls.
+`mut_ref(callback)` lends a named library callback to an operation that owns
+its callback, retaining the original state for inspection or reuse afterward.
+The movable `MutableRef` preserves every repeatable shape and its native origin.
+`CallContract` is the shared result/error metadata of owned-argument callables.
 `RepeatableBorrow` admits shared or mutable borrowing receivers. Errors keep their exact types. `Partial`,
 `Composition`, `Flipped`, `Tupled`, `MappedPair` and `Identity` from `fp.functions` implement these
 protocols.
@@ -53,7 +57,7 @@ raises only `StopIteration`; terminal callbacks keep their own error channel.
 """
 
 from .protocols import (
-    UnaryContract, Unary, MutableUnary, OnceUnary,
+    CallContract, UnaryContract, Unary, MutableUnary, OnceUnary,
     BinaryContract, Binary, MutableBinary, OnceBinary,
     ThunkContract, Thunk, MutableThunk, OnceThunk,
     BorrowCallContract, BorrowCallable, BorrowMutableCallable, BorrowOnceCallable,
@@ -65,3 +69,5 @@ from .invoke import (
 )
 from .native import NativeUnary, as_unary, NativeBinary, as_binary, BinarySignature
 from .native import NativeBorrow, BorrowSignature
+
+from ._receiver import MutableRef, mut_ref

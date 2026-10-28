@@ -2,6 +2,7 @@
 from std.builtin.variadics import TypeList
 from std.builtin.rebind import downcast, rebind_var
 from fp.callables._identity import Identity
+from fp.callables.protocols import CallContract
 from fp.callables.protocols import (UnaryContract, Unary, MutableUnary, OnceUnary,
     BinaryContract, Binary, MutableBinary, OnceBinary, ThunkContract, Thunk, MutableThunk, OnceThunk)
 from ._stages import (_Plan, _Arity, _StageIn, _Classify, _SharedCapability, _MutableCapability,
@@ -61,6 +62,7 @@ struct _StoredExclusive[reverse: Bool, arity: Int, once: Bool, origin: MutOrigin
 
 @fieldwise_init
 struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](
+    CallContract,
     Movable, Copyable where Fs.map[_Cell]().all_conforms_to[Copyable](),
     ThunkContract where arity == 0,
     UnaryContract where arity == 1,

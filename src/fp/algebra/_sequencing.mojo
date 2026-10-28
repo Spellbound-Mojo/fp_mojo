@@ -52,6 +52,6 @@ struct _IfEffect[G: Monad, L: ThunkContract & Movable & Deinitable, R: ThunkCont
     def call_once(deinit self, var arg: Bool) raises Self.Error -> Self.Out:
         return _choose_effect[Self.G](arg, self.on_true^, self.on_false^)
     def call_mut(mut self, var arg: Bool) raises Self.Error -> Self.Out:
-        var left = _ThunkView(Pointer(to=self.on_true))
-        var right = _ThunkView(Pointer(to=self.on_false))
+        var left = _ThunkView[Self.L, origin_of(self.on_true)](Pointer(to=self.on_true))
+        var right = _ThunkView[Self.R, origin_of(self.on_false)](Pointer(to=self.on_false))
         return _choose_effect[Self.G](arg, left^, right^)

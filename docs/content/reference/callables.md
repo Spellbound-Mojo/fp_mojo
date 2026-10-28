@@ -66,6 +66,27 @@ that choice for generic code and excludes consuming-only callbacks. The
 result retains its native type and origins. Errors must match `E`, with
 widening permitted from `Never`, as with `invoke_borrowed`.
 
+Use `mut_ref(callback)` when an operation owns its callback but you want to
+inspect or reuse the original state afterward. For example,
+`iterated(range(5)).filter(mut_ref(predicate)).to_list()` updates a named
+`EveryOther` in place; its `calls` field remains available afterward. The
+executable example below also reuses it in a second operation.
+
+The same spelling works for unary transformations, binary folds, thunks,
+predicates, and observers. No callback type or origin annotation is needed.
+A reference keeps every repeatable shape of a callback that supports several.
+Calls prefer its mutable receiver and fall back to its shared receiver.
+Consuming the reference never selects the original's consuming receiver.
+
+`MutableRef` is movable and noncopyable. It retains the original callback's
+mutable origin, including while a lazy iterator or deferred computation stores
+it. Finish or discard that computation before moving the original callback.
+Payloads, results, and errors keep their exact types and origins. Creating or
+discarding the reference does not invoke, copy, or destroy the original.
+`mut_ref` requires a named mutable library callable with at least one repeatable
+receiver; adapt native callbacks first, and move consuming-only callbacks
+directly into operations that allow a single call.
+
 A procedure with no return value differs from a function returning `NoneType`.
 Pipeline and composition mismatch diagnostics name the former
 `type_of(None) (no return value)`. Declare an explicit `-> NoneType` result

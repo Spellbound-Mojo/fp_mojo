@@ -7,6 +7,7 @@ read, and their arguments are borrowed. Keyword binding, reordering, owned
 remaining parameters and capturing targets are written as native closures.
 """
 from std.builtin.rebind import rebind, downcast
+from fp.callables.protocols import CallContract
 from fp.callables.protocols import Thunk, Unary, Binary, BorrowCallable
 from fp.callables._views import _UnaryViewable, _BorrowViewable, _BinaryViewable
 from fp.callables._receiver import _SharedUnaryRef, _SharedBorrowRef
@@ -52,6 +53,7 @@ comptime _Fn[R: Movable & Deinitable, E: Movable & Deinitable, Bs: TypeList[Trai
 @fieldwise_init
 struct Partial[R: Movable & Deinitable, E: Movable & Deinitable,
                Bs: TypeList[Trait=_Bound, ...], Rs: TypeList[Trait=_Rest, ...]](
+    CallContract,
     Copyable, Thunk where Rs.length == 0, Unary where Rs.length == 1, Binary where Rs.length == 2,
     _UnaryViewable where Rs.length == 1, _BorrowViewable where Rs.length == 1,
     _BinaryViewable where Rs.length == 2

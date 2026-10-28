@@ -57,7 +57,7 @@ def invoke_borrowed[E: Movable & Deinitable, H: BorrowCallable, T: AnyType](
         _propagate_error[E](error^)
 
 
-comptime RepeatableBorrow[C: BorrowCallContract] = conforms_to(C, BorrowCallable) or conforms_to(C, BorrowMutableCallable)
+comptime RepeatableBorrow[C: AnyType] = conforms_to(C, BorrowCallable) or conforms_to(C, BorrowMutableCallable)
 """Whether a borrowing callback has a shared or mutable receiver for repeated calls.
 
 Parameters:
@@ -137,7 +137,7 @@ from .protocols import (UnaryContract, Unary, MutableUnary, OnceUnary,
 # Fixed-arity receiver dispatch: one call prefers the consuming mode, repeated
 # calls prefer exclusive access, then a shared receiver. Each arity has its own
 # native call signature.
-comptime RepeatableUnary[F: UnaryContract] = conforms_to(F, Unary) or conforms_to(F, MutableUnary)
+comptime RepeatableUnary[F: AnyType] = conforms_to(F, Unary) or conforms_to(F, MutableUnary)
 """Whether a unary callback stays usable after a call: it has a shared or exclusive receiver.
 
 `call_repeated` requires it. Generic code that calls a callback more than once
@@ -145,15 +145,15 @@ asserts it first, so a consuming-only callback is rejected when the program
 compiles.
 
 Parameters:
-    F: The callback's type.
+    F: Any type; non-callable and consuming-only types return `False`.
 """
-comptime RepeatableBinary[F: BinaryContract] = conforms_to(F, Binary) or conforms_to(F, MutableBinary)
+comptime RepeatableBinary[F: AnyType] = conforms_to(F, Binary) or conforms_to(F, MutableBinary)
 """Whether a binary callback stays usable after a call; `call_repeated` requires it.
 
 Parameters:
-    F: The callback's type.
+    F: Any type; non-callable and consuming-only types return `False`.
 """
-comptime RepeatableThunk[F: ThunkContract] = conforms_to(F, Thunk) or conforms_to(F, MutableThunk)
+comptime RepeatableThunk[F: AnyType] = conforms_to(F, Thunk) or conforms_to(F, MutableThunk)
 """Whether a thunk stays usable after a call; `call_repeated` requires it.
 
 Parameters:

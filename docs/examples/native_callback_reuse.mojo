@@ -1,7 +1,7 @@
 """Keep an owned native closure reusable as a library callable."""
 from fp.functions import pipeline, as_unary, as_binary
 from fp.iteration import iterated
-from fp.callables import BinarySignature, BorrowSignature, BorrowMutableCallable
+from fp.callables import BinarySignature, BorrowSignature, BorrowMutableCallable, mut_ref
 
 
 def add(var first: Int, var second: Int) -> Int: return first + second
@@ -51,3 +51,8 @@ def main():
     print("stateful predicate:", iterated(range(5)).filter(EveryOther(0)).collect_list())
     print("stateful projection:", iterated(range(1, 4)).pair_with(RunningKey(0)).collect_list())
     print("family projection:", pipeline[Int]([1, 2, 3]).pair_with(RunningKey(0)).get())
+    var predicate = EveryOther(0)
+    print("borrowed mutable predicate:", iterated(range(5)).filter(mut_ref(predicate)).to_list())
+    print("retained calls:", predicate.calls)
+    print("continued predicate:", iterated(range(3)).filter(mut_ref(predicate)).to_list())
+    print("total calls:", predicate.calls)

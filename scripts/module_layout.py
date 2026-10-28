@@ -9,7 +9,7 @@ CALLABLE_ENTRIES = frozenset()
 
 # Keep declarations at their physical owner; package initializers only re-export.
 SOURCE_MODULES = (
-    *(( 'callables', 'callables/' + name) for name in ('protocols', 'invoke', 'native')),
+    *(( 'callables', 'callables/' + name) for name in ('protocols', 'invoke', 'native', '_receiver')),
     ('functions', 'functions/pipeline'),
     ('functions', 'functions/context'),
     ('functions', 'functions/_recovery'),

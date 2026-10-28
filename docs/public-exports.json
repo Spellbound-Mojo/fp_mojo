@@ -1453,7 +1453,7 @@
   },
   "callables.BinaryContract": {
    "declarations": [
-    "trait BinaryContract:"
+    "trait BinaryContract(CallContract):"
    ],
    "kind": "type or alias",
    "provider": "callables/protocols"
@@ -1659,6 +1659,13 @@
    },
    "provider": "callables/native"
   },
+  "callables.CallContract": {
+   "declarations": [
+    "trait CallContract:"
+   ],
+   "kind": "type or alias",
+   "provider": "callables/protocols"
+  },
   "callables.MutableBinary": {
    "declarations": [
     "trait MutableBinary(BinaryContract, Movable, Deinitable):"
@@ -1673,6 +1680,55 @@
     ]
    },
    "provider": "callables/protocols"
+  },
+  "callables.MutableRef": {
+   "declarations": [
+    "struct MutableRef[F: Movable & Deinitable, o: MutOrigin]("
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "call_mut": [
+     {
+      "sha256": "6fee2b827152c52ac880ef3dfb31ea709203a0a5b457175273390b351964485c",
+      "signature": "def call_mut(mut self, var value: Self.Arg) raises Self.Error -> Self.Out where RepeatableUnary[Self.F]:"
+     },
+     {
+      "sha256": "416f6268e786a48f692f8b829c7614d179569c904da4118c0e172648864c490d",
+      "signature": "def call_mut(mut self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out where RepeatableBinary[Self.F]:"
+     },
+     {
+      "sha256": "ab515514c325b395014f8407a2a4bfa1bc320acc4e24bbd00f9c88dd897d8145",
+      "signature": "def call_mut(mut self) raises Self.Error -> Self.Out where RepeatableThunk[Self.F]:"
+     }
+    ],
+    "call_once": [
+     {
+      "sha256": "ea532f6b9ac65e0ba6bcdabdc3ed488034fa64fa10dbee3b8b9607b74a2e7805",
+      "signature": "def call_once(deinit self, var value: Self.Arg) raises Self.Error -> Self.Out where RepeatableUnary[Self.F]:"
+     },
+     {
+      "sha256": "047106388e919ef1fd9c1775f0bdb8e3f1ae33a30494229a4225d6446e44c91f",
+      "signature": "def call_once(deinit self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out where RepeatableBinary[Self.F]:"
+     },
+     {
+      "sha256": "7ae649bd1c52a453a6a1c253ec2f6e9ecd00f94cd576963ef23b2272b3d433c1",
+      "signature": "def call_once(deinit self) raises Self.Error -> Self.Out where RepeatableThunk[Self.F]:"
+     }
+    ],
+    "invoke_mut": [
+     {
+      "sha256": "efc9c0bc4749345de6ea498eb62b66352810c3b105d3dabeb53f9b72e24bb786",
+      "signature": "def invoke_mut(mut self, ref value: Self.Payload) raises Self.Failure capturing -> Self.Result where RepeatableBorrow[Self.F]:"
+     }
+    ],
+    "invoke_once": [
+     {
+      "sha256": "f10ca16fdfcd43fad97d8a344dca3b755d28bf32e5ca615324348bae9dc81ba9",
+      "signature": "def invoke_once(deinit self, ref value: Self.Payload) raises Self.Failure capturing -> Self.Result where RepeatableBorrow[Self.F]:"
+     }
+    ]
+   },
+   "provider": "callables/_receiver"
   },
   "callables.MutableThunk": {
    "declarations": [
@@ -1832,28 +1888,28 @@
   },
   "callables.RepeatableBinary": {
    "declarations": [
-    "comptime RepeatableBinary[F: BinaryContract] = conforms_to(F, Binary) or conforms_to(F, MutableBinary)"
+    "comptime RepeatableBinary[F: AnyType] = conforms_to(F, Binary) or conforms_to(F, MutableBinary)"
    ],
    "kind": "type or alias",
    "provider": "callables/invoke"
   },
   "callables.RepeatableBorrow": {
    "declarations": [
-    "comptime RepeatableBorrow[C: BorrowCallContract] = conforms_to(C, BorrowCallable) or conforms_to(C, BorrowMutableCallable)"
+    "comptime RepeatableBorrow[C: AnyType] = conforms_to(C, BorrowCallable) or conforms_to(C, BorrowMutableCallable)"
    ],
    "kind": "type or alias",
    "provider": "callables/invoke"
   },
   "callables.RepeatableThunk": {
    "declarations": [
-    "comptime RepeatableThunk[F: ThunkContract] = conforms_to(F, Thunk) or conforms_to(F, MutableThunk)"
+    "comptime RepeatableThunk[F: AnyType] = conforms_to(F, Thunk) or conforms_to(F, MutableThunk)"
    ],
    "kind": "type or alias",
    "provider": "callables/invoke"
   },
   "callables.RepeatableUnary": {
    "declarations": [
-    "comptime RepeatableUnary[F: UnaryContract] = conforms_to(F, Unary) or conforms_to(F, MutableUnary)"
+    "comptime RepeatableUnary[F: AnyType] = conforms_to(F, Unary) or conforms_to(F, MutableUnary)"
    ],
    "kind": "type or alias",
    "provider": "callables/invoke"
@@ -1875,7 +1931,7 @@
   },
   "callables.ThunkContract": {
    "declarations": [
-    "trait ThunkContract:"
+    "trait ThunkContract(CallContract):"
    ],
    "kind": "type or alias",
    "provider": "callables/protocols"
@@ -1897,7 +1953,7 @@
   },
   "callables.UnaryContract": {
    "declarations": [
-    "trait UnaryContract:"
+    "trait UnaryContract(CallContract):"
    ],
    "kind": "type or alias",
    "provider": "callables/protocols"
@@ -2099,6 +2155,16 @@
     }
    ],
    "provider": "callables/invoke"
+  },
+  "callables.mut_ref": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "753ba1cb61ae3e9cfc1d2d9ba3bc56d116b0a54127a988aef728025a8db627eb",
+     "signature": "def mut_ref[F: Movable & Deinitable, o: MutOrigin](ref[o] function: F) -> MutableRef[F, o]:"
+    }
+   ],
+   "provider": "callables/_receiver"
   },
   "combinators.all_effect": {
    "kind": "function",

@@ -9,6 +9,7 @@ signature, for the fixed-arity pipeline and composition overloads.
 
 from std.builtin.rebind import downcast, rebind, rebind_var
 from std.builtin.variadics import TypeList
+from .protocols import CallContract
 from .protocols import Thunk, Unary, Binary, BorrowCallable
 from ._receiver import _MutableBorrow, _SharedUnaryRef, _SharedBorrowRef
 from ._views import _UnaryViewable, _BinaryViewable, _BorrowViewable
@@ -2006,7 +2007,7 @@ comptime _Thin[R: Movable & Deinitable, E: Movable & Deinitable, Args: TypeList[
 @fieldwise_init
 struct _ThinFunction[R: Movable & Deinitable, E: Movable & Deinitable,
                      Args: TypeList[Trait=Movable & Deinitable, ...]](
-    ImplicitlyCopyable, Thunk where Args.length == 0, Unary where Args.length == 1, Binary where Args.length == 2
+    CallContract, ImplicitlyCopyable, Thunk where Args.length == 0, Unary where Args.length == 1, Binary where Args.length == 2
 ):
     comptime Arg = Self.Args[0]
     comptime First = Self.Args[0]

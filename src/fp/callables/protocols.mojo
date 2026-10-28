@@ -5,7 +5,21 @@
 # mode is its own trait: an implementation provides only the modes it supports.
 # Algorithms call through `call_once` and `call_repeated`, which admit any mode
 # for a single call and a shared or mutable receiver for repeated calls.
-trait UnaryContract:
+trait CallContract:
+    """The common result and error of owned-argument callables and thunks.
+
+    `UnaryContract`, `BinaryContract` and `ThunkContract` inherit it. Types
+    implementing several arities share one `Out` and `Error`; each arity
+    declares only its inputs. Conditional implementations of multiple arities
+    declare this common ancestor explicitly.
+    """
+    comptime Out: Movable & Deinitable
+    """The result type."""
+    comptime Error: Movable & Deinitable = Never
+    """The error type; `Never` for a callable that does not raise."""
+
+
+trait UnaryContract(CallContract):
     """The types of a callable that takes one owned argument.
 
     A library callable fixes its argument, result and error types here, and
@@ -14,10 +28,7 @@ trait UnaryContract:
     """
     comptime Arg: Movable & Deinitable
     """The argument type."""
-    comptime Out: Movable & Deinitable
-    """The result type."""
-    comptime Error: Movable & Deinitable = Never
-    """The error type; `Never` for a callable that does not raise."""
+
 
 trait Unary(UnaryContract, Movable, Deinitable):
     """A one-argument callable that can be called repeatedly through a shared receiver.
@@ -78,7 +89,7 @@ trait OnceUnary(UnaryContract, Movable, Deinitable):
         """
         ...
 
-trait BinaryContract:
+trait BinaryContract(CallContract):
     """The types of a callable that takes two owned arguments.
 
     A library callable implements the receiver modes it supports: `Binary`,
@@ -88,10 +99,7 @@ trait BinaryContract:
     """The first argument's type."""
     comptime Second: Movable & Deinitable
     """The second argument's type."""
-    comptime Out: Movable & Deinitable
-    """The result type."""
-    comptime Error: Movable & Deinitable = Never
-    """The error type; `Never` for a callable that does not raise."""
+
 
 trait Binary(BinaryContract, Movable, Deinitable):
     """A two-argument callable that can be called repeatedly through a shared receiver."""
@@ -151,16 +159,13 @@ trait OnceBinary(BinaryContract, Movable, Deinitable):
         """
         ...
 
-trait ThunkContract:
+trait ThunkContract(CallContract):
     """The types of a callable that takes no argument: a deferred producer.
 
     A library callable implements the receiver modes it supports: `Thunk`,
     `MutableThunk` or `OnceThunk`.
     """
-    comptime Out: Movable & Deinitable
-    """The result type."""
-    comptime Error: Movable & Deinitable = Never
-    """The error type; `Never` for a callable that does not raise."""
+    pass
 
 trait Thunk(ThunkContract, Movable, Deinitable):
     """A producer that can be called repeatedly through a shared receiver."""

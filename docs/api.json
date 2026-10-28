@@ -10872,7 +10872,8 @@
    "signature": "trait Binary(BinaryContract, Movable, Deinitable)",
    "summary": "A two-argument callable that can be called repeatedly through a shared receiver.",
    "traits": [
-    "BinaryContract"
+    "BinaryContract",
+    "CallContract"
    ]
   },
   "callables.BinaryContract": {
@@ -10884,14 +10885,6 @@
     {
      "description": "The second argument's type.",
      "name": "Second"
-    },
-    {
-     "description": "The result type.",
-     "name": "Out"
-    },
-    {
-     "description": "The error type; `Never` for a callable that does not raise.",
-     "name": "Error"
     }
    ],
    "description": "A library callable implements the receiver modes it supports: `Binary`,\n`MutableBinary` or `OnceBinary`.",
@@ -10900,9 +10893,11 @@
    "methods": {},
    "parameters": [],
    "provider": "callables/protocols",
-   "signature": "trait BinaryContract",
+   "signature": "trait BinaryContract(CallContract)",
    "summary": "The types of a callable that takes two owned arguments.",
-   "traits": []
+   "traits": [
+    "CallContract"
+   ]
   },
   "callables.BinarySignature": {
    "aliases": [],
@@ -12334,6 +12329,27 @@
    "summary": "Select a read-only native signature before storing a callback.",
    "traits": []
   },
+  "callables.CallContract": {
+   "aliases": [
+    {
+     "description": "The result type.",
+     "name": "Out"
+    },
+    {
+     "description": "The error type; `Never` for a callable that does not raise.",
+     "name": "Error"
+    }
+   ],
+   "description": "`UnaryContract`, `BinaryContract` and `ThunkContract` inherit it. Types\nimplementing several arities share one `Out` and `Error`; each arity\ndeclares only its inputs. Conditional implementations of multiple arities\ndeclare this common ancestor explicitly.",
+   "fields": [],
+   "kind": "trait",
+   "methods": {},
+   "parameters": [],
+   "provider": "callables/protocols",
+   "signature": "trait CallContract",
+   "summary": "The common result and error of owned-argument callables and thunks.",
+   "traits": []
+  },
   "callables.MutableBinary": {
    "aliases": [],
    "description": "",
@@ -12377,7 +12393,265 @@
    "signature": "trait MutableBinary(BinaryContract, Movable, Deinitable)",
    "summary": "A two-argument callable that can be called repeatedly with exclusive access to its state.",
    "traits": [
-    "BinaryContract"
+    "BinaryContract",
+    "CallContract"
+   ]
+  },
+  "callables.MutableRef": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Arg"
+    },
+    {
+     "description": "",
+     "name": "First"
+    },
+    {
+     "description": "",
+     "name": "Second"
+    },
+    {
+     "description": "",
+     "name": "Out"
+    },
+    {
+     "description": "",
+     "name": "Error"
+    },
+    {
+     "description": "",
+     "name": "Payload"
+    },
+    {
+     "description": "",
+     "name": "Result"
+    },
+    {
+     "description": "",
+     "name": "Failure"
+    }
+   ],
+   "description": "Create one with `mut_ref(callback)`. It preserves every repeatable call\nshape of the original callback. Consuming the reference invokes the\noriginal repeatedly; it never consumes or copies the original state.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "call_mut": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The input, consumed.",
+        "name": "value",
+        "type": "Self.Arg",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "`Error`, the original callback's exact error; nothing for `Never`.",
+      "returns": {
+       "doc": "The original callback's result, with its exact type and origins.",
+       "type": "Self.Out"
+      },
+      "signature": "def call_mut(mut self, var value: Self.Arg) raises Self.Error -> Self.Out where RepeatableUnary[Self.F]",
+      "summary": "Invoke the original unary callback with exclusive access."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The first input, consumed.",
+        "name": "first",
+        "type": "Self.First",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The second input, consumed.",
+        "name": "second",
+        "type": "Self.Second",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "`Error`, the original callback's exact error; nothing for `Never`.",
+      "returns": {
+       "doc": "The original callback's result, with its exact type and origins.",
+       "type": "Self.Out"
+      },
+      "signature": "def call_mut(mut self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out where RepeatableBinary[Self.F]",
+      "summary": "Invoke the original binary callback with exclusive access."
+     },
+     {
+      "args": [],
+      "description": "",
+      "error": "Self.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "`Error`, the original callback's exact error; nothing for `Never`.",
+      "returns": {
+       "doc": "The original callback's result, with its exact type and origins.",
+       "type": "Self.Out"
+      },
+      "signature": "def call_mut(mut self) raises Self.Error -> Self.Out where RepeatableThunk[Self.F]",
+      "summary": "Invoke the original thunk with exclusive access."
+     }
+    ],
+    "call_once": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The input, consumed.",
+        "name": "value",
+        "type": "Self.Arg",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "`Error`, the original callback's exact error; nothing for `Never`.",
+      "returns": {
+       "doc": "The original callback's result, with its exact type and origins.",
+       "type": "Self.Out"
+      },
+      "signature": "def call_once(deinit self, var value: Self.Arg) raises Self.Error -> Self.Out where RepeatableUnary[Self.F]",
+      "summary": "Consume this reference and invoke the original unary callback."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The first input, consumed.",
+        "name": "first",
+        "type": "Self.First",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The second input, consumed.",
+        "name": "second",
+        "type": "Self.Second",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "`Error`, the original callback's exact error; nothing for `Never`.",
+      "returns": {
+       "doc": "The original callback's result, with its exact type and origins.",
+       "type": "Self.Out"
+      },
+      "signature": "def call_once(deinit self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out where RepeatableBinary[Self.F]",
+      "summary": "Consume this reference and invoke the original binary callback."
+     },
+     {
+      "args": [],
+      "description": "",
+      "error": "Self.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "`Error`, the original callback's exact error; nothing for `Never`.",
+      "returns": {
+       "doc": "The original callback's result, with its exact type and origins.",
+       "type": "Self.Out"
+      },
+      "signature": "def call_once(deinit self) raises Self.Error -> Self.Out where RepeatableThunk[Self.F]",
+      "summary": "Consume this reference and invoke the original thunk."
+     }
+    ],
+    "invoke_mut": [
+     {
+      "args": [
+       {
+        "convention": "ref",
+        "description": "The input, borrowed for this call.",
+        "name": "value",
+        "type": "Self.Payload",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.Failure capturing",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "`Failure`, the original callback's exact error; nothing for `Never`.",
+      "returns": {
+       "doc": "The original callback's result, with its exact type and origins.",
+       "type": "Self.Result"
+      },
+      "signature": "def invoke_mut(mut self, ref value: Self.Payload) raises Self.Failure capturing -> Self.Result where RepeatableBorrow[Self.F]",
+      "summary": "Invoke the original callback while borrowing its input."
+     }
+    ],
+    "invoke_once": [
+     {
+      "args": [
+       {
+        "convention": "ref",
+        "description": "The input, borrowed for this call.",
+        "name": "value",
+        "type": "Self.Payload",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.Failure capturing",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "`Failure`, the original callback's exact error; nothing for `Never`.",
+      "returns": {
+       "doc": "The original callback's result, with its exact type and origins.",
+       "type": "Self.Result"
+      },
+      "signature": "def invoke_once(deinit self, ref value: Self.Payload) raises Self.Failure capturing -> Self.Result where RepeatableBorrow[Self.F]",
+      "summary": "Consume this reference and borrow the input for the original callback."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The original callback's type.",
+     "inferred": false,
+     "name": "F",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The mutable origin of the original callback.",
+     "inferred": false,
+     "name": "o",
+     "type": "MutOrigin",
+     "variadic": false
+    }
+   ],
+   "provider": "callables/_receiver",
+   "signature": "struct MutableRef[F: Movable & Deinitable, o: MutOrigin](Movable, Deinitable, CallContract where conforms_to(F, CallContract), UnaryContract where conforms_to(F, CallContract) and conforms_to(F, UnaryContract), MutableUnary where conforms_to(F, CallContract) and conforms_to(F, UnaryContract) and RepeatableUnary[F], OnceUnary where conforms_to(F, CallContract) and conforms_to(F, UnaryContract) and RepeatableUnary[F], BinaryContract where conforms_to(F, CallContract) and conforms_to(F, BinaryContract), MutableBinary where conforms_to(F, CallContract) and conforms_to(F, BinaryContract) and RepeatableBinary[F], OnceBinary where conforms_to(F, CallContract) and conforms_to(F, BinaryContract) and RepeatableBinary[F], ThunkContract where conforms_to(F, CallContract) and conforms_to(F, ThunkContract), MutableThunk where conforms_to(F, CallContract) and conforms_to(F, ThunkContract) and RepeatableThunk[F], OnceThunk where conforms_to(F, CallContract) and conforms_to(F, ThunkContract) and RepeatableThunk[F], BorrowCallContract where conforms_to(F, BorrowCallContract), BorrowMutableCallable where conforms_to(F, BorrowCallContract) and RepeatableBorrow[F], BorrowOnceCallable where conforms_to(F, BorrowCallContract) and RepeatableBorrow[F],)",
+   "summary": "An exclusive, origin-tracked reference to a repeatable library callable.",
+   "traits": [
+    "BinaryContract",
+    "BorrowCallContract",
+    "BorrowMutableCallable",
+    "BorrowOnceCallable",
+    "CallContract",
+    "MutableBinary",
+    "MutableThunk",
+    "MutableUnary",
+    "OnceBinary",
+    "OnceThunk",
+    "OnceUnary",
+    "ThunkContract",
+    "UnaryContract"
    ]
   },
   "callables.MutableThunk": {
@@ -12408,6 +12682,7 @@
    "signature": "trait MutableThunk(ThunkContract, Movable, Deinitable)",
    "summary": "A producer that can be called repeatedly with exclusive access to its state.",
    "traits": [
+    "CallContract",
     "ThunkContract"
    ]
   },
@@ -12447,6 +12722,7 @@
    "signature": "trait MutableUnary(UnaryContract, Movable, Deinitable)",
    "summary": "A one-argument callable that can be called repeatedly with exclusive access to its state.",
    "traits": [
+    "CallContract",
     "UnaryContract"
    ]
   },
@@ -12618,6 +12894,7 @@
    "traits": [
     "Binary",
     "BinaryContract",
+    "CallContract",
     "Copyable",
     "ImplicitlyCopyable",
     "_BinaryViewable"
@@ -12887,6 +13164,7 @@
    "signature": "struct NativeUnary[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](Unary, _UnaryViewable, Copyable where conforms_to(F, Copyable), ImplicitlyCopyable where conforms_to(F, ImplicitlyCopyable))",
    "summary": "A native function or closure stored as a `Unary` value, made by `as_unary`.",
    "traits": [
+    "CallContract",
     "Copyable",
     "ImplicitlyCopyable",
     "Unary",
@@ -12937,7 +13215,8 @@
    "signature": "trait OnceBinary(BinaryContract, Movable, Deinitable)",
    "summary": "A two-argument callable that is called at most once, consuming its state.",
    "traits": [
-    "BinaryContract"
+    "BinaryContract",
+    "CallContract"
    ]
   },
   "callables.OnceThunk": {
@@ -12968,6 +13247,7 @@
    "signature": "trait OnceThunk(ThunkContract, Movable, Deinitable)",
    "summary": "A producer that is called at most once, consuming its state; `attempt_once` takes one.",
    "traits": [
+    "CallContract",
     "ThunkContract"
    ]
   },
@@ -13007,6 +13287,7 @@
    "signature": "trait OnceUnary(UnaryContract, Movable, Deinitable)",
    "summary": "A one-argument callable that is called at most once, consuming its state.",
    "traits": [
+    "CallContract",
     "UnaryContract"
    ]
   },
@@ -13018,15 +13299,15 @@
    "methods": {},
    "parameters": [
     {
-     "description": "The callback's type.",
+     "description": "Any type; non-callable and consuming-only types return `False`.",
      "inferred": false,
      "name": "F",
-     "type": "BinaryContract",
+     "type": "AnyType",
      "variadic": false
     }
    ],
    "provider": "callables/invoke",
-   "signature": "comptime RepeatableBinary[F: BinaryContract] = conforms_to(F, Binary) or conforms_to(F, MutableBinary)",
+   "signature": "comptime RepeatableBinary[F: AnyType] = conforms_to(F, Binary) or conforms_to(F, MutableBinary)",
    "summary": "Whether a binary callback stays usable after a call; `call_repeated` requires it.",
    "traits": []
   },
@@ -13041,12 +13322,12 @@
      "description": "The borrowing callback's contract type.",
      "inferred": false,
      "name": "C",
-     "type": "BorrowCallContract",
+     "type": "AnyType",
      "variadic": false
     }
    ],
    "provider": "callables/invoke",
-   "signature": "comptime RepeatableBorrow[C: BorrowCallContract] = conforms_to(C, BorrowCallable) or conforms_to(C, BorrowMutableCallable)",
+   "signature": "comptime RepeatableBorrow[C: AnyType] = conforms_to(C, BorrowCallable) or conforms_to(C, BorrowMutableCallable)",
    "summary": "Whether a borrowing callback has a shared or mutable receiver for repeated calls.",
    "traits": []
   },
@@ -13061,12 +13342,12 @@
      "description": "The thunk's type.",
      "inferred": false,
      "name": "F",
-     "type": "ThunkContract",
+     "type": "AnyType",
      "variadic": false
     }
    ],
    "provider": "callables/invoke",
-   "signature": "comptime RepeatableThunk[F: ThunkContract] = conforms_to(F, Thunk) or conforms_to(F, MutableThunk)",
+   "signature": "comptime RepeatableThunk[F: AnyType] = conforms_to(F, Thunk) or conforms_to(F, MutableThunk)",
    "summary": "Whether a thunk stays usable after a call; `call_repeated` requires it.",
    "traits": []
   },
@@ -13078,15 +13359,15 @@
    "methods": {},
    "parameters": [
     {
-     "description": "The callback's type.",
+     "description": "Any type; non-callable and consuming-only types return `False`.",
      "inferred": false,
      "name": "F",
-     "type": "UnaryContract",
+     "type": "AnyType",
      "variadic": false
     }
    ],
    "provider": "callables/invoke",
-   "signature": "comptime RepeatableUnary[F: UnaryContract] = conforms_to(F, Unary) or conforms_to(F, MutableUnary)",
+   "signature": "comptime RepeatableUnary[F: AnyType] = conforms_to(F, Unary) or conforms_to(F, MutableUnary)",
    "summary": "Whether a unary callback stays usable after a call: it has a shared or exclusive receiver.",
    "traits": []
   },
@@ -13118,29 +13399,23 @@
    "signature": "trait Thunk(ThunkContract, Movable, Deinitable)",
    "summary": "A producer that can be called repeatedly through a shared receiver.",
    "traits": [
+    "CallContract",
     "ThunkContract"
    ]
   },
   "callables.ThunkContract": {
-   "aliases": [
-    {
-     "description": "The result type.",
-     "name": "Out"
-    },
-    {
-     "description": "The error type; `Never` for a callable that does not raise.",
-     "name": "Error"
-    }
-   ],
+   "aliases": [],
    "description": "A library callable implements the receiver modes it supports: `Thunk`,\n`MutableThunk` or `OnceThunk`.",
    "fields": [],
    "kind": "trait",
    "methods": {},
    "parameters": [],
    "provider": "callables/protocols",
-   "signature": "trait ThunkContract",
+   "signature": "trait ThunkContract(CallContract)",
    "summary": "The types of a callable that takes no argument: a deferred producer.",
-   "traits": []
+   "traits": [
+    "CallContract"
+   ]
   },
   "callables.Unary": {
    "aliases": [],
@@ -13178,6 +13453,7 @@
    "signature": "trait Unary(UnaryContract, Movable, Deinitable)",
    "summary": "A one-argument callable that can be called repeatedly through a shared receiver.",
    "traits": [
+    "CallContract",
     "UnaryContract"
    ]
   },
@@ -13186,14 +13462,6 @@
     {
      "description": "The argument type.",
      "name": "Arg"
-    },
-    {
-     "description": "The result type.",
-     "name": "Out"
-    },
-    {
-     "description": "The error type; `Never` for a callable that does not raise.",
-     "name": "Error"
     }
    ],
    "description": "A library callable fixes its argument, result and error types here, and\nimplements the receiver modes it supports: `Unary`, `MutableUnary` or\n`OnceUnary`.",
@@ -13202,9 +13470,11 @@
    "methods": {},
    "parameters": [],
    "provider": "callables/protocols",
-   "signature": "trait UnaryContract",
+   "signature": "trait UnaryContract(CallContract)",
    "summary": "The types of a callable that takes one owned argument.",
-   "traits": []
+   "traits": [
+    "CallContract"
+   ]
   },
   "callables.as_binary": {
    "description": "",
@@ -14990,6 +15260,51 @@
     }
    ],
    "provider": "callables/invoke",
+   "summary": ""
+  },
+  "callables.mut_ref": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "A named library callback with a shared or mutable receiver.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "For example, `iterated(values^).map(mut_ref(callback)).to_list()` updates\n`callback` in place. After the operation ends, its state remains available.\nA deferred computation retains its origin until executed or discarded.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The callback's type, inferred.",
+       "inferred": false,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "Its mutable origin, inferred.",
+       "inferred": false,
+       "name": "o",
+       "type": "MutOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A movable reference preserving every repeatable call shape, exact\nargument and result types, error types, and the callback's origin.",
+      "type": "MutableRef[F, o]"
+     },
+     "signature": "def mut_ref[F: Movable & Deinitable, o: MutOrigin](ref[o] function: F) -> MutableRef[F, o]",
+     "summary": "Borrow a mutable callback for an operation that owns its callback."
+    }
+   ],
+   "provider": "callables/_receiver",
    "summary": ""
   },
   "combinators.all_effect": {
@@ -53948,11 +54263,12 @@
     }
    ],
    "provider": "functions/composition",
-   "signature": "struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](Movable, Copyable where Fs.map[_Cell]().all_conforms_to[Copyable](), ThunkContract where arity == 0, UnaryContract where arity == 1, BinaryContract where arity == 2, Thunk where arity == 0 and _AllShared[Fs], MutableThunk where arity == 0 and _AllMutable[Fs], OnceThunk where arity == 0 and _AllOnce[Fs], Unary where arity == 1 and _AllShared[Fs], _UnaryViewable where arity == 1 and _AllShared[Fs], MutableUnary where arity == 1 and _AllMutable[Fs], OnceUnary where arity == 1 and _AllOnce[Fs], Binary where arity == 2 and _AllShared[Fs], _BinaryViewable where arity == 2 and _AllShared[Fs], MutableBinary where arity == 2 and _AllMutable[Fs], OnceBinary where arity == 2 and _AllOnce[Fs],)",
+   "signature": "struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](CallContract, Movable, Copyable where Fs.map[_Cell]().all_conforms_to[Copyable](), ThunkContract where arity == 0, UnaryContract where arity == 1, BinaryContract where arity == 2, Thunk where arity == 0 and _AllShared[Fs], MutableThunk where arity == 0 and _AllMutable[Fs], OnceThunk where arity == 0 and _AllOnce[Fs], Unary where arity == 1 and _AllShared[Fs], _UnaryViewable where arity == 1 and _AllShared[Fs], MutableUnary where arity == 1 and _AllMutable[Fs], OnceUnary where arity == 1 and _AllOnce[Fs], Binary where arity == 2 and _AllShared[Fs], _BinaryViewable where arity == 2 and _AllShared[Fs], MutableBinary where arity == 2 and _AllMutable[Fs], OnceBinary where arity == 2 and _AllOnce[Fs],)",
    "summary": "A stored chain of stages, returned by `flow` and `compose`.",
    "traits": [
     "Binary",
     "BinaryContract",
+    "CallContract",
     "Copyable",
     "MutableBinary",
     "MutableThunk",
@@ -54131,6 +54447,7 @@
    "traits": [
     "Binary",
     "BinaryContract",
+    "CallContract",
     "Copyable",
     "MutableBinary",
     "OnceBinary",
@@ -54279,6 +54596,7 @@
    "traits": [
     "Binary",
     "BinaryContract",
+    "CallContract",
     "Copyable",
     "_BinaryViewable"
    ]
@@ -54364,6 +54682,7 @@
    "signature": "struct Identity[T: Movable & Deinitable](Unary, ImplicitlyCopyable)",
    "summary": "The unary identity on `T`, returned by `flow[T]()` and `compose[T]()`.",
    "traits": [
+    "CallContract",
     "Copyable",
     "ImplicitlyCopyable",
     "Unary",
@@ -55066,6 +55385,7 @@
    "signature": "struct Kleisli[I: Monad, P: _Program](_KleisliValue, OnceUnary, _UnaryViewable where P.CanShare, Copyable where conforms_to(P, Copyable))",
    "summary": "A stored function returning an effect of family `I`, made by `kleisli`.",
    "traits": [
+    "CallContract",
     "Copyable",
     "OnceUnary",
     "UnaryContract",
@@ -55222,6 +55542,7 @@
    "signature": "struct MappedPair[F: UnaryContract & Movable & Deinitable, Other: Movable & Deinitable, first: Bool](OnceUnary, Unary where conforms_to(F, Unary), _UnaryViewable where conforms_to(F, Unary), MutableUnary where RepeatableUnary[F], Copyable where conforms_to(F, Copyable))",
    "summary": "Transform one pair element and move the other through unchanged.",
    "traits": [
+    "CallContract",
     "Copyable",
     "MutableUnary",
     "OnceUnary",
@@ -55529,13 +55850,14 @@
     }
    ],
    "provider": "functions/partial",
-   "signature": "struct Partial[R: Movable & Deinitable, E: Movable & Deinitable, Bs: TypeList[Trait=_Bound, ...], Rs: TypeList[Trait=_Rest, ...]](Copyable, Thunk where Rs.length == 0, Unary where Rs.length == 1, Binary where Rs.length == 2, _UnaryViewable where Rs.length == 1, _BorrowViewable where Rs.length == 1, _BinaryViewable where Rs.length == 2)",
+   "signature": "struct Partial[R: Movable & Deinitable, E: Movable & Deinitable, Bs: TypeList[Trait=_Bound, ...], Rs: TypeList[Trait=_Rest, ...]](CallContract, Copyable, Thunk where Rs.length == 0, Unary where Rs.length == 1, Binary where Rs.length == 2, _UnaryViewable where Rs.length == 1, _BorrowViewable where Rs.length == 1, _BinaryViewable where Rs.length == 2)",
    "summary": "A plain function with copies of its leading arguments, returned by `partial`.",
    "traits": [
     "Binary",
     "BinaryContract",
     "BorrowCallContract",
     "BorrowCallable",
+    "CallContract",
     "Copyable",
     "Thunk",
     "ThunkContract",
@@ -229179,6 +229501,7 @@
    "signature": "struct Tupled[F: BinaryContract & Movable & Deinitable](Movable, UnaryContract, Unary where conforms_to(F, Binary), _UnaryViewable where conforms_to(F, Binary), MutableUnary where RepeatableBinary[F], OnceUnary where _OnceBinaryAvailable[F], Copyable where conforms_to(F, Copyable),)",
    "summary": "A binary callback consuming one pair, returned by `tupled`.",
    "traits": [
+    "CallContract",
     "Copyable",
     "MutableUnary",
     "OnceUnary",
@@ -317571,7 +317894,7 @@
    "summary": "Functor, Filterable, FunctorFilter, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Semigroup and Monoid over native values, with explicit instances."
   },
   "callables": {
-   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n| one borrowed argument | `BorrowCallable.invoke` | `BorrowMutableCallable.invoke_mut` | `BorrowOnceCallable.invoke_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. Borrowing callables read their argument instead\nof taking it. `invoke_borrowed`, `invoke_borrowed_repeated` and\n`invoke_borrowed_once` provide shared, repeated exclusive and consuming calls.\n`RepeatableBorrow` admits shared or mutable borrowing receivers. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped`, `Tupled`, `MappedPair` and `Identity` from `fp.functions` implement these\nprotocols.\n\n`as_binary` stores a plain binary function or thin pointer in `NativeBinary`.\nIt preserves two owned argument types and the exact result and error types.\nNamed adapters can be reused by shared borrow in `zip_with`, `map_with_index`,\n`scan_map` and `scan_left`. The factory does not infer capturing closures.\n`BinarySignature[A, B, R, E].capture(closure)` selects the signature before\ncapturing a binary closure into the same adapter. Its error defaults to `Never`.\n`BorrowSignature[A, R, E].capture(callback)` stores a predicate, observer or\nprojection in `NativeBorrow`. Named uses share the adapter; each call reads\nits payload. Native closures and thin pointer aliases retain their exact types.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Lazy `map`, `filter_map`, `flat_map`, `scan_left` | Native callbacks and shared or mutable library unary/binary values |\n| `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| `fori_loop_mut` | A named shared or mutable library binary body, borrowed exclusively; updated receiver state remains in the caller. |\n| Iterator filter, prefix, partition, search and count predicates | Native predicates, `BorrowCallable` and owned `BorrowMutableCallable` |\n| `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `OnceThunk` |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
+   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n| one borrowed argument | `BorrowCallable.invoke` | `BorrowMutableCallable.invoke_mut` | `BorrowOnceCallable.invoke_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. Borrowing callables read their argument instead\nof taking it. `invoke_borrowed`, `invoke_borrowed_repeated` and\n`invoke_borrowed_once` provide shared, repeated exclusive and consuming calls.\n`mut_ref(callback)` lends a named library callback to an operation that owns\nits callback, retaining the original state for inspection or reuse afterward.\nThe movable `MutableRef` preserves every repeatable shape and its native origin.\n`CallContract` is the shared result/error metadata of owned-argument callables.\n`RepeatableBorrow` admits shared or mutable borrowing receivers. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped`, `Tupled`, `MappedPair` and `Identity` from `fp.functions` implement these\nprotocols.\n\n`as_binary` stores a plain binary function or thin pointer in `NativeBinary`.\nIt preserves two owned argument types and the exact result and error types.\nNamed adapters can be reused by shared borrow in `zip_with`, `map_with_index`,\n`scan_map` and `scan_left`. The factory does not infer capturing closures.\n`BinarySignature[A, B, R, E].capture(closure)` selects the signature before\ncapturing a binary closure into the same adapter. Its error defaults to `Never`.\n`BorrowSignature[A, R, E].capture(callback)` stores a predicate, observer or\nprojection in `NativeBorrow`. Named uses share the adapter; each call reads\nits payload. Native closures and thin pointer aliases retain their exact types.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Lazy `map`, `filter_map`, `flat_map`, `scan_left` | Native callbacks and shared or mutable library unary/binary values |\n| `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| `fori_loop_mut` | A named shared or mutable library binary body, borrowed exclusively; updated receiver state remains in the caller. |\n| Iterator filter, prefix, partition, search and count predicates | Native predicates, `BorrowCallable` and owned `BorrowMutableCallable` |\n| `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `OnceThunk` |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
    "summary": "How the library calls user code: callable protocols, receiver dispatch and native functions as values."
   },
   "combinators": {

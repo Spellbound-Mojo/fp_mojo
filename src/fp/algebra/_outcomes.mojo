@@ -86,8 +86,8 @@ struct _Ensure[I: ApplicativeError, A: Movable & Deinitable,
         return _guard_owned[Self.A, Self.C, Self.G, Self.Out, Self.Error, False, keep, reject](arg^, self.predicate^, self.make_error^)
     def call_mut(mut self, var arg: Self.A) raises Self.Error -> Self.Out:
         comptime assert _RepeatableBorrow[Self.C] and _RepeatableBorrow[Self.G], "ensure: branching requires repeatable callbacks"
-        var predicate = _MutableBorrowRef(Pointer(to=self.predicate))
-        var factory = _MutableBorrowRef(Pointer(to=self.make_error))
+        var predicate = _MutableBorrowRef[Self.C, origin_of(self.predicate)](Pointer(to=self.predicate))
+        var factory = _MutableBorrowRef[Self.G, origin_of(self.make_error)](Pointer(to=self.make_error))
         return _Ensure[Self.I, Self.A, type_of(predicate), type_of(factory)](predicate^, factory^).call_once(arg^)
 
 
@@ -157,8 +157,8 @@ struct _OutcomeFold[I: ApplicativeError, A: Movable & Deinitable,
             _outcome_arm[Self.I, Self.H.Out, Self.K.Out, Self.effect, False, Self.K, Self.I.Failure, Self.Out]](arg^, self.on_ok^, self.on_err^)
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert RepeatableUnary[Self.H] and RepeatableUnary[Self.K], "outcome: branching requires repeatable handlers"
-        var left = _MutableUnaryRef(Pointer(to=self.on_ok))
-        var right = _MutableUnaryRef(Pointer(to=self.on_err))
+        var left = _MutableUnaryRef[Self.H, origin_of(self.on_ok)](Pointer(to=self.on_ok))
+        var right = _MutableUnaryRef[Self.K, origin_of(self.on_err)](Pointer(to=self.on_err))
         return _OutcomeFold[Self.I, Self.A, type_of(left), type_of(right), Self.effect](left^, right^).call_once(arg^)
 
 
