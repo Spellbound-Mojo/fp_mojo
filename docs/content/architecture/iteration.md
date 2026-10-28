@@ -634,6 +634,30 @@ caller's body and delegates to `_binary_repeated_as`. That existing receiver
 policy chooses mutable invocation before shared invocation. Bounds, unrolling,
 error propagation and carry ownership remain with the indexed kernel.
 
+`while_loop_mut` likewise delegates scheduling and cleanup to `_loops._while`.
+A native pointer borrows the named body and `_unary_repeated_as` owns receiver
+selection. `_WhileBody` is the single repeatability and carry-type predicate;
+no new loop, receiver priority or ownership representation is introduced.
+The library-predicate boundary validates its metadata with compile-time
+assertions. This retains normal diagnostics without requiring generic callers
+to prove a nested projection of two callbacks' error types during overload
+selection. Error selection uses `_CommonError` and `_CommonErrorCompatible`;
+invocation retains the existing `_ErrorCompatible` proofs.
+
+The optional `E=` parameter defaults to the exact combined error. A generic
+wrapper may select that same type explicitly when Mojo 1.2 cannot normalize
+an associated error under its `where` constraints. The boundary asserts exact
+equality with the combined error; selecting a broader type for two pure
+callbacks is rejected. Native entry points forward this selection to the same
+validation owner.
+
+Native predicate overloads only adapt thin read signatures with explicit
+register ABI evidence. Capturing predicates and pointer aliases enter through
+`BorrowSignature[A, Bool, E].capture` and then the ordinary `BorrowCallable`
+boundary. Inferring the function trait directly in the mutable-loop overload
+set crashes Mojo 1.2 on invalid input or result conventions; selecting a full
+signature first keeps ordinary rejection diagnostics and native origins.
+
 The explicit receiver name follows `call_mut`. Combining shared and exclusive
 library admissions under one `fori_loop` overload set is ambiguous for a body
 that supports both modes on Mojo 1.2. Excluding shared bodies from the mutable

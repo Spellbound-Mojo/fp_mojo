@@ -2883,6 +2883,32 @@
    ],
    "provider": "control/loops"
   },
+  "control.while_loop_mut": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "b92f3fe1f89652bc199977afe26846b7fe969e3636af0a3c80169fc7af114b6b",
+     "signature": "def while_loop_mut[A: Movable & Deinitable, P: BorrowCallable, F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable = _CommonError[P.Failure, F.Error]]( cond_fun: P, mut body_fun: F, var init_val: A ) raises E -> A:"
+    },
+    {
+     "sha256": "d26dcd5ae7a4ec8fa47805c4d708450df82c67b70120a5150a568bd58ae2b3e2",
+     "signature": "def while_loop_mut[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable, //, E: Movable & Deinitable = F.Error]( cond_fun: def(A) thin -> R, mut body_fun: F, var init_val: A ) raises E -> A where not conforms_to(A, TrivialRegisterPassable) and R == Bool and _WhileBody[A, F]:"
+    },
+    {
+     "sha256": "77fbed929e93d56ca3149bb7a3bfcc33e85c880f01df04977949b7e91fe4b244",
+     "signature": "def while_loop_mut[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, B: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //, E: Movable & Deinitable = F.Error]( cond_fun: def(B) thin -> R, mut body_fun: F, var init_val: A ) raises E -> A where B == A and R == Bool and _WhileBody[A, F]:"
+    },
+    {
+     "sha256": "394031b17b549900711c9acc5846dc515b020f24310a4ace981cc6a7fe51ac93",
+     "signature": "def while_loop_mut[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable, PE: Movable & Deinitable, //, E: Movable & Deinitable = _CommonError[PE, F.Error]]( cond_fun: def(A) raises PE thin -> R, mut body_fun: F, var init_val: A ) raises E -> A where not conforms_to(A, TrivialRegisterPassable) and R == Bool and _WhileBody[A, F] and _CommonErrorCompatible[PE, F.Error]:"
+    },
+    {
+     "sha256": "b664c87629e3a673e1a26e9c9a5a644200b2b42526b569f8a685317efe1449b8",
+     "signature": "def while_loop_mut[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, B: TrivialRegisterPassable, R: RegisterPassable & Deinitable, PE: Movable & Deinitable, //, E: Movable & Deinitable = _CommonError[PE, F.Error]]( cond_fun: def(B) raises PE thin -> R, mut body_fun: F, var init_val: A ) raises E -> A where B == A and R == Bool and _WhileBody[A, F] and _CommonErrorCompatible[PE, F.Error]:"
+    }
+   ],
+   "provider": "control/loops"
+  },
   "data.Both": {
    "declarations": [
     "struct Both[E: Movable & Deinitable, A: Movable & Deinitable]("

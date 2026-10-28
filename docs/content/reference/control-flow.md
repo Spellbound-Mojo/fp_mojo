@@ -18,6 +18,26 @@ unrolling semantics. It borrows the callback, so pass a named mutable variable.
 Neither the callback nor carry is copied. Generic wrappers can forward any
 repeatable binary callback using its exact `Error` type.
 
+Use `while_loop_mut(predicate, body, carry)` for a named unary body that needs
+exclusive access to its receiver. It accepts `MutableUnary` or `Unary` with
+`Carry -> Carry`, prefers mutable invocation when both are present, and keeps
+receiver updates after success or failure. The predicate reads the carry before
+each step; a false result returns that carry without a body call. The carry and
+callback are never copied, and failure stops before the next predicate call.
+
+Predicates can be shared `BorrowCallable` values, plain functions or stored
+thin pointers. Capture a closure or pointer alias once with
+`BorrowSignature[A, Bool, E].capture(callback)`, then reuse the named predicate.
+`E` defaults to `Never`. Predicate and body errors must be the same exact type,
+including origins, or one must be `Never`; `while_loop` keeps its shared-body
+behavior.
+
+Generic wrappers can name the exact combined error with
+`while_loop_mut[E=MyError](predicate, body, carry)`. For example, a generic
+non-raising predicate and a body `F` can use `E=F.Error`, matching the wrapper's
+`raises F.Error`. Ordinary calls infer the error. The explicit selection must
+equal that inferred error, so it cannot widen or replace an error type.
+
 <!-- api: control -->
 
 ## Write loops and a scan as expressions
@@ -32,3 +52,7 @@ order, `[6, 5, 3]`.
 
 The mutable counted-loop example retains its increasing weight in `body`.
 The four steps produce `20`, and the body records four calls after the loop.
+
+The mutable while-loop example reuses a captured predicate and increases its
+step size through `advance.calls`: the carries are `0`, `1`, `3`, `6`, `10`.
+The result is `10`, and the body retains four calls.

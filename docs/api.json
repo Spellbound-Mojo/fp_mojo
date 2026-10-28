@@ -24289,6 +24289,367 @@
    "provider": "control/loops",
    "summary": ""
   },
+  "control.while_loop_mut": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The predicate, borrowed for the loop.",
+       "name": "cond_fun",
+       "type": "P",
+       "variadic": false
+      },
+      {
+       "convention": "mut",
+       "description": "A named library callback, borrowed exclusively for the loop.",
+       "name": "body_fun",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The initial carry, consumed without copying.",
+       "name": "init_val",
+       "type": "A",
+       "variadic": false
+      }
+     ],
+     "description": "The predicate reads the carry before each step. A false result returns\nthat carry without calling the body. Each successful body call consumes\nthe carry and returns the next value of exactly the same type. Mutable\ninvocation wins when the body also supports shared or consuming calls.\nThe body and predicate remain available afterward, including on error.",
+     "error": "E",
+     "parameters": [
+      {
+       "description": "The carry type, including move-only values and borrowed views.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "A shared read-only predicate returning `Bool`.",
+       "inferred": true,
+       "name": "P",
+       "type": "BorrowCallable",
+       "variadic": false
+      },
+      {
+       "description": "A repeatable unary body with matching input and output carry types.",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The exact common error, normally inferred. Generic wrappers may select it explicitly.",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The predicate's or body's exact error type. Their errors must match,\nincluding origins, or one must be `Never`. Failure stops immediately;\nreceiver updates are retained and the current carry is destroyed.",
+     "returns": {
+      "doc": "The carry for which the predicate first returned `False`.",
+      "type": "A"
+     },
+     "signature": "def while_loop_mut[A: Movable & Deinitable, P: BorrowCallable, F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable = _CommonError[P.Failure, F.Error]](cond_fun: P, mut body_fun: F, var init_val: A) raises E -> A",
+     "summary": "Repeat a named library body with exclusive access to its receiver."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored pointer that reads the carry.",
+       "name": "cond_fun",
+       "type": "def(A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "mut",
+       "description": "A named library callback, borrowed exclusively.",
+       "name": "body_fun",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The initial carry, consumed without copying.",
+       "name": "init_val",
+       "type": "A",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "E",
+     "parameters": [
+      {
+       "description": "The carry type, selected by the initial value.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "A repeatable library body with matching input and output carry types.",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native result, required to be `Bool`.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The exact common error, normally inferred. Generic wrappers may select it explicitly.",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The compatible predicate/body error, stopping the loop immediately.",
+     "returns": {
+      "doc": "The first carry for which the predicate returns `False`.",
+      "type": "A"
+     },
+     "signature": "def while_loop_mut[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable, //, E: Movable & Deinitable = F.Error](cond_fun: def(A) thin -> R, mut body_fun: F, var init_val: A) raises E -> A where not conforms_to(A, TrivialRegisterPassable) and R == Bool and _WhileBody[A, F]",
+     "summary": "Loop with a native predicate and an exclusively borrowed library body."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored pointer that reads the carry.",
+       "name": "cond_fun",
+       "type": "def(B) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "mut",
+       "description": "A named library callback, borrowed exclusively.",
+       "name": "body_fun",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The initial carry, consumed without copying.",
+       "name": "init_val",
+       "type": "A",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "E",
+     "parameters": [
+      {
+       "description": "The carry type, selected by the initial value.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "A repeatable library body with matching input and output carry types.",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native register input, required to equal the carry type.",
+       "inferred": true,
+       "name": "B",
+       "type": "TrivialRegisterPassable",
+       "variadic": false
+      },
+      {
+       "description": "The native result, required to be `Bool`.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The exact common error, normally inferred. Generic wrappers may select it explicitly.",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The compatible predicate/body error, stopping the loop immediately.",
+     "returns": {
+      "doc": "The first carry for which the predicate returns `False`.",
+      "type": "A"
+     },
+     "signature": "def while_loop_mut[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, B: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //, E: Movable & Deinitable = F.Error](cond_fun: def(B) thin -> R, mut body_fun: F, var init_val: A) raises E -> A where B == A and R == Bool and _WhileBody[A, F]",
+     "summary": "Loop with a native predicate and an exclusively borrowed library body."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored pointer that reads the carry.",
+       "name": "cond_fun",
+       "type": "def(A) raises PE thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "mut",
+       "description": "A named library callback, borrowed exclusively.",
+       "name": "body_fun",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The initial carry, consumed without copying.",
+       "name": "init_val",
+       "type": "A",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "E",
+     "parameters": [
+      {
+       "description": "The carry type, selected by the initial value.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "A repeatable library body with matching input and output carry types.",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native result, required to be `Bool`.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The predicate's exact native error type.",
+       "inferred": true,
+       "name": "PE",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The exact common error, normally inferred. Generic wrappers may select it explicitly.",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The compatible predicate/body error, stopping the loop immediately.",
+     "returns": {
+      "doc": "The first carry for which the predicate returns `False`.",
+      "type": "A"
+     },
+     "signature": "def while_loop_mut[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable, PE: Movable & Deinitable, //, E: Movable & Deinitable = _CommonError[PE, F.Error]](cond_fun: def(A) raises PE thin -> R, mut body_fun: F, var init_val: A) raises E -> A where not conforms_to(A, TrivialRegisterPassable) and R == Bool and _WhileBody[A, F] and _CommonErrorCompatible[PE, F.Error]",
+     "summary": "Loop with a native predicate and an exclusively borrowed library body."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored pointer that reads the carry.",
+       "name": "cond_fun",
+       "type": "def(B) raises PE thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "mut",
+       "description": "A named library callback, borrowed exclusively.",
+       "name": "body_fun",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The initial carry, consumed without copying.",
+       "name": "init_val",
+       "type": "A",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "E",
+     "parameters": [
+      {
+       "description": "The carry type, selected by the initial value.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "A repeatable library body with matching input and output carry types.",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native register input, required to equal the carry type.",
+       "inferred": true,
+       "name": "B",
+       "type": "TrivialRegisterPassable",
+       "variadic": false
+      },
+      {
+       "description": "The native result, required to be `Bool`.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The predicate's exact native error type.",
+       "inferred": true,
+       "name": "PE",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The exact common error, normally inferred. Generic wrappers may select it explicitly.",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The compatible predicate/body error, stopping the loop immediately.",
+     "returns": {
+      "doc": "The first carry for which the predicate returns `False`.",
+      "type": "A"
+     },
+     "signature": "def while_loop_mut[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, B: TrivialRegisterPassable, R: RegisterPassable & Deinitable, PE: Movable & Deinitable, //, E: Movable & Deinitable = _CommonError[PE, F.Error]](cond_fun: def(B) raises PE thin -> R, mut body_fun: F, var init_val: A) raises E -> A where B == A and R == Bool and _WhileBody[A, F] and _CommonErrorCompatible[PE, F.Error]",
+     "summary": "Loop with a native predicate and an exclusively borrowed library body."
+    }
+   ],
+   "provider": "control/loops",
+   "summary": ""
+  },
   "data.Both": {
    "aliases": [],
    "description": "",
@@ -312382,8 +312743,8 @@
    "summary": "Direct combinators shared with fluent pipelines."
   },
   "control": {
-   "description": "They follow the sequential value semantics of JAX's control-flow operations,\nwithout tensor stacking, tracing, autodiff or a JIT. Branch with Mojo's `if`.\n\nThe carry may be any value: a scalar, a SIMD value, a string, a container or a\nmove-only owner. Its type stays fixed, and nothing copies it. A callback is a\nplain function or a closure, with separate pure and raising overloads, or a\nshared-receiver library value: `Unary` for a `while_loop` body, `Binary` taking\n`(Int, carry)` for a `fori_loop` body, and a `Binary` step for `scan`, whose\noutput type is then named, `scan[Y](step, ...)`. A `while_loop` predicate may\nbe a `BorrowCallable`. A call needing keywords or defaults is written as a\nclosure. Callbacks keep one receiver throughout.\n\nUse `fori_loop_mut` to borrow a named library body exclusively and retain its\nmutable state after the call. It accepts shared or mutable binary callbacks,\npreferring mutable invocation when both are available. `fori_loop` retains\nits shared receiver behavior. Both forms share bounds, unrolling and errors.\n\nErrors stop the loop at once. A predicate and a body must raise one error type,\nincluding any embedded origins, or one of them nothing. Nothing retries or\nrolls back effects.\n\nThe compile-time parameter `unroll` expands that many steps per rolled\niteration, with exact bounds checks for the final partial chunk; `1`, the\ndefault, keeps a rolled loop. `unroll=0` fully expands a statically bounded\nloop: `fori_loop[lower, upper, unroll=0](body, initial)` or\n`scan[static_length=N, unroll=0](...)`. Full unrolling without static bounds,\na negative factor and an invalid static length are compile errors.\n`while_loop` has no unroll parameter.",
-   "summary": "Functional loops and scans over native Mojo values: `while_loop`, `fori_loop`, `fori_loop_mut` and `scan`."
+   "description": "They follow the sequential value semantics of JAX's control-flow operations,\nwithout tensor stacking, tracing, autodiff or a JIT. Branch with Mojo's `if`.\n\nThe carry may be any value: a scalar, a SIMD value, a string, a container or a\nmove-only owner. Its type stays fixed, and nothing copies it. A callback is a\nplain function or a closure, with separate pure and raising overloads, or a\nshared-receiver library value: `Unary` for a `while_loop` body, `Binary` taking\n`(Int, carry)` for a `fori_loop` body, and a `Binary` step for `scan`, whose\noutput type is then named, `scan[Y](step, ...)`. A `while_loop` predicate may\nbe a `BorrowCallable`. A call needing keywords or defaults is written as a\nclosure. Callbacks keep one receiver throughout.\n\nUse `fori_loop_mut` to borrow a named library body exclusively and retain its\nmutable state after the call. It accepts shared or mutable binary callbacks,\npreferring mutable invocation when both are available. `fori_loop` retains\nits shared receiver behavior. Both forms share bounds, unrolling and errors.\n\n`while_loop_mut(predicate, body, carry)` borrows a named unary body exclusively\nwith the same repeated receiver preference. Its predicate can be a shared\n`BorrowCallable`, plain function or stored thin pointer. Capturing predicates\nand pointer aliases use `BorrowSignature[A, Bool, E].capture(callback)`.\n\nErrors stop the loop at once. A predicate and a body must raise one error type,\nincluding any embedded origins, or one of them nothing. Nothing retries or\nrolls back effects.\n\nThe compile-time parameter `unroll` expands that many steps per rolled\niteration, with exact bounds checks for the final partial chunk; `1`, the\ndefault, keeps a rolled loop. `unroll=0` fully expands a statically bounded\nloop: `fori_loop[lower, upper, unroll=0](body, initial)` or\n`scan[static_length=N, unroll=0](...)`. Full unrolling without static bounds,\na negative factor and an invalid static length are compile errors.\n`while_loop` has no unroll parameter.",
+   "summary": "Functional loops and scans over native Mojo values: `while_loop`, `while_loop_mut`, `fori_loop`, `fori_loop_mut` and `scan`."
   },
   "data": {
    "description": "`Result[T, E]` holds a success value `Ok[T]` or a stored failure `Err[E]`.\n`ok[E](value)` and `err[T](error)` infer the type of the payload they receive.\n`ControlFlow[B, C]` holds `Break[B]` or `Continue[C]`. `Ior[E, A]` holds\n`Left[E]`, `Right[A]` or `Both[E, A]` for values with diagnostics. These are stored in place\nand matched by `fp.match`. Mojo's typed native errors are efficient; `Result`\nis for failures that must be stored, collected or passed along as values, not\na replacement for `raises`.\n\nThe bridges: `attempt`, `attempt_kwargs` and `attempt_once` turn a raising call into a `Result`,\n`raise_on_err` turns it back, each with the original error type, and\n`collect_results` collects a source of Results into one.",

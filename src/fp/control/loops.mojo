@@ -1,10 +1,11 @@
 """Functional while and counted loops with exact native carry types."""
 from std.builtin.rebind import rebind_var
-from fp._internal.errors import _ErrorCompatible, _CommonError
-from fp.callables.protocols import BorrowCallable, Unary, Binary, BinaryContract
-from fp.callables.invoke import RepeatableBinary
-from fp.callables._receiver import _binary_repeated_as
+from fp._internal.errors import _ErrorCompatible, _CommonError, _CommonErrorCompatible
+from fp.callables.protocols import BorrowCallable, Unary, UnaryContract, Binary, BinaryContract
+from fp.callables.invoke import RepeatableBinary, RepeatableUnary
+from fp.callables._receiver import _binary_repeated_as, _unary_repeated_as
 from fp.iteration._callbacks import _predicate_plain, _predicate_raising, _predicate_callable, _binary_plain, _binary_raising
+from fp.callables.native import NativeBorrow
 from ._loops import _while, _indexed, _for_step
 
 
@@ -116,6 +117,175 @@ def while_loop[A: Movable & Deinitable, R: Movable & Deinitable,
 ) raises _CommonError[PE, BE] -> A where R == Bool and _ErrorCompatible[_CommonError[PE, BE], PE] and _ErrorCompatible[_CommonError[PE, BE], BE]:
     """Loop with a raising predicate and body, which raise one error type or one of them nothing."""
     return _while[A, P, F, PE, BE, _predicate_raising[A, PE, R, P], _unary_raising[A, BE, F], _CommonError[PE, BE]](cond_fun, body_fun, init_val^)
+
+
+comptime _WhileBody[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Arg == A and F.Out == A and RepeatableUnary[F]
+
+
+def _while_repeated[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, o: MutOrigin](
+    function: Pointer[F, o], var value: A
+) raises F.Error capturing -> A where _WhileBody[A, F]:
+    """Bridge the existing loop kernel to canonical repeated receiver dispatch."""
+    return rebind_var[A](_unary_repeated_as[F.Error](function[], rebind_var[F.Arg](value^)))
+
+
+def while_loop_mut[A: Movable & Deinitable, P: BorrowCallable, F: UnaryContract & Movable & Deinitable,
+                    //, E: Movable & Deinitable = _CommonError[P.Failure, F.Error]](
+    cond_fun: P, mut body_fun: F, var init_val: A
+) raises E -> A:
+    """Repeat a named library body with exclusive access to its receiver.
+
+    The predicate reads the carry before each step. A false result returns
+    that carry without calling the body. Each successful body call consumes
+    the carry and returns the next value of exactly the same type. Mutable
+    invocation wins when the body also supports shared or consuming calls.
+    The body and predicate remain available afterward, including on error.
+
+    Parameters:
+        A: The carry type, including move-only values and borrowed views.
+        P: A shared read-only predicate returning `Bool`.
+        F: A repeatable unary body with matching input and output carry types.
+        E: The exact common error, normally inferred. Generic wrappers may select it explicitly.
+
+    Args:
+        cond_fun: The predicate, borrowed for the loop.
+        body_fun: A named library callback, borrowed exclusively for the loop.
+        init_val: The initial carry, consumed without copying.
+
+    Returns:
+        The carry for which the predicate first returned `False`.
+
+    Raises:
+        The predicate's or body's exact error type. Their errors must match,
+        including origins, or one must be `Never`. Failure stops immediately;
+        receiver updates are retained and the current carry is destroyed.
+    """
+    comptime assert P.Payload == A, "while_loop_mut: the predicate must read the carry"
+    comptime assert P.Result == Bool, "while_loop_mut: the predicate must return Bool"
+    comptime assert _WhileBody[A, F], "while_loop_mut: the body must repeatedly take and return the carry"
+    comptime assert _CommonErrorCompatible[P.Failure, F.Error], "while_loop_mut: predicate and body errors must match or be Never"
+    comptime assert E == _CommonError[P.Failure, F.Error], "while_loop_mut: selected error must match the exact combined error"
+    comptime assert _ErrorCompatible[E, P.Failure] and _ErrorCompatible[E, F.Error]
+    return _while[A, P, Pointer[F, origin_of(body_fun)], P.Failure, F.Error, _predicate_callable[A, P], _while_repeated[A, F, origin_of(body_fun)], E](cond_fun, Pointer(to=body_fun), init_val^)
+
+
+# Native admission only: captures and pointer aliases use BorrowSignature.
+# Inferring a native function trait here crashes on incompatible predicates.
+# Thin signatures recover the native read ABI, then enter the library overload.
+def while_loop_mut[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable,
+                    //, E: Movable & Deinitable = F.Error](
+    cond_fun: def(A) thin -> R,
+    mut body_fun: F,
+    var init_val: A
+) raises E -> A where not conforms_to(A, TrivialRegisterPassable) and R == Bool and _WhileBody[A, F]:
+    """Loop with a native predicate and an exclusively borrowed library body.
+
+    Parameters:
+        A: The carry type, selected by the initial value.
+        F: A repeatable library body with matching input and output carry types.
+        R: The native result, required to be `Bool`.
+        E: The exact common error, normally inferred. Generic wrappers may select it explicitly.
+
+    Args:
+        cond_fun: A plain function or stored pointer that reads the carry.
+        body_fun: A named library callback, borrowed exclusively.
+        init_val: The initial carry, consumed without copying.
+
+    Returns:
+        The first carry for which the predicate returns `False`.
+
+    Raises:
+        The compatible predicate/body error, stopping the loop immediately.
+    """
+    return while_loop_mut[E=E](NativeBorrow[A, R, Never, type_of(cond_fun), False](cond_fun), body_fun, init_val^)
+
+
+def while_loop_mut[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, B: TrivialRegisterPassable, R: RegisterPassable & Deinitable,
+                    //, E: Movable & Deinitable = F.Error](
+    cond_fun: def(B) thin -> R,
+    mut body_fun: F,
+    var init_val: A
+) raises E -> A where B == A and R == Bool and _WhileBody[A, F]:
+    """Loop with a native predicate and an exclusively borrowed library body.
+
+    Parameters:
+        A: The carry type, selected by the initial value.
+        F: A repeatable library body with matching input and output carry types.
+        B: The native register input, required to equal the carry type.
+        R: The native result, required to be `Bool`.
+        E: The exact common error, normally inferred. Generic wrappers may select it explicitly.
+
+    Args:
+        cond_fun: A plain function or stored pointer that reads the carry.
+        body_fun: A named library callback, borrowed exclusively.
+        init_val: The initial carry, consumed without copying.
+
+    Returns:
+        The first carry for which the predicate returns `False`.
+
+    Raises:
+        The compatible predicate/body error, stopping the loop immediately.
+    """
+    return while_loop_mut[E=E](NativeBorrow[A, R, Never, type_of(cond_fun), False](cond_fun), body_fun, init_val^)
+
+
+def while_loop_mut[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable, PE: Movable & Deinitable,
+                    //, E: Movable & Deinitable = _CommonError[PE, F.Error]](
+    cond_fun: def(A) raises PE thin -> R,
+    mut body_fun: F,
+    var init_val: A
+) raises E -> A where not conforms_to(A, TrivialRegisterPassable) and R == Bool and _WhileBody[A, F] and _CommonErrorCompatible[PE, F.Error]:
+    """Loop with a native predicate and an exclusively borrowed library body.
+
+    Parameters:
+        A: The carry type, selected by the initial value.
+        F: A repeatable library body with matching input and output carry types.
+        R: The native result, required to be `Bool`.
+        PE: The predicate's exact native error type.
+        E: The exact common error, normally inferred. Generic wrappers may select it explicitly.
+
+    Args:
+        cond_fun: A plain function or stored pointer that reads the carry.
+        body_fun: A named library callback, borrowed exclusively.
+        init_val: The initial carry, consumed without copying.
+
+    Returns:
+        The first carry for which the predicate returns `False`.
+
+    Raises:
+        The compatible predicate/body error, stopping the loop immediately.
+    """
+    return while_loop_mut[E=E](NativeBorrow[A, R, PE, type_of(cond_fun), True](cond_fun), body_fun, init_val^)
+
+
+def while_loop_mut[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, B: TrivialRegisterPassable, R: RegisterPassable & Deinitable, PE: Movable & Deinitable,
+                    //, E: Movable & Deinitable = _CommonError[PE, F.Error]](
+    cond_fun: def(B) raises PE thin -> R,
+    mut body_fun: F,
+    var init_val: A
+) raises E -> A where B == A and R == Bool and _WhileBody[A, F] and _CommonErrorCompatible[PE, F.Error]:
+    """Loop with a native predicate and an exclusively borrowed library body.
+
+    Parameters:
+        A: The carry type, selected by the initial value.
+        F: A repeatable library body with matching input and output carry types.
+        B: The native register input, required to equal the carry type.
+        R: The native result, required to be `Bool`.
+        PE: The predicate's exact native error type.
+        E: The exact common error, normally inferred. Generic wrappers may select it explicitly.
+
+    Args:
+        cond_fun: A plain function or stored pointer that reads the carry.
+        body_fun: A named library callback, borrowed exclusively.
+        init_val: The initial carry, consumed without copying.
+
+    Returns:
+        The first carry for which the predicate returns `False`.
+
+    Raises:
+        The compatible predicate/body error, stopping the loop immediately.
+    """
+    return while_loop_mut[E=E](NativeBorrow[A, R, PE, type_of(cond_fun), True](cond_fun), body_fun, init_val^)
 
 
 def fori_loop[A: Movable & Deinitable, R: Movable & Deinitable,

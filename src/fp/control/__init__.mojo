@@ -1,4 +1,4 @@
-"""Functional loops and scans over native Mojo values: `while_loop`, `fori_loop`, `fori_loop_mut` and `scan`.
+"""Functional loops and scans over native Mojo values: `while_loop`, `while_loop_mut`, `fori_loop`, `fori_loop_mut` and `scan`.
 
 They follow the sequential value semantics of JAX's control-flow operations,
 without tensor stacking, tracing, autodiff or a JIT. Branch with Mojo's `if`.
@@ -17,6 +17,11 @@ mutable state after the call. It accepts shared or mutable binary callbacks,
 preferring mutable invocation when both are available. `fori_loop` retains
 its shared receiver behavior. Both forms share bounds, unrolling and errors.
 
+`while_loop_mut(predicate, body, carry)` borrows a named unary body exclusively
+with the same repeated receiver preference. Its predicate can be a shared
+`BorrowCallable`, plain function or stored thin pointer. Capturing predicates
+and pointer aliases use `BorrowSignature[A, Bool, E].capture(callback)`.
+
 Errors stop the loop at once. A predicate and a body must raise one error type,
 including any embedded origins, or one of them nothing. Nothing retries or
 rolls back effects.
@@ -29,5 +34,5 @@ loop: `fori_loop[lower, upper, unroll=0](body, initial)` or
 a negative factor and an invalid static length are compile errors.
 `while_loop` has no unroll parameter.
 """
-from .loops import while_loop, fori_loop, fori_loop_mut
+from .loops import while_loop, while_loop_mut, fori_loop, fori_loop_mut
 from .scan import scan, ScanLengthError, ScanStepError, ScanError
