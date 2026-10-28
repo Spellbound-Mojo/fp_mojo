@@ -3751,3 +3751,23 @@ inputs and their common output must match exactly, including origins. Native
 errors are admitted against the selected context; library handler errors
 remain independent. Shared named chains retain their borrow origin, and owned
 handlers use the existing one-call receiver dispatch and inactive cleanup.
+
+### Borrowing Result fold terminal
+
+Pipeline's `fold` uses the same generated admission table as `fold_owned`,
+selecting native read signatures and borrowing library callback contracts.
+Each handler is wrapped in `_BorrowedUnary`, the existing adapter that keeps
+an owned input alive until a borrowed callback's output is materialized.
+Both forms then enter `_fold_result_owned` and `_call_transform`. The pipeline
+consumes its native Result; the callback convention controls whether its
+payload is borrowed or transferred. No new branch or disposal implementation
+is needed.
+
+Generic captured callbacks, including a reused Never closure, retain their
+errors and origins. Promoting a bare read-function declaration through a
+generic native function trait remains a compiler boundary: the
+[native-only reproduction](https://github.com/Spellbound-Mojo/fp_mojo/blob/nightly/experiments/mojo12-diagnostics/borrowed_function_promotion.mojo)
+fails without an FP import on Mojo 1.2. Independent result/error inference,
+explicit receiver origins and register bounds did not repair the tested
+promotion. Ordinary selected `fold` calls accept the declaration directly;
+this limitation concerns the additional generic wrapper in the reproduction.

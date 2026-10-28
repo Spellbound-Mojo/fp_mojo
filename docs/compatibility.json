@@ -843,6 +843,7 @@
     {
       "name": "Result terminals",
       "methods": [
+        "fold",
         "fold_owned",
         "value_or",
         "to_optional",
@@ -850,10 +851,10 @@
       ],
       "status": "result_only",
       "families": "A native Result carrier",
-      "callbacks": "Owned unary fallback for value_or; two owned-payload handlers for fold_owned; no callback for to_optional or raise_on_err. Named shared callable chains are borrowed without copying captures; explicit moves retain consuming admission.",
+      "callbacks": "Owned unary fallback for value_or; two borrowed-payload handlers for fold or owned-payload handlers for fold_owned; no callback for to_optional or raise_on_err. Named shared callable chains are borrowed without copying captures; explicit moves retain consuming admission.",
       "ownership": "Consumes the Result and owned library callbacks; native closures and named shared chains are borrowed. Returns a plain value or Optional.",
-      "errors": "Selected native error for closures, exact declared library error. Stored errors feed value_or or are discarded by to_optional. raise_on_err raises the stored error with its exact type and origins, independent of the selected callback error. fold_owned returns the active handler value directly; handler outputs and their origins must match, and raised errors must agree or be Never.",
-      "timing": "Immediate extraction; fold_owned runs exactly one handler, and value_or runs its fallback only on Err.",
+      "errors": "Selected native error for closures, exact declared library error. Stored errors feed value_or or are discarded by to_optional. raise_on_err raises the stored error with its exact type and origins, independent of the selected callback error. fold and fold_owned return the active handler value directly; handler outputs and their origins must match, and raised errors must agree or be Never.",
+      "timing": "Immediate extraction; fold and fold_owned run exactly one handler, and value_or runs its fallback only on Err.",
       "owner": [
         "src/fp/data/_result.mojo",
         "src/fp/functions/context.mojo"
@@ -877,7 +878,11 @@
         "tests/runtime/test_context_result_fold_views.mojo",
         "tests/ownership/test_context_result_fold_ownership.mojo",
         "tests/compile_fail/context_result_fold_convention.mojo",
-        "tests/compile_fail/context_result_fold_escape.mojo"
+        "tests/compile_fail/context_result_fold_escape.mojo",
+        "tests/runtime/test_context_result_borrow_fold.mojo",
+        "tests/ownership/test_context_result_borrow_fold_ownership.mojo",
+        "tests/compile_fail/context_result_borrow_fold_convention.mojo",
+        "tests/compile_fail/context_result_borrow_fold_escape.mojo"
       ]
     },
     {

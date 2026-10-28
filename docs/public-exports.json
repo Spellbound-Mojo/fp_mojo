@@ -11268,6 +11268,584 @@
             "sha256": "e2c297920bfd1fc5664e1aaf07ecaf40a87f9fd83c36ba8a4a62d337bc8b2994"
           }
         ],
+        "fold": [
+          {
+            "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](deinit self, var on_ok: C, var on_err: G) raises _CommonError[C.Failure, G.Failure] -> C.Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Success[Self.V] and G.Payload == _Failure[Self.V] and C.Result == G.Result and (C.Failure == Never or G.Failure == Never or C.Failure == G.Failure):",
+            "sha256": "eadb1dded0bdea8330b5661ac473f078c5d91f7954dc6bd060953a8832a72736"
+          },
+          {
+            "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) -> S](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Failure, Never] -> C.Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Success[Self.V] and C.Result == S and (C.Failure == Never or Never == Never or C.Failure == Never):",
+            "sha256": "8dceb6d338c5cd0236c80013735b023297533fe18c4d98f01b71040f75cdd897"
+          },
+          {
+            "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) raises Self.E -> S](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Failure, Self.E] -> C.Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Success[Self.V] and C.Result == S and (C.Failure == Never or Self.E == Never or C.Failure == Self.E):",
+            "sha256": "aa295da49b5fa80ec4fb7f0e32d1cdba844922fbe6922f6ddc221a3e99fb82e8"
+          },
+          {
+            "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) raises Never -> S](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Failure, Never] -> C.Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Success[Self.V] and Self.E != Never and C.Result == S and (C.Failure == Never or Never == Never or C.Failure == Never):",
+            "sha256": "870e992558a70e369d74020622642a0e7488fb203d873503962116f8b0a5eb9d"
+          },
+          {
+            "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, S: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[C.Failure, Never] -> C.Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Success[Self.V] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and C.Result == S and (C.Failure == Never or Never == Never or C.Failure == Never):",
+            "sha256": "da9c438375bdd3262f87dd0c4247360c3dce0cca4aebb7fab82a5961f7f56a3c"
+          },
+          {
+            "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, S: RegisterPassable & Deinitable](deinit self, var on_ok: C, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[C.Failure, Never] -> C.Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Success[Self.V] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and C.Result == S and (C.Failure == Never or Never == Never or C.Failure == Never):",
+            "sha256": "c9b615de9df3d8591ccd2f0ccf491b4010d6fdf9b2edc73a347532e6a6e3e4b3"
+          },
+          {
+            "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, Q: TrivialRegisterPassable, S: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(Q) thin -> S) raises _CommonError[C.Failure, Never] -> C.Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Success[Self.V] and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and C.Result == S and (C.Failure == Never or Never == Never or C.Failure == Never):",
+            "sha256": "c60638b4619b9a206afe0d5b804d816cbae1fad89abc8b487ba6681b7d9787db"
+          },
+          {
+            "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable](deinit self, var on_ok: C, on_err: def(Q) thin -> S) raises _CommonError[C.Failure, Never] -> C.Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Success[Self.V] and Q == _Failure[Self.V] and C.Result == S and (C.Failure == Never or Never == Never or C.Failure == Never):",
+            "sha256": "d79bd1c9ecadf94646266a9d91004765342755fa1cb380fd7ceabd95b71366ec"
+          },
+          {
+            "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[C.Failure, Y] -> C.Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and C.Result == S and (C.Failure == Never or Y == Never or C.Failure == Y):",
+            "sha256": "0dd978716152a22dec2d963fe05d96fe7978a9e9665e9c8d0ef7ea562b94ac54"
+          },
+          {
+            "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[C.Failure, Y] -> C.Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and C.Result == S and (C.Failure == Never or Y == Never or C.Failure == Y):",
+            "sha256": "7f2128cece76b0f6a45451f91bbf383f47f492c718bbd584c7b04381c49f1e35"
+          },
+          {
+            "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, Q: TrivialRegisterPassable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(Q) raises Y thin -> S) raises _CommonError[C.Failure, Y] -> C.Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and C.Result == S and (C.Failure == Never or Y == Never or C.Failure == Y):",
+            "sha256": "2de55fbd184176f0b4d3b3e279600c82ad354d0fdef70a80f17ab24198f2fd48"
+          },
+          {
+            "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(Q) raises Y thin -> S) raises _CommonError[C.Failure, Y] -> C.Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and C.Result == S and (C.Failure == Never or Y == Never or C.Failure == Y):",
+            "sha256": "bbacba566db8763cafff9c876e49a44792a6c36cb356eae5cd889ace2f5ca428"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable, //, C: def(_Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[Never, G.Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G.Payload == _Failure[Self.V] and R == G.Result and (Never == Never or G.Failure == Never or Never == G.Failure):",
+            "sha256": "2fad6fd6c48c4c1c1e22638761f0f9cb616c759c3538484356e9d91f25aacd67"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(_Success[Self.V]) -> R, G: def(_Failure[Self.V]) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "e28e6679540b778dca670e17fe402e20385fa5d685d4e0b26009571f7b4ed2c4"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(_Success[Self.V]) -> R, G: def(_Failure[Self.V]) raises Self.E -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Never == Never or Self.E == Never or Never == Self.E):",
+            "sha256": "f2fdcd0292f5137cafeb02692a82317e6916f40adc0654a2d815bd20bcb98df2"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(_Success[Self.V]) -> R, G: def(_Failure[Self.V]) raises Never -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "eb3b1673a1749f51cce27a524d16ea64062db6d749f55b68cb89316d6a8e351b"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, //, C: def(_Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "de28fe0d1748dd77e9635ab655123aa73247612ac7fe46c2544c6cd0d6aa629f"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: RegisterPassable & Deinitable, //, C: def(_Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "45d5d3e54d6e35c150aff011f8740c5e683cbc111a593526f76de9e407878c6c"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, Q: TrivialRegisterPassable, S: Movable & Deinitable, //, C: def(_Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, on_err: def(Q) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "39e99005243d2f9c6328d331726ae098fed6e47dedcf603b9b87485462257613"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable, //, C: def(_Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, on_err: def(Q) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Q == _Failure[Self.V] and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "723912ebfeb800f0660b38ea8469bc738498f3d2f2861dcbbfed7440c112d62f"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, Y: Movable & Deinitable, //, C: def(_Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "2c39d518c00b5dee306099b559274551f335229efc437796df0ef5fa945f10b4"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: RegisterPassable & Deinitable, Y: Movable & Deinitable, //, C: def(_Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "969048fd0d488f349493309811813bfbc77a4e7e4e3803afbe61be6df8e343d1"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, Q: TrivialRegisterPassable, S: Movable & Deinitable, Y: Movable & Deinitable, //, C: def(_Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, on_err: def(Q) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "b275badd849bbb5841cdc0551b36cc7ff4d553171b9cc36c3ee86f967c8fe2db"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable, //, C: def(_Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, on_err: def(Q) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "2bd202dd5da3d511ccd94daff788615757193699a2d4e2a356e063c90a48407e"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable, //, C: def(_Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[Self.E, G.Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G.Payload == _Failure[Self.V] and R == G.Result and (Self.E == Never or G.Failure == Never or Self.E == G.Failure):",
+            "sha256": "c4fa562771067ca590658d9fdde08e22c334acf1023789317a7cc9d4f988ea43"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(_Success[Self.V]) raises Self.E -> R, G: def(_Failure[Self.V]) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Self.E, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Self.E == Never or Never == Never or Self.E == Never):",
+            "sha256": "f85103deffa4c3f93b3816eea77e66a8036ccd7d1be1541b6e63aadc13845842"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(_Success[Self.V]) raises Self.E -> R, G: def(_Failure[Self.V]) raises Self.E -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Self.E, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Self.E == Never or Self.E == Never or Self.E == Self.E):",
+            "sha256": "8a11c3550b39aef0e84192b083283301c0f8595b3bb88816226baeb160a4c8f3"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(_Success[Self.V]) raises Self.E -> R, G: def(_Failure[Self.V]) raises Never -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Self.E, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == S and (Self.E == Never or Never == Never or Self.E == Never):",
+            "sha256": "cebd9114e8ff6c6c5aa37da4f1ec11a3b4d976462f687fbe86019e5aa6b26a53"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, //, C: def(_Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[Self.E, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (Self.E == Never or Never == Never or Self.E == Never):",
+            "sha256": "6a6439dd1445f4b793c6d98b96aa1c13d57690d582bc5761a1f6ab00c410c546"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: RegisterPassable & Deinitable, //, C: def(_Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[Self.E, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (Self.E == Never or Never == Never or Self.E == Never):",
+            "sha256": "7b0ecedc007f589eb7c127b6d496fcd1c868ae6ddb86ebe11cee28cfe0d916b8"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, Q: TrivialRegisterPassable, S: Movable & Deinitable, //, C: def(_Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, on_err: def(Q) thin -> S) raises _CommonError[Self.E, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (Self.E == Never or Never == Never or Self.E == Never):",
+            "sha256": "a65820796b61158f9795b7a077b83d103e040f4cadbd6c23bc51afe32bcad6ff"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable, //, C: def(_Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, on_err: def(Q) thin -> S) raises _CommonError[Self.E, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Q == _Failure[Self.V] and R == S and (Self.E == Never or Never == Never or Self.E == Never):",
+            "sha256": "15d80ca0df3722874edf4a8389ba3d3198240865193bbcad3a17c830232bb472"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, Y: Movable & Deinitable, //, C: def(_Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[Self.E, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (Self.E == Never or Y == Never or Self.E == Y):",
+            "sha256": "48edcdfbbd2153c21f65dd16fc98b0a7f1e350761b2988c49e32ce72935820ea"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: RegisterPassable & Deinitable, Y: Movable & Deinitable, //, C: def(_Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[Self.E, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (Self.E == Never or Y == Never or Self.E == Y):",
+            "sha256": "94e5a060ab86e81ff50b98fee5b00e08ce7ad3be4a0944044f93fb6218c749b7"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, Q: TrivialRegisterPassable, S: Movable & Deinitable, Y: Movable & Deinitable, //, C: def(_Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, on_err: def(Q) raises Y thin -> S) raises _CommonError[Self.E, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (Self.E == Never or Y == Never or Self.E == Y):",
+            "sha256": "a56cfb0c895f65f132648a6237287ddde3a1745f756fdeaec34119d17e1b420f"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable, //, C: def(_Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, on_err: def(Q) raises Y thin -> S) raises _CommonError[Self.E, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and R == S and (Self.E == Never or Y == Never or Self.E == Y):",
+            "sha256": "dfc6196ba015acecb08fe3df1322ef62aa0c81668e68bc37cc629283bede44df"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable, //, C: def(_Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[Never, G.Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and G.Payload == _Failure[Self.V] and R == G.Result and (Never == Never or G.Failure == Never or Never == G.Failure):",
+            "sha256": "94934ac67c5c654447f91ac9d810c6a635b3a2d5be2e0e24e3e532565a1c6ecb"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(_Success[Self.V]) raises Never -> R, G: def(_Failure[Self.V]) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "44945cf4e63f19caedda70e934d6d9f6955c48c726b91f3ac099baf5126c3b11"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(_Success[Self.V]) raises Never -> R, G: def(_Failure[Self.V]) raises Self.E -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == S and (Never == Never or Self.E == Never or Never == Self.E):",
+            "sha256": "7e78f521b1a5879ef8f4a48239335533d2844487b4b45a14bececad84c311f9f"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(_Success[Self.V]) raises Never -> R, G: def(_Failure[Self.V]) raises Never -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and Self.E != Never and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "493af14d0f81be5307bf46ad1e3b5430b2cc17afe0d85f0617523e846af75338"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, //, C: def(_Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "7bd3bd7915b5047f89578bfc6acb9e6b9dd66e7686de349aeb339d91cc72ee1a"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: RegisterPassable & Deinitable, //, C: def(_Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "dcab165c04545284f18e9fe3bcc0b2665acbd5063b677a43195a13aa781399b7"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, Q: TrivialRegisterPassable, S: Movable & Deinitable, //, C: def(_Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, on_err: def(Q) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "8a6b949abdc4891331473b87069187283555eacdf3a77eef3781fc018d8f1c90"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable, //, C: def(_Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, on_err: def(Q) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and Q == _Failure[Self.V] and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "623a21c49b86161b7e47b7a7f7bbc0ebdace376077a84a20852b3e5d7996f172"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, Y: Movable & Deinitable, //, C: def(_Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "20eea82631e157903b771e6d631279d9b7020e08909bf529c7ab86ce312e2179"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: RegisterPassable & Deinitable, Y: Movable & Deinitable, //, C: def(_Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "dbb03a93668a096653aa5218eaabc7e376190889ef9cba923ac3a0f6d0da8696"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, Q: TrivialRegisterPassable, S: Movable & Deinitable, Y: Movable & Deinitable, //, C: def(_Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, on_err: def(Q) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "49424e8a45f4b7ca2dfa2f20b436c95bfc0b381e4d73b0423e9bf3781850a433"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable, //, C: def(_Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, on_err: def(Q) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "eccc7c69d6a477eab203ac4890fc0ed175a9eb44ea8aab6fbfcdeefc3e373509"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) thin -> R, var on_err: G) raises _CommonError[Never, G.Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and G.Payload == _Failure[Self.V] and R == G.Result and (Never == Never or G.Failure == Never or Never == G.Failure):",
+            "sha256": "32b970bff8757196ad919e135c937f00dc1ba9413b373e9fd98b0273523d566f"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) -> S](deinit self, on_ok: def(_Success[Self.V]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "9661dc308c088c07f458bc825d2ed7da00961f5043df251044f40c27549aa573"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) raises Self.E -> S](deinit self, on_ok: def(_Success[Self.V]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == S and (Never == Never or Self.E == Never or Never == Self.E):",
+            "sha256": "7985ab0df3ff597199b2ded4563f3a80130052fa9ced07e8b7d8b7d9ac0fbf53"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) raises Never -> S](deinit self, on_ok: def(_Success[Self.V]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and Self.E != Never and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "b081409d00eae8281ac906cd0d38e0da86ac306b0755151330ea9cac9c44e4de"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, S: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) thin -> R, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "953819d926fea441851a4c65824a43c4a44d8d452ec237ad2fccbe3777572c33"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) thin -> R, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "9832b9f8e66cacdae88610c4bee7121171ed37acfe7cba5f64eb37d5877f8429"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, Q: TrivialRegisterPassable, S: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) thin -> R, on_err: def(Q) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "f1fd12e4b694584e4d021c1e5875e3a901cbf93392267b240073266b3abe93c7"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) thin -> R, on_err: def(Q) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and Q == _Failure[Self.V] and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "a7bab1c94be1f18844f8c4897e1e36d204c5c89736b66995cd7eacfa395c2caa"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) thin -> R, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "c0e614d3c0c86ca9e816e69e1296c88dd484da495db795b1a1239bbf48b228e7"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) thin -> R, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "408938075e049c97f54e192f70b6a5956106348ffe552d63d45f91c0ac2e2b9d"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, Q: TrivialRegisterPassable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) thin -> R, on_err: def(Q) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "e929cb00a351a2394cef5f8da28a37db359625b0da5c6c6392cd6743d4c31c2e"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) thin -> R, on_err: def(Q) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "b481dd09259375cdd588abd3faf3555f2cfe06dfa0775795e417c32f9ea22089"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, G: BorrowCallContract & Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) thin -> R, var on_err: G) raises _CommonError[Never, G.Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and G.Payload == _Failure[Self.V] and R == G.Result and (Never == Never or G.Failure == Never or Never == G.Failure):",
+            "sha256": "1c16a1276224b1ac15c1a5d89eda551d19fb59988b84ec31204950a3593c02d7"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) -> S](deinit self, on_ok: def(_Success[Self.V]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "a5dcf0e29b476f22a5d0ea6c7e3781f11f790dcdaafd5cb21141411cf8632629"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) raises Self.E -> S](deinit self, on_ok: def(_Success[Self.V]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and R == S and (Never == Never or Self.E == Never or Never == Self.E):",
+            "sha256": "8338df66924732df0d86b8a66a34ab7d56169579d7a2c693dbbfeefca000cde8"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) raises Never -> S](deinit self, on_ok: def(_Success[Self.V]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and Self.E != Never and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "6ea086b8a9e0f599587aaf24fca3eec8f796699af5b9e60d54173f3328333e94"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, S: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) thin -> R, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "3a37b52681f1cf413410e4c3d5ab080b862b4641b1f864541dff873df7530a59"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) thin -> R, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "17977a2aa9dfdb3a22b1ecb82598d7cc5c7a890549321b5c10a65a8ea2e6c0eb"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, Q: TrivialRegisterPassable, S: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) thin -> R, on_err: def(Q) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "57fd7c4f94c48a568bf7515b527eccd71a0e3f290010586880bd2eaf99401936"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) thin -> R, on_err: def(Q) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and Q == _Failure[Self.V] and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "b3de116a4298285ec6a60b7a30217690ea16ae7bce26f8937e4422dbf6569be8"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) thin -> R, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "e9d7b8bf5e0cc6b9f071599f687151cf4a2e7df91369bd7537cc317daedd79d5"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) thin -> R, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "aa6d93516524c9dcff9a0f6783690113cfb722a07332474ee63f97c18a420709"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, Q: TrivialRegisterPassable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) thin -> R, on_err: def(Q) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "51837a9871b56f545249bd56dd5bee002f9982399270185eafef00243b719327"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) thin -> R, on_err: def(Q) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "4b70a8f0fca0b3aab14c9f3b5f60aaed20d6b155f13e7183c6ac0f5baedb23b7"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](deinit self, on_ok: def(P) thin -> R, var on_err: G) raises _CommonError[Never, G.Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and G.Payload == _Failure[Self.V] and R == G.Result and (Never == Never or G.Failure == Never or Never == G.Failure):",
+            "sha256": "9f947517f317a19d12bb1c77b025abab8c0925a527d1032a3d99ecafaef32c8d"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) -> S](deinit self, on_ok: def(P) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "e2e512c14c50e7bf5bfde1298a7be7284d59e140a13c78acde0b900d6b03487f"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) raises Self.E -> S](deinit self, on_ok: def(P) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and R == S and (Never == Never or Self.E == Never or Never == Self.E):",
+            "sha256": "7e0055a9a71442112c6849a86780344bd8fb49e209bb983872aa07c16358022f"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) raises Never -> S](deinit self, on_ok: def(P) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and Self.E != Never and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "c96628b000365d7749d25fb2eda6b9cb44432da41bd5e62a9c98dffe8829d212"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, S: Movable & Deinitable](deinit self, on_ok: def(P) thin -> R, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "58ecb1b2e3179b644b3b289732e07298720f722da99bef818dc02ac7370bacfa"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(P) thin -> R, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "d7e432d43b9e8de76ddfe9dac66d8f2d47d437e1811e524f63aed2816ab7e679"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, Q: TrivialRegisterPassable, S: Movable & Deinitable](deinit self, on_ok: def(P) thin -> R, on_err: def(Q) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "837014dcd8fcae89c43e411883cda00211b05c43fd461ad43e9a194c2686a3e8"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(P) thin -> R, on_err: def(Q) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and Q == _Failure[Self.V] and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "eadbdb86277b3d135dc4acedc466c7bef973a82a95237fe44fc2fd10a89d19bf"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(P) thin -> R, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "5ac5c265de9c16b89b83aec030c2985aed2a18d7dd0436d33c1c001ae0f7cab6"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(P) thin -> R, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "dcef33dbdb3665a33b587ba507fd16fcc06909f9818c3d42821c4e8d0969f54d"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, Q: TrivialRegisterPassable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(P) thin -> R, on_err: def(Q) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "84f45623644118329f7a222fe6c7c37bf43763b42cb9eba27835f40aa9bf7596"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(P) thin -> R, on_err: def(Q) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "72694cf948841dfe7b605e43154dd923bbdb3ed5fa46df273a580fab86cad3aa"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, G: BorrowCallContract & Movable & Deinitable](deinit self, on_ok: def(P) thin -> R, var on_err: G) raises _CommonError[Never, G.Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and G.Payload == _Failure[Self.V] and R == G.Result and (Never == Never or G.Failure == Never or Never == G.Failure):",
+            "sha256": "06684b243b2e6029987d7b4398b637a8497de1712668f964c5d20687aad9ce84"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) -> S](deinit self, on_ok: def(P) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "894a8e7e5766bfecfc192e69e323b0a5ed0ad9e05107be627c0f34106c51fc18"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) raises Self.E -> S](deinit self, on_ok: def(P) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and R == S and (Never == Never or Self.E == Never or Never == Self.E):",
+            "sha256": "90c5d5961e13c44111c83b57251a7744a2f7a4bdec1f31f75ef412a163663c84"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) raises Never -> S](deinit self, on_ok: def(P) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and Self.E != Never and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "b341da553c067d45487f756d2960664867ab8acad81ca2704116db498ce0b7cd"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, S: Movable & Deinitable](deinit self, on_ok: def(P) thin -> R, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "169ced495b20eed504e7d25c5b36b101a77fefa4de38ffc604878158cd744f6c"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(P) thin -> R, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "3e5d5a2a5ed372eaf0371a560799f0ef0804c855cd656a31b604587e2ca5a929"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, Q: TrivialRegisterPassable, S: Movable & Deinitable](deinit self, on_ok: def(P) thin -> R, on_err: def(Q) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "b976e4221ee12a1792d1e74753a8e025f2f9cdbf202aa0ade7495996dcb7ffb8"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(P) thin -> R, on_err: def(Q) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and Q == _Failure[Self.V] and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "1f61fe1a1c5dd8b858a8d372e6e4880e846958151341a71e594616b6002a9071"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(P) thin -> R, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "2eb56c76029ac8cef07e25a2d9ab5ad07f5e1fa28d14607410ed08c15f9fb95c"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(P) thin -> R, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "62c139faf73dbf409376f567315cb863c23636dc71311cdcbfca4b8f9495a0f7"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, Q: TrivialRegisterPassable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(P) thin -> R, on_err: def(Q) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "0f5d91568d892df212deb630ca181ea145c0f2797f0386689f6b20a7da056fb4"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(P) thin -> R, on_err: def(Q) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "4f38b6db2dea6c41aa3840e71c3dd6b8f32a935ce2d0a713e4429accf2e0355c"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, X: Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, var on_err: G) raises _CommonError[X, G.Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and G.Payload == _Failure[Self.V] and R == G.Result and (X == Never or G.Failure == Never or X == G.Failure):",
+            "sha256": "f21607c5e58f4d01bca5744dc35d47884e5d288218da7231ed8863911e347307"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) -> S](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "4e9029ef20d2d50d4973b84d693840203733d99435563574579df89a402942c1"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) raises Self.E -> S](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == S and (X == Never or Self.E == Never or X == Self.E):",
+            "sha256": "fae10299b69fc26a2ccc7511d2c7cf36eb27337ad6b3ee65a6c1dd7a65f67936"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) raises Never -> S](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and Self.E != Never and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "ffab06e1f5d46fcb8fd2c7f89cb3783a62cf1764d59dcde81dcc9ecf17aa812a"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "174d55e1897a6e96bf107fb874f6463dbff4e6f03880e5da74fb0f6efa429d80"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, X: Movable & Deinitable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "d41c2c88e507527a353aee132df30d294d8110219862a704deea222dc18dda63"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, X: Movable & Deinitable, Q: TrivialRegisterPassable, S: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, on_err: def(Q) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "849a90c525db1f65afb64750b9f5f0a272c4007ff3b2a703e014bf11e31457c3"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, X: Movable & Deinitable, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, on_err: def(Q) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and Q == _Failure[Self.V] and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "adf941634234486de43a7c579c6b759a4707f89ad9e44f30611577c75726c0e5"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "cf7ff1ca4df4b031a21a6f86c10902ab5ab9c756756751bd7706cd9d49c20cf2"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, X: Movable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "62bfac33319bcbb40c9de2b4f8dd53d196754d22677aa19f6e8a112cb4d6e9ae"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, X: Movable & Deinitable, Q: TrivialRegisterPassable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, on_err: def(Q) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "e85add88f34ec9bac8c82205b3269448b3114054de0ce110ca0898eb5284075c"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, X: Movable & Deinitable, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, on_err: def(Q) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "6ab895763f4b665038183d8abc43601a5dd358596b0e99b862623f463bf761e6"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, X: Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, var on_err: G) raises _CommonError[X, G.Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and G.Payload == _Failure[Self.V] and R == G.Result and (X == Never or G.Failure == Never or X == G.Failure):",
+            "sha256": "fc0fbbf8dbd1dc3a9402f60dc2e7a427849447ced24c1253067fac52a7c17d71"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) -> S](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "972e350c91c64adc6b2ce7e0499072e945de1b91cc5c8d2e300ab42b6a2479a9"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) raises Self.E -> S](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and R == S and (X == Never or Self.E == Never or X == Self.E):",
+            "sha256": "e59bfb6f286dd6279a53ec96c745f7ab216d3b2ef44ae7cf4ec6effe3a734143"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) raises Never -> S](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and Self.E != Never and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "19bbd9625de3014b68af06ad4cb7be0352f2347b9755588afccd670911973f30"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "490a2665ac8cf3ff792b16d0128a4b2d4e8c7463e7c532bf2ad52cc0d8d2c43e"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "a91b5d62ab04b24369be100dbee34ff624b2da6f5126c5e3743db30b8f0b08a9"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, X: Movable & Deinitable, Q: TrivialRegisterPassable, S: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, on_err: def(Q) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "5dd559c9890376d40c26120d51bf87871be1d35f946efc8b32e520a73f90d41c"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, X: Movable & Deinitable, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, on_err: def(Q) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and Q == _Failure[Self.V] and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "0cd7c6979da995d911f530c734af79058fa96217654cfc056e75e6e9d37955b9"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "fe07bd36883b12e5e79563c4c13879efbf659d18c02ef092868e2797c9f245c9"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "fd03a33082cf101e71e35dc62e45164ad5ed93ddcf00fef328759567da5f5a47"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, X: Movable & Deinitable, Q: TrivialRegisterPassable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, on_err: def(Q) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "58e4456f16b90891b33a2af4f40410508aaeecf7236f3e744c646874be435c66"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, X: Movable & Deinitable, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, on_err: def(Q) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "a6aa7a9ad35b5c72662516a3d5c4589cf78ec9901355db53277778d3e8da3e86"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](deinit self, on_ok: def(P) raises X thin -> R, var on_err: G) raises _CommonError[X, G.Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and G.Payload == _Failure[Self.V] and R == G.Result and (X == Never or G.Failure == Never or X == G.Failure):",
+            "sha256": "9e96f1fad2fd2c996a9e87cfb5c78624809d9d830522b86e6aa5d489135d47c0"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) -> S](deinit self, on_ok: def(P) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "1c235a4ddce5d92fdc5ce0227bf9c22b4ebe5f802a7ebe2aafa74457f89000a6"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) raises Self.E -> S](deinit self, on_ok: def(P) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and R == S and (X == Never or Self.E == Never or X == Self.E):",
+            "sha256": "95a0f6c76990cd925f8b71bffcedefda74573e76fa66c0521f3db293f1dc62d0"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) raises Never -> S](deinit self, on_ok: def(P) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and Self.E != Never and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "a272c0a06079dd48530879067477b399d78a20daa037f9284f4cc71bd185835b"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable](deinit self, on_ok: def(P) raises X thin -> R, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "cca7f17b595e3b9e16891417c3cf538046a3afa71563cc066f3cd2b09c4c4d4b"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(P) raises X thin -> R, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "bbbf0911825a14aff7aafb492bda26b419f142a95b33e3f9b6b1954e2c33d9e9"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, Q: TrivialRegisterPassable, S: Movable & Deinitable](deinit self, on_ok: def(P) raises X thin -> R, on_err: def(Q) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "3484709a34bcaa38df44ec6bdb93d32c92046d955b10a48fb07a2728f0146164"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(P) raises X thin -> R, on_err: def(Q) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and Q == _Failure[Self.V] and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "d164ac916a8079cac4764dabc43e53da1d84263a2c459683357108f63dc26818"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(P) raises X thin -> R, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "8f6caa4f7bf91da03940e36691db5fd78f2b429972e9c89f4cd17950bb7c3409"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(P) raises X thin -> R, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "6afee293d2ab9c23bdbd8922779886666534082d5ee35b135c376beced0181a9"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, Q: TrivialRegisterPassable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(P) raises X thin -> R, on_err: def(Q) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "1870b8559c7232dfc74dfbd46760bcdf02a38262acecaadc09a247f6507fa4ae"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(P) raises X thin -> R, on_err: def(Q) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "e8ccf0a2cd04447a39e3dff2a24eb82eb24850473400e4c2efb3b50fc1d61ac0"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](deinit self, on_ok: def(P) raises X thin -> R, var on_err: G) raises _CommonError[X, G.Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and G.Payload == _Failure[Self.V] and R == G.Result and (X == Never or G.Failure == Never or X == G.Failure):",
+            "sha256": "8507e522ffb41f6f4eed9f1934f80872e882ac3366b36da452226173bf2cf986"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) -> S](deinit self, on_ok: def(P) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "75609e391189ce94d3a8dd9e665b52ab1297fc81e33acc903d7feebf64d5bba8"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) raises Self.E -> S](deinit self, on_ok: def(P) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and R == S and (X == Never or Self.E == Never or X == Self.E):",
+            "sha256": "725bfd4f891908a6fd194e667b313319e1be33cda5d7981a95d817b2fd549136"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) raises Never -> S](deinit self, on_ok: def(P) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and Self.E != Never and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "17300256c5f119e6cf8399552fb39480de933f86b6f20dd2f8c98c10f70f376d"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable](deinit self, on_ok: def(P) raises X thin -> R, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "2de6eb0c15501e120d6d0dce6e788ac428563734e72028df15de068a5bb58d27"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(P) raises X thin -> R, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "5679377bd1edb787ef170e9e22c0125e72c364a38bef146be3b050e43925572c"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, Q: TrivialRegisterPassable, S: Movable & Deinitable](deinit self, on_ok: def(P) raises X thin -> R, on_err: def(Q) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "fb64c118ff63bdbfda8db189f958087a8808f08226d973073073f1b1de5c6dcb"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(P) raises X thin -> R, on_err: def(Q) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and Q == _Failure[Self.V] and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "3c6ce1471b3075688599d9e9129e690373de3f41d2bea6835ad6e240117c34ad"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(P) raises X thin -> R, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "99530c632b9c901bfb2a1dab0351b0a7bce323289d9c0c09bc3f64d96159fd2d"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(P) raises X thin -> R, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "45db0ead61e54fd670e2c9b290265bc49c7645f070e8f2723f77560a331cf3dc"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, Q: TrivialRegisterPassable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(P) raises X thin -> R, on_err: def(Q) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "6a9a5943a199218ca73121b28e12d7710eceb6d297c971fa55d3991b38e720fb"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(P) raises X thin -> R, on_err: def(Q) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "5b3af0ca1a5ca02078ce013365897981b4c6ea2c48198ae937bf0e36f43ebcd4"
+          }
+        ],
         "value_or": [
           {
             "signature": "def value_or[C: UnaryContract & Movable & Deinitable](deinit self, var on_err: C) raises C.Error -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Failure[Self.V] and C.Out == _Success[Self.V]:",

@@ -11,6 +11,8 @@ def checked(value: Int) -> Result[Int, String]:
 
 
 def double(value: Int) -> Int: return value * 2
+def describe(value: Int) -> String: return "count " + String(value)
+def describe_error(error: String) -> String: return "invalid: " + error
 
 
 def report(var error: String) -> Int:
@@ -42,3 +44,7 @@ def main() raises:
     assert_equal(reason.value(), "negative count")
     print("reason:", reason.value())
     assert_equal(Bool(checked(5).swap().to_optional()), False)
+
+    # Both handlers borrow their payload; the pipeline owns its cleanup.
+    assert_equal(pipeline(checked(5)).fold(describe, describe_error), "count 5")
+    print("summary:", pipeline(checked(-1)).fold(describe, describe_error))

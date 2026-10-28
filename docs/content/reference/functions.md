@@ -7,7 +7,7 @@ The [pipeline tutorial](../tutorial/pipelines.md) starts with a complete program
 
 Use `.map(transform)` for selected payloads and `.then(stage)` for the whole
 value. Native collection operations execute immediately, and `.get()` extracts
-the stored carrier. Value terminals `fold_owned`, `value_or`, `get_or`, `get_or_else`, `raise_on_err` and `to_optional`
+the stored carrier. Value terminals `fold`, `fold_owned`, `value_or`, `get_or`, `get_or_else`, `raise_on_err` and `to_optional`
 return their final value directly. For a reusable generic wrapper, follow the
 [contract-forwarding guide](../guides/generic-wrappers.md).
 
@@ -520,6 +520,13 @@ The entry point selects `PriceError` once; subsequent pure stages retain Never.
 
 ## Fold a Result into a value
 
+`pipeline(result^).fold(on_ok, on_err)` borrows the active payload for its
+handler and returns the handler's value directly. The pipeline consumes the
+Result, keeping its payload alive until the callback result is materialized,
+then releases it. This accepts ordinary handlers such as
+`def explain(error: String) -> String` without an ownership annotation.
+Use `fold_owned` when the handler needs ownership of that payload instead.
+
 `pipeline(result^).fold_owned(on_ok, on_err)` consumes the native Result and
 returns the selected handler's value directly. This follows Cats Either's
 `fold`, using the library's existing success-first argument order and explicit
@@ -535,6 +542,12 @@ one explicitly transfers its captures. Other library handlers are consumed,
 including destruction of the inactive handler. Their shared, mutable and
 consuming receiver modes all use the same one-call boundary. Move-only
 payloads and outputs require no copies.
+
+For `fold`, library handlers use `BorrowCallable` or `BorrowOnceCallable` and
+are consumed, including disposal of the skipped handler. A consuming borrowing
+handler can return its owned captures, while the Result payload remains
+borrowed during the call. Native handlers remain borrowed. Shared Kleisli
+views consume their input, so they belong with `fold_owned`.
 
 Use `.raising[E]()` for custom native callback errors. Library handlers retain
 their own errors; both handlers must share an error type, or one must have

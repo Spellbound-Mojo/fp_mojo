@@ -1072,24 +1072,30 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
     # Terminals consume native carriers and return the final value. Callback
     # admission is shared; each carrier owns its branch and cleanup semantics.
     result_conditions = ["conforms_to(Self.V, _ResultType)", f"Self.V == {Source}"]
-    # Fold the native Result directly. The existing branch driver owns payload
-    # movement, handler cleanup and error propagation; adapters only select
-    # callback signatures and preserve shared views of reusable chains.
-    left = native_callbacks("owned", T, "on_ok", view=True)
-    right = list(native_callbacks("owned", Err, "on_err", second=True, view=True))
-    for a, b in product(left, right):
-        params = callback_parameters([a, b])
-        output = a["result"]
-        error = f'_CommonError[{a["error"]}, {b["error"]}]'
-        conditions = result_conditions + a["conditions"] + b["conditions"] + [
-            f'{output} == {b["result"]}',
-            f'({a["error"]} == Never or {b["error"]} == Never or {a["error"]} == {b["error"]})',
-        ]
-        types = f'{T}, {Err}, {output}, {error}, {a["error"]}, {b["error"]}, {a["adapter_type"]}, {b["adapter_type"]}'
-        invoke = f'_fold_result_owned[{types}, _call_transform[{T}, {a["adapter_type"]}], _call_transform[{Err}, {b["adapter_type"]}, {output}]]'
-        body.append(f'\n    @always_inline\n    def fold_owned[{", ".join(params)}](deinit self, {a["argument"]}, {b["argument"]}) raises {error} -> {output} where {" and ".join(conditions)}:\n'
-                    '        """Consume the native Result and return the selected handler value directly."""\n'
-                    f'        return {invoke}(rebind_var[{Source}](self.value^), {a["build"]}, {b["build"]})\n')
+    # Both fold terminals share Result's branch driver. Borrowing handlers
+    # enter through the existing owned-to-borrowed adapter, which keeps the
+    # active payload alive until its callback result has been materialized.
+    for name, mode in (("fold_owned", "owned"), ("fold", "borrow")):
+        left = native_callbacks(mode, T, "on_ok", view=mode == "owned")
+        right = list(native_callbacks(mode, Err, "on_err", second=True, view=mode == "owned"))
+        for a, b in product(left, right):
+            params = callback_parameters([a, b])
+            output = a["result"]
+            error = f'_CommonError[{a["error"]}, {b["error"]}]'
+            conditions = result_conditions + a["conditions"] + b["conditions"] + [
+                f'{output} == {b["result"]}',
+                f'({a["error"]} == Never or {b["error"]} == Never or {a["error"]} == {b["error"]})',
+            ]
+            adapters = [(f'_BorrowedUnary[{payload}, {cb["adapter_type"]}]' if mode == "borrow" else cb["adapter_type"])
+                        for payload, cb in ((T, a), (Err, b))]
+            builds = [(f'{adapter}({cb["build"]})' if mode == "borrow" else cb["build"])
+                      for adapter, cb in zip(adapters, (a, b))]
+            types = f'{T}, {Err}, {output}, {error}, {a["error"]}, {b["error"]}, {adapters[0]}, {adapters[1]}'
+            invoke = f'_fold_result_owned[{types}, _call_transform[{T}, {adapters[0]}], _call_transform[{Err}, {adapters[1]}, {output}]]'
+            payload_mode = "borrowed" if mode == "borrow" else "owned"
+            body.append(f'\n    @always_inline\n    def {name}[{", ".join(params)}](deinit self, {a["argument"]}, {b["argument"]}) raises {error} -> {output} where {" and ".join(conditions)}:\n'
+                        f'        """Consume the native Result and return one {payload_mode}-payload handler value directly."""\n'
+                        f'        return {invoke}(rebind_var[{Source}](self.value^), {builds[0]}, {builds[1]})\n')
     def value_terminal(name, mode, arg, summary, input_type, output_type, source_conditions, invoke):
         for cb in native_callbacks(mode, input_type, arg, view=mode == "owned"):
             params = callback_parameters([cb])
@@ -1320,6 +1326,8 @@ def documented(source):
             doc += ["\n" + indent + "Args:\n"]
             doc += [
                 indent + "    " + a["name"] + ": " + (
+                    "The selected branch handler, borrowing its payload for the call."
+                    if name == "fold" and a["name"] in ("on_ok", "on_err") else
                     "The value consumed here and copied into each payload position."
                     if a["name"] == "value" and name in ("fill", "tuple_left", "tuple_right")
                     else args[a["name"]]
@@ -1332,7 +1340,7 @@ def documented(source):
             + "Returns:\n"
             + indent
             + ("    An owning fold stage; run(step) returns the target pipeline.\n" if name == "fold_effect" else
-               "    The selected handler value, without a pipeline wrapper.\n" if name == "fold_owned" else
+               "    The selected handler value, without a pipeline wrapper.\n" if name in ("fold", "fold_owned") else
                "    The moved payload or fallback, without a pipeline wrapper.\n" if name in ("value_or", "get_or", "get_or_else") else
                "    A native Optional containing the moved success, or empty on Err.\n" if name == "to_optional" else
                "    The moved Result success value, without a pipeline wrapper.\n" if name == "raise_on_err" else

@@ -64,6 +64,14 @@ access is needed. Each consumes its Result, so use `result^` for a named
 local. Move-only payloads work without copying. A skipped library callback is
 destroyed; a captured native callback remains borrowed and can be reused.
 
+When both branches need formatting, finish with `.fold(describe, describe_error)`.
+Each handler borrows its payload, and the pipeline releases that payload after
+the handler returns. The example formats either branch as a String without
+copying the stored error or adding `var` to the handler. Use `fold_owned`
+instead when a handler needs to consume or return its input. Both pipeline
+terminals consume their Result; direct `result.fold(...)` is available when
+you want to keep the original Result.
+
 These operations follow [Cats Either's `valueOr`, `getOrElse` and `toOption`](https://github.com/typelevel/cats/blob/main/core/src/main/scala/cats/syntax/either.scala).
 Mojo uses snake_case and an explicit zero-argument factory for a lazy default.
 For constants, `get_or(0)` avoids a factory. It consumes the supplied default
