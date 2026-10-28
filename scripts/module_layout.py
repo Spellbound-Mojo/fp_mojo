@@ -56,7 +56,7 @@ def declaration_providers():
     yield 'combinators', 'iteration/reductions', None
     yield 'combinators', 'iteration/effectful', None
     yield 'combinators', 'algebra/conditional', ('if_effect',)
-    yield 'functions', 'callables/native', ('as_unary',)
+    yield 'functions', 'callables/native', ('as_unary', 'as_binary')
 
 
 def public_providers(root):

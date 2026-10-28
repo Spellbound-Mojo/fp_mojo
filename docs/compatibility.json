@@ -56,7 +56,17 @@
       "restrictions": "Native ABI and owned-capture restrictions apply. Adapter diagnostics retain legacy exceptions.",
       "evidence": [
         "docs/examples/callable_pipeline.mojo",
-        "docs/examples/capture_native.mojo"
+        "docs/examples/capture_native.mojo",
+        "tests/runtime/test_native_binary_pointers.mojo",
+        "tests/ownership/test_native_binary_pointers_ownership.mojo",
+        "tests/compile_fail/native_binary_pointer_arity.mojo",
+        "tests/compile_fail/native_binary_pointer_captured.mojo",
+        "tests/compile_fail/native_binary_pointer_consumed.mojo",
+        "tests/compile_fail/native_binary_pointer_error.mojo",
+        "tests/compile_fail/native_binary_pointer_input.mojo",
+        "tests/compile_fail/native_binary_pointer_lifetime.mojo",
+        "tests/compile_fail/native_binary_pointer_mutable.mojo",
+        "tests/compile_fail/native_binary_pointer_origin.mojo"
       ]
     },
     "combinators": {

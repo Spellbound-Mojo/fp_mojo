@@ -28,7 +28,8 @@ API without a separate review.
   cell, without allocating or copying captures. `NativeUnary.function` becomes
   `function()` for borrowing and `into_function()` for consuming extraction.
 - Stored thin pointers need explicit register or memory evidence at `as_unary`
-  admission, just as Capture does. Both factories share that signature policy.
+  and `as_binary` admission, just as Capture does. The factories share that
+  signature policy.
   Borrowed callback views call their native helpers directly: an extra
   function-valued dispatch policy can corrupt Bool results at O0. The
   [current architecture](mojo12-redesign.md#native-signatures-and-storage)

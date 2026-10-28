@@ -234,6 +234,33 @@
       ],
       "provider": "callables/invoke"
     },
+    "callables.NativeBinary": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct NativeBinary[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable,"
+      ],
+      "methods": {
+        "function": [
+          {
+            "signature": "def function(ref self) -> ref[self._function._value] Self.F:",
+            "sha256": "d1c160031933531b372446bb13cd04509ea0e9b6f2254cffc123448673689921"
+          }
+        ],
+        "into_function": [
+          {
+            "signature": "def into_function(deinit self) -> Self.F:",
+            "sha256": "65c3ea9a910699f34c3c6b595b685291a194b615c6bd7878a941a640252c4fd0"
+          }
+        ],
+        "call": [
+          {
+            "signature": "def call(self, var first: Self.A, var second: Self.B) raises Self.E -> Self.R:",
+            "sha256": "ac3ed08f8a87fdc84a85c3b80e1f7f1c047f6720c208129bb0b5e7bb79e73977"
+          }
+        ]
+      },
+      "provider": "callables/native"
+    },
     "callables.NativeUnary": {
       "kind": "type or alias",
       "declarations": [
@@ -17270,6 +17297,108 @@
       ],
       "provider": "callables/native"
     },
+    "callables.as_binary": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A, var B) thin -> R ) -> NativeBinary[A, B, R, Never, type_of(function), False]:",
+          "sha256": "be210f12e173d1d00f26131c51e26b197479fbb1282c238111c7986b7f2747b4"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, //]( function: def(var A, var B) thin -> R ) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable):",
+          "sha256": "6f9b5c1d717e061b8601006ef4b18dbce7352c3d569f6850a87eb4946796f3ff"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, //]( function: def(var A, var B) thin -> R ) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable):",
+          "sha256": "45d37710b0759d45dc8f3f99bdc705eb568aee6eb413cf5a9958fd529b469329"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //]( function: def(var A, var B) thin -> R ) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(A, RegisterPassable):",
+          "sha256": "ee3b0d78b36f9a3ec7bf4f8d928290e2b1be957b58a5c2a0b903b7e5a9387514"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //]( function: def(var A, var B) thin -> R ) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):",
+          "sha256": "955929c0d82d37bfb33ce28b3616ce37c6c1344cc6ca812a4cc1d6f0c84cffaa"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, //]( function: def(var A, var B) thin -> R ) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(B, RegisterPassable):",
+          "sha256": "d8aae783bec17e892a2affdb86b45d08f22916a1499f774c1327cd8081637543"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, //]( function: def(var A, var B) thin -> R ) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(R, RegisterPassable):",
+          "sha256": "ad9ae4131c943c6b59b14203a7ad5fc63df0c51b9fa6a87eba43b4208c4db508"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //]( function: def(var A, var B) thin -> R ) -> NativeBinary[A, B, R, Never, type_of(function), False]:",
+          "sha256": "d328bc65a5631e63a5cb1ea6078a1a6961dc43eeca62bf9945513540c7983b0e"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A, var B) thin ) -> NativeBinary[A, B, type_of(None), Never, type_of(function), False]:",
+          "sha256": "cc5ec15a2bafc0fe76789efe7403a1f0a2454aaef8fe7026a0390455f062caac"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, //]( function: def(var A, var B) thin ) -> NativeBinary[A, B, type_of(None), Never, type_of(function), False] where not conforms_to(A, RegisterPassable):",
+          "sha256": "02512f55d9f3c3ee322f269feae6090337c43288eb3d58af9488c71c652004fc"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, //]( function: def(var A, var B) thin ) -> NativeBinary[A, B, type_of(None), Never, type_of(function), False] where not conforms_to(B, RegisterPassable):",
+          "sha256": "775eeca640d6e78c96ddb443d5f36f2018306985df5c7db211395ec333016d35"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, //]( function: def(var A, var B) thin ) -> NativeBinary[A, B, type_of(None), Never, type_of(function), False]:",
+          "sha256": "59503925d247edf9329dc9a55406a2f0f85fca08e7f728fbfc34a4e5623bdfa8"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A, var B) raises E thin -> R ) -> NativeBinary[A, B, R, E, type_of(function), True]:",
+          "sha256": "3448d028ee3c2feb31baf4b9c1f622b1a26160687c5584da8deea6415ba42fd8"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R ) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable):",
+          "sha256": "860b68fa18bbc52c33bdd49e4f255928ae1d5d0792065573a48b8fc780c0537a"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R ) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable):",
+          "sha256": "31c907e51ddbb5c383e49ebab42d9ad7941a7ef7fc5a6783dc3e51b8c2d25efa"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R ) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(A, RegisterPassable):",
+          "sha256": "5cc9b815ce8842719353550b78b967e859d7719c289565d899ed1b3a71b1928f"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R ) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):",
+          "sha256": "3056238d478b49f3f8dd7df20012bb9f326c80f77c5ea01afed26d46b97d8a98"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R ) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(B, RegisterPassable):",
+          "sha256": "251b7d241dc7adeeb68c9e383724f4eb07b80b5da0728b54450107d0f9ece1e1"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R ) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(R, RegisterPassable):",
+          "sha256": "6208c7c1c15f2f2ca2e7408edfc731edd23f683ee734efdd3dc27ccd84212c05"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R ) -> NativeBinary[A, B, R, E, type_of(function), True]:",
+          "sha256": "e305dda84a5e43dfe39f0e9fcdd88d62b8354de36a24bdefb71f6f6bb92413e9"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A, var B) raises E thin ) -> NativeBinary[A, B, type_of(None), E, type_of(function), True]:",
+          "sha256": "683fce811412bc8f3b4bbb4b912173537c43baff7f1d5e180d236323e66acd1c"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin ) -> NativeBinary[A, B, type_of(None), E, type_of(function), True] where not conforms_to(A, RegisterPassable):",
+          "sha256": "c6aa727b645f8631ef949eccbcd2e378896336ab174cb354490d7d3594c4357f"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin ) -> NativeBinary[A, B, type_of(None), E, type_of(function), True] where not conforms_to(B, RegisterPassable):",
+          "sha256": "6d123b2ce56614d017eab9bd7bd11d3b1accb6fa0162fcd88aaf7cc75072186e"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin ) -> NativeBinary[A, B, type_of(None), E, type_of(function), True]:",
+          "sha256": "ec520c3c98a41caae257f823f8f7c441cf5cd0e8746bdfcef30b15849a3771cc"
+        }
+      ],
+      "provider": "callables/native"
+    },
     "functions.identity": {
       "kind": "function",
       "overloads": [
@@ -21322,6 +21451,108 @@
         {
           "signature": "def as_unary[A: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( function: def(var A) raises E thin ) -> NativeUnary[A, type_of(None), E, type_of(function), True]:",
           "sha256": "d9466de2adfb013943914917ffe41b39498ce93777e115bfa00ad7aca5af5607"
+        }
+      ],
+      "provider": "callables/native"
+    },
+    "functions.as_binary": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A, var B) thin -> R ) -> NativeBinary[A, B, R, Never, type_of(function), False]:",
+          "sha256": "be210f12e173d1d00f26131c51e26b197479fbb1282c238111c7986b7f2747b4"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, //]( function: def(var A, var B) thin -> R ) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable):",
+          "sha256": "6f9b5c1d717e061b8601006ef4b18dbce7352c3d569f6850a87eb4946796f3ff"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, //]( function: def(var A, var B) thin -> R ) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable):",
+          "sha256": "45d37710b0759d45dc8f3f99bdc705eb568aee6eb413cf5a9958fd529b469329"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //]( function: def(var A, var B) thin -> R ) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(A, RegisterPassable):",
+          "sha256": "ee3b0d78b36f9a3ec7bf4f8d928290e2b1be957b58a5c2a0b903b7e5a9387514"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //]( function: def(var A, var B) thin -> R ) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):",
+          "sha256": "955929c0d82d37bfb33ce28b3616ce37c6c1344cc6ca812a4cc1d6f0c84cffaa"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, //]( function: def(var A, var B) thin -> R ) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(B, RegisterPassable):",
+          "sha256": "d8aae783bec17e892a2affdb86b45d08f22916a1499f774c1327cd8081637543"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, //]( function: def(var A, var B) thin -> R ) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(R, RegisterPassable):",
+          "sha256": "ad9ae4131c943c6b59b14203a7ad5fc63df0c51b9fa6a87eba43b4208c4db508"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //]( function: def(var A, var B) thin -> R ) -> NativeBinary[A, B, R, Never, type_of(function), False]:",
+          "sha256": "d328bc65a5631e63a5cb1ea6078a1a6961dc43eeca62bf9945513540c7983b0e"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A, var B) thin ) -> NativeBinary[A, B, type_of(None), Never, type_of(function), False]:",
+          "sha256": "cc5ec15a2bafc0fe76789efe7403a1f0a2454aaef8fe7026a0390455f062caac"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, //]( function: def(var A, var B) thin ) -> NativeBinary[A, B, type_of(None), Never, type_of(function), False] where not conforms_to(A, RegisterPassable):",
+          "sha256": "02512f55d9f3c3ee322f269feae6090337c43288eb3d58af9488c71c652004fc"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, //]( function: def(var A, var B) thin ) -> NativeBinary[A, B, type_of(None), Never, type_of(function), False] where not conforms_to(B, RegisterPassable):",
+          "sha256": "775eeca640d6e78c96ddb443d5f36f2018306985df5c7db211395ec333016d35"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, //]( function: def(var A, var B) thin ) -> NativeBinary[A, B, type_of(None), Never, type_of(function), False]:",
+          "sha256": "59503925d247edf9329dc9a55406a2f0f85fca08e7f728fbfc34a4e5623bdfa8"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A, var B) raises E thin -> R ) -> NativeBinary[A, B, R, E, type_of(function), True]:",
+          "sha256": "3448d028ee3c2feb31baf4b9c1f622b1a26160687c5584da8deea6415ba42fd8"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R ) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable):",
+          "sha256": "860b68fa18bbc52c33bdd49e4f255928ae1d5d0792065573a48b8fc780c0537a"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R ) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable):",
+          "sha256": "31c907e51ddbb5c383e49ebab42d9ad7941a7ef7fc5a6783dc3e51b8c2d25efa"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R ) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(A, RegisterPassable):",
+          "sha256": "5cc9b815ce8842719353550b78b967e859d7719c289565d899ed1b3a71b1928f"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R ) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):",
+          "sha256": "3056238d478b49f3f8dd7df20012bb9f326c80f77c5ea01afed26d46b97d8a98"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R ) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(B, RegisterPassable):",
+          "sha256": "251b7d241dc7adeeb68c9e383724f4eb07b80b5da0728b54450107d0f9ece1e1"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R ) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(R, RegisterPassable):",
+          "sha256": "6208c7c1c15f2f2ca2e7408edfc731edd23f683ee734efdd3dc27ccd84212c05"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R ) -> NativeBinary[A, B, R, E, type_of(function), True]:",
+          "sha256": "e305dda84a5e43dfe39f0e9fcdd88d62b8354de36a24bdefb71f6f6bb92413e9"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A, var B) raises E thin ) -> NativeBinary[A, B, type_of(None), E, type_of(function), True]:",
+          "sha256": "683fce811412bc8f3b4bbb4b912173537c43baff7f1d5e180d236323e66acd1c"
+        },
+        {
+          "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin ) -> NativeBinary[A, B, type_of(None), E, type_of(function), True] where not conforms_to(A, RegisterPassable):",
+          "sha256": "c6aa727b645f8631ef949eccbcd2e378896336ab174cb354490d7d3594c4357f"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin ) -> NativeBinary[A, B, type_of(None), E, type_of(function), True] where not conforms_to(B, RegisterPassable):",
+          "sha256": "6d123b2ce56614d017eab9bd7bd11d3b1accb6fa0162fcd88aaf7cc75072186e"
+        },
+        {
+          "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin ) -> NativeBinary[A, B, type_of(None), E, type_of(function), True]:",
+          "sha256": "ec520c3c98a41caae257f823f8f7c441cf5cd0e8746bdfcef30b15849a3771cc"
         }
       ],
       "provider": "callables/native"

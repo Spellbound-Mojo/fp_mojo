@@ -19,6 +19,11 @@ their argument instead of taking it, and `invoke_borrowed` and
 `Composition`, `Flipped` and `Identity` from `fp.functions` implement these
 protocols.
 
+`as_binary` stores a plain binary function or thin pointer in `NativeBinary`.
+It preserves two owned argument types and the exact result and error types.
+Named adapters can be reused by shared borrow in `zip_with`, `map_with_index`,
+`scan_map` and `scan_left`. The factory does not infer capturing closures.
+
 Where each consumer enters:
 
 | Consumer | Accepts |
@@ -47,4 +52,4 @@ from .invoke import (
     call_once, call_repeated, RepeatableUnary, RepeatableBinary, RepeatableThunk,
     BorrowCallCompatible, invoke_borrowed, invoke_borrowed_once,
 )
-from .native import NativeUnary, as_unary
+from .native import NativeUnary, as_unary, NativeBinary, as_binary

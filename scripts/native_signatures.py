@@ -64,16 +64,18 @@ def callable_protocol(mode, *, repeatable=False):
     return shape.repeatable if repeatable else shape.contract
 
 
-def native_adapter(mode, payloads, result, error, function, raising, *, origin=None):
+def native_adapter(mode, payloads, result, error, function, raising, *, origin=None, owner=None):
     """Spell an existing owner or reference view without choosing admission.
 
     An origin selects a borrowed callback view; its absence selects ownership.
     Payload conventions, ABI evidence and caller parameter order stay with the
     signature generator. This only names existing adapters, never their storage
     or execution implementation.
+    An explicit owner preserves a public spelling while legacy consumers keep
+    an existing alias of that same owner.
     """
     shape = CALLBACK_SHAPES[mode]
-    owner = shape.borrowed if origin is not None else shape.owned
+    owner = owner or (shape.borrowed if origin is not None else shape.owned)
     if mode == "nary":
         owner += str(len(payloads))
     parameters = [*payloads, result, error, function, str(raising)]
@@ -361,7 +363,7 @@ class NativeFactory:
     adapter: str
 
 
-def native_factories(mode, payloads, *, name="function", result="R", error="E"):
+def native_factories(mode, payloads, *, name="function", result="R", error="E", owner=None):
     """Spell native factory signatures with shared ABI and no-value evidence.
 
     Consumers place their own parameters around the native parameters and the
@@ -383,7 +385,7 @@ def native_factories(mode, payloads, *, name="function", result="R", error="E"):
                              + ("" if void else " -> " + result))
                 output = "type_of(None)" if void else result
                 failure = error if raising else "Never"
-                adapter = native_adapter(mode, payloads, output, failure, f"type_of({name})", raising)
+                adapter = native_adapter(mode, payloads, output, failure, f"type_of({name})", raising, owner=owner)
                 yield NativeFactory(parameters, pointer, pointer.argument + ": " + signature,
                                     adapter)
 

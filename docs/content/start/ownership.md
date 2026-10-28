@@ -89,6 +89,7 @@ partial application, composition or a reusable owner for captured state.
 | Compose ordinary transformations | `flow(first, second)` or `compose(second, first)` | Passes each whole result to the next stage; `flow` reads left to right. |
 | Compose functions returning an effect | `kleisli[Family](first).then(second)` | Uses that family's bind: for example, Result stops at Err and Optional stops at absence. |
 | Store a native unary callback as a library value | `as_unary(function)` or `as_unary(closure^)` | Owns the callback without changing its argument, result or error types. Shared callback entry points can borrow the adapter later. |
+| Store a plain binary function as a library value | `as_binary(function)` or `as_binary(pointer)` | Copies a thin pointer into an adapter with two owned arguments. Supported binary iterator operations borrow a named adapter. |
 | Control receiver mutation or consumption explicitly | A callable struct | Implement the shared, mutable or consuming protocol required by the operation. |
 
 A two-stage `flow` or `compose` can combine a plain function or stored thin

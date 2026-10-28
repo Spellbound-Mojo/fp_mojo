@@ -12,6 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "src/fp/callables/native.mojo"
 ADAPTER_START = "# --- native unary admission (generated) ---\n"
 ADAPTER_END = "# --- end native unary admission ---\n"
+BINARY_START = "# --- native binary admission (generated) ---\n"
+BINARY_END = "# --- end native binary admission ---\n"
 
 def markers(name):
     indent = "        " if NATIVE_INVOCATIONS[name].view else "    "
@@ -68,25 +70,61 @@ def register_void(payload, value):
 
 
 def unary_factories():
-    out = [
+    header = (
         "# Preserve native pointer types and copyability. Register arguments and\n"
         "# results need explicit ABI evidence; symbolic forwards borrow a pointer\n"
         "# only for admission, then copy it into the existing NativeUnary owner.\n"
         "# No-value signatures must be admitted literally on Mojo 1.2.\n"
-    ]
-    for factory in native_factories("owned", ["A"]):
+    )
+    return header + pointer_factories("owned", ["A"], "as_unary")
+
+
+def pointer_factories(mode, payloads, name, *, owner=None):
+    out = []
+    for factory in native_factories(mode, payloads, owner=owner):
         parameters = [*factory.parameters, *factory.pointer.parameters]
         declarations = [name + ": " + bound for name, bound in parameters]
         conditions = factory.pointer.conditions
         where = " where " + " and ".join(conditions) if conditions else ""
         out += [
-            f'def as_unary[{", ".join(declarations + ["//"])}](\n'
+            f'def {name}[{", ".join(declarations + ["//"])}](\n'
             f"    {factory.argument}\n"
-            f") -> {factory.adapter}{where}:\n"
-            '    """Store a native pointer with its exact signature and copyability."""\n'
+            f") -> {factory.adapter}{where}:\n",
+            ('    """Store a native pointer with its exact signature and copyability."""\n'
+             if mode == "owned" else BINARY_DOC.format(parameters="".join(
+                 f"        {parameter}: {BINARY_PARAMETERS[parameter]}\n"
+                 for parameter, _ in parameters))),
             f"    return {factory.adapter}(function)\n\n\n"
         ]
     return "".join(out)
+
+
+BINARY_DOC = '''    """Store a plain binary function or thin pointer as a reusable `Binary`.
+
+    The adapter owns a copy of the pointer and construction never calls it.
+    Use the adapter directly, or borrow it by name in supported binary
+    iterator operations. Native closures with captures are not admitted by
+    this factory. Most consumers already accept native callbacks directly.
+    `fp.functions` re-exports this factory.
+
+    Parameters:
+{parameters}
+
+    Args:
+        function: A plain function or stored thin pointer taking two arguments.
+
+    Returns:
+        A `NativeBinary` preserving the exact native signature and copyability.
+    """
+'''
+
+BINARY_PARAMETERS = {
+    "A": "The first owned argument's type.",
+    "B": "The second owned argument's type.",
+    "R": "The result type.",
+    "E": "The native error type.",
+    "q": "The temporary admission borrow's origin, not stored in the adapter.",
+}
 
 
 def source(text=None):
@@ -99,6 +137,9 @@ def source(text=None):
     before, remaining = text.split(ADAPTER_START, 1)
     _, after = remaining.split(ADAPTER_END, 1)
     text = before + ADAPTER_START + unary_factories() + ADAPTER_END + after
+    before, remaining = text.split(BINARY_START, 1)
+    _, after = remaining.split(BINARY_END, 1)
+    text = before + BINARY_START + pointer_factories("binary", ["A", "B"], "as_binary", owner="NativeBinary") + BINARY_END + after
     return text.rstrip() + "\n"
 
 

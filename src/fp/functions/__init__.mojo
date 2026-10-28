@@ -11,6 +11,10 @@ stages and preserve their shared, mutable or consuming receiver capabilities.
 Inferred two-stage `pipe` also accepts a native/library pair, borrowing its
 shared library stage for immediate execution.
 
+Extend saved compositions with `.then(next)` or adapt a unary chain's inputs
+with `.compose(before)`. `as_binary(function)` stores a plain binary function
+or thin pointer as a reusable library callback when an adapter is needed.
+
 `Piped.map(transform)` preserves supported native containers, mapping their
 payloads immediately through `fp.algebra`. Use `.map[Family](transform)` for an
 explicit Functor instance, including third-party containers. `filter(predicate)`
@@ -30,7 +34,7 @@ monadic bind. Its `map` transforms successful payloads; ordinary container
 `map(chain)` borrows the chain automatically, including in lazy iterators.
 """
 
-from fp.callables.native import as_unary
+from fp.callables.native import as_unary, as_binary
 from .pipeline import identity, pipe, Piped, piped
 from .composition import Composition, Identity, flow, compose
 from .kleisli import Kleisli, kleisli

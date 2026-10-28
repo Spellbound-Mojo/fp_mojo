@@ -11,7 +11,7 @@ import docs_contract
 class DocumentationContractTests(unittest.TestCase):
     def test_complete_reviewed_inventory(self):
         result = docs_contract.audit_docs()
-        self.assertEqual(result['exports'], 330)
+        self.assertEqual(result['exports'], 333)
         self.assertEqual(result['modules'], 10)
         self.assertEqual(result['examples'], 108)
 
@@ -22,6 +22,8 @@ class DocumentationContractTests(unittest.TestCase):
         self.assertFalse('callables.md#Identity' in rendered, 'Identity was linked to its private implementation package')
         self.assertTrue('callables.md#as_unary' in rendered, 'Missing existing as_unary re-export link')
         self.assertFalse('{ #as_unary .api-name }' in rendered, 'Duplicate as_unary reference entry')
+        self.assertTrue('callables.md#as_binary' in rendered, 'Missing as_binary re-export link')
+        self.assertFalse('{ #as_binary .api-name }' in rendered, 'Duplicate as_binary reference entry')
 
     def test_relocated_identity_docstring_is_still_audited(self):
         api = docs_contract.data('api.json')

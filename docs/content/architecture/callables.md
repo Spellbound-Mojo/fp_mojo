@@ -85,6 +85,24 @@ The public `function` field is now a borrowing `function()` method. Use
 `call` and `__call__` keep their existing calling forms. Lazy iterator adapters
 use the same storage representation and retain mutable access between pulls.
 
+
+`as_binary` exposes the existing owned binary adapter as `NativeBinary`; the
+private `_NativeBinary` name is an alias so existing signature spellings remain
+stable. Its optional cell and `_call_native_binary` invocation are unchanged.
+The public adapter adds the same borrowing and consuming function accessors as
+`NativeUnary`, direct calls, and conditional implicit copyability. The standard
+`_BinaryViewable` marker admits shared receiver views in binary iteration
+operations without broadening that admission to custom dual-receiver callables.
+
+Both pointer factories use `native_factories` and one declaration renderer.
+The binary factory spells the two owned operands and their native ABI variants;
+it admits plain declarations and stored thin pointers without function-trait
+overload inference. The current factory does not infer captured closures.
+Explicitly typed `NativeBinary` construction retains the underlying closure
+storage capability, including noncopyable captures; it does not add another
+inference path to the factory. Pointer admission copies the pointer, never
+invokes it, and retains no borrow of its source variable.
+
 Mojo 1.1 records a native function's signature only when the value passes
 through a parameter of that exact function type (`F: def(A) -> R`); a plain
 generic `F` loses it. Each entry point that accepts closures therefore has one
@@ -105,15 +123,15 @@ site, which the library uses where closures cannot reach:
   `Unary` or `Binary` value, and the chain goes through the ordinary planner.
 - Two-stage mixed `flow` and `compose` use the same spelled native signature
   boundary beside one library stage. The `native_factories` descriptor also
-  drives `as_unary` pointer admission: it owns pure/raising and literal
+  drives `as_unary` and `as_binary` pointer admission: it owns pure/raising and literal
   no-value signatures, obtains register/memory evidence and the symbolic
   fallback from `factory_pointer`, and uses `native_adapter` to select
   the existing owner. The overload constructs `Composition`, whose constructor
   performs the same capability, arity, type and error checks as library-only
   composition. There is no additional plan, storage or invocation mechanism.
   Consumers retain their own library-stage bounds and parameter order around
-  that descriptor. The consolidation emits byte-for-byte identical native
-  and composition source, including public signatures and overload order.
+  that descriptor. Existing consumers preserve their public signature spellings and overload
+  order.
 - Inferred two-stage mixed `pipe` uses that factory descriptor to normalize
   one native unary stage and borrows the other through `Unary`. It forwards
   both to the original immediate pipeline. The existing plan, stage checks

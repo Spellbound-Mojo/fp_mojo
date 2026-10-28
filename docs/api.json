@@ -9868,6 +9868,179 @@
     "UnaryContract"
    ]
   },
+  "callables.NativeBinary": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "First"
+    },
+    {
+     "description": "",
+     "name": "Second"
+    },
+    {
+     "description": "",
+     "name": "Out"
+    },
+    {
+     "description": "",
+     "name": "Error"
+    }
+   ],
+   "description": "The factory accepts plain functions and stored thin pointers. Named\nadapters can be reused by shared borrow in supported binary iteration\noperations. An explicit move transfers the adapter to a consumer.\nArgument, result and error types remain exact, including embedded origins.\nCopyability follows the stored native callable.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "__call__": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The first argument, consumed.",
+        "name": "first",
+        "type": "Self.A",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The second argument, consumed.",
+        "name": "second",
+        "type": "Self.B",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The native callback's exact error type.",
+      "returns": {
+       "doc": "The native callback's result, unchanged.",
+       "type": "Self.R"
+      },
+      "signature": "def __call__(self, var first: Self.A, var second: Self.B) raises Self.E -> Self.R",
+      "summary": "Call the adapter directly, as `call` does."
+     }
+    ],
+    "call": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The first argument, consumed.",
+        "name": "first",
+        "type": "Self.A",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The second argument, consumed.",
+        "name": "second",
+        "type": "Self.B",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The native callback's exact error type.",
+      "returns": {
+       "doc": "The native callback's result, unchanged.",
+       "type": "Self.R"
+      },
+      "signature": "def call(self, var first: Self.A, var second: Self.B) raises Self.E -> Self.R",
+      "summary": "Call the stored function with two owned arguments."
+     }
+    ],
+    "function": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A reference retaining the stored callable's exact type and origins.",
+       "type": "ref[self._function._value] Self.F"
+      },
+      "signature": "def function(ref self) -> ref[self._function._value] Self.F",
+      "summary": "Borrow the stored native callable with the receiver's mutability."
+     }
+    ],
+    "into_function": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The original native callable, without invoking or copying it.",
+       "type": "Self.F"
+      },
+      "signature": "def into_function(deinit self) -> Self.F",
+      "summary": "Move the native callable out, consuming the adapter."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The first owned argument's type.",
+     "inferred": false,
+     "name": "A",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The second owned argument's type.",
+     "inferred": false,
+     "name": "B",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The result type.",
+     "inferred": false,
+     "name": "R",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The native error type; `Never` when no error can be raised.",
+     "inferred": false,
+     "name": "E",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The exact stored callable type.",
+     "inferred": false,
+     "name": "F",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "Whether the native signature declares a raised error.",
+     "inferred": false,
+     "name": "raising",
+     "type": "Bool",
+     "variadic": false
+    }
+   ],
+   "provider": "callables/native",
+   "signature": "struct NativeBinary[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](Binary, _BinaryViewable, Copyable where conforms_to(F, Copyable), ImplicitlyCopyable where conforms_to(F, ImplicitlyCopyable),)",
+   "summary": "A native binary callback stored as a `Binary` value, made by `as_binary`.",
+   "traits": [
+    "Binary",
+    "BinaryContract",
+    "Copyable",
+    "ImplicitlyCopyable",
+    "_BinaryViewable"
+   ]
+  },
   "callables.NativeUnary": {
    "aliases": [
     {
@@ -10307,6 +10480,1126 @@
    "signature": "trait UnaryContract",
    "summary": "The types of a callable that takes one owned argument.",
    "traits": []
+  },
+  "callables.as_binary": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The temporary admission borrow's origin, not stored in the adapter.",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A, var B) thin -> R) -> NativeBinary[A, B, R, Never, type_of(function), False]",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, //](function: def(var A, var B) thin -> R) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, //](function: def(var A, var B) thin -> R) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](function: def(var A, var B) thin -> R) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(A, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //](function: def(var A, var B) thin -> R) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, //](function: def(var A, var B) thin -> R) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(B, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, //](function: def(var A, var B) thin -> R) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(R, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](function: def(var A, var B) thin -> R) -> NativeBinary[A, B, R, Never, type_of(function), False]",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The temporary admission borrow's origin, not stored in the adapter.",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, type_of(None), Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A, var B) thin) -> NativeBinary[A, B, type_of(None), Never, type_of(function), False]",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, type_of(None), Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, //](function: def(var A, var B) thin) -> NativeBinary[A, B, type_of(None), Never, type_of(function), False] where not conforms_to(A, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, type_of(None), Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, //](function: def(var A, var B) thin) -> NativeBinary[A, B, type_of(None), Never, type_of(function), False] where not conforms_to(B, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, type_of(None), Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, //](function: def(var A, var B) thin) -> NativeBinary[A, B, type_of(None), Never, type_of(function), False]",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The temporary admission borrow's origin, not stored in the adapter.",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A, var B) raises E thin -> R) -> NativeBinary[A, B, R, E, type_of(function), True]",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(A, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(B, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(R, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R) -> NativeBinary[A, B, R, E, type_of(function), True]",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The temporary admission borrow's origin, not stored in the adapter.",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, type_of(None), E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A, var B) raises E thin) -> NativeBinary[A, B, type_of(None), E, type_of(function), True]",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, type_of(None), E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin) -> NativeBinary[A, B, type_of(None), E, type_of(function), True] where not conforms_to(A, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, type_of(None), E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin) -> NativeBinary[A, B, type_of(None), E, type_of(function), True] where not conforms_to(B, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, type_of(None), E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin) -> NativeBinary[A, B, type_of(None), E, type_of(function), True]",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    }
+   ],
+   "provider": "callables/native",
+   "summary": ""
   },
   "callables.as_unary": {
    "description": "",
@@ -220832,6 +222125,1126 @@
    "summary": "Admission and result metadata for selected effect-returning outcome handling.",
    "traits": []
   },
+  "functions.as_binary": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The temporary admission borrow's origin, not stored in the adapter.",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A, var B) thin -> R) -> NativeBinary[A, B, R, Never, type_of(function), False]",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, //](function: def(var A, var B) thin -> R) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, //](function: def(var A, var B) thin -> R) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](function: def(var A, var B) thin -> R) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(A, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //](function: def(var A, var B) thin -> R) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, //](function: def(var A, var B) thin -> R) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(B, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, //](function: def(var A, var B) thin -> R) -> NativeBinary[A, B, R, Never, type_of(function), False] where not conforms_to(R, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](function: def(var A, var B) thin -> R) -> NativeBinary[A, B, R, Never, type_of(function), False]",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The temporary admission borrow's origin, not stored in the adapter.",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, type_of(None), Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A, var B) thin) -> NativeBinary[A, B, type_of(None), Never, type_of(function), False]",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, type_of(None), Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, //](function: def(var A, var B) thin) -> NativeBinary[A, B, type_of(None), Never, type_of(function), False] where not conforms_to(A, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, type_of(None), Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, //](function: def(var A, var B) thin) -> NativeBinary[A, B, type_of(None), Never, type_of(function), False] where not conforms_to(B, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) thin",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, type_of(None), Never, type_of(function), False]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, //](function: def(var A, var B) thin) -> NativeBinary[A, B, type_of(None), Never, type_of(function), False]",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The temporary admission borrow's origin, not stored in the adapter.",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A, var B) raises E thin -> R) -> NativeBinary[A, B, R, E, type_of(function), True]",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(A, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(B, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R) -> NativeBinary[A, B, R, E, type_of(function), True] where not conforms_to(R, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, R, E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R) -> NativeBinary[A, B, R, E, type_of(function), True]",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The temporary admission borrow's origin, not stored in the adapter.",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, type_of(None), E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A, var B) raises E thin) -> NativeBinary[A, B, type_of(None), E, type_of(function), True]",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, type_of(None), E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: Movable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin) -> NativeBinary[A, B, type_of(None), E, type_of(function), True] where not conforms_to(A, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, type_of(None), E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin) -> NativeBinary[A, B, type_of(None), E, type_of(function), True] where not conforms_to(B, RegisterPassable)",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A plain function or stored thin pointer taking two arguments.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "The adapter owns a copy of the pointer and construction never calls it.\nUse the adapter directly, or borrow it by name in supported binary\niterator operations. Native closures with captures are not admitted by\nthis factory. Most consumers already accept native callbacks directly.\n`fp.functions` re-exports this factory.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `NativeBinary` preserving the exact native signature and copyability.",
+      "type": "NativeBinary[A, B, type_of(None), E, type_of(function), True]"
+     },
+     "signature": "def as_binary[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin) -> NativeBinary[A, B, type_of(None), E, type_of(function), True]",
+     "summary": "Store a plain binary function or thin pointer as a reusable `Binary`."
+    }
+   ],
+   "provider": "callables/native",
+   "summary": ""
+  },
   "functions.as_unary": {
    "description": "",
    "kind": "function",
@@ -287211,7 +289624,7 @@
    "summary": "Functor, Filterable, FunctorFilter, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Semigroup and Monoid over native values, with explicit instances."
   },
   "callables": {
-   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. `BorrowCallable` and `BorrowOnceCallable` borrow\ntheir argument instead of taking it, and `invoke_borrowed` and\n`invoke_borrowed_once` call them. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped` and `Identity` from `fp.functions` implement these\nprotocols.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Owned iteration callbacks, `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| Iteration predicates, `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `OnceThunk` |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
+   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. `BorrowCallable` and `BorrowOnceCallable` borrow\ntheir argument instead of taking it, and `invoke_borrowed` and\n`invoke_borrowed_once` call them. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped` and `Identity` from `fp.functions` implement these\nprotocols.\n\n`as_binary` stores a plain binary function or thin pointer in `NativeBinary`.\nIt preserves two owned argument types and the exact result and error types.\nNamed adapters can be reused by shared borrow in `zip_with`, `map_with_index`,\n`scan_map` and `scan_left`. The factory does not infer capturing closures.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Owned iteration callbacks, `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| Iteration predicates, `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `OnceThunk` |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
    "summary": "How the library calls user code: callable protocols, receiver dispatch and native functions as values."
   },
   "combinators": {
@@ -287231,7 +289644,7 @@
    "summary": "Reader, State and Writer computations and the OptionalT and ResultT layers, over any base Monad."
   },
   "functions": {
-   "description": "Use `pipe(value, f, g)` to apply stages now, `flow(f, g)` or `compose(g, f)` to\nbuild a reusable composition, and `piped(value).then(f).get()` to chain any\nnumber of stages one call at a time. `flip` swaps two arguments and `partial`\nbinds leading arguments.\n\nTwo-stage `flow` and `compose` can mix a plain function or stored thin pointer\nwith a library callable directly, in either position. Compositions own their\nstages and preserve their shared, mutable or consuming receiver capabilities.\nInferred two-stage `pipe` also accepts a native/library pair, borrowing its\nshared library stage for immediate execution.\n\n`Piped.map(transform)` preserves supported native containers, mapping their\npayloads immediately through `fp.algebra`. Use `.map[Family](transform)` for an\nexplicit Functor instance, including third-party containers. `filter(predicate)`\nalso runs immediately, preserving containers that can represent rejection; `fold_left(step, initial)` consumes an iterable\nimmediately and keeps the accumulator in the chain. `get()` extracts the stored\nvalue. Use `then(function)` to transform the whole value and `iterated` for lazy\nelement mapping and filtering.\n\nA stage is a plain function, a closure promoted with `as_unary`, or a library\nvalue that implements `Unary`, such as a `Partial` or a `Composition`. Each\nstage's input must equal the previous stage's result. Values move from stage to\nstage without copies, stages are borrowed, and a raised error stops the chain\nwith its own type; a returned `Result` is ordinary data.\n\n`kleisli[Family](f).then(g)` composes effectful functions through the family's\nmonadic bind. Its `map` transforms successful payloads; ordinary container\n`map(chain)` borrows the chain automatically, including in lazy iterators.",
+   "description": "Use `pipe(value, f, g)` to apply stages now, `flow(f, g)` or `compose(g, f)` to\nbuild a reusable composition, and `piped(value).then(f).get()` to chain any\nnumber of stages one call at a time. `flip` swaps two arguments and `partial`\nbinds leading arguments.\n\nTwo-stage `flow` and `compose` can mix a plain function or stored thin pointer\nwith a library callable directly, in either position. Compositions own their\nstages and preserve their shared, mutable or consuming receiver capabilities.\nInferred two-stage `pipe` also accepts a native/library pair, borrowing its\nshared library stage for immediate execution.\n\nExtend saved compositions with `.then(next)` or adapt a unary chain's inputs\nwith `.compose(before)`. `as_binary(function)` stores a plain binary function\nor thin pointer as a reusable library callback when an adapter is needed.\n\n`Piped.map(transform)` preserves supported native containers, mapping their\npayloads immediately through `fp.algebra`. Use `.map[Family](transform)` for an\nexplicit Functor instance, including third-party containers. `filter(predicate)`\nalso runs immediately, preserving containers that can represent rejection; `fold_left(step, initial)` consumes an iterable\nimmediately and keeps the accumulator in the chain. `get()` extracts the stored\nvalue. Use `then(function)` to transform the whole value and `iterated` for lazy\nelement mapping and filtering.\n\nA stage is a plain function, a closure promoted with `as_unary`, or a library\nvalue that implements `Unary`, such as a `Partial` or a `Composition`. Each\nstage's input must equal the previous stage's result. Values move from stage to\nstage without copies, stages are borrowed, and a raised error stops the chain\nwith its own type; a returned `Result` is ordinary data.\n\n`kleisli[Family](f).then(g)` composes effectful functions through the family's\nmonadic bind. Its `map` transforms successful payloads; ordinary container\n`map(chain)` borrows the chain automatically, including in lazy iterators.",
    "summary": "Pipelines, compositions, argument flipping and partial application."
   },
   "iteration": {
