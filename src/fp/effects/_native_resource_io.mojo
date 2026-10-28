@@ -20,6 +20,7 @@ struct _IOResource[O: _OpenScope, F: BorrowCallContract & Movable & Deinitable](
     comptime Value = Self.F.Result
     comptime Out[o: ImmOrigin] = Outcome[Self.Value, Self.E]
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) -> Self.Out[o]:
+        comptime assert Self.O.Native
         comptime assert Self.F.Payload == Self.O.Release.Value and _ErrorCompatible[Self.E, Self.F.Failure] and _OnceBorrowAvailable[Self.F]
         if env.canceled():
             return None
@@ -27,7 +28,7 @@ struct _IOResource[O: _OpenScope, F: BorrowCallContract & Movable & Deinitable](
 
 
 def use_resource[O: _OpenScope, F: BorrowCallContract & Movable & Deinitable](var scope: Resource[O], var function: F
-) -> _IOResource[O, F] where F.Payload == O.Release.Value and _ErrorCompatible[O.Release.Error, F.Failure] and _OnceBorrowAvailable[F]:
+) -> _IOResource[O, F] where O.Native and F.Payload == O.Release.Value and _ErrorCompatible[O.Release.Error, F.Failure] and _OnceBorrowAvailable[F]:
     """Defer an entire synchronous native resource scope into its IO error family.
 
     Cancellation is observed before entry and after release. Native acquisition,
@@ -49,12 +50,12 @@ def use_resource[O: _OpenScope, F: BorrowCallContract & Movable & Deinitable](va
 
 
 def use_resource[O: _OpenScope, P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](var scope: Resource[O], var function: F
-) -> _IOResource[O, _NativeBorrow[P, V, Never, F, False]] where P == O.Release.Value:
+) -> _IOResource[O, _NativeBorrow[P, V, Never, F, False]] where O.Native and P == O.Release.Value:
     """Adapt a native borrowing use callback into a deferred resource scope."""
     return use_resource(scope^, _NativeBorrow[P, V, Never, F, False](function^))
 
 
 def use_resource[O: _OpenScope, P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](var scope: Resource[O], var function: F
-) -> _IOResource[O, _NativeBorrow[P, V, X, F, True]] where P == O.Release.Value and _ErrorCompatible[O.Release.Error, X]:
+) -> _IOResource[O, _NativeBorrow[P, V, X, F, True]] where O.Native and P == O.Release.Value and _ErrorCompatible[O.Release.Error, X]:
     """Adapt a native use callback with the scope's exact error type."""
     return use_resource(scope^, _NativeBorrow[P, V, X, F, True](function^))

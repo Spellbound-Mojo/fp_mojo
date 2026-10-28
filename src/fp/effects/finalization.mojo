@@ -16,18 +16,23 @@ from .scoped import ScopedIO, _run_scoped
 def _finalize[P: ReaderAction, F: ScopedIO, o: ImmOrigin, only_cancel: Bool = False](var program: P, var finalizer: F, ref[o] env: IOContext[F.Error]
 ) -> Outcome[P.Value, F.Error] where IOContract[P].Compatible and IOContract[P].Error == F.Error and F.Input == ExitCase[F.Error]:
     var completed = _run_io(program^, rebind[IOContext[IOContract[P].Error]](env))
-    var state = _ExitState(rebind_var[Outcome[P.Value, F.Error]](completed^))
+    return _finalize_outcome[only_cancel=only_cancel](rebind_var[Outcome[P.Value, F.Error]](completed^), finalizer^, env)
+
+
+def _finalize_outcome[T: Movable & Deinitable, E: Movable & Deinitable, F: ScopedIO, o: ImmOrigin, only_cancel: Bool = False](var completed: Outcome[T, E], var finalizer: F, ref[o] env: IOContext[E]
+) -> Outcome[T, E] where F.Error == E and F.Input == ExitCase[E]:
+    var state = _ExitState(_settle(completed^, env))
     if only_cancel and not state.exit.is_canceled():
         return _settle(state^.outcome(), env)
     var masked = env._mask()
-    var cleanup = _run_scoped(finalizer^, rebind[F.Input](state.exit), masked)
-    return _settle(_finish(state^.outcome(), cleanup^), env)
+    var cleanup = _run_scoped(finalizer^, rebind[F.Input](state.exit), rebind[IOContext[F.Error]](masked))
+    return _settle(_finish(state^.outcome(), rebind_var[Outcome[F.Value, E]](cleanup^)), env)
 
 
 @fieldwise_init
-struct _ConstantFinalizer[P: ReaderAction](ScopedIO):
+struct _ConstantFinalizer[P: ReaderAction, T: AnyType = ExitCase[IOContract[P].Error]](ScopedIO):
     var program: Self.P
-    comptime Input = ExitCase[IOContract[Self.P].Error]
+    comptime Input = Self.T
     comptime Value = Self.P.Value
     comptime Error = IOContract[Self.P].Error
     comptime Action[o: ImmOrigin] = Self.P
@@ -185,14 +190,20 @@ struct _IOMaskBody[F: UnaryContract & Movable & Deinitable, E: Movable & Deinita
     comptime Value = Self.Program.Value
     comptime Out[o: ImmOrigin] = Outcome[Self.Value, Self.E]
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) -> Self.Out[o]:
-        comptime assert IOContract[Self.Program].Compatible and IOContract[Self.Program].Error == Self.E
-        comptime assert Self.F.Arg == Poll[Self.E] and _ErrorCompatible[Self.E, Self.F.Error]
-        var masked = env._mask()
-        var poll = Poll(env.copy(), masked._region.value().copy())
-        var built = _capture[Self.E](_OwnedUnary(self.function^, rebind_var[Self.F.Arg](poll^)))
-        if built.is_err():
-            return _settle(Optional(Result[Self.Value, EffectFailure[Self.E]](Err(built^._take_err()))), env)
-        return _settle(rebind_var[Self.Out[o]](_run_io(rebind_var[Self.Program](built^._take_ok()), rebind[IOContext[IOContract[Self.Program].Error]](masked))), env)
+        return _settle(_masked_factory[Self.F, Self.E](self.function^, env), env)
+
+
+def _masked_factory[F: UnaryContract & Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin](var function: F, ref[o] env: IOContext[E]
+) -> Outcome[downcast[F.Out, ReaderAction].Value, E]:
+    """Run a Poll factory under a mask; the caller owns the unmask checkpoint."""
+    comptime assert IOContract[downcast[F.Out, ReaderAction]].Compatible and IOContract[downcast[F.Out, ReaderAction]].Error == E
+    comptime assert F.Arg == Poll[E] and _ErrorCompatible[E, F.Error]
+    var masked = env._mask()
+    var poll = Poll(env.copy(), masked._region.value().copy())
+    var built = _capture[E](_OwnedUnary(function^, rebind_var[F.Arg](poll^)))
+    if built.is_err():
+        return Optional(Result[downcast[F.Out, ReaderAction].Value, EffectFailure[E]](Err(built^._take_err())))
+    return rebind_var[Outcome[downcast[F.Out, ReaderAction].Value, E]](_run_io(rebind_var[downcast[F.Out, ReaderAction]](built^._take_ok()), rebind[IOContext[IOContract[downcast[F.Out, ReaderAction]].Error]](masked)))
 
 
 def uncancelable_with[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](var function: F

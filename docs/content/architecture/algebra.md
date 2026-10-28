@@ -1090,8 +1090,8 @@ whose finalizer never terminates cannot finish cancellation.
 cancellation before entry and after release. Its native callbacks are synchronous;
 a cancellation request cannot skip release or interrupt acquisition midway.
 As with delay, a long native callback must return before this boundary observes
-cancellation. General IO finalizers are composed with guarantee. This initial
-resource interface does not claim origin-dependent IO acquisition/use callbacks.
+cancellation. General IO finalizers are composed with guarantee. This bridge
+retains native callback signatures; IOResource supplies the effectful lifecycle.
 
 Shared callable adapters own invocation conventions, Result capture owns native
 exception conversion, and one outcome combiner owns finalization precedence.
@@ -1200,3 +1200,35 @@ Queue writes need an owned retry state because their rejected payload cannot
 be copied. All retries release the lock before sleeping and observing
 cancellation. Accepted enqueues and completed dequeues are not rolled back;
 a canceled, unobserved dequeued owner is destroyed exactly once.
+
+
+Effectful resources reuse the native resource engine. `_OpenScope.open` receives
+an exact execution context and returns an Outcome of a registered lease;
+`_Lease.close` carries the completed body outcome through release. Native `use`
+passes a unit context and allocates no IO token or mask. IOResource passes its
+IOContext. Product, dependent acquisition, owned projections, rollback and
+reverse release order have one implementation. Right release completes before
+left release receives its exit case, including right cleanup errors.
+
+Default effectful acquisition runs masked and converts success into a lease
+before returning to the enclosing cancellation state. Full acquisition uses the
+same masked factory runner as `uncancelable_with`, but registers its lease before
+settling pending cancellation. Settling first would destroy a successfully
+acquired value without invoking its registered cleanup. Cancellable waiting is
+explicitly selected by Poll; failed partial acquisition owns its own cleanup.
+
+Release delegates to `_finalize_outcome`, also used by IO guarantee operations.
+An owned resource and its consuming release factory become a scoped finalizer;
+its two construction stages share canonical callable invocation and exact error
+propagation. A non-throwing whole-owner handoff precedes fallible construction,
+so Mojo does not need to unwind a partially consumed receiver. Ordinary release
+normalizes its returned IO into a constant scoped factory. Case-aware release
+already returns a ScopedIO over ExitCase. No lifecycle driver or native callback
+ABI implementation is duplicated.
+
+Effectful use and projections run with the resource borrowed until their action
+completes. Success values and errors are independent of that fresh origin;
+callbacks and actions keep all independent capture origins. This supports
+move-only resources and failures without self-referential leases. Resource
+semantics currently execute on synchronous IO; a future suspension backend must
+preserve these acquisition handoff, masking and finalization boundaries.

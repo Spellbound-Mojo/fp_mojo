@@ -48,7 +48,8 @@ eager, deferred and third-party bases. A deferred computation can be copied or
 replayed only when its stored inputs and callbacks support it; copying an owner
 does not make a consuming callback reusable.
 
-Resource owns consumed acquisition and release scopes. IO uses the existing
+Resource owns native scopes; IOResource composes effectful acquisition, use
+and outcome-aware release through the same lifecycle. IO uses the existing
 Reader, Result and Optional families for typed outcomes and cooperative
 cancellation. Ref, Deferred, Semaphore and Queue construct IO recipes over
 shared state. The optional Fiber backend requires explicit unsafe_start and
@@ -71,3 +72,5 @@ from .coordination import Ref, Deferred, Semaphore, Permit, Queue
 from .scoped import ScopedIO, scoped_io
 from .finalization import guarantee_case, on_cancel, Poll, uncancelable_with
 from ._io_core import DelayContract
+
+from .effectful_resources import IOResource, IOResourceContract, IOResourceCaseContract, IOResourceFullContract, resource_io, resource_io_case, resource_io_full, resource_io_case_full, eval_resource, lift_resource

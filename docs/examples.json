@@ -347,6 +347,9 @@
     },
     "docs/examples/io_finalization.mojo": {
       "stdout": "released after success\nresult: 42\nreleased after cancellation\ncanceled: True\n"
+    },
+    "docs/examples/io_resources.mojo": {
+      "stdout": "open session\nclose session after use\nresult: 42\nopen session\nclose session after cancellation\ncanceled: True\n"
     }
   },
   "version": 1

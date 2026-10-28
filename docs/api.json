@@ -43980,6 +43980,973 @@
    "summary": "Admission and exact outcome type for running a concrete IO recipe.",
    "traits": []
   },
+  "effects.IOResource": {
+   "aliases": [
+    {
+     "description": "The concrete recipe, retaining all captures and origins.",
+     "name": "Recipe"
+    },
+    {
+     "description": "The acquired value, borrowed by use and effectful projections.",
+     "name": "Value"
+    },
+    {
+     "description": "The exact error family shared by every lifecycle effect.",
+     "name": "Error"
+    }
+   ],
+   "description": "Default acquisition is masked until release is registered. Use is run in\nthe enclosing cancellation state, and release is masked. Product and bind\nacquire left to right and finalize inside out, preserving every exact error.\nDropping an unopened recipe destroys captures without executing effects.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "eval_map": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The deferred effectful projection, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A scoped IO factory over the acquired value.",
+        "inferred": false,
+        "name": "F",
+        "type": "ScopedIO",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A resource of F.Value, retaining outer release after native result destruction.",
+       "type": "IOResource[_EvalMapResource[Self.O, F, False]]"
+      },
+      "signature": "def eval_map[F: ScopedIO](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, F, False]] where F.Input == Self.Value and F.Error == Self.Error and _ErrorCompatible[Self.Error, F.BuildError]",
+      "summary": "Project through a cancellable effect while the original resource lives."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IOResource[_EvalMapResource[Self.O, _ScopedFactory[F], False]]"
+      },
+      "signature": "def eval_map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, _ScopedFactory[F], False]] where F.Payload == Self.Value and _OnceBorrowAvailable[F] and conforms_to(F.Result, ReaderAction) and IOContract[downcast[F.Result, ReaderAction]].Compatible and IOContract[downcast[F.Result, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, F.Failure]",
+      "summary": "Adapt an input-independent IO factory to the shared scoped runner."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Borrowing[P, V]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IOResource[_EvalMapResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, Never, F, False]], False]]"
+      },
+      "signature": "def eval_map[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, Never, F, False]], False]] where P == Self.Value and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, Never]",
+      "summary": "Adapt a native borrowing IO factory without executing it."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingBorrowing[P, V, X]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IOResource[_EvalMapResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, X, F, True]], False]]"
+      },
+      "signature": "def eval_map[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, X, F, True]], False]] where P == Self.Value and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, X]",
+      "summary": "Adapt a native borrowing IO factory without executing it."
+     }
+    ],
+    "eval_tap": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The deferred effect, whose successful result is discarded.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A scoped IO factory over the acquired value.",
+        "inferred": false,
+        "name": "F",
+        "type": "ScopedIO",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The original resource after the effect; failure or cancellation releases it.",
+       "type": "IOResource[_EvalMapResource[Self.O, F, True]]"
+      },
+      "signature": "def eval_tap[F: ScopedIO](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, F, True]] where F.Input == Self.Value and F.Error == Self.Error and _ErrorCompatible[Self.Error, F.BuildError]",
+      "summary": "Run a cancellable effect and retain the original acquired value."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IOResource[_EvalMapResource[Self.O, _ScopedFactory[F], True]]"
+      },
+      "signature": "def eval_tap[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, _ScopedFactory[F], True]] where F.Payload == Self.Value and _OnceBorrowAvailable[F] and conforms_to(F.Result, ReaderAction) and IOContract[downcast[F.Result, ReaderAction]].Compatible and IOContract[downcast[F.Result, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, F.Failure]",
+      "summary": "Adapt an input-independent IO factory to the shared scoped runner."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Borrowing[P, V]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IOResource[_EvalMapResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, Never, F, False]], True]]"
+      },
+      "signature": "def eval_tap[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, Never, F, False]], True]] where P == Self.Value and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, Never]",
+      "summary": "Adapt a native borrowing IO factory without executing it."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingBorrowing[P, V, X]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IOResource[_EvalMapResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, X, F, True]], True]]"
+      },
+      "signature": "def eval_tap[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, X, F, True]], True]] where P == Self.Value and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, X]",
+      "summary": "Adapt a native borrowing IO factory without executing it."
+     }
+    ],
+    "flat_map": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The factory, consumed and deferred until acquisition.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "The inner recipe is independent of the fresh input borrow; captured\nindependent origins remain supported. For an effect that borrows the\nouter value during execution, use eval_map or eval_tap instead.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A borrowing factory of a native or effectful resource.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The inner scope, with outer release registered behind inner release.",
+       "type": "IOResource[_Join[Self.O, F, False]]"
+      },
+      "signature": "def flat_map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> IOResource[_Join[Self.O, F, False]] where F.Payload == Self.Value and conforms_to(F.Result, _ResourceType) and _OnceBorrowAvailable[F] and _ErrorCompatible[Self.Error, F.Failure] and downcast[F.Result, _ResourceType].Recipe.Release.Error == Self.Error",
+      "summary": "Derive an inner resource while retaining the outer resource."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Borrowing[P, V]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IOResource[_Join[Self.O, _NativeBorrow[P, V, Never, F, False], False]]"
+      },
+      "signature": "def flat_map[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> IOResource[_Join[Self.O, _NativeBorrow[P, V, Never, F, False], False]] where P == Self.Value and _ErrorCompatible[Self.Error, Never] and conforms_to(V, _ResourceType) and downcast[V, _ResourceType].Recipe.Release.Error == Self.Error",
+      "summary": "Adapt a native borrowing callback to the shared resource derivation."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingBorrowing[P, V, X]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IOResource[_Join[Self.O, _NativeBorrow[P, V, X, F, True], False]]"
+      },
+      "signature": "def flat_map[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> IOResource[_Join[Self.O, _NativeBorrow[P, V, X, F, True], False]] where P == Self.Value and _ErrorCompatible[Self.Error, X] and conforms_to(V, _ResourceType) and downcast[V, _ResourceType].Recipe.Release.Error == Self.Error",
+      "summary": "Adapt a native borrowing callback to the shared resource derivation."
+     }
+    ],
+    "map": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The deferred projection, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A native borrowing projection with compatible exact errors.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A resource of the projection, sharing the native map derivation.",
+       "type": "IOResource[_Join[Self.O, _MapScopeFactory[F, Self.Error], False]]"
+      },
+      "signature": "def map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> IOResource[_Join[Self.O, _MapScopeFactory[F, Self.Error], False]] where F.Payload == Self.Value and _OnceBorrowAvailable[F] and _ErrorCompatible[Self.Error, F.Failure]",
+      "summary": "Project an owned value, retaining the original scope until release."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Borrowing[P, V]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IOResource[_Join[Self.O, _MapScopeFactory[_NativeBorrow[P, V, Never, F, False], Self.Error], False]]"
+      },
+      "signature": "def map[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> IOResource[_Join[Self.O, _MapScopeFactory[_NativeBorrow[P, V, Never, F, False], Self.Error], False]] where P == Self.Value and _ErrorCompatible[Self.Error, Never]",
+      "summary": "Adapt a native borrowing callback to the shared resource derivation."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingBorrowing[P, V, X]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IOResource[_Join[Self.O, _MapScopeFactory[_NativeBorrow[P, V, X, F, True], Self.Error], False]]"
+      },
+      "signature": "def map[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> IOResource[_Join[Self.O, _MapScopeFactory[_NativeBorrow[P, V, X, F, True], Self.Error], False]] where P == Self.Value and _ErrorCompatible[Self.Error, X]",
+      "summary": "Adapt a native borrowing callback to the shared resource derivation."
+     }
+    ],
+    "product": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The unopened right scope, consumed.",
+        "name": "right",
+        "type": "R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A native or effectful right resource in the same error family.",
+        "inferred": false,
+        "name": "R",
+        "type": "_ResourceType",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A scope releasing right then left, including after partial failure.",
+       "type": "IOResource[_Join[Self.O, _ConstantResource[Self.Value, R], True]]"
+      },
+      "signature": "def product[R: _ResourceType](deinit self, var right: R) -> IOResource[_Join[Self.O, _ConstantResource[Self.Value, R], True]] where R.Recipe.Release.Error == Self.Error",
+      "summary": "Acquire two scopes and expose their owned native pair."
+     }
+    ],
+    "surround": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed and deferred.",
+        "name": "program",
+        "type": "P",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An IO program in the resource's error family.",
+        "inferred": false,
+        "name": "P",
+        "type": "ReaderAction",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO program with the supplied program's value type.",
+       "type": "_UseEffectResource[Self.O, _ConstantFinalizer[P, Self.Value]]"
+      },
+      "signature": "def surround[P: ReaderAction](deinit self, var program: P) -> _UseEffectResource[Self.O, _ConstantFinalizer[P, Self.Value]] where IOContract[P].Compatible and IOContract[P].Error == Self.Error",
+      "summary": "Run an independent program inside this resource's lifetime."
+     }
+    ],
+    "use": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The use factory, consumed and deferred.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "Action[o] may borrow the acquired value while it runs. Completed values\nand errors must be independent of that fresh origin. A failed or canceled\nacquisition skips use; every registered release still runs exactly once.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A scoped IO factory over the acquired value.",
+        "inferred": false,
+        "name": "F",
+        "type": "ScopedIO",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO program yielding F.Value, with all lifecycle errors retained.",
+       "type": "_UseEffectResource[Self.O, F]"
+      },
+      "signature": "def use[F: ScopedIO](deinit self, var function: F) -> _UseEffectResource[Self.O, F] where F.Input == Self.Value and F.Error == Self.Error and _ErrorCompatible[Self.Error, F.BuildError]",
+      "summary": "Build a bracketed IO action, retaining the resource through use."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_UseEffectResource[Self.O, _ScopedFactory[F]]"
+      },
+      "signature": "def use[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> _UseEffectResource[Self.O, _ScopedFactory[F]] where F.Payload == Self.Value and _OnceBorrowAvailable[F] and conforms_to(F.Result, ReaderAction) and IOContract[downcast[F.Result, ReaderAction]].Compatible and IOContract[downcast[F.Result, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, F.Failure]",
+      "summary": "Adapt an input-independent IO factory to the shared scoped runner."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Borrowing[P, V]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_UseEffectResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, Never, F, False]]]"
+      },
+      "signature": "def use[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> _UseEffectResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, Never, F, False]]] where P == Self.Value and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, Never]",
+      "summary": "Adapt a native borrowing IO factory without executing it."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingBorrowing[P, V, X]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_UseEffectResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, X, F, True]]]"
+      },
+      "signature": "def use[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> _UseEffectResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, X, F, True]]] where P == Self.Value and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, X]",
+      "summary": "Adapt a native borrowing IO factory without executing it."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The concrete shared acquisition recipe, inferred by constructors.",
+     "inferred": false,
+     "name": "O",
+     "type": "_OpenScope",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/effectful_resources",
+   "signature": "struct IOResource[O: _OpenScope](_ResourceType)",
+   "summary": "An inert resource whose acquisition, use and release compose IO effects.",
+   "traits": [
+    "_ResourceType"
+   ]
+  },
+  "effects.IOResourceCaseContract": {
+   "aliases": [
+    {
+     "description": "The exact selected error family.",
+     "name": "E"
+    },
+    {
+     "description": "The release factory after it owns the acquired resource.",
+     "name": "Factory"
+    },
+    {
+     "description": "Exact acquired input, exit-case input and compatible native errors.",
+     "name": "Compatible"
+    },
+    {
+     "description": "The unopened concrete resource with case-aware release.",
+     "name": "Out"
+    }
+   ],
+   "description": "",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The acquisition IO program.",
+     "inferred": false,
+     "name": "P",
+     "type": "ReaderAction",
+     "variadic": false
+    },
+    {
+     "description": "A consuming factory returning ScopedIO over ExitCase.",
+     "inferred": false,
+     "name": "R",
+     "type": "UnaryContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/effectful_resources",
+   "signature": "struct IOResourceCaseContract[P: ReaderAction, R: UnaryContract & Movable & Deinitable]",
+   "summary": "Admission and type for release that borrows the exact exit case.",
+   "traits": []
+  },
+  "effects.IOResourceContract": {
+   "aliases": [
+    {
+     "description": "The exact selected error family.",
+     "name": "E"
+    },
+    {
+     "description": "Exact acquired input, IO families and compatible construction errors.",
+     "name": "Compatible"
+    },
+    {
+     "description": "The unopened concrete resource, retaining every owner and origin.",
+     "name": "Out"
+    }
+   ],
+   "description": "",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The acquisition program, including its value and error family.",
+     "inferred": false,
+     "name": "P",
+     "type": "ReaderAction",
+     "variadic": false
+    },
+    {
+     "description": "The consuming factory of a release IO program.",
+     "inferred": false,
+     "name": "R",
+     "type": "UnaryContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/effectful_resources",
+   "signature": "struct IOResourceContract[P: ReaderAction, R: UnaryContract & Movable & Deinitable]",
+   "summary": "Admission and concrete type for an IO resource with ordinary release.",
+   "traits": []
+  },
+  "effects.IOResourceFullContract": {
+   "aliases": [
+    {
+     "description": "The acquisition program produced under the mask.",
+     "name": "Program"
+    },
+    {
+     "description": "The normalized exit-aware release factory.",
+     "name": "Release"
+    },
+    {
+     "description": "Compatible Poll, acquisition, value, release and exact error types.",
+     "name": "Compatible"
+    },
+    {
+     "description": "The unopened full-acquisition resource type.",
+     "name": "Out"
+    }
+   ],
+   "description": "",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "A consuming factory from Poll[E] to an IO program.",
+     "inferred": false,
+     "name": "F",
+     "type": "UnaryContract & Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The consuming release factory.",
+     "inferred": false,
+     "name": "R",
+     "type": "UnaryContract & Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The selected error family.",
+     "inferred": false,
+     "name": "E",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "Whether release returns ScopedIO over ExitCase instead of IO.",
+     "inferred": false,
+     "name": "case_release",
+     "type": "Bool",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/effectful_resources",
+   "signature": "struct IOResourceFullContract[F: UnaryContract & Movable & Deinitable, R: UnaryContract & Movable & Deinitable, E: Movable & Deinitable, case_release: Bool = False]",
+   "summary": "Admission and type for controlled cancellation during acquisition.",
+   "traits": []
+  },
   "effects.LiftAsk": {
    "aliases": [
     {
@@ -46539,7 +47506,7 @@
        "doc": "A scope exposing the inner value, released before its outer owner.",
        "type": "Resource[_Join[Self.O, F, False]]"
       },
-      "signature": "def flat_map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Resource[_Join[Self.O, F, False]] where F.Payload == Self.Value and conforms_to(F.Result, _ResourceType) and _ErrorCompatible[Self.Error, F.Failure] and downcast[F.Result, _ResourceType].Recipe.Release.Error == Self.Error and _OnceBorrowAvailable[F]",
+      "signature": "def flat_map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Resource[_Join[Self.O, F, False]] where Self.O.Native and F.Payload == Self.Value and conforms_to(F.Result, _ResourceType) and downcast[F.Result, _ResourceType].Recipe.Native and _ErrorCompatible[Self.Error, F.Failure] and downcast[F.Result, _ResourceType].Recipe.Release.Error == Self.Error and _OnceBorrowAvailable[F]",
       "summary": "Derive an inner scope while retaining the outer resource until release."
      },
      {
@@ -46583,7 +47550,7 @@
        "doc": "",
        "type": "Resource[_Join[Self.O, _NativeBorrow[P, V, Never, F, False], False]]"
       },
-      "signature": "def flat_map[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> Resource[_Join[Self.O, _NativeBorrow[P, V, Never, F, False], False]] where P == Self.Value and conforms_to(V, _ResourceType) and downcast[V, _ResourceType].Recipe.Release.Error == Self.Error",
+      "signature": "def flat_map[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> Resource[_Join[Self.O, _NativeBorrow[P, V, Never, F, False], False]] where Self.O.Native and P == Self.Value and conforms_to(V, _ResourceType) and downcast[V, _ResourceType].Recipe.Native and downcast[V, _ResourceType].Recipe.Release.Error == Self.Error",
       "summary": "Adapt an owned native borrowing callback to the shared scope runner."
      },
      {
@@ -46634,7 +47601,7 @@
        "doc": "",
        "type": "Resource[_Join[Self.O, _NativeBorrow[P, V, X, F, True], False]]"
       },
-      "signature": "def flat_map[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> Resource[_Join[Self.O, _NativeBorrow[P, V, X, F, True], False]] where P == Self.Value and _ErrorCompatible[Self.Error, X] and conforms_to(V, _ResourceType) and downcast[V, _ResourceType].Recipe.Release.Error == Self.Error",
+      "signature": "def flat_map[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> Resource[_Join[Self.O, _NativeBorrow[P, V, X, F, True], False]] where Self.O.Native and P == Self.Value and _ErrorCompatible[Self.Error, X] and conforms_to(V, _ResourceType) and downcast[V, _ResourceType].Recipe.Native and downcast[V, _ResourceType].Recipe.Release.Error == Self.Error",
       "summary": "Adapt an owned native borrowing callback to the shared scope runner."
      }
     ],
@@ -46666,7 +47633,7 @@
        "doc": "A scope exposing F.Result and retaining the original finalizer.",
        "type": "Resource[_Join[Self.O, _MapScopeFactory[F, Self.Error], False]]"
       },
-      "signature": "def map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Resource[_Join[Self.O, _MapScopeFactory[F, Self.Error], False]] where F.Payload == Self.Value and _ErrorCompatible[Self.Error, F.Failure] and _OnceBorrowAvailable[F]",
+      "signature": "def map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Resource[_Join[Self.O, _MapScopeFactory[F, Self.Error], False]] where Self.O.Native and F.Payload == Self.Value and _ErrorCompatible[Self.Error, F.Failure] and _OnceBorrowAvailable[F]",
       "summary": "Project an owned value while retaining the original resource until release."
      },
      {
@@ -46710,7 +47677,7 @@
        "doc": "",
        "type": "Resource[_Join[Self.O, _MapScopeFactory[_NativeBorrow[P, V, Never, F, False], Self.Error], False]]"
       },
-      "signature": "def map[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> Resource[_Join[Self.O, _MapScopeFactory[_NativeBorrow[P, V, Never, F, False], Self.Error], False]] where P == Self.Value and _ErrorCompatible[Self.Error, Never]",
+      "signature": "def map[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> Resource[_Join[Self.O, _MapScopeFactory[_NativeBorrow[P, V, Never, F, False], Self.Error], False]] where Self.O.Native and P == Self.Value and _ErrorCompatible[Self.Error, Never]",
       "summary": "Adapt an owned native projection to the shared resource derivation."
      },
      {
@@ -46761,7 +47728,7 @@
        "doc": "",
        "type": "Resource[_Join[Self.O, _MapScopeFactory[_NativeBorrow[P, V, X, F, True], Self.Error], False]]"
       },
-      "signature": "def map[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> Resource[_Join[Self.O, _MapScopeFactory[_NativeBorrow[P, V, X, F, True], Self.Error], False]] where P == Self.Value and _ErrorCompatible[Self.Error, X]",
+      "signature": "def map[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> Resource[_Join[Self.O, _MapScopeFactory[_NativeBorrow[P, V, X, F, True], Self.Error], False]] where Self.O.Native and P == Self.Value and _ErrorCompatible[Self.Error, X]",
       "summary": "Adapt an owned native projection to the shared resource derivation."
      }
     ],
@@ -46791,9 +47758,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "A scope of the pair, released right then left on every exit.",
-       "type": "Resource[_Join[Self.O, _ConstantResource[Self.Value, P], True]]"
+       "type": "Resource[_Join[Self.O, _ConstantResource[Self.Value, Resource[P]], True]]"
       },
-      "signature": "def product[P: _OpenScope](deinit self, var right: Resource[P]) -> Resource[_Join[Self.O, _ConstantResource[Self.Value, P], True]] where P.Release.Error == Self.Error",
+      "signature": "def product[P: _OpenScope](deinit self, var right: Resource[P]) -> Resource[_Join[Self.O, _ConstantResource[Self.Value, Resource[P]], True]] where Self.O.Native and P.Native and P.Release.Error == Self.Error",
       "summary": "Acquire both scopes left to right and expose their owned native pair."
      }
     ],
@@ -46825,7 +47792,7 @@
        "doc": "Ok of the owned result, or all exact errors in execution order.",
        "type": "Result[F.Result, EffectFailure[Self.Error]]"
       },
-      "signature": "def use[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Result[F.Result, EffectFailure[Self.Error]] where F.Payload == Self.Value and _ErrorCompatible[Self.Error, F.Failure] and _OnceBorrowAvailable[F]",
+      "signature": "def use[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Result[F.Result, EffectFailure[Self.Error]] where Self.O.Native and F.Payload == Self.Value and _ErrorCompatible[Self.Error, F.Failure] and _OnceBorrowAvailable[F]",
       "summary": "Acquire, borrow for use, and release, preserving every failure."
      },
      {
@@ -46869,7 +47836,7 @@
        "doc": "",
        "type": "Result[V, EffectFailure[Self.Error]]"
       },
-      "signature": "def use[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> Result[V, EffectFailure[Self.Error]] where P == Self.Value",
+      "signature": "def use[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> Result[V, EffectFailure[Self.Error]] where Self.O.Native and P == Self.Value",
       "summary": "Adapt an owned native borrowing callback to the shared scope runner."
      },
      {
@@ -46920,7 +47887,7 @@
        "doc": "",
        "type": "Result[V, EffectFailure[Self.Error]]"
       },
-      "signature": "def use[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> Result[V, EffectFailure[Self.Error]] where P == Self.Value and _ErrorCompatible[Self.Error, X]",
+      "signature": "def use[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> Result[V, EffectFailure[Self.Error]] where Self.O.Native and P == Self.Value and _ErrorCompatible[Self.Error, X]",
       "summary": "Adapt an owned native borrowing callback to the shared scope runner."
      }
     ]
@@ -49611,6 +50578,44 @@
    "provider": "effects/_io_core",
    "summary": ""
   },
+  "effects.eval_resource": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The deferred action, consumed.",
+       "name": "program",
+       "type": "P",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "An IO program in any selected error family.",
+       "inferred": false,
+       "name": "P",
+       "type": "ReaderAction",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A resource that holds the successful value through use, with no custom release.",
+      "type": "IOResource[_EvaluateResource[P]]"
+     },
+     "signature": "def eval_resource[P: ReaderAction](var program: P) -> IOResource[_EvaluateResource[P]] where IOContract[P].Compatible",
+     "summary": "Lift a cancellable IO action into a resource with native value destruction."
+    }
+   ],
+   "provider": "effects/effectful_resources",
+   "summary": ""
+  },
   "effects.get": {
    "description": "",
    "kind": "function",
@@ -49942,6 +50947,44 @@
     }
    ],
    "provider": "effects/operations",
+   "summary": ""
+  },
+  "effects.lift_resource": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The unopened native scope, consumed without acquiring it.",
+       "name": "scope",
+       "type": "Resource[O]",
+       "variadic": false
+      }
+     ],
+     "description": "The native callbacks retain their synchronous signatures. IO use effects\ncan borrow the acquired value while running. Partial acquisition cleanup\nand reverse release order remain owned by the shared scope engine.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "A native resource recipe.",
+       "inferred": false,
+       "name": "O",
+       "type": "_OpenScope",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "An effectful view of the same acquisition and release recipe.",
+      "type": "IOResource[O]"
+     },
+     "signature": "def lift_resource[O: _OpenScope](var scope: Resource[O]) -> IOResource[O] where O.Native",
+     "summary": "Use a native resource in effectful composition through the same recipe."
+    }
+   ],
+   "provider": "effects/effectful_resources",
    "summary": ""
   },
   "effects.listen": {
@@ -51109,6 +52152,1710 @@
    "provider": "effects/resources",
    "summary": ""
   },
+  "effects.resource_io": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The unopened acquisition program, consumed.",
+       "name": "acquire",
+       "type": "P",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The deferred release factory, consumed.",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "Acquisition and release are masked. Release consumes the acquired value\nand returns IO in the same error family; its successful result is discarded.\nCancellation arriving during acquisition cannot abandon a successful value\nbefore its release is registered. Use remains cancellable.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The acquisition IO program.",
+       "inferred": false,
+       "name": "P",
+       "type": "ReaderAction",
+       "variadic": false
+      },
+      {
+       "description": "The consuming release factory.",
+       "inferred": false,
+       "name": "R",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "An IOResource whose use method constructs a bracketed IO program.",
+      "type": "IOResourceContract[P, R].Out"
+     },
+     "signature": "def resource_io[P: ReaderAction, R: UnaryContract & Movable & Deinitable](var acquire: P, var release: R) -> IOResourceContract[P, R].Out where IOResourceContract[P, R].Compatible",
+     "summary": "Describe effectful acquisition and release without executing either."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "P",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "ReaderAction",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_Unary[T, V]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IOResourceContract[P, NativeUnary[T, V, Never, R, False]].Out"
+     },
+     "signature": "def resource_io[P: ReaderAction, T: Movable & Deinitable, V: Movable & Deinitable, //, R: _Unary[T, V]](var acquire: P, var release: R) -> IOResourceContract[P, NativeUnary[T, V, Never, R, False]].Out where IOResourceContract[P, NativeUnary[T, V, Never, R, False]].Compatible",
+     "summary": "Adapt a native consuming release factory through the canonical callable owner."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "P",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "ReaderAction",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_RaisingUnary[T, V, X]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IOResourceContract[P, NativeUnary[T, V, X, R, True]].Out"
+     },
+     "signature": "def resource_io[P: ReaderAction, T: Movable & Deinitable, V: Movable & Deinitable, X: Movable & Deinitable, //, R: _RaisingUnary[T, V, X]](var acquire: P, var release: R) -> IOResourceContract[P, NativeUnary[T, V, X, R, True]].Out where IOResourceContract[P, NativeUnary[T, V, X, R, True]].Compatible",
+     "summary": "Adapt a native consuming release factory through the canonical callable owner."
+    }
+   ],
+   "provider": "effects/effectful_resources",
+   "summary": ""
+  },
+  "effects.resource_io_case": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The unopened masked acquisition, consumed.",
+       "name": "acquire",
+       "type": "P",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The deferred consuming release factory.",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "Release first consumes the resource into a ScopedIO factory over ExitCase[E].\nThat factory may retain a borrow of the exit case during its IO action.\nBoth construction stages and execution are masked and capture exact errors.\nThe two-stage signature separates owned resource transfer from borrowed exit\ninformation without requiring copyable resources or errors.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The acquisition IO program.",
+       "inferred": false,
+       "name": "P",
+       "type": "ReaderAction",
+       "variadic": false
+      },
+      {
+       "description": "A consuming factory returning ScopedIO over ExitCase[E].",
+       "inferred": false,
+       "name": "R",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "An effectful resource with case-aware finalization.",
+      "type": "IOResourceCaseContract[P, R].Out"
+     },
+     "signature": "def resource_io_case[P: ReaderAction, R: UnaryContract & Movable & Deinitable](var acquire: P, var release: R) -> IOResourceCaseContract[P, R].Out where IOResourceCaseContract[P, R].Compatible",
+     "summary": "Describe release that observes the protected scope's exact exit case."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "P",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "ReaderAction",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_Unary[T, V]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IOResourceCaseContract[P, NativeUnary[T, V, Never, R, False]].Out"
+     },
+     "signature": "def resource_io_case[P: ReaderAction, T: Movable & Deinitable, V: Movable & Deinitable, //, R: _Unary[T, V]](var acquire: P, var release: R) -> IOResourceCaseContract[P, NativeUnary[T, V, Never, R, False]].Out where IOResourceCaseContract[P, NativeUnary[T, V, Never, R, False]].Compatible",
+     "summary": "Adapt a native consuming release factory through the canonical callable owner."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "P",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "ReaderAction",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_RaisingUnary[T, V, X]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IOResourceCaseContract[P, NativeUnary[T, V, X, R, True]].Out"
+     },
+     "signature": "def resource_io_case[P: ReaderAction, T: Movable & Deinitable, V: Movable & Deinitable, X: Movable & Deinitable, //, R: _RaisingUnary[T, V, X]](var acquire: P, var release: R) -> IOResourceCaseContract[P, NativeUnary[T, V, X, R, True]].Out where IOResourceCaseContract[P, NativeUnary[T, V, X, R, True]].Compatible",
+     "summary": "Adapt a native consuming release factory through the canonical callable owner."
+    }
+   ],
+   "provider": "effects/effectful_resources",
+   "summary": ""
+  },
+  "effects.resource_io_case_full": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The deferred acquisition factory, consumed.",
+       "name": "acquire",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The deferred exit-aware release factory, consumed.",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "A consuming factory from Poll[E] to IO[E].",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "A consuming factory returning ScopedIO over ExitCase[E].",
+       "inferred": true,
+       "name": "R",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The selected exact error family.",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A full-acquisition resource retaining the same ownership and cleanup rules.",
+      "type": "IOResourceFullContract[F, R, E, True].Out"
+     },
+     "signature": "def resource_io_case_full[F: UnaryContract & Movable & Deinitable, R: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](var acquire: F, var release: R) -> IOResourceFullContract[F, R, E, True].Out where IOResourceFullContract[F, R, E, True].Compatible",
+     "summary": "Combine controlled acquisition cancellation with exit-aware release."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_Unary[T, V]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IOResourceFullContract[F, NativeUnary[T, V, Never, R, False], E, True].Out"
+     },
+     "signature": "def resource_io_case_full[F: UnaryContract & Movable & Deinitable, T: Movable & Deinitable, V: Movable & Deinitable, //, E: Movable & Deinitable, R: _Unary[T, V]](var acquire: F, var release: R) -> IOResourceFullContract[F, NativeUnary[T, V, Never, R, False], E, True].Out where IOResourceFullContract[F, NativeUnary[T, V, Never, R, False], E, True].Compatible",
+     "summary": "Adapt native acquisition or release through the shared callable owners."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "Y",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_RaisingUnary[T, V, Y]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IOResourceFullContract[F, NativeUnary[T, V, Y, R, True], E, True].Out"
+     },
+     "signature": "def resource_io_case_full[F: UnaryContract & Movable & Deinitable, T: Movable & Deinitable, V: Movable & Deinitable, Y: Movable & Deinitable, //, E: Movable & Deinitable, R: _RaisingUnary[T, V, Y]](var acquire: F, var release: R) -> IOResourceFullContract[F, NativeUnary[T, V, Y, R, True], E, True].Out where IOResourceFullContract[F, NativeUnary[T, V, Y, R, True], E, True].Compatible",
+     "summary": "Adapt native acquisition or release through the shared callable owners."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Unary[A, B]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IOResourceFullContract[NativeUnary[A, B, Never, F, False], R, E, True].Out"
+     },
+     "signature": "def resource_io_case_full[A: Movable & Deinitable, B: Movable & Deinitable, R: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable, F: _Unary[A, B]](var acquire: F, var release: R) -> IOResourceFullContract[NativeUnary[A, B, Never, F, False], R, E, True].Out where IOResourceFullContract[NativeUnary[A, B, Never, F, False], R, E, True].Compatible",
+     "summary": "Adapt native acquisition or release through the shared callable owners."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Unary[A, B]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_Unary[T, V]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IOResourceFullContract[NativeUnary[A, B, Never, F, False], NativeUnary[T, V, Never, R, False], E, True].Out"
+     },
+     "signature": "def resource_io_case_full[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, V: Movable & Deinitable, //, E: Movable & Deinitable, F: _Unary[A, B], R: _Unary[T, V]](var acquire: F, var release: R) -> IOResourceFullContract[NativeUnary[A, B, Never, F, False], NativeUnary[T, V, Never, R, False], E, True].Out where IOResourceFullContract[NativeUnary[A, B, Never, F, False], NativeUnary[T, V, Never, R, False], E, True].Compatible",
+     "summary": "Adapt native acquisition or release through the shared callable owners."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "Y",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Unary[A, B]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_RaisingUnary[T, V, Y]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IOResourceFullContract[NativeUnary[A, B, Never, F, False], NativeUnary[T, V, Y, R, True], E, True].Out"
+     },
+     "signature": "def resource_io_case_full[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, V: Movable & Deinitable, Y: Movable & Deinitable, //, E: Movable & Deinitable, F: _Unary[A, B], R: _RaisingUnary[T, V, Y]](var acquire: F, var release: R) -> IOResourceFullContract[NativeUnary[A, B, Never, F, False], NativeUnary[T, V, Y, R, True], E, True].Out where IOResourceFullContract[NativeUnary[A, B, Never, F, False], NativeUnary[T, V, Y, R, True], E, True].Compatible",
+     "summary": "Adapt native acquisition or release through the shared callable owners."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingUnary[A, B, X]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IOResourceFullContract[NativeUnary[A, B, X, F, True], R, E, True].Out"
+     },
+     "signature": "def resource_io_case_full[A: Movable & Deinitable, B: Movable & Deinitable, X: Movable & Deinitable, R: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[A, B, X]](var acquire: F, var release: R) -> IOResourceFullContract[NativeUnary[A, B, X, F, True], R, E, True].Out where IOResourceFullContract[NativeUnary[A, B, X, F, True], R, E, True].Compatible",
+     "summary": "Adapt native acquisition or release through the shared callable owners."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingUnary[A, B, X]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_Unary[T, V]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IOResourceFullContract[NativeUnary[A, B, X, F, True], NativeUnary[T, V, Never, R, False], E, True].Out"
+     },
+     "signature": "def resource_io_case_full[A: Movable & Deinitable, B: Movable & Deinitable, X: Movable & Deinitable, T: Movable & Deinitable, V: Movable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[A, B, X], R: _Unary[T, V]](var acquire: F, var release: R) -> IOResourceFullContract[NativeUnary[A, B, X, F, True], NativeUnary[T, V, Never, R, False], E, True].Out where IOResourceFullContract[NativeUnary[A, B, X, F, True], NativeUnary[T, V, Never, R, False], E, True].Compatible",
+     "summary": "Adapt native acquisition or release through the shared callable owners."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "Y",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingUnary[A, B, X]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_RaisingUnary[T, V, Y]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IOResourceFullContract[NativeUnary[A, B, X, F, True], NativeUnary[T, V, Y, R, True], E, True].Out"
+     },
+     "signature": "def resource_io_case_full[A: Movable & Deinitable, B: Movable & Deinitable, X: Movable & Deinitable, T: Movable & Deinitable, V: Movable & Deinitable, Y: Movable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[A, B, X], R: _RaisingUnary[T, V, Y]](var acquire: F, var release: R) -> IOResourceFullContract[NativeUnary[A, B, X, F, True], NativeUnary[T, V, Y, R, True], E, True].Out where IOResourceFullContract[NativeUnary[A, B, X, F, True], NativeUnary[T, V, Y, R, True], E, True].Compatible",
+     "summary": "Adapt native acquisition or release through the shared callable owners."
+    }
+   ],
+   "provider": "effects/effectful_resources",
+   "summary": ""
+  },
+  "effects.resource_io_full": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The deferred acquisition factory, consumed.",
+       "name": "acquire",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The deferred release factory, consumed.",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "The factory and ordinary acquisition steps run masked. Poll restores the\nenclosing cancellation state for selected subprograms. A canceled or failed\nacquisition must clean up its own partial work; registered release begins\nonly after a successful value is returned. Keep the final handoff masked.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "A consuming factory from Poll[E] to IO[E].",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The consuming factory of a release IO program.",
+       "inferred": true,
+       "name": "R",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The selected exact error family.",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A resource with controlled cancellable acquisition and masked release.",
+      "type": "IOResourceFullContract[F, R, E].Out"
+     },
+     "signature": "def resource_io_full[F: UnaryContract & Movable & Deinitable, R: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](var acquire: F, var release: R) -> IOResourceFullContract[F, R, E].Out where IOResourceFullContract[F, R, E].Compatible",
+     "summary": "Pass Poll to acquisition so selected waiting can be canceled safely."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_Unary[T, V]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IOResourceFullContract[F, NativeUnary[T, V, Never, R, False], E].Out"
+     },
+     "signature": "def resource_io_full[F: UnaryContract & Movable & Deinitable, T: Movable & Deinitable, V: Movable & Deinitable, //, E: Movable & Deinitable, R: _Unary[T, V]](var acquire: F, var release: R) -> IOResourceFullContract[F, NativeUnary[T, V, Never, R, False], E].Out where IOResourceFullContract[F, NativeUnary[T, V, Never, R, False], E].Compatible",
+     "summary": "Adapt native acquisition or release through the shared callable owners."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "Y",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_RaisingUnary[T, V, Y]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IOResourceFullContract[F, NativeUnary[T, V, Y, R, True], E].Out"
+     },
+     "signature": "def resource_io_full[F: UnaryContract & Movable & Deinitable, T: Movable & Deinitable, V: Movable & Deinitable, Y: Movable & Deinitable, //, E: Movable & Deinitable, R: _RaisingUnary[T, V, Y]](var acquire: F, var release: R) -> IOResourceFullContract[F, NativeUnary[T, V, Y, R, True], E].Out where IOResourceFullContract[F, NativeUnary[T, V, Y, R, True], E].Compatible",
+     "summary": "Adapt native acquisition or release through the shared callable owners."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Unary[A, B]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IOResourceFullContract[NativeUnary[A, B, Never, F, False], R, E].Out"
+     },
+     "signature": "def resource_io_full[A: Movable & Deinitable, B: Movable & Deinitable, R: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable, F: _Unary[A, B]](var acquire: F, var release: R) -> IOResourceFullContract[NativeUnary[A, B, Never, F, False], R, E].Out where IOResourceFullContract[NativeUnary[A, B, Never, F, False], R, E].Compatible",
+     "summary": "Adapt native acquisition or release through the shared callable owners."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Unary[A, B]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_Unary[T, V]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IOResourceFullContract[NativeUnary[A, B, Never, F, False], NativeUnary[T, V, Never, R, False], E].Out"
+     },
+     "signature": "def resource_io_full[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, V: Movable & Deinitable, //, E: Movable & Deinitable, F: _Unary[A, B], R: _Unary[T, V]](var acquire: F, var release: R) -> IOResourceFullContract[NativeUnary[A, B, Never, F, False], NativeUnary[T, V, Never, R, False], E].Out where IOResourceFullContract[NativeUnary[A, B, Never, F, False], NativeUnary[T, V, Never, R, False], E].Compatible",
+     "summary": "Adapt native acquisition or release through the shared callable owners."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "Y",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Unary[A, B]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_RaisingUnary[T, V, Y]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IOResourceFullContract[NativeUnary[A, B, Never, F, False], NativeUnary[T, V, Y, R, True], E].Out"
+     },
+     "signature": "def resource_io_full[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, V: Movable & Deinitable, Y: Movable & Deinitable, //, E: Movable & Deinitable, F: _Unary[A, B], R: _RaisingUnary[T, V, Y]](var acquire: F, var release: R) -> IOResourceFullContract[NativeUnary[A, B, Never, F, False], NativeUnary[T, V, Y, R, True], E].Out where IOResourceFullContract[NativeUnary[A, B, Never, F, False], NativeUnary[T, V, Y, R, True], E].Compatible",
+     "summary": "Adapt native acquisition or release through the shared callable owners."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingUnary[A, B, X]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IOResourceFullContract[NativeUnary[A, B, X, F, True], R, E].Out"
+     },
+     "signature": "def resource_io_full[A: Movable & Deinitable, B: Movable & Deinitable, X: Movable & Deinitable, R: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[A, B, X]](var acquire: F, var release: R) -> IOResourceFullContract[NativeUnary[A, B, X, F, True], R, E].Out where IOResourceFullContract[NativeUnary[A, B, X, F, True], R, E].Compatible",
+     "summary": "Adapt native acquisition or release through the shared callable owners."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingUnary[A, B, X]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_Unary[T, V]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IOResourceFullContract[NativeUnary[A, B, X, F, True], NativeUnary[T, V, Never, R, False], E].Out"
+     },
+     "signature": "def resource_io_full[A: Movable & Deinitable, B: Movable & Deinitable, X: Movable & Deinitable, T: Movable & Deinitable, V: Movable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[A, B, X], R: _Unary[T, V]](var acquire: F, var release: R) -> IOResourceFullContract[NativeUnary[A, B, X, F, True], NativeUnary[T, V, Never, R, False], E].Out where IOResourceFullContract[NativeUnary[A, B, X, F, True], NativeUnary[T, V, Never, R, False], E].Compatible",
+     "summary": "Adapt native acquisition or release through the shared callable owners."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "Y",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingUnary[A, B, X]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_RaisingUnary[T, V, Y]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "IOResourceFullContract[NativeUnary[A, B, X, F, True], NativeUnary[T, V, Y, R, True], E].Out"
+     },
+     "signature": "def resource_io_full[A: Movable & Deinitable, B: Movable & Deinitable, X: Movable & Deinitable, T: Movable & Deinitable, V: Movable & Deinitable, Y: Movable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[A, B, X], R: _RaisingUnary[T, V, Y]](var acquire: F, var release: R) -> IOResourceFullContract[NativeUnary[A, B, X, F, True], NativeUnary[T, V, Y, R, True], E].Out where IOResourceFullContract[NativeUnary[A, B, X, F, True], NativeUnary[T, V, Y, R, True], E].Compatible",
+     "summary": "Adapt native acquisition or release through the shared callable owners."
+    }
+   ],
+   "provider": "effects/effectful_resources",
+   "summary": ""
+  },
   "effects.run": {
    "description": "",
    "kind": "function",
@@ -51816,7 +54563,7 @@
       "doc": "An IO program yielding F.Result, with the scope's exact error family.",
       "type": "_IOResource[O, F]"
      },
-     "signature": "def use_resource[O: _OpenScope, F: BorrowCallContract & Movable & Deinitable](var scope: Resource[O], var function: F) -> _IOResource[O, F] where F.Payload == O.Release.Value and _ErrorCompatible[O.Release.Error, F.Failure] and _OnceBorrowAvailable[F]",
+     "signature": "def use_resource[O: _OpenScope, F: BorrowCallContract & Movable & Deinitable](var scope: Resource[O], var function: F) -> _IOResource[O, F] where O.Native and F.Payload == O.Release.Value and _ErrorCompatible[O.Release.Error, F.Failure] and _OnceBorrowAvailable[F]",
      "summary": "Defer an entire synchronous native resource scope into its IO error family."
     },
     {
@@ -51874,7 +54621,7 @@
       "doc": "",
       "type": "_IOResource[O, _NativeBorrow[P, V, Never, F, False]]"
      },
-     "signature": "def use_resource[O: _OpenScope, P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](var scope: Resource[O], var function: F) -> _IOResource[O, _NativeBorrow[P, V, Never, F, False]] where P == O.Release.Value",
+     "signature": "def use_resource[O: _OpenScope, P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](var scope: Resource[O], var function: F) -> _IOResource[O, _NativeBorrow[P, V, Never, F, False]] where O.Native and P == O.Release.Value",
      "summary": "Adapt a native borrowing use callback into a deferred resource scope."
     },
     {
@@ -51939,7 +54686,7 @@
       "doc": "",
       "type": "_IOResource[O, _NativeBorrow[P, V, X, F, True]]"
      },
-     "signature": "def use_resource[O: _OpenScope, P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](var scope: Resource[O], var function: F) -> _IOResource[O, _NativeBorrow[P, V, X, F, True]] where P == O.Release.Value and _ErrorCompatible[O.Release.Error, X]",
+     "signature": "def use_resource[O: _OpenScope, P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](var scope: Resource[O], var function: F) -> _IOResource[O, _NativeBorrow[P, V, X, F, True]] where O.Native and P == O.Release.Value and _ErrorCompatible[O.Release.Error, X]",
      "summary": "Adapt a native use callback with the scope's exact error type."
     }
    ],
@@ -317910,7 +320657,7 @@
    "summary": "Typed results, early termination and bridges between raised and stored errors."
   },
   "effects": {
-   "description": "| Family | Value | Additional operations |\n|---|---|---|\n| `ReaderT[M, R]` | A `ReaderAction`: borrows `R` when run, returns `M`'s carrier | `action`, `run`, `lift`, `ask`, `asks`, `local` |\n| `StateT[M, S]` | A `StateAction`: consumes `S` when run, returns `M`'s carrier of `(A, S)` | `action`, `run`, `lift`, `get`, `inspect`, `put`, `modify` |\n| `WriterT[M, W]` | A `WriterValue` wrapping `M`'s carrier of `(W.Value, A)` | `writer`, `run_writer`, `lift`, `tell`, `listen`, `censor` |\n| `OptionalT[M]` | `M`'s carrier of `Optional[A]` | `lift` |\n| `ResultT[M, E]` | `M`'s carrier of `Result[A, E]` | `lift` |\n\n`Reader[R]`, `State[S]` and `Writer[W]` are the transformers over\n`IdentityFamily`; `OptionalT` and `ResultT` over Identity are `OptionalFamily`\nand `ResultFamily[E]` themselves. Each family is a `Monad` of `fp.algebra`, so\n`map`, `pure`, `flat_map`, `map2_lazy` and `traverse` apply to its values.\nReader and State values are deferred computations: nothing runs until `run`.\n\nAsk/Local and Stateful are compile-time capability dictionaries. Reader and\nState select their own environment or state; LiftAsk, LiftLocal and\nLiftStateful explicitly select a capability from the immediate base. Generic\nprograms use the selected dictionary's Family for algebra operations.\nTell/Listen/Censor select a log; LiftTell, LiftListen and LiftCensor transport\nthose operations through one layer. Listen pairs the payload with an observed\nlog, while censor transforms only the selected computation's output log.\n\nTransformer order matters. `StateT` over `Result` returns no state on failure;\n`ResultT` over `State` can return a failed `Result` together with the updated\nstate. Neither rolls back external mutation. For `ResultT[State[S], E]`, run\nwith `run[State[S]]`, whose result is `Tuple[Result[A, E], S]`, and lift\nState's operations into the ResultT layer; for `StateT[ResultFamily[E], S]`,\nrun with that StateT, whose result is `Result[Tuple[A, S], E]`.\n\n| Stack | Evaluation order | Final shape |\n|---|---|---|\n| `WriterT[Reader[R], W]` | `run_writer`, then Reader `run` | `(log, value)` |\n| `ReaderT[Writer[W], R]` | Reader `run`, then `run_writer` | `(log, value)` |\n| `WriterT[State[S], W]` | `run_writer`, then State `run` | `((log, value), state)` |\n| `StateT[Writer[W], S]` | State `run`, then `run_writer` | `(log, (value, state))` |\n\n`OptionalT[ResultT[M, E]]` carries `M[Result[Optional[A], E]]`, and\n`ResultT[OptionalT[M], E]` carries `M[Optional[Result[A, E]]]`. Either an\nabsence or a stored error skips later callbacks and lazy right operands,\nwithout converting one failure kind into the other. Native exceptions from any\nstage propagate with their exact types instead of becoming `Result` data.\n\nTraversal into a layer delegates to the base's traversal loop with the layer's\naccumulation rule, so the count of pulls and callback calls is the same over\neager, deferred and third-party bases. A deferred computation can be copied or\nreplayed only when its stored inputs and callbacks support it; copying an owner\ndoes not make a consuming callback reusable.\n\nResource owns consumed acquisition and release scopes. IO uses the existing\nReader, Result and Optional families for typed outcomes and cooperative\ncancellation. Ref, Deferred, Semaphore and Queue construct IO recipes over\nshared state. The optional Fiber backend requires explicit unsafe_start and\nits documented thread-safety obligations.",
+   "description": "| Family | Value | Additional operations |\n|---|---|---|\n| `ReaderT[M, R]` | A `ReaderAction`: borrows `R` when run, returns `M`'s carrier | `action`, `run`, `lift`, `ask`, `asks`, `local` |\n| `StateT[M, S]` | A `StateAction`: consumes `S` when run, returns `M`'s carrier of `(A, S)` | `action`, `run`, `lift`, `get`, `inspect`, `put`, `modify` |\n| `WriterT[M, W]` | A `WriterValue` wrapping `M`'s carrier of `(W.Value, A)` | `writer`, `run_writer`, `lift`, `tell`, `listen`, `censor` |\n| `OptionalT[M]` | `M`'s carrier of `Optional[A]` | `lift` |\n| `ResultT[M, E]` | `M`'s carrier of `Result[A, E]` | `lift` |\n\n`Reader[R]`, `State[S]` and `Writer[W]` are the transformers over\n`IdentityFamily`; `OptionalT` and `ResultT` over Identity are `OptionalFamily`\nand `ResultFamily[E]` themselves. Each family is a `Monad` of `fp.algebra`, so\n`map`, `pure`, `flat_map`, `map2_lazy` and `traverse` apply to its values.\nReader and State values are deferred computations: nothing runs until `run`.\n\nAsk/Local and Stateful are compile-time capability dictionaries. Reader and\nState select their own environment or state; LiftAsk, LiftLocal and\nLiftStateful explicitly select a capability from the immediate base. Generic\nprograms use the selected dictionary's Family for algebra operations.\nTell/Listen/Censor select a log; LiftTell, LiftListen and LiftCensor transport\nthose operations through one layer. Listen pairs the payload with an observed\nlog, while censor transforms only the selected computation's output log.\n\nTransformer order matters. `StateT` over `Result` returns no state on failure;\n`ResultT` over `State` can return a failed `Result` together with the updated\nstate. Neither rolls back external mutation. For `ResultT[State[S], E]`, run\nwith `run[State[S]]`, whose result is `Tuple[Result[A, E], S]`, and lift\nState's operations into the ResultT layer; for `StateT[ResultFamily[E], S]`,\nrun with that StateT, whose result is `Result[Tuple[A, S], E]`.\n\n| Stack | Evaluation order | Final shape |\n|---|---|---|\n| `WriterT[Reader[R], W]` | `run_writer`, then Reader `run` | `(log, value)` |\n| `ReaderT[Writer[W], R]` | Reader `run`, then `run_writer` | `(log, value)` |\n| `WriterT[State[S], W]` | `run_writer`, then State `run` | `((log, value), state)` |\n| `StateT[Writer[W], S]` | State `run`, then `run_writer` | `(log, (value, state))` |\n\n`OptionalT[ResultT[M, E]]` carries `M[Result[Optional[A], E]]`, and\n`ResultT[OptionalT[M], E]` carries `M[Optional[Result[A, E]]]`. Either an\nabsence or a stored error skips later callbacks and lazy right operands,\nwithout converting one failure kind into the other. Native exceptions from any\nstage propagate with their exact types instead of becoming `Result` data.\n\nTraversal into a layer delegates to the base's traversal loop with the layer's\naccumulation rule, so the count of pulls and callback calls is the same over\neager, deferred and third-party bases. A deferred computation can be copied or\nreplayed only when its stored inputs and callbacks support it; copying an owner\ndoes not make a consuming callback reusable.\n\nResource owns native scopes; IOResource composes effectful acquisition, use\nand outcome-aware release through the same lifecycle. IO uses the existing\nReader, Result and Optional families for typed outcomes and cooperative\ncancellation. Ref, Deferred, Semaphore and Queue construct IO recipes over\nshared state. The optional Fiber backend requires explicit unsafe_start and\nits documented thread-safety obligations.",
    "summary": "Reader, State and Writer computations and the OptionalT and ResultT layers, over any base Monad."
   },
   "functions": {

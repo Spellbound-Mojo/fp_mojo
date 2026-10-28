@@ -362,6 +362,67 @@ there is no cancellation gap that can abandon an acquired value. Its callbacks
 are native synchronous operations, not general origin-dependent IO callbacks.
 `IOContract[P]` exposes admission and result types for generic host runners.
 
+### Effectful resources
+
+`resource_io(acquire, release)` describes an `IOResource`. Acquisition is an IO
+program; release consumes its acquired value and returns another IO program in
+the same error family. `scope.use(factory)` returns IO, deferring the complete
+scope until execution. Acquisition and release run with cancellation masked;
+use inherits the enclosing cancellation state. A successful acquisition always
+registers release before a pending cancellation can skip use. Release runs once
+on success, error or cancellation, and retains every exact error in order.
+
+<!-- example: docs/examples/io_resources.mojo -->
+Native factories returning a fixed IO type work directly. Implement `ScopedIO`
+when the use action needs to borrow the acquired value while it runs: its
+`Action[o]` retains that input origin, while completed values and errors cannot
+escape it. Independent captured origins remain supported. Resources, callbacks
+and errors may be move-only.
+
+| Operation | Behavior |
+|---|---|
+| `product(other)` | Acquire left then right; release right then left. Accepts native or effectful resources in the same error family. |
+| `flat_map(factory)` | Construct an inner resource from a borrowed outer value; retain outer release until the inner scope closes. |
+| `map(factory)` | Project an owned value using a native callback, retaining the original resource. |
+| `eval_map(factory)` | Project through IO, keeping the original resource alive while that IO borrows it. |
+| `eval_tap(factory)` | Run IO over the borrowed resource and retain the original value. |
+| `surround(program)` | Run an independent IO program inside the scope. |
+| `eval_resource(program)` | Lift cancellable IO into a resource with ordinary value destruction and no custom release. |
+| `lift_resource(scope)` | Lift a native Resource into the effectful lifecycle. |
+
+Failure or cancellation during a later acquisition or projection closes every
+previously acquired scope. Each outer release observes the completed inner
+scope, including errors from inner cleanup. `flat_map` does not let an inner
+recipe retain the temporary borrow of its outer value; use `eval_map` or
+`eval_tap` for an IO action that needs that borrow. Native Resource composition
+admits native recipes only; call `lift_resource` before binding an effectful
+inner resource.
+
+`resource_io_case(acquire, release)` adds outcome-aware cleanup. Its release
+callback consumes the resource and returns a `ScopedIO` factory whose input is
+`ExitCase[E]`. The factory can borrow the exact success/error/cancellation case
+throughout its action. Both factory stages and execution are masked; exceptions
+from any stage are captured. This two-stage signature transfers resource
+ownership separately from borrowing the exit case, preserving move-only errors
+without erasing origins. The example's `close_with_case` shows this pattern.
+
+`resource_io_full[E](acquire, release)` passes `Poll[E]` to an acquisition
+factory. Use `poll.apply(waiting)` for a region that may be canceled, and keep
+the final acquisition handoff masked. Failed or canceled acquisition must clean
+up its own partial work: registered release starts only after successful
+acquisition. `resource_io_case_full` also provides outcome-aware release. A poll
+retained from acquisition cannot unmask release, which has a fresh mask region.
+
+`IOResourceContract`, `IOResourceCaseContract` and `IOResourceFullContract`
+provide admission checks and concrete result types for generic code. All
+lifecycle effects select the same exact error family; native construction errors
+must be that type or `Never`. Dropping an unopened scope destroys captures
+without running acquisition or release.
+
+These operations currently run through the synchronous cooperative IO backend.
+They establish effectful lifecycle semantics; suspending asynchronous execution
+and an async scheduler remain future runtime work.
+
 ## Shared state and coordination
 
 `Ref[T]`, `Deferred[T]`, `Semaphore` and `Queue[T]` are shared handles: copying
