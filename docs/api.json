@@ -41466,7 +41466,7 @@
      "name": "Error"
     }
    ],
-   "description": "The first stage to run may take zero, one or two arguments (a `Thunk`,\n`Unary` or `Binary`, including plain functions and closures promoted with\n`as_unary`); every later stage takes the previous result. Calling the\ncomposition runs each stage once, in order, and a raised error stops it.\nIt is itself a `Thunk`, `Unary` or `Binary` in each receiver mode that all\nits stages support: shared (`call`, `__call__`), exclusive (`call_mut`) or\nconsuming (`call_once`). Nothing runs during construction. It is `Copyable`\nwhen every stage is, and copying is explicit.",
+   "description": "The first stage to run may take zero, one or two arguments (a `Thunk`,\n`Unary` or `Binary`, including plain functions and closures promoted with\n`as_unary`); every later stage takes the previous result. Calling the\ncomposition runs each stage once, in order, and a raised error stops it.\nIt is itself a `Thunk`, `Unary` or `Binary` in each receiver mode that all\nits stages support: shared (`call`, `__call__`), exclusive (`call_mut`) or\nconsuming (`call_once`). Nothing runs during construction. It is `Copyable`\nwhen every stage is, and copying is explicit.\n\nA named shared unary composition can be reused as a selected Pipeline or\nResult callback without copying its stages. The operation borrows it through\nthe existing shared receiver view. Use an explicit move to transfer the\nstages, including into deferred results. Mutable and consuming-only chains\nretain their existing owned admission.",
    "fields": [],
    "kind": "struct",
    "methods": {
@@ -41763,7 +41763,7 @@
     }
    ],
    "provider": "functions/composition",
-   "signature": "struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](Movable, Copyable where Fs.map[_Cell]().all_conforms_to[Copyable](), ThunkContract where arity == 0, UnaryContract where arity == 1, BinaryContract where arity == 2, Thunk where arity == 0 and _AllShared[Fs], MutableThunk where arity == 0 and _AllMutable[Fs], OnceThunk where arity == 0 and _AllOnce[Fs], Unary where arity == 1 and _AllShared[Fs], MutableUnary where arity == 1 and _AllMutable[Fs], OnceUnary where arity == 1 and _AllOnce[Fs], Binary where arity == 2 and _AllShared[Fs], MutableBinary where arity == 2 and _AllMutable[Fs], OnceBinary where arity == 2 and _AllOnce[Fs],)",
+   "signature": "struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](Movable, Copyable where Fs.map[_Cell]().all_conforms_to[Copyable](), ThunkContract where arity == 0, UnaryContract where arity == 1, BinaryContract where arity == 2, Thunk where arity == 0 and _AllShared[Fs], MutableThunk where arity == 0 and _AllMutable[Fs], OnceThunk where arity == 0 and _AllOnce[Fs], Unary where arity == 1 and _AllShared[Fs], _UnaryViewable where arity == 1 and _AllShared[Fs], MutableUnary where arity == 1 and _AllMutable[Fs], OnceUnary where arity == 1 and _AllOnce[Fs], Binary where arity == 2 and _AllShared[Fs], MutableBinary where arity == 2 and _AllMutable[Fs], OnceBinary where arity == 2 and _AllOnce[Fs],)",
    "summary": "A stored chain of stages, returned by `flow` and `compose`.",
    "traits": [
     "Binary",
@@ -41778,7 +41778,8 @@
     "Thunk",
     "ThunkContract",
     "Unary",
-    "UnaryContract"
+    "UnaryContract",
+    "_UnaryViewable"
    ]
   },
   "functions.Flipped": {

@@ -9,6 +9,8 @@ from ._stages import (_Plan, _Arity, _StageIn, _Classify, _SharedCapability, _Mu
     _first_thunk_shared, _first_thunk_mut, _first_binary_shared, _first_binary_mut)
 from ._pipeline import _PipelineRunner, _pipe_at
 from fp.callables.native import _Thin0F, _Thin1F, _Thin2F
+from fp.callables._views import _UnaryViewable
+from fp.callables._receiver import _SharedUnaryRef
 
 from fp.callables.products import _OptionalCell as _Cell
 
@@ -67,6 +69,7 @@ struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](
     MutableThunk where arity == 0 and _AllMutable[Fs],
     OnceThunk where arity == 0 and _AllOnce[Fs],
     Unary where arity == 1 and _AllShared[Fs],
+    _UnaryViewable where arity == 1 and _AllShared[Fs],
     MutableUnary where arity == 1 and _AllMutable[Fs],
     OnceUnary where arity == 1 and _AllOnce[Fs],
     Binary where arity == 2 and _AllShared[Fs],
@@ -83,6 +86,12 @@ struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](
     its stages support: shared (`call`, `__call__`), exclusive (`call_mut`) or
     consuming (`call_once`). Nothing runs during construction. It is `Copyable`
     when every stage is, and copying is explicit.
+
+    A named shared unary composition can be reused as a selected Pipeline or
+    Result callback without copying its stages. The operation borrows it through
+    the existing shared receiver view. Use an explicit move to transfer the
+    stages, including into deferred results. Mutable and consuming-only chains
+    retain their existing owned admission.
 
     Parameters:
         reverse: True for `compose`, whose stages run right to left.
@@ -117,6 +126,14 @@ struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](
             comptime assert Self.Cells[index] == Optional[Self.Fs[index]]
             self._cells[index] = rebind_var[Self.Cells[index]](Optional(function^))
         functions^.consume_elements(store)
+
+    # Shared unary compositions use the same retained receiver as Kleisli
+    # leaves. Pipeline admission can borrow the chain without copying stages.
+    comptime _View[o: ImmOrigin] = _SharedUnaryRef[downcast[Self, Unary], o]
+
+    def _unary_view[o: ImmOrigin](ref[o] self) -> Self._View[o]:
+        comptime assert Self.arity == 1 and _AllShared[Self.Fs]
+        return Self._View[o](Pointer(to=self))
 
     # Shared receiver.
     def call(self) raises Self.Error -> Self.Out:

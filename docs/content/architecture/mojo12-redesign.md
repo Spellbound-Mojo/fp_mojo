@@ -3771,3 +3771,19 @@ fails without an FP import on Mojo 1.2. Independent result/error inference,
 explicit receiver origins and register bounds did not repair the tested
 promotion. Ordinary selected `fold` calls accept the declaration directly;
 this limitation concerns the additional generic wrapper in the reproduction.
+
+### Shared ordinary composition callbacks
+
+Shared unary Composition values now implement `_UnaryViewable` conditionally
+on their existing arity and shared-stage capabilities. Their view is the
+existing `_SharedUnaryRef`, so stage evaluation, error propagation and capture
+storage remain with Composition's current runner. Named `flow` and `compose`
+chains can enter every existing view-aware operation without a copy; explicit
+moves retain owned dispatch. The view retains the chain's origin through a
+deferred result.
+
+The existing `_ViewFamily` boundary already recognizes native carrier outputs
+when no Kleisli family metadata is present. Ordinary composition therefore
+needs no new family inference or target-selection mechanism. Non-unary,
+mutable-only and consuming-only compositions do not expose the shared view;
+their existing calls and ownership requirements remain in place.

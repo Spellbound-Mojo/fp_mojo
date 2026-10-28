@@ -637,6 +637,16 @@ returns `18` for `"10010"`.
 
 ## Compose effectful functions
 
+Ordinary shared `flow` and `compose` chains can also be reused as named
+callbacks in Pipeline and direct Result operations. They share the same
+borrowed callback admission as Kleisli, without copying captures.
+Native Optional, Result and List outputs
+select their normal effect families; select a custom family explicitly when
+the callback's output does not identify it. `kleisli` remains the composition
+form that sequences stages through a selected Monad's bind.
+
+<!-- example: docs/examples/composition_reuse.mojo -->
+
 `kleisli[Family](parse).then(validate).map(render)` stores one computation for
 later calls. `then` passes each successful payload into the next effectful
 function. `map` transforms the payload inside that effect. The family supplies

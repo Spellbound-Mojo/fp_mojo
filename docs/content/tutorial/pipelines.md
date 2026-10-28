@@ -249,7 +249,22 @@ for lazy processing. Generic code can still name a family explicitly, as in
 ## Reuse and generic code
 
 Use `flow` or `compose` to build a reusable callable, and `partial` to bind
-leading arguments. A wrapper generic over a family should forward its public
+leading arguments. Named shared unary chains can be passed directly to
+pipeline callbacks: no `.copy()` or repeated wrapper is needed.
+
+<!-- example: docs/examples/composition_reuse.mojo -->
+
+`flow(add_one, double)` runs left to right; `compose(double, add_one)` runs
+right to left. The same named chain can serve several pipelines. A chain
+returning a native Optional, Result or List also supplies enough information
+for `traverse` or `then` to select that effect family. Each operation keeps
+its own short-circuiting and ownership rules.
+
+Use `chain^` when transferring its stages to an operation. A deferred operation
+retains a borrowed chain until it runs or is discarded. Mutable and
+consuming-only chains still require ownership; they are not implicitly shared.
+
+A wrapper generic over a family should forward its public
 operation contract; the [wrapper guide](../guides/generic-wrappers.md) covers
 that advanced case. Ordinary fluent calls need no such contract annotations.
 

@@ -75,7 +75,8 @@
         "docs/examples/selected_pipeline.mojo",
         "docs/examples/selected_workflow.mojo",
         "docs/examples/partial.mojo",
-        "docs/examples/kleisli.mojo"
+        "docs/examples/kleisli.mojo",
+        "docs/examples/composition_reuse.mojo"
       ]
     },
     "adt": {
@@ -192,7 +193,7 @@
       ],
       "status": "selected",
       "families": "Functor; Filterable, Monad or FunctorFilter where required",
-      "callbacks": "Native closures and thin pointers; library callable contracts retain receiver modes. Shared callable chains are borrowed directly by map, flat_map, filter_map.",
+      "callbacks": "Native closures and thin pointers; library callable contracts retain receiver modes. Shared callable chains are borrowed directly by map, flat_map, filter_map. Named shared unary flow/compose chains use the same borrowed view admission.",
       "ownership": "Transforms consume payloads; predicates and observers borrow them.",
       "errors": "Exact family/callback error; stored errors retain their family.",
       "timing": "Family-controlled, including deferred execution.",
@@ -210,7 +211,12 @@
         "tests/ownership/test_context_native_signatures_ownership.mojo",
         "tests/runtime/test_context_callable_views.mojo",
         "tests/ownership/test_context_callable_views_ownership.mojo",
-        "tests/compile_fail/context_callable_view_move.mojo"
+        "tests/compile_fail/context_callable_view_move.mojo",
+        "docs/examples/composition_reuse.mojo",
+        "tests/runtime/test_context_composition_views.mojo",
+        "tests/ownership/test_context_composition_views_ownership.mojo",
+        "tests/compile_fail/composition_view_lifetime.mojo",
+        "tests/compile_fail/composition_view_mutable.mojo"
       ]
     },
     {
