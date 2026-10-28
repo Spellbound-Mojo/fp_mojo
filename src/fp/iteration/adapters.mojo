@@ -18,8 +18,8 @@ from std.builtin.rebind import downcast, rebind_var
 from fp.iteration._advance import _next_fused, _Source, _source
 from fp.iteration._terminal import _find, _quantify, _collect_list
 from fp.iteration._callbacks import _predicate_plain, _predicate_raising, _predicate_thin, _LazyUnary, _LazyStep, _apply_lazy_unary, _apply_lazy_step, _LazyPredicate, _LazyOptional, _apply_lazy_predicate, _apply_lazy_optional
-from fp.callables.protocols import Unary, UnaryContract, Binary
-from fp.callables.invoke import RepeatableUnary
+from fp.callables.protocols import UnaryContract, BinaryContract
+from fp.callables.invoke import RepeatableUnary, RepeatableBinary
 from fp.callables.protocols import BorrowCallable
 from fp.iteration._callbacks import _predicate_callable
 
@@ -639,9 +639,9 @@ def flat_map[I: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](v
     return flatten(map(function^, source^))
 
 
-def scan_left[A: Copyable & Deinitable, I: Movable & Deinitable, F: Binary](var function: F, var initial: A, var source: I
-) -> _Scan[A, F.Second, _Source[I], F] where F.First == A and F.Second == _Source[I].Element and F.Out == A and F.Error == Never:
-    """Lazily yield the snapshots of a scan with a library `Binary` step."""
+def scan_left[A: Copyable & Deinitable, I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var function: F, var initial: A, var source: I
+) -> _Scan[A, F.Second, _Source[I], F] where F.First == A and F.Second == _Source[I].Element and F.Out == A and F.Error == Never and RepeatableBinary[F]:
+    """Lazily yield the snapshots of a scan with a shared or mutable library binary step."""
     return _Scan[A, F.Second, _Source[I], F](function^, initial^, _source(source^), False, False)
 
 

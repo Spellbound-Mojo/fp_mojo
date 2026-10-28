@@ -3,7 +3,7 @@ from fp.iteration import fold_left, reduce_optional
 from fp.iteration import map, filter, filter_map, flat_map, scan_left, collect_list
 from fp.iteration import iterated
 from fp.functions import partial
-from fp.callables import MutableUnary
+from fp.callables import MutableUnary, MutableBinary
 from std.testing import assert_equal
 
 def add(var total: Int, var value: Int) -> Int:
@@ -23,6 +23,17 @@ struct Running(MutableUnary):
     def call_mut(mut self, var value: Int) -> Int:
         self.total += value
         return self.total
+
+@fieldwise_init
+struct IncreasingWeight(MutableBinary):
+    comptime First = Int
+    comptime Second = Int
+    comptime Out = Int
+    var weight: Int
+    def call_mut(mut self, var total: Int, var value: Int) -> Int:
+        total += self.weight * value
+        self.weight += 1
+        return total
 
 def main() raises:
     var values: List[Int] = [-1, 1, 3]
@@ -85,3 +96,4 @@ def main() raises:
     print("again:", collect_list(scan_left(step, 10, range(1, 3))))
     print("initial:", iterated(range(0)).scan_left(step^, 5).collect_list())
     print("stateful:", iterated(range(1, 4)).map(Running(0)).collect_list())
+    print("changing weights:", iterated(range(1, 4)).scan_left(IncreasingWeight(1), 0).collect_list())

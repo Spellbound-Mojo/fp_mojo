@@ -13986,8 +13986,8 @@
             "sha256": "82f3c4f65d0a2a3e904f2bb9d17ee7692529b729480e6f6f3f005cd8b0c65b9c"
           },
           {
-            "signature": "def scan_left[A: Copyable & Deinitable, F: Binary]( deinit self, var step: F, var initial: A ) -> Iter[ScanIterator[A, F.Second, Self.I, F]] where F.First == A and F.Second == Self.I.Element and F.Out == A and F.Error == Never:",
-            "sha256": "6c8269729c088e9fdd54b9dfad340035c7d97b35a2a876107d58c7fbec0132a8"
+            "signature": "def scan_left[A: Copyable & Deinitable, F: BinaryContract & Movable & Deinitable]( deinit self, var step: F, var initial: A ) -> Iter[ScanIterator[A, F.Second, Self.I, F]] where F.First == A and F.Second == Self.I.Element and F.Out == A and F.Error == Never and RepeatableBinary[F]:",
+            "sha256": "85d21810330eb3342878e2dea727779f2bf384489c95a32158f530ea292a5dff"
           },
           {
             "signature": "def scan_left[A: Copyable & Deinitable, F: _BinaryViewable, o: ImmOrigin]( deinit self, ref[o] step: F, var initial: A ) -> Iter[ScanIterator[A, F.Second, Self.I, _SharedBinaryRef[F, o]]] where F.First == A and F.Second == Self.I.Element and F.Out == A and F.Error == Never:",
@@ -18707,8 +18707,8 @@
           "sha256": "8d29e28656e504d39dc0c104b53faf90a5786e1197ae2c11947dc96c9dc6535c"
         },
         {
-          "signature": "def scan_left[A: Copyable & Deinitable, I: Movable & Deinitable, F: Binary](var function: F, var initial: A, var source: I ) -> _Scan[A, F.Second, _Source[I], F] where F.First == A and F.Second == _Source[I].Element and F.Out == A and F.Error == Never:",
-          "sha256": "b30f6f2934612272c166fb37a976c220d105ac840fdfed294f4c0c00e1e7a5c3"
+          "signature": "def scan_left[A: Copyable & Deinitable, I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var function: F, var initial: A, var source: I ) -> _Scan[A, F.Second, _Source[I], F] where F.First == A and F.Second == _Source[I].Element and F.Out == A and F.Error == Never and RepeatableBinary[F]:",
+          "sha256": "9328c213d5ba55963815b560f105bce806aa76f706acd432f44499a4f5333009"
         },
         {
           "signature": "def scan_left[A: Copyable & Deinitable, I: Movable & Deinitable, F: _BinaryViewable, o: ImmOrigin]( ref[o] function: F, var initial: A, var source: I ) -> _Scan[A, F.Second, _Source[I], _SharedBinaryRef[F, o]] where F.First == A and F.Second == _Source[I].Element and F.Out == A and F.Error == Never:",

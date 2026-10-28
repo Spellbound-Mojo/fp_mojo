@@ -92,6 +92,20 @@ source/input equality and `F.Error == Never`. Existing explicit `F` and Optional
 payload bindings retain their parameter positions. The canonical source and
 flatten owners continue to preserve lazy pull order, exhaustion and cleanup.
 
+`scan_left` uses the corresponding `BinaryContract` and `RepeatableBinary`
+admission. `_apply_lazy_step` refines that contract and delegates to the same
+`_binary_repeated_as` dispatcher already used for shared steps. The existing
+snapshot transition and `_ScanDriver` own accumulator copies, the initial
+snapshot, source pulls and exhaustion. Mutable state stays in the existing
+callback cell. No callback is copied or invoked to produce the initial
+snapshot, and no new storage or loop is needed. Shared-view admission keeps
+its original borrow and receiver selection.
+Native exclusive-access rules still apply to mutable callbacks. A mutable
+origin carried by both the callback's type and an argument can alias even when
+that origin appears only in the callback's associated types. Such calls reject;
+the library does not erase origins to admit them. Read-only Span origins remain
+preserved through mutable callbacks and their returned snapshots.
+
 ## Folds
 
 ```text

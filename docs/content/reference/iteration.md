@@ -21,6 +21,14 @@ returned inner source before invoking the callback for the next outer element.
 
 <!-- example: docs/examples/iteration.mojo -->
 
+`scan_left` likewise accepts shared or mutable binary steps directly. The
+example's `.scan_left(IncreasingWeight(1), 0)` changes its weight between
+inputs while yielding `[0, 1, 5, 14]`. It yields a copy of the initial
+accumulator before pulling any input or calling the step, then one snapshot
+per input. The accumulator must remain Copyable; callback captures and input
+elements can be move-only. Use `scan_map` when carry and output should differ
+or the carry cannot be copied.
+
 An owned callback uses its mutable receiver when it has one, otherwise its
 shared receiver. A consuming-only callback cannot serve repeated lazy calls.
 Named shared partials, compositions and other supported wrappers retain their

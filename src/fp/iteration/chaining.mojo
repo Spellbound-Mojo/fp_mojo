@@ -1312,10 +1312,10 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Lazily yield accumulator snapshots with a stored closure."""
         return Iter(_scan_left(step^, initial^, self._iterator^))
 
-    def scan_left[A: Copyable & Deinitable, F: Binary](
+    def scan_left[A: Copyable & Deinitable, F: BinaryContract & Movable & Deinitable](
         deinit self, var step: F, var initial: A
-    ) -> Iter[ScanIterator[A, F.Second, Self.I, F]] where F.First == A and F.Second == Self.I.Element and F.Out == A and F.Error == Never:
-        """Lazily yield accumulator snapshots with a library `Binary` step."""
+    ) -> Iter[ScanIterator[A, F.Second, Self.I, F]] where F.First == A and F.Second == Self.I.Element and F.Out == A and F.Error == Never and RepeatableBinary[F]:
+        """Lazily yield accumulator snapshots with a shared or mutable library binary step."""
         return Iter(_scan_left(step^, initial^, self._iterator^))
 
     def scan_left[A: Copyable & Deinitable, F: _BinaryViewable, o: ImmOrigin](

@@ -13,7 +13,7 @@ kernel as typed failures.
 from std.builtin.rebind import downcast, rebind_var
 from fp.callables.native import _LazyUnary, _LazyOptional, _call_native_borrow, _call_native_binary
 from fp.data.control import ControlFlow
-from fp.callables.protocols import BorrowCallable, Unary, UnaryContract, Binary
+from fp.callables.protocols import BorrowCallable, UnaryContract, Binary
 from fp.callables.invoke import BorrowCallCompatible, invoke_borrowed, RepeatableUnary
 from fp.callables._receiver import _unary_repeated_as, _binary_repeated_as
 
@@ -54,9 +54,9 @@ def _apply_lazy_unary[T: Movable & Deinitable, U: Movable & Deinitable,
 
 def _apply_lazy_step[A: Copyable & Deinitable, T: Movable & Deinitable,
                      F: Movable & Deinitable](mut function: F, var accumulator: A, var value: T) -> A:
-    comptime if conforms_to(F, Binary):
-        comptime C = downcast[F, Binary]
-        comptime assert C.Error == Never and C.First == A and C.Second == T and C.Out == A, "scan_left: exact non-raising binary callable required"
+    comptime if conforms_to(F, BinaryContract):
+        comptime C = downcast[F, BinaryContract & Movable & Deinitable]
+        comptime assert RepeatableBinary[C] and C.Error == Never and C.First == A and C.Second == T and C.Out == A, "scan_left: exact non-raising binary callable required"
         return rebind_var[A](_binary_repeated_as[Never](
             rebind[C](function), rebind_var[C.First](accumulator^), rebind_var[C.Second](value^)))
     elif F == def(var A, var T) thin -> A:

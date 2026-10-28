@@ -36,7 +36,7 @@ Lazy callbacks do not raise, because a native iterator can raise only
 aggregate them with `collect_results`. A callback is a plain function, a
 capturing closure or a library callable such as a `Partial`. `map`, `filter_map`
 and `flat_map` accept shared or mutable unary receivers; `scan_left` accepts
-shared binary callbacks. Move a closure that
+shared or mutable binary callbacks. Move a closure that
 owns non-trivial state in with `callback^`. On Mojo 1.1, some native closures
 with move-only inputs/output and owned mutable state require `@always_inline`
 on the callback to preserve state writes at O3; see the native-boundaries
