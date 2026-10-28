@@ -59,6 +59,10 @@ The context stores no arguments or callback state. Reuse it after successes
 and failures; each argument bundle still runs once, while stateful owns its
 repeated-call state. Pure callbacks retain Never even when E is another type.
 Type-level factories such as `Capture[E].args(...)` remain available.
+Prefer those type-level forms when using only argument factories: Mojo treats
+these factories as static calls, so a saved context used only through them
+still triggers an unused-variable warning. `run` and `stateful` use the saved
+context as an actual receiver.
 `args` accepts up to eight owned positional arguments; an all-owned bundle
 can also append operands with `take`. Mixed conventions and keyword calls
 support up to three positional operands.

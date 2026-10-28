@@ -156,11 +156,16 @@ itself: it is invoked only on `Ok`. `flat_pair_with(project)` instead keeps
 both the original and projected successes in a tuple. A failure returned by
 any of these callbacks becomes the resulting `Err`.
 
-The same methods are available on `piped(result^)`, together with `map_err`
-and `or_else`; `.get()` extracts the already computed Result. Generic native
-forwarders name raising callback errors with `X=` (`Y=` for the second
-callback). A generic Piped recovery may also need `A=E, R=T` to identify the
-callback's input and output types on Mojo 1.1.
+The example starts with `pipeline(ok[String](value))`: the value supplies its
+success type, and `String` supplies the stored error type. The pipeline keeps
+that context through validation and recovery. `raise_on_err()` finishes with
+the successful `Int`, raising any stored error that remains. Use `.get()` only
+when the caller needs the complete Result for later handling.
+
+Pass native callbacks directly. For a captured callback that raises a custom
+native error, select `.raising[MyError]()` before that callback; this is
+independent of the stored `String` error. The direct Result methods remain
+available when a pipeline is unnecessary.
 
 ## Recover selected errors
 
@@ -183,12 +188,10 @@ All three methods preserve the success and stored error types. In particular,
 `or_else_if` cannot change `E`, because an unmatched error still needs that type.
 Raised errors propagate as native errors, including errors from predicates.
 
-Generic Piped forwarders may need `T=T, Failure=E` to identify the source
-Result and `X=`/`Y=` for native errors. When a generic continuation returns a
-Result, Mojo 1.1 can also require an explicit assertion that its native
-signature's nominal types match the source; follow the
-[generic forwarding conventions](../architecture/native-boundaries.md#generic-code).
-Concrete chains such as the example infer these types.
+The pipeline starts with `err[Int](message)`, selecting the missing success
+type once. After recovery, `.map(success).value_or(failure)` renders either
+branch as a plain String. No intermediate `.get()` or manual case extraction
+is needed, and the callbacks need no family or payload type annotations.
 
 ## Compose either outcome
 
@@ -217,13 +220,12 @@ outcome; an observer's `Err` replaces it. The observer must keep the stored
 error type, including its origins, because an original error may survive.
 Move-only payloads and consuming library observers need no copies.
 
-Generic `redeem_with` forwarders can pass `U=U, V=V` for the returned Result,
-alongside `X=`/`Y=` for native errors and Piped's `T=T, Failure=E` for the source.
-The native signatures keep Result types structural so their component types
-remain available through precompiled packages. The existing
-[native closure boundaries](../architecture/native-boundaries.md#known-compiler-defects)
-still apply: pass borrowed views in arguments or library callable fields when
-a native closure cannot carry their origins through its captures.
+These native handlers are passed directly, and their return types determine
+the next Result types. `raise_on_err()` finishes the example with its String.
+Use `kleisli` when you need to build and reuse a composed callback; it is not
+required to pass a single function. See [function composition](../reference/functions.md)
+for reusable chains and the [native boundary reference](../architecture/native-boundaries.md)
+for generic forwarding and compiler-specific restrictions.
 
 ## Keep raised errors raised
 
@@ -243,9 +245,10 @@ For a zero-argument callback use `Capture().run(callback)` or
 `Capture[Failure]().run(callback)`. Construction fixes the context before the
 callback is matched. `Capture.args().run(callback)` is the equivalent empty
 argument bundle. Direct `run` and `stateful` calls require a context instance.
-For consistent syntax across all forms, save `var capture = Capture[E]()` and
-reuse `capture.run(...)`, `capture.mutable(...)`, `capture.args(...)` and the
-other factories. The context stays reusable after a failure.
+Save `var capture = Capture[E]()` when reusing direct `run` or `stateful`
+calls. The context stays reusable after a failure. When only binding
+arguments, use the type-level factories shown below, such as
+`Capture[E].args(...)`; no saved context is needed.
 
 `Capture[E]` selects the native error type before callback inference. `args`
 binds zero to eight consumed operands; `borrow`, `mutable` and `take` bind

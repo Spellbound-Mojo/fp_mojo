@@ -1,5 +1,6 @@
-"""Validate, bind, observe and recover in a direct Result chain."""
-from fp.data import Result, Ok
+"""Validate, bind, observe and recover in a selected Result pipeline."""
+from fp.data import Result, Ok, ok
+from fp.functions import pipeline
 
 
 def positive(value: Int) -> Bool:
@@ -30,11 +31,12 @@ def fallback(var error: String) -> Int:
 def main() raises:
     for value in [4, -2]:
         var result = (
-            Result[Int, String](Ok(value))
+            pipeline(ok[String](value))
             .ensure(positive, invalid)
             .flat_map(double)
             .flat_tap(record)
             .tap_err(log_error)
             .recover(fallback)
+            .raise_on_err()
         )
-        print(result^.raise_on_err())
+        print(result)

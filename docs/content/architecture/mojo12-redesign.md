@@ -3715,3 +3715,23 @@ error conversion or ownership engine is duplicated. Abandoning a bundle drops
 its owned payloads and keyword values while releasing its borrowed slots.
 Returned values and captured errors retain their origins, and captured errors
 do not roll back mutations already performed by the callback.
+
+### Capture receiver experiment
+
+Adding instance argument factories alongside the existing static factories
+does not yet preserve the complete contract on Mojo 1.2. A borrowed receiver
+can conflict with an operand carrying the same mutable origin as the selected
+error type, even though Capture stores no fields. A value receiver avoids
+that conflict for argument factories, but an unbound instance `args` overload
+can absorb a leading Capture payload in an existing type-level call. Making
+the receiver keyword-only does not supply it through ordinary method syntax;
+an exact static overload cannot coexist with the identical instance signature.
+
+No extra factory overloads were retained. Changing the existing `run` and
+`stateful` receivers to values also did not eliminate their mutable-origin
+alias diagnostics. This investigation does not establish that another
+representation is impossible. A future redesign must preserve static calls,
+named-context reuse, exact error origins and ordinary Capture-valued operands
+together before replacing the current boundary. Type-level argument bundles
+remain the introductory syntax for bound calls; saved contexts remain useful
+for repeated direct and stateful admission.
