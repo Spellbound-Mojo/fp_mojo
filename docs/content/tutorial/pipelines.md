@@ -276,6 +276,11 @@ values as specified by `partial`; passing the callback does not copy its stored
 prefix. The [partial application example](../reference/functions.md#bind-leading-arguments-with-partial)
 shows a reusable multiplier.
 
+A stored `as_unary` adapter follows the same rule: reuse it by name, or pass
+`callback^` to transfer its captures. The [native callback example](../reference/callables.md)
+shows a formatter reused across two pipelines. Ordinary native functions and
+closures need no adapter for direct Pipeline calls.
+
 A wrapper generic over a family should forward its public
 operation contract; the [wrapper guide](../guides/generic-wrappers.md) covers
 that advanced case. Ordinary fluent calls need no such contract annotations.

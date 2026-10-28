@@ -9767,7 +9767,7 @@
      "name": "Error"
     }
    ],
-   "description": "It is `Copyable` when the stored function is. The Mojo 1.1 O3 measurements\nmatched direct calls; that performance result is not yet requalified for 1.2.",
+   "description": "Named adapters can be reused in Pipeline and Result callbacks through a\nshared borrow of their stored function. Deferred operations retain that\nborrow; an explicit move transfers the adapter and its captures.\nIt is `Copyable` when the stored function is. The Mojo 1.1 O3 measurements\nmatched direct calls; that performance result is not yet requalified for 1.2.",
    "fields": [],
    "kind": "struct",
    "methods": {
@@ -9890,13 +9890,14 @@
     }
    ],
    "provider": "callables/native",
-   "signature": "struct NativeUnary[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](Unary, Copyable where conforms_to(F, Copyable), ImplicitlyCopyable where conforms_to(F, ImplicitlyCopyable))",
+   "signature": "struct NativeUnary[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](Unary, _UnaryViewable, Copyable where conforms_to(F, Copyable), ImplicitlyCopyable where conforms_to(F, ImplicitlyCopyable))",
    "summary": "A native function or closure stored as a `Unary` value, made by `as_unary`.",
    "traits": [
     "Copyable",
     "ImplicitlyCopyable",
     "Unary",
-    "UnaryContract"
+    "UnaryContract",
+    "_UnaryViewable"
    ]
   },
   "callables.OnceBinary": {
@@ -10205,7 +10206,7 @@
        "variadic": false
       }
      ],
-     "description": "This moves the callable in and never calls or copies it. Most entry points\ntake native functions without it; it is needed for closures in pipelines\nand compositions, and wherever generic code needs a `Unary` value.\n`fp.functions` re-exports it.",
+     "description": "This moves the callable in and never calls or copies it. Most entry points\ntake native functions and closures without it. Use it to store a callback\nas a library callable, compose closures, or satisfy a generic `Unary` contract.\n`fp.functions` re-exports it.",
      "error": "",
      "parameters": [
       {
@@ -205375,7 +205376,7 @@
        "variadic": false
       }
      ],
-     "description": "This moves the callable in and never calls or copies it. Most entry points\ntake native functions without it; it is needed for closures in pipelines\nand compositions, and wherever generic code needs a `Unary` value.\n`fp.functions` re-exports it.",
+     "description": "This moves the callable in and never calls or copies it. Most entry points\ntake native functions and closures without it. Use it to store a callback\nas a library callable, compose closures, or satisfy a generic `Unary` contract.\n`fp.functions` re-exports it.",
      "error": "",
      "parameters": [
       {

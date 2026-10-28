@@ -16,4 +16,14 @@ including `raises Never` and no-value returns. Native pointers remain implicitly
 copyable; captured closures retain their own copyability and borrowed origins.
 Creating an adapter never invokes the callback.
 
+A named `as_unary` adapter can be reused directly in Pipeline and Result
+callbacks, even when its captured values cannot be copied. These operations
+borrow the adapter; they neither copy its captures nor extract its function.
+Use `callback^` to transfer ownership. Deferred operations keep the borrow
+until they run or are discarded, so keep the adapter alive for that duration.
+Native functions and closures can still be passed directly when storage as
+a library callable is unnecessary.
+
+<!-- example: docs/examples/native_callback_reuse.mojo -->
+
 <!-- api: callables -->

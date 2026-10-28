@@ -10,7 +10,8 @@ signature, for the fixed-arity pipeline and composition overloads.
 from std.builtin.rebind import downcast, rebind, rebind_var
 from std.builtin.variadics import TypeList
 from .protocols import Thunk, Unary, Binary, BorrowCallable
-from ._receiver import _MutableBorrow
+from ._receiver import _MutableBorrow, _SharedUnaryRef
+from ._views import _UnaryViewable
 from .products import _OptionalCell
 
 
@@ -458,10 +459,13 @@ def _call_native[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & 
 @fieldwise_init
 struct NativeUnary[A: Movable & Deinitable, R: Movable & Deinitable,
                    E: Movable & Deinitable, F: Movable & Deinitable,
-                   raising: Bool](Unary, Copyable where conforms_to(F, Copyable),
+                   raising: Bool](Unary, _UnaryViewable, Copyable where conforms_to(F, Copyable),
                                   ImplicitlyCopyable where conforms_to(F, ImplicitlyCopyable)):
     """A native function or closure stored as a `Unary` value, made by `as_unary`.
 
+    Named adapters can be reused in Pipeline and Result callbacks through a
+    shared borrow of their stored function. Deferred operations retain that
+    borrow; an explicit move transfers the adapter and its captures.
     It is `Copyable` when the stored function is. The Mojo 1.1 O3 measurements
     matched direct calls; that performance result is not yet requalified for 1.2.
 
@@ -487,6 +491,11 @@ struct NativeUnary[A: Movable & Deinitable, R: Movable & Deinitable,
             function: The native callable, consumed without copying or calling it.
         """
         self._function = Optional(function^)
+
+    comptime _View[o: ImmOrigin] = _SharedUnaryRef[Self, o]
+
+    def _unary_view[o: ImmOrigin](ref[o] self) -> Self._View[o]:
+        return Self._View[o](Pointer(to=self))
 
     def function(ref self) -> ref[self._function._value] Self.F:
         """Borrow the stored native function with the receiver's mutability.
@@ -552,8 +561,8 @@ def as_unary[A: Movable & Deinitable, R: Movable & Deinitable, //,
     """Store a native function or closure as a `Unary` value.
 
     This moves the callable in and never calls or copies it. Most entry points
-    take native functions without it; it is needed for closures in pipelines
-    and compositions, and wherever generic code needs a `Unary` value.
+    take native functions and closures without it. Use it to store a callback
+    as a library callable, compose closures, or satisfy a generic `Unary` contract.
     `fp.functions` re-exports it.
 
     Parameters:

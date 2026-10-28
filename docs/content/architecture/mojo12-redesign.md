@@ -3813,3 +3813,21 @@ context, also for an empty literal. Examples now use that form directly.
 Named Lists retain inferred element mapping, and named Arrays retain their
 whole-value Identity behavior until `.elements()` selects their element
 family. No new overload or literal-specific conversion is introduced.
+
+### Stored native unary adapters retain shared receiver ownership
+
+`NativeUnary` now offers the existing `_UnaryViewable` contract using
+`_SharedUnaryRef`. A selected operation borrows a named adapter and owns its
+small receiver reference. `_call_native` still owns native signature dispatch,
+and the existing inline cell still stores the native function. Construction,
+copyability, `function()` and `into_function()` retain their contracts.
+
+This admits move-only captured closures without an implicit copy or an explicit
+move at each call. Deferred family results retain the adapter's borrow;
+explicit moves and temporary adapters transfer their capture storage through
+the existing owned overload. Lazy iterator mapping retains the same borrow and
+performs no callback work until consumption. Tests cover exact capture destruction on execution
+and abandonment, stored thin-pointer independence, native errors, inferred
+traversal targets, and output origins that outlive a local adapter. Invalid
+input/output types, extracting a borrowed adapter, and escaping a local output
+origin remain ordinary compiler rejections.
