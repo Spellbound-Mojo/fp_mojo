@@ -6,6 +6,7 @@ number of stages one call at a time. `flip` swaps two arguments and `partial`
 binds leading arguments. `tupled(function)` adapts a binary callback to one
 native pair without copying either element. `first[Other]` and `second[Other]`
 transform one pair element and move the other through unchanged.
+`split(left, right)` transforms both pair elements with their types inferred.
 
 Two-stage `flow` and `compose` can mix a plain function or stored thin pointer
 with a library callable directly, in either position. Compositions own their
@@ -43,7 +44,7 @@ from .kleisli import Kleisli, kleisli
 from .flipped import Flipped, FlippedFunction, flip
 from .tupled import Tupled, tupled
 from fp.callables.products import MappedPair
-from .products import first, second
+from .products import first, second, Split, split
 from .partial import Partial, partial
 
 from .context import Pipeline, pipeline, pipeline_values

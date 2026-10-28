@@ -477,6 +477,73 @@ def pair_projection_source(path):
     return spliced(path, ''.join(out), '# --- pair projection native admission (generated) ---\n', '# --- end pair projection native admission ---\n', '')
 
 
+def split_overloads():
+    # Only admission has a cross product. Pair transfer, invocation, ordering,
+    # receiver selection and error joining remain in MappedPair/Composition.
+    out = []
+    factories = [list(native_factories('owned', [f'A{i}'], name=name,
+                     result=f'R{i}', error=f'E{i}', origin=f'q{i}'))
+                 for i, name in enumerate(('left', 'right'))]
+    descriptions = {}
+    for i, side in enumerate(('first', 'second')):
+        descriptions.update({f'A{i}': f"The {side} element's type.",
+                             f'R{i}': f"The {side} callback's result type.",
+                             f'E{i}': f"The {side} callback's error type.",
+                             f'q{i}': f"The {side} pointer admission borrow's origin."})
+    descriptions.update(F="The first element's library callback type.",
+                        G="The second element's library callback type.")
+    for left in [None, *factories[0]]:
+        for right in [None, *factories[1]]:
+            if left is None and right is None:
+                continue
+            parameters, arguments, types, values, conditions = [], [], [], [], []
+            for name, library, factory in [('left', 'F', left), ('right', 'G', right)]:
+                if factory is None:
+                    parameters.append((library, 'UnaryContract & Movable & Deinitable'))
+                    arguments.append(f'var {name}: {library}')
+                    types.append(library)
+                    values.append(name + '^')
+                    conditions.append(f'_OnceUnaryAvailable[{library}]')
+                else:
+                    parameters.extend((*factory.parameters, *factory.pointer.parameters))
+                    arguments.append(factory.argument)
+                    types.append(factory.adapter)
+                    values.append(f'{factory.adapter}({name})')
+                    conditions.extend(factory.pointer.conditions)
+            declarations = [f'{key}: {bound}' for key, bound in parameters] + ['//']
+            where = ' where ' + ' and '.join(conditions) if conditions else ''
+            documented = ''.join(f'        {key}: {descriptions[key]}\n' for key, _ in parameters)
+            out.append(f'''def split[{", ".join(declarations)}](
+    {", ".join(arguments)}
+) -> Split[{", ".join(types)}]{where}:
+    """Transform both pair elements with native or library unary callbacks.
+
+    Types are inferred from the callbacks. Construction stores native pointers
+    and owns library callbacks without invoking them. Pair transfer, left-to-right
+    execution, receiver capabilities and exact errors follow ordinary composition.
+
+    Parameters:
+{documented}
+    Args:
+        left: The first element's callback.
+        right: The second element's callback.
+
+    Returns:
+        A composition transforming both elements of an owned pair.
+    """
+    return split({", ".join(values)})
+
+
+''')
+    return ''.join(out)
+
+
+def products_source(path):
+    return splice_source(pair_projection_source(path), split_overloads(),
+                         '# --- pair split native admission (generated) ---\n',
+                         '# --- end pair split native admission ---\n', '')
+
+
 def main():
     import generate_sequencing_syntax as sequencing_syntax
     parser = argparse.ArgumentParser(description=__doc__)
@@ -501,7 +568,7 @@ def main():
         ('iteration/derived.mojo', lambda path: spliced(path, traversal_syntax.methods('free'), traversal_syntax.START, traversal_syntax.END, traversal_syntax.HEADER)),
         ('functions/composition.mojo', composition_source),
         ('functions/tupled.mojo', tupled_source),
-        ('functions/products.mojo', pair_projection_source),
+        ('functions/products.mojo', products_source),
         ('matching/matcher.mojo', lambda path: spliced(path, match_overloads(), MATCH_START, MATCH_END, MATCH_HEADER)),
     ):
         path = ROOT / 'src/fp' / name

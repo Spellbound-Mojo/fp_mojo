@@ -37,7 +37,7 @@ class GeneratedOverloadTests(unittest.TestCase):
         for name, render in (('pipeline.mojo', generator.pipeline_source),
                              ('composition.mojo', generator.composition_source),
                              ('tupled.mojo', generator.tupled_source),
-                             ('products.mojo', generator.pair_projection_source)):
+                             ('products.mojo', generator.products_source)):
             with self.subTest(module=name):
                 path = folder/name
                 self.assertEqual(path.read_text(), render(path),

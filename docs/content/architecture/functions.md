@@ -19,6 +19,7 @@ partial(f, a, b)(rest)           = f(copy(a), copy(b), rest)
 tupled(f)((a, b))               = f(a, b)
 first[Other](f)((a, b))         = (f(a), b)
 second[Other](f)((a, b))        = (a, f(b))
+split(f, g)((a, b))             = (f(a), g(b))
 ```
 
 These equations describe logical calls. `args` is zero, one or two arguments for
@@ -87,6 +88,21 @@ its literal no-value signatures. Native no-return callbacks leave a
 distinct. The same pair mapping owner supports both, including move-only
 untouched elements. Capturing unary closures enter through the existing
 `as_unary` adapter.
+
+`split(left, right)` follows
+[Cats' `Arrow.split`](https://github.com/typelevel/cats/blob/main/core/src/main/scala/cats/arrow/Arrow.scala):
+compose `first(left)` followed by `second(right)`. Each callback supplies the
+other projection's untouched type, so the caller needs no `Other` annotation.
+`Split[F, G]` names that existing composition; it adds no storage or invocation
+path. The composition planner retains exact error compatibility and receiver
+capabilities, and its normal execution order skips the right callback after a
+left-side failure. These callbacks can have effects, so their order matters.
+
+Native/library and native/native factories use the same `native_factories`
+descriptor as single callback admission, with distinct temporary borrow origins
+for each pointer. The generated cross product is limited to native signatures;
+every body immediately delegates to the library factory. Existing single
+callback signatures retain their original parameter names and placement.
 
 ## Pipelines
 

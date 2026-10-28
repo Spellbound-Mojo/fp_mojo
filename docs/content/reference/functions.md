@@ -719,6 +719,21 @@ operations. A native no-return callback leaves a `type_of(None)` element in
 the pair, preserving its exact native result type. An explicit `NoneType`
 result stays distinct. In either case the untouched element is retained.
 
+Use `split(left, right)` to transform both pair elements with their types
+inferred from the callbacks. For example, `split(display, excited)((6,
+String("ready")))` produces `(String("price=6"), String("ready!"))`. Either side
+can be a plain function, stored thin pointer or library callable. Capturing
+unary closures use `as_unary` in that position. This follows Cats' `Arrow.split`.
+
+The returned `Split` is an ordinary `Composition` of `first` and `second`.
+It owns both callbacks and moves both pair elements without copying them.
+The left callback runs first; if it raises, the right callback is skipped.
+Both raising callbacks must use the same exact error type; a non-raising
+callback can join either side. Shared, mutable and consuming calls require
+both callbacks to support that receiver. Named shared results can be borrowed
+in mapping operations, and `.then(next)` continues the resulting pair's chain.
+No-value results retain their native tuple element types.
+
 Use `.then(next)` to grow an existing composition one stage at a time. A plain
 function, stored thin pointer or library stage is accepted directly. Move a
 named chain with `chain^.then(next)`; the result owns its stages and construction

@@ -174,7 +174,23 @@
         "tests/compile_fail/pair_projection_once_shared.mojo",
         "tests/compile_fail/pair_projection_pair.mojo",
         "tests/compile_fail/pair_projection_side.mojo",
-        "tests/compile_fail/pair_projection_untouched_origin.mojo"
+        "tests/compile_fail/pair_projection_untouched_origin.mojo",
+        "tests/runtime/test_split.mojo",
+        "tests/ownership/test_split_ownership.mojo",
+        "tests/laws/test_split_laws.mojo",
+        "tests/compile_fail/split_arity.mojo",
+        "tests/compile_fail/split_captured.mojo",
+        "tests/compile_fail/split_consumed.mojo",
+        "tests/compile_fail/split_contract.mojo",
+        "tests/compile_fail/split_error.mojo",
+        "tests/compile_fail/split_input.mojo",
+        "tests/compile_fail/split_left_origin.mojo",
+        "tests/compile_fail/split_lifetime.mojo",
+        "tests/compile_fail/split_mutable.mojo",
+        "tests/compile_fail/split_once_shared.mojo",
+        "tests/compile_fail/split_pair.mojo",
+        "tests/compile_fail/split_right_mutable.mojo",
+        "tests/compile_fail/split_right_origin.mojo"
       ]
     },
     "adt": {

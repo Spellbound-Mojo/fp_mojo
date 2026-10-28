@@ -17963,6 +17963,13 @@
    "kind": "type or alias",
    "provider": "functions/_outcomes"
   },
+  "functions.Split": {
+   "declarations": [
+    "comptime Split[F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Composition[False, 1, MappedPair[F, G.Arg, True], MappedPair[G, F.Out, False]]"
+   ],
+   "kind": "type or alias",
+   "provider": "functions/products"
+  },
   "functions.Tupled": {
    "declarations": [
     "struct Tupled[F: BinaryContract & Movable & Deinitable]("
@@ -19194,6 +19201,688 @@
     {
      "sha256": "c94ae77f02e96fbf4be22c9dba2e983eaa2d6e9ae29e35f25d31746c70341f74",
      "signature": "def second[A: RegisterPassable & Deinitable, E: Movable & Deinitable, //, Other: Movable & Deinitable]( function: def(var A) raises E thin ) -> MappedPair[NativeUnary[A, type_of(None), E, type_of(function), True], Other, False]:"
+    }
+   ],
+   "provider": "functions/products"
+  },
+  "functions.split": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "60eda824a666ba06eee6dcf2bf336eb38adb68273f14483d83c1fdea74f0844d",
+     "signature": "def split[F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable]( var left: F, var right: G ) -> Split[F, G] where _OnceUnaryAvailable[F] and _OnceUnaryAvailable[G]:"
+    },
+    {
+     "sha256": "e123b474405e232e664860ac98e1585a7bc6c5dc15cd4978bb8cf67d6b115087",
+     "signature": "def split[F: UnaryContract & Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( var left: F, ref[q1] right: def(var A1) thin -> R1 ) -> Split[F, NativeUnary[A1, R1, Never, type_of(right), False]] where _OnceUnaryAvailable[F]:"
+    },
+    {
+     "sha256": "986a59667bbea8e15e79921735d98f3dfd4688f647cfdb0199c60cd58ade229b",
+     "signature": "def split[F: UnaryContract & Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( var left: F, right: def(var A1) thin -> R1 ) -> Split[F, NativeUnary[A1, R1, Never, type_of(right), False]] where _OnceUnaryAvailable[F] and not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "97482771a7e4c95eca07224aeff89487f620e54d193fe6bbe17081a7e5ba82dd",
+     "signature": "def split[F: UnaryContract & Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( var left: F, right: def(var A1) thin -> R1 ) -> Split[F, NativeUnary[A1, R1, Never, type_of(right), False]] where _OnceUnaryAvailable[F] and not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "d691162a813fbaadf56c40edbdff0bd0bf6b8938afc0d6894bd639304724dae6",
+     "signature": "def split[F: UnaryContract & Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( var left: F, right: def(var A1) thin -> R1 ) -> Split[F, NativeUnary[A1, R1, Never, type_of(right), False]] where _OnceUnaryAvailable[F]:"
+    },
+    {
+     "sha256": "a54cf4e12c30fc91605b2be61817f5caead667651423ae9314ef5b260ac286aa",
+     "signature": "def split[F: UnaryContract & Movable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //]( var left: F, ref[q1] right: def(var A1) thin ) -> Split[F, NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _OnceUnaryAvailable[F]:"
+    },
+    {
+     "sha256": "e4fdf42a35f7f7141940179579ddc5c6531990a99a33db372415a8158036af15",
+     "signature": "def split[F: UnaryContract & Movable & Deinitable, A1: RegisterPassable & Deinitable, //]( var left: F, right: def(var A1) thin ) -> Split[F, NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _OnceUnaryAvailable[F]:"
+    },
+    {
+     "sha256": "d9fa1a09b0c97776d8e44bebb6a8b6506f7d3647e733250d7f410eb3e26a23b8",
+     "signature": "def split[F: UnaryContract & Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( var left: F, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Split[F, NativeUnary[A1, R1, E1, type_of(right), True]] where _OnceUnaryAvailable[F]:"
+    },
+    {
+     "sha256": "4cd72ec22e2b5aa55569c78f369c86d56ad4c9ff744fe7b01ba9203d731117cf",
+     "signature": "def split[F: UnaryContract & Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( var left: F, right: def(var A1) raises E1 thin -> R1 ) -> Split[F, NativeUnary[A1, R1, E1, type_of(right), True]] where _OnceUnaryAvailable[F] and not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "78935c09076af3e379ee0fd82e9882f3a4e91f0cff86e07eb64356a230280543",
+     "signature": "def split[F: UnaryContract & Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( var left: F, right: def(var A1) raises E1 thin -> R1 ) -> Split[F, NativeUnary[A1, R1, E1, type_of(right), True]] where _OnceUnaryAvailable[F] and not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "8eee467288784900aa366103e73f3de5c80d52c64f1acd283cf8f47a56bd2840",
+     "signature": "def split[F: UnaryContract & Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( var left: F, right: def(var A1) raises E1 thin -> R1 ) -> Split[F, NativeUnary[A1, R1, E1, type_of(right), True]] where _OnceUnaryAvailable[F]:"
+    },
+    {
+     "sha256": "4b92891daa8f5079e4cce741a492612958a387540f91d18736761b3f7a56bc3e",
+     "signature": "def split[F: UnaryContract & Movable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( var left: F, ref[q1] right: def(var A1) raises E1 thin ) -> Split[F, NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _OnceUnaryAvailable[F]:"
+    },
+    {
+     "sha256": "a7d980947fd6eea2e9f36c098b3d2dc32d1fec082e335b7e143bd0fb69d27822",
+     "signature": "def split[F: UnaryContract & Movable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( var left: F, right: def(var A1) raises E1 thin ) -> Split[F, NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _OnceUnaryAvailable[F]:"
+    },
+    {
+     "sha256": "75285926c2e024b89b4c9ddea2d973b71a1a42fce046501c6181fe3d78c375ca",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, G: UnaryContract & Movable & Deinitable, //]( ref[q0] left: def(var A0) thin -> R0, var right: G ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], G] where _OnceUnaryAvailable[G]:"
+    },
+    {
+     "sha256": "7a0bb146d49cfe857b07564f19ca3eec8ab34cdb59179207a25c8ee7eee34cff",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "38372f71762b6038677b0163ca5b71bd4269d276ab76455f82e26a71d86e570d",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "85c1bbb01fdf33cf951533c045f3253731a6cc25e70b2677941e0a0531cf88a5",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( ref[q0] left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "5fd910880aedc9c63dc9610e3ab60d4f28615773368afabd4cd2c6d73093ebf0",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "a0726f4520ff2937e7728209319755b76120602c89909ddd0cce42cb32e74aa0",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "3e73cf19560fcdccf996e2e384f4875b1b64402dbbb7a0675696a691369545c1",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) thin -> R0, right: def(var A1) thin ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "d86896541484ab3188b943aaa68a516fe048ded7e924195f05fcd442a7289fb0",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "a6a3354275d82d6254699d6b1a39b0ea7b3acccc16dc5bcca8216d63fece133c",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "31d4ddf7a746106a6e61c5c11bb31e1e386ff79cb06d8a3636ec3df85d9e281d",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "f348e8ef6ac63e3d5e04dac2ac8c953e4bb6c1d50a2b8ac4d2a3f4ab78c1638d",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "c158302404cf5f91de921d398da1ef61e1abcd5a0ffd170c4c97092ecc0cd41b",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "c9e3bd847e5bae590b86c0d2b0f3b017516017cc1aec31fdb2f43a321a277b4f",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "ed7a19c21b09d57719ceafeff145bc6c276d957bb04baed951386e6ef8d25236",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, G: UnaryContract & Movable & Deinitable, //]( left: def(var A0) thin -> R0, var right: G ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], G] where not conforms_to(A0, RegisterPassable) and _OnceUnaryAvailable[G]:"
+    },
+    {
+     "sha256": "06e86fdd885e4824b3aa385e08b128c03f2797c04fad948d46c78f99ef21debc",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable):"
+    },
+    {
+     "sha256": "dde729f1166ddea84ca4b504fe8227ddb54732b056a4f135d3b1c290e4d3bfb9",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "cd3bb8b2ad48673ccd7dcfb90bf54eff39880125b68ae4a5c3779a8b79744176",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "884e8b31f81027b1e0ddfe4f9f31811332ec37076cc80788c4e0770ca9fd08d5",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable):"
+    },
+    {
+     "sha256": "dcb3a2c18aeb24fd71d4f51b1452f03b2792fd1046b3b4fee970662d3f73a6cb",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable):"
+    },
+    {
+     "sha256": "87691da59a6739e48aa01e0660f7709a5c95d0f15ec6a5f3e1fcd2486be1bb0e",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable):"
+    },
+    {
+     "sha256": "abd12ea6717c70b303b8434a8d63f4077299fd220045dce0f465952a0c88e486",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable):"
+    },
+    {
+     "sha256": "2c8f292553b50403017fd2aeb72e946917a107a6a8cada8c2527b84f44fd90dd",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "9bf63b5ba02c1502621fa1305749fe3e39baec3bb11a1aa29000a4f56edb260c",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "ab4321943db3ff9afc405a8b0353645d0e157d43fcb2827645cdbf2040aecc0b",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable):"
+    },
+    {
+     "sha256": "f09c949a8d836e5601fa0300284f6d7ba088b2123fe8cd5581d80e92fa129d6d",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable):"
+    },
+    {
+     "sha256": "2b44b8f5dbda2d628e61779914f436941ea8268448a73f2ee4f76b2fb6ecd41e",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable):"
+    },
+    {
+     "sha256": "229ab6f77beafdd1fcfc4d1eb6e90b2af597e904560ed5571dade76f13a3405e",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //]( left: def(var A0) thin -> R0, var right: G ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], G] where not conforms_to(R0, RegisterPassable) and _OnceUnaryAvailable[G]:"
+    },
+    {
+     "sha256": "d50201b0ef949a2818e58d3c89de62f86332d0b6f6c77ba0a9d8058f16986cbc",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable):"
+    },
+    {
+     "sha256": "2073f4b8d9c9bc21018f97284d2978baa31404b14e02f659b1c56970cb82e691",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "b1b711706a27a5cff4061fa19daa6d46a88f9047579cea3b54dbf37f3d7165ec",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "d79bb5e9221dd18c561c247d973f5ed8b520ba26daf492d3eaf01b10e9f16318",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable):"
+    },
+    {
+     "sha256": "72c38f1a7e4432f3e6a5aed389a4e6d85179c848c5fcf5f53307b1bfed953401",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable):"
+    },
+    {
+     "sha256": "8ee803711c2a6bc37075e84dd026fca068ae1fac91d88b79abba7464261b97f5",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: RegisterPassable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable):"
+    },
+    {
+     "sha256": "bf78703b6c1fa59357a793681f9d0fefa307e21f22e247a810122111840d4385",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable):"
+    },
+    {
+     "sha256": "95cd14333cb9066f5b02a4b994dcea5a1853b3aed3874d80aac4c4d7ab92d827",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "b8b18ee1d5a1f81dc7fc2981a0393cb078265a7f60ce56e55a054f1322485dc1",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "869655ee18f0c65c2362055ae93e58ca94fea354a8108519118753b66c93c85f",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable):"
+    },
+    {
+     "sha256": "e2d02448318d8e614ca4a99f7a599cb01e445a0a92eef0446c566ecdf093962f",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable):"
+    },
+    {
+     "sha256": "68e03c231aa28de3415aa3ec19e4efa1ee3277478f7de2156024e3df9d7b8e74",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable):"
+    },
+    {
+     "sha256": "4838972f8d5ec16bcefbd2c9cf145c2ea61117d8f860b22050f9fc036feb9136",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, G: UnaryContract & Movable & Deinitable, //]( left: def(var A0) thin -> R0, var right: G ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], G] where _OnceUnaryAvailable[G]:"
+    },
+    {
+     "sha256": "b1f39c0a0fe0081ad1d87877660523eda6dad178cb44ff7cf12f5a7857e995e4",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "ef0bb6338cdc5ca185a6490634dc19193a6f93d994c2c1bd6b735fa6960f4a35",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "027a100e0658b39b467e30e20d4234cec1a39bcdb2f884654b2a85bae305af5b",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "0842794fdecd15e8e21b7361164bb6eca7514230b5268cb896d434a311a8e826",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "23800795aedb2395a6ecebc97d2327f31d37726643d4b92de5826af99b558557",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "391370c6d1d4b76cf6b5814c6c763a5e84ac0d88a9ac94da73ef87b390784e1a",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "ef71ddf3d8549d78c0eb106635c3300cace7086b160713f1859c881ece2e9b47",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "ab85c6350ee954c57a7941a07ed8a286954a347966598a46a409e8c225898c70",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "1a78f930497e6b8ba0dacf69c06840bf07aed1f44b8182b9dab8adff5c34d930",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "a83906b96f4ac0914bcf29478b408d41ce43f7e2d31c31c7fe609c231ddcd0aa",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "2b783e3d9b1efb131ff81d5860f239ef5018b2051db23c9ad282a7f710d70603",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "c7d9b3ee85e3c228977922c1c87b111ba84d00f39a81a6e7191cdd3114d05bf7",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "368828a0ab372217f26977efb83257b0452274e86a16b86ee45dcbba05447647",
+     "signature": "def split[A0: Movable & Deinitable, q0: ImmOrigin, G: UnaryContract & Movable & Deinitable, //]( ref[q0] left: def(var A0) thin, var right: G ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], G] where _OnceUnaryAvailable[G]:"
+    },
+    {
+     "sha256": "fcc95e10ba0decfc73f6e5c7843fe3d5706199b359417ccec7d13401650df75c",
+     "signature": "def split[A0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) thin, ref[q1] right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "d721f1f2786cf167b03a4cf91c71886ef6e9b51a8c2f04c2b9b2c6ccfe80a32b",
+     "signature": "def split[A0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) thin, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "12444e178d76a7a1deb55ccdb39162e4cfdc4d3aa69219b4120eda7a401d4f0e",
+     "signature": "def split[A0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( ref[q0] left: def(var A0) thin, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "92f429d7d6a9b294d850f1605e5e434df8e043d3653c1b249e4eafd5b2604830",
+     "signature": "def split[A0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) thin, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "3ef79fbd590e9af9f949e0dd3b435408679fe05fd32bf2053e54fa76a9dd70e4",
+     "signature": "def split[A0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) thin, ref[q1] right: def(var A1) thin ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "bac6934b8103ddb039e8bc5eb36f3cea7ec00eeb614aa76437eb4486d49e777d",
+     "signature": "def split[A0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) thin, right: def(var A1) thin ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "d8e78d48e568ac470f44cbd0a6109770e1be2795e07abd26a5f99765b032576f",
+     "signature": "def split[A0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) thin, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "8ca6ba3ed2da35b5364f50c81945c5bf920756c6410c3c77d4e96935757f3a76",
+     "signature": "def split[A0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) thin, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "a1d21f66954545b432fd3244a6e2e262f7457d26ac9573c44200b0630972a36f",
+     "signature": "def split[A0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) thin, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "646bd3e6b009d87a6b859b0748fc1164c1c22685869b0bb65a07da55f1e0462f",
+     "signature": "def split[A0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) thin, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "5ba6251318d53defd45e90c9d82a5913161b3f57a628036e013b9e48ca736ff6",
+     "signature": "def split[A0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) thin, ref[q1] right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "a99e4891c3e476006f0dd41d7f54e968f1437bd7e540d67f76ee32c3ef21d523",
+     "signature": "def split[A0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) thin, right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "f33f2fa2c6303eaec43c5027d3eccdcad2156cfab8b85e91c0f3236adcb967e4",
+     "signature": "def split[A0: RegisterPassable & Deinitable, G: UnaryContract & Movable & Deinitable, //]( left: def(var A0) thin, var right: G ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], G] where _OnceUnaryAvailable[G]:"
+    },
+    {
+     "sha256": "424964cf8022e274f1f8efe24c9b2849a32f587f596d156911dbaf4f7cb974a8",
+     "signature": "def split[A0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin, ref[q1] right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "24625a8fc9b6517e6429b2ebdd52754818bad0c87c215b20bc790bfc91a93f05",
+     "signature": "def split[A0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) thin, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "77217e427ea44adbdef13ddd2df5b110313806b89c55ef2746406671df478357",
+     "signature": "def split[A0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( left: def(var A0) thin, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "668873138a13ae5a739f43bd7223ab8d9b07442b39d58984978eb8056b80bb20",
+     "signature": "def split[A0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) thin, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "d10a8676138ee0bc18db42d7c55c16a6c51432d585ea923d4bba0b5eff3bb94e",
+     "signature": "def split[A0: RegisterPassable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin, ref[q1] right: def(var A1) thin ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "d257250e1cedd233e0aa93fe66c571126a0e145d2b0c0440243917b6c6a47955",
+     "signature": "def split[A0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, //]( left: def(var A0) thin, right: def(var A1) thin ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "c5866c938674d1c470c374802b9e6e3d2e9b4ae18a3211606c45278313d4ba46",
+     "signature": "def split[A0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "2674896bc9a374b11f4e7c57851bea22fc0c69e4af75978bbb5411e578b43e8e",
+     "signature": "def split[A0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "813a0796ab2872ae8eced7384445e293dfd86f7317ef0a5cf897af1aa1206dc8",
+     "signature": "def split[A0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "40f0ac5d793579080b023e90d334b504e14e00e6b049727486d285fd3ea9b82f",
+     "signature": "def split[A0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "9f0ead09861d2b69fa56df457f928c29b6e296480525f5c0b1e8fe6296dfe6c5",
+     "signature": "def split[A0: RegisterPassable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin, ref[q1] right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "807187db35e5bda66271978b571ef9f15180aec85f30d234e60c6bf6c6f0fb52",
+     "signature": "def split[A0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin, right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "9d87a8752d6ac08bb88fb03b14f36a64ed71ea98cd976b0fd2aaca9a839c66ff",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, G: UnaryContract & Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, var right: G ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], G] where _OnceUnaryAvailable[G]:"
+    },
+    {
+     "sha256": "7461d3a46ea2753078a610072b0f03602c013503ad41143921e0ceb7765b5517",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "533982d930de030db3e23d62e3b355cd47211c1855ec2cc6f47ad24574a3202c",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "0c1ae127a6df49312cb66b66e5291102350e41d20398f04d1722c59e2ec8887c",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "ad640fb08c3d95bf52e2a5af620018a53e110002145e447a375a671db9119188",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "ac2ec58e6d103b37d74436d2aa45603358a9bb7c5ad8ef14c8543f1266b3fd9c",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "b82193b5d97140d8348a667e697e8f6073292ba3c590d7e8d513bfea1de1fca5",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "16c132e5bd79a49d4263ada5f59e5387bc3b0826a601b92fafe7a575e92414ec",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "3ce0281d4888c7437300da6b1f8d70b7b91bd5cf818b40b3dc06a613f04e5cfc",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "a544d362b94e06ff092cf683d4203b4f615c4dcc97444cc7ca3f411b08579db0",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "7c69f716b8ede571906ba228426da7f52e916996d5f92e2836f2d03850a4a191",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "082b667a21fb95077917f69b06e60b7e52e92deacfabff3b870c7f218688ce05",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "ece3cdc68ef54796db5392e5d1c6e0d3775f366496bc5ffafdb36cad45334e46",
+     "signature": "def split[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "24c774b05d9050dcf0db5db98b8e44da49897315e4790dd5c136dba4956a8b24",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, var right: G ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], G] where not conforms_to(A0, RegisterPassable) and _OnceUnaryAvailable[G]:"
+    },
+    {
+     "sha256": "4873fc11b1c6b23296fc92a57e4c572040c8bf8a5a44f49f75a6821155a73675",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable):"
+    },
+    {
+     "sha256": "524926e4c9555b2fc5099d3e56dd3e4bde53c4eff75ad9e20973e1e5a66b1ee3",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "bd5edfe947ad4125b649b267cbed33890c4f358d17b8e8774ff17b1a3dff7759",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "633faceeffa20875f4ae5ecd3efed1a6b0d6336a4fa6a1a1b51f334e01615bd7",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable):"
+    },
+    {
+     "sha256": "6d166e6c339a6515344078b5fefdeff4c1c1ba41a04e272d0899b84d4eac7b5a",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable):"
+    },
+    {
+     "sha256": "b1c34b432c81d3f0d28f115921a5db87c9cedecf0018bbfb6d2c8edd0b88b355",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable):"
+    },
+    {
+     "sha256": "9675acdebf61a0fb66183accfa7fe58a2e5b4a5c932b1e1598b9d65cc52be8bc",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable):"
+    },
+    {
+     "sha256": "9feef0c8a3f087b6ca1d5da04c49a18f5c3a7e4b29036c9b497c33360745176b",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "b465c6ded89e4d3f88a78f31ef56bdf18e95c89176de0ba8227361e548378a68",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "8bf6c880c637bba1991b6f78d337f2ec16e7393bb673ad7fa1a24e4464b3c3fc",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable):"
+    },
+    {
+     "sha256": "a4f03f69f998a60bd368e24ffb9b361484d60563e34a3ec17556a430c34c8e42",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable):"
+    },
+    {
+     "sha256": "f7c164f0b74c3d6efc47bdef7af11b1f4d76ed79236d8a3a4b99f2842f3e3408",
+     "signature": "def split[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable):"
+    },
+    {
+     "sha256": "4019d5faecd629dd73d675ece3392b4def183b146de52f9bdd41feee2c33aab6",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, var right: G ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], G] where not conforms_to(R0, RegisterPassable) and _OnceUnaryAvailable[G]:"
+    },
+    {
+     "sha256": "7396a6c1b22815eea1f89121d7d408f6f27fa111cab3d56abe73e1a45ae405cb",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable):"
+    },
+    {
+     "sha256": "23e059e609932da2bf738786318516628f53ab9e6bf657ed9d964d44b206de3b",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "a23c59a15bb28ddf7d2f6b738553fda8dce14d74264f1754745fa6a8836dae34",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "980f60440f28a034c3e9655d9e7cdaf2e095f9ec72787be6498d324c14f6ae9c",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable):"
+    },
+    {
+     "sha256": "6b054ed7b576896f05b0e6f70216f3aefca6a8db41bd5725c5f8099bbbad4b6a",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable):"
+    },
+    {
+     "sha256": "5e8ce5ae4b0ef588124d292912d99d900dfa257b339d4a7253a86174a1e0739f",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable):"
+    },
+    {
+     "sha256": "ca4264c96eaf40c648f0ffba2ca77c47a93b6ba1c0945859056cd2f510b226a9",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable):"
+    },
+    {
+     "sha256": "47f58d52b39502e5aab70e18a59bf84af148cfd0bb9963ae05e2374efc3c4899",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "a5de6c16fbd9b3a5061581ed41a784bfe20c995efd9f5fb1e4a13f2466771cf5",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "e96466a34a00c6d12ea46ebdab35eec6898d9c1dc58a1e724cca50a95b55f1bc",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable):"
+    },
+    {
+     "sha256": "8e4425cf65e4912443d7074ed7197196b771027add9b107a2460df0375e0bca3",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable):"
+    },
+    {
+     "sha256": "0203d5660a690d53258b9c7a95e77d3c165313f1570c9e5d21fa183c7097c59d",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable):"
+    },
+    {
+     "sha256": "798ce87fc0e800ac5bdf737fe148796b7fd26a4f8430ae548472b59fddd9ecb5",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, var right: G ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], G] where _OnceUnaryAvailable[G]:"
+    },
+    {
+     "sha256": "7c9def2abc17ae04e822cbee6a594f94961ff6d3c43da27c710b5ecb7746dbe5",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "4614319750719d21c96de936d4351521ef58b9832eb9ed4ed41f8ebf6ad18989",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "6ebae8ecaae9344fb043521f32cb0c4bc929303b789147d0bb67dc79a8f196e5",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "e0989be7b57bec4fcbc6abb046dacae97bbb389b30e20075c9421db792ec3aa3",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "f9ea969f58923a1f23dab4e87d027e3fb4e5e66eea2fe3bef8ee7e10bf5e93f6",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "5e994fc9b885516630afa47121b0fe30f9520f25917a1602002755dea169cf72",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "8e30314efbef0349612d97b797a14f995bcfc56266a8f906aea2ecc5a4415592",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "02818522b45f5e75702a06e10ba3463e24623ccf63aa596a612ed8a49d6b80d2",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "3d2d8cd15d657f925df9fd03653da15fcbffccfd6d5c1d9f923f1ec55384b24a",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "534bbf6a046a0caff2c818617d6929f9bf21c5ddc2a96b65cd7303633668dd47",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "126ec618943476e62595776a8f1c2b01ba0f211bdf4530f05dedb0b3a2e5ce72",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "dd6442039236a9e743c2ba1fefe994cf36d98146e053022361b8cda69c971ee0",
+     "signature": "def split[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "6e21e676e0587f0e19261dbc606569f0ca2c2d52652f75e09631909d5a447b17",
+     "signature": "def split[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, G: UnaryContract & Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin, var right: G ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], G] where _OnceUnaryAvailable[G]:"
+    },
+    {
+     "sha256": "42d10f977cfbf2160e747b0b98cc5e7b21f3a2036a0e4a72b833df558b8448c5",
+     "signature": "def split[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "8fc4ebe6aee4125616bc643352b065b3446f5516a0f75b8b8d5ca7e178b36920",
+     "signature": "def split[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "2c1e94a9afc9e2934d8186995f087b036eee878e0fddb0029cd4ee0f9d439719",
+     "signature": "def split[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "5adb7c803391df46e4db86427c1333e298ed989a862ff67e2b0a9586f259717d",
+     "signature": "def split[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "62fc9aa4ff35db099ecd079348a96752047512ca1f151a20e541fa7f8703de3f",
+     "signature": "def split[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) thin ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "d66bded5ed9722bdab6b4ad5636040cf02acfebb706e43d482e9d0a58879d683",
+     "signature": "def split[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) thin ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "74f77a88c0e8a2c9a6f9e88dd486d0de15fa7179249e6c45663df396a0b4e020",
+     "signature": "def split[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "ca64b6832df529b69eebd59b7a29dbd656d44aaf25c132d4d0757a1024295ae3",
+     "signature": "def split[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "dcfab39595047d695f07753fc98bd27f76ddfce1eda13aeb4d49439e69eaf760",
+     "signature": "def split[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "9b6f69dca185d9b2f21bcbe21ede5cecad9a5f6609324fdbb41209e67b37eb3e",
+     "signature": "def split[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "42269c6c03e771c580f915ed9131fe255702f1f4f95599cc83f6ef0fb9659758",
+     "signature": "def split[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "681ab2fc985cae36be83237e15ed4cbab7e9ca22445ac83f92b60624e5f8fc56",
+     "signature": "def split[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "256b7ad0deb331a327594a907cf25b8f184f54c316f7fa96baa6a1880653df13",
+     "signature": "def split[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //]( left: def(var A0) raises E0 thin, var right: G ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], G] where _OnceUnaryAvailable[G]:"
+    },
+    {
+     "sha256": "9758673adc85558d89e8fd48da0edebfc59009da2dc170500421f2e0981ec297",
+     "signature": "def split[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "69ac29721c6c975c12b904e7e962a964cfc4f79232580a45a81e34344f5bc50a",
+     "signature": "def split[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "f6ff1364e3390165985de38eb4478783a2a9958c756aba8164aaaa9c87a22cd1",
+     "signature": "def split[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "1c607ad0fbc9d6ccbc08a998f2ae8dbf6492b39b63a4c76cb58a3a790a64e63e",
+     "signature": "def split[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin, right: def(var A1) thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "ab74488f915b54902d02fb9a1d354b3fee4d06301ddb7bc0f40467226cdb2efe",
+     "signature": "def split[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) thin ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "34f85b53e4d2bd4783c6b2a7568d97c8879adff48a2c8a8eb927f1793a2bea03",
+     "signature": "def split[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin, right: def(var A1) thin ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "0e21e4ebd422f80841a670f75a11d0d1ae92d046feffcc4c9cc696f0316f14f4",
+     "signature": "def split[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "1c33a90ac534b607aaecf8685fe3bea724485e882ef2ce8469afa7e313055ba9",
+     "signature": "def split[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable):"
+    },
+    {
+     "sha256": "427804fdb1ad2415ddb386de2ca17292b33efaa1da97317552b69e367d256c18",
+     "signature": "def split[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable):"
+    },
+    {
+     "sha256": "9af1487317a42fe1f3b80e3314fd7447f19c6a9d4614deeeb8d9c0a95e37ec38",
+     "signature": "def split[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin -> R1 ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "6de12a4f1a66d2e7b840b320a8d9ad36f47198e67fe5d9b2d33148381b749c11",
+     "signature": "def split[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "4f00244d4e90a2b4a23e7241c1a31dbfe026fa5ad7571cfeec171200801832d2",
+     "signature": "def split[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin ) -> Split[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
     }
    ],
    "provider": "functions/products"
