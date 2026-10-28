@@ -319,6 +319,13 @@
    },
    "provider": "algebra/protocols"
   },
+  "algebra.FillContract": {
+   "declarations": [
+    "comptime FillContract[I: Functor, V: Movable & Deinitable, U: Movable & Deinitable] = MapContract[I, V, _Fill[I.Element[V], U]]"
+   ],
+   "kind": "type or alias",
+   "provider": "algebra/contracts"
+  },
   "algebra.FilterContract": {
    "declarations": [
     "struct FilterContract[I: Filterable, V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, inverted: Bool = False]:"
@@ -1101,6 +1108,13 @@
     ]
    },
    "provider": "algebra/validation"
+  },
+  "algebra.VoidContract": {
+   "declarations": [
+    "comptime VoidContract[I: Functor, V: Movable & Deinitable] = FillContract[I, V, NoneType]"
+   ],
+   "kind": "type or alias",
+   "provider": "algebra/contracts"
   },
   "algebra.ap": {
    "kind": "function",

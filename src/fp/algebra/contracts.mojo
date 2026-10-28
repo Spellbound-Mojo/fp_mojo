@@ -11,7 +11,7 @@ from ._primitive_contracts import MapContract, BindContract, CombineContract, Fi
 from .protocols import Functor, Monad, Traversable, Applicative
 from fp.iteration._advance import _OwnedElement
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallable, _ErrorProbe
-from fp.callables._transforms import _ValueThunk, _Pair, _Apply
+from fp.callables._transforms import _ValueThunk, _Pair, _Apply, _Fill
 from .protocols import Monoid, _AllLive, _LiveAccumulator
 from ._accumulation import _FoldMappedStep, _SearchStep, _FirstPresent, _BoolLive, _PredicateStep
 from ._sequencing import _EffectRetain, _IfEffect
@@ -56,6 +56,41 @@ struct TraverseContract[S: Traversable, G: Applicative, V: Movable & Deinitable,
     """The exact traversal result, retaining source shape and target effect."""
     comptime Error = Self.S.TraverseError[Self.G, Self.V, Self.F]
     """The exact native error raised when constructing the traversal."""
+
+
+comptime FillContract[I: Functor, V: Movable & Deinitable, U: Movable & Deinitable] = MapContract[I, V, _Fill[I.Element[V], U]]
+"""The admission, family, result and construction error of filling a carrier.
+
+This is MapContract specialized with the ordinary replacement callback; it
+stores no value and introduces no execution path. A generic wrapper forwards
+InvocationCompatible, returns Out and raises Error. A fluent wrapper also
+projects Family and retains its selected Pipeline error parameter.
+
+The family's map policy admits the replacement: a single invocation moves it,
+while repeated mapping requires Copyable and copies it. Deferred computations
+retain their existing execution-time error and origin requirements. Error
+describes construction of Out, not every later run of a deferred computation.
+
+Parameters:
+    I: The selected Functor family, preserving its evaluation and receiver policy.
+    V: The complete source carrier type, including origins.
+    U: The replacement type, including its origins and ownership requirements.
+"""
+
+
+comptime VoidContract[I: Functor, V: Movable & Deinitable] = FillContract[I, V, NoneType]
+"""The admission, family, result and construction error of discarding payloads.
+
+This specializes FillContract with NoneType, matching the ordinary void
+operation. Forward InvocationCompatible, Out, Error and, for fluent wrappers,
+Family. The source is consumed; its shape, stored errors and native origins
+follow the family's existing mapping policy. Deferred execution remains with
+that family and retains its own run requirements.
+
+Parameters:
+    I: The selected Functor family.
+    V: The complete source carrier type, including origins.
+"""
 
 
 comptime Map2Contract[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & Movable & Deinitable] = CombineContract[I, V, F, _ValueThunk[W]]

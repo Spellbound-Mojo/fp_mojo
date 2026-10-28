@@ -61,6 +61,7 @@ from .operations import map, pure, flat_map, map2_lazy, traverse, empty, combine
 from .instances import IdentityFamily, OptionalFamily, ResultFamily, ListFamily
 from .collections import ArrayFamily, DequeFamily, LinkedListFamily
 from .contracts import ApContract, ProductContract, Map2Contract, IfContract, AnyContract, AllContract, FindContract, FindMapContract, FoldMapContract, FoldContract, MapContract, FilterMapContract, BindContract, TraverseContract, FilterContract, CombineContract
+from .contracts import FillContract, VoidContract
 from .sequencing import FlatTapContract, FlatPairWithContract, BeforeContract, FollowedByContract
 
 from ._derived import map2, product, ap, flatten, sequence

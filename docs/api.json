@@ -1747,6 +1747,40 @@
     "Functor"
    ]
   },
+  "algebra.FillContract": {
+   "aliases": [],
+   "description": "This is MapContract specialized with the ordinary replacement callback; it\nstores no value and introduces no execution path. A generic wrapper forwards\nInvocationCompatible, returns Out and raises Error. A fluent wrapper also\nprojects Family and retains its selected Pipeline error parameter.\n\nThe family's map policy admits the replacement: a single invocation moves it,\nwhile repeated mapping requires Copyable and copies it. Deferred computations\nretain their existing execution-time error and origin requirements. Error\ndescribes construction of Out, not every later run of a deferred computation.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected Functor family, preserving its evaluation and receiver policy.",
+     "inferred": false,
+     "name": "I",
+     "type": "Functor",
+     "variadic": false
+    },
+    {
+     "description": "The complete source carrier type, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The replacement type, including its origins and ownership requirements.",
+     "inferred": false,
+     "name": "U",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/contracts",
+   "signature": "comptime FillContract[I: Functor, V: Movable & Deinitable, U: Movable & Deinitable] = MapContract[I, V, _Fill[I.Element[V], U]]",
+   "summary": "The admission, family, result and construction error of filling a carrier.",
+   "traits": []
+  },
   "algebra.FilterContract": {
    "aliases": [
     {
@@ -7257,6 +7291,33 @@
     "Functor",
     "_ValidationPolicy"
    ]
+  },
+  "algebra.VoidContract": {
+   "aliases": [],
+   "description": "This specializes FillContract with NoneType, matching the ordinary void\noperation. Forward InvocationCompatible, Out, Error and, for fluent wrappers,\nFamily. The source is consumed; its shape, stored errors and native origins\nfollow the family's existing mapping policy. Deferred execution remains with\nthat family and retains its own run requirements.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected Functor family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Functor",
+     "variadic": false
+    },
+    {
+     "description": "The complete source carrier type, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/contracts",
+   "signature": "comptime VoidContract[I: Functor, V: Movable & Deinitable] = FillContract[I, V, NoneType]",
+   "summary": "The admission, family, result and construction error of discarding payloads.",
+   "traits": []
   },
   "algebra.ap": {
    "description": "",

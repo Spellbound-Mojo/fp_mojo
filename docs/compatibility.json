@@ -549,7 +549,19 @@
         "docs/examples/algebra_traversal.mojo",
         "docs/examples/parallel_validation.mojo",
         "tests/runtime/test_context_family_admission_generic.mojo",
-        "tests/ownership/test_context_family_admission_ownership.mojo"
+        "tests/ownership/test_context_family_admission_ownership.mojo",
+        "tests/runtime/test_fill_contract.mojo",
+        "tests/ownership/test_fill_contract.mojo",
+        "tests/compile_fail/fill_contract_discarded_effect.mojo",
+        "tests/compile_fail/fill_contract_empty_repeated.mojo",
+        "tests/compile_fail/fill_contract_fill_source.mojo",
+        "tests/compile_fail/fill_contract_filled_effect.mojo",
+        "tests/compile_fail/fill_contract_output_origin.mojo",
+        "tests/compile_fail/fill_contract_repeated.mojo",
+        "tests/compile_fail/fill_contract_replacement_reuse.mojo",
+        "tests/compile_fail/fill_contract_source_reuse.mojo",
+        "tests/compile_fail/fill_contract_stored_error_origin.mojo",
+        "tests/compile_fail/fill_contract_void_source.mojo"
       ]
     },
     "effects": {

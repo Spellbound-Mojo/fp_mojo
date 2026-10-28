@@ -15,7 +15,9 @@ or additional execution step.
 This maintained example shows both patterns. `mapped` checks a unary receiver
 through `MapContract.InvocationCompatible`. `gather` forwards the source and
 target traversal rules through `TraverseContract.Compatible`. The ordinary
-call sites infer the callback and carrier types.
+call sites infer the callback and carrier types. `filled` and `discarded` use
+`FillContract` and `VoidContract` without exposing their internal mapping
+callbacks; the example transfers a move-only List into an Optional.
 
 <!-- example: docs/examples/operation_contracts.mojo -->
 
@@ -59,6 +61,7 @@ are exported from `fp.functions`.
 | Operation | Public descriptor |
 |---|---|
 | Map or dependent bind | `MapContract`, `BindContract` |
+| Replace or discard payloads | `FillContract`, `VoidContract` |
 | Lazy combination, evaluated combination or pairing | `CombineContract`, `Map2Contract`, `ProductContract` |
 | Apply stored callbacks | `ApContract` |
 | Traverse into another family | `TraverseContract` |

@@ -1,5 +1,5 @@
 """Public contracts name generic operation admission, results and native errors."""
-from fp.algebra import Functor, MapContract, Applicative, Traversable, TraverseContract, ListFamily, OptionalFamily
+from fp.algebra import Functor, MapContract, FillContract, VoidContract, Applicative, Traversable, TraverseContract, ListFamily, OptionalFamily
 from fp.callables import UnaryContract, Unary
 from fp.functions import pipeline, Identity
 from std.testing import assert_equal
@@ -15,6 +15,18 @@ def gather[S: Traversable, G: Applicative, V: Movable & Deinitable, F: UnaryCont
 ) raises TraverseContract[S, G, V, F].Error -> TraverseContract[S, G, V, F].Out where TraverseContract[S, G, V, F].Compatible:
     return pipeline[S](values^).traverse[G](function^).get()
 
+
+def filled[I: Functor, V: Movable & Deinitable, U: Movable & Deinitable](
+    var source: V, var replacement: U
+) raises FillContract[I,V,U].Error -> FillContract[I,V,U].Out where FillContract[I,V,U].InvocationCompatible:
+    return pipeline[I](source^).fill(replacement^).get()
+
+
+def discarded[I: Functor, V: Movable & Deinitable](
+    var source: V
+) raises VoidContract[I,V].Error -> VoidContract[I,V].Out where VoidContract[I,V].InvocationCompatible:
+    return pipeline[I](source^).void().get()
+
 @fieldwise_init
 struct Positive(Unary):
     comptime Arg = Int
@@ -28,3 +40,9 @@ def main() raises:
     var values = result.take()
     assert_equal(values, List[Int]([3, 7]))
     print("gathered:", values[0], values[1])
+    var replacement: List[Int] = [7, 11]
+    var output = filled[OptionalFamily](Optional(0), replacement^)
+    ref filled_values = output.value()
+    print("filled:", filled_values[0], filled_values[1])
+    var done = discarded[OptionalFamily](output^)
+    print("discarded:", Bool(done))

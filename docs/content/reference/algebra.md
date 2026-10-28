@@ -20,6 +20,15 @@ input equality and three family predicates. These compile-time descriptors
 store nothing and delegate execution to the same families. They describe
 library callbacks; native callbacks keep their existing admission syntax.
 
+`FillContract[I, V, U]` and `VoidContract[I, V]` describe structural replacement
+and payload discarding without naming the internal callback. Both specialize
+the same map contract. Forward `InvocationCompatible`, return `Out` and raise
+`Error`; project `Family` as well when returning a selected Pipeline. A
+single-call family accepts a move-only replacement, while a repeated family
+requires copying. Dictionary continuation follows the replacement's type.
+For deferred effects, `Error` describes construction; execution keeps its
+separate run requirements and native error type.
+
 For new map or bind wrappers, `InvocationCompatible` adds callback receiver
 availability to the historical `Compatible` proof. `ReceiverCompatible` exposes
 that check alone. This catches metadata-only callbacks at the wrapper boundary,
