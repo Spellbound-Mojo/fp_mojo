@@ -175,7 +175,7 @@
       "stdout": "generic lazy snapshots: 0, 2, 6; source preserved\n"
     },
     "docs/examples/iteration_scan_map.mojo": {
-      "stdout": "before consuming: 0\n[total=1, total=3, total=6]\nsteps: 3\nempty: []\nsteps after empty: 3\nprices: [3, 9, 18]\nreused: [13, 19]\nmoved: [3, 9]\n"
+      "stdout": "before consuming: 0\n[total=1, total=3, total=6]\nsteps: 3\nempty: []\nsteps after empty: 3\nprices: [3, 9, 18]\nreused: [13, 19]\nfinal total: 18\ncollected: [3, 9, 18]\nmoved: [3, 9]\n"
     },
     "docs/examples/job_router.mojo": {
       "stdout": "dispatched 1; deferred; deferred; dispatch failed for job 3\n"

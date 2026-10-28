@@ -21,3 +21,16 @@ struct _Carry[A: Movable & Deinitable](Movable):
         _take_pair(pair^, carry, output)
         self.value = Optional(carry^.unsafe_assume_init())
         return output^.unsafe_assume_init()
+
+
+@fieldwise_init
+struct _ScanOutputs[A: Movable & Deinitable, Y: Movable & Deinitable](Movable):
+    """One owned carry and collected outputs for eager scan drivers."""
+    var carry: _Carry[Self.A]
+    var outputs: List[Self.Y]
+
+    def append(mut self, var pair: Tuple[Self.A, Self.Y]):
+        self.outputs.append(self.carry.replace(pair^))
+
+    def into_result(deinit self) -> Tuple[Self.A, List[Self.Y]]:
+        return (self.carry.take(), self.outputs^)

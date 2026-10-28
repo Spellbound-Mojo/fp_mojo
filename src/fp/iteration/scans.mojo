@@ -1,12 +1,41 @@
-"""Lazy carry/output scans, sharing transitions and scheduling with scan_left."""
+"""Carry/output scans sharing ownership transitions and existing iteration drivers."""
 from std.iter import Iterator
 from fp.callables.protocols import BinaryContract
 from fp.callables._views import _BinaryViewable
-from fp.callables._receiver import _SharedBinaryRef
+from fp.callables._receiver import _SharedBinaryRef, _binary_repeated_as
+from fp.callables._scan import _Carry, _ScanOutputs
+from fp.callables.native import NativeBinary, _NativeOwnedArg
+from std.builtin.rebind import rebind_var, downcast
 from fp.callables.invoke import RepeatableBinary
 from ._advance import _Source, _source
 from .adapters import _ScanDriver
 from ._callbacks import _LazyScanStep, _apply_lazy_scan
+from ._terminal import _fold_left
+
+
+def _accumulate_step[A: Movable & Deinitable, T: Movable & Deinitable,
+                     Y: Movable & Deinitable, F: BinaryContract & Movable & Deinitable,
+                     o: MutOrigin](
+    var state: _ScanOutputs[A, Y], var item: T, function: Pointer[F, o]
+) raises F.Error capturing -> _ScanOutputs[A, Y] where RepeatableBinary[F]:
+    comptime assert F.First == A and F.Second == T and F.Out == Tuple[A, Y]
+    var pair = rebind_var[Tuple[A, Y]](_binary_repeated_as[F.Error](
+        function[], rebind_var[F.First](state.carry.take()), rebind_var[F.Second](item^)))
+    state.append(pair^)
+    return state^
+
+
+def _map_accumulate_owned[A: Movable & Deinitable, T: Movable & Deinitable,
+                          Y: Movable & Deinitable, F: BinaryContract & Movable & Deinitable,
+                          V: Movable & Deinitable](
+    var function: F, var initial: A, var source: V
+) raises F.Error -> Tuple[A, List[Y]] where _Source[V].Element == T and F.First == A and F.Second == T and F.Out == Tuple[A, Y] and RepeatableBinary[F]:
+    # The fold driver alone owns advancement and distinguishes callback errors
+    # from source exhaustion; the scan owner alone moves the carry/output pair.
+    var result = _fold_left[_ScanOutputs[A, Y], T, _Source[V], F.Error,
+        Pointer[F, origin_of(function)], _accumulate_step[A, T, Y, F, origin_of(function)]](
+        Pointer(to=function), _ScanOutputs(_Carry(initial^), List[Y]()), _source(source^))
+    return result^.into_result()
 
 
 comptime ScanMapIterator[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, I: Iterator, F: Movable & Deinitable = def(var A,var T) thin -> Tuple[A,Y]] = _ScanDriver[A,T,Y,I,F,False,_apply_lazy_scan[A,T,Y,F]]
@@ -39,7 +68,7 @@ def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Dein
 
     Args:
         function: The callback, borrowed or owned according to the selected overload; captures retain their native origins.
-        initial: The initial carry, consumed; scan_map does not yield it.
+        initial: The initial carry, consumed.
         source: The source, consumed at its current position.
 
     Returns:
@@ -61,4 +90,140 @@ def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Dein
     """Lazily consume (carry, input) into (new carry, output), yielding one output per input.
     """
     return ScanMapIterator[A, T, Y, _Source[V], _SharedBinaryRef[F, o]](_SharedBinaryRef[F, o](Pointer(to=function)), initial^, _source(source^), False, False)
+
+def map_accumulate[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var function: F, var initial: A, var source: V) raises F.Error -> Tuple[A, List[Y]] where _Source[V].Element == T and F.First == A and F.Second == T and F.Out == Tuple[A, Y] and RepeatableBinary[F]:
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+
+    The step consumes (carry, element) and returns (next carry, output).
+    The finite source is pulled once per step, in order; empty input returns the initial carry.
+    Neither the carry nor elements nor outputs need to be Copyable. Mutable library steps
+    take priority over shared invocation; consuming-only steps are rejected.
+    Failures stop immediately and retain their exact type, including StopIteration.
+    Capture native closures with BinarySignature; named standard binary adapters can be reused.
+    Aliased native pointers select Y explicitly, and E for typed errors.
+
+    Parameters:
+        A: The first callback argument type.
+        T: The source element type, including origins.
+        Y: The independent scan output type, including origins.
+        V: The consumed native iterator or owned collection type.
+        F: The concrete callback type, preserving captures and receiver semantics.
+
+    Args:
+        function: The callback, borrowed or owned according to the selected overload; captures retain their native origins.
+        initial: The initial carry, consumed.
+        source: The source, consumed at its current position.
+
+    Returns:
+        Tuple[A, List[Y]] with the ownership, timing and empty-input behavior described above.
+
+    Raises:
+        The exact admitted callback or combination error; Never when non-raising.
+    """
+    return _map_accumulate_owned[A, T, Y, F, V](function^, initial^, source^)
+
+def map_accumulate[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, F: _BinaryViewable, o: ImmOrigin](ref[o] function: F, var initial: A, var source: V) raises F.Error -> Tuple[A, List[Y]] where _Source[V].Element == T and F.First == A and F.Second == T and F.Out == Tuple[A, Y]:
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+    """
+    return _map_accumulate_owned[A, T, Y, _SharedBinaryRef[F, o], V](_SharedBinaryRef[F, o](Pointer(to=function)), initial^, source^)
+
+def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Deinitable, V: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, Y: Movable & Deinitable](ref[q] function: def(var P, var Q) thin -> R, var initial: A, var source: V) raises Never -> Tuple[A, List[Y]] where P == A and _Source[V].Element == Q and R == Tuple[A, Y]:
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+    """
+    return _map_accumulate_owned[A, Q, Y, NativeBinary[P, Q, R, Never, type_of(function), False], V](NativeBinary[P, Q, R, Never, type_of(function), False](function), initial^, source^)
+
+def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Deinitable, V: Movable & Deinitable, R: RegisterPassable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) thin -> R, var initial: A, var source: V) raises Never -> Tuple[A, List[Y]] where not conforms_to(P, RegisterPassable) and not conforms_to(Q, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+    """
+    return _map_accumulate_owned[A, Q, Y, NativeBinary[P, Q, R, Never, type_of(function), False], V](NativeBinary[P, Q, R, Never, type_of(function), False](function), initial^, source^)
+
+def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: RegisterPassable & Deinitable, V: Movable & Deinitable, R: Movable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) thin -> R, var initial: A, var source: V) raises Never -> Tuple[A, List[Y]] where not conforms_to(P, RegisterPassable) and not conforms_to(R, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+    """
+    return _map_accumulate_owned[A, Q, Y, NativeBinary[P, Q, R, Never, type_of(function), False], V](NativeBinary[P, Q, R, Never, type_of(function), False](function), initial^, source^)
+
+def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: RegisterPassable & Deinitable, V: Movable & Deinitable, R: RegisterPassable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) thin -> R, var initial: A, var source: V) raises Never -> Tuple[A, List[Y]] where not conforms_to(P, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+    """
+    return _map_accumulate_owned[A, Q, Y, NativeBinary[P, Q, R, Never, type_of(function), False], V](NativeBinary[P, Q, R, Never, type_of(function), False](function), initial^, source^)
+
+def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: Movable & Deinitable, V: Movable & Deinitable, R: Movable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) thin -> R, var initial: A, var source: V) raises Never -> Tuple[A, List[Y]] where not conforms_to(Q, RegisterPassable) and not conforms_to(R, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+    """
+    return _map_accumulate_owned[A, Q, Y, NativeBinary[P, Q, R, Never, type_of(function), False], V](NativeBinary[P, Q, R, Never, type_of(function), False](function), initial^, source^)
+
+def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: Movable & Deinitable, V: Movable & Deinitable, R: RegisterPassable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) thin -> R, var initial: A, var source: V) raises Never -> Tuple[A, List[Y]] where not conforms_to(Q, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+    """
+    return _map_accumulate_owned[A, Q, Y, NativeBinary[P, Q, R, Never, type_of(function), False], V](NativeBinary[P, Q, R, Never, type_of(function), False](function), initial^, source^)
+
+def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: RegisterPassable & Deinitable, V: Movable & Deinitable, R: Movable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) thin -> R, var initial: A, var source: V) raises Never -> Tuple[A, List[Y]] where not conforms_to(R, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+    """
+    return _map_accumulate_owned[A, Q, Y, NativeBinary[P, Q, R, Never, type_of(function), False], V](NativeBinary[P, Q, R, Never, type_of(function), False](function), initial^, source^)
+
+def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: RegisterPassable & Deinitable, V: Movable & Deinitable, R: RegisterPassable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) thin -> R, var initial: A, var source: V) raises Never -> Tuple[A, List[Y]] where P == A and _Source[V].Element == Q and R == Tuple[A, Y]:
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+    """
+    return _map_accumulate_owned[A, Q, Y, NativeBinary[P, Q, R, Never, type_of(function), False], V](NativeBinary[P, Q, R, Never, type_of(function), False](function), initial^, source^)
+
+def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Deinitable, V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, Y: Movable & Deinitable](ref[q] function: def(var P, var Q) raises E thin -> R, var initial: A, var source: V) raises E -> Tuple[A, List[Y]] where P == A and _Source[V].Element == Q and R == Tuple[A, Y]:
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+    """
+    return _map_accumulate_owned[A, Q, Y, NativeBinary[P, Q, R, E, type_of(function), True], V](NativeBinary[P, Q, R, E, type_of(function), True](function), initial^, source^)
+
+def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Deinitable, V: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) raises E thin -> R, var initial: A, var source: V) raises E -> Tuple[A, List[Y]] where not conforms_to(P, RegisterPassable) and not conforms_to(Q, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+    """
+    return _map_accumulate_owned[A, Q, Y, NativeBinary[P, Q, R, E, type_of(function), True], V](NativeBinary[P, Q, R, E, type_of(function), True](function), initial^, source^)
+
+def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: RegisterPassable & Deinitable, V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) raises E thin -> R, var initial: A, var source: V) raises E -> Tuple[A, List[Y]] where not conforms_to(P, RegisterPassable) and not conforms_to(R, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+    """
+    return _map_accumulate_owned[A, Q, Y, NativeBinary[P, Q, R, E, type_of(function), True], V](NativeBinary[P, Q, R, E, type_of(function), True](function), initial^, source^)
+
+def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: RegisterPassable & Deinitable, V: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) raises E thin -> R, var initial: A, var source: V) raises E -> Tuple[A, List[Y]] where not conforms_to(P, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+    """
+    return _map_accumulate_owned[A, Q, Y, NativeBinary[P, Q, R, E, type_of(function), True], V](NativeBinary[P, Q, R, E, type_of(function), True](function), initial^, source^)
+
+def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: Movable & Deinitable, V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) raises E thin -> R, var initial: A, var source: V) raises E -> Tuple[A, List[Y]] where not conforms_to(Q, RegisterPassable) and not conforms_to(R, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+    """
+    return _map_accumulate_owned[A, Q, Y, NativeBinary[P, Q, R, E, type_of(function), True], V](NativeBinary[P, Q, R, E, type_of(function), True](function), initial^, source^)
+
+def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: Movable & Deinitable, V: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) raises E thin -> R, var initial: A, var source: V) raises E -> Tuple[A, List[Y]] where not conforms_to(Q, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+    """
+    return _map_accumulate_owned[A, Q, Y, NativeBinary[P, Q, R, E, type_of(function), True], V](NativeBinary[P, Q, R, E, type_of(function), True](function), initial^, source^)
+
+def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: RegisterPassable & Deinitable, V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) raises E thin -> R, var initial: A, var source: V) raises E -> Tuple[A, List[Y]] where not conforms_to(R, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+    """
+    return _map_accumulate_owned[A, Q, Y, NativeBinary[P, Q, R, E, type_of(function), True], V](NativeBinary[P, Q, R, E, type_of(function), True](function), initial^, source^)
+
+def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: RegisterPassable & Deinitable, V: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) raises E thin -> R, var initial: A, var source: V) raises E -> Tuple[A, List[Y]] where P == A and _Source[V].Element == Q and R == Tuple[A, Y]:
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+    """
+    return _map_accumulate_owned[A, Q, Y, NativeBinary[P, Q, R, E, type_of(function), True], V](NativeBinary[P, Q, R, E, type_of(function), True](function), initial^, source^)
+
+def map_accumulate[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, F: Copyable & Deinitable, R: Movable & Deinitable = Tuple[A, Y]](function: F, var initial: A, var source: V) raises Never -> Tuple[A, List[Y]] where _Source[V].Element == T and R == Tuple[A, Y] and not conforms_to(Tuple[A, Y], RegisterPassable) and F == (def(var _NativeOwnedArg[A], var _NativeOwnedArg[T]) thin -> R):
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+    """
+    return _map_accumulate_owned[A, T, Y, NativeBinary[A, T, R, Never, F, False], V](NativeBinary[A, T, R, Never, F, False](function.copy()), initial^, source^)
+
+def map_accumulate[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, F: Copyable & Deinitable, R: RegisterPassable & Deinitable = downcast[Tuple[A, Y], RegisterPassable & Deinitable]](function: F, var initial: A, var source: V) raises Never -> Tuple[A, List[Y]] where _Source[V].Element == T and R == Tuple[A, Y] and conforms_to(Tuple[A, Y], RegisterPassable) and F == (def(var _NativeOwnedArg[A], var _NativeOwnedArg[T]) thin -> R):
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+    """
+    return _map_accumulate_owned[A, T, Y, NativeBinary[A, T, R, Never, F, False], V](NativeBinary[A, T, R, Never, F, False](function.copy()), initial^, source^)
+
+def map_accumulate[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, F: Copyable & Deinitable, R: Movable & Deinitable = Tuple[A, Y], E: Movable & Deinitable = Never](function: F, var initial: A, var source: V) raises E -> Tuple[A, List[Y]] where _Source[V].Element == T and R == Tuple[A, Y] and not conforms_to(Tuple[A, Y], RegisterPassable) and F == (def(var _NativeOwnedArg[A], var _NativeOwnedArg[T]) raises E thin -> R):
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+    """
+    return _map_accumulate_owned[A, T, Y, NativeBinary[A, T, R, E, F, True], V](NativeBinary[A, T, R, E, F, True](function.copy()), initial^, source^)
+
+def map_accumulate[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, F: Copyable & Deinitable, R: RegisterPassable & Deinitable = downcast[Tuple[A, Y], RegisterPassable & Deinitable], E: Movable & Deinitable = Never](function: F, var initial: A, var source: V) raises E -> Tuple[A, List[Y]] where _Source[V].Element == T and R == Tuple[A, Y] and conforms_to(Tuple[A, Y], RegisterPassable) and F == (def(var _NativeOwnedArg[A], var _NativeOwnedArg[T]) raises E thin -> R):
+    """Thread a carry through the remaining source, returning the final carry and collected outputs.
+    """
+    return _map_accumulate_owned[A, T, Y, NativeBinary[A, T, R, E, F, True], V](NativeBinary[A, T, R, E, F, True](function.copy()), initial^, source^)
 # --- end iterator expansion syntax ---

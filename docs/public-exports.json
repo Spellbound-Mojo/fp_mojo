@@ -21597,6 +21597,96 @@
       "signature": "def map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F ) -> Iter[MapIterator[F.Arg, F.Out, Self.I, F]] where Self.I.Element == F.Arg and F.Error == Never and RepeatableUnary[F]:"
      }
     ],
+    "map_accumulate": [
+     {
+      "sha256": "15bcedf31a3c692c010e0efff4dde483c8aadc8bac3be4bdf417918b30952aa3",
+      "signature": "def map_accumulate[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](deinit self, var function: F, var initial: A) raises F.Error -> Tuple[A, List[Y]] where Self.I.Element == T and F.First == A and F.Second == T and F.Out == Tuple[A, Y] and RepeatableBinary[F]:"
+     },
+     {
+      "sha256": "3ec067e574b97e9cc53f5f66f639d88e9e4e1a9dbdc1d5cf859a3da836ca9cd7",
+      "signature": "def map_accumulate[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: _BinaryViewable, o: ImmOrigin](deinit self, ref[o] function: F, var initial: A) raises F.Error -> Tuple[A, List[Y]] where Self.I.Element == T and F.First == A and F.Second == T and F.Out == Tuple[A, Y]:"
+     },
+     {
+      "sha256": "0d9e0a04cc1018356fca0151dd8d4ae49559e99837b338625f0c027f52949b0f",
+      "signature": "def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, Y: Movable & Deinitable](deinit self, ref[q] function: def(var P, var Q) thin -> R, var initial: A) raises Never -> Tuple[A, List[Y]] where P == A and Self.I.Element == Q and R == Tuple[A, Y]:"
+     },
+     {
+      "sha256": "2903b1acd619a1465c51a48f882fd2a1d3400dd1ac5f14be1fd08286f1108686",
+      "signature": "def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Deinitable, R: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, function: def(var P, var Q) thin -> R, var initial: A) raises Never -> Tuple[A, List[Y]] where not conforms_to(P, RegisterPassable) and not conforms_to(Q, RegisterPassable) and P == A and Self.I.Element == Q and R == Tuple[A, Y]:"
+     },
+     {
+      "sha256": "d65ecc7a5f5a05b58319a7f94398eccfacfa37197ec9468a57aa28209830f53e",
+      "signature": "def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: RegisterPassable & Deinitable, R: Movable & Deinitable, Y: Movable & Deinitable](deinit self, function: def(var P, var Q) thin -> R, var initial: A) raises Never -> Tuple[A, List[Y]] where not conforms_to(P, RegisterPassable) and not conforms_to(R, RegisterPassable) and P == A and Self.I.Element == Q and R == Tuple[A, Y]:"
+     },
+     {
+      "sha256": "9e510bf2e5b70c6f7fae0d32cf841981a5b00983e2010a2df902eeafa6219c20",
+      "signature": "def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, function: def(var P, var Q) thin -> R, var initial: A) raises Never -> Tuple[A, List[Y]] where not conforms_to(P, RegisterPassable) and P == A and Self.I.Element == Q and R == Tuple[A, Y]:"
+     },
+     {
+      "sha256": "4163ed3231edb0524b94d4b8aa51b08370bcbf43b363d8ffde095feeeb583e39",
+      "signature": "def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: Movable & Deinitable, R: Movable & Deinitable, Y: Movable & Deinitable](deinit self, function: def(var P, var Q) thin -> R, var initial: A) raises Never -> Tuple[A, List[Y]] where not conforms_to(Q, RegisterPassable) and not conforms_to(R, RegisterPassable) and P == A and Self.I.Element == Q and R == Tuple[A, Y]:"
+     },
+     {
+      "sha256": "121671ea0e2d572abe1dab6270d89da5fdeaff0793cd7c0d3d1896ab30ce7f1f",
+      "signature": "def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: Movable & Deinitable, R: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, function: def(var P, var Q) thin -> R, var initial: A) raises Never -> Tuple[A, List[Y]] where not conforms_to(Q, RegisterPassable) and P == A and Self.I.Element == Q and R == Tuple[A, Y]:"
+     },
+     {
+      "sha256": "3a860d0405316a9d3c0827eaa13e98bdbfd28b5c1e7a9d5df34e9fe35f6eacc7",
+      "signature": "def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: RegisterPassable & Deinitable, R: Movable & Deinitable, Y: Movable & Deinitable](deinit self, function: def(var P, var Q) thin -> R, var initial: A) raises Never -> Tuple[A, List[Y]] where not conforms_to(R, RegisterPassable) and P == A and Self.I.Element == Q and R == Tuple[A, Y]:"
+     },
+     {
+      "sha256": "7c18da47ef66e6df80d005eaa329415cdcd92ccbd5eabd799ce8ead277be3364",
+      "signature": "def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, function: def(var P, var Q) thin -> R, var initial: A) raises Never -> Tuple[A, List[Y]] where P == A and Self.I.Element == Q and R == Tuple[A, Y]:"
+     },
+     {
+      "sha256": "c4ab8b2349a8c539c93a345873b6b56421e4cfa09b25bc7060372b0a11bfc628",
+      "signature": "def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, Y: Movable & Deinitable](deinit self, ref[q] function: def(var P, var Q) raises E thin -> R, var initial: A) raises E -> Tuple[A, List[Y]] where P == A and Self.I.Element == Q and R == Tuple[A, Y]:"
+     },
+     {
+      "sha256": "88854521c149727a53c2780f5e715830839b7ac5e2cc58c6d7952c530620f9e9",
+      "signature": "def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, Y: Movable & Deinitable](deinit self, function: def(var P, var Q) raises E thin -> R, var initial: A) raises E -> Tuple[A, List[Y]] where not conforms_to(P, RegisterPassable) and not conforms_to(Q, RegisterPassable) and P == A and Self.I.Element == Q and R == Tuple[A, Y]:"
+     },
+     {
+      "sha256": "bf9bfdec58d480e072120f406ccf6e67e67b1a86d733b13eb4b184a49a91ffa0",
+      "signature": "def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, Y: Movable & Deinitable](deinit self, function: def(var P, var Q) raises E thin -> R, var initial: A) raises E -> Tuple[A, List[Y]] where not conforms_to(P, RegisterPassable) and not conforms_to(R, RegisterPassable) and P == A and Self.I.Element == Q and R == Tuple[A, Y]:"
+     },
+     {
+      "sha256": "f20bf07cb29fac860f55cfe64ea3ade9a18d5432967c89e45d18dcbe322617ae",
+      "signature": "def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, Y: Movable & Deinitable](deinit self, function: def(var P, var Q) raises E thin -> R, var initial: A) raises E -> Tuple[A, List[Y]] where not conforms_to(P, RegisterPassable) and P == A and Self.I.Element == Q and R == Tuple[A, Y]:"
+     },
+     {
+      "sha256": "a4413250a258e6266c6eb8ede80876c2bdfba3fcba2bb9dc1160406377906400",
+      "signature": "def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, Y: Movable & Deinitable](deinit self, function: def(var P, var Q) raises E thin -> R, var initial: A) raises E -> Tuple[A, List[Y]] where not conforms_to(Q, RegisterPassable) and not conforms_to(R, RegisterPassable) and P == A and Self.I.Element == Q and R == Tuple[A, Y]:"
+     },
+     {
+      "sha256": "d2a637c072e9aeec5ec6408d7e46e66594ddf3b8d7809203ab68b3fe6ac12c5a",
+      "signature": "def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, Y: Movable & Deinitable](deinit self, function: def(var P, var Q) raises E thin -> R, var initial: A) raises E -> Tuple[A, List[Y]] where not conforms_to(Q, RegisterPassable) and P == A and Self.I.Element == Q and R == Tuple[A, Y]:"
+     },
+     {
+      "sha256": "b47b4637314a3f1f6111f8fdca6e81d0741d10827fdb903d2beca45541796195",
+      "signature": "def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, Y: Movable & Deinitable](deinit self, function: def(var P, var Q) raises E thin -> R, var initial: A) raises E -> Tuple[A, List[Y]] where not conforms_to(R, RegisterPassable) and P == A and Self.I.Element == Q and R == Tuple[A, Y]:"
+     },
+     {
+      "sha256": "5cef4f58040e7e8f2c8e2f353ef3d4cc804d43e1631a1e6f7a339ee1ee214d7d",
+      "signature": "def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, Y: Movable & Deinitable](deinit self, function: def(var P, var Q) raises E thin -> R, var initial: A) raises E -> Tuple[A, List[Y]] where P == A and Self.I.Element == Q and R == Tuple[A, Y]:"
+     },
+     {
+      "sha256": "b8df7bcad7369f1334848f64ec4c13367934cc9bc11652d93ca46106b013697a",
+      "signature": "def map_accumulate[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: Copyable & Deinitable, R: Movable & Deinitable = Tuple[A, Y]](deinit self, function: F, var initial: A) raises Never -> Tuple[A, List[Y]] where Self.I.Element == T and R == Tuple[A, Y] and not conforms_to(Tuple[A, Y], RegisterPassable) and F == (def(var _NativeOwnedArg[A], var _NativeOwnedArg[T]) thin -> R):"
+     },
+     {
+      "sha256": "04ebff3e3306c40c2e7cdf2a991c4fe99231645d118a8cb6f51c4d4ec7b51800",
+      "signature": "def map_accumulate[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: Copyable & Deinitable, R: RegisterPassable & Deinitable = downcast[Tuple[A, Y], RegisterPassable & Deinitable]](deinit self, function: F, var initial: A) raises Never -> Tuple[A, List[Y]] where Self.I.Element == T and R == Tuple[A, Y] and conforms_to(Tuple[A, Y], RegisterPassable) and F == (def(var _NativeOwnedArg[A], var _NativeOwnedArg[T]) thin -> R):"
+     },
+     {
+      "sha256": "b1bb015cba51e4673fd6e89016b5687451cf4a211c863a4cc3e62e4d78cb8e6d",
+      "signature": "def map_accumulate[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: Copyable & Deinitable, R: Movable & Deinitable = Tuple[A, Y], E: Movable & Deinitable = Never](deinit self, function: F, var initial: A) raises E -> Tuple[A, List[Y]] where Self.I.Element == T and R == Tuple[A, Y] and not conforms_to(Tuple[A, Y], RegisterPassable) and F == (def(var _NativeOwnedArg[A], var _NativeOwnedArg[T]) raises E thin -> R):"
+     },
+     {
+      "sha256": "63a66e9edc30d5364137933a616ad5c2b5d8c3c39c7d972163a5c796ce784223",
+      "signature": "def map_accumulate[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: Copyable & Deinitable, R: RegisterPassable & Deinitable = downcast[Tuple[A, Y], RegisterPassable & Deinitable], E: Movable & Deinitable = Never](deinit self, function: F, var initial: A) raises E -> Tuple[A, List[Y]] where Self.I.Element == T and R == Tuple[A, Y] and conforms_to(Tuple[A, Y], RegisterPassable) and F == (def(var _NativeOwnedArg[A], var _NativeOwnedArg[T]) raises E thin -> R):"
+     }
+    ],
     "map_with_index": [
      {
       "sha256": "4a53b235b89198cecef2fcfbf20774151d7e322b2210edeabffe28285bcae5a3",
@@ -22787,6 +22877,100 @@
     }
    ],
    "provider": "iteration/adapters"
+  },
+  "iteration.map_accumulate": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "78e82873c81beb82ed4504a3c227e9945d3dee1422a5643142517005d04dbfea",
+     "signature": "def map_accumulate[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var function: F, var initial: A, var source: V) raises F.Error -> Tuple[A, List[Y]] where _Source[V].Element == T and F.First == A and F.Second == T and F.Out == Tuple[A, Y] and RepeatableBinary[F]:"
+    },
+    {
+     "sha256": "306779a49f18ce016b75d9f1bb022e6b4f265b9f0205eaf41d69d9241629a9f3",
+     "signature": "def map_accumulate[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, F: _BinaryViewable, o: ImmOrigin](ref[o] function: F, var initial: A, var source: V) raises F.Error -> Tuple[A, List[Y]] where _Source[V].Element == T and F.First == A and F.Second == T and F.Out == Tuple[A, Y]:"
+    },
+    {
+     "sha256": "21dc4744dbc37b6148efc33c5104b5835aeeac1bf253b3038d4da9a5f845ca1c",
+     "signature": "def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Deinitable, V: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, Y: Movable & Deinitable](ref[q] function: def(var P, var Q) thin -> R, var initial: A, var source: V) raises Never -> Tuple[A, List[Y]] where P == A and _Source[V].Element == Q and R == Tuple[A, Y]:"
+    },
+    {
+     "sha256": "8b1bf9dd5f4c80008b9c00807e46e7b8ec66683bdb38d00eb15f56dc68a0f53c",
+     "signature": "def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Deinitable, V: Movable & Deinitable, R: RegisterPassable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) thin -> R, var initial: A, var source: V) raises Never -> Tuple[A, List[Y]] where not conforms_to(P, RegisterPassable) and not conforms_to(Q, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:"
+    },
+    {
+     "sha256": "24799b296b528930c179ef2418902ad86a7233e1c8c2c0712f3b50849e2d3412",
+     "signature": "def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: RegisterPassable & Deinitable, V: Movable & Deinitable, R: Movable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) thin -> R, var initial: A, var source: V) raises Never -> Tuple[A, List[Y]] where not conforms_to(P, RegisterPassable) and not conforms_to(R, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:"
+    },
+    {
+     "sha256": "2fb5c85fbe2788f8ec76d51b067be59e404a1e32135416cdcfedc286bdc55e44",
+     "signature": "def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: RegisterPassable & Deinitable, V: Movable & Deinitable, R: RegisterPassable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) thin -> R, var initial: A, var source: V) raises Never -> Tuple[A, List[Y]] where not conforms_to(P, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:"
+    },
+    {
+     "sha256": "df57fc93315c5520775c218f1184a0ab6981db65ca7d3c22a9e177f057992f76",
+     "signature": "def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: Movable & Deinitable, V: Movable & Deinitable, R: Movable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) thin -> R, var initial: A, var source: V) raises Never -> Tuple[A, List[Y]] where not conforms_to(Q, RegisterPassable) and not conforms_to(R, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:"
+    },
+    {
+     "sha256": "7f43d06460675397c671355c1b107556b974a336d8cb9a8e907256ce31db8cf8",
+     "signature": "def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: Movable & Deinitable, V: Movable & Deinitable, R: RegisterPassable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) thin -> R, var initial: A, var source: V) raises Never -> Tuple[A, List[Y]] where not conforms_to(Q, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:"
+    },
+    {
+     "sha256": "6f41216084e749e145b0f426cca63bc600b9deceb6162f9bec42d20a16f41eee",
+     "signature": "def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: RegisterPassable & Deinitable, V: Movable & Deinitable, R: Movable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) thin -> R, var initial: A, var source: V) raises Never -> Tuple[A, List[Y]] where not conforms_to(R, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:"
+    },
+    {
+     "sha256": "c0507c220e377e0a813b5a92949f0450d15bd7ee8aa84319d01f4f44076c8efe",
+     "signature": "def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: RegisterPassable & Deinitable, V: Movable & Deinitable, R: RegisterPassable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) thin -> R, var initial: A, var source: V) raises Never -> Tuple[A, List[Y]] where P == A and _Source[V].Element == Q and R == Tuple[A, Y]:"
+    },
+    {
+     "sha256": "3a8da89b8dd8aa852c893b4ebb7fcf3f1256fe4bbf794f993fdf397722ae0592",
+     "signature": "def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Deinitable, V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, Y: Movable & Deinitable](ref[q] function: def(var P, var Q) raises E thin -> R, var initial: A, var source: V) raises E -> Tuple[A, List[Y]] where P == A and _Source[V].Element == Q and R == Tuple[A, Y]:"
+    },
+    {
+     "sha256": "8d3dfd2724c6ca1ce99b24e8e32b43a7e2a6321b4b5def731ac00279735ec21d",
+     "signature": "def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Deinitable, V: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) raises E thin -> R, var initial: A, var source: V) raises E -> Tuple[A, List[Y]] where not conforms_to(P, RegisterPassable) and not conforms_to(Q, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:"
+    },
+    {
+     "sha256": "3fb804b37d53841dd20466e3f69b8fe23235e6f74eb62a1991fda6c1f974061e",
+     "signature": "def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: RegisterPassable & Deinitable, V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) raises E thin -> R, var initial: A, var source: V) raises E -> Tuple[A, List[Y]] where not conforms_to(P, RegisterPassable) and not conforms_to(R, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:"
+    },
+    {
+     "sha256": "34ec5c64266888bcfc7835b31ad2a4d0f3481f00ce0af497af2bc109cf6c4643",
+     "signature": "def map_accumulate[A: Movable & Deinitable, P: Movable & Deinitable, Q: RegisterPassable & Deinitable, V: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) raises E thin -> R, var initial: A, var source: V) raises E -> Tuple[A, List[Y]] where not conforms_to(P, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:"
+    },
+    {
+     "sha256": "2c038d5386152f3cbc86bac191e6eb902091d508d89b8f6031ba7c45ee4faf4e",
+     "signature": "def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: Movable & Deinitable, V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) raises E thin -> R, var initial: A, var source: V) raises E -> Tuple[A, List[Y]] where not conforms_to(Q, RegisterPassable) and not conforms_to(R, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:"
+    },
+    {
+     "sha256": "1696cf9672fdedac973694c80658952a6905a85a8224bd4970986e5624af9746",
+     "signature": "def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: Movable & Deinitable, V: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) raises E thin -> R, var initial: A, var source: V) raises E -> Tuple[A, List[Y]] where not conforms_to(Q, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:"
+    },
+    {
+     "sha256": "6059b42805ebe7bc175ed60819e17d8fd050b0ddcbd0c2ce98448fc098872a47",
+     "signature": "def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: RegisterPassable & Deinitable, V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) raises E thin -> R, var initial: A, var source: V) raises E -> Tuple[A, List[Y]] where not conforms_to(R, RegisterPassable) and P == A and _Source[V].Element == Q and R == Tuple[A, Y]:"
+    },
+    {
+     "sha256": "9db3662aab37f507860d5bf00e86aee483861cc4211c16d19a695237f5703909",
+     "signature": "def map_accumulate[A: Movable & Deinitable, P: RegisterPassable & Deinitable, Q: RegisterPassable & Deinitable, V: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, Y: Movable & Deinitable](function: def(var P, var Q) raises E thin -> R, var initial: A, var source: V) raises E -> Tuple[A, List[Y]] where P == A and _Source[V].Element == Q and R == Tuple[A, Y]:"
+    },
+    {
+     "sha256": "da4250f5c3dbcfe8433bb1b0d22c78e0a508df9b56d2fa2668531a0b135b4c05",
+     "signature": "def map_accumulate[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, F: Copyable & Deinitable, R: Movable & Deinitable = Tuple[A, Y]](function: F, var initial: A, var source: V) raises Never -> Tuple[A, List[Y]] where _Source[V].Element == T and R == Tuple[A, Y] and not conforms_to(Tuple[A, Y], RegisterPassable) and F == (def(var _NativeOwnedArg[A], var _NativeOwnedArg[T]) thin -> R):"
+    },
+    {
+     "sha256": "903f5dc0480aa2e1f8fd1757218a5c27267edf747d43ac9adf205259be8026f3",
+     "signature": "def map_accumulate[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, F: Copyable & Deinitable, R: RegisterPassable & Deinitable = downcast[Tuple[A, Y], RegisterPassable & Deinitable]](function: F, var initial: A, var source: V) raises Never -> Tuple[A, List[Y]] where _Source[V].Element == T and R == Tuple[A, Y] and conforms_to(Tuple[A, Y], RegisterPassable) and F == (def(var _NativeOwnedArg[A], var _NativeOwnedArg[T]) thin -> R):"
+    },
+    {
+     "sha256": "95284e747226beba904562c21f5998355417542cdd7b39c4f14fd7bfe2d89e82",
+     "signature": "def map_accumulate[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, F: Copyable & Deinitable, R: Movable & Deinitable = Tuple[A, Y], E: Movable & Deinitable = Never](function: F, var initial: A, var source: V) raises E -> Tuple[A, List[Y]] where _Source[V].Element == T and R == Tuple[A, Y] and not conforms_to(Tuple[A, Y], RegisterPassable) and F == (def(var _NativeOwnedArg[A], var _NativeOwnedArg[T]) raises E thin -> R):"
+    },
+    {
+     "sha256": "e2b99cf9e54e42ba6b7bcdad3a24d9a3ae761c0878dc2cd8f49fb32dae769ad1",
+     "signature": "def map_accumulate[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, F: Copyable & Deinitable, R: RegisterPassable & Deinitable = downcast[Tuple[A, Y], RegisterPassable & Deinitable], E: Movable & Deinitable = Never](function: F, var initial: A, var source: V) raises E -> Tuple[A, List[Y]] where _Source[V].Element == T and R == Tuple[A, Y] and conforms_to(Tuple[A, Y], RegisterPassable) and F == (def(var _NativeOwnedArg[A], var _NativeOwnedArg[T]) raises E thin -> R):"
+    }
+   ],
+   "provider": "iteration/scans"
   },
   "iteration.map_with_index": {
    "kind": "function",

@@ -128,6 +128,6 @@ from .branching import Unbounded, BoundedFail, BufferCapacityError, BufferLimitE
 
 from .alignment import AlignIterator, AlignWithIterator, PadZipIterator, align, align_with, pad_zip
 
-from .scans import ScanMapIterator, scan_map
+from .scans import ScanMapIterator, scan_map, map_accumulate
 
 from .non_empty import reduce_non_empty, reduce_map, combine_non_empty, minimum_by_non_empty, maximum_by_non_empty

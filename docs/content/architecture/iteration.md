@@ -791,3 +791,28 @@ value rather than an Optional. All these operations accept move-only payloads;
 remaining elements, temporary keys and partial accumulators are destroyed on
 failure. Non-emptiness is established by the source type, never assumed for a
 plain List or an arbitrary iterator.
+
+## Collecting a stateful map
+
+`map_accumulate` follows the state/output contract of
+[Cats Traverse.mapAccumulate](https://github.com/typelevel/cats/blob/b055e31caf3b4922432f5423585094c3b3116eb8/core/src/main/scala/cats/Traverse.scala).
+Its source is a native iterator or owned collection, and its collected shape is
+a `List`; it does not emulate a higher-kinded Traverse implementation.
+
+`callables._scan._ScanOutputs` owns the carry and outputs for both eager
+`control.scan` and `iteration.map_accumulate`. Its existing `_Carry` slot is
+empty while the callback owns the carry, so failure cleanup cannot destroy it
+twice. Pair movement and list append live in that shared owner. The indexed
+control scan retains its existing scheduling, reverse and length contracts.
+The iterator terminal delegates advancement to `_terminal._fold_left`, which
+keeps callback errors outside the source's exhaustion handler.
+
+Generated native signatures only admit and adapt callbacks to `NativeBinary`.
+They infer the complete return type before constraining it to a carry/output
+pair, avoiding tuple-pack inference in native function signatures. Aliased
+pointers use selected output/error types and the canonical owned argument
+projection, retaining explicit, disjoint result ABI witnesses. Their read
+admission avoids an ambiguity with the all-memory native ref boundary; the
+pointer is copied into its owner and no admission borrow escapes. Library
+callbacks use the existing repeatable binary dispatch, including its receiver
+priority. Free functions and fluent methods enter the same private driver.

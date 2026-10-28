@@ -30,4 +30,7 @@ def main():
     var price = partial(priced, 3)
     print("prices:", iterated(range(1,4)).scan_map(price, 0).collect_list())
     print("reused:", iterated(range(1,3)).scan_map(price, 10).collect_list())
+    var accumulated = iterated(range(1,4)).map_accumulate(price, 0)
+    print("final total:", accumulated[0])
+    print("collected:", accumulated[1])
     print("moved:", iterated(range(1,3)).scan_map(price^, 0).collect_list())

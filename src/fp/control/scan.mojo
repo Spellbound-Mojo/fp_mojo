@@ -2,7 +2,7 @@
 from std.iter import Iterator
 from std.utils import Variant
 from std.builtin.rebind import rebind_var
-from fp.callables._scan import _Carry
+from fp.callables._scan import _Carry, _ScanOutputs
 from fp.callables.protocols import Binary
 from fp.callables.native import _call_native_binary
 from fp.iteration._terminal import _collect_list
@@ -100,13 +100,7 @@ def _scan_raising[A: Movable & Deinitable, X: Movable & Deinitable,
         return rebind_var[Tuple[A, Y]](function(carry^, value^))
 
 
-@fieldwise_init
-struct _ScanState[A: Movable & Deinitable, Y: Movable & Deinitable](Movable):
-    var carry: _Carry[Self.A]
-    var outputs: List[Self.Y]
-
-    def into_result(deinit self) -> Tuple[Self.A, List[Self.Y]]:
-        return (self.carry.take(), self.outputs^)
+comptime _ScanState[A: Movable & Deinitable, Y: Movable & Deinitable] = _ScanOutputs[A, Y]
 
 
 # Mojo 1.1 O3 crashes when an always-raising native step is inlined through
@@ -122,7 +116,7 @@ def _scan_step[A: Movable & Deinitable, X: Movable & Deinitable,
 ) raises E capturing -> _ScanState[A, Y]:
     var value = _scan_item[X, no_input](context[1][])
     var pair = apply(state.carry.take(), value^, context[0][])
-    state.outputs.append(state.carry.replace(pair^))
+    state.append(pair^)
     return state^
 
 

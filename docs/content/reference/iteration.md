@@ -227,10 +227,30 @@ Use `scan_left` when each accumulator snapshot is an output, including the
 initial snapshot. It supports the same named binary callback reuse. The
 accumulator must remain `Copyable`: each yielded snapshot is an independent
 copy, including the sole snapshot produced for an empty source.
-Use `fp.control.scan` for eager finite scans that return the
-final carry and collected outputs. Its native errors and scheduling are unchanged.
 Generic native wrappers preserve `A`, `T`, `Y` and forward them explicitly;
 `ScanMapIterator[A,T,Y,I,F]` names the concrete lazy iterator, including origins.
+
+To keep the final carry, use `map_accumulate(step, initial, source)` or
+`.map_accumulate(step, initial)`. Inspired by Cats `Traverse.mapAccumulate`,
+it returns `(final_carry, List[output])`. It consumes a finite source from its
+current position, invoking the step immediately after each pull. Empty input
+returns the initial carry and an empty list. Storage grows with the outputs;
+the inputs are not collected first.
+
+Ordinary native functions and library callbacks infer the output type. Mutable
+library steps run directly, with mutable invocation preferred over shared
+invocation; consuming-only callbacks are rejected. Named standard binary
+adapters, such as `price` in the example, can be reused. Native closures enter
+through `BinarySignature[A,T,Tuple[A,Y],E].capture(callback)`. Aliased thin
+pointers select `[Y=Output]`, and `[E=Failure]` for typed errors. Generic library
+wrappers forward their selected output with `[Y=Y]`.
+
+The step may raise its exact native error, including `StopIteration`; that is
+a failure, not source exhaustion. No subsequent item is pulled. Partial
+outputs, remaining owned inputs, carry and callback are released on failure.
+Borrowed callback adapters keep their named owner alive for the call, and
+borrowed outputs retain their native origins. Use `fp.control.scan` when you
+need reverse traversal, length validation or static scheduling.
 
 ## Effectful search and reduction
 
