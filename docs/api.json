@@ -219124,7 +219124,7 @@
        "variadic": true
       }
      ],
-     "description": "`compose(h, g, f)(x)` is `h(g(f(x)))`: the last argument runs first and may\ntake zero, one or two arguments. Plain functions, library values and\npromoted closures are accepted as in `flow`. A mismatched stage is reported\nby its position in the run order and its argument position.\n\nLimitations:\n    At most eight plain functions per call, and plain functions mixed with\n    library values are promoted with `as_unary`, as in `pipe`.",
+     "description": "`compose(h, g, f)(x)` is `h(g(f(x)))`: the last argument runs first and may\ntake zero, one or two arguments. Plain functions, library values and\npromoted closures are accepted as in `flow`. A mismatched stage is reported\nby its position in the run order and its argument position.\n\nLimitations:\n    At most eight plain functions per call. A pair may mix one plain\n    function or stored thin pointer with one library callable directly.\n    Longer mixed chains group pairs or promote unary native stages with\n    `as_unary`; capturing unary closures also use `as_unary`.",
      "error": "",
      "parameters": [
       {
@@ -222419,6 +222419,3061 @@
      },
      "signature": "def compose[B0: Movable & Deinitable, B1: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, A8: Movable & Deinitable, P1: Movable & Deinitable, P2: Movable & Deinitable, P3: Movable & Deinitable, P4: Movable & Deinitable, P5: Movable & Deinitable, P6: Movable & Deinitable, P7: Movable & Deinitable, E0: Movable & Deinitable, E1: Movable & Deinitable, E2: Movable & Deinitable, E3: Movable & Deinitable, E4: Movable & Deinitable, E5: Movable & Deinitable, E6: Movable & Deinitable, E7: Movable & Deinitable, //](f7: def(var P7) raises E7 thin -> A8, f6: def(var P6) raises E6 thin -> A7, f5: def(var P5) raises E5 thin -> A6, f4: def(var P4) raises E4 thin -> A5, f3: def(var P3) raises E3 thin -> A4, f2: def(var P2) raises E2 thin -> A3, f1: def(var P1) raises E1 thin -> A2, f0: def(var B0, var B1) raises E0 thin -> A1) -> Composition[True, 2, _Thin1F[P7, A8, E7], _Thin1F[P6, A7, E6], _Thin1F[P5, A6, E5], _Thin1F[P4, A5, E4], _Thin1F[P3, A4, E3], _Thin1F[P2, A3, E2], _Thin1F[P1, A2, E1], _Thin2F[B0, B1, A1, E0]]",
      "summary": "Store 8 plain functions, applied right to left."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def() thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 0, F, _NativeThunk[R, Never, type_of(function), False]]"
+     },
+     "signature": "def compose[R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](var stage: F, ref[q] function: def() thin -> R) -> Composition[True, 0, F, _NativeThunk[R, Never, type_of(function), False]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def() thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 0, F, _NativeThunk[R, Never, type_of(function), False]]"
+     },
+     "signature": "def compose[R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def() thin -> R) -> Composition[True, 0, F, _NativeThunk[R, Never, type_of(function), False]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def() thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 0, F, _NativeThunk[type_of(None), Never, type_of(function), False]]"
+     },
+     "signature": "def compose[F: Movable & Deinitable, q: ImmOrigin, //](var stage: F, ref[q] function: def() thin) -> Composition[True, 0, F, _NativeThunk[type_of(None), Never, type_of(function), False]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def() raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 0, F, _NativeThunk[R, E, type_of(function), True]]"
+     },
+     "signature": "def compose[R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](var stage: F, ref[q] function: def() raises E thin -> R) -> Composition[True, 0, F, _NativeThunk[R, E, type_of(function), True]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def() raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 0, F, _NativeThunk[R, E, type_of(function), True]]"
+     },
+     "signature": "def compose[R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def() raises E thin -> R) -> Composition[True, 0, F, _NativeThunk[R, E, type_of(function), True]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def() raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 0, F, _NativeThunk[type_of(None), E, type_of(function), True]]"
+     },
+     "signature": "def compose[E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](var stage: F, ref[q] function: def() raises E thin) -> Composition[True, 0, F, _NativeThunk[type_of(None), E, type_of(function), True]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 1, F, NativeUnary[A, R, Never, type_of(function), False]]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](var stage: F, ref[q] function: def(var A) thin -> R) -> Composition[True, 1, F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 1, F, NativeUnary[A, R, Never, type_of(function), False]]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A) thin -> R) -> Composition[True, 1, F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(A, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 1, F, NativeUnary[A, R, Never, type_of(function), False]]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A) thin -> R) -> Composition[True, 1, F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(R, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 1, F, NativeUnary[A, R, Never, type_of(function), False]]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A) thin -> R) -> Composition[True, 1, F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 1, F, NativeUnary[A, type_of(None), Never, type_of(function), False]]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](var stage: F, ref[q] function: def(var A) thin) -> Composition[True, 1, F, NativeUnary[A, type_of(None), Never, type_of(function), False]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 1, F, NativeUnary[A, type_of(None), Never, type_of(function), False]]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A) thin) -> Composition[True, 1, F, NativeUnary[A, type_of(None), Never, type_of(function), False]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 1, F, NativeUnary[A, R, E, type_of(function), True]]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](var stage: F, ref[q] function: def(var A) raises E thin -> R) -> Composition[True, 1, F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 1, F, NativeUnary[A, R, E, type_of(function), True]]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A) raises E thin -> R) -> Composition[True, 1, F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F] and not conforms_to(A, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 1, F, NativeUnary[A, R, E, type_of(function), True]]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A) raises E thin -> R) -> Composition[True, 1, F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F] and not conforms_to(R, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 1, F, NativeUnary[A, R, E, type_of(function), True]]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A) raises E thin -> R) -> Composition[True, 1, F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 1, F, NativeUnary[A, type_of(None), E, type_of(function), True]]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](var stage: F, ref[q] function: def(var A) raises E thin) -> Composition[True, 1, F, NativeUnary[A, type_of(None), E, type_of(function), True]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 1, F, NativeUnary[A, type_of(None), E, type_of(function), True]]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A) raises E thin) -> Composition[True, 1, F, NativeUnary[A, type_of(None), E, type_of(function), True]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](var stage: F, ref[q] function: def(var A, var B) thin -> R) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A, var B) thin -> R) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A, var B) thin -> R) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A, var B) thin -> R) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(A, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A, var B) thin -> R) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A, var B) thin -> R) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(B, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A, var B) thin -> R) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(R, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A, var B) thin -> R) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, type_of(None), Never, type_of(function), False]]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, B: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](var stage: F, ref[q] function: def(var A, var B) thin) -> Composition[True, 2, F, _NativeBinary[A, B, type_of(None), Never, type_of(function), False]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, type_of(None), Never, type_of(function), False]]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A, var B) thin) -> Composition[True, 2, F, _NativeBinary[A, B, type_of(None), Never, type_of(function), False]] where _Once[F] and not conforms_to(A, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, type_of(None), Never, type_of(function), False]]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A, var B) thin) -> Composition[True, 2, F, _NativeBinary[A, B, type_of(None), Never, type_of(function), False]] where _Once[F] and not conforms_to(B, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, type_of(None), Never, type_of(function), False]]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A, var B) thin) -> Composition[True, 2, F, _NativeBinary[A, B, type_of(None), Never, type_of(function), False]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](var stage: F, ref[q] function: def(var A, var B) raises E thin -> R) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A, var B) raises E thin -> R) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A, var B) raises E thin -> R) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A, var B) raises E thin -> R) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F] and not conforms_to(A, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A, var B) raises E thin -> R) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F] and not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A, var B) raises E thin -> R) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F] and not conforms_to(B, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A, var B) raises E thin -> R) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F] and not conforms_to(R, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A, var B) raises E thin -> R) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, type_of(None), E, type_of(function), True]]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](var stage: F, ref[q] function: def(var A, var B) raises E thin) -> Composition[True, 2, F, _NativeBinary[A, B, type_of(None), E, type_of(function), True]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, type_of(None), E, type_of(function), True]]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A, var B) raises E thin) -> Composition[True, 2, F, _NativeBinary[A, B, type_of(None), E, type_of(function), True]] where _Once[F] and not conforms_to(A, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, type_of(None), E, type_of(function), True]]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A, var B) raises E thin) -> Composition[True, 2, F, _NativeBinary[A, B, type_of(None), E, type_of(function), True]] where _Once[F] and not conforms_to(B, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, 2, F, _NativeBinary[A, B, type_of(None), E, type_of(function), True]]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A, var B) raises E thin) -> Composition[True, 2, F, _NativeBinary[A, B, type_of(None), E, type_of(function), True]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, _Arity[F], NativeUnary[A, R, Never, type_of(function), False], F]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A) thin -> R, var stage: F) -> Composition[True, _Arity[F], NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, _Arity[F], NativeUnary[A, R, Never, type_of(function), False], F]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](function: def(var A) thin -> R, var stage: F) -> Composition[True, _Arity[F], NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(A, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, _Arity[F], NativeUnary[A, R, Never, type_of(function), False], F]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A) thin -> R, var stage: F) -> Composition[True, _Arity[F], NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(R, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, _Arity[F], NativeUnary[A, R, Never, type_of(function), False], F]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](function: def(var A) thin -> R, var stage: F) -> Composition[True, _Arity[F], NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, _Arity[F], NativeUnary[A, type_of(None), Never, type_of(function), False], F]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A) thin, var stage: F) -> Composition[True, _Arity[F], NativeUnary[A, type_of(None), Never, type_of(function), False], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, _Arity[F], NativeUnary[A, type_of(None), Never, type_of(function), False], F]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, F: Movable & Deinitable, //](function: def(var A) thin, var stage: F) -> Composition[True, _Arity[F], NativeUnary[A, type_of(None), Never, type_of(function), False], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, _Arity[F], NativeUnary[A, R, E, type_of(function), True], F]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A) raises E thin -> R, var stage: F) -> Composition[True, _Arity[F], NativeUnary[A, R, E, type_of(function), True], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, _Arity[F], NativeUnary[A, R, E, type_of(function), True], F]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A) raises E thin -> R, var stage: F) -> Composition[True, _Arity[F], NativeUnary[A, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(A, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, _Arity[F], NativeUnary[A, R, E, type_of(function), True], F]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A) raises E thin -> R, var stage: F) -> Composition[True, _Arity[F], NativeUnary[A, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(R, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, _Arity[F], NativeUnary[A, R, E, type_of(function), True], F]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A) raises E thin -> R, var stage: F) -> Composition[True, _Arity[F], NativeUnary[A, R, E, type_of(function), True], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, _Arity[F], NativeUnary[A, type_of(None), E, type_of(function), True], F]"
+     },
+     "signature": "def compose[A: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A) raises E thin, var stage: F) -> Composition[True, _Arity[F], NativeUnary[A, type_of(None), E, type_of(function), True], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[True, _Arity[F], NativeUnary[A, type_of(None), E, type_of(function), True], F]"
+     },
+     "signature": "def compose[A: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A) raises E thin, var stage: F) -> Composition[True, _Arity[F], NativeUnary[A, type_of(None), E, type_of(function), True], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
     }
    ],
    "provider": "functions/composition",
@@ -222586,7 +225641,7 @@
        "variadic": true
       }
      ],
-     "description": "`flow(f, g, h)(x)` is `h(g(f(x)))`. Two to eight plain functions are accepted\nas they are; library values such as partials, compositions and flipped\nfunctions, and closures promoted with `as_unary`, are accepted in any\nnumber. The first stage may take zero, one or two arguments; every later\nstage takes the previous result, or the call does not compile, with an\nerror that names the stage.\n\nLimitations:\n    At most eight plain functions per call, and plain functions mixed with\n    library values are promoted with `as_unary`, as in `pipe`.",
+     "description": "`flow(f, g, h)(x)` is `h(g(f(x)))`. Two to eight plain functions are accepted\nas they are; library values such as partials, compositions and flipped\nfunctions, and closures promoted with `as_unary`, are accepted in any\nnumber. The first stage may take zero, one or two arguments; every later\nstage takes the previous result, or the call does not compile, with an\nerror that names the stage.\n\nTwo-stage compositions also accept one plain function or stored thin\npointer beside one library callable, in either position. The native stage\nneeds no adapter; the composition owns both stages without calling them.\n\nLimitations:\n    At most eight plain functions per call. Longer mixed chains group\n    two-stage compositions or promote unary native stages with `as_unary`.\n    Capturing unary closures use `as_unary` for stored composition.",
      "error": "",
      "parameters": [
       {
@@ -225881,6 +228936,3061 @@
      },
      "signature": "def flow[B0: Movable & Deinitable, B1: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, A8: Movable & Deinitable, P1: Movable & Deinitable, P2: Movable & Deinitable, P3: Movable & Deinitable, P4: Movable & Deinitable, P5: Movable & Deinitable, P6: Movable & Deinitable, P7: Movable & Deinitable, E0: Movable & Deinitable, E1: Movable & Deinitable, E2: Movable & Deinitable, E3: Movable & Deinitable, E4: Movable & Deinitable, E5: Movable & Deinitable, E6: Movable & Deinitable, E7: Movable & Deinitable, //](f0: def(var B0, var B1) raises E0 thin -> A1, f1: def(var P1) raises E1 thin -> A2, f2: def(var P2) raises E2 thin -> A3, f3: def(var P3) raises E3 thin -> A4, f4: def(var P4) raises E4 thin -> A5, f5: def(var P5) raises E5 thin -> A6, f6: def(var P6) raises E6 thin -> A7, f7: def(var P7) raises E7 thin -> A8) -> Composition[False, 2, _Thin2F[B0, B1, A1, E0], _Thin1F[P1, A2, E1], _Thin1F[P2, A3, E2], _Thin1F[P3, A4, E3], _Thin1F[P4, A5, E4], _Thin1F[P5, A6, E5], _Thin1F[P6, A7, E6], _Thin1F[P7, A8, E7]]",
      "summary": "Store 8 plain functions, applied left to right."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def() thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 0, _NativeThunk[R, Never, type_of(function), False], F]"
+     },
+     "signature": "def flow[R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def() thin -> R, var stage: F) -> Composition[False, 0, _NativeThunk[R, Never, type_of(function), False], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def() thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 0, _NativeThunk[R, Never, type_of(function), False], F]"
+     },
+     "signature": "def flow[R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](function: def() thin -> R, var stage: F) -> Composition[False, 0, _NativeThunk[R, Never, type_of(function), False], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def() thin",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 0, _NativeThunk[type_of(None), Never, type_of(function), False], F]"
+     },
+     "signature": "def flow[F: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def() thin, var stage: F) -> Composition[False, 0, _NativeThunk[type_of(None), Never, type_of(function), False], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def() raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 0, _NativeThunk[R, E, type_of(function), True], F]"
+     },
+     "signature": "def flow[R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def() raises E thin -> R, var stage: F) -> Composition[False, 0, _NativeThunk[R, E, type_of(function), True], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def() raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 0, _NativeThunk[R, E, type_of(function), True], F]"
+     },
+     "signature": "def flow[R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](function: def() raises E thin -> R, var stage: F) -> Composition[False, 0, _NativeThunk[R, E, type_of(function), True], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def() raises E thin",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 0, _NativeThunk[type_of(None), E, type_of(function), True], F]"
+     },
+     "signature": "def flow[E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def() raises E thin, var stage: F) -> Composition[False, 0, _NativeThunk[type_of(None), E, type_of(function), True], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 1, NativeUnary[A, R, Never, type_of(function), False], F]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A) thin -> R, var stage: F) -> Composition[False, 1, NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 1, NativeUnary[A, R, Never, type_of(function), False], F]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](function: def(var A) thin -> R, var stage: F) -> Composition[False, 1, NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(A, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 1, NativeUnary[A, R, Never, type_of(function), False], F]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A) thin -> R, var stage: F) -> Composition[False, 1, NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(R, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 1, NativeUnary[A, R, Never, type_of(function), False], F]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](function: def(var A) thin -> R, var stage: F) -> Composition[False, 1, NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 1, NativeUnary[A, type_of(None), Never, type_of(function), False], F]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A) thin, var stage: F) -> Composition[False, 1, NativeUnary[A, type_of(None), Never, type_of(function), False], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 1, NativeUnary[A, type_of(None), Never, type_of(function), False], F]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, F: Movable & Deinitable, //](function: def(var A) thin, var stage: F) -> Composition[False, 1, NativeUnary[A, type_of(None), Never, type_of(function), False], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 1, NativeUnary[A, R, E, type_of(function), True], F]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A) raises E thin -> R, var stage: F) -> Composition[False, 1, NativeUnary[A, R, E, type_of(function), True], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 1, NativeUnary[A, R, E, type_of(function), True], F]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A) raises E thin -> R, var stage: F) -> Composition[False, 1, NativeUnary[A, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(A, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 1, NativeUnary[A, R, E, type_of(function), True], F]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A) raises E thin -> R, var stage: F) -> Composition[False, 1, NativeUnary[A, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(R, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 1, NativeUnary[A, R, E, type_of(function), True], F]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A) raises E thin -> R, var stage: F) -> Composition[False, 1, NativeUnary[A, R, E, type_of(function), True], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 1, NativeUnary[A, type_of(None), E, type_of(function), True], F]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A) raises E thin, var stage: F) -> Composition[False, 1, NativeUnary[A, type_of(None), E, type_of(function), True], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 1, NativeUnary[A, type_of(None), E, type_of(function), True], F]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A) raises E thin, var stage: F) -> Composition[False, 1, NativeUnary[A, type_of(None), E, type_of(function), True], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A, var B) thin -> R, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](function: def(var A, var B) thin -> R, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A, var B) thin -> R, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](function: def(var A, var B) thin -> R, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(A, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A, var B) thin -> R, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](function: def(var A, var B) thin -> R, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(B, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A, var B) thin -> R, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(R, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](function: def(var A, var B) thin -> R, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, type_of(None), Never, type_of(function), False], F]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, B: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A, var B) thin, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, type_of(None), Never, type_of(function), False], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, type_of(None), Never, type_of(function), False], F]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, B: RegisterPassable & Deinitable, F: Movable & Deinitable, //](function: def(var A, var B) thin, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, type_of(None), Never, type_of(function), False], F] where _Once[F] and not conforms_to(A, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, type_of(None), Never, type_of(function), False], F]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, B: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A, var B) thin, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, type_of(None), Never, type_of(function), False], F] where _Once[F] and not conforms_to(B, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) thin",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, type_of(None), Never, type_of(function), False], F]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, F: Movable & Deinitable, //](function: def(var A, var B) thin, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, type_of(None), Never, type_of(function), False], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A, var B) raises E thin -> R, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(A, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(B, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(R, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, type_of(None), E, type_of(function), True], F]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A, var B) raises E thin, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, type_of(None), E, type_of(function), True], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, type_of(None), E, type_of(function), True], F]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A, var B) raises E thin, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, type_of(None), E, type_of(function), True], F] where _Once[F] and not conforms_to(A, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, type_of(None), E, type_of(function), True], F]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A, var B) raises E thin, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, type_of(None), E, type_of(function), True], F] where _Once[F] and not conforms_to(B, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, 2, _NativeBinary[A, B, type_of(None), E, type_of(function), True], F]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](function: def(var A, var B) raises E thin, var stage: F) -> Composition[False, 2, _NativeBinary[A, B, type_of(None), E, type_of(function), True], F] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, _Arity[F], F, NativeUnary[A, R, Never, type_of(function), False]]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](var stage: F, ref[q] function: def(var A) thin -> R) -> Composition[False, _Arity[F], F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, _Arity[F], F, NativeUnary[A, R, Never, type_of(function), False]]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A) thin -> R) -> Composition[False, _Arity[F], F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(A, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, _Arity[F], F, NativeUnary[A, R, Never, type_of(function), False]]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A) thin -> R) -> Composition[False, _Arity[F], F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(R, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, _Arity[F], F, NativeUnary[A, R, Never, type_of(function), False]]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A) thin -> R) -> Composition[False, _Arity[F], F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, _Arity[F], F, NativeUnary[A, type_of(None), Never, type_of(function), False]]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](var stage: F, ref[q] function: def(var A) thin) -> Composition[False, _Arity[F], F, NativeUnary[A, type_of(None), Never, type_of(function), False]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, _Arity[F], F, NativeUnary[A, type_of(None), Never, type_of(function), False]]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A) thin) -> Composition[False, _Arity[F], F, NativeUnary[A, type_of(None), Never, type_of(function), False]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, _Arity[F], F, NativeUnary[A, R, E, type_of(function), True]]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](var stage: F, ref[q] function: def(var A) raises E thin -> R) -> Composition[False, _Arity[F], F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, _Arity[F], F, NativeUnary[A, R, E, type_of(function), True]]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A) raises E thin -> R) -> Composition[False, _Arity[F], F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F] and not conforms_to(A, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, _Arity[F], F, NativeUnary[A, R, E, type_of(function), True]]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A) raises E thin -> R) -> Composition[False, _Arity[F], F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F] and not conforms_to(R, RegisterPassable)",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, _Arity[F], F, NativeUnary[A, R, E, type_of(function), True]]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A) raises E thin -> R) -> Composition[False, _Arity[F], F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, _Arity[F], F, NativeUnary[A, type_of(None), E, type_of(function), True]]"
+     },
+     "signature": "def flow[A: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](var stage: F, ref[q] function: def(var A) raises E thin) -> Composition[False, _Arity[F], F, NativeUnary[A, type_of(None), E, type_of(function), True]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Composition[False, _Arity[F], F, NativeUnary[A, type_of(None), E, type_of(function), True]]"
+     },
+     "signature": "def flow[A: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](var stage: F, function: def(var A) raises E thin) -> Composition[False, _Arity[F], F, NativeUnary[A, type_of(None), E, type_of(function), True]] where _Once[F]",
+     "summary": "Compose a plain function or stored pointer with one library stage."
     }
    ],
    "provider": "functions/composition",
@@ -277094,7 +283204,7 @@
    "summary": "Functor, Filterable, FunctorFilter, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Semigroup and Monoid over native values, with explicit instances."
   },
   "callables": {
-   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. `BorrowCallable` and `BorrowOnceCallable` borrow\ntheir argument instead of taking it, and `invoke_borrowed` and\n`invoke_borrowed_once` call them. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped` and `Identity` from `fp.functions` implement these\nprotocols.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions directly; otherwise `Thunk`/`Unary`/`Binary` values and native functions promoted with `as_unary` |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Owned iteration callbacks, `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| Iteration predicates, `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `OnceThunk` |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
+   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. `BorrowCallable` and `BorrowOnceCallable` borrow\ntheir argument instead of taking it, and `invoke_borrowed` and\n`invoke_borrowed_once` call them. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped` and `Identity` from `fp.functions` implement these\nprotocols.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; two-stage `flow`/`compose` also mix a plain function or stored thin pointer with one library stage directly. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Owned iteration callbacks, `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| Iteration predicates, `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `OnceThunk` |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
    "summary": "How the library calls user code: callable protocols, receiver dispatch and native functions as values."
   },
   "combinators": {
@@ -277114,7 +283224,7 @@
    "summary": "Reader, State and Writer computations and the OptionalT and ResultT layers, over any base Monad."
   },
   "functions": {
-   "description": "Use `pipe(value, f, g)` to apply stages now, `flow(f, g)` or `compose(g, f)` to\nbuild a reusable composition, and `piped(value).then(f).get()` to chain any\nnumber of stages one call at a time. `flip` swaps two arguments and `partial`\nbinds leading arguments.\n\n`Piped.map(transform)` preserves supported native containers, mapping their\npayloads immediately through `fp.algebra`. Use `.map[Family](transform)` for an\nexplicit Functor instance, including third-party containers. `filter(predicate)`\nalso runs immediately, preserving containers that can represent rejection; `fold_left(step, initial)` consumes an iterable\nimmediately and keeps the accumulator in the chain. `get()` extracts the stored\nvalue. Use `then(function)` to transform the whole value and `iterated` for lazy\nelement mapping and filtering.\n\nA stage is a plain function, a closure promoted with `as_unary`, or a library\nvalue that implements `Unary`, such as a `Partial` or a `Composition`. Each\nstage's input must equal the previous stage's result. Values move from stage to\nstage without copies, stages are borrowed, and a raised error stops the chain\nwith its own type; a returned `Result` is ordinary data.\n\n`kleisli[Family](f).then(g)` composes effectful functions through the family's\nmonadic bind. Its `map` transforms successful payloads; ordinary container\n`map(chain)` borrows the chain automatically, including in lazy iterators.",
+   "description": "Use `pipe(value, f, g)` to apply stages now, `flow(f, g)` or `compose(g, f)` to\nbuild a reusable composition, and `piped(value).then(f).get()` to chain any\nnumber of stages one call at a time. `flip` swaps two arguments and `partial`\nbinds leading arguments.\n\nTwo-stage `flow` and `compose` can mix a plain function or stored thin pointer\nwith a library callable directly, in either position. Compositions own their\nstages and preserve their shared, mutable or consuming receiver capabilities.\n\n`Piped.map(transform)` preserves supported native containers, mapping their\npayloads immediately through `fp.algebra`. Use `.map[Family](transform)` for an\nexplicit Functor instance, including third-party containers. `filter(predicate)`\nalso runs immediately, preserving containers that can represent rejection; `fold_left(step, initial)` consumes an iterable\nimmediately and keeps the accumulator in the chain. `get()` extracts the stored\nvalue. Use `then(function)` to transform the whole value and `iterated` for lazy\nelement mapping and filtering.\n\nA stage is a plain function, a closure promoted with `as_unary`, or a library\nvalue that implements `Unary`, such as a `Partial` or a `Composition`. Each\nstage's input must equal the previous stage's result. Values move from stage to\nstage without copies, stages are borrowed, and a raised error stops the chain\nwith its own type; a returned `Result` is ordinary data.\n\n`kleisli[Family](f).then(g)` composes effectful functions through the family's\nmonadic bind. Its `map` transforms successful payloads; ordinary container\n`map(chain)` borrows the chain automatically, including in lazy iterators.",
    "summary": "Pipelines, compositions, argument flipping and partial application."
   },
   "iteration": {

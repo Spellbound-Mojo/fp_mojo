@@ -675,6 +675,20 @@ form that sequences stages through a selected Monad's bind.
 
 <!-- example: docs/examples/composition_reuse.mojo -->
 
+For two-stage `flow` and `compose`, a plain function or stored thin pointer
+can appear beside a library callable in either argument position. The first
+stage to run may take zero, one or two arguments; the second must take the
+first stage's exact result. `flow(add_one, partial(scale, 3))` and
+`compose(partial(scale, 3), add_one)` both produce `9` for input `2`.
+The binary `combine` in the example yields snapshots `[0, 2, 8, 22]`.
+
+The chain owns its stages. Mutable and consuming stages keep those receiver
+requirements, and native errors keep their exact type. Longer mixed chains
+can group two-stage compositions or promote unary native stages with
+`as_unary`; all-library chains remain variadic and all-plain chains support
+two through eight stages. Capturing unary closures use `as_unary` to become
+stored stages.
+
 `kleisli[Family](parse).then(validate).map(render)` stores one computation for
 later calls. `then` passes each successful payload into the next effectful
 function. `map` transforms the payload inside that effect. The family supplies

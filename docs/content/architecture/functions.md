@@ -56,6 +56,16 @@ signature, which is why these overloads are per stage count. Closures become
 stages through `as_unary`, which moves them into a `NativeUnary`. Partials and
 compositions are stages as they are.
 
+Two-stage mixed `flow` and `compose` normalize only the plain native stage.
+Their generated signatures reuse native factory ABI evidence, preserve the
+exact stored pointer type, and pass the adapted value and original library
+stage to `Composition`. Its constructor remains the owner of stage validation;
+the plan and shared, mutable and consuming runners are unchanged. No capture
+copy or callback invocation occurs at admission. Generic callers still need
+to preserve the native signature before reaching this boundary: a concrete
+register pointer cannot be converted to an unconstrained memory signature
+inside a user wrapper. Generic library callable contracts avoid that conversion.
+
 A pipeline's result type is inferred from the stages. `functions._stages` builds
 one compile-time plan (`_Plan`) from the stages' types: it tabulates each stage's
 result type as a `TypeList` with a known length and reduces it to the final

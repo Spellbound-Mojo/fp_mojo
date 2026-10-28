@@ -91,6 +91,13 @@ partial application, composition or a reusable owner for captured state.
 | Store a native unary callback as a library value | `as_unary(function)` or `as_unary(closure^)` | Owns the callback without changing its argument, result or error types. Shared callback entry points can borrow the adapter later. |
 | Control receiver mutation or consumption explicitly | A callable struct | Implement the shared, mutable or consuming protocol required by the operation. |
 
+A two-stage `flow` or `compose` can combine a plain function or stored thin
+pointer with a library stage directly, in either order. For example,
+`flow(add, partial(scale, 2))` adds two arguments and scales their sum.
+The composition owns the library stage and a copy of the pointer; no callback
+runs during construction. Unary capturing closures still use `as_unary` when
+stored as composition stages.
+
 These choices do not change the operation. Mapping a callback that returns a
 Result keeps that Result as an element; `traverse` gathers effectful results,
 and `flat_map` sequences a returned carrier. A lazy `filter_map` removes one

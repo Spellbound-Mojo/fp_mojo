@@ -266,6 +266,12 @@ returning a native Optional, Result or List also supplies enough information
 for `traverse` or `then` to select that effect family. Each operation keeps
 its own short-circuiting and ownership rules.
 
+Two-stage compositions can mix a plain function with a library callback
+directly. `flow(add_one, partial(scale, 3))` adds one and triples the result;
+`compose(partial(scale, 3), add_one)` does the same in reverse argument order.
+The example also starts a binary chain with plain `add` and reuses it in
+`scan_left`. No adapter is needed for the plain stage in these pairs.
+
 Use `chain^` when transferring its stages to an operation. A deferred operation
 retains a borrowed chain until it runs or is discarded. Mutable and
 consuming-only chains still require ownership; they are not implicitly shared.

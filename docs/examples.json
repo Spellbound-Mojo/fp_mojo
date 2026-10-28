@@ -58,7 +58,7 @@
       "stdout": "Hello Mojo!\nitems: 1 2 3\nchoices: ab aB Ab AB\n"
     },
     "docs/examples/composition_reuse.mojo": {
-      "stdout": "mapped: [4, 6]\nreused: 8\nvalidated: 2 3\nfallback: unavailable\n"
+      "stdout": "mapped: [4, 6]\nreused: 8\nvalidated: 2 3\nfallback: unavailable\nmixed: [6, 9]\nmirrored: 9\nrunning: [0, 2, 8, 22]\n"
     },
     "docs/examples/config_parser.mojo": {
       "stdout": "ready: batch=12, workers=4\n"

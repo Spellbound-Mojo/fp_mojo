@@ -23,6 +23,7 @@ import generate_result_syntax as result_syntax
 import generate_traversal_syntax as traversal_syntax
 import generate_effect_syntax as effect_syntax
 import generate_nary_syntax as nary_syntax
+from native_signatures import Operand, variants, factory_pointer, native_adapter
 
 MD = 'Movable & Deinitable'
 MAX = 8
@@ -100,6 +101,49 @@ def composition_overloads():
                            '    """Store %d plain functions, applied %s."""\n    return %s(%s)\n'
                            % (name, decls(n, first_arity), params, reverse, first_arity, types,
                               n, direction, name, wrapped))
+    return ''.join(out) + mixed_composition_overloads()
+
+
+def mixed_composition_overloads():
+    """Normalize one thin stage in a two-stage composition, then use its owner.
+
+    The library stage keeps its receiver capabilities. A spelled native
+    signature supplies the metadata that Mojo cannot recover from a type pack.
+    Factory ABI evidence is shared with as_unary; no callback is executed here.
+    """
+    out = []
+    for name, reverse in (('flow', False), ('compose', True)):
+        for native_first, arities in ((True, (0, 1, 2)), (False, (1,))):
+            for arity in arities:
+                payloads = ['A', 'B'][:arity]
+                mode = ('thunk', 'owned', 'binary')[arity]
+                for raising in (False, True):
+                    for void in (False, True):
+                        for abi in variants([Operand(p, 'o', known=False) for p in payloads], None if void else 'R'):
+                            pointer = factory_pointer(abi)
+                            parameters = list(abi.parameters)
+                            if raising:
+                                parameters += [('E', MD)]
+                            parameters += [('F', MD), *pointer.parameters]
+                            declarations = [f'{p}: {bound}' for p, bound in parameters] + ['//']
+                            signature = ('def(' + ', '.join('var ' + p for p in payloads) + ')'
+                                         + (' raises E' if raising else '') + ' thin'
+                                         + ('' if void else ' -> R'))
+                            adapter = native_adapter(mode, payloads, 'type_of(None)' if void else 'R',
+                                                     'E' if raising else 'Never', 'type_of(function)', raising)
+                            arguments = [f'{pointer.argument}: {signature}', 'var stage: F']
+                            types = [adapter, 'F']
+                            values = [adapter + '(function)', 'stage^']
+                            if native_first == reverse:
+                                arguments.reverse()
+                                types.reverse()
+                                values.reverse()
+                            result = f'Composition[{reverse}, {arity if native_first else "_Arity[F]"}, {", ".join(types)}]'
+                            conditions = ['_Once[F]', *pointer.conditions]
+                            out.append(f'\n\ndef {name}[{", ".join(declarations)}](\n'
+                                       f'    {", ".join(arguments)}\n) -> {result} where {" and ".join(conditions)}:\n'
+                                       '    """Compose a plain function or stored pointer with one library stage."""\n'
+                                       f'    return {result}({", ".join(values)})\n')
     return ''.join(out)
 
 

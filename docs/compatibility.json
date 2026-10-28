@@ -76,7 +76,19 @@
         "docs/examples/selected_workflow.mojo",
         "docs/examples/partial.mojo",
         "docs/examples/kleisli.mojo",
-        "docs/examples/composition_reuse.mojo"
+        "docs/examples/composition_reuse.mojo",
+        "tests/runtime/test_mixed_composition.mojo",
+        "tests/ownership/test_mixed_composition_ownership.mojo",
+        "tests/compile_fail/mixed_composition_arity.mojo",
+        "tests/compile_fail/mixed_composition_errors.mojo",
+        "tests/compile_fail/mixed_composition_input.mojo",
+        "tests/compile_fail/mixed_composition_lifetime.mojo",
+        "tests/compile_fail/mixed_composition_mutable_first.mojo",
+        "tests/compile_fail/mixed_composition_mutable_last.mojo",
+        "tests/compile_fail/mixed_composition_noncallable.mojo",
+        "tests/compile_fail/mixed_composition_once_reused.mojo",
+        "tests/compile_fail/mixed_composition_once_shared.mojo",
+        "tests/compile_fail/mixed_composition_origin.mojo"
       ]
     },
     "adt": {

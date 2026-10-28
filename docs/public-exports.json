@@ -17262,6 +17262,222 @@
         {
           "signature": "def flow[B0: Movable & Deinitable, B1: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, A8: Movable & Deinitable, P1: Movable & Deinitable, P2: Movable & Deinitable, P3: Movable & Deinitable, P4: Movable & Deinitable, P5: Movable & Deinitable, P6: Movable & Deinitable, P7: Movable & Deinitable, E0: Movable & Deinitable, E1: Movable & Deinitable, E2: Movable & Deinitable, E3: Movable & Deinitable, E4: Movable & Deinitable, E5: Movable & Deinitable, E6: Movable & Deinitable, E7: Movable & Deinitable, //]( f0: def(var B0, var B1) raises E0 thin -> A1, f1: def(var P1) raises E1 thin -> A2, f2: def(var P2) raises E2 thin -> A3, f3: def(var P3) raises E3 thin -> A4, f4: def(var P4) raises E4 thin -> A5, f5: def(var P5) raises E5 thin -> A6, f6: def(var P6) raises E6 thin -> A7, f7: def(var P7) raises E7 thin -> A8 ) -> Composition[False, 2, _Thin2F[B0, B1, A1, E0], _Thin1F[P1, A2, E1], _Thin1F[P2, A3, E2], _Thin1F[P3, A4, E3], _Thin1F[P4, A5, E4], _Thin1F[P5, A6, E5], _Thin1F[P6, A7, E6], _Thin1F[P7, A8, E7]]:",
           "sha256": "e63e8d250b8097cf55e55c03c493927adf9feae4407d3b09105da63db5f2747a"
+        },
+        {
+          "signature": "def flow[R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def() thin -> R, var stage: F ) -> Composition[False, 0, _NativeThunk[R, Never, type_of(function), False], F] where _Once[F]:",
+          "sha256": "b16bdd54297ee56877154a67ab44c8a91bbeb0d217bb486bf507bbe7df13dcdd"
+        },
+        {
+          "signature": "def flow[R: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( function: def() thin -> R, var stage: F ) -> Composition[False, 0, _NativeThunk[R, Never, type_of(function), False], F] where _Once[F]:",
+          "sha256": "a3d36da867b52b84a6ca36eb3ecd5f182ed321c27f5be3a59b8b166c0b59facc"
+        },
+        {
+          "signature": "def flow[F: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def() thin, var stage: F ) -> Composition[False, 0, _NativeThunk[type_of(None), Never, type_of(function), False], F] where _Once[F]:",
+          "sha256": "353c8deea9a07b444552a13c21e537b049754ac0449b9a131a591d647b987eeb"
+        },
+        {
+          "signature": "def flow[R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def() raises E thin -> R, var stage: F ) -> Composition[False, 0, _NativeThunk[R, E, type_of(function), True], F] where _Once[F]:",
+          "sha256": "f95d878584f841edc20d5f5a05a31e7e8fa61d498a1d1edf6fd29454be9d4545"
+        },
+        {
+          "signature": "def flow[R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( function: def() raises E thin -> R, var stage: F ) -> Composition[False, 0, _NativeThunk[R, E, type_of(function), True], F] where _Once[F]:",
+          "sha256": "f22668ad53b0e150949db526d59fdfb81e6da5d9631596e0e452ffc4fdb9e028"
+        },
+        {
+          "signature": "def flow[E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def() raises E thin, var stage: F ) -> Composition[False, 0, _NativeThunk[type_of(None), E, type_of(function), True], F] where _Once[F]:",
+          "sha256": "05bed83e120e6bd922cd9a1d17a58588ba7e47505496b6f0bfd57c8e212b128f"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A) thin -> R, var stage: F ) -> Composition[False, 1, NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F]:",
+          "sha256": "7ca5a722af3dd50a91ef545d9e83f793a3f066366e71f525ea220248285fc43e"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( function: def(var A) thin -> R, var stage: F ) -> Composition[False, 1, NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(A, RegisterPassable):",
+          "sha256": "a22b914c5495b3badcecd706f894fe1d511bb5f82894f5a38af9b6a9cbad551d"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A) thin -> R, var stage: F ) -> Composition[False, 1, NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(R, RegisterPassable):",
+          "sha256": "91a97f724b9ac3f72fa01e192094d31a088073ec90f523392c316f4468afc367"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( function: def(var A) thin -> R, var stage: F ) -> Composition[False, 1, NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F]:",
+          "sha256": "e815af4fac423f41fde2445dd71bdb606618fc462d6c0e2d9a5ea547fa62e2f7"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A) thin, var stage: F ) -> Composition[False, 1, NativeUnary[A, type_of(None), Never, type_of(function), False], F] where _Once[F]:",
+          "sha256": "96ba32f5f417785625ac82a3d6349bfec7e19cee4e5953477b24f3b049ffd54a"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( function: def(var A) thin, var stage: F ) -> Composition[False, 1, NativeUnary[A, type_of(None), Never, type_of(function), False], F] where _Once[F]:",
+          "sha256": "e53acd3f109171e0bb774bf8ace6e99e8b939336a0e3ea8926b0b2c706f72804"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A) raises E thin -> R, var stage: F ) -> Composition[False, 1, NativeUnary[A, R, E, type_of(function), True], F] where _Once[F]:",
+          "sha256": "46dbeb446a928b735a97fcb13cf51bbf90af9cebdb4877eaf7ec35b5a5beb666"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A) raises E thin -> R, var stage: F ) -> Composition[False, 1, NativeUnary[A, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(A, RegisterPassable):",
+          "sha256": "f2e809182e7552c95af9bb5c312579078b61523c1f1bd87549bc510ae04be741"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A) raises E thin -> R, var stage: F ) -> Composition[False, 1, NativeUnary[A, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(R, RegisterPassable):",
+          "sha256": "daf8680eb72d8e4ab06c0efe380fc3aef861539f58ff4a07f64484b3a039a6fa"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A) raises E thin -> R, var stage: F ) -> Composition[False, 1, NativeUnary[A, R, E, type_of(function), True], F] where _Once[F]:",
+          "sha256": "5cac138286ed7f282a5ac3f1a0bb6683f36d79cb94b4f700cd87b2340c2835f5"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A) raises E thin, var stage: F ) -> Composition[False, 1, NativeUnary[A, type_of(None), E, type_of(function), True], F] where _Once[F]:",
+          "sha256": "9578cdfca40308f3f26294bf9d4eb11d86359c5d199f99e87077fa6db1cb0553"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A) raises E thin, var stage: F ) -> Composition[False, 1, NativeUnary[A, type_of(None), E, type_of(function), True], F] where _Once[F]:",
+          "sha256": "b12664eb77368bb1eae7799b32907a348553884916dc27370b320398bc018a6e"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A, var B) thin -> R, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F]:",
+          "sha256": "301258a798af115f6ada7138fb50b23d161f1829bac19801d5a99705f74c4524"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( function: def(var A, var B) thin -> R, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable):",
+          "sha256": "7f890b28415f6b195334a306807b39bcf9d2740523546d96155653273adfef2d"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A, var B) thin -> R, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable):",
+          "sha256": "94e69c2321302c66826c61869a572475e2b55185680e745a4bde9f7e402ba4f9"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( function: def(var A, var B) thin -> R, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(A, RegisterPassable):",
+          "sha256": "474a8707afae40cecc5558043742482b4988e22f7067459ee2891777ce1e55b4"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A, var B) thin -> R, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):",
+          "sha256": "bca12b933520056fe98226be6ccc15d734075f721e98116d38408f3d1272b68f"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( function: def(var A, var B) thin -> R, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(B, RegisterPassable):",
+          "sha256": "b2bb588d9c142be12009b56508a7daf7da5a9c706b99124834e697476bc3cc5e"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A, var B) thin -> R, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(R, RegisterPassable):",
+          "sha256": "bd1deeb3e99e4402d2a2b602f0d14e58b3244dd1f34fb4254091522bf4d045fe"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( function: def(var A, var B) thin -> R, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F]:",
+          "sha256": "65a3ab73eb07da8f54af55a6e856ff522ba9e8868baa6a172a31183b3cedd9aa"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, B: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A, var B) thin, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, type_of(None), Never, type_of(function), False], F] where _Once[F]:",
+          "sha256": "eec67b6f634b52e1f3451573edb372f9a8885bf9429196e87bebe15d846876bd"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, B: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( function: def(var A, var B) thin, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, type_of(None), Never, type_of(function), False], F] where _Once[F] and not conforms_to(A, RegisterPassable):",
+          "sha256": "33c5615cba57af920faa103320fb461295ba39df746619f9866aff350f7406d1"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, B: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A, var B) thin, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, type_of(None), Never, type_of(function), False], F] where _Once[F] and not conforms_to(B, RegisterPassable):",
+          "sha256": "aaf85460eff8895391df0db47b0030c20ff9c274f20f489c8bb2890b4b99eec1"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( function: def(var A, var B) thin, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, type_of(None), Never, type_of(function), False], F] where _Once[F]:",
+          "sha256": "e9d0ea8c7a5f7574e2341e0e00c01bf7a5f52f4cc267e571f5229fa4525b8260"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A, var B) raises E thin -> R, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F]:",
+          "sha256": "6ed2249280f7855875f62e50d304968053f7545ae01f26f9cf441cf37c0504b6"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable):",
+          "sha256": "f19385e2e08d14c53220ba86931c31c9a1eeb3dffae35d95ec1ac175ef76e058"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable):",
+          "sha256": "4233e9f905e1d3a82840fff413eb6d6d97d526a78615d641e7c4ef64a1c84467"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(A, RegisterPassable):",
+          "sha256": "db0de8dbd89b5efdb9ca948d97171f9dda0b2e04263142bdd58711252fb20aae"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):",
+          "sha256": "96f594960f2b45ec2b16664e5ee5bf3295a7c0c6cae5814ddf695d07ade79f24"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(B, RegisterPassable):",
+          "sha256": "7ebad43293ea80ff41612a1a0c9595d57e2c9b9bf3df0d4699db3e4da60b1106"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(R, RegisterPassable):",
+          "sha256": "ef6ed4fa246da23c334387f6d1739efbf535d9ab0e0a956744a5be36e13b7cb4"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F]:",
+          "sha256": "1638268a928f7faa23a27c66e1f95b45941cf675c1b01ddfaf58d7c48027ebd0"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A, var B) raises E thin, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, type_of(None), E, type_of(function), True], F] where _Once[F]:",
+          "sha256": "a3e5e3c32fb6fbfbf5f59448b123d91a32d26fe6bbedc00ebcccc9f1700755cc"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A, var B) raises E thin, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, type_of(None), E, type_of(function), True], F] where _Once[F] and not conforms_to(A, RegisterPassable):",
+          "sha256": "ba3c2f8ed8f0857fd4c8a55fa140a66f151d11979f54e39829f0f04be83e4e7c"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A, var B) raises E thin, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, type_of(None), E, type_of(function), True], F] where _Once[F] and not conforms_to(B, RegisterPassable):",
+          "sha256": "3ba37bad7f3cc3ae2a664abe075f60628b3ac0888d4bc5fddad34f6c65ce84a0"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A, var B) raises E thin, var stage: F ) -> Composition[False, 2, _NativeBinary[A, B, type_of(None), E, type_of(function), True], F] where _Once[F]:",
+          "sha256": "2b339b52f9e463142cee9ba660b8c86d2cacc151b99d6810bae89b761278b5ba"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( var stage: F, ref[q] function: def(var A) thin -> R ) -> Composition[False, _Arity[F], F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F]:",
+          "sha256": "fc2aa7c77c75568b7a9540d574f4c8b4d4c8ecdfdcaed8ac28c7300dd8d25cd7"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A) thin -> R ) -> Composition[False, _Arity[F], F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(A, RegisterPassable):",
+          "sha256": "de6cb5bd3967b649a625acf7b6c907a8cd61861af0d2a30ee791aea1d7307cdc"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A) thin -> R ) -> Composition[False, _Arity[F], F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(R, RegisterPassable):",
+          "sha256": "5f2b12ea5d5777e3bdc97c4e770f3f4ac1e904d94375a9a1459d1262b7afa364"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A) thin -> R ) -> Composition[False, _Arity[F], F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F]:",
+          "sha256": "32eb0338c2ca6d1b7221473363de63000d80275abc3e0f9eedfff1b15eca512c"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( var stage: F, ref[q] function: def(var A) thin ) -> Composition[False, _Arity[F], F, NativeUnary[A, type_of(None), Never, type_of(function), False]] where _Once[F]:",
+          "sha256": "316a67207ba9c126994574c9a0e517dab7b8693a9646a1c6267808d082bdee71"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A) thin ) -> Composition[False, _Arity[F], F, NativeUnary[A, type_of(None), Never, type_of(function), False]] where _Once[F]:",
+          "sha256": "0398c489b18feef7d0f7868cd4f3714f049b2d06c749652b8a1b9c0bcbfcc0f1"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( var stage: F, ref[q] function: def(var A) raises E thin -> R ) -> Composition[False, _Arity[F], F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F]:",
+          "sha256": "7cae6c471fbaae41e0d3cabc577c7fa90f5d26e23d8cf3e72e34b83661ad30d0"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A) raises E thin -> R ) -> Composition[False, _Arity[F], F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F] and not conforms_to(A, RegisterPassable):",
+          "sha256": "9dc36494ddbd1ae0860e7643ef30edd993831202ddb47add49364cfe6c3ef5ca"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A) raises E thin -> R ) -> Composition[False, _Arity[F], F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F] and not conforms_to(R, RegisterPassable):",
+          "sha256": "2fc3b6716bb12985616bec52649e278c040688f3d36e0d39707f9ea73de63121"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A) raises E thin -> R ) -> Composition[False, _Arity[F], F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F]:",
+          "sha256": "837af7d390add68c7c8bda774ea5f5fcb78698f401d1b0826fa03aa491aedb8e"
+        },
+        {
+          "signature": "def flow[A: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( var stage: F, ref[q] function: def(var A) raises E thin ) -> Composition[False, _Arity[F], F, NativeUnary[A, type_of(None), E, type_of(function), True]] where _Once[F]:",
+          "sha256": "f0df7d3923a5f9e1ae7e8773ec8990caac6f378f582cddd11984fc03d1ed45d1"
+        },
+        {
+          "signature": "def flow[A: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A) raises E thin ) -> Composition[False, _Arity[F], F, NativeUnary[A, type_of(None), E, type_of(function), True]] where _Once[F]:",
+          "sha256": "7f47fd7f53bc3d1beefd80280a17e1f41558077c40d7789489fc7885ee83356c"
         }
       ],
       "provider": "functions/composition"
@@ -17364,6 +17580,222 @@
         {
           "signature": "def compose[B0: Movable & Deinitable, B1: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, A8: Movable & Deinitable, P1: Movable & Deinitable, P2: Movable & Deinitable, P3: Movable & Deinitable, P4: Movable & Deinitable, P5: Movable & Deinitable, P6: Movable & Deinitable, P7: Movable & Deinitable, E0: Movable & Deinitable, E1: Movable & Deinitable, E2: Movable & Deinitable, E3: Movable & Deinitable, E4: Movable & Deinitable, E5: Movable & Deinitable, E6: Movable & Deinitable, E7: Movable & Deinitable, //]( f7: def(var P7) raises E7 thin -> A8, f6: def(var P6) raises E6 thin -> A7, f5: def(var P5) raises E5 thin -> A6, f4: def(var P4) raises E4 thin -> A5, f3: def(var P3) raises E3 thin -> A4, f2: def(var P2) raises E2 thin -> A3, f1: def(var P1) raises E1 thin -> A2, f0: def(var B0, var B1) raises E0 thin -> A1 ) -> Composition[True, 2, _Thin1F[P7, A8, E7], _Thin1F[P6, A7, E6], _Thin1F[P5, A6, E5], _Thin1F[P4, A5, E4], _Thin1F[P3, A4, E3], _Thin1F[P2, A3, E2], _Thin1F[P1, A2, E1], _Thin2F[B0, B1, A1, E0]]:",
           "sha256": "0b2c83e733b4a8f0b46d7b7b0c3fee45b4573baa8959dcbc6b5d0d954682e35f"
+        },
+        {
+          "signature": "def compose[R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( var stage: F, ref[q] function: def() thin -> R ) -> Composition[True, 0, F, _NativeThunk[R, Never, type_of(function), False]] where _Once[F]:",
+          "sha256": "9d030d23e36af530f8955c56b44541b93bf793dc695644204d398c963320eea6"
+        },
+        {
+          "signature": "def compose[R: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def() thin -> R ) -> Composition[True, 0, F, _NativeThunk[R, Never, type_of(function), False]] where _Once[F]:",
+          "sha256": "8ffa06b2c70a4444fa2fd92ad098d8edc6030be58a0027b2760ae79b52028aa0"
+        },
+        {
+          "signature": "def compose[F: Movable & Deinitable, q: ImmOrigin, //]( var stage: F, ref[q] function: def() thin ) -> Composition[True, 0, F, _NativeThunk[type_of(None), Never, type_of(function), False]] where _Once[F]:",
+          "sha256": "398f6ee4bb71dd433a415e71d9d54035a6fbd600daf9d4bb4e25d2574d13c83e"
+        },
+        {
+          "signature": "def compose[R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( var stage: F, ref[q] function: def() raises E thin -> R ) -> Composition[True, 0, F, _NativeThunk[R, E, type_of(function), True]] where _Once[F]:",
+          "sha256": "6f7e8c25b4180cb4b56e517483411f24e38a6250fbf4a7283614164c538f1c74"
+        },
+        {
+          "signature": "def compose[R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def() raises E thin -> R ) -> Composition[True, 0, F, _NativeThunk[R, E, type_of(function), True]] where _Once[F]:",
+          "sha256": "845072cd6e776aa76fd28808b95173e541928a61ab0e6f7f42faee86aa2ec4e0"
+        },
+        {
+          "signature": "def compose[E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( var stage: F, ref[q] function: def() raises E thin ) -> Composition[True, 0, F, _NativeThunk[type_of(None), E, type_of(function), True]] where _Once[F]:",
+          "sha256": "de04e8f42e1fc6a0e661c0e2a7f92267482b747637959e11778d7b954253b3bc"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( var stage: F, ref[q] function: def(var A) thin -> R ) -> Composition[True, 1, F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F]:",
+          "sha256": "20274464dbd40b78b1f6f9a18811bc0042f219b5d4d1ba26f4d0c06ddf8f07cc"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A) thin -> R ) -> Composition[True, 1, F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(A, RegisterPassable):",
+          "sha256": "244fc30b677150ee1f5a42e27eec1fc0fdc863ecd4b036e87c22912dc57f4413"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A) thin -> R ) -> Composition[True, 1, F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(R, RegisterPassable):",
+          "sha256": "153230922643f1fb1258e26db30dc1ece686a39ec798ad2efc1210b4014372dd"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A) thin -> R ) -> Composition[True, 1, F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F]:",
+          "sha256": "e455a3daf5bf4018940f0ece09cc2d8143ea30ca01cde7ff9824cb3a87d90080"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( var stage: F, ref[q] function: def(var A) thin ) -> Composition[True, 1, F, NativeUnary[A, type_of(None), Never, type_of(function), False]] where _Once[F]:",
+          "sha256": "ef422fdbdcfc8d5eb6e3bdd28a4db0ffb69067fe7355bd69902087c32b2b6f82"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A) thin ) -> Composition[True, 1, F, NativeUnary[A, type_of(None), Never, type_of(function), False]] where _Once[F]:",
+          "sha256": "99d820394310787ee93f546ce6f3a12ccfed5f6a7555777a9d67c495b1c913ba"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( var stage: F, ref[q] function: def(var A) raises E thin -> R ) -> Composition[True, 1, F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F]:",
+          "sha256": "8e2cb15a24365f4de4c30984ea8b371f934a9f1ed4722475b9ebdce23bf26249"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A) raises E thin -> R ) -> Composition[True, 1, F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F] and not conforms_to(A, RegisterPassable):",
+          "sha256": "9aa20f470da13497b08f44350ff11e9511b4a4ffcc97184471045a13e0b195de"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A) raises E thin -> R ) -> Composition[True, 1, F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F] and not conforms_to(R, RegisterPassable):",
+          "sha256": "33d9d9d936b34c2029a7fe1fe6431cb6c4557f0ab81a2aabb4b264de63e6469f"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A) raises E thin -> R ) -> Composition[True, 1, F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F]:",
+          "sha256": "e6f7d97fbfb8b9c2f4ea8ae9b42d83a20c05667606910e340a618af8a5e9da35"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( var stage: F, ref[q] function: def(var A) raises E thin ) -> Composition[True, 1, F, NativeUnary[A, type_of(None), E, type_of(function), True]] where _Once[F]:",
+          "sha256": "d3161bbbd924275aa4642229a6a682dc02749743cca4482eb86fd4f16ef73cd6"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A) raises E thin ) -> Composition[True, 1, F, NativeUnary[A, type_of(None), E, type_of(function), True]] where _Once[F]:",
+          "sha256": "ed461534a17788c1794ffa339e224a4a0826cd7121b1b5058795999cbecd409f"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( var stage: F, ref[q] function: def(var A, var B) thin -> R ) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F]:",
+          "sha256": "151c735c97c8907daba3ed3a274b5aae2c5ca13cd6f92044a5ef93e0e3aa7ce7"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A, var B) thin -> R ) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable):",
+          "sha256": "581ea04a9f002bb25b882507aed5118fa17849538b44f9b4f4537e81a4e5e537"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A, var B) thin -> R ) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable):",
+          "sha256": "1c03f173bb45c63bb33d3d232cb8192b8a4deac0198a7cc43f5bb91f5b702929"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A, var B) thin -> R ) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(A, RegisterPassable):",
+          "sha256": "38c661280f7b49140357f437d141a54259b64e875ca0430bf5d56832bf7b25c4"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A, var B) thin -> R ) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):",
+          "sha256": "3f3d39641c50bc0a743359b2f37f150dce0890f1afd6ed112e7e4295218f69c7"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A, var B) thin -> R ) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(B, RegisterPassable):",
+          "sha256": "227cb9a687b8cb361445ea9cd6994fdc429304dfebcd5fc820a98d54f6cfd27e"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A, var B) thin -> R ) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(R, RegisterPassable):",
+          "sha256": "add105b0fba28f7c6bc0f658d5205dd5e904b9e424a9d0eb1aefdf48e1d15927"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A, var B) thin -> R ) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F]:",
+          "sha256": "6791439ef68e57edf84fc1dad131bf2b72a9e42f1c11a6645df94c6ca72cf1cd"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, B: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( var stage: F, ref[q] function: def(var A, var B) thin ) -> Composition[True, 2, F, _NativeBinary[A, B, type_of(None), Never, type_of(function), False]] where _Once[F]:",
+          "sha256": "440ee244f4cf93bdcb1e27ff9b45e64bc0bdc938a245e82163ba65fc63ca6121"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A, var B) thin ) -> Composition[True, 2, F, _NativeBinary[A, B, type_of(None), Never, type_of(function), False]] where _Once[F] and not conforms_to(A, RegisterPassable):",
+          "sha256": "4289cfdfdf5f9e9dd469d1e283657ed102ebfd0dfe3505dc2b0b3b2b305d715f"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A, var B) thin ) -> Composition[True, 2, F, _NativeBinary[A, B, type_of(None), Never, type_of(function), False]] where _Once[F] and not conforms_to(B, RegisterPassable):",
+          "sha256": "eafeafeeec702691da871adca244cf619a89b804b5815ff8934f61549d91ab01"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A, var B) thin ) -> Composition[True, 2, F, _NativeBinary[A, B, type_of(None), Never, type_of(function), False]] where _Once[F]:",
+          "sha256": "935f531fc0d99b05368e846f7521dd582293636b9929bbc14a1e497b19a43bfb"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( var stage: F, ref[q] function: def(var A, var B) raises E thin -> R ) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F]:",
+          "sha256": "76f4154579fe18c243c2e16051e2fa2b071a06a61f4eaeab4f591c4d27e4a689"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A, var B) raises E thin -> R ) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable):",
+          "sha256": "ff1f9c2ddd675bcfcca84a008d161ef7c2fe53f131e8f71685e1de7e046f5720"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A, var B) raises E thin -> R ) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable):",
+          "sha256": "b3b50d9332a86835e0c1d6f8f1d7296a664ac6bae9b37cfc4ab5455325e29931"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A, var B) raises E thin -> R ) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F] and not conforms_to(A, RegisterPassable):",
+          "sha256": "22a2615dc433ad35749665d972422f8315aa301af9ab1209383843134f61baac"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A, var B) raises E thin -> R ) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F] and not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):",
+          "sha256": "582fb751ad348babab51a24dd2a536ca277e2b8bef800fd7fc6a8d3d6558e028"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A, var B) raises E thin -> R ) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F] and not conforms_to(B, RegisterPassable):",
+          "sha256": "5d3f8bcef9ca16438012e05ad3744d1b12e296ffa23d5b9f5014ebbce6775fb0"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A, var B) raises E thin -> R ) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F] and not conforms_to(R, RegisterPassable):",
+          "sha256": "38b5bd3bbc1d7301445dd2c805b03e35a0d7d725b41429beb5139ff64c38d8ae"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A, var B) raises E thin -> R ) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F]:",
+          "sha256": "ace82644faddf9aec16098e1482a9b08b25d95213e1cb61b348a66d930052369"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( var stage: F, ref[q] function: def(var A, var B) raises E thin ) -> Composition[True, 2, F, _NativeBinary[A, B, type_of(None), E, type_of(function), True]] where _Once[F]:",
+          "sha256": "a0ad514305a78826fc3accb4a22f6892065e914751e4835599da924df6f21f85"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A, var B) raises E thin ) -> Composition[True, 2, F, _NativeBinary[A, B, type_of(None), E, type_of(function), True]] where _Once[F] and not conforms_to(A, RegisterPassable):",
+          "sha256": "7377388d5d40f99c431ee61acc749451f34163c41cb554c9fbfe6ebdbe6c3446"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A, var B) raises E thin ) -> Composition[True, 2, F, _NativeBinary[A, B, type_of(None), E, type_of(function), True]] where _Once[F] and not conforms_to(B, RegisterPassable):",
+          "sha256": "2f350d4a466232ffcbb1f05f1901e92f412a9be4b2764706c5faf48fd81a2744"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( var stage: F, function: def(var A, var B) raises E thin ) -> Composition[True, 2, F, _NativeBinary[A, B, type_of(None), E, type_of(function), True]] where _Once[F]:",
+          "sha256": "11ea4f647f00576d639c5ba2266392910ab6f42d2d1b7b22c5741ef8bf33b13b"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A) thin -> R, var stage: F ) -> Composition[True, _Arity[F], NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F]:",
+          "sha256": "dde9e2335eb44284283b482d0f6e30a013bb7a68beaa07359ec3c51fb8f0a458"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( function: def(var A) thin -> R, var stage: F ) -> Composition[True, _Arity[F], NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(A, RegisterPassable):",
+          "sha256": "5a523cc13489c4a9ad8f907735adf3c54d2c4f199a2dac3ff674a84d129d7815"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A) thin -> R, var stage: F ) -> Composition[True, _Arity[F], NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(R, RegisterPassable):",
+          "sha256": "c9bcd2de3ab8afacb13ad7fa520dbe5ab695e4deef0f68c98e9ba5e69e209acc"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( function: def(var A) thin -> R, var stage: F ) -> Composition[True, _Arity[F], NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F]:",
+          "sha256": "f0a6a9b9fafd5a108cfc5ae99c20bd4c2dd5e228378389b9bfdb790ecbbc5265"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A) thin, var stage: F ) -> Composition[True, _Arity[F], NativeUnary[A, type_of(None), Never, type_of(function), False], F] where _Once[F]:",
+          "sha256": "9db97a3ed34c98ac8b69ad7bc7686f9b9c6f9443f21b181ea3b96bc7f94d9d50"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, F: Movable & Deinitable, //]( function: def(var A) thin, var stage: F ) -> Composition[True, _Arity[F], NativeUnary[A, type_of(None), Never, type_of(function), False], F] where _Once[F]:",
+          "sha256": "636f50abf76d282464ff1077f0f5e58924772e4eb53943915cce40dad8bf2465"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A) raises E thin -> R, var stage: F ) -> Composition[True, _Arity[F], NativeUnary[A, R, E, type_of(function), True], F] where _Once[F]:",
+          "sha256": "3efc7d838dcce2fdb2e9aa7e79e6e30be230a00edeb59aae20d2c9c15e4a4edf"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A) raises E thin -> R, var stage: F ) -> Composition[True, _Arity[F], NativeUnary[A, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(A, RegisterPassable):",
+          "sha256": "38caec4c55ecf5e5dd3461f2e8e0940cc1ca9b5c01c9001d2aaa7e3060809241"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A) raises E thin -> R, var stage: F ) -> Composition[True, _Arity[F], NativeUnary[A, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(R, RegisterPassable):",
+          "sha256": "6bfbccd29ff85bd1d417828a0b495559bc7869d10a80deebf376765808d57869"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A) raises E thin -> R, var stage: F ) -> Composition[True, _Arity[F], NativeUnary[A, R, E, type_of(function), True], F] where _Once[F]:",
+          "sha256": "392d9e91345a7620e668a86268b79957fd373089704973507d14bbbc4cfdfa0d"
+        },
+        {
+          "signature": "def compose[A: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A) raises E thin, var stage: F ) -> Composition[True, _Arity[F], NativeUnary[A, type_of(None), E, type_of(function), True], F] where _Once[F]:",
+          "sha256": "12c1bd129963158a5b22cf9a750cb2051f9d14fee33516b545c764a1446e0edd"
+        },
+        {
+          "signature": "def compose[A: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //]( function: def(var A) raises E thin, var stage: F ) -> Composition[True, _Arity[F], NativeUnary[A, type_of(None), E, type_of(function), True], F] where _Once[F]:",
+          "sha256": "932c219642bbd747c5bfdb593538ff546017225872ba320ed3647295d258d6dd"
         }
       ],
       "provider": "functions/composition"

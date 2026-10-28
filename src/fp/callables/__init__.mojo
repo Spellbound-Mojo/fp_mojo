@@ -23,7 +23,7 @@ Where each consumer enters:
 
 | Consumer | Accepts |
 |---|---|
-| `pipe`, `flow`, `compose` | Two to eight plain functions directly; otherwise `Thunk`/`Unary`/`Binary` values and native functions promoted with `as_unary` |
+| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; two-stage `flow`/`compose` also mix a plain function or stored thin pointer with one library stage directly. Capturing unary closures use `as_unary`. |
 | `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |
 | `flip` | `Binary` values and plain functions with two or more parameters |
 | Owned iteration callbacks, `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |

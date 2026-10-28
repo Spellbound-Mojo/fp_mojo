@@ -98,7 +98,7 @@ def _check_stage[index: Int, F: Movable & Deinitable, A: Movable & Deinitable,
                  name: StaticString = "pipe", argument: Int = -1]() -> Bool:
     comptime assert _Arity[F] == 1, (_stage_label[name, index, argument]()
         + " must take one argument: a Unary value, or a native function promoted with as_unary."
-        + " Plain functions are accepted unpromoted only when every stage is one")
+        + " Native stages must enter through a supported function signature")
     comptime assert _StageIn[F] == A and _StageOut[F] == R and _ErrorCompatible[E, _StageError[F]], (
         _stage_diagnostic[name, index, argument, F, A, R, E]())
     return True
