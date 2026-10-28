@@ -2691,6 +2691,20 @@
    ],
    "provider": "control/loops"
   },
+  "control.fori_loop_mut": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "6c7997113873e3e034372ba74f4de07f71bce656a59472ce8b480e376fad9ff4",
+     "signature": "def fori_loop_mut[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, unroll: Int = 1]( lower: Int, upper: Int, mut body_fun: F, var init_val: A ) raises F.Error -> A where RepeatableBinary[F] and F.First == Int and F.Second == A and F.Out == A:"
+    },
+    {
+     "sha256": "19ee013735a84a45bd5d28dd393e0b9aee8800959f6fb5c2b2b911dacd8f3437",
+     "signature": "def fori_loop_mut[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, lower: Int, upper: Int, unroll: Int = 1]( mut body_fun: F, var init_val: A ) raises F.Error -> A where RepeatableBinary[F] and F.First == Int and F.Second == A and F.Out == A:"
+    }
+   ],
+   "provider": "control/loops"
+  },
   "control.scan": {
    "kind": "function",
    "overloads": [

@@ -35,6 +35,7 @@ Where each consumer enters:
 | `flip` | `Binary` values and plain functions with two or more parameters |
 | Lazy `map`, `filter_map`, `flat_map`, `scan_left` | Native callbacks and shared or mutable library unary/binary values |
 | `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |
+| `fori_loop_mut` | A named shared or mutable library binary body, borrowed exclusively; updated receiver state remains in the caller. |
 | Iteration predicates, `while_loop` predicates | Native predicates and `BorrowCallable` |
 | `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |
 | `attempt_once` | `OnceThunk` |

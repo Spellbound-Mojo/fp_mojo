@@ -628,6 +628,19 @@ construction pulls nothing, the initial snapshot invokes no callback, and
 each yielded snapshot copies the accumulator exactly once. An explicit move
 still transfers the callback through owned admission.
 
+`fori_loop_mut` shares `control._loops._indexed` with `fori_loop` and control
+scan scheduling. A thin step boundary retains a `Pointer[F, MutOrigin]` to the
+caller's body and delegates to `_binary_repeated_as`. That existing receiver
+policy chooses mutable invocation before shared invocation. Bounds, unrolling,
+error propagation and carry ownership remain with the indexed kernel.
+
+The explicit receiver name follows `call_mut`. Combining shared and exclusive
+library admissions under one `fori_loop` overload set is ambiguous for a body
+that supports both modes on Mojo 1.2. Excluding shared bodies from the mutable
+overload then prevents forwarding an arbitrary `MutableBinary`. Separate
+receiver entry points preserve existing shared calls and let generic mutable
+wrappers forward without negative capability constraints or explicit casts.
+
 Native callback bridges remain signature-specific: lazy scans own and mutably
 call their captures, while control scan borrows its native callback. Control
 scan keeps its existing length validation, reversal, unrolling, error wrapping

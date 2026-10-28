@@ -22042,6 +22042,144 @@
    "provider": "control/loops",
    "summary": ""
   },
+  "control.fori_loop_mut": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The first index.",
+       "name": "lower",
+       "type": "Int",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "The excluded upper bound.",
+       "name": "upper",
+       "type": "Int",
+       "variadic": false
+      },
+      {
+       "convention": "mut",
+       "description": "A named callback, borrowed exclusively for this call.",
+       "name": "body_fun",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The first carry, consumed.",
+       "name": "init_val",
+       "type": "A",
+       "variadic": false
+      }
+     ],
+     "description": "The body remains in the caller and retains its state after success or a\nraised error. Each step uses `call_repeated`: mutable invocation takes\npriority when available, otherwise a shared callback is invoked. Nothing\ncopies the body or carry. Bounds and unrolling follow `fori_loop`.",
+     "error": "F.Error",
+     "parameters": [
+      {
+       "description": "The exact carry type, including any borrowed origins.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The shared or mutable binary library callback's type.",
+       "inferred": true,
+       "name": "F",
+       "type": "BinaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "Steps per rolled iteration; must be positive for dynamic bounds.",
+       "inferred": false,
+       "name": "unroll",
+       "type": "Int",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The body's exact error type; execution stops without rolling back state.",
+     "returns": {
+      "doc": "The carry after the final step, or the initial carry for empty bounds.",
+      "type": "A"
+     },
+     "signature": "def fori_loop_mut[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, unroll: Int = 1](lower: Int, upper: Int, mut body_fun: F, var init_val: A) raises F.Error -> A where RepeatableBinary[F] and F.First == Int and F.Second == A and F.Out == A",
+     "summary": "Run a counted loop with exclusive access to a reusable library body."
+    },
+    {
+     "args": [
+      {
+       "convention": "mut",
+       "description": "A named callback, borrowed exclusively for this call.",
+       "name": "body_fun",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The first carry, consumed.",
+       "name": "init_val",
+       "type": "A",
+       "variadic": false
+      }
+     ],
+     "description": "The receiver and carry follow `fori_loop_mut` with dynamic bounds. Static\nbounds also permit `unroll=0`, which fully expands the same ordered steps.",
+     "error": "F.Error",
+     "parameters": [
+      {
+       "description": "The exact carry type, including any borrowed origins.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The shared or mutable binary library callback's type.",
+       "inferred": true,
+       "name": "F",
+       "type": "BinaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The first index, known at compile time.",
+       "inferred": false,
+       "name": "lower",
+       "type": "Int",
+       "variadic": false
+      },
+      {
+       "description": "The excluded upper bound, known at compile time.",
+       "inferred": false,
+       "name": "upper",
+       "type": "Int",
+       "variadic": false
+      },
+      {
+       "description": "Steps per rolled iteration, or zero for full static expansion.",
+       "inferred": false,
+       "name": "unroll",
+       "type": "Int",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The body's exact error type; execution stops without rolling back state.",
+     "returns": {
+      "doc": "The final carry, or the initial carry when the bounds are empty.",
+      "type": "A"
+     },
+     "signature": "def fori_loop_mut[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, lower: Int, upper: Int, unroll: Int = 1](mut body_fun: F, var init_val: A) raises F.Error -> A where RepeatableBinary[F] and F.First == Int and F.Second == A and F.Out == A",
+     "summary": "Run a statically bounded counted loop with exclusive callback access."
+    }
+   ],
+   "provider": "control/loops",
+   "summary": ""
+  },
   "control.scan": {
    "description": "",
    "kind": "function",
@@ -316577,7 +316715,7 @@
    "summary": "Functor, Filterable, FunctorFilter, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Semigroup and Monoid over native values, with explicit instances."
   },
   "callables": {
-   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. `BorrowCallable` and `BorrowOnceCallable` borrow\ntheir argument instead of taking it, and `invoke_borrowed` and\n`invoke_borrowed_once` call them. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped`, `Tupled`, `MappedPair` and `Identity` from `fp.functions` implement these\nprotocols.\n\n`as_binary` stores a plain binary function or thin pointer in `NativeBinary`.\nIt preserves two owned argument types and the exact result and error types.\nNamed adapters can be reused by shared borrow in `zip_with`, `map_with_index`,\n`scan_map` and `scan_left`. The factory does not infer capturing closures.\n`BinarySignature[A, B, R, E].capture(closure)` selects the signature before\ncapturing a binary closure into the same adapter. Its error defaults to `Never`.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Lazy `map`, `filter_map`, `flat_map`, `scan_left` | Native callbacks and shared or mutable library unary/binary values |\n| `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| Iteration predicates, `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `OnceThunk` |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
+   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. `BorrowCallable` and `BorrowOnceCallable` borrow\ntheir argument instead of taking it, and `invoke_borrowed` and\n`invoke_borrowed_once` call them. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped`, `Tupled`, `MappedPair` and `Identity` from `fp.functions` implement these\nprotocols.\n\n`as_binary` stores a plain binary function or thin pointer in `NativeBinary`.\nIt preserves two owned argument types and the exact result and error types.\nNamed adapters can be reused by shared borrow in `zip_with`, `map_with_index`,\n`scan_map` and `scan_left`. The factory does not infer capturing closures.\n`BinarySignature[A, B, R, E].capture(closure)` selects the signature before\ncapturing a binary closure into the same adapter. Its error defaults to `Never`.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Lazy `map`, `filter_map`, `flat_map`, `scan_left` | Native callbacks and shared or mutable library unary/binary values |\n| `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| `fori_loop_mut` | A named shared or mutable library binary body, borrowed exclusively; updated receiver state remains in the caller. |\n| Iteration predicates, `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `OnceThunk` |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
    "summary": "How the library calls user code: callable protocols, receiver dispatch and native functions as values."
   },
   "combinators": {
@@ -316585,8 +316723,8 @@
    "summary": "Direct combinators shared with fluent pipelines."
   },
   "control": {
-   "description": "They follow the sequential value semantics of JAX's control-flow operations,\nwithout tensor stacking, tracing, autodiff or a JIT. Branch with Mojo's `if`.\n\nThe carry may be any value: a scalar, a SIMD value, a string, a container or a\nmove-only owner. Its type stays fixed, and nothing copies it. A callback is a\nplain function or a closure, with separate pure and raising overloads, or a\nshared-receiver library value: `Unary` for a `while_loop` body, `Binary` taking\n`(Int, carry)` for a `fori_loop` body, and a `Binary` step for `scan`, whose\noutput type is then named, `scan[Y](step, ...)`. A `while_loop` predicate may\nbe a `BorrowCallable`. A call needing keywords or defaults is written as a\nclosure. Callbacks keep one receiver throughout.\n\nErrors stop the loop at once. A predicate and a body must raise one error type,\nincluding any embedded origins, or one of them nothing. Nothing retries or\nrolls back effects.\n\nThe compile-time parameter `unroll` expands that many steps per rolled\niteration, with exact bounds checks for the final partial chunk; `1`, the\ndefault, keeps a rolled loop. `unroll=0` fully expands a statically bounded\nloop: `fori_loop[lower, upper, unroll=0](body, initial)` or\n`scan[static_length=N, unroll=0](...)`. Full unrolling without static bounds,\na negative factor and an invalid static length are compile errors.\n`while_loop` has no unroll parameter.",
-   "summary": "Functional loops and scans over native Mojo values: `while_loop`, `fori_loop` and `scan`."
+   "description": "They follow the sequential value semantics of JAX's control-flow operations,\nwithout tensor stacking, tracing, autodiff or a JIT. Branch with Mojo's `if`.\n\nThe carry may be any value: a scalar, a SIMD value, a string, a container or a\nmove-only owner. Its type stays fixed, and nothing copies it. A callback is a\nplain function or a closure, with separate pure and raising overloads, or a\nshared-receiver library value: `Unary` for a `while_loop` body, `Binary` taking\n`(Int, carry)` for a `fori_loop` body, and a `Binary` step for `scan`, whose\noutput type is then named, `scan[Y](step, ...)`. A `while_loop` predicate may\nbe a `BorrowCallable`. A call needing keywords or defaults is written as a\nclosure. Callbacks keep one receiver throughout.\n\nUse `fori_loop_mut` to borrow a named library body exclusively and retain its\nmutable state after the call. It accepts shared or mutable binary callbacks,\npreferring mutable invocation when both are available. `fori_loop` retains\nits shared receiver behavior. Both forms share bounds, unrolling and errors.\n\nErrors stop the loop at once. A predicate and a body must raise one error type,\nincluding any embedded origins, or one of them nothing. Nothing retries or\nrolls back effects.\n\nThe compile-time parameter `unroll` expands that many steps per rolled\niteration, with exact bounds checks for the final partial chunk; `1`, the\ndefault, keeps a rolled loop. `unroll=0` fully expands a statically bounded\nloop: `fori_loop[lower, upper, unroll=0](body, initial)` or\n`scan[static_length=N, unroll=0](...)`. Full unrolling without static bounds,\na negative factor and an invalid static length are compile errors.\n`while_loop` has no unroll parameter.",
+   "summary": "Functional loops and scans over native Mojo values: `while_loop`, `fori_loop`, `fori_loop_mut` and `scan`."
   },
   "data": {
    "description": "`Result[T, E]` holds a success value `Ok[T]` or a stored failure `Err[E]`.\n`ok[E](value)` and `err[T](error)` infer the type of the payload they receive.\n`ControlFlow[B, C]` holds `Break[B]` or `Continue[C]`. `Ior[E, A]` holds\n`Left[E]`, `Right[A]` or `Both[E, A]` for values with diagnostics. These are stored in place\nand matched by `fp.match`. Mojo's typed native errors are efficient; `Result`\nis for failures that must be stored, collected or passed along as values, not\na replacement for `raises`.\n\nThe bridges: `attempt`, `attempt_kwargs` and `attempt_once` turn a raising call into a `Result`,\n`raise_on_err` turns it back, each with the original error type, and\n`collect_results` collects a source of Results into one.",

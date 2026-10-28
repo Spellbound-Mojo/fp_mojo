@@ -1,7 +1,9 @@
 """Functional while and counted loops with exact native carry types."""
 from std.builtin.rebind import rebind_var
 from fp._internal.errors import _ErrorCompatible, _CommonError
-from fp.callables.protocols import BorrowCallable, Unary, Binary
+from fp.callables.protocols import BorrowCallable, Unary, Binary, BinaryContract
+from fp.callables.invoke import RepeatableBinary
+from fp.callables._receiver import _binary_repeated_as
 from fp.iteration._callbacks import _predicate_plain, _predicate_raising, _predicate_callable, _binary_plain, _binary_raising
 from ._loops import _while, _indexed, _for_step
 
@@ -25,6 +27,14 @@ def _index_fixed[A: Movable & Deinitable, F: Binary](var index: Int, var value: 
 ) raises F.Error capturing -> A:
     comptime assert F.First == Int and F.Second == A and F.Out == A, "fori_loop: the body must take (Int, carry) and return the carry"
     return rebind_var[A](function.call(rebind_var[F.First](index), rebind_var[F.Second](value^)))
+
+
+def _indexed_repeated[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, o: MutOrigin](
+    var value: A, index: Int, function: Pointer[F, o]
+) raises F.Error capturing -> A where RepeatableBinary[F]:
+    """Use the canonical repeated receiver at the existing indexed-loop boundary."""
+    comptime assert F.First == Int and F.Second == A and F.Out == A, "fori_loop_mut: the body must take (Int, carry) and return the carry"
+    return rebind_var[A](_binary_repeated_as[F.Error](function[], rebind_var[F.First](index), rebind_var[F.Second](value^)))
 
 
 def while_loop[A: Movable & Deinitable, P: BorrowCallable, F: Unary](
@@ -210,4 +220,68 @@ def fori_loop[A: Movable & Deinitable,
     """Counted loop with static bounds and a library `Binary` body."""
     return _indexed[A, Pointer[F, origin_of(body_fun)], F.Error,
         _for_step[A, F, F.Error, origin_of(body_fun), _index_fixed[A, F]], unroll, True, lower, upper](
+        lower, upper, Pointer(to=body_fun), init_val^)
+
+
+def fori_loop_mut[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable,
+                  //, unroll: Int = 1](
+    lower: Int, upper: Int, mut body_fun: F, var init_val: A
+) raises F.Error -> A where RepeatableBinary[F] and F.First == Int and F.Second == A and F.Out == A:
+    """Run a counted loop with exclusive access to a reusable library body.
+
+    The body remains in the caller and retains its state after success or a
+    raised error. Each step uses `call_repeated`: mutable invocation takes
+    priority when available, otherwise a shared callback is invoked. Nothing
+    copies the body or carry. Bounds and unrolling follow `fori_loop`.
+
+    Parameters:
+        A: The exact carry type, including any borrowed origins.
+        F: The shared or mutable binary library callback's type.
+        unroll: Steps per rolled iteration; must be positive for dynamic bounds.
+
+    Args:
+        lower: The first index.
+        upper: The excluded upper bound.
+        body_fun: A named callback, borrowed exclusively for this call.
+        init_val: The first carry, consumed.
+
+    Returns:
+        The carry after the final step, or the initial carry for empty bounds.
+
+    Raises:
+        The body's exact error type; execution stops without rolling back state.
+    """
+    return _indexed[A, Pointer[F, origin_of(body_fun)], F.Error,
+        _indexed_repeated[A, F, origin_of(body_fun)], unroll](
+        lower, upper, Pointer(to=body_fun), init_val^)
+
+
+def fori_loop_mut[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable,
+                  //, lower: Int, upper: Int, unroll: Int = 1](
+    mut body_fun: F, var init_val: A
+) raises F.Error -> A where RepeatableBinary[F] and F.First == Int and F.Second == A and F.Out == A:
+    """Run a statically bounded counted loop with exclusive callback access.
+
+    The receiver and carry follow `fori_loop_mut` with dynamic bounds. Static
+    bounds also permit `unroll=0`, which fully expands the same ordered steps.
+
+    Parameters:
+        A: The exact carry type, including any borrowed origins.
+        F: The shared or mutable binary library callback's type.
+        lower: The first index, known at compile time.
+        upper: The excluded upper bound, known at compile time.
+        unroll: Steps per rolled iteration, or zero for full static expansion.
+
+    Args:
+        body_fun: A named callback, borrowed exclusively for this call.
+        init_val: The first carry, consumed.
+
+    Returns:
+        The final carry, or the initial carry when the bounds are empty.
+
+    Raises:
+        The body's exact error type; execution stops without rolling back state.
+    """
+    return _indexed[A, Pointer[F, origin_of(body_fun)], F.Error,
+        _indexed_repeated[A, F, origin_of(body_fun)], unroll, True, lower, upper](
         lower, upper, Pointer(to=body_fun), init_val^)
