@@ -642,11 +642,14 @@ policy chooses mutable invocation before shared invocation. Bounds, unrolling,
 error propagation and carry ownership remain with the indexed kernel.
 
 `while_loop_mut` likewise delegates scheduling and cleanup to `_loops._while`.
-A native pointer borrows the named body and `_unary_repeated_as` owns receiver
-selection. `_WhileBody` is the single repeatability and carry-type predicate;
-no new loop, receiver priority or ownership representation is introduced.
-The library-predicate boundary validates its metadata with compile-time
-assertions. This retains normal diagnostics without requiring generic callers
+Both library overloads enter `_while_mut_owned`, the sole validation and
+receiver-storage boundary. Named shared predicates use the existing
+`_SharedBorrowRef`; owned predicates retain their original type. The existing
+`_predicate_repeated` bridge selects mutable invocation before shared, while
+`_unary_repeated_as` owns body receiver selection. `mut_ref` keeps an original
+predicate available after return or failure without copying its captures.
+`_WhileBody` validates the body; `RepeatableBorrow` admits repeatable predicates.
+The shared boundary validates metadata with compile-time assertions. This retains normal diagnostics without requiring generic callers
 to prove a nested projection of two callbacks' error types during overload
 selection. Error selection uses `_CommonError` and `_CommonErrorCompatible`;
 invocation retains the existing `_ErrorCompatible` proofs.

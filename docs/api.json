@@ -24856,6 +24856,71 @@
     {
      "args": [
       {
+       "convention": "var",
+       "description": "The predicate owner, consumed for the whole loop.",
+       "name": "cond_fun",
+       "type": "P",
+       "variadic": false
+      },
+      {
+       "convention": "mut",
+       "description": "A named body, borrowed exclusively for the whole loop.",
+       "name": "body_fun",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The initial carry, consumed without copying.",
+       "name": "init_val",
+       "type": "A",
+       "variadic": false
+      }
+     ],
+     "description": "The predicate borrows the current carry and keeps one receiver for the\nloop. Mutable invocation wins over shared invocation for both callbacks;\nconsuming-only receivers cannot repeat. A false predicate returns the\ncurrent carry without calling the body. Each successful body call consumes\nthat carry and returns its successor of exactly the same type.\n\nThe body remains available after success or failure. Pass `mut_ref(predicate)`\nto retain the original predicate's state too; otherwise its owner is consumed.",
+     "error": "E",
+     "parameters": [
+      {
+       "description": "The carry type, including move-only values and borrowed views.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "A shared or mutable borrowing predicate returning Bool.",
+       "inferred": true,
+       "name": "P",
+       "type": "BorrowCallContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "A repeatable unary body taking and returning the carry type.",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The exact combined error, normally inferred; generic wrappers may name it.",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The predicate's or body's exact error. Their errors must match,\nincluding origins, or one must be Never. Failure stops immediately,\npreserves retained receiver state and destroys the current carry.",
+     "returns": {
+      "doc": "The carry for which the predicate first returned False.",
+      "type": "A"
+     },
+     "signature": "def while_loop_mut[A: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable = _CommonError[P.Failure, F.Error]](var cond_fun: P, mut body_fun: F, var init_val: A) raises E -> A",
+     "summary": "Consume a repeatable predicate and loop with a named library body."
+    },
+    {
+     "args": [
+      {
        "convention": "",
        "description": "A plain function or stored pointer that reads the carry.",
        "name": "cond_fun",
@@ -320697,7 +320762,7 @@
    "summary": "Direct combinators shared with fluent pipelines."
   },
   "control": {
-   "description": "They follow the sequential value semantics of JAX's control-flow operations,\nwithout tensor stacking, tracing, autodiff or a JIT. Branch with Mojo's `if`.\n\nThe carry may be any value: a scalar, a SIMD value, a string, a container or a\nmove-only owner. Its type stays fixed, and nothing copies it. A callback is a\nplain function or a closure, with separate pure and raising overloads, or a\nshared-receiver library value: `Unary` for a `while_loop` body, `Binary` taking\n`(Int, carry)` for a `fori_loop` body, and a `Binary` step for `scan`, whose\noutput type is then named, `scan[Y](step, ...)`. A `while_loop` predicate may\nbe a `BorrowCallable`. A call needing keywords or defaults is written as a\nclosure. Callbacks keep one receiver throughout.\n\nUse `fori_loop_mut` to borrow a named library body exclusively and retain its\nmutable state after the call. It accepts shared or mutable binary callbacks,\npreferring mutable invocation when both are available. `fori_loop` retains\nits shared receiver behavior. Both forms share bounds, unrolling and errors.\n\n`while_loop_mut(predicate, body, carry)` borrows a named unary body exclusively\nwith the same repeated receiver preference. Its predicate can be a shared\n`BorrowCallable`, plain function or stored thin pointer. Capturing predicates\nand pointer aliases use `BorrowSignature[A, Bool, E].capture(callback)`.\n\nErrors stop the loop at once. A predicate and a body must raise one error type,\nincluding any embedded origins, or one of them nothing. Nothing retries or\nrolls back effects.\n\nThe compile-time parameter `unroll` expands that many steps per rolled\niteration, with exact bounds checks for the final partial chunk; `1`, the\ndefault, keeps a rolled loop. `unroll=0` fully expands a statically bounded\nloop: `fori_loop[lower, upper, unroll=0](body, initial)` or\n`scan[static_length=N, unroll=0](...)`. Full unrolling without static bounds,\na negative factor and an invalid static length are compile errors.\n`while_loop` has no unroll parameter.",
+   "description": "They follow the sequential value semantics of JAX's control-flow operations,\nwithout tensor stacking, tracing, autodiff or a JIT. Branch with Mojo's `if`.\n\nThe carry may be any value: a scalar, a SIMD value, a string, a container or a\nmove-only owner. Its type stays fixed, and nothing copies it. A callback is a\nplain function or a closure, with separate pure and raising overloads, or a\nshared-receiver library value: `Unary` for a `while_loop` body, `Binary` taking\n`(Int, carry)` for a `fori_loop` body, and a `Binary` step for `scan`, whose\noutput type is then named, `scan[Y](step, ...)`. A `while_loop` predicate may\nbe a `BorrowCallable`. A call needing keywords or defaults is written as a\nclosure. Callbacks keep one receiver throughout.\n\nUse `fori_loop_mut` to borrow a named library body exclusively and retain its\nmutable state after the call. It accepts shared or mutable binary callbacks,\npreferring mutable invocation when both are available. `fori_loop` retains\nits shared receiver behavior. Both forms share bounds, unrolling and errors.\n\n`while_loop_mut(predicate, body, carry)` borrows a named unary body exclusively\nwith the same repeated receiver preference. It also owns shared or mutable\nborrowing predicates; pass `mut_ref(predicate)` to retain their updated state.\nNamed shared `BorrowCallable` predicates, plain functions and stored thin\npointers keep their borrowed admission. Capturing predicates\nand pointer aliases use `BorrowSignature[A, Bool, E].capture(callback)`.\n\nErrors stop the loop at once. A predicate and a body must raise one error type,\nincluding any embedded origins, or one of them nothing. Nothing retries or\nrolls back effects.\n\nThe compile-time parameter `unroll` expands that many steps per rolled\niteration, with exact bounds checks for the final partial chunk; `1`, the\ndefault, keeps a rolled loop. `unroll=0` fully expands a statically bounded\nloop: `fori_loop[lower, upper, unroll=0](body, initial)` or\n`scan[static_length=N, unroll=0](...)`. Full unrolling without static bounds,\na negative factor and an invalid static length are compile errors.\n`while_loop` has no unroll parameter.",
    "summary": "Functional loops and scans over native Mojo values: `while_loop`, `while_loop_mut`, `fori_loop`, `fori_loop_mut` and `scan`."
   },
   "data": {

@@ -1,4 +1,4 @@
-# error: while_loop_mut: selected error must match the exact combined error
+# error: constraint failed: while_loop_mut: incompatible errors
 from fp.control import while_loop_mut
 from fp.callables import MutableUnary, BorrowSignature
 @fieldwise_init

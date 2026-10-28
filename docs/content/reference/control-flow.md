@@ -25,8 +25,13 @@ receiver updates after success or failure. The predicate reads the carry before
 each step; a false result returns that carry without a body call. The carry and
 callback are never copied, and failure stops before the next predicate call.
 
-Predicates can be shared `BorrowCallable` values, plain functions or stored
-thin pointers. Capture a closure or pointer alias once with
+Predicates can use shared `BorrowCallable` or mutable `BorrowMutableCallable`
+receivers, or be plain functions or stored thin pointers. Move a stateful
+predicate with `predicate^`, or pass `mut_ref(predicate)` to retain it after the
+loop. A moved or temporary predicate uses mutable invocation before shared;
+named shared predicates remain borrowed. Consuming-only predicates cannot
+repeat. The example retains a predicate that allows three steps, then inspects
+its four checks, including the final false result. Capture a closure or pointer alias once with
 `BorrowSignature[A, Bool, E].capture(callback)`, then reuse the named predicate.
 `E` defaults to `Never`. Predicate and body errors must be the same exact type,
 including origins, or one must be `Never`; `while_loop` keeps its shared-body

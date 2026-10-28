@@ -2993,6 +2993,10 @@
      "signature": "def while_loop_mut[A: Movable & Deinitable, P: BorrowCallable, F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable = _CommonError[P.Failure, F.Error]]( cond_fun: P, mut body_fun: F, var init_val: A ) raises E -> A:"
     },
     {
+     "sha256": "dc3b9b6e55f886c31e3b89f7dc6bd08ac00f39b59e629cd4146a7ae2e8f59491",
+     "signature": "def while_loop_mut[A: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable = _CommonError[P.Failure, F.Error]]( var cond_fun: P, mut body_fun: F, var init_val: A ) raises E -> A:"
+    },
+    {
      "sha256": "d26dcd5ae7a4ec8fa47805c4d708450df82c67b70120a5150a568bd58ae2b3e2",
      "signature": "def while_loop_mut[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable, //, E: Movable & Deinitable = F.Error]( cond_fun: def(A) thin -> R, mut body_fun: F, var init_val: A ) raises E -> A where not conforms_to(A, TrivialRegisterPassable) and R == Bool and _WhileBody[A, F]:"
     },

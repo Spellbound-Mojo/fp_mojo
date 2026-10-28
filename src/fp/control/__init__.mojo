@@ -18,8 +18,10 @@ preferring mutable invocation when both are available. `fori_loop` retains
 its shared receiver behavior. Both forms share bounds, unrolling and errors.
 
 `while_loop_mut(predicate, body, carry)` borrows a named unary body exclusively
-with the same repeated receiver preference. Its predicate can be a shared
-`BorrowCallable`, plain function or stored thin pointer. Capturing predicates
+with the same repeated receiver preference. It also owns shared or mutable
+borrowing predicates; pass `mut_ref(predicate)` to retain their updated state.
+Named shared `BorrowCallable` predicates, plain functions and stored thin
+pointers keep their borrowed admission. Capturing predicates
 and pointer aliases use `BorrowSignature[A, Bool, E].capture(callback)`.
 
 Errors stop the loop at once. A predicate and a body must raise one error type,

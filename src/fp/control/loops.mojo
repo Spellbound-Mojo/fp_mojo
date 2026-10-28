@@ -1,10 +1,10 @@
 """Functional while and counted loops with exact native carry types."""
 from std.builtin.rebind import rebind_var
 from fp._internal.errors import _ErrorCompatible, _CommonError, _CommonErrorCompatible
-from fp.callables.protocols import BorrowCallable, Unary, UnaryContract, Binary, BinaryContract
-from fp.callables.invoke import RepeatableBinary, RepeatableUnary
-from fp.callables._receiver import _binary_repeated_as, _unary_repeated_as
-from fp.iteration._callbacks import _predicate_plain, _predicate_raising, _predicate_callable, _binary_plain, _binary_raising
+from fp.callables.protocols import BorrowCallContract, BorrowCallable, Unary, UnaryContract, Binary, BinaryContract
+from fp.callables.invoke import RepeatableBorrow, RepeatableBinary, RepeatableUnary
+from fp.callables._receiver import _SharedBorrowRef, _binary_repeated_as, _unary_repeated_as
+from fp.iteration._callbacks import _predicate_repeated, _predicate_plain, _predicate_raising, _predicate_callable, _binary_plain, _binary_raising
 from fp.callables.native import NativeBorrow
 from ._loops import _while, _indexed, _for_step
 
@@ -129,6 +129,18 @@ def _while_repeated[A: Movable & Deinitable, F: UnaryContract & Movable & Deinit
     return rebind_var[A](_unary_repeated_as[F.Error](function[], rebind_var[F.Arg](value^)))
 
 
+def _while_mut_owned[A: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, F: UnaryContract & Movable & Deinitable, E: Movable & Deinitable](var cond_fun: P, mut body_fun: F, var init_val: A) raises E -> A:
+    """Validate both callbacks once and retain their native receiver pointers."""
+    comptime assert RepeatableBorrow[P], "while_loop_mut: the predicate must have a repeatable receiver"
+    comptime assert P.Payload == A, "while_loop_mut: the predicate must read the carry"
+    comptime assert P.Result == Bool, "while_loop_mut: the predicate must return Bool"
+    comptime assert _WhileBody[A, F], "while_loop_mut: the body must repeatedly take and return the carry"
+    comptime assert _CommonErrorCompatible[P.Failure, F.Error], "while_loop_mut: incompatible errors; predicate and body errors must match or be Never"
+    comptime assert E == _CommonError[P.Failure, F.Error], "while_loop_mut: incompatible errors; selected error must match the exact combined error"
+    comptime assert _ErrorCompatible[E, P.Failure] and _ErrorCompatible[E, F.Error], "while_loop_mut: incompatible errors; selected error must equal each raising callback's exact error"
+    return _while[A, Pointer[P, origin_of(cond_fun)], Pointer[F, origin_of(body_fun)], P.Failure, F.Error, _predicate_repeated[A, P, origin_of(cond_fun)], _while_repeated[A, F, origin_of(body_fun)], E](Pointer(to=cond_fun), Pointer(to=body_fun), init_val^)
+
+
 def while_loop_mut[A: Movable & Deinitable, P: BorrowCallable, F: UnaryContract & Movable & Deinitable,
                     //, E: Movable & Deinitable = _CommonError[P.Failure, F.Error]](
     cond_fun: P, mut body_fun: F, var init_val: A
@@ -160,13 +172,45 @@ def while_loop_mut[A: Movable & Deinitable, P: BorrowCallable, F: UnaryContract 
         including origins, or one must be `Never`. Failure stops immediately;
         receiver updates are retained and the current carry is destroyed.
     """
-    comptime assert P.Payload == A, "while_loop_mut: the predicate must read the carry"
-    comptime assert P.Result == Bool, "while_loop_mut: the predicate must return Bool"
-    comptime assert _WhileBody[A, F], "while_loop_mut: the body must repeatedly take and return the carry"
-    comptime assert _CommonErrorCompatible[P.Failure, F.Error], "while_loop_mut: predicate and body errors must match or be Never"
-    comptime assert E == _CommonError[P.Failure, F.Error], "while_loop_mut: selected error must match the exact combined error"
-    comptime assert _ErrorCompatible[E, P.Failure] and _ErrorCompatible[E, F.Error]
-    return _while[A, P, Pointer[F, origin_of(body_fun)], P.Failure, F.Error, _predicate_callable[A, P], _while_repeated[A, F, origin_of(body_fun)], E](cond_fun, Pointer(to=body_fun), init_val^)
+    return _while_mut_owned[A, _SharedBorrowRef[P, origin_of(cond_fun)], F, E](_SharedBorrowRef[P, origin_of(cond_fun)](Pointer(to=cond_fun)), body_fun, init_val^)
+
+
+def while_loop_mut[A: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, F: UnaryContract & Movable & Deinitable,
+                    //, E: Movable & Deinitable = _CommonError[P.Failure, F.Error]](
+    var cond_fun: P, mut body_fun: F, var init_val: A
+) raises E -> A:
+    """Consume a repeatable predicate and loop with a named library body.
+
+    The predicate borrows the current carry and keeps one receiver for the
+    loop. Mutable invocation wins over shared invocation for both callbacks;
+    consuming-only receivers cannot repeat. A false predicate returns the
+    current carry without calling the body. Each successful body call consumes
+    that carry and returns its successor of exactly the same type.
+
+    The body remains available after success or failure. Pass `mut_ref(predicate)`
+    to retain the original predicate's state too; otherwise its owner is consumed.
+
+    Parameters:
+        A: The carry type, including move-only values and borrowed views.
+        P: A shared or mutable borrowing predicate returning Bool.
+        F: A repeatable unary body taking and returning the carry type.
+        E: The exact combined error, normally inferred; generic wrappers may name it.
+
+    Args:
+        cond_fun: The predicate owner, consumed for the whole loop.
+        body_fun: A named body, borrowed exclusively for the whole loop.
+        init_val: The initial carry, consumed without copying.
+
+    Returns:
+        The carry for which the predicate first returned False.
+
+    Raises:
+        The predicate's or body's exact error. Their errors must match,
+        including origins, or one must be Never. Failure stops immediately,
+        preserves retained receiver state and destroys the current carry.
+    """
+    return _while_mut_owned[A, P, F, E](cond_fun^, body_fun, init_val^)
+
 
 
 # Native admission only: captures and pointer aliases use BorrowSignature.

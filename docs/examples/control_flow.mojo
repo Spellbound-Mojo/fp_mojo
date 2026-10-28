@@ -1,6 +1,6 @@
 """Functional loops over native Mojo values and sequences."""
 from fp.control import while_loop, while_loop_mut, fori_loop, fori_loop_mut, scan
-from fp.callables import MutableBinary, MutableUnary, BorrowSignature
+from fp.callables import MutableBinary, MutableUnary, BorrowSignature, BorrowMutableCallable, mut_ref
 
 
 def below_ten(value: Int) -> Bool:
@@ -41,6 +41,17 @@ struct Advance(MutableUnary):
         return carry + self.calls
 
 
+@fieldwise_init
+struct StopAfter(BorrowMutableCallable):
+    comptime Payload = Int
+    comptime Result = Bool
+    var checks: Int
+    var steps: Int
+    def invoke_mut(mut self, ref value: Int) -> Bool:
+        self.checks += 1
+        return self.checks <= self.steps
+
+
 def main() raises:
     print("while:", while_loop(below_ten, double, 1))
     print("fori:", fori_loop(0, 5, add_index, 0))
@@ -56,3 +67,7 @@ def main() raises:
     var advance = Advance(0)
     var final = while_loop_mut(predicate, advance, 0)
     print("mutable while:", final, "calls:", advance.calls)
+    var stop = StopAfter(0,3)
+    var measured = Advance(0)
+    var limited = while_loop_mut(mut_ref(stop),measured,0)
+    print("stateful predicate:", limited, "checks:", stop.checks, "steps:", measured.calls)
