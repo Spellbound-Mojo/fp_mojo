@@ -43,3 +43,5 @@ def main() raises:
     var rendered = price^.then(display).then(excited)
     print("extended:", rendered(1), rendered(2))
     print("extended reverse:", mirrored^.then(display)(2))
+    var combined = rendered^.compose(add)
+    print("combined:", combined(2, 3))

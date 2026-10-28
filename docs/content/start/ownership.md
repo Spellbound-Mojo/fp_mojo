@@ -103,6 +103,11 @@ on a temporary composition. The old chain and the new stage move into the
 result; no callback runs and no capture is copied. Receiver capabilities still
 follow every stage, including mutable and consuming stages.
 
+For an existing unary chain, `chain^.compose(before)` transfers the same stages
+and adds a new first step. It can change the entry to zero, one or two arguments.
+Both extension methods preserve state already held by mutable stages and
+retain the origins embedded in inputs and outputs.
+
 For immediate application, `pipe(value, first, second)` accepts a plain
 function or stored thin pointer beside a shared library stage. It borrows
 the library stage for the call, so a named partial remains available afterward.

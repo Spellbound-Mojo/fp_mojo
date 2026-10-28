@@ -694,11 +694,22 @@ named chain with `chain^.then(next)`; the result owns its stages and constructio
 runs nothing. The entry arguments stay the same, including for zero-argument
 and binary compositions. The new stage runs last even after `compose`.
 
+Use `.compose(before)` to adapt an existing unary composition to new inputs.
+For example, `rendered^.compose(add)` first adds two quantities, then applies
+the saved pricing and formatting stages: `combined(2, 3)` produces
+`"price=18!"`. The new first stage can take zero, one or two arguments; its
+result must exactly match the old chain's input. Plain functions, stored thin
+pointers and library stages work directly. The new stage runs first even
+when the saved chain was built with reverse `compose`.
+
 The chain owns its stages. Mutable and consuming stages keep those receiver
 requirements, and native errors keep their exact type. Ordinary `.then`
 passes the whole previous output, including an Optional or Result; use Kleisli
 composition to sequence successful payloads through a Monad. Each append
 changes the concrete composition type, so this builds a statically typed chain.
+Prepending likewise changes the entry arguments and concrete type. Repeated
+`.then` and `.compose` calls keep the existing stages in one tuple; a new stage
+that is itself a composition retains its explicit grouping.
 All-library `flow`/`compose` calls remain variadic and all-plain calls support
 two through eight stages. Capturing unary closures use `as_unary` to become
 stored stages.

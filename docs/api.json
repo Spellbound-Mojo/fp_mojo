@@ -43553,6 +43553,1851 @@
       "summary": "Run the stages on two arguments once, consuming the composition."
      }
     ],
+    "compose": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The new first stage, moved into the result.",
+        "name": "stage",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "The new stage may take zero, one or two arguments. Its result must\nmatch this chain's input, and raised errors must be compatible.\nThe result takes the new stage's arguments and owns all stages in\none tuple. Nothing runs or copies captures during construction.\nShared, mutable and consuming receiver modes follow all stages.\nA reverse composition also runs the new stage first.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The preceding library stage's type.",
+        "inferred": false,
+        "name": "F",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A composition with the new entry arguments and the same result.",
+       "type": "Self._WithPrevious[F]"
+      },
+      "signature": "def compose[F: Movable & Deinitable](deinit self, var stage: F) -> Self._WithPrevious[F] where _Once[F]",
+      "summary": "Run a new first stage before this unary composition, consuming both."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "function",
+        "type": "def() thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeThunk[R, Never, type_of(function), False]]"
+      },
+      "signature": "def compose[R: Movable & Deinitable, q: ImmOrigin, //](deinit self, ref[q] function: def() thin -> R) -> Self._WithPrevious[_NativeThunk[R, Never, type_of(function), False]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def() thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeThunk[R, Never, type_of(function), False]]"
+      },
+      "signature": "def compose[R: RegisterPassable & Deinitable, //](deinit self, function: def() thin -> R) -> Self._WithPrevious[_NativeThunk[R, Never, type_of(function), False]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "function",
+        "type": "def() thin",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeThunk[type_of(None), Never, type_of(function), False]]"
+      },
+      "signature": "def compose[q: ImmOrigin, //](deinit self, ref[q] function: def() thin) -> Self._WithPrevious[_NativeThunk[type_of(None), Never, type_of(function), False]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "function",
+        "type": "def() raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeThunk[R, E, type_of(function), True]]"
+      },
+      "signature": "def compose[R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](deinit self, ref[q] function: def() raises E thin -> R) -> Self._WithPrevious[_NativeThunk[R, E, type_of(function), True]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def() raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeThunk[R, E, type_of(function), True]]"
+      },
+      "signature": "def compose[R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](deinit self, function: def() raises E thin -> R) -> Self._WithPrevious[_NativeThunk[R, E, type_of(function), True]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "function",
+        "type": "def() raises E thin",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeThunk[type_of(None), E, type_of(function), True]]"
+      },
+      "signature": "def compose[E: Movable & Deinitable, q: ImmOrigin, //](deinit self, ref[q] function: def() raises E thin) -> Self._WithPrevious[_NativeThunk[type_of(None), E, type_of(function), True]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[NativeUnary[A, R, Never, type_of(function), False]]"
+      },
+      "signature": "def compose[A: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //](deinit self, ref[q] function: def(var A) thin -> R) -> Self._WithPrevious[NativeUnary[A, R, Never, type_of(function), False]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[NativeUnary[A, R, Never, type_of(function), False]]"
+      },
+      "signature": "def compose[A: Movable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, function: def(var A) thin -> R) -> Self._WithPrevious[NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable)",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[NativeUnary[A, R, Never, type_of(function), False]]"
+      },
+      "signature": "def compose[A: RegisterPassable & Deinitable, R: Movable & Deinitable, //](deinit self, function: def(var A) thin -> R) -> Self._WithPrevious[NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable)",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[NativeUnary[A, R, Never, type_of(function), False]]"
+      },
+      "signature": "def compose[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, function: def(var A) thin -> R) -> Self._WithPrevious[NativeUnary[A, R, Never, type_of(function), False]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) thin",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[NativeUnary[A, type_of(None), Never, type_of(function), False]]"
+      },
+      "signature": "def compose[A: Movable & Deinitable, q: ImmOrigin, //](deinit self, ref[q] function: def(var A) thin) -> Self._WithPrevious[NativeUnary[A, type_of(None), Never, type_of(function), False]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) thin",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[NativeUnary[A, type_of(None), Never, type_of(function), False]]"
+      },
+      "signature": "def compose[A: RegisterPassable & Deinitable, //](deinit self, function: def(var A) thin) -> Self._WithPrevious[NativeUnary[A, type_of(None), Never, type_of(function), False]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[NativeUnary[A, R, E, type_of(function), True]]"
+      },
+      "signature": "def compose[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](deinit self, ref[q] function: def(var A) raises E thin -> R) -> Self._WithPrevious[NativeUnary[A, R, E, type_of(function), True]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[NativeUnary[A, R, E, type_of(function), True]]"
+      },
+      "signature": "def compose[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](deinit self, function: def(var A) raises E thin -> R) -> Self._WithPrevious[NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable)",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[NativeUnary[A, R, E, type_of(function), True]]"
+      },
+      "signature": "def compose[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](deinit self, function: def(var A) raises E thin -> R) -> Self._WithPrevious[NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(R, RegisterPassable)",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[NativeUnary[A, R, E, type_of(function), True]]"
+      },
+      "signature": "def compose[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](deinit self, function: def(var A) raises E thin -> R) -> Self._WithPrevious[NativeUnary[A, R, E, type_of(function), True]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) raises E thin",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[NativeUnary[A, type_of(None), E, type_of(function), True]]"
+      },
+      "signature": "def compose[A: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](deinit self, ref[q] function: def(var A) raises E thin) -> Self._WithPrevious[NativeUnary[A, type_of(None), E, type_of(function), True]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) raises E thin",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[NativeUnary[A, type_of(None), E, type_of(function), True]]"
+      },
+      "signature": "def compose[A: RegisterPassable & Deinitable, E: Movable & Deinitable, //](deinit self, function: def(var A) raises E thin) -> Self._WithPrevious[NativeUnary[A, type_of(None), E, type_of(function), True]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]]"
+      },
+      "signature": "def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //](deinit self, ref[q] function: def(var A, var B) thin -> R) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]]"
+      },
+      "signature": "def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, function: def(var A, var B) thin -> R) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable)",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]]"
+      },
+      "signature": "def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, //](deinit self, function: def(var A, var B) thin -> R) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]]"
+      },
+      "signature": "def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, function: def(var A, var B) thin -> R) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable)",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]]"
+      },
+      "signature": "def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //](deinit self, function: def(var A, var B) thin -> R) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]]"
+      },
+      "signature": "def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, function: def(var A, var B) thin -> R) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(B, RegisterPassable)",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]]"
+      },
+      "signature": "def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, //](deinit self, function: def(var A, var B) thin -> R) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable)",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]]"
+      },
+      "signature": "def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](deinit self, function: def(var A, var B) thin -> R) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) thin",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, type_of(None), Never, type_of(function), False]]"
+      },
+      "signature": "def compose[A: Movable & Deinitable, B: Movable & Deinitable, q: ImmOrigin, //](deinit self, ref[q] function: def(var A, var B) thin) -> Self._WithPrevious[_NativeBinary[A, B, type_of(None), Never, type_of(function), False]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) thin",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, type_of(None), Never, type_of(function), False]]"
+      },
+      "signature": "def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, //](deinit self, function: def(var A, var B) thin) -> Self._WithPrevious[_NativeBinary[A, B, type_of(None), Never, type_of(function), False]] where not conforms_to(A, RegisterPassable)",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) thin",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, type_of(None), Never, type_of(function), False]]"
+      },
+      "signature": "def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, //](deinit self, function: def(var A, var B) thin) -> Self._WithPrevious[_NativeBinary[A, B, type_of(None), Never, type_of(function), False]] where not conforms_to(B, RegisterPassable)",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) thin",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, type_of(None), Never, type_of(function), False]]"
+      },
+      "signature": "def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, //](deinit self, function: def(var A, var B) thin) -> Self._WithPrevious[_NativeBinary[A, B, type_of(None), Never, type_of(function), False]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]]"
+      },
+      "signature": "def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](deinit self, ref[q] function: def(var A, var B) raises E thin -> R) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]]"
+      },
+      "signature": "def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](deinit self, function: def(var A, var B) raises E thin -> R) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable)",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]]"
+      },
+      "signature": "def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](deinit self, function: def(var A, var B) raises E thin -> R) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]]"
+      },
+      "signature": "def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](deinit self, function: def(var A, var B) raises E thin -> R) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable)",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]]"
+      },
+      "signature": "def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](deinit self, function: def(var A, var B) raises E thin -> R) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]]"
+      },
+      "signature": "def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](deinit self, function: def(var A, var B) raises E thin -> R) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(B, RegisterPassable)",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]]"
+      },
+      "signature": "def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](deinit self, function: def(var A, var B) raises E thin -> R) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(R, RegisterPassable)",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]]"
+      },
+      "signature": "def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](deinit self, function: def(var A, var B) raises E thin -> R) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) raises E thin",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, type_of(None), E, type_of(function), True]]"
+      },
+      "signature": "def compose[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](deinit self, ref[q] function: def(var A, var B) raises E thin) -> Self._WithPrevious[_NativeBinary[A, B, type_of(None), E, type_of(function), True]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) raises E thin",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, type_of(None), E, type_of(function), True]]"
+      },
+      "signature": "def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, //](deinit self, function: def(var A, var B) raises E thin) -> Self._WithPrevious[_NativeBinary[A, B, type_of(None), E, type_of(function), True]] where not conforms_to(A, RegisterPassable)",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) raises E thin",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, type_of(None), E, type_of(function), True]]"
+      },
+      "signature": "def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, //](deinit self, function: def(var A, var B) raises E thin) -> Self._WithPrevious[_NativeBinary[A, B, type_of(None), E, type_of(function), True]] where not conforms_to(B, RegisterPassable)",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A, var B) raises E thin",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "B",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self._WithPrevious[_NativeBinary[A, B, type_of(None), E, type_of(function), True]]"
+      },
+      "signature": "def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, //](deinit self, function: def(var A, var B) raises E thin) -> Self._WithPrevious[_NativeBinary[A, B, type_of(None), E, type_of(function), True]]",
+      "summary": "Prepend a plain function or stored pointer without invoking it."
+     }
+    ],
     "then": [
      {
       "args": [

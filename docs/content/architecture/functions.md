@@ -74,22 +74,24 @@ storage or new runner. The planner keeps native no-value output distinct from
 an explicit `NoneType` result. Existing `E` and `Results` bindings stay on
 their original explicit overloads, which retain their promotion contract.
 
-`Composition.then` follows the incremental composition workflow of
+`Composition.then` and `Composition.compose` follow the incremental workflow of
 [Cats' `AndThen`](https://github.com/typelevel/cats/blob/main/core/src/main/scala/cats/data/AndThen.scala)
-with native static storage. Appending a stage consumes the old cell tuple and
-uses native tuple concatenation to add one Optional cell. Forward compositions
-append physically; reverse compositions prepend physically so the new stage
-still executes last. Repeated appends retain one tuple containing the original
-stages and each appended stage. A stage
-that is itself a composition keeps its explicit grouping.
+with native static storage. Both delegate to `_extend`, which consumes the
+old cell tuple and uses native tuple concatenation to add one Optional cell.
+Execution direction and the requested end determine the physical insertion
+point. `.then` retains the entry arity; `.compose` adopts the new first stage's
+arity. The original first stage then becomes an ordinary unary stage, checked
+by the same planner. Repeated extensions retain one tuple containing the
+original stages and each added stage. A stage that is itself a composition
+keeps its explicit grouping.
 
-The existing constructor and append share `_validate`, which uses the original
+The existing constructor and extension share `_validate`, which uses the original
 planner's stage, arity and error checks. The extended type uses known-length
 `TypeList.tabulate`. Concat and tabulate spell symbolic packs differently, so
-append asserts exact cell-tuple equality before the checked native expression
+extension asserts exact cell-tuple equality before the checked native expression
 rebind. The fieldwise constructor then stores that tuple; no callback, capture
-copy or new invocation loop is introduced. Native `.then` admission uses the
-same `native_factories` descriptor and delegates to this library-stage owner.
+copy or new invocation loop is introduced. Both native admission methods use
+the same `native_factories` descriptor and delegate to this library-stage owner.
 
 A pipeline's result type is inferred from the stages. `functions._stages` builds
 one compile-time plan (`_Plan`) from the stages' types: it tabulates each stage's

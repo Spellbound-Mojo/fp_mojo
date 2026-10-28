@@ -111,7 +111,20 @@
         "tests/compile_fail/composition_then_lifetime.mojo",
         "tests/compile_fail/composition_then_native_convention.mojo",
         "tests/compile_fail/composition_then_once.mojo",
-        "tests/compile_fail/composition_then_origin.mojo"
+        "tests/compile_fail/composition_then_origin.mojo",
+        "tests/runtime/test_composition_compose.mojo",
+        "tests/ownership/test_composition_compose_ownership.mojo",
+        "tests/compile_fail/composition_compose_arity.mojo",
+        "tests/compile_fail/composition_compose_consumed.mojo",
+        "tests/compile_fail/composition_compose_copy.mojo",
+        "tests/compile_fail/composition_compose_empty_entry.mojo",
+        "tests/compile_fail/composition_compose_error.mojo",
+        "tests/compile_fail/composition_compose_input.mojo",
+        "tests/compile_fail/composition_compose_lifetime.mojo",
+        "tests/compile_fail/composition_compose_native_convention.mojo",
+        "tests/compile_fail/composition_compose_once.mojo",
+        "tests/compile_fail/composition_compose_origin.mojo",
+        "tests/compile_fail/composition_compose_void.mojo"
       ]
     },
     "adt": {

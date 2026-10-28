@@ -278,6 +278,12 @@ chain that formats each price and adds `!`. Construction runs no callbacks;
 `rendered(1)` and `rendered(2)` produce `"price=6!"` and `"price=9!"`.
 Appending to a reverse `compose` chain still runs the new stage last.
 
+Adapt a saved unary chain to new inputs with `.compose(before)`.
+`rendered^.compose(add)` combines two quantities before running the same
+pricing and formatting stages. Calling the resulting `combined(2, 3)` produces
+`"price=18!"`. The new first stage determines the entry arguments; the saved
+chain keeps its result type.
+
 Use `chain^` when transferring its stages to an operation. A deferred operation
 retains a borrowed chain until it runs or is discarded. Mutable and
 consuming-only chains still require ownership; they are not implicitly shared.

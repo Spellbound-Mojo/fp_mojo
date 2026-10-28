@@ -113,7 +113,7 @@ struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](
     comptime Error: Movable & Deinitable = Self.Plan.Failure
     var _cells: Tuple[*Self.Cells]
 
-    # Construction and append validate through the same planner.
+    # Construction and extension validate through the same planner.
     @staticmethod
     def _validate() -> Bool:
         comptime assert Self.Fs.length >= 2, "composition: use flow or compose for zero or one component"
@@ -136,12 +136,28 @@ struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](
             self._cells[index] = rebind_var[Self.Cells[index]](Optional(function^))
         functions^.consume_elements(store)
 
-    comptime _NextStage[F: Movable & Deinitable, index: Int]: Movable & Deinitable = (
-        F if (index == 0 if Self.reverse else index == Self.Fs.length)
-        else Self.Fs[index - 1 if Self.reverse else index]
+    comptime _ExtendedStage[F: Movable & Deinitable, before: Bool, index: Int]: Movable & Deinitable = (
+        F if (index == 0 if Self.reverse != before else index == Self.Fs.length)
+        else Self.Fs[index - 1 if Self.reverse != before else index]
     )
-    comptime _Extended[F: Movable & Deinitable] = TypeList.tabulate[Self.Fs.length + 1, Self._NextStage[F, _]]()
-    comptime _WithNext[F: Movable & Deinitable] = Composition[Self.reverse, Self.arity, *Self._Extended[F]]
+    comptime _Extended[F: Movable & Deinitable, before: Bool] = TypeList.tabulate[Self.Fs.length + 1, Self._ExtendedStage[F, before, _]]()
+    comptime _WithStage[F: Movable & Deinitable, before: Bool] = Composition[Self.reverse, _Arity[F] if before else Self.arity, *Self._Extended[F, before]]
+    comptime _WithNext[F: Movable & Deinitable] = Self._WithStage[F, False]
+    comptime _WithPrevious[F: Movable & Deinitable] = Self._WithStage[F, True]
+
+    def _extend[before: Bool, F: Movable & Deinitable](deinit self, var stage: F) -> Self._WithStage[F, before] where _Once[F]:
+        comptime Target = Self._WithStage[F, before]
+        comptime assert Target._validate()
+        # Native concat and tabulate spell symbolic packs differently; assert
+        # their exact cell equality before crossing that expression boundary.
+        comptime if Self.reverse != before:
+            var cells = Tuple(Optional(stage^)).concat(self._cells^)
+            comptime assert type_of(cells) == Tuple[*Target.Cells]
+            return Target(_cells=rebind_var[Tuple[*Target.Cells]](cells^))
+        else:
+            var cells = self._cells^.concat((Optional(stage^),))
+            comptime assert type_of(cells) == Tuple[*Target.Cells]
+            return Target(_cells=rebind_var[Tuple[*Target.Cells]](cells^))
 
     def then[F: Movable & Deinitable](deinit self, var stage: F) -> Self._WithNext[F] where _Once[F]:
         """Append one stage in execution order, consuming this composition.
@@ -163,21 +179,31 @@ struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](
         Returns:
             A composition with the same entry arguments and one more stage.
         """
-        comptime Target = Self._WithNext[F]
-        comptime assert Target._validate()
-        # Native concat and tabulate spell symbolic packs differently; assert
-        # their exact cell equality before crossing that expression boundary.
-        comptime if Self.reverse:
-            var cells = Tuple(Optional(stage^)).concat(self._cells^)
-            comptime assert type_of(cells) == Tuple[*Target.Cells]
-            return Target(_cells=rebind_var[Tuple[*Target.Cells]](cells^))
-        else:
-            var cells = self._cells^.concat((Optional(stage^),))
-            comptime assert type_of(cells) == Tuple[*Target.Cells]
-            return Target(_cells=rebind_var[Tuple[*Target.Cells]](cells^))
+        return self^._extend[False](stage^)
 
-    # --- composition append admission (generated) ---
-    # Native admission delegates to the same consuming append owner.
+    def compose[F: Movable & Deinitable](deinit self, var stage: F) -> Self._WithPrevious[F] where _Once[F]:
+        """Run a new first stage before this unary composition, consuming both.
+
+        The new stage may take zero, one or two arguments. Its result must
+        match this chain's input, and raised errors must be compatible.
+        The result takes the new stage's arguments and owns all stages in
+        one tuple. Nothing runs or copies captures during construction.
+        Shared, mutable and consuming receiver modes follow all stages.
+        A reverse composition also runs the new stage first.
+
+        Parameters:
+            F: The preceding library stage's type.
+
+        Args:
+            stage: The new first stage, moved into the result.
+
+        Returns:
+            A composition with the new entry arguments and the same result.
+        """
+        return self^._extend[True](stage^)
+
+    # --- composition extension admission (generated) ---
+    # Native admission delegates to the same consuming extension owner.
 
     def then[A: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //](
         deinit self, ref[q] function: def(var A) thin -> R
@@ -251,7 +277,259 @@ struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](
         """Append a plain function or stored pointer without invoking it."""
         return self^.then(NativeUnary[A, type_of(None), E, type_of(function), True](function))
 
-    # --- end composition append admission ---
+    def compose[R: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def() thin -> R
+    ) -> Self._WithPrevious[_NativeThunk[R, Never, type_of(function), False]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeThunk[R, Never, type_of(function), False](function))
+
+    def compose[R: RegisterPassable & Deinitable, //](
+        deinit self, function: def() thin -> R
+    ) -> Self._WithPrevious[_NativeThunk[R, Never, type_of(function), False]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeThunk[R, Never, type_of(function), False](function))
+
+    def compose[q: ImmOrigin, //](
+        deinit self, ref[q] function: def() thin
+    ) -> Self._WithPrevious[_NativeThunk[type_of(None), Never, type_of(function), False]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeThunk[type_of(None), Never, type_of(function), False](function))
+
+    def compose[R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def() raises E thin -> R
+    ) -> Self._WithPrevious[_NativeThunk[R, E, type_of(function), True]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeThunk[R, E, type_of(function), True](function))
+
+    def compose[R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def() raises E thin -> R
+    ) -> Self._WithPrevious[_NativeThunk[R, E, type_of(function), True]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeThunk[R, E, type_of(function), True](function))
+
+    def compose[E: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def() raises E thin
+    ) -> Self._WithPrevious[_NativeThunk[type_of(None), E, type_of(function), True]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeThunk[type_of(None), E, type_of(function), True](function))
+
+    def compose[A: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def(var A) thin -> R
+    ) -> Self._WithPrevious[NativeUnary[A, R, Never, type_of(function), False]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, R, Never, type_of(function), False](function))
+
+    def compose[A: Movable & Deinitable, R: RegisterPassable & Deinitable, //](
+        deinit self, function: def(var A) thin -> R
+    ) -> Self._WithPrevious[NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, R, Never, type_of(function), False](function))
+
+    def compose[A: RegisterPassable & Deinitable, R: Movable & Deinitable, //](
+        deinit self, function: def(var A) thin -> R
+    ) -> Self._WithPrevious[NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, R, Never, type_of(function), False](function))
+
+    def compose[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](
+        deinit self, function: def(var A) thin -> R
+    ) -> Self._WithPrevious[NativeUnary[A, R, Never, type_of(function), False]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, R, Never, type_of(function), False](function))
+
+    def compose[A: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def(var A) thin
+    ) -> Self._WithPrevious[NativeUnary[A, type_of(None), Never, type_of(function), False]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, type_of(None), Never, type_of(function), False](function))
+
+    def compose[A: RegisterPassable & Deinitable, //](
+        deinit self, function: def(var A) thin
+    ) -> Self._WithPrevious[NativeUnary[A, type_of(None), Never, type_of(function), False]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, type_of(None), Never, type_of(function), False](function))
+
+    def compose[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def(var A) raises E thin -> R
+    ) -> Self._WithPrevious[NativeUnary[A, R, E, type_of(function), True]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, R, E, type_of(function), True](function))
+
+    def compose[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A) raises E thin -> R
+    ) -> Self._WithPrevious[NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, R, E, type_of(function), True](function))
+
+    def compose[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A) raises E thin -> R
+    ) -> Self._WithPrevious[NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(R, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, R, E, type_of(function), True](function))
+
+    def compose[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A) raises E thin -> R
+    ) -> Self._WithPrevious[NativeUnary[A, R, E, type_of(function), True]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, R, E, type_of(function), True](function))
+
+    def compose[A: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def(var A) raises E thin
+    ) -> Self._WithPrevious[NativeUnary[A, type_of(None), E, type_of(function), True]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, type_of(None), E, type_of(function), True](function))
+
+    def compose[A: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A) raises E thin
+    ) -> Self._WithPrevious[NativeUnary[A, type_of(None), E, type_of(function), True]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, type_of(None), E, type_of(function), True](function))
+
+    def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def(var A, var B) thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+    def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, //](
+        deinit self, function: def(var A, var B) thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+    def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+    def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](
+        deinit self, function: def(var A, var B) thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+    def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+    def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, //](
+        deinit self, function: def(var A, var B) thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(B, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+    def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+    def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](
+        deinit self, function: def(var A, var B) thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+    def compose[A: Movable & Deinitable, B: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def(var A, var B) thin
+    ) -> Self._WithPrevious[_NativeBinary[A, B, type_of(None), Never, type_of(function), False]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, type_of(None), Never, type_of(function), False](function))
+
+    def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, //](
+        deinit self, function: def(var A, var B) thin
+    ) -> Self._WithPrevious[_NativeBinary[A, B, type_of(None), Never, type_of(function), False]] where not conforms_to(A, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, type_of(None), Never, type_of(function), False](function))
+
+    def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) thin
+    ) -> Self._WithPrevious[_NativeBinary[A, B, type_of(None), Never, type_of(function), False]] where not conforms_to(B, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, type_of(None), Never, type_of(function), False](function))
+
+    def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, //](
+        deinit self, function: def(var A, var B) thin
+    ) -> Self._WithPrevious[_NativeBinary[A, B, type_of(None), Never, type_of(function), False]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, type_of(None), Never, type_of(function), False](function))
+
+    def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def(var A, var B) raises E thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, E, type_of(function), True](function))
+
+    def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) raises E thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, E, type_of(function), True](function))
+
+    def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) raises E thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, E, type_of(function), True](function))
+
+    def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) raises E thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, E, type_of(function), True](function))
+
+    def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) raises E thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, E, type_of(function), True](function))
+
+    def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) raises E thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(B, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, E, type_of(function), True](function))
+
+    def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) raises E thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(R, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, E, type_of(function), True](function))
+
+    def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) raises E thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, E, type_of(function), True](function))
+
+    def compose[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def(var A, var B) raises E thin
+    ) -> Self._WithPrevious[_NativeBinary[A, B, type_of(None), E, type_of(function), True]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, type_of(None), E, type_of(function), True](function))
+
+    def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) raises E thin
+    ) -> Self._WithPrevious[_NativeBinary[A, B, type_of(None), E, type_of(function), True]] where not conforms_to(A, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, type_of(None), E, type_of(function), True](function))
+
+    def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) raises E thin
+    ) -> Self._WithPrevious[_NativeBinary[A, B, type_of(None), E, type_of(function), True]] where not conforms_to(B, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, type_of(None), E, type_of(function), True](function))
+
+    def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) raises E thin
+    ) -> Self._WithPrevious[_NativeBinary[A, B, type_of(None), E, type_of(function), True]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, type_of(None), E, type_of(function), True](function))
+
+    # --- end composition extension admission ---
 
     # Shared unary compositions use the same retained receiver as Kleisli
     # leaves. Pipeline admission can borrow the chain without copying stages.
