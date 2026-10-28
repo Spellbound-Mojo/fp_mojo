@@ -193,7 +193,7 @@
       ],
       "status": "selected",
       "families": "Functor; Filterable, Monad or FunctorFilter where required",
-      "callbacks": "Native closures and thin pointers; library callable contracts retain receiver modes. Shared callable chains are borrowed directly by map, flat_map, filter_map. Named shared unary flow/compose chains use the same borrowed view admission. Unary partial applications are borrowed without copying their stored prefix; each invocation retains its documented bound-value copies. Stored NativeUnary adapters borrow their capture storage through the same shared view. Unary partials also expose their native borrowed-argument convention to selected predicates and observers, retaining named receiver storage without copying it.",
+      "callbacks": "Native closures and thin pointers; library callable contracts retain receiver modes. Shared callable chains are borrowed directly by map, flat_map, filter_map. Named shared unary flow/compose chains use the same borrowed view admission. Unary partial applications are borrowed without copying their stored prefix; each invocation retains its documented bound-value copies. Stored NativeUnary adapters borrow their capture storage through the same shared view. Unary partials also expose their native borrowed-argument convention to selected predicates and observers, retaining named receiver storage without copying it. Direct Result and Piped Result predicates and observers also borrow named partials.",
       "ownership": "Transforms consume payloads; predicates and observers borrow them.",
       "errors": "Exact family/callback error; stored errors retain their family.",
       "timing": "Family-controlled, including deferred execution.",
@@ -231,7 +231,12 @@
         "tests/ownership/test_context_partial_borrow_ownership.mojo",
         "tests/compile_fail/partial_borrow_lifetime.mojo",
         "tests/compile_fail/partial_borrow_origin.mojo",
-        "tests/compile_fail/partial_borrow_call_arity.mojo"
+        "tests/compile_fail/partial_borrow_call_arity.mojo",
+        "docs/examples/reusable_result_handlers.mojo",
+        "tests/runtime/test_result_partial_views.mojo",
+        "tests/ownership/test_result_partial_views_ownership.mojo",
+        "tests/compile_fail/result_partial_view_lifetime.mojo",
+        "tests/compile_fail/result_partial_view_origin.mojo"
       ]
     },
     {

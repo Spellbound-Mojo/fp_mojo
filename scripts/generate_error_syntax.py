@@ -81,7 +81,7 @@ def conditional_methods():
     for operation in error_operations('conditional'):
         name = operation.name
         primary, secondary = operation.callbacks
-        for pk, hk in product(('library', 'pure', 'raising'), ('library', 'pure', 'raising', 'view')):
+        for pk, hk in product(('library', 'pure', 'raising', 'view'), ('library', 'pure', 'raising', 'view')):
             p = callback(primary.mode, pk, primary.argument).renamed({'R': 'S'})
             # Preserve the owned callback's canonical A/R/E native signature.
             h = _handler_callback(secondary.mode, hk, second=True).renamed({'Q': 'A', 'S': 'R', 'Y': 'E'})
@@ -142,10 +142,10 @@ def observation_methods():
     for operation in error_operations('observation'):
         name, effect = operation.name, operation.effect
         primary = operation.callbacks[0]
-        for kind in ('library', 'pure', 'raising'):
+        for kind in ('library', 'pure', 'raising', 'view'):
             cb = callback(primary.mode, kind, 'inspect')
             params = [v for v in cb.parameters if v != f'R: {MD}'] + ['//', 'I: Applicative']
-            if kind != 'library': params += [f'R: {MD}']
+            if kind in ('pure', 'raising'): params += [f'R: {MD}']
             params += cb.explicit + ['Z: AnyType = _InferError']
             family = '_ErrorFamily[I]'
             elem = 'I.Element[Self.Value]'

@@ -237,6 +237,9 @@
     "docs/examples/results.mojo": {
       "stdout": "ok: 42\ndomain: expected a positive value\nraised: callback failed\n"
     },
+    "docs/examples/reusable_result_handlers.mojo": {
+      "stdout": "observed: missing\nrecovered: 0\nobserved: fatal\nretained: fatal\n"
+    },
     "docs/examples/selected_conditional_recovery.mojo": {
       "stdout": "before run: 0\nrecovered: 14\npreserved: denied ; handled: 1\nretried: 9\n"
     },

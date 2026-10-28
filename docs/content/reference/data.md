@@ -50,6 +50,23 @@ without copying its payload.
 `pipeline(result^)`, retaining the native error setting. Combine it with
 `to_optional()` to keep only the error; see [working with the error as a value](../tutorial/results.md#work-with-the-error-as-a-value).
 
+## Reuse Result predicates and observers
+
+Bind a native predicate or observer with `partial`, then pass it by name to
+several operations. Direct Result and Piped Result methods borrow that stored
+callback: `.ensure`, `.tap_err`, `.flat_tap_err`, `.attempt_tap`,
+`.recover_if` and `.or_else_if` use their existing branch and error rules.
+A predicate or observer borrows its payload; recovery still consumes the
+matching stored error. Explicit moves transfer callback storage.
+
+<!-- example: docs/examples/reusable_result_handlers.mojo -->
+
+Family-parameterized Piped calls, such as `.tap_err[Family](observer)`, also
+retain named partials without copying their stored prefix. If that family
+defers execution, keep the partial alive until the resulting computation
+runs or is discarded. Each actual native invocation retains `partial`'s
+normal bound-argument copies; skipped branches do not invoke the callback.
+
 ## Reuse an error context
 
 Construct `var capture = Capture[E]()` once, then use `capture.run(callback)`,

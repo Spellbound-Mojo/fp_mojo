@@ -23,18 +23,21 @@ def methods(piped=False):
         conditional, selective = operation.conditional, operation.selective
         mode = primary.mode
         kinds = ('library', 'pure', 'raising')
-        handler_kinds = kinds + (('view',) if selective and not piped else ())
-        combinations = product(kinds, handler_kinds) if conditional else ((k, None) for k in kinds)
+        primary_kinds = kinds + (('view',) if mode == 'borrow' else ())
+        handler_kinds = kinds + (('view',) if conditional and (
+            operation.callbacks[1].mode == 'borrow' or (selective and not piped)) else ())
+        combinations = product(primary_kinds, handler_kinds) if conditional else ((k, None) for k in primary_kinds)
         for kind, other in combinations:
             t, e = ('T', 'Failure') if piped else ('Self.T', 'Self.E')
             cb = callback(mode, kind, primary.argument)
+            native = kind in ('pure', 'raising')
             if piped and name == 'or_else' and kind != 'library':
                 cb.explicit.append(f'U: {MD} = downcast[R, _ResultType].Error')
             inferred_recovery = piped and name == 'recover' and kind != 'library'
             if inferred_recovery:
                 t, e = cb.result, cb.payload
             source = f'Result[{t}, {e}]'
-            if name in ('attempt_tap', 'flat_tap_err') and kind != 'library':
+            if name in ('attempt_tap', 'flat_tap_err') and native:
                 # Infer the whole native result on Mojo 1.2, then check the
                 # stored error and its origins at admission. Keep U available
                 # by name, without changing the existing C/X positions.
@@ -54,14 +57,14 @@ def methods(piped=False):
             if explicit:
                 params += ['//', *explicit]
             conditions = ([f'Self.Value == {source}'] if piped else [])
-            if mode != 'thunk' and not (name in ('attempt_tap', 'flat_tap_err') and kind != 'library'):
+            if mode != 'thunk' and not (name in ('attempt_tap', 'flat_tap_err') and native):
                 conditions.append(f'{cb.payload} == '+primary.input(t, e, whole=source))
             if piped and name == 'or_else' and kind != 'library':
                 conditions.append('R == Result[T, U]')
             conditions += operation.first_constraints(t, e, cb.result,
                 value=lambda r: f'downcast[{r}, _ResultType].Value',
                 failure=lambda r: f'downcast[{r}, _ResultType].Error')
-            if name in ('flat_tap_err', 'attempt_tap') and kind != 'library':
+            if name in ('flat_tap_err', 'attempt_tap') and native:
                 conditions.append('U == downcast[R, _ResultType].Value')
             if conditional:
                 expected = operation.second_result(t, e)
@@ -135,6 +138,8 @@ def methods(piped=False):
             doc = summary
             if kind == 'library' and other in (None, 'library'):
                 doc += '\n\n        '+detail+' Native errors propagate unchanged; they never become stored Err values. Native callbacks are borrowed in place; library callbacks are consumed and use their declared receiver mode.'
+                if mode == 'borrow':
+                    doc += ' Shared partial predicates and observers may instead be borrowed by name; an explicit move retains the owning form.'
                 if name in ('recover', 'recover_if', 'or_else_if') and not piped:
                     doc += ' Shared callable chains may instead be borrowed by passing their name; an explicit move retains the consuming form.'
                 doc += '\n\n        Parameters:\n'

@@ -3855,6 +3855,25 @@ partial's borrow, and an explicit move transfers its prefix. The canonical
 `_call` also checks that each protocol entry point retains the exact stored
 function signature before rebinding it, rejecting wrong-arity direct `call` or
 `invoke` methods. Ownership tests track both prefix copies and move-only payload
-destruction, including deferred execution and abandonment. Direct and lazy API
-admission will share the same descriptor in a subsequent pass; their existing
-owned BorrowCallable overloads already accept temporary or moved partials.
+destruction, including deferred execution and abandonment. Direct Result and Piped admission share the same descriptor. Lazy APIs still
+accept temporary or moved partials through their existing owned BorrowCallable
+overloads.
+
+### Direct Result and Piped callbacks share borrowed receiver admission
+
+The Result combinator generator and family-specific Piped error generator now
+request borrowed views from the common callback descriptor. They forward each
+view to existing Result implementations, conditional recovery continuations
+and family observers. Native-only inference adjustments are restricted to
+native callback kinds, so a stored shared view retains its own result, error
+and origin metadata.
+
+Named partials work as validation predicates and error builders, plain or
+effectful observers, and selective recovery predicates. This matches selected
+Pipeline calls without copying their stored prefixes. Direct Result's existing
+shared `fold` already admits Partial through its BorrowCallable conformance.
+Generic Piped operations keep their explicit family and callback bindings and
+retain borrowed receivers through deferred execution. Copy and destruction
+checks cover skipped builders, discarded computations, native raises, explicit
+moves, and move-only stored errors. Origin rejections use immutable spans to
+isolate lifetime mismatches from mutable-alias diagnostics.

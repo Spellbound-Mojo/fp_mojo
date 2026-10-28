@@ -194,6 +194,11 @@ succeeds, subsequent error callbacks are skipped.
 the original error. This lets recording failures participate in the chain.
 All three methods preserve the success and stored error types. In particular,
 `or_else_if` cannot change `E`, because an unmatched error still needs that type.
+For a reusable threshold, matching rule or observer, bind its leading arguments
+with `partial`. The same named partial works in selected pipelines and direct
+Result methods; see [reusable Result handlers](../reference/data.md#reuse-result-predicates-and-observers).
+No wrapper lambda is needed to forward the remaining borrowed argument.
+
 Raised errors propagate as native errors, including errors from predicates.
 
 The pipeline starts with `err[Int](message)`, selecting the missing success

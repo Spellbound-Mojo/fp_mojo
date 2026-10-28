@@ -281,6 +281,10 @@
             "sha256": "690ca353f831da9a751a4a7b8a31a96d2e66d8162a0f7ba037edb0c459867e4e"
           },
           {
+            "signature": "def ensure[T: Movable & Deinitable, Failure: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, var predicate: C, ref[q] make_error: G) raises _CommonError[C.Failure, G._BorrowView[q].Failure] -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and C.Payload == T and C.Result == Bool and G._BorrowView[q].Payload == T and G._BorrowView[q].Result == Failure:",
+            "sha256": "0c8c3dcc05bdc8b4b75931c1e55c21e46aa1d946750e4e3559bf683d50b1b9bf"
+          },
+          {
             "signature": "def ensure[T: Movable & Deinitable, Failure: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable, //, C: _Borrowing[P, R]](deinit self, ref[o] predicate: C, var make_error: G) raises _CommonError[Never, G.Failure] -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and P == T and R == Bool and G.Payload == T and G.Result == Failure:",
             "sha256": "51c5a51a9eb2b843520a5f62add2e869283ae732821c117e9cdd28a6c94e522a"
           },
@@ -293,6 +297,10 @@
             "sha256": "0bae3a3a87754a187493bdd09afeb29e01ec66fc7d18b3bf35479581cf428b38"
           },
           {
+            "signature": "def ensure[T: Movable & Deinitable, Failure: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin, //, C: _Borrowing[P, R]](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[Never, G._BorrowView[q].Failure] -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and P == T and R == Bool and G._BorrowView[q].Payload == T and G._BorrowView[q].Result == Failure:",
+            "sha256": "fb7aef705d047e8621b7a921862fa09baa5382fe28d033f2f5b89cfe91115557"
+          },
+          {
             "signature": "def ensure[T: Movable & Deinitable, Failure: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] predicate: C, var make_error: G) raises _CommonError[X, G.Failure] -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and P == T and R == Bool and G.Payload == T and G.Result == Failure:",
             "sha256": "45ac148579935f07bbf4a56977afdb121ab5f4b3d6c720efbd8d8780a0f4b75a"
           },
@@ -303,6 +311,26 @@
           {
             "signature": "def ensure[T: Movable & Deinitable, Failure: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X], Y: Movable & Deinitable, G: _RaisingBorrowing[Q, S, Y]](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[X, Y] -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and P == T and R == Bool and Q == T and S == Failure:",
             "sha256": "eb9d5a5d91481afb37bba268eea8ded99f53f9a970d75db5aacb18738da749c3"
+          },
+          {
+            "signature": "def ensure[T: Movable & Deinitable, Failure: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[X, G._BorrowView[q].Failure] -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and P == T and R == Bool and G._BorrowView[q].Payload == T and G._BorrowView[q].Result == Failure:",
+            "sha256": "91b69525527e933507fd050dc5c50d20188287c4721221a1e526d7282a41b888"
+          },
+          {
+            "signature": "def ensure[T: Movable & Deinitable, Failure: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable](deinit self, ref[o] predicate: C, var make_error: G) raises _CommonError[C._BorrowView[o].Failure, G.Failure] -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and C._BorrowView[o].Payload == T and C._BorrowView[o].Result == Bool and G.Payload == T and G.Result == Failure:",
+            "sha256": "d77bd6d121b45c6e2ef4544ea9b61becf9fab0e17a48a50df7a67f0e3ebf07cb"
+          },
+          {
+            "signature": "def ensure[T: Movable & Deinitable, Failure: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, G: _Borrowing[Q, S]](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[C._BorrowView[o].Failure, Never] -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and C._BorrowView[o].Payload == T and C._BorrowView[o].Result == Bool and Q == T and S == Failure:",
+            "sha256": "6cf094f289b80542819a1032c4814ef01d4f5ed207ccdbc559d493e466b1b5f9"
+          },
+          {
+            "signature": "def ensure[T: Movable & Deinitable, Failure: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: _RaisingBorrowing[Q, S, Y]](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[C._BorrowView[o].Failure, Y] -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and C._BorrowView[o].Payload == T and C._BorrowView[o].Result == Bool and Q == T and S == Failure:",
+            "sha256": "be267c91cda1b0d61eec6f79a0fb09d41eaeeb75ddeef5b06a2f69443233a836"
+          },
+          {
+            "signature": "def ensure[T: Movable & Deinitable, Failure: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[C._BorrowView[o].Failure, G._BorrowView[q].Failure] -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and C._BorrowView[o].Payload == T and C._BorrowView[o].Result == Bool and G._BorrowView[q].Payload == T and G._BorrowView[q].Result == Failure:",
+            "sha256": "8e0acbe3f0cd723d21f494a8da7c78a0a000dd40b12983f96bdcf523b763a8ca"
           },
           {
             "signature": "def ensure[C: BorrowCallContract & Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable, //, I: Applicative, Z: AnyType = _InferError](deinit self, var predicate: C, var make_error: G) raises _EntryError[Z, _ErrorMonad[I].BindError[Self.Value, _Ensure[_ErrorFamily[I], I.Element[Self.Value], C, G]]] -> Piped[_ErrorMonad[I].Bound[Self.Value, _Ensure[_ErrorFamily[I], I.Element[Self.Value], C, G]]] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and conforms_to(I, Monad) and C.Payload == I.Element[Self.Value] and C.Result == Bool and G.Payload == I.Element[Self.Value] and G.Result == _ErrorFamily[I].Failure and (C.Failure == Never or G.Failure == Never or C.Failure == G.Failure):",
@@ -385,6 +413,10 @@
             "sha256": "18411d6cf2073505d79f7097a5471fde60d454053b6bca3314c94ca59daff888"
           },
           {
+            "signature": "def tap_err[T: Movable & Deinitable, Failure: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and C._BorrowView[o].Payload == Failure:",
+            "sha256": "7e00ae1ef8644dac1f853fb68557a3b2479c4d3c9f0d7c55c91feca851f06852"
+          },
+          {
             "signature": "def tap_err[C: BorrowCallContract & Movable & Deinitable, //, I: Applicative, Z: AnyType = _InferError](deinit self, var inspect: C) raises _EntryError[Z, _ErrorFamily[I].HandleError[Self.Value, _ErrorProbe[_ErrorFamily[I].Failure, _ErrorObservation[_ErrorFamily[I], I.Element[Self.Value], C.Result, C.Failure, False].Out, _ErrorObservation[_ErrorFamily[I], I.Element[Self.Value], C.Result, C.Failure, False].Error]]] -> Piped[_ErrorFamily[I].Handled[Self.Value, _ObserveError[_ErrorFamily[I], I.Element[Self.Value], C, False]]] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and C.Payload == _ErrorFamily[I].Failure:",
             "sha256": "1d0ed1f4c09a2484ef1746f763e3aca3411d348708d4215ebe6b5050250ddedf"
           },
@@ -395,6 +427,10 @@
           {
             "signature": "def tap_err[P: AnyType, o: ImmOrigin, //, I: Applicative, R: Movable & Deinitable, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X], Z: AnyType = _InferError](deinit self, ref[o] inspect: C) raises _EntryError[Z, _ErrorFamily[I].HandleError[Self.Value, _ErrorProbe[_ErrorFamily[I].Failure, _ErrorObservation[_ErrorFamily[I], I.Element[Self.Value], R, X, False].Out, _ErrorObservation[_ErrorFamily[I], I.Element[Self.Value], R, X, False].Error]]] -> Piped[_ErrorFamily[I].Handled[Self.Value, _ObserveError[_ErrorFamily[I], I.Element[Self.Value], _NativeBorrowRef[P, R, X, C, True, o], False]]] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and P == _ErrorFamily[I].Failure:",
             "sha256": "5d2f9c8f902f2db8a08ad08a520120ae6df08a7d816eb76b9883b7e965cb38fa"
+          },
+          {
+            "signature": "def tap_err[C: _BorrowViewable, o: ImmOrigin, //, I: Applicative, Z: AnyType = _InferError](deinit self, ref[o] inspect: C) raises _EntryError[Z, _ErrorFamily[I].HandleError[Self.Value, _ErrorProbe[_ErrorFamily[I].Failure, _ErrorObservation[_ErrorFamily[I], I.Element[Self.Value], C._BorrowView[o].Result, C._BorrowView[o].Failure, False].Out, _ErrorObservation[_ErrorFamily[I], I.Element[Self.Value], C._BorrowView[o].Result, C._BorrowView[o].Failure, False].Error]]] -> Piped[_ErrorFamily[I].Handled[Self.Value, _ObserveError[_ErrorFamily[I], I.Element[Self.Value], C._BorrowView[o], False]]] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and C._BorrowView[o].Payload == _ErrorFamily[I].Failure:",
+            "sha256": "ea41868d9ed69688c57ff8d4605f5f3ff80754e09f99f683999afa61385de8a3"
           }
         ],
         "recover_if": [
@@ -433,6 +469,18 @@
           {
             "signature": "def recover_if[T: Movable & Deinitable, Failure: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X], Y: Movable & Deinitable, G: _RaisingUnary[Q, S, Y]](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[X, Y] -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and P == Failure and R == Bool and Q == Failure and S == T:",
             "sha256": "e95bd157615d209180af4739ef8158048222fc295d1df0acb5032e8f810ed2a9"
+          },
+          {
+            "signature": "def recover_if[T: Movable & Deinitable, Failure: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable](deinit self, ref[o] predicate: C, var function: G) raises _CommonError[C._BorrowView[o].Failure, G.Error] -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and C._BorrowView[o].Payload == Failure and C._BorrowView[o].Result == Bool and G.Arg == Failure and G.Out == T:",
+            "sha256": "942853b54924a8ea6b2b48cc37e7faac81c4a5768c246a39dd36dacca486936c"
+          },
+          {
+            "signature": "def recover_if[T: Movable & Deinitable, Failure: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: _Unary[Q, S]](deinit self, ref[o] predicate: C, ref[q] function: G) raises C._BorrowView[o].Failure -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and C._BorrowView[o].Payload == Failure and C._BorrowView[o].Result == Bool and Q == Failure and S == T:",
+            "sha256": "da87a1c5595750d97441d1e51e07ebb58ed0b44031dba8d59f2d335791e37db1"
+          },
+          {
+            "signature": "def recover_if[T: Movable & Deinitable, Failure: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: _RaisingUnary[Q, S, Y]](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[C._BorrowView[o].Failure, Y] -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and C._BorrowView[o].Payload == Failure and C._BorrowView[o].Result == Bool and Q == Failure and S == T:",
+            "sha256": "fd822baf700d225f34159e5c4b7bb369b3f73afb1dacd24825d61351d7a40eae"
           },
           {
             "signature": "def recover_if[C: BorrowCallContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //, I: Applicative, Z: AnyType = _InferError](deinit self, var predicate: C, var handler: G) raises _EntryError[Z, _ErrorFamily[I].HandleError[Self.Value, _ErrorProbe[_ErrorFamily[I].Failure, I._Joined[_ErrorFamily[I].Failed[I.Element[Self.Value]], I.Pure[G.Out]], _CommonError[C.Failure, _CommonError[G.Error, _ErrorFamily[I].FailError[I.Element[Self.Value]]]]]]] -> Piped[_ErrorFamily[I].Handled[Self.Value, _ConditionalRecovery[_ErrorFamily[I], I.Element[Self.Value], C, _Recovered[I, G]]]] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and C.Payload == _ErrorFamily[I].Failure and C.Result == Bool and G.Arg == _ErrorFamily[I].Failure and G.Out == I.Element[Self.Value]:",
@@ -481,6 +529,22 @@
           {
             "signature": "def recover_if[P: AnyType, S: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, I: Applicative, X: Movable & Deinitable, C: _RaisingBorrowing[P, S, X], Z: AnyType = _InferError](deinit self, ref[o] predicate: C, ref[q] handler: G) raises _EntryError[Z, _ErrorFamily[I].HandleError[Self.Value, _ErrorProbe[_ErrorFamily[I].Failure, I._Joined[_ErrorFamily[I].Failed[I.Element[Self.Value]], I.Pure[G._View[q].Out]], _CommonError[X, _CommonError[G._View[q].Error, _ErrorFamily[I].FailError[I.Element[Self.Value]]]]]]] -> Piped[_ErrorFamily[I].Handled[Self.Value, _ConditionalRecovery[_ErrorFamily[I], I.Element[Self.Value], _NativeBorrowRef[P, S, X, C, True, o], _Recovered[I, G._View[q]]]]] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and P == _ErrorFamily[I].Failure and S == Bool and G._View[q].Arg == _ErrorFamily[I].Failure and G._View[q].Out == I.Element[Self.Value]:",
             "sha256": "f38d464dad34ec7a7ed14ba1c527ce18f244c419326ef6b701c59d93f7a67b60"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, I: Applicative, Z: AnyType = _InferError](deinit self, ref[o] predicate: C, var handler: G) raises _EntryError[Z, _ErrorFamily[I].HandleError[Self.Value, _ErrorProbe[_ErrorFamily[I].Failure, I._Joined[_ErrorFamily[I].Failed[I.Element[Self.Value]], I.Pure[G.Out]], _CommonError[C._BorrowView[o].Failure, _CommonError[G.Error, _ErrorFamily[I].FailError[I.Element[Self.Value]]]]]]] -> Piped[_ErrorFamily[I].Handled[Self.Value, _ConditionalRecovery[_ErrorFamily[I], I.Element[Self.Value], C._BorrowView[o], _Recovered[I, G]]]] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and C._BorrowView[o].Payload == _ErrorFamily[I].Failure and C._BorrowView[o].Result == Bool and G.Arg == _ErrorFamily[I].Failure and G.Out == I.Element[Self.Value]:",
+            "sha256": "94197f3d4cfbf6f1974bc8760a7257cc19bb2b36083a2b07e67f504c17346269"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, A: Movable & Deinitable, q: ImmOrigin, //, I: Applicative, R: Movable & Deinitable, G: _Unary[A, R], Z: AnyType = _InferError](deinit self, ref[o] predicate: C, ref[q] handler: G) raises _EntryError[Z, _ErrorFamily[I].HandleError[Self.Value, _ErrorProbe[_ErrorFamily[I].Failure, I._Joined[_ErrorFamily[I].Failed[I.Element[Self.Value]], I.Pure[R]], _CommonError[C._BorrowView[o].Failure, _CommonError[Never, _ErrorFamily[I].FailError[I.Element[Self.Value]]]]]]] -> Piped[_ErrorFamily[I].Handled[Self.Value, _ConditionalRecovery[_ErrorFamily[I], I.Element[Self.Value], C._BorrowView[o], _Recovered[I, _NativeUnaryRef[A, R, Never, G, False, q]]]]] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and C._BorrowView[o].Payload == _ErrorFamily[I].Failure and C._BorrowView[o].Result == Bool and A == _ErrorFamily[I].Failure and R == I.Element[Self.Value]:",
+            "sha256": "6764ebdf7713455527e52e22f673824f899eb353d4ddff2d8f2b30268b5c7a9f"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, A: Movable & Deinitable, q: ImmOrigin, //, I: Applicative, R: Movable & Deinitable, E: Movable & Deinitable, G: _RaisingUnary[A, R, E], Z: AnyType = _InferError](deinit self, ref[o] predicate: C, ref[q] handler: G) raises _EntryError[Z, _ErrorFamily[I].HandleError[Self.Value, _ErrorProbe[_ErrorFamily[I].Failure, I._Joined[_ErrorFamily[I].Failed[I.Element[Self.Value]], I.Pure[R]], _CommonError[C._BorrowView[o].Failure, _CommonError[E, _ErrorFamily[I].FailError[I.Element[Self.Value]]]]]]] -> Piped[_ErrorFamily[I].Handled[Self.Value, _ConditionalRecovery[_ErrorFamily[I], I.Element[Self.Value], C._BorrowView[o], _Recovered[I, _NativeUnaryRef[A, R, E, G, True, q]]]]] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and C._BorrowView[o].Payload == _ErrorFamily[I].Failure and C._BorrowView[o].Result == Bool and A == _ErrorFamily[I].Failure and R == I.Element[Self.Value]:",
+            "sha256": "f47025fa28c37dcedf90a7b15e1c3a88effe0bc0a4fd0ddbb488c441b69c3a73"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, I: Applicative, Z: AnyType = _InferError](deinit self, ref[o] predicate: C, ref[q] handler: G) raises _EntryError[Z, _ErrorFamily[I].HandleError[Self.Value, _ErrorProbe[_ErrorFamily[I].Failure, I._Joined[_ErrorFamily[I].Failed[I.Element[Self.Value]], I.Pure[G._View[q].Out]], _CommonError[C._BorrowView[o].Failure, _CommonError[G._View[q].Error, _ErrorFamily[I].FailError[I.Element[Self.Value]]]]]]] -> Piped[_ErrorFamily[I].Handled[Self.Value, _ConditionalRecovery[_ErrorFamily[I], I.Element[Self.Value], C._BorrowView[o], _Recovered[I, G._View[q]]]]] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and C._BorrowView[o].Payload == _ErrorFamily[I].Failure and C._BorrowView[o].Result == Bool and G._View[q].Arg == _ErrorFamily[I].Failure and G._View[q].Out == I.Element[Self.Value]:",
+            "sha256": "88911bca6183c57cca720c143bcd947838b390adee813ec5b9b2b61fe253b763"
           }
         ],
         "or_else_if": [
@@ -519,6 +583,18 @@
           {
             "signature": "def or_else_if[T: Movable & Deinitable, Failure: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X], Y: Movable & Deinitable, G: _RaisingUnary[Q, S, Y]](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[X, Y] -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and P == Failure and R == Bool and Q == Failure and S == Result[T, Failure]:",
             "sha256": "17b744c05c4a1da0f9ebd699404eeebb91f95333308777b3c83af10b7f4e643f"
+          },
+          {
+            "signature": "def or_else_if[T: Movable & Deinitable, Failure: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable](deinit self, ref[o] predicate: C, var function: G) raises _CommonError[C._BorrowView[o].Failure, G.Error] -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and C._BorrowView[o].Payload == Failure and C._BorrowView[o].Result == Bool and G.Arg == Failure and G.Out == Result[T, Failure]:",
+            "sha256": "6755cf0fc1a3953daca895911c2fa8d32faa25441ee84260a6168bc59be4fd8d"
+          },
+          {
+            "signature": "def or_else_if[T: Movable & Deinitable, Failure: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: _Unary[Q, S]](deinit self, ref[o] predicate: C, ref[q] function: G) raises C._BorrowView[o].Failure -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and C._BorrowView[o].Payload == Failure and C._BorrowView[o].Result == Bool and Q == Failure and S == Result[T, Failure]:",
+            "sha256": "f8880a08e6adf2b91d69778ae306a9426fa24009722d7cceeae84ea6272fc037"
+          },
+          {
+            "signature": "def or_else_if[T: Movable & Deinitable, Failure: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: _RaisingUnary[Q, S, Y]](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[C._BorrowView[o].Failure, Y] -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and C._BorrowView[o].Payload == Failure and C._BorrowView[o].Result == Bool and Q == Failure and S == Result[T, Failure]:",
+            "sha256": "0c7db749c021de1a9b9faa16646c90421afe56cd11a36ed25a3e4f526ef74c3d"
           },
           {
             "signature": "def or_else_if[C: BorrowCallContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //, I: Applicative, Z: AnyType = _InferError](deinit self, var predicate: C, var handler: G) raises _EntryError[Z, _ErrorFamily[I].HandleError[Self.Value, _ErrorProbe[_ErrorFamily[I].Failure, I._Joined[_ErrorFamily[I].Failed[I.Element[Self.Value]], G.Out], _CommonError[C.Failure, _CommonError[G.Error, _ErrorFamily[I].FailError[I.Element[Self.Value]]]]]]] -> Piped[_ErrorFamily[I].Handled[Self.Value, _ConditionalRecovery[_ErrorFamily[I], I.Element[Self.Value], C, G]]] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and C.Payload == _ErrorFamily[I].Failure and C.Result == Bool and G.Arg == _ErrorFamily[I].Failure and _ErrorFamily[I]._ErrorCarrier[G.Out] and I.Element[G.Out] == I.Element[Self.Value]:",
@@ -567,6 +643,22 @@
           {
             "signature": "def or_else_if[P: AnyType, S: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, I: Applicative, X: Movable & Deinitable, C: _RaisingBorrowing[P, S, X], Z: AnyType = _InferError](deinit self, ref[o] predicate: C, ref[q] handler: G) raises _EntryError[Z, _ErrorFamily[I].HandleError[Self.Value, _ErrorProbe[_ErrorFamily[I].Failure, I._Joined[_ErrorFamily[I].Failed[I.Element[Self.Value]], G._View[q].Out], _CommonError[X, _CommonError[G._View[q].Error, _ErrorFamily[I].FailError[I.Element[Self.Value]]]]]]] -> Piped[_ErrorFamily[I].Handled[Self.Value, _ConditionalRecovery[_ErrorFamily[I], I.Element[Self.Value], _NativeBorrowRef[P, S, X, C, True, o], G._View[q]]]] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and P == _ErrorFamily[I].Failure and S == Bool and G._View[q].Arg == _ErrorFamily[I].Failure and _ErrorFamily[I]._ErrorCarrier[G._View[q].Out] and I.Element[G._View[q].Out] == I.Element[Self.Value]:",
             "sha256": "09d0b02867475b80b3c40ff2d5406236e0ae035ac7f9ea05931e1b50bef65af5"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, I: Applicative, Z: AnyType = _InferError](deinit self, ref[o] predicate: C, var handler: G) raises _EntryError[Z, _ErrorFamily[I].HandleError[Self.Value, _ErrorProbe[_ErrorFamily[I].Failure, I._Joined[_ErrorFamily[I].Failed[I.Element[Self.Value]], G.Out], _CommonError[C._BorrowView[o].Failure, _CommonError[G.Error, _ErrorFamily[I].FailError[I.Element[Self.Value]]]]]]] -> Piped[_ErrorFamily[I].Handled[Self.Value, _ConditionalRecovery[_ErrorFamily[I], I.Element[Self.Value], C._BorrowView[o], G]]] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and C._BorrowView[o].Payload == _ErrorFamily[I].Failure and C._BorrowView[o].Result == Bool and G.Arg == _ErrorFamily[I].Failure and _ErrorFamily[I]._ErrorCarrier[G.Out] and I.Element[G.Out] == I.Element[Self.Value]:",
+            "sha256": "70abf8668c683044de0a3e24b071b0624f0c615d210e13f5891db698f4293e72"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, A: Movable & Deinitable, q: ImmOrigin, //, I: Applicative, R: Movable & Deinitable, G: _Unary[A, R], Z: AnyType = _InferError](deinit self, ref[o] predicate: C, ref[q] handler: G) raises _EntryError[Z, _ErrorFamily[I].HandleError[Self.Value, _ErrorProbe[_ErrorFamily[I].Failure, I._Joined[_ErrorFamily[I].Failed[I.Element[Self.Value]], R], _CommonError[C._BorrowView[o].Failure, _CommonError[Never, _ErrorFamily[I].FailError[I.Element[Self.Value]]]]]]] -> Piped[_ErrorFamily[I].Handled[Self.Value, _ConditionalRecovery[_ErrorFamily[I], I.Element[Self.Value], C._BorrowView[o], _NativeUnaryRef[A, R, Never, G, False, q]]]] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and C._BorrowView[o].Payload == _ErrorFamily[I].Failure and C._BorrowView[o].Result == Bool and A == _ErrorFamily[I].Failure and _ErrorFamily[I]._ErrorCarrier[R] and I.Element[R] == I.Element[Self.Value]:",
+            "sha256": "a90c5f8d1f3f8ac2ab017e42fbd93e24c81a0752dd94dd92bfde255e7fda0cf2"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, A: Movable & Deinitable, q: ImmOrigin, //, I: Applicative, R: Movable & Deinitable, E: Movable & Deinitable, G: _RaisingUnary[A, R, E], Z: AnyType = _InferError](deinit self, ref[o] predicate: C, ref[q] handler: G) raises _EntryError[Z, _ErrorFamily[I].HandleError[Self.Value, _ErrorProbe[_ErrorFamily[I].Failure, I._Joined[_ErrorFamily[I].Failed[I.Element[Self.Value]], R], _CommonError[C._BorrowView[o].Failure, _CommonError[E, _ErrorFamily[I].FailError[I.Element[Self.Value]]]]]]] -> Piped[_ErrorFamily[I].Handled[Self.Value, _ConditionalRecovery[_ErrorFamily[I], I.Element[Self.Value], C._BorrowView[o], _NativeUnaryRef[A, R, E, G, True, q]]]] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and C._BorrowView[o].Payload == _ErrorFamily[I].Failure and C._BorrowView[o].Result == Bool and A == _ErrorFamily[I].Failure and _ErrorFamily[I]._ErrorCarrier[R] and I.Element[R] == I.Element[Self.Value]:",
+            "sha256": "08d2f9af8e5253f0eed5403849df6c3a92da41650c1b51f09b5c7cabe942563b"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, I: Applicative, Z: AnyType = _InferError](deinit self, ref[o] predicate: C, ref[q] handler: G) raises _EntryError[Z, _ErrorFamily[I].HandleError[Self.Value, _ErrorProbe[_ErrorFamily[I].Failure, I._Joined[_ErrorFamily[I].Failed[I.Element[Self.Value]], G._View[q].Out], _CommonError[C._BorrowView[o].Failure, _CommonError[G._View[q].Error, _ErrorFamily[I].FailError[I.Element[Self.Value]]]]]]] -> Piped[_ErrorFamily[I].Handled[Self.Value, _ConditionalRecovery[_ErrorFamily[I], I.Element[Self.Value], C._BorrowView[o], G._View[q]]]] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and C._BorrowView[o].Payload == _ErrorFamily[I].Failure and C._BorrowView[o].Result == Bool and G._View[q].Arg == _ErrorFamily[I].Failure and _ErrorFamily[I]._ErrorCarrier[G._View[q].Out] and I.Element[G._View[q].Out] == I.Element[Self.Value]:",
+            "sha256": "e0444a3ccc1a04632f24f9a6c9198aad4da289d64076a48439f2ca3400e81946"
           }
         ],
         "flat_tap_err": [
@@ -583,6 +675,10 @@
             "sha256": "b6bfd7478e742a6dc29420878c1f440a7f655e71c5196139c007646ccd90469e"
           },
           {
+            "signature": "def flat_tap_err[T: Movable & Deinitable, Failure: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and C._BorrowView[o].Payload == Failure and C._BorrowView[o].Result == Result[downcast[C._BorrowView[o].Result, _ResultType].Value, Failure]:",
+            "sha256": "ca7086fd065a7733ac35ce4296025a974ba2984ec0c1542b986c4a2b1a470314"
+          },
+          {
             "signature": "def flat_tap_err[C: BorrowCallContract & Movable & Deinitable, //, I: Applicative, Z: AnyType = _InferError](deinit self, var inspect: C) raises _EntryError[Z, _ErrorFamily[I].HandleError[Self.Value, _ErrorProbe[_ErrorFamily[I].Failure, _ErrorObservation[_ErrorFamily[I], I.Element[Self.Value], C.Result, C.Failure, True].Out, _ErrorObservation[_ErrorFamily[I], I.Element[Self.Value], C.Result, C.Failure, True].Error]]] -> Piped[_ErrorFamily[I].Handled[Self.Value, _ObserveError[_ErrorFamily[I], I.Element[Self.Value], C, True]]] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and C.Payload == _ErrorFamily[I].Failure and _ErrorFamily[I]._ErrorCarrier[C.Result]:",
             "sha256": "ba0b6355e97e9de8ecca8428dbd5ded6f927ef7971b459ef48a330c8cef08833"
           },
@@ -593,6 +689,10 @@
           {
             "signature": "def flat_tap_err[P: AnyType, o: ImmOrigin, //, I: Applicative, R: Movable & Deinitable, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X], Z: AnyType = _InferError](deinit self, ref[o] inspect: C) raises _EntryError[Z, _ErrorFamily[I].HandleError[Self.Value, _ErrorProbe[_ErrorFamily[I].Failure, _ErrorObservation[_ErrorFamily[I], I.Element[Self.Value], R, X, True].Out, _ErrorObservation[_ErrorFamily[I], I.Element[Self.Value], R, X, True].Error]]] -> Piped[_ErrorFamily[I].Handled[Self.Value, _ObserveError[_ErrorFamily[I], I.Element[Self.Value], _NativeBorrowRef[P, R, X, C, True, o], True]]] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and P == _ErrorFamily[I].Failure and _ErrorFamily[I]._ErrorCarrier[R]:",
             "sha256": "a2d37ee331579ee6724cc40a935509dcc2b11d24ae103d065b1c2ffc125ee2fb"
+          },
+          {
+            "signature": "def flat_tap_err[C: _BorrowViewable, o: ImmOrigin, //, I: Applicative, Z: AnyType = _InferError](deinit self, ref[o] inspect: C) raises _EntryError[Z, _ErrorFamily[I].HandleError[Self.Value, _ErrorProbe[_ErrorFamily[I].Failure, _ErrorObservation[_ErrorFamily[I], I.Element[Self.Value], C._BorrowView[o].Result, C._BorrowView[o].Failure, True].Out, _ErrorObservation[_ErrorFamily[I], I.Element[Self.Value], C._BorrowView[o].Result, C._BorrowView[o].Failure, True].Error]]] -> Piped[_ErrorFamily[I].Handled[Self.Value, _ObserveError[_ErrorFamily[I], I.Element[Self.Value], C._BorrowView[o], True]]] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and C._BorrowView[o].Payload == _ErrorFamily[I].Failure and _ErrorFamily[I]._ErrorCarrier[C._BorrowView[o].Result]:",
+            "sha256": "e168f4b0595338aec12b25f23b7545e352bd3b9f509f5b4a935d61549cd98fb8"
           }
         ],
         "attempt_tap": [
@@ -607,6 +707,10 @@
           {
             "signature": "def attempt_tap[T: Movable & Deinitable, Failure: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(Result[T, Failure]) raises X -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value](deinit self, ref[o] function: C) raises X -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and R == Result[downcast[R, _ResultType].Value, Failure] and U == downcast[R, _ResultType].Value:",
             "sha256": "cd2d420648b5b918cf9750da332f2db7d954af9291ec03e8c4755a04599e77d2"
+          },
+          {
+            "signature": "def attempt_tap[T: Movable & Deinitable, Failure: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and C._BorrowView[o].Payload == Result[T, Failure] and C._BorrowView[o].Result == Result[downcast[C._BorrowView[o].Result, _ResultType].Value, Failure]:",
+            "sha256": "01f1352064b3659984ffe03c5567b559178ed244cf1d43b85900a125a803600a"
           },
           {
             "signature": "def attempt_tap[C: BorrowCallContract & Movable & Deinitable, //, I: Applicative, Z: AnyType = _InferError](deinit self, var inspect: C) raises _EntryError[Z, _AttemptTap[_ErrorMonad[I], Self.Value, C].Error] -> Piped[_AttemptTap[_ErrorMonad[I], Self.Value, C].Out] where conforms_to(I, ApplicativeError) and _ErrorFamily[I]._ErrorCarrier[Self.Value] and conforms_to(I, Monad) and C.Payload == Result[I.Element[Self.Value], _ErrorFamily[I].Failure] and _ErrorFamily[I]._ErrorCarrier[C.Result]:",
@@ -15500,6 +15604,10 @@
           {
             "signature": "def flat_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where P == Self.T:",
             "sha256": "f27d6898d6c2b9924a027f02e4246dfdc166ed34781db2607710b99e6d818aed"
+          },
+          {
+            "signature": "def flat_tap[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.T:",
+            "sha256": "bfcf8ab457c9c4f4f6045ce8fc87ee5bab41403acf83f1ceda5d7627cc55f8a3"
           }
         ],
         "flat_pair_with": [
@@ -15514,6 +15622,10 @@
           {
             "signature": "def flat_pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] function: C) raises X -> Result[Tuple[Self.T, downcast[R, _ResultType].Value], Self.E] where P == Self.T:",
             "sha256": "9e780ef02e6b17c9aef39a277f1f39766f13885e618ecfc2b03ee6548852b500"
+          },
+          {
+            "signature": "def flat_pair_with[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Result[Tuple[Self.T, downcast[C._BorrowView[o].Result, _ResultType].Value], Self.E] where C._BorrowView[o].Payload == Self.T:",
+            "sha256": "359e4d7bf5920b8c28d7771504c3c657a591ebebbc877c800bde6c6d8a4fc2c1"
           }
         ],
         "followed_by": [
@@ -15558,6 +15670,10 @@
             "sha256": "f93b6db82c3be7c77b61f5d12db7972959494984d57f20aa171db4e24ce95769"
           },
           {
+            "signature": "def ensure[C: BorrowCallContract & Movable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, var predicate: C, ref[q] make_error: G) raises _CommonError[C.Failure, G._BorrowView[q].Failure] -> Result[Self.T, Self.E] where C.Payload == Self.T and C.Result == Bool and G._BorrowView[q].Payload == Self.T and G._BorrowView[q].Result == Self.E:",
+            "sha256": "118939f1371441a4643c5cff52780939d91f07d0036b638bc57b5b575b2f341f"
+          },
+          {
             "signature": "def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable, //, C: _Borrowing[P, R]](deinit self, ref[o] predicate: C, var make_error: G) raises _CommonError[Never, G.Failure] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and G.Payload == Self.T and G.Result == Self.E:",
             "sha256": "5c656bcd29841ca307891751beff587c468effe917179053c6ea798a1ff216be"
           },
@@ -15570,6 +15686,10 @@
             "sha256": "5c4ae5e454fb07c7a5b69fa95a13635befdf3b41238768bbd836aa8b457b77aa"
           },
           {
+            "signature": "def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin, //, C: _Borrowing[P, R]](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[Never, G._BorrowView[q].Failure] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and G._BorrowView[q].Payload == Self.T and G._BorrowView[q].Result == Self.E:",
+            "sha256": "ad60179de0216576389fa1681c86b85c03923fe2c0aa108b66c8d9a953eaecf9"
+          },
+          {
             "signature": "def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] predicate: C, var make_error: G) raises _CommonError[X, G.Failure] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and G.Payload == Self.T and G.Result == Self.E:",
             "sha256": "afaf8bf5e2c8fd63160f5c0cd7e1d3d3b8404707eec59694481388aa2a7a4b80"
           },
@@ -15580,6 +15700,26 @@
           {
             "signature": "def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X], Y: Movable & Deinitable, G: _RaisingBorrowing[Q, S, Y]](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[X, Y] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and Q == Self.T and S == Self.E:",
             "sha256": "831364710e42970a8206df7e8fdd0051f7f3cdb6dcecbeac5ba9bfe3f89105b7"
+          },
+          {
+            "signature": "def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[X, G._BorrowView[q].Failure] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and G._BorrowView[q].Payload == Self.T and G._BorrowView[q].Result == Self.E:",
+            "sha256": "5d1bc607fc3a4a43839faeb92c3f347534f8cea377c137d519d2a44762396580"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable](deinit self, ref[o] predicate: C, var make_error: G) raises _CommonError[C._BorrowView[o].Failure, G.Failure] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.T and C._BorrowView[o].Result == Bool and G.Payload == Self.T and G.Result == Self.E:",
+            "sha256": "c986a1327d17735b9d5e21dba5afa99b848e1f4c7b0be80a7e1d780b8e4c0ce9"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, G: _Borrowing[Q, S]](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[C._BorrowView[o].Failure, Never] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.T and C._BorrowView[o].Result == Bool and Q == Self.T and S == Self.E:",
+            "sha256": "09386f08ceb0ea25ae739cc46b6d646c0fc07ce5462ad79899c11ca121670eac"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: _RaisingBorrowing[Q, S, Y]](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[C._BorrowView[o].Failure, Y] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.T and C._BorrowView[o].Result == Bool and Q == Self.T and S == Self.E:",
+            "sha256": "86591db6d67cae189e722b89dcebd6466e73a5626b022dcd63ea94790bb64cad"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[C._BorrowView[o].Failure, G._BorrowView[q].Failure] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.T and C._BorrowView[o].Result == Bool and G._BorrowView[q].Payload == Self.T and G._BorrowView[q].Result == Self.E:",
+            "sha256": "c628de7f80bcf6096813f2fdf21b569b3f9fce8606d217d57919afb7e807709f"
           }
         ],
         "recover": [
@@ -15612,6 +15752,10 @@
           {
             "signature": "def tap_err[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where P == Self.E:",
             "sha256": "0b92bd0e130a106218b94939d0d7520065ed8b58173b09e0197404830028e9c3"
+          },
+          {
+            "signature": "def tap_err[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E:",
+            "sha256": "0450be1aee25519ad58e660956645694b73a08a9b40ab4405c4f5f98c6947bd7"
           }
         ],
         "recover_if": [
@@ -15662,6 +15806,22 @@
           {
             "signature": "def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[X, G._View[q].Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G._View[q].Arg == Self.E and G._View[q].Out == Self.T:",
             "sha256": "9d350b28cea0fe90121754009ffe8b946099e70e7fc784d46f33aed434291981"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable](deinit self, ref[o] predicate: C, var function: G) raises _CommonError[C._BorrowView[o].Failure, G.Error] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and G.Arg == Self.E and G.Out == Self.T:",
+            "sha256": "c664b6444663cd4694fa39ce6d6c5f5b15c0c04b96eb9de0bc9504c95e72e4d5"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: _Unary[Q, S]](deinit self, ref[o] predicate: C, ref[q] function: G) raises C._BorrowView[o].Failure -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and Q == Self.E and S == Self.T:",
+            "sha256": "113e931fe96dda03e7ed7f87233dacc5f5ad5ffa0d7b828d59175007d5572146"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: _RaisingUnary[Q, S, Y]](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[C._BorrowView[o].Failure, Y] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and Q == Self.E and S == Self.T:",
+            "sha256": "205122a3fdfa07d49db60bca1181af33bede994abcbf5a9336086a67ecf9f70d"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[C._BorrowView[o].Failure, G._View[q].Error] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and G._View[q].Arg == Self.E and G._View[q].Out == Self.T:",
+            "sha256": "f4abd0019088b2725c25eb83c435f8016aec8b1a5649aa79e3196bb634f2da81"
           }
         ],
         "or_else_if": [
@@ -15712,6 +15872,22 @@
           {
             "signature": "def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[X, G._View[q].Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G._View[q].Arg == Self.E and G._View[q].Out == Result[Self.T, Self.E]:",
             "sha256": "e7b8b2e1ae8da80fe0db5fcf5ba2e51d5291618abc31960b4852e031f18e46f9"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable](deinit self, ref[o] predicate: C, var function: G) raises _CommonError[C._BorrowView[o].Failure, G.Error] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and G.Arg == Self.E and G.Out == Result[Self.T, Self.E]:",
+            "sha256": "b7e0330098231e63f6edb2c8ddaab44f444467d3d34f2c84b6e9afe8ffed25a5"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: _Unary[Q, S]](deinit self, ref[o] predicate: C, ref[q] function: G) raises C._BorrowView[o].Failure -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and Q == Self.E and S == Result[Self.T, Self.E]:",
+            "sha256": "8d9a1fac8dc29531782e75a575169a5197ed3c27049547beba13222674c51ef1"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: _RaisingUnary[Q, S, Y]](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[C._BorrowView[o].Failure, Y] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and Q == Self.E and S == Result[Self.T, Self.E]:",
+            "sha256": "783cc1d2400ef2800ce061d525972dbb631b8bb83409bb23b239a1be06729976"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[C._BorrowView[o].Failure, G._View[q].Error] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and G._View[q].Arg == Self.E and G._View[q].Out == Result[Self.T, Self.E]:",
+            "sha256": "75b2c1087bd2d361c8e9c837c58ba2fd053a63f301fbb627c128bcc9194dbba3"
           }
         ],
         "flat_tap_err": [
@@ -15726,6 +15902,10 @@
           {
             "signature": "def flat_tap_err[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(Self.E) raises X -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E] and U == downcast[R, _ResultType].Value:",
             "sha256": "9b4b4bfac7e1c135825a1b611bdab99964165bf491c2353c4ac7c5727991133b"
+          },
+          {
+            "signature": "def flat_tap_err[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Result[downcast[C._BorrowView[o].Result, _ResultType].Value, Self.E]:",
+            "sha256": "cf6fd161d736be4167f00a4f04f9f871f00b3b891b92c2fdb5392d21ebe2a9bd"
           }
         ],
         "attempt_tap": [
@@ -15740,6 +15920,10 @@
           {
             "signature": "def attempt_tap[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(Result[Self.T, Self.E]) raises X -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E] and U == downcast[R, _ResultType].Value:",
             "sha256": "efad771446e8c7c4dcd5c8b9b4c058b4f85aa972602d664b0a20ad575da0f6a9"
+          },
+          {
+            "signature": "def attempt_tap[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Result[Self.T, Self.E] and C._BorrowView[o].Result == Result[downcast[C._BorrowView[o].Result, _ResultType].Value, Self.E]:",
+            "sha256": "09bbcbaeec2608f48464d8f056d7acf3842d9262444712924bd23ce40e899dcd"
           }
         ],
         "map_both": [
