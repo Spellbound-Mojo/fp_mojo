@@ -6,7 +6,7 @@ Result transformations use the owned transformation of the Result methods.
 
 from std.builtin.rebind import rebind_var, rebind, downcast
 from std.iter import IterableOwned, Iterator
-from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, Unary, BorrowCallable
+from fp.callables.protocols import BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, Unary, BorrowCallable
 from fp.callables.invoke import RepeatableUnary, RepeatableBinary, _OnceUnaryAvailable, _OnceThunkAvailable, call_once, call_repeated
 from fp.callables._receiver import _unary_once_as, _binary_once_as, _binary_repeated_as, _thunk_once_as
 from fp.data._result import Result, Ok, Err, _ResultType, _transform_result_owned
@@ -196,8 +196,8 @@ struct OptionalFamily(Monad, Traversable, Filterable, FunctorFilter, _Lifting):
     comptime _LoopCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = _LinearLoopCompatible[V, F, Optional[K.Item], K.Error]
     comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out] & _LinearProducerCompatible[V, F, Never]
     comptime Element[V: Movable & Deinitable] = _ListElement[V]
-    comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = V
-    comptime FilterError[V: Movable & Deinitable, P: BorrowCallable] = P.Failure
+    comptime Filtered[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = V
+    comptime FilterError[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = P.Failure
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Optional[F.Out]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
     comptime Pure[A: Movable & Deinitable] = Optional[A]
@@ -239,7 +239,7 @@ struct OptionalFamily(Monad, Traversable, Filterable, FunctorFilter, _Lifting):
         return rebind_var[Self.MapFiltered[V, F]](Self.flat_map(f^, value^))
 
     @staticmethod
-    def filter[V: Movable & Deinitable, P: BorrowCallable](var predicate: P, var value: V
+    def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable](var predicate: P, var value: V
     ) raises P.Failure -> V:
         """Retain accepted Optional payloads, moving them unchanged.
 
@@ -713,8 +713,8 @@ struct ListFamily(Monad, Traversable, Filterable, FunctorFilter):
     comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self._LoopCompatible[V, F, _Append[Self.Element[F.Out]]] if Self.CarrierCompatible[F.Out] else False
     comptime TraverseCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.Element[V] == F.Arg if conforms_to(V, Iterator) or conforms_to(V, IterableOwned) else False
     comptime Element[V: Movable & Deinitable] = _Item[V]
-    comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = V
-    comptime FilterError[V: Movable & Deinitable, P: BorrowCallable] = P.Failure
+    comptime Filtered[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = V
+    comptime FilterError[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = P.Failure
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = List[F.Out]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
     comptime Pure[A: Movable & Deinitable] = List[A]
@@ -754,7 +754,7 @@ struct ListFamily(Monad, Traversable, Filterable, FunctorFilter):
         return _map_accumulate[V, F, _Keep[_Append[U]], F.Error](f^, value^, List[U]())
 
     @staticmethod
-    def filter[V: Movable & Deinitable, P: BorrowCallable](var predicate: P, var value: V
+    def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable](var predicate: P, var value: V
     ) raises P.Failure -> V:
         """Retain accepted List payloads, moving them unchanged.
 

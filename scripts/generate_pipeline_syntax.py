@@ -115,10 +115,12 @@ def filter_methods(carrier, name, description):
                            'E' if raising else '', f'R == Bool and Self.Value == {source}'))
     for kind in ('library', 'view'):
         cb = callback('borrow', kind, 'predicate')
-        parameters = [f'C: {callable_protocol("borrow", repeatable=True)}'] if kind == 'library' else cb.parameters
+        parameters = [f'C: BorrowCallContract & {MD}'] if kind == 'library' else cb.parameters
         element = f'downcast[{cb.payload}, {MD}]'
         source, family = carrier.value(element), carrier.instance(element)
         condition = f'conforms_to({cb.payload}, {MD}) and Self.Value == {source} and {cb.result} == Bool'
+        if kind == 'library':
+            condition += ' and RepeatableBorrow[C]'
         receiver = 'an owned' if kind == 'library' else 'a shared'
         out.append(forward(name, [*parameters, *carrier.parameters], cb.argument, source, source,
                            f'_family_{name}[{family}]', cb.build, f'{description} {carrier.name} payloads with {receiver} library predicate.',

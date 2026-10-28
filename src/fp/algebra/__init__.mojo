@@ -33,7 +33,7 @@ consuming-only callback is rejected when the program compiles. Native errors
 propagate with their exact types; stored `Result` errors remain data.
 
 `Filterable` is independent of Functor. ListFamily and OptionalFamily support
-`filter` and its derived `filter_not`, with a repeatable `BorrowCallable` predicate returning Bool. Native
+`filter` and its derived `filter_not`, with a repeatable borrowing predicate (`BorrowCallable` or `BorrowMutableCallable`) returning Bool. Owned predicates prefer their mutable receiver. Native
 predicates are borrowed; owned library predicates are consumed. Selection runs
 immediately and preserves the original payloads, origins and carrier type.
 

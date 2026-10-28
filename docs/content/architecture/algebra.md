@@ -59,13 +59,26 @@ its success value, but rejection needs an explicit error policy. Neither has
 an automatic filter.
 
 A family supplies `Element[V]`, `Filtered[V, P]`, `FilterError[V, P]` and static
-`filter(predicate, value)`. The predicate implements the public `BorrowCallable`
-contract: it borrows a payload and returns Bool, preserving its exact failure
-type. Third-party instances call it through `invoke_borrowed`; no private
-library helpers are required. Eager families preserve accepted payloads and
-origins in their native carrier. A deferred family's concrete output type may
-include the predicate, with evaluation and errors at its own invocation boundary.
-Native callbacks enter borrowed; deferred results keep that borrow alive.
+`filter(predicate, value)`. Predicates use `BorrowCallContract` metadata and
+have a shared or mutable receiver, checked by `FilterContract.ReceiverCompatible`.
+They borrow each payload and return Bool, preserving the exact failure type.
+Third-party instances use `invoke_borrowed_repeated[P.Failure](value, predicate)`
+with exclusive access to their owned predicate. This prefers `invoke_mut` and
+falls back to shared `invoke`; no private library helpers are required.
+Family primitives assume admitted inputs, as other family operations do.
+
+Custom Filterable implementations bind `P: BorrowCallContract & Movable &
+Deinitable` in `Filtered`, `FilterError`, `filter`, and any deferred holder.
+This replaces the former `P: BorrowCallable` restriction. Generic public
+wrappers forward `FilterContract.Compatible`; custom execution bodies can
+assert `RepeatableBorrow[P]` before repeated invocation. A family that delegates
+to an existing filter keeps that existing execution owner.
+
+Eager families preserve accepted payloads and origins in their native carrier.
+A deferred family's output may include the predicate, with evaluation and
+errors at its own invocation boundary. Native callbacks enter borrowed;
+deferred results keep that borrow alive. `mut_ref(predicate)` similarly lends
+caller-owned mutable state without moving or copying the original callback.
 
 ListFamily and OptionalFamily provide public instances. Native pipeline
 adapters cover Deque, LinkedList, Dict and StringDict; see

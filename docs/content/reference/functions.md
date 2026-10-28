@@ -291,8 +291,10 @@ same callback contract works across carriers. Whole-value `tap` also accepts
 shared, because it invokes the observer exactly once. These rules apply to
 Piped and selected Pipeline methods without extra type arguments.
 
-`filter_not` uses `BorrowCallable`; named unary partials retain shared
-admission. Native closures are borrowed and thin pointers are copied. Deferred families retain their evaluation timing and
+`filter` and `filter_not` accept owned `BorrowMutableCallable` and
+`BorrowCallable` values, with the same repeated receiver choice as observers.
+Use `mut_ref(predicate)` to keep and inspect a named predicate's state.
+Named unary partials retain shared admission. Native closures are borrowed and thin pointers are copied. Deferred families retain their evaluation timing and
 any callback borrow. A raised error stops eager processing and destroys
 remaining inputs and partial output. See [callback lifetimes](../start/ownership.md#reuse-callbacks-by-name).
 

@@ -7,8 +7,8 @@ from std.builtin.rebind import downcast
 from fp.callables._predicates import _FilterPredicate
 from fp.iteration._advance import _OwnedElement
 from .protocols import _MappedFamily, Functor, Monad, Applicative, ApplicativeError, Filterable, FunctorFilter
-from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallable
-from fp.callables.invoke import _OnceUnaryAvailable, _OnceBinaryAvailable, _OnceThunkAvailable
+from fp.callables.protocols import BorrowCallContract, UnaryContract, BinaryContract, ThunkContract
+from fp.callables.invoke import RepeatableBorrow, _OnceUnaryAvailable, _OnceBinaryAvailable, _OnceThunkAvailable
 
 
 struct MapContract[I: Functor, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]:
@@ -149,7 +149,7 @@ struct FilterMapContract[I: FunctorFilter, V: Movable & Deinitable, F: UnaryCont
     """The family's exact construction error."""
 
 
-struct FilterContract[I: Filterable, V: Movable & Deinitable, P: BorrowCallable, inverted: Bool = False]:
+struct FilterContract[I: Filterable, V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, inverted: Bool = False]:
     """The admission, output and exact error of borrowing predicate selection.
 
     Forward `Compatible` in a generic wrapper of `filter` or `filter_not`.
@@ -165,9 +165,11 @@ struct FilterContract[I: Filterable, V: Movable & Deinitable, P: BorrowCallable,
     """
     comptime InputCompatible = Self.I.Element[Self.V] == Self.P.Payload
     """Exact predicate payload equality, including embedded origins."""
+    comptime ReceiverCompatible = RepeatableBorrow[Self.P]
+    """A shared or mutable receiver permits repeated calls."""
     comptime PredicateCompatible = Self.P.Result == Bool
     """The predicate returns the native Bool type."""
-    comptime Compatible = Self.InputCompatible and Self.PredicateCompatible
+    comptime Compatible = Self.InputCompatible and Self.PredicateCompatible and Self.ReceiverCompatible
     """The complete checked filtering admission."""
     comptime Family = downcast[Self.I.FilteredFamily, Functor]
     """The output Functor; project only when FilteredFamily conforms to Functor."""

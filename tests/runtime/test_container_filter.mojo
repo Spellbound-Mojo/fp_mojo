@@ -1,4 +1,5 @@
 """Eager filtering preserves containers, borrowed payloads and exact failures."""
+from fp.callables import BorrowCallContract
 from std.builtin.rebind import rebind_var, downcast
 from std.collections import Deque, LinkedList, StringDict
 from std.hash import default_comp_time_hasher
@@ -48,10 +49,10 @@ struct ContainerFilterBox[T: Movable & Deinitable](Movable, ContainerFilterCarri
 
 struct ContainerFilterFamily(Filterable):
     comptime Element[V: Movable & Deinitable] = downcast[V, ContainerFilterCarrier].Element
-    comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = V
-    comptime FilterError[V: Movable & Deinitable, P: BorrowCallable] = P.Failure
+    comptime Filtered[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = V
+    comptime FilterError[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = P.Failure
     @staticmethod
-    def filter[V: Movable & Deinitable, P: BorrowCallable](var predicate: P, var value: V) raises P.Failure -> V:
+    def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable](var predicate: P, var value: V) raises P.Failure -> V:
         comptime T = Self.Element[V]
         comptime assert V == ContainerFilterBox[T]
         var box = rebind_var[ContainerFilterBox[T]](value^)
@@ -71,22 +72,7 @@ def filter_forward_raised[T: Movable & Deinitable, E: Movable & Deinitable, //, 
     return piped(source^).filter[ListFamily, E=E](predicate).get()
 
 
-@fieldwise_init
-struct ContainerDeferredFilter[T: Movable & Deinitable, P: BorrowCallable](Movable):
-    var source: List[Self.T]
-    var predicate: Self.P
-    def run(deinit self) raises Self.P.Failure -> List[Self.T]:
-        return ListFamily.filter(self.predicate^, self.source^)
-
-struct ContainerDeferredFamily(Filterable):
-    comptime Element[V: Movable & Deinitable] = ListFamily.Element[V]
-    comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = ContainerDeferredFilter[Self.Element[V], P]
-    comptime FilterError[V: Movable & Deinitable, P: BorrowCallable] = Never
-    @staticmethod
-    def filter[V: Movable & Deinitable, P: BorrowCallable](var predicate: P, var value: V) -> Self.Filtered[V, P]:
-        comptime T = Self.Element[V]
-        comptime assert V == List[T]
-        return ContainerDeferredFilter[T, P](rebind_var[List[T]](value^), predicate^)
+from algebra_support.filtering import ContainerDeferredFamily
 
 
 def filter_shapes() raises:

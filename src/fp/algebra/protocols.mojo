@@ -13,7 +13,7 @@ from std.builtin.rebind import rebind
 # Algebra's retained receiver view shares the callable dispatch used by
 # Kleisli. Existing consumers retain their private import name.
 from fp.callables._receiver import _MutableUnaryRef as _UnaryView
-from fp.callables.protocols import (_ErrorProbe, UnaryContract, BinaryContract, ThunkContract,
+from fp.callables.protocols import (BorrowCallContract, _ErrorProbe, UnaryContract, BinaryContract, ThunkContract,
                                     Unary, Binary, OnceUnary, MutableUnary, OnceThunk, BorrowCallable)
 from fp.callables.invoke import call_once, RepeatableUnary, RepeatableBinary
 from fp.callables._receiver import _binary_repeated_as, _unary_repeated_as, _thunk_once_as, _unary_once_as
@@ -139,18 +139,20 @@ trait Filterable:
 
     This capability is independent of Functor: removing a value and changing
     its type have different native constraints. Rejected values must be
-    representable without inventing a payload or an error.
+    representable without inventing a payload or an error. Owned predicates
+    have a shared or mutable receiver; `FilterContract` owns their admission.
+    The primitive assumes that admission, as other family primitives do.
     """
     comptime Element[V: Movable & Deinitable]: Movable & Deinitable
     """The payload type of a carrier of this family."""
     comptime FilteredFamily: AnyType = Self
     """Family of the filtered carrier; fluent continuation requires a Functor."""
-    comptime Filtered[V: Movable & Deinitable, P: BorrowCallable]: Movable & Deinitable
+    comptime Filtered[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable]: Movable & Deinitable
     """The carrier returned by filtering; deferred families may change its concrete type."""
-    comptime FilterError[V: Movable & Deinitable, P: BorrowCallable]: Movable & Deinitable
+    comptime FilterError[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable]: Movable & Deinitable
     """The error raised when constructing the filtered carrier."""
     @staticmethod
-    def filter[V: Movable & Deinitable, P: BorrowCallable](var predicate: P, var value: V
+    def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable](var predicate: P, var value: V
     ) raises Self.FilterError[V, P] -> Self.Filtered[V, P]:
         """Retain payloads accepted by a borrowing Bool predicate.
 

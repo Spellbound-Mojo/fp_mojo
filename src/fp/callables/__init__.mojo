@@ -46,6 +46,7 @@ Where each consumer enters:
 | `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |
 | `fori_loop_mut` | A named shared or mutable library binary body, borrowed exclusively; updated receiver state remains in the caller. |
 | Iterator filter, prefix, partition, search and count predicates | Native predicates, `BorrowCallable` and owned `BorrowMutableCallable` |
+| Family `filter` and `filter_not` | Native predicates, shared views and owned `BorrowMutableCallable` or `BorrowCallable`; `mut_ref` preserves caller-owned state. |
 | `while_loop` predicates | Native predicates and `BorrowCallable` |
 | `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |
 | `attempt_once` | `OnceThunk` |

@@ -13,7 +13,7 @@ from std.hash import Hasher, default_comp_time_hasher
 from std.memory import MaybeUninit
 from fp._internal.native_collections import _empty_deque_like, _take_string_dict, _string_dict_from_native
 from fp.callables.products import _take_pair
-from fp.callables.protocols import UnaryContract, Unary, MutableUnary, BorrowCallable
+from fp.callables.protocols import BorrowCallContract, UnaryContract, Unary, MutableUnary, BorrowCallable
 from fp.callables.invoke import call_repeated, RepeatableUnary
 from .protocols import Functor, RebindingFunctor, Filterable, FunctorFilter, _Accumulate, _map_accumulate
 from .filtering import _Select, _Keep
@@ -99,8 +99,8 @@ struct _DequeAppend[T: Movable & Deinitable](_Accumulate):
 struct _DequeFamily(Functor, Filterable, FunctorFilter):
     comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == Deque[F.Arg]
     comptime Element[V: Movable & Deinitable] = _ListElement[V]
-    comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = V
-    comptime FilterError[V: Movable & Deinitable, P: BorrowCallable] = P.Failure
+    comptime Filtered[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = V
+    comptime FilterError[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = P.Failure
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Deque[F.Out]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
     comptime MapFiltered[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Deque[_ListElement[F.Out]]
@@ -121,7 +121,7 @@ struct _DequeFamily(Functor, Filterable, FunctorFilter):
             f^, rebind_var[Deque[F.Arg]](value^))
 
     @staticmethod
-    def filter[V: Movable & Deinitable, P: BorrowCallable](var predicate: P, var value: V
+    def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable](var predicate: P, var value: V
     ) raises P.Failure -> V:
         """Retain accepted deque elements, keeping the native settings."""
         comptime T = Self.Element[V]
@@ -158,8 +158,8 @@ struct _LinkedAppend[T: Movable & Deinitable](_Accumulate):
 struct _LinkedListFamily(Functor, Filterable, FunctorFilter):
     comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == LinkedList[F.Arg]
     comptime Element[V: Movable & Deinitable] = _ListElement[V]
-    comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = V
-    comptime FilterError[V: Movable & Deinitable, P: BorrowCallable] = P.Failure
+    comptime Filtered[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = V
+    comptime FilterError[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = P.Failure
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = LinkedList[F.Out]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
     comptime MapFiltered[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = LinkedList[_ListElement[F.Out]]
@@ -180,7 +180,7 @@ struct _LinkedListFamily(Functor, Filterable, FunctorFilter):
             f^, rebind_var[LinkedList[F.Arg]](value^), LinkedList[F.Out]())
 
     @staticmethod
-    def filter[V: Movable & Deinitable, P: BorrowCallable](var predicate: P, var value: V
+    def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable](var predicate: P, var value: V
     ) raises P.Failure -> V:
         """Retain accepted linked-list elements in their original order."""
         comptime T = Self.Element[V]
@@ -229,8 +229,8 @@ struct _DictFamily[K: KeyElement & Deinitable, A: Movable & Deinitable, H: Hashe
     comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == Dict[Self.K, Self.A, Self.H] and F.Arg == Self.A
     comptime WithElement[A: Movable & Deinitable] = _DictFamily[Self.K, A, Self.H]
     comptime Element[V: Movable & Deinitable] = Self.A
-    comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = V
-    comptime FilterError[V: Movable & Deinitable, P: BorrowCallable] = P.Failure
+    comptime Filtered[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = V
+    comptime FilterError[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = P.Failure
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Dict[Self.K, F.Out, Self.H]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
     comptime MapFiltered[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Dict[Self.K, _ListElement[F.Out], Self.H]
@@ -254,7 +254,7 @@ struct _DictFamily[K: KeyElement & Deinitable, A: Movable & Deinitable, H: Hashe
             C(f^), rebind_var[Dict[Self.K, F.Arg, Self.H]](value^))
 
     @staticmethod
-    def filter[V: Movable & Deinitable, P: BorrowCallable](var predicate: P, var value: V
+    def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable](var predicate: P, var value: V
     ) raises P.Failure -> V:
         """Filter dictionary values, retaining accepted keys and insertion order."""
         comptime T = Self.Element[V]
@@ -288,8 +288,8 @@ struct _StringDictFamily[A: Movable & Deinitable](RebindingFunctor, Filterable, 
     comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == StringDict[Self.A] and F.Arg == Self.A
     comptime WithElement[A: Movable & Deinitable] = _StringDictFamily[A]
     comptime Element[V: Movable & Deinitable] = Self.A
-    comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = V
-    comptime FilterError[V: Movable & Deinitable, P: BorrowCallable] = P.Failure
+    comptime Filtered[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = V
+    comptime FilterError[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = P.Failure
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = StringDict[F.Out]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
     comptime MapFiltered[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = StringDict[_ListElement[F.Out]]
@@ -312,7 +312,7 @@ struct _StringDictFamily[A: Movable & Deinitable](RebindingFunctor, Filterable, 
         return _string_dict_from_native(_DictFamily[String, F.Arg, default_comp_time_hasher].map(f^, native^))
 
     @staticmethod
-    def filter[V: Movable & Deinitable, P: BorrowCallable](var predicate: P, var value: V
+    def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable](var predicate: P, var value: V
     ) raises P.Failure -> V:
         """Filter keyword dictionary values through the native Dict adapter."""
         comptime T = Self.Element[V]

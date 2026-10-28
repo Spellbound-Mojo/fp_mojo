@@ -1,4 +1,5 @@
 """Generic filter and lazy-combination wrappers retain family errors and origins."""
+from fp.callables import BorrowCallContract
 from fp.algebra import Filterable, Applicative, FilterContract, CombineContract, ListFamily, OptionalFamily
 from fp.algebra import filter, filter_not, map2_lazy
 from fp.callables import BorrowCallable, BinaryContract, ThunkContract, Binary, OnceThunk
@@ -7,10 +8,10 @@ from algebra_support.external import PublicMonad
 from std.memory import ArcPointer
 from std.testing import assert_equal
 
-def selected[I: Filterable, V: Movable & Deinitable, P: BorrowCallable](var value: V, var predicate: P) raises FilterContract[I, V, P].Error -> FilterContract[I, V, P].Out where FilterContract[I, V, P].Compatible:
+def selected[I: Filterable, V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable](var value: V, var predicate: P) raises FilterContract[I, V, P].Error -> FilterContract[I, V, P].Out where FilterContract[I, V, P].Compatible:
     return filter[I](predicate^, value^)
 
-def rejected[I: Filterable, V: Movable & Deinitable, P: BorrowCallable](var value: V, var predicate: P) raises FilterContract[I, V, P, True].Error -> FilterContract[I, V, P, True].Out where FilterContract[I, V, P, True].Compatible:
+def rejected[I: Filterable, V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable](var value: V, var predicate: P) raises FilterContract[I, V, P, True].Error -> FilterContract[I, V, P, True].Out where FilterContract[I, V, P, True].Compatible:
     return filter_not[I](predicate^, value^)
 
 def combined[I: Applicative, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var left: V, var right: R, var function: F) raises CombineContract[I, V, F, R].Error -> CombineContract[I, V, F, R].Out where CombineContract[I, V, F, R].Compatible:
@@ -46,18 +47,18 @@ struct Pending(OnceThunk):
 
 struct FailingFilter(Filterable):
     comptime Element[V: Movable & Deinitable] = ListFamily.Element[V]
-    comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = V
-    comptime FilterError[V: Movable & Deinitable, P: BorrowCallable] = Int
+    comptime Filtered[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = V
+    comptime FilterError[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = Int
     @staticmethod
-    def filter[V: Movable & Deinitable, P: BorrowCallable](var predicate: P, var value: V) raises Int -> V:
+    def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable](var predicate: P, var value: V) raises Int -> V:
         raise 733
 
 struct PredicateFault(Filterable):
     comptime Element[V: Movable & Deinitable] = ListFamily.Element[V]
-    comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = V
-    comptime FilterError[V: Movable & Deinitable, P: BorrowCallable] = P
+    comptime Filtered[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = V
+    comptime FilterError[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = P
     @staticmethod
-    def filter[V: Movable & Deinitable, P: BorrowCallable](var predicate: P, var value: V) raises P -> V:
+    def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable](var predicate: P, var value: V) raises P -> V:
         raise predicate^
 
 @fieldwise_init

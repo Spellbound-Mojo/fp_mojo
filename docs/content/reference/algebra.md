@@ -117,7 +117,9 @@ failed effects and deferred execution remain controlled by the target family.
 
 `FilterContract[I, V, P]` does the same for `filter`; pass `True` as the
 fourth parameter for `filter_not`. Its error and output use the actual
-predicate supplied to the family, including inversion. `CombineContract`
+predicate supplied to the family, including inversion. `ReceiverCompatible`
+requires a shared or mutable borrowing receiver; `Compatible` also checks the
+exact payload type and Bool result. `CombineContract`
 describes a binary callback and a lazy right-hand thunk; it preserves the
 family's exact construction error and does not evaluate the thunk.
 Its `InvocationCompatible` additionally requires invocable receivers on both the
@@ -426,7 +428,11 @@ Ordinary calls infer their concrete carrier types as before.
 `filter[ListFamily](predicate, values^)` and
 `filter[OptionalFamily](predicate, value^)` retain accepted original payloads.
 `filter_not[Family](predicate, value^)` retains rejected payloads through the
-same Filterable primitive. The predicate borrows each payload, returns Bool, and may raise a typed error.
+same Filterable primitive. The predicate borrows each payload, returns Bool,
+and may raise a typed error. Owned `BorrowMutableCallable` and `BorrowCallable`
+values are both accepted; repeated invocation prefers the mutable receiver.
+Use `mut_ref(predicate)` to inspect or reuse its updated state after the operation.
+Consuming-only predicates are rejected, including for Optional.
 The independent `Filterable` interface lets custom containers define selection;
 `piped(value).filter[Family](predicate)` uses the same instance. See
 [container filtering](../architecture/functions.md#container-preserving-filter). Named

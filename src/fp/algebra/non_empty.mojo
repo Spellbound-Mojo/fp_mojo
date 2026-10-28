@@ -2,7 +2,7 @@
 from std.builtin.rebind import rebind_var
 from std.iter import IterableOwned
 from fp.data.non_empty_list import NonEmptyList
-from fp.callables.protocols import Unary, UnaryContract, BorrowCallable
+from fp.callables.protocols import BorrowCallContract, Unary, UnaryContract, BorrowCallable
 from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible
 from .protocols import Traversable, Filterable, FunctorFilter, Applicative, Semigroup
 from .instances import ListFamily, _ListElement
@@ -71,8 +71,8 @@ struct NonEmptyListFamily(Traversable, Filterable, FunctorFilter):
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
     comptime FilteredFamily = ListFamily
     comptime MapFilteredFamily = ListFamily
-    comptime Filtered[V: Movable & Deinitable, P: BorrowCallable] = List[Self.Element[V]]
-    comptime FilterError[V: Movable & Deinitable, P: BorrowCallable] = P.Failure
+    comptime Filtered[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = List[Self.Element[V]]
+    comptime FilterError[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = P.Failure
     comptime MapFiltered[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = List[_ListElement[F.Out]]
     comptime MapFilterError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
     comptime TargetCompatible[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = G.CollectCompatible[List[F.Arg], F] and G.MapCompatible[G.Collected[List[F.Arg], F], _NonEmptyAfter[G.Element[F.Out]]] and _CommonErrorCompatible[G.CollectError[List[F.Arg], F], G.MapError[G.Collected[List[F.Arg], F], _NonEmptyAfter[G.Element[F.Out]]]]
@@ -103,7 +103,7 @@ struct NonEmptyListFamily(Traversable, Filterable, FunctorFilter):
         return _NonEmptyAfter[F.Out]().call(mapped^)
 
     @staticmethod
-    def filter[V: Movable & Deinitable, P: BorrowCallable](var predicate: P, var value: V
+    def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable](var predicate: P, var value: V
     ) raises P.Failure -> Self.Filtered[V, P]:
         """Retain accepted elements in a possibly empty native List.
 

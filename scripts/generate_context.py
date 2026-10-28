@@ -836,9 +836,9 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         mode = "borrow" if filtering else "owned"
         arg = "predicate" if filtering else "function"
         callbacks = (
-            borrowing_callbacks("Self.I.Element[Self.V]", arg)
-            if name == "filter_not"
-            else native_callbacks(mode, "Self.I.Element[Self.V]", arg, repeatable=filtering, view=not filtering)
+            borrowing_callbacks("Self.I.Element[Self.V]", arg, repeatable=False)
+            if filtering
+            else native_callbacks(mode, "Self.I.Element[Self.V]", arg, view=True)
         )
         for cb in callbacks:
             params = cb["params"]
@@ -846,6 +846,8 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
             conditions = [f"conforms_to(Self.I, {trait})"] + cb["conditions"]
             if filtering:
                 conditions.append(cb["result"] + " == Bool")
+                if cbtype == "C":
+                    conditions.append("RepeatableBorrow[C]")
             contract = None
             if name in ("map", "flat_map"):
                 operation = "MapContract" if name == "map" else "BindContract"

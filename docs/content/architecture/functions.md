@@ -435,8 +435,8 @@ candidate is tested. Dictionaries test values and retain accepted keys,
 insertion order and hasher. Deques retain their bound and storage policy.
 Empty inputs skip calls, and no matches produces an empty carrier.
 
-Native callbacks are borrowed for the operation. Library BorrowCallable values
-are consumed. A predicate cannot consume or mutate its input. Raised errors
+Native callbacks are borrowed for the operation. Repeatable library predicates
+are consumed and prefer their mutable receiver, falling back to shared access. A predicate cannot consume or mutate its input. Raised errors
 retain their exact types, stop further calls, and destroy the remaining input
 and partial output. Callback StopIteration remains a failure. Payload origins
 are checked at admission and preserved in the result. Filtering takes O(n)
@@ -448,8 +448,16 @@ implement both where appropriate; ListFamily and OptionalFamily own their
 selection methods. `.filter[I](predicate)` and `fp.algebra.filter[I]` use the
 same family, including third-party and deferred carriers. A deferred result
 may change concrete type and retain a native callback's borrow. An owned
-BorrowCallable transfers its state into that result. Generic native forwarding
+library predicate transfers its state into that result; `mut_ref` instead retains
+the original callback's mutable origin. Generic native forwarding
 uses an explicit family; raising forwarding also names `E=E`.
+
+`_Negated` retains shared and mutable receiver capabilities and delegates
+invocation to the corresponding public borrowing dispatcher. `_Select` does
+the same when adapting a borrowed predicate to an owned Optional result.
+`_filter_decision` owns inversion, `_selected` owns payload retention, and
+family traversal remains unchanged. Owned state is neither copied per element
+nor hidden behind shared interior mutation.
 
 `algebra.filtering` owns the selection rule: a borrowed predicate turns an
 owned payload into a present or absent Optional, and `_Keep` forwards accepted

@@ -3952,7 +3952,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Family, MapContract[Self.I, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E](Self.I.map(NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True](function), self.value^))
 
     @always_inline
-    def filter[C: BorrowCallable](deinit self, var predicate: C) raises FilterContract[_Filtering[Self.I], Self.V, C].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, C].Out, Self.E] where conforms_to(Self.I, Filterable) and C.Payload == Self.I.Element[Self.V] and C.Result == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor):
+    def filter[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) raises FilterContract[_Filtering[Self.I], Self.V, C].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, C].Out, Self.E] where conforms_to(Self.I, Filterable) and C.Payload == Self.I.Element[Self.V] and C.Result == Bool and RepeatableBorrow[C] and conforms_to(_Filtering[Self.I].FilteredFamily, Functor):
         """Apply filter through the selected family's Filterable capability.
 
         Parameters:
@@ -4030,7 +4030,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E](_Filtering[Self.I].filter(_NativeBorrow[P, R, X, def(P) raises X thin -> R, True](predicate), self.value^))
 
     @always_inline
-    def filter_not[C: BorrowCallable](deinit self, var predicate: C) raises FilterContract[_Filtering[Self.I], Self.V, C, True].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, C, True].Out, Self.E] where conforms_to(Self.I, Filterable) and C.Payload == Self.I.Element[Self.V] and C.Result == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor):
+    def filter_not[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) raises FilterContract[_Filtering[Self.I], Self.V, C, True].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, C, True].Out, Self.E] where conforms_to(Self.I, Filterable) and C.Payload == Self.I.Element[Self.V] and C.Result == Bool and RepeatableBorrow[C] and conforms_to(_Filtering[Self.I].FilteredFamily, Functor):
         """Apply filter_not through the selected family's Filterable capability.
 
         Parameters:

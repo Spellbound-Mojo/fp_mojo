@@ -865,7 +865,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         predicates borrow values; keys, insertion order and hasher are preserved.
         Accepted payloads move unchanged, rejected payloads are destroyed, and
         empty inputs skip the predicate. Native callbacks are borrowed; library
-        BorrowCallable values are consumed. Each predicate only borrows its input.
+        repeatable borrowing callbacks are consumed. Each predicate only borrows its input.
 
         Custom containers implement Filterable and use `filter[I](predicate)`.
         Deferred families retain their own evaluation and error semantics and may
@@ -904,8 +904,8 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Filter through the selected family with a shared predicate."""
         return Piped(_family_filter[I](predicate._borrow_view(), self.value^))
 
-    def filter[C: BorrowCallable, //, I: Filterable](deinit self, var predicate: C
-    ) raises I.FilterError[Self.Value, C] -> Piped[I.Filtered[Self.Value, C]] where I.Element[Self.Value] == C.Payload and C.Result == Bool:
+    def filter[C: BorrowCallContract & Movable & Deinitable, //, I: Filterable](deinit self, var predicate: C
+    ) raises I.FilterError[Self.Value, C] -> Piped[I.Filtered[Self.Value, C]] where I.Element[Self.Value] == C.Payload and C.Result == Bool and RepeatableBorrow[C]:
         """Filter through an explicit family with an owned library predicate."""
         return Piped(_family_filter[I](predicate^, self.value^))
 
@@ -957,8 +957,8 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Filter through the selected family with a shared predicate."""
         return Piped(_family_filter_not[I](predicate._borrow_view(), self.value^))
 
-    def filter_not[C: BorrowCallable, //, I: Filterable](deinit self, var predicate: C
-    ) raises I.FilterError[Self.Value, _Negated[C]] -> Piped[I.Filtered[Self.Value, _Negated[C]]] where I.Element[Self.Value] == C.Payload and C.Result == Bool:
+    def filter_not[C: BorrowCallContract & Movable & Deinitable, //, I: Filterable](deinit self, var predicate: C
+    ) raises I.FilterError[Self.Value, _Negated[C]] -> Piped[I.Filtered[Self.Value, _Negated[C]]] where I.Element[Self.Value] == C.Payload and C.Result == Bool and RepeatableBorrow[C]:
         """Retain rejected payloads through an explicit family with an owned predicate."""
         return Piped(_family_filter_not[I](predicate^, self.value^))
 
@@ -3069,9 +3069,9 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == List[T]
         return Piped(_family_filter[ListFamily, E=E](predicate, rebind_var[List[T]](self.value^)))
 
-    def filter[C: BorrowCallable](
+    def filter[C: BorrowCallContract & Movable & Deinitable](
         deinit self, var predicate: C
-    ) raises C.Failure -> Piped[List[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == List[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool:
+    ) raises C.Failure -> Piped[List[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == List[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:
         """Retain accepted List payloads with an owned library predicate."""
         comptime assert Self.Value == List[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_family_filter[ListFamily](predicate^, rebind_var[List[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
@@ -3097,9 +3097,9 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Deque[T]
         return Piped(_family_filter[_DequeFamily, E=E](predicate, rebind_var[Deque[T]](self.value^)))
 
-    def filter[C: BorrowCallable](
+    def filter[C: BorrowCallContract & Movable & Deinitable](
         deinit self, var predicate: C
-    ) raises C.Failure -> Piped[Deque[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool:
+    ) raises C.Failure -> Piped[Deque[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:
         """Retain accepted Deque payloads with an owned library predicate."""
         comptime assert Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_family_filter[_DequeFamily](predicate^, rebind_var[Deque[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
@@ -3125,9 +3125,9 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == LinkedList[T]
         return Piped(_family_filter[_LinkedListFamily, E=E](predicate, rebind_var[LinkedList[T]](self.value^)))
 
-    def filter[C: BorrowCallable](
+    def filter[C: BorrowCallContract & Movable & Deinitable](
         deinit self, var predicate: C
-    ) raises C.Failure -> Piped[LinkedList[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool:
+    ) raises C.Failure -> Piped[LinkedList[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:
         """Retain accepted LinkedList payloads with an owned library predicate."""
         comptime assert Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_family_filter[_LinkedListFamily](predicate^, rebind_var[LinkedList[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
@@ -3153,9 +3153,9 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_family_filter[_DictFamily[K, T, H], E=E](predicate, rebind_var[Dict[K, T, H]](self.value^)))
 
-    def filter[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](
+    def filter[C: BorrowCallContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](
         deinit self, var predicate: C
-    ) raises C.Failure -> Piped[Dict[K, downcast[C.Payload, Movable & Deinitable], H]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and C.Result == Bool:
+    ) raises C.Failure -> Piped[Dict[K, downcast[C.Payload, Movable & Deinitable], H]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and C.Result == Bool and RepeatableBorrow[C]:
         """Retain accepted Dict payloads with an owned library predicate."""
         comptime assert Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H]
         return Piped(_family_filter[_DictFamily[K, downcast[C.Payload, Movable & Deinitable], H]](predicate^, rebind_var[Dict[K, downcast[C.Payload, Movable & Deinitable], H]](self.value^)))
@@ -3181,9 +3181,9 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == StringDict[T]
         return Piped(_family_filter[_StringDictFamily[T], E=E](predicate, rebind_var[StringDict[T]](self.value^)))
 
-    def filter[C: BorrowCallable](
+    def filter[C: BorrowCallContract & Movable & Deinitable](
         deinit self, var predicate: C
-    ) raises C.Failure -> Piped[StringDict[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool:
+    ) raises C.Failure -> Piped[StringDict[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:
         """Retain accepted StringDict payloads with an owned library predicate."""
         comptime assert Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_family_filter[_StringDictFamily[downcast[C.Payload, Movable & Deinitable]]](predicate^, rebind_var[StringDict[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
@@ -3209,9 +3209,9 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Optional[T]
         return Piped(_family_filter[OptionalFamily, E=E](predicate, rebind_var[Optional[T]](self.value^)))
 
-    def filter[C: BorrowCallable](
+    def filter[C: BorrowCallContract & Movable & Deinitable](
         deinit self, var predicate: C
-    ) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool:
+    ) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:
         """Retain accepted Optional payloads with an owned library predicate."""
         comptime assert Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_family_filter[OptionalFamily](predicate^, rebind_var[Optional[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
@@ -3237,9 +3237,9 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == List[T]
         return Piped(_family_filter_not[ListFamily, E=E](predicate, rebind_var[List[T]](self.value^)))
 
-    def filter_not[C: BorrowCallable](
+    def filter_not[C: BorrowCallContract & Movable & Deinitable](
         deinit self, var predicate: C
-    ) raises C.Failure -> Piped[List[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == List[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool:
+    ) raises C.Failure -> Piped[List[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == List[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:
         """Retain rejected List payloads with an owned library predicate."""
         comptime assert Self.Value == List[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_family_filter_not[ListFamily](predicate^, rebind_var[List[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
@@ -3265,9 +3265,9 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Deque[T]
         return Piped(_family_filter_not[_DequeFamily, E=E](predicate, rebind_var[Deque[T]](self.value^)))
 
-    def filter_not[C: BorrowCallable](
+    def filter_not[C: BorrowCallContract & Movable & Deinitable](
         deinit self, var predicate: C
-    ) raises C.Failure -> Piped[Deque[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool:
+    ) raises C.Failure -> Piped[Deque[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:
         """Retain rejected Deque payloads with an owned library predicate."""
         comptime assert Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_family_filter_not[_DequeFamily](predicate^, rebind_var[Deque[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
@@ -3293,9 +3293,9 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == LinkedList[T]
         return Piped(_family_filter_not[_LinkedListFamily, E=E](predicate, rebind_var[LinkedList[T]](self.value^)))
 
-    def filter_not[C: BorrowCallable](
+    def filter_not[C: BorrowCallContract & Movable & Deinitable](
         deinit self, var predicate: C
-    ) raises C.Failure -> Piped[LinkedList[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool:
+    ) raises C.Failure -> Piped[LinkedList[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:
         """Retain rejected LinkedList payloads with an owned library predicate."""
         comptime assert Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_family_filter_not[_LinkedListFamily](predicate^, rebind_var[LinkedList[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
@@ -3321,9 +3321,9 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_family_filter_not[_DictFamily[K, T, H], E=E](predicate, rebind_var[Dict[K, T, H]](self.value^)))
 
-    def filter_not[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](
+    def filter_not[C: BorrowCallContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](
         deinit self, var predicate: C
-    ) raises C.Failure -> Piped[Dict[K, downcast[C.Payload, Movable & Deinitable], H]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and C.Result == Bool:
+    ) raises C.Failure -> Piped[Dict[K, downcast[C.Payload, Movable & Deinitable], H]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and C.Result == Bool and RepeatableBorrow[C]:
         """Retain rejected Dict payloads with an owned library predicate."""
         comptime assert Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H]
         return Piped(_family_filter_not[_DictFamily[K, downcast[C.Payload, Movable & Deinitable], H]](predicate^, rebind_var[Dict[K, downcast[C.Payload, Movable & Deinitable], H]](self.value^)))
@@ -3349,9 +3349,9 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == StringDict[T]
         return Piped(_family_filter_not[_StringDictFamily[T], E=E](predicate, rebind_var[StringDict[T]](self.value^)))
 
-    def filter_not[C: BorrowCallable](
+    def filter_not[C: BorrowCallContract & Movable & Deinitable](
         deinit self, var predicate: C
-    ) raises C.Failure -> Piped[StringDict[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool:
+    ) raises C.Failure -> Piped[StringDict[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:
         """Retain rejected StringDict payloads with an owned library predicate."""
         comptime assert Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_family_filter_not[_StringDictFamily[downcast[C.Payload, Movable & Deinitable]]](predicate^, rebind_var[StringDict[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
@@ -3377,9 +3377,9 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Optional[T]
         return Piped(_family_filter_not[OptionalFamily, E=E](predicate, rebind_var[Optional[T]](self.value^)))
 
-    def filter_not[C: BorrowCallable](
+    def filter_not[C: BorrowCallContract & Movable & Deinitable](
         deinit self, var predicate: C
-    ) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool:
+    ) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:
         """Retain rejected Optional payloads with an owned library predicate."""
         comptime assert Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_family_filter_not[OptionalFamily](predicate^, rebind_var[Optional[downcast[C.Payload, Movable & Deinitable]]](self.value^)))

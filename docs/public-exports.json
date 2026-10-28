@@ -321,7 +321,7 @@
   },
   "algebra.FilterContract": {
    "declarations": [
-    "struct FilterContract[I: Filterable, V: Movable & Deinitable, P: BorrowCallable, inverted: Bool = False]:"
+    "struct FilterContract[I: Filterable, V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, inverted: Bool = False]:"
    ],
    "kind": "type or alias",
    "provider": "algebra/_primitive_contracts"
@@ -341,8 +341,8 @@
    "methods": {
     "filter": [
      {
-      "sha256": "21f985c9140a08060c57e72e480f460cb5d1c175b0928948a2e1ed35a1610206",
-      "signature": "def filter[V: Movable & Deinitable, P: BorrowCallable](var predicate: P, var value: V ) raises Self.FilterError[V, P] -> Self.Filtered[V, P]:"
+      "sha256": "ecc8b495209b2dafb979cb7abea1ac0cc517c2b19bb81d0a215cf1f186e52969",
+      "signature": "def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable](var predicate: P, var value: V ) raises Self.FilterError[V, P] -> Self.Filtered[V, P]:"
      }
     ]
    },
@@ -597,8 +597,8 @@
    "methods": {
     "filter": [
      {
-      "sha256": "b915cd6191bf4831093ee6284409a1889cbdbcd9d79289cf2d74e112b5574e51",
-      "signature": "def filter[V: Movable & Deinitable, P: BorrowCallable](var predicate: P, var value: V ) raises P.Failure -> V:"
+      "sha256": "6e9895f33ca1df41079d1fb5424c4ed65d32db69af4f1ad3114d45b67c3741f4",
+      "signature": "def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable](var predicate: P, var value: V ) raises P.Failure -> V:"
      }
     ],
     "filter_map": [
@@ -727,8 +727,8 @@
    "methods": {
     "filter": [
      {
-      "sha256": "98834b7e580e36dc543a8ddc029383207d55a2e2dd39c48a2bcc231486b6df2a",
-      "signature": "def filter[V: Movable & Deinitable, P: BorrowCallable](var predicate: P, var value: V ) raises P.Failure -> Self.Filtered[V, P]:"
+      "sha256": "1fbe15e353ad67cb92493f88cfd25e5c2b7590988dbeec0b3a59f44de9349304",
+      "signature": "def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable](var predicate: P, var value: V ) raises P.Failure -> Self.Filtered[V, P]:"
      }
     ],
     "filter_map": [
@@ -775,8 +775,8 @@
    "methods": {
     "filter": [
      {
-      "sha256": "b915cd6191bf4831093ee6284409a1889cbdbcd9d79289cf2d74e112b5574e51",
-      "signature": "def filter[V: Movable & Deinitable, P: BorrowCallable](var predicate: P, var value: V ) raises P.Failure -> V:"
+      "sha256": "6e9895f33ca1df41079d1fb5424c4ed65d32db69af4f1ad3114d45b67c3741f4",
+      "signature": "def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable](var predicate: P, var value: V ) raises P.Failure -> V:"
      }
     ],
     "filter_map": [
@@ -1156,8 +1156,8 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "cb720146d548a57b0af32ab5fcabea870a7ac147bd1981be2f7adc2fede3dd9f",
-     "signature": "def filter[V: Movable & Deinitable, P: BorrowCallable, //, I: Filterable](var predicate: P, var value: V ) raises FilterContract[I, V, P].Error -> FilterContract[I, V, P].Out where FilterContract[I, V, P].Compatible:"
+     "sha256": "a70298c921681ab620aca771265f0cb4ed0063a7280dd913851ed40f0f191a70",
+     "signature": "def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, //, I: Filterable](var predicate: P, var value: V ) raises FilterContract[I, V, P].Error -> FilterContract[I, V, P].Out where FilterContract[I, V, P].Compatible:"
     },
     {
      "sha256": "99455273d23b7c25c5fa604a701bb96d9c3222d81fdd76c02bc98b7a614bbdf3",
@@ -1196,8 +1196,8 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "43dbe0b82f45f37078a686b9392f8740dbc8ec6f944f1d758ef0b7722f181e0f",
-     "signature": "def filter_not[V: Movable & Deinitable, P: BorrowCallable, //, I: Filterable](var predicate: P, var value: V ) raises FilterContract[I, V, P, True].Error -> FilterContract[I, V, P, True].Out where FilterContract[I, V, P, True].Compatible:"
+     "sha256": "991b14ac40c68cb9891f40023784e58d2b74df075dcef02ec61af982f9bc43ea",
+     "signature": "def filter_not[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, //, I: Filterable](var predicate: P, var value: V ) raises FilterContract[I, V, P, True].Error -> FilterContract[I, V, P, True].Out where FilterContract[I, V, P, True].Compatible:"
     },
     {
      "sha256": "cfbfc100aab954a8a014769df55a691fbe11b9ad9e73e4937708b24c6c1d3465",
@@ -6996,8 +6996,8 @@
       "signature": "def filter[C: _BorrowViewable, o: ImmOrigin, //, I: Filterable](deinit self, ref[o] predicate: C ) raises I.FilterError[Self.Value, C._BorrowView[o]] -> Piped[I.Filtered[Self.Value, C._BorrowView[o]]] where I.Element[Self.Value] == C._BorrowView[o].Payload and C._BorrowView[o].Result == Bool:"
      },
      {
-      "sha256": "1cb9599654ba708cf03a43cee8af3f85d98ac115ae60158aa008d016fce45284",
-      "signature": "def filter[C: BorrowCallable, //, I: Filterable](deinit self, var predicate: C ) raises I.FilterError[Self.Value, C] -> Piped[I.Filtered[Self.Value, C]] where I.Element[Self.Value] == C.Payload and C.Result == Bool:"
+      "sha256": "138d6318ef54ca69fcf686785cbcde85f4c23c50137c17bc4f82f94325a6e3b4",
+      "signature": "def filter[C: BorrowCallContract & Movable & Deinitable, //, I: Filterable](deinit self, var predicate: C ) raises I.FilterError[Self.Value, C] -> Piped[I.Filtered[Self.Value, C]] where I.Element[Self.Value] == C.Payload and C.Result == Bool and RepeatableBorrow[C]:"
      },
      {
       "sha256": "661a09a076f45c251eeef09fa3497bbbc1ed169e9984949c5df39569da3f8bd4",
@@ -7008,8 +7008,8 @@
       "signature": "def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R]( deinit self, ref predicate: F ) raises E -> Piped[List[T]] where R == Bool and Self.Value == List[T]:"
      },
      {
-      "sha256": "dbb316e0cc72acab9c4cb3e2e5c4eaad878e3df0031938eff92fb2adbdbff549",
-      "signature": "def filter[C: BorrowCallable]( deinit self, var predicate: C ) raises C.Failure -> Piped[List[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == List[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool:"
+      "sha256": "2eb53a1d50dfd3d6ed0f24488313ddead0c46d086fece715109d56fc2d76e88f",
+      "signature": "def filter[C: BorrowCallContract & Movable & Deinitable]( deinit self, var predicate: C ) raises C.Failure -> Piped[List[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == List[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:"
      },
      {
       "sha256": "910093af544efb9a164609dd58056ef6afddb75d8994ecde6e39fa0453103571",
@@ -7024,8 +7024,8 @@
       "signature": "def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R]( deinit self, ref predicate: F ) raises E -> Piped[Deque[T]] where R == Bool and Self.Value == Deque[T]:"
      },
      {
-      "sha256": "7162b76c970c0ec14d430cf64c6a9ebbcd1adcc0e78c680831107d93df282dc3",
-      "signature": "def filter[C: BorrowCallable]( deinit self, var predicate: C ) raises C.Failure -> Piped[Deque[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool:"
+      "sha256": "ead9838f8e1b15d5b177bc0b8c2d88df3e6c058d1e7cd16c591e4d2cf495ac5b",
+      "signature": "def filter[C: BorrowCallContract & Movable & Deinitable]( deinit self, var predicate: C ) raises C.Failure -> Piped[Deque[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:"
      },
      {
       "sha256": "67ace28e9ac0c7768de81855624dba545f1a18f7b4bd9e2baa2a586b69ecf541",
@@ -7040,8 +7040,8 @@
       "signature": "def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R]( deinit self, ref predicate: F ) raises E -> Piped[LinkedList[T]] where R == Bool and Self.Value == LinkedList[T]:"
      },
      {
-      "sha256": "e3fcc4463c265d419de791634a99f5bac551c9d4e4c1f83f5b957db998b8670a",
-      "signature": "def filter[C: BorrowCallable]( deinit self, var predicate: C ) raises C.Failure -> Piped[LinkedList[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool:"
+      "sha256": "4a531dcd75cf2aadc4c7cf8d481da62c4b371079b218009fe13c6e017ce0e298",
+      "signature": "def filter[C: BorrowCallContract & Movable & Deinitable]( deinit self, var predicate: C ) raises C.Failure -> Piped[LinkedList[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:"
      },
      {
       "sha256": "c9605bd4d2d5f6ee2067e75dc03b2f6f4a875a6ffa542cbd2ac5f9a5401e111d",
@@ -7056,8 +7056,8 @@
       "signature": "def filter[T: Movable & Deinitable, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R]( deinit self, ref predicate: F ) raises E -> Piped[Dict[K, T, H]] where R == Bool and Self.Value == Dict[K, T, H]:"
      },
      {
-      "sha256": "17e7c74a927ac599d1bd89fb784b036feaabe05741a3dd16ca2f064c577aaf17",
-      "signature": "def filter[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable]( deinit self, var predicate: C ) raises C.Failure -> Piped[Dict[K, downcast[C.Payload, Movable & Deinitable], H]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and C.Result == Bool:"
+      "sha256": "56fbad38a77244454d02ec066a6c59e0062a54a3c1b280644b4889170bc37b40",
+      "signature": "def filter[C: BorrowCallContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable]( deinit self, var predicate: C ) raises C.Failure -> Piped[Dict[K, downcast[C.Payload, Movable & Deinitable], H]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and C.Result == Bool and RepeatableBorrow[C]:"
      },
      {
       "sha256": "aa0f098001391ace5989b8041b0da3c0bdcdec12a7aa244fa568e4d56c8dde78",
@@ -7072,8 +7072,8 @@
       "signature": "def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R]( deinit self, ref predicate: F ) raises E -> Piped[StringDict[T]] where R == Bool and Self.Value == StringDict[T]:"
      },
      {
-      "sha256": "9523fb4426f2a85386eabb2923ec96d9bbcf5b4e91d01ae2a16181bd66381d1f",
-      "signature": "def filter[C: BorrowCallable]( deinit self, var predicate: C ) raises C.Failure -> Piped[StringDict[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool:"
+      "sha256": "fb53711020a96ef42e56c4c389d4681d2155e867c2aee18120f73061d4a8e8a0",
+      "signature": "def filter[C: BorrowCallContract & Movable & Deinitable]( deinit self, var predicate: C ) raises C.Failure -> Piped[StringDict[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:"
      },
      {
       "sha256": "66b19052a596a4805953f70a4de680c6b5b780ac823d260d86326a965832f08d",
@@ -7088,8 +7088,8 @@
       "signature": "def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R]( deinit self, ref predicate: F ) raises E -> Piped[Optional[T]] where R == Bool and Self.Value == Optional[T]:"
      },
      {
-      "sha256": "37f0030d814135e0f95e2ef52becd086cce9bbd638800b9bc80af169d201226e",
-      "signature": "def filter[C: BorrowCallable]( deinit self, var predicate: C ) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool:"
+      "sha256": "4d8312c2d27880f30c9d90ec1a0839759281c3b1c753e1aeb79ff6a4e6c4d8ef",
+      "signature": "def filter[C: BorrowCallContract & Movable & Deinitable]( deinit self, var predicate: C ) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:"
      },
      {
       "sha256": "b4fb8ac1a2bd15654ac25eb7b8a8167074df42b0665723b42f6f79ecbfacdce4",
@@ -7262,8 +7262,8 @@
       "signature": "def filter_not[C: _BorrowViewable, o: ImmOrigin, //, I: Filterable](deinit self, ref[o] predicate: C ) raises I.FilterError[Self.Value, _Negated[C._BorrowView[o]]] -> Piped[I.Filtered[Self.Value, _Negated[C._BorrowView[o]]]] where I.Element[Self.Value] == C._BorrowView[o].Payload and C._BorrowView[o].Result == Bool:"
      },
      {
-      "sha256": "c6eb80c1ada14e12f0cda687bfcd8f1d7e9b523cbf990124d161616cc8918705",
-      "signature": "def filter_not[C: BorrowCallable, //, I: Filterable](deinit self, var predicate: C ) raises I.FilterError[Self.Value, _Negated[C]] -> Piped[I.Filtered[Self.Value, _Negated[C]]] where I.Element[Self.Value] == C.Payload and C.Result == Bool:"
+      "sha256": "41b12f9d5641ebbbb52877339803fdf2d406e514bcb0c9d8c59d0621c4ed609e",
+      "signature": "def filter_not[C: BorrowCallContract & Movable & Deinitable, //, I: Filterable](deinit self, var predicate: C ) raises I.FilterError[Self.Value, _Negated[C]] -> Piped[I.Filtered[Self.Value, _Negated[C]]] where I.Element[Self.Value] == C.Payload and C.Result == Bool and RepeatableBorrow[C]:"
      },
      {
       "sha256": "4c3c1629089a058263124414f71229dbd3df671365340e447f144f3506a7fa18",
@@ -7274,8 +7274,8 @@
       "signature": "def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R]( deinit self, ref predicate: F ) raises E -> Piped[List[T]] where R == Bool and Self.Value == List[T]:"
      },
      {
-      "sha256": "10bc5f7dec632bc1ed41fd2606d9a3406d9243a031dd24f9ea004b75d6271b08",
-      "signature": "def filter_not[C: BorrowCallable]( deinit self, var predicate: C ) raises C.Failure -> Piped[List[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == List[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool:"
+      "sha256": "8799e8b4df240bcc564a25203f875c8c6b5415317e6e76a92f53bced4cfde4cf",
+      "signature": "def filter_not[C: BorrowCallContract & Movable & Deinitable]( deinit self, var predicate: C ) raises C.Failure -> Piped[List[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == List[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:"
      },
      {
       "sha256": "a10b8bfc9781b823a19a3f3ac26e46ad7760f1747043bcd3dcfaf25b82ce0fd6",
@@ -7290,8 +7290,8 @@
       "signature": "def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R]( deinit self, ref predicate: F ) raises E -> Piped[Deque[T]] where R == Bool and Self.Value == Deque[T]:"
      },
      {
-      "sha256": "d5c79399685be3059066ed80713b09fb0f7bb93ec5b3ae5ba0bc799ec3feeb24",
-      "signature": "def filter_not[C: BorrowCallable]( deinit self, var predicate: C ) raises C.Failure -> Piped[Deque[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool:"
+      "sha256": "46ebd4582f7a26f57dcf0d47a383c12710d4b6171766bdc69242204bdbf97cee",
+      "signature": "def filter_not[C: BorrowCallContract & Movable & Deinitable]( deinit self, var predicate: C ) raises C.Failure -> Piped[Deque[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:"
      },
      {
       "sha256": "1c95539990f4b55dbab5c8f54c46be192dcefd1104c790b271b4735e71c96d25",
@@ -7306,8 +7306,8 @@
       "signature": "def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R]( deinit self, ref predicate: F ) raises E -> Piped[LinkedList[T]] where R == Bool and Self.Value == LinkedList[T]:"
      },
      {
-      "sha256": "acccaccddb57ff91bd91237ebc7a33667bdfd44575fc36eb2f56302b0df75355",
-      "signature": "def filter_not[C: BorrowCallable]( deinit self, var predicate: C ) raises C.Failure -> Piped[LinkedList[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool:"
+      "sha256": "d755bc103d450cb5669163daf1b7f41cc20f68e0d3518b7332a5ee40e816a13f",
+      "signature": "def filter_not[C: BorrowCallContract & Movable & Deinitable]( deinit self, var predicate: C ) raises C.Failure -> Piped[LinkedList[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:"
      },
      {
       "sha256": "efd8a17a58fe0a1788d9fffb519b622a048609574a32e3db7e6a8c4529c69acf",
@@ -7322,8 +7322,8 @@
       "signature": "def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R]( deinit self, ref predicate: F ) raises E -> Piped[Dict[K, T, H]] where R == Bool and Self.Value == Dict[K, T, H]:"
      },
      {
-      "sha256": "168d6558951a6bc3d7bdbb7f61314690ffa01d3dbc52d49df1b6520645e474cf",
-      "signature": "def filter_not[C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable]( deinit self, var predicate: C ) raises C.Failure -> Piped[Dict[K, downcast[C.Payload, Movable & Deinitable], H]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and C.Result == Bool:"
+      "sha256": "0b73116b779483207183645c42630ba5f26b33cfb514f4c3eebc81d6c1daeecf",
+      "signature": "def filter_not[C: BorrowCallContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable]( deinit self, var predicate: C ) raises C.Failure -> Piped[Dict[K, downcast[C.Payload, Movable & Deinitable], H]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H] and C.Result == Bool and RepeatableBorrow[C]:"
      },
      {
       "sha256": "254f0025063832bf259ddb2ff125b7405c4b4988c5fd3bd6c290c131f9a18893",
@@ -7338,8 +7338,8 @@
       "signature": "def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R]( deinit self, ref predicate: F ) raises E -> Piped[StringDict[T]] where R == Bool and Self.Value == StringDict[T]:"
      },
      {
-      "sha256": "df82b308e7b907958084f21c92de9afc70f124a0021aaf915589726a31fc1696",
-      "signature": "def filter_not[C: BorrowCallable]( deinit self, var predicate: C ) raises C.Failure -> Piped[StringDict[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool:"
+      "sha256": "0382a0b5dbe16cbdbef14ebed6be038c941a04c5080e25e16601cde6923d0c63",
+      "signature": "def filter_not[C: BorrowCallContract & Movable & Deinitable]( deinit self, var predicate: C ) raises C.Failure -> Piped[StringDict[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:"
      },
      {
       "sha256": "84e4dd422818cce512dcfa5712c771c764fa1c5e6e980490c603af3e12dac494",
@@ -7354,8 +7354,8 @@
       "signature": "def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R]( deinit self, ref predicate: F ) raises E -> Piped[Optional[T]] where R == Bool and Self.Value == Optional[T]:"
      },
      {
-      "sha256": "13305bd4ce960c1fb75080c1dc97a9bdba41ba0948258ec6c6610fa6b2afd198",
-      "signature": "def filter_not[C: BorrowCallable]( deinit self, var predicate: C ) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool:"
+      "sha256": "943b9398de910a0314b4066d4796acb1e22315f3a89bd6fe83be4e4fd02abc6d",
+      "signature": "def filter_not[C: BorrowCallContract & Movable & Deinitable]( deinit self, var predicate: C ) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:"
      },
      {
       "sha256": "c3afdf861285d03cb344baaf068a2977140cbdb8aec69c7f5fa1e17d2c72f531",
@@ -11679,8 +11679,8 @@
     ],
     "filter": [
      {
-      "sha256": "cdf165404fa01d3d4342f03a53186120b3572bd96ec27ef4c559f57893e32231",
-      "signature": "def filter[C: BorrowCallable](deinit self, var predicate: C) raises FilterContract[_Filtering[Self.I], Self.V, C].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, C].Out, Self.E] where conforms_to(Self.I, Filterable) and C.Payload == Self.I.Element[Self.V] and C.Result == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor):"
+      "sha256": "7e4a76e4f911445136711f91a99d10f6fd8b57f6edb27a97018e0df2a0ea64c1",
+      "signature": "def filter[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) raises FilterContract[_Filtering[Self.I], Self.V, C].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, C].Out, Self.E] where conforms_to(Self.I, Filterable) and C.Payload == Self.I.Element[Self.V] and C.Result == Bool and RepeatableBorrow[C] and conforms_to(_Filtering[Self.I].FilteredFamily, Functor):"
      },
      {
       "sha256": "50ec7777d15413ec79900c63ed72e36a0247e05c78bf0748fb366a9eeb482fca",
@@ -11825,8 +11825,8 @@
     ],
     "filter_not": [
      {
-      "sha256": "f76e7e7c2f14fda21d0afcdd8f763d16a4ba87d5eeae7df3ba7ebc7e436d26ec",
-      "signature": "def filter_not[C: BorrowCallable](deinit self, var predicate: C) raises FilterContract[_Filtering[Self.I], Self.V, C, True].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, C, True].Out, Self.E] where conforms_to(Self.I, Filterable) and C.Payload == Self.I.Element[Self.V] and C.Result == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor):"
+      "sha256": "f9fd9395f4a98e25a2a199c8468e37b960dcafefc4a2723b55f4cad5b3723274",
+      "signature": "def filter_not[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) raises FilterContract[_Filtering[Self.I], Self.V, C, True].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, C, True].Out, Self.E] where conforms_to(Self.I, Filterable) and C.Payload == Self.I.Element[Self.V] and C.Result == Bool and RepeatableBorrow[C] and conforms_to(_Filtering[Self.I].FilteredFamily, Functor):"
      },
      {
       "sha256": "aec111231467bb8f18f9098a99e562409dd4a4d4c3dcbed91dff8f4a133de112",

@@ -56,3 +56,6 @@ def main():
     print("retained calls:", predicate.calls)
     print("continued predicate:", iterated(range(3)).filter(mut_ref(predicate)).to_list())
     print("total calls:", predicate.calls)
+    print("family mutable filter:", pipeline[Int]([0, 1, 2, 3]).filter(mut_ref(predicate)).get())
+    print("family mutable filter_not:", pipeline[Int]([0, 1, 2, 3]).filter_not(mut_ref(predicate)).get())
+    print("family retained calls:", predicate.calls)

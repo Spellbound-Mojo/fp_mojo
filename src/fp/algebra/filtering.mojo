@@ -1,24 +1,24 @@
 """Container filtering and selection rules over the existing accumulation loop."""
-from std.builtin.rebind import rebind_var
+from std.builtin.rebind import downcast, rebind_var
 from fp.callables._views import _BorrowViewable
 from fp.callables._predicates import _Negated, _FilterPredicate
-from fp.callables.protocols import BorrowCallable, Unary
-from fp.iteration._callbacks import _predicate_callable
+from fp.callables.protocols import BorrowCallContract, BorrowCallable, Unary, UnaryContract, MutableUnary
+from fp.iteration._callbacks import _predicate_callable, _predicate_repeated
 from fp.callables.native import _Borrowing, _RaisingBorrowing, _NativeBorrowRef
 from .protocols import Filterable, FunctorFilter, _Accumulate
 from ._primitive_contracts import FilterContract
-from fp.callables.protocols import UnaryContract
+from fp.callables.invoke import RepeatableBorrow
 from fp.callables.native import _Unary, _RaisingUnary, _NativeUnaryRef
 from fp.callables._identity import Identity
 from fp.callables._transforms import _selected
 
 
-def filter[V: Movable & Deinitable, P: BorrowCallable, //, I: Filterable](var predicate: P, var value: V
+def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, //, I: Filterable](var predicate: P, var value: V
 ) raises FilterContract[I, V, P].Error -> FilterContract[I, V, P].Out where FilterContract[I, V, P].Compatible:
     """Filter a carrier through an explicit family, preserving its context.
 
     Native functions and closures are accepted directly and borrowed. A library
-    BorrowCallable is consumed; shared partial predicates may instead be borrowed
+    repeatable borrowing callback is consumed; shared partial predicates may instead be borrowed
     by name. Built-in families run now, call once per payload
     in native order, move accepted values unchanged and destroy rejected values.
     Empty carriers skip calls. Failure destroys remaining input and partial output.
@@ -64,7 +64,7 @@ def filter[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmO
     return _filter_native[V, P, E, I, F, True, o](predicate, value^)
 
 
-def filter_not[V: Movable & Deinitable, P: BorrowCallable, //, I: Filterable](var predicate: P, var value: V
+def filter_not[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, //, I: Filterable](var predicate: P, var value: V
 ) raises FilterContract[I, V, P, True].Error -> FilterContract[I, V, P, True].Out where FilterContract[I, V, P, True].Compatible:
     """Retain payloads the predicate rejects, through an explicit family.
 
@@ -113,7 +113,7 @@ def filter_not[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: 
     return _filter_native[V, P, E, I, F, True, o, True](predicate, value^)
 
 
-def _filter_with[V: Movable & Deinitable, P: BorrowCallable, I: Filterable, inverted: Bool](
+def _filter_with[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, I: Filterable, inverted: Bool](
     var predicate: P, var value: V
 ) raises I.FilterError[V, _FilterPredicate[P, inverted]] -> I.Filtered[V, _FilterPredicate[P, inverted]]:
     # Derive inversion once; every family retains its own construction, error
@@ -144,13 +144,23 @@ def _filter_native[V: Movable & Deinitable, T: AnyType, E: Movable & Deinitable,
 
 
 @fieldwise_init
-struct _Select[T: Movable & Deinitable, P: BorrowCallable](Unary):
+struct _Select[T: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable](
+    UnaryContract, Movable, Deinitable,
+    Unary where conforms_to(P, BorrowCallable), MutableUnary where RepeatableBorrow[P]
+):
     var predicate: Self.P
     comptime Arg = Self.T
     comptime Out = Optional[Self.T]
     comptime Error = Self.P.Failure
     def call(self, var arg: Self.T) raises Self.Error -> Self.Out:
-        var accepted = _predicate_callable[Self.T, Self.P](arg, self.predicate)
+        comptime assert conforms_to(Self.P, BorrowCallable)
+        comptime Shared = downcast[Self.P, BorrowCallable]
+        var accepted = _predicate_callable[Self.T, Shared, Self.Error](arg, rebind[Shared](self.predicate))
+        return _selected(arg^, accepted)
+
+    def call_mut(mut self, var arg: Self.T) raises Self.Error -> Self.Out:
+        comptime assert RepeatableBorrow[Self.P] and Self.P.Payload == Self.T and Self.P.Result == Bool
+        var accepted = _predicate_repeated[Self.T, Self.P, origin_of(self.predicate), Self.Error](arg, Pointer(to=self.predicate))
         return _selected(arg^, accepted)
 
 
