@@ -1,6 +1,8 @@
 """Lazy carry/output scans, sharing transitions and scheduling with scan_left."""
 from std.iter import Iterator
 from fp.callables.protocols import BinaryContract
+from fp.callables._views import _BinaryViewable
+from fp.callables._receiver import _SharedBinaryRef
 from fp.callables.invoke import RepeatableBinary
 from ._advance import _Source, _source
 from .adapters import _ScanDriver
@@ -54,4 +56,9 @@ def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Dein
     """Lazily consume (carry, input) into (new carry, output), yielding one output per input.
     """
     return ScanMapIterator[A, T, Y, _Source[V], F](function^, initial^, _source(source^), False, False)
+
+def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: _BinaryViewable, o: ImmOrigin, V: Movable & Deinitable](ref[o] function: F, var initial: A, var source: V) -> ScanMapIterator[A, T, Y, _Source[V], _SharedBinaryRef[F, o]] where _Source[V].Element == T and _SharedBinaryRef[F, o].First == A and _SharedBinaryRef[F, o].Second == T and _SharedBinaryRef[F, o].Out == Tuple[A, Y] and _SharedBinaryRef[F, o].Error == Never and RepeatableBinary[_SharedBinaryRef[F, o]]:
+    """Lazily consume (carry, input) into (new carry, output), yielding one output per input.
+    """
+    return ScanMapIterator[A, T, Y, _Source[V], _SharedBinaryRef[F, o]](_SharedBinaryRef[F, o](Pointer(to=function)), initial^, _source(source^), False, False)
 # --- end iterator expansion syntax ---

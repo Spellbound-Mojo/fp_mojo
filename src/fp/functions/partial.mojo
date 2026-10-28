@@ -70,7 +70,7 @@ struct Partial[R: Movable & Deinitable, E: Movable & Deinitable,
     handlers call the same native function without consuming the payload.
     Selected Pipeline operations can reuse these partials by name.
     With two remaining arguments, a named partial can also be reused by
-    `zip_with` and `map_with_index`; both remaining native arguments are read.
+    `zip_with`, `map_with_index` and `scan_map`; both remaining native arguments are read.
 
     Parameters:
         R: The function's result type.

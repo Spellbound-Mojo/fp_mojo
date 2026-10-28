@@ -582,6 +582,14 @@ owner serves `fp.control.scan`, below both iteration and control. An empty
 Optional slot represents the interval where the callback owns the carry, so
 native error unwinding never destroys a moved value twice.
 
+Shared `scan_map` admission uses the same binary callback descriptor and
+`_SharedBinaryRef` as indexed mapping. The view enters `_ScanDriver` without
+another carry slot, invocation policy or scheduling loop. Native tuple equality
+already infers the output type from the callback's pair, so this boundary needs
+no output projection. Existing explicit bindings and generic forwarding remain
+available. Callback receiver lifetime stays distinct from carry and output
+ownership, including on empty input and abandonment.
+
 Native callback bridges remain signature-specific: lazy scans own and mutably
 call their captures, while control scan borrows its native callback. Control
 scan keeps its existing length validation, reversal, unrolling, error wrapping

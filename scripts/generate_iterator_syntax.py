@@ -266,19 +266,22 @@ def alignment(mode):
 def scans(mode):
     out=''; ind='' if mode=='free' else '    '
     it='_Source[V]' if mode=='free' else 'Self.I';src='source^' if mode=='free' else 'self._iterator^'
-    for kind in ['thin','native','library']:
+    for kind in ['thin','native','library','view']:
+        shared=callback('binary', 'view').renamed({'C':'F'}) if kind=='view' else None
         params=[f'A: {MD}',f'T: {MD}',f'Y: {MD}']
-        if kind=='library':params+=[f'F: {callable_protocol("binary")} & {MD}']
+        if shared:params+=list(shared.parameters)
+        elif kind=='library':params+=[f'F: {callable_protocol("binary")} & {MD}']
         if mode=='free':params+=[f'V: {MD}']
-        if kind!='library':params+=[f'R: {MD}']
+        if kind not in ('library','view'):params+=[f'R: {MD}']
         if kind=='native':params+=['//','F: def(var A, var T) -> R']
-        cb='def(var A, var T) thin -> R' if kind=='thin' else 'F'
+        cb=shared.type if shared else 'def(var A, var T) thin -> R' if kind=='thin' else 'F'
+        metadata=callable_metadata('binary', cb) if kind in ('library','view') else None
         condition=f'{it}.Element == T'
-        if kind!='library':condition+=' and R == Tuple[A, Y]'
-        if kind=='library':condition+=' and F.First == A and F.Second == T and F.Out == Tuple[A, Y] and F.Error == Never and RepeatableBinary[F]'
-        args=['var function: '+cb,'var initial: A']+(['var source: V'] if mode=='free' else [])
+        if metadata:condition+=f' and {metadata.inputs[0]} == A and {metadata.inputs[1]} == T and {metadata.result} == Tuple[A, Y] and {metadata.error} == Never and RepeatableBinary[{cb}]'
+        else:condition+=' and R == Tuple[A, Y]'
+        args=[shared.argument if shared else 'var function: '+cb,'var initial: A']+(['var source: V'] if mode=='free' else [])
         result=f'ScanMapIterator[A, T, Y, {it}, {cb}]'
-        val='function'+('' if kind=='thin' else '^')
+        val=shared.build if shared else 'function'+('' if kind=='thin' else '^')
         if mode=='free':body=f'return {result}({val}, initial^, _source({src}), False, False)'
         else:
             args.insert(0,'deinit self');result=f'Iter[{result}]'

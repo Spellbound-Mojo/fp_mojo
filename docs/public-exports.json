@@ -13465,6 +13465,10 @@
           {
             "signature": "def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](deinit self, var function: F, var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, F]] where Self.I.Element == T and F.First == A and F.Second == T and F.Out == Tuple[A, Y] and F.Error == Never and RepeatableBinary[F]:",
             "sha256": "797096a88d1d25800307acd34f28fe87ece495b6857270caf447b6c367bde601"
+          },
+          {
+            "signature": "def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: _BinaryViewable, o: ImmOrigin](deinit self, ref[o] function: F, var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, _SharedBinaryRef[F, o]]] where Self.I.Element == T and _SharedBinaryRef[F, o].First == A and _SharedBinaryRef[F, o].Second == T and _SharedBinaryRef[F, o].Out == Tuple[A, Y] and _SharedBinaryRef[F, o].Error == Never and RepeatableBinary[_SharedBinaryRef[F, o]]:",
+            "sha256": "0fc086e86611c7ab8d564c490c12b3402f2c7a745d4c08b99ac24e2f90d181ae"
           }
         ],
         "map": [
@@ -18578,6 +18582,10 @@
         {
           "signature": "def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, V: Movable & Deinitable](var function: F, var initial: A, var source: V) -> ScanMapIterator[A, T, Y, _Source[V], F] where _Source[V].Element == T and F.First == A and F.Second == T and F.Out == Tuple[A, Y] and F.Error == Never and RepeatableBinary[F]:",
           "sha256": "d6a4a7e238f29e262283f976c4540fa47cafe6732b673c37ff3a58da7b9e5d88"
+        },
+        {
+          "signature": "def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: _BinaryViewable, o: ImmOrigin, V: Movable & Deinitable](ref[o] function: F, var initial: A, var source: V) -> ScanMapIterator[A, T, Y, _Source[V], _SharedBinaryRef[F, o]] where _Source[V].Element == T and _SharedBinaryRef[F, o].First == A and _SharedBinaryRef[F, o].Second == T and _SharedBinaryRef[F, o].Out == Tuple[A, Y] and _SharedBinaryRef[F, o].Error == Never and RepeatableBinary[_SharedBinaryRef[F, o]]:",
+          "sha256": "c6d1f34565f770cb237047267197550bb9078a110b6123821267963271b57ebe"
         }
       ],
       "provider": "iteration/scans"

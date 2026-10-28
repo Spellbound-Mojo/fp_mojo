@@ -16,7 +16,7 @@ struct Flipped[F: BinaryContract & Movable & Deinitable](
 
     It has the receiver modes of the callable it wraps.
     A shared binary wrapper can be reused by name in `zip_with` and
-    `map_with_index`; an explicit move transfers the wrapped callback.
+    `map_with_index` or `scan_map`; an explicit move transfers the wrapped callback.
 
     Parameters:
         F: The wrapped callable's type, a `Binary`, `MutableBinary` or `OnceBinary`.
@@ -111,7 +111,7 @@ struct FlippedFunction[R: Movable & Deinitable, E: Movable & Deinitable, A0: Mov
 
     `flip(f)(a, b, rest...)` calls `f(b, a, rest...)`; the remaining arguments
     are borrowed. With no remaining parameters it is also a `Binary`.
-    That binary form can be reused by name in `zip_with` and `map_with_index`.
+    That binary form can be reused by name in `zip_with`, `map_with_index` and `scan_map`.
 
     Parameters:
         R: The function's result type.

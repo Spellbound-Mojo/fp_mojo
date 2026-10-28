@@ -93,8 +93,8 @@ struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](
     the existing shared receiver view. Use an explicit move to transfer the
     stages, including into deferred results. Mutable and consuming-only chains
     retain their existing owned admission.
-    Shared binary chains can be reused by name in `zip_with` and
-    `map_with_index`, with the same retained callback lifetime.
+    Shared binary chains can be reused by name in `zip_with`, `map_with_index`
+    and `scan_map`, with the same retained callback lifetime.
 
     Parameters:
         reverse: True for `compose`, whose stages run right to left.

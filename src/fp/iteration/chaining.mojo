@@ -822,6 +822,11 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Lazily consume (carry, input) into (new carry, output), yielding one output per input.
         """
         return Iter(_scan_map[A=A, T=T, Y=Y](function^, initial^, self._iterator^))
+
+    def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: _BinaryViewable, o: ImmOrigin](deinit self, ref[o] function: F, var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, _SharedBinaryRef[F, o]]] where Self.I.Element == T and _SharedBinaryRef[F, o].First == A and _SharedBinaryRef[F, o].Second == T and _SharedBinaryRef[F, o].Out == Tuple[A, Y] and _SharedBinaryRef[F, o].Error == Never and RepeatableBinary[_SharedBinaryRef[F, o]]:
+        """Lazily consume (carry, input) into (new carry, output), yielding one output per input.
+        """
+        return Iter(_scan_map[A=A, T=T, Y=Y](_SharedBinaryRef[F, o](Pointer(to=function)), initial^, self._iterator^))
     # --- end iterator expansion syntax ---
 
     # Native thin functions and closures keep their own admission signatures,

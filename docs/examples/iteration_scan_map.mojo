@@ -1,10 +1,16 @@
 """A move-only running state with independent text outputs."""
 from fp.iteration import iterated
+from fp.functions import partial
 
 
 @fieldwise_init
 struct RunningTotal(Movable):
     var value: Int
+
+
+def priced(scale: Int, total: Int, quantity: Int) -> Tuple[Int, Int]:
+    var next_total = total + scale * quantity
+    return (next_total, next_total)
 
 
 def main():
@@ -21,3 +27,7 @@ def main():
     print("steps:",calls)
     print("empty:",iterated(range(0)).scan_map(step,RunningTotal(0)).to_list())
     print("steps after empty:",calls)
+    var price = partial(priced, 3)
+    print("prices:", iterated(range(1,4)).scan_map(price, 0).collect_list())
+    print("reused:", iterated(range(1,3)).scan_map(price, 10).collect_list())
+    print("moved:", iterated(range(1,3)).scan_map(price^, 0).collect_list())

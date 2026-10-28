@@ -43281,7 +43281,7 @@
      "name": "Error"
     }
    ],
-   "description": "The first stage to run may take zero, one or two arguments (a `Thunk`,\n`Unary` or `Binary`, including plain functions and closures promoted with\n`as_unary`); every later stage takes the previous result. Calling the\ncomposition runs each stage once, in order, and a raised error stops it.\nIt is itself a `Thunk`, `Unary` or `Binary` in each receiver mode that all\nits stages support: shared (`call`, `__call__`), exclusive (`call_mut`) or\nconsuming (`call_once`). Nothing runs during construction. It is `Copyable`\nwhen every stage is, and copying is explicit.\n\nA named shared unary composition can be reused as a selected Pipeline or\nResult callback without copying its stages. The operation borrows it through\nthe existing shared receiver view. Use an explicit move to transfer the\nstages, including into deferred results. Mutable and consuming-only chains\nretain their existing owned admission.\nShared binary chains can be reused by name in `zip_with` and\n`map_with_index`, with the same retained callback lifetime.",
+   "description": "The first stage to run may take zero, one or two arguments (a `Thunk`,\n`Unary` or `Binary`, including plain functions and closures promoted with\n`as_unary`); every later stage takes the previous result. Calling the\ncomposition runs each stage once, in order, and a raised error stops it.\nIt is itself a `Thunk`, `Unary` or `Binary` in each receiver mode that all\nits stages support: shared (`call`, `__call__`), exclusive (`call_mut`) or\nconsuming (`call_once`). Nothing runs during construction. It is `Copyable`\nwhen every stage is, and copying is explicit.\n\nA named shared unary composition can be reused as a selected Pipeline or\nResult callback without copying its stages. The operation borrows it through\nthe existing shared receiver view. Use an explicit move to transfer the\nstages, including into deferred results. Mutable and consuming-only chains\nretain their existing owned admission.\nShared binary chains can be reused by name in `zip_with`, `map_with_index`\nand `scan_map`, with the same retained callback lifetime.",
    "fields": [],
    "kind": "struct",
    "methods": {
@@ -43617,7 +43617,7 @@
      "name": "Error"
     }
    ],
-   "description": "It has the receiver modes of the callable it wraps.\nA shared binary wrapper can be reused by name in `zip_with` and\n`map_with_index`; an explicit move transfers the wrapped callback.",
+   "description": "It has the receiver modes of the callable it wraps.\nA shared binary wrapper can be reused by name in `zip_with` and\n`map_with_index` or `scan_map`; an explicit move transfers the wrapped callback.",
    "fields": [],
    "kind": "struct",
    "methods": {
@@ -43786,7 +43786,7 @@
      "name": "Error"
     }
    ],
-   "description": "`flip(f)(a, b, rest...)` calls `f(b, a, rest...)`; the remaining arguments\nare borrowed. With no remaining parameters it is also a `Binary`.\nThat binary form can be reused by name in `zip_with` and `map_with_index`.",
+   "description": "`flip(f)(a, b, rest...)` calls `f(b, a, rest...)`; the remaining arguments\nare borrowed. With no remaining parameters it is also a `Binary`.\nThat binary form can be reused by name in `zip_with`, `map_with_index` and `scan_map`.",
    "fields": [
     {
      "description": "The wrapped function.",
@@ -44813,7 +44813,7 @@
      "name": "Failure"
     }
    ],
-   "description": "Call it with the remaining arguments, which are borrowed. Each call passes\nthe function a fresh copy of every bound argument, so the stored values are\nnever consumed or changed. With 0, 1 or 2 remaining arguments it is also a\n`Thunk`, `Unary` or `Binary`, which library higher-order functions accept.\nA named unary Partial can be reused as a Pipeline or Result callback without\ncopying its stored prefix for admission. Each invocation still supplies the\nnative function with fresh copies of the bound arguments. An explicit move\ntransfers the Partial, including into deferred computations. Unary partials\nalso implement `BorrowCallable`: predicates, observers and borrowed-payload\nhandlers call the same native function without consuming the payload.\nSelected Pipeline operations can reuse these partials by name.\nWith two remaining arguments, a named partial can also be reused by\n`zip_with` and `map_with_index`; both remaining native arguments are read.",
+   "description": "Call it with the remaining arguments, which are borrowed. Each call passes\nthe function a fresh copy of every bound argument, so the stored values are\nnever consumed or changed. With 0, 1 or 2 remaining arguments it is also a\n`Thunk`, `Unary` or `Binary`, which library higher-order functions accept.\nA named unary Partial can be reused as a Pipeline or Result callback without\ncopying its stored prefix for admission. Each invocation still supplies the\nnative function with fresh copies of the bound arguments. An explicit move\ntransfers the Partial, including into deferred computations. Unary partials\nalso implement `BorrowCallable`: predicates, observers and borrowed-payload\nhandlers call the same native function without consuming the payload.\nSelected Pipeline operations can reuse these partials by name.\nWith two remaining arguments, a named partial can also be reused by\n`zip_with`, `map_with_index` and `scan_map`; both remaining native arguments are read.",
    "fields": [
     {
      "description": "The stored function.",
@@ -236373,6 +236373,71 @@
       },
       "signature": "def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](deinit self, var function: F, var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, F]] where Self.I.Element == T and F.First == A and F.Second == T and F.Out == Tuple[A, Y] and F.Error == Never and RepeatableBinary[F]",
       "summary": "Lazily consume (carry, input) into (new carry, output), yielding one output per input."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "initial",
+        "type": "A",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_BinaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[ScanMapIterator[A, T, Y, Self.I, _SharedBinaryRef[F, o]]]"
+      },
+      "signature": "def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: _BinaryViewable, o: ImmOrigin](deinit self, ref[o] function: F, var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, _SharedBinaryRef[F, o]]] where Self.I.Element == T and _SharedBinaryRef[F, o].First == A and _SharedBinaryRef[F, o].Second == T and _SharedBinaryRef[F, o].Out == Tuple[A, Y] and _SharedBinaryRef[F, o].Error == Never and RepeatableBinary[_SharedBinaryRef[F, o]]",
+      "summary": "Lazily consume (carry, input) into (new carry, output), yielding one output per input."
      }
     ],
     "sequence": [
@@ -248076,6 +248141,85 @@
       "type": "ScanMapIterator[A, T, Y, _Source[V], F]"
      },
      "signature": "def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, V: Movable & Deinitable](var function: F, var initial: A, var source: V) -> ScanMapIterator[A, T, Y, _Source[V], F] where _Source[V].Element == T and F.First == A and F.Second == T and F.Out == Tuple[A, Y] and F.Error == Never and RepeatableBinary[F]",
+     "summary": "Lazily consume (carry, input) into (new carry, output), yielding one output per input."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "initial",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "Y",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_BinaryViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "ScanMapIterator[A, T, Y, _Source[V], _SharedBinaryRef[F, o]]"
+     },
+     "signature": "def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: _BinaryViewable, o: ImmOrigin, V: Movable & Deinitable](ref[o] function: F, var initial: A, var source: V) -> ScanMapIterator[A, T, Y, _Source[V], _SharedBinaryRef[F, o]] where _Source[V].Element == T and _SharedBinaryRef[F, o].First == A and _SharedBinaryRef[F, o].Second == T and _SharedBinaryRef[F, o].Out == Tuple[A, Y] and _SharedBinaryRef[F, o].Error == Never and RepeatableBinary[_SharedBinaryRef[F, o]]",
      "summary": "Lazily consume (carry, input) into (new carry, output), yielding one output per input."
     }
    ],

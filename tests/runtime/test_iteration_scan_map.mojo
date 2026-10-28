@@ -1,31 +1,11 @@
 """Lazy carry/output transitions without copying, including generic forwarding."""
 from fp.iteration import iterated, scan_map, ScanMapIterator
 from fp.callables import MutableBinary, Binary
+from algebra_support.scans import I5Carry, I5Input, I5Output
 from std.iter import Iterator, IterableOwned, next, iter
 from std.itertools import count
 from std.memory import ArcPointer
 from std.testing import assert_equal
-
-
-@fieldwise_init
-struct I5Carry(Movable):
-    var total: Int
-    var drops: ArcPointer[Int]
-    def __deinit__(deinit self): self.drops[] += 1
-
-
-@fieldwise_init
-struct I5Input(Movable):
-    var value: Int
-    var drops: ArcPointer[Int]
-    def __deinit__(deinit self): self.drops[] += 1
-
-
-@fieldwise_init
-struct I5Output(Movable):
-    var text: String
-    var drops: ArcPointer[Int]
-    def __deinit__(deinit self): self.drops[] += 1
 
 
 @fieldwise_init

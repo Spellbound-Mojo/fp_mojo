@@ -166,12 +166,19 @@ unknown. The mapped forms retain the existing map adapter's conservative bounds.
 
 <!-- example: docs/examples/iteration_scan_map.mojo -->
 
-`scan_map(step, initial, source)` and `.scan_map(step, initial)` consume a step
+`scan_map(step, initial, source)` and `.scan_map(step, initial)` apply a step
 `(var A, var T) -> Tuple[A,Y]`. The carry `A` and output `Y` are independent;
 neither needs to be Copyable. Every pull consumes one source item and invokes
 the non-raising step once. Empty input yields nothing, and exhaustion is fused.
 The carry stays owned by the iterator until it is destroyed, including early
 abandonment through `take`; no final-carry extraction is promised.
+
+A named two-argument partial, shared binary composition or binary `flip`
+wrapper can be reused in either form. The example reuses `price` with two
+initial totals, then transfers it with `price^`. Ordinary calls infer the
+output type from the returned pair; explicit `A`, `T` and `Y` bindings remain
+available. The callback borrow follows the [shared lifetime rules](../start/ownership.md#reuse-callbacks-by-name),
+while the iterator owns its carry independently.
 
 Use `scan_left` when each accumulator snapshot is an output, including the
 initial snapshot. Use `fp.control.scan` for eager finite scans that return the
