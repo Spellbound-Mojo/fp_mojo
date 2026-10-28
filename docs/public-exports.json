@@ -1914,6 +1914,35 @@
    "kind": "type or alias",
    "provider": "callables/invoke"
   },
+  "callables.SharedRef": {
+   "declarations": [
+    "struct SharedRef[F: Movable & Deinitable, o: ImmOrigin]("
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "call": [
+     {
+      "sha256": "cf25d1fa79e0862e01db1145e0121a0776a07acbbe3c0e11dc56444dc2630dbf",
+      "signature": "def call(self) raises Self.Error -> Self.Out where conforms_to(Self.F, Thunk):"
+     },
+     {
+      "sha256": "ae69ed2321b17cebfc8203280450925001e3e5213ac6e941266f4d1c9e698959",
+      "signature": "def call(self, var value: Self.Arg) raises Self.Error -> Self.Out where conforms_to(Self.F, Unary):"
+     },
+     {
+      "sha256": "6de3a7d6a6003c048326b32e88de008ad5d10c4dee1abbab54a827b5dada98dd",
+      "signature": "def call(self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out where conforms_to(Self.F, Binary):"
+     }
+    ],
+    "invoke": [
+     {
+      "sha256": "9b5b18fad4a84db0567aac509cd0410e01ece05a78b7eac00ccfaf191db56617",
+      "signature": "def invoke(self, ref value: Self.Payload) raises Self.Failure capturing -> Self.Result where conforms_to(Self.F, BorrowCallable):"
+     }
+    ]
+   },
+   "provider": "callables/_receiver"
+  },
   "callables.Thunk": {
    "declarations": [
     "trait Thunk(ThunkContract, Movable, Deinitable):"
@@ -2162,6 +2191,16 @@
     {
      "sha256": "753ba1cb61ae3e9cfc1d2d9ba3bc56d116b0a54127a988aef728025a8db627eb",
      "signature": "def mut_ref[F: Movable & Deinitable, o: MutOrigin](ref[o] function: F) -> MutableRef[F, o]:"
+    }
+   ],
+   "provider": "callables/_receiver"
+  },
+  "callables.shared_ref": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "35b38357ddcd69934acf464a922643a0d30896e5e74f4aee7ab8a3445306fa6b",
+     "signature": "def shared_ref[F: Movable & Deinitable, o: ImmOrigin](ref[o] function: F) -> SharedRef[F, o]:"
     }
    ],
    "provider": "callables/_receiver"

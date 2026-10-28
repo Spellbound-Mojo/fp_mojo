@@ -8,6 +8,142 @@ from fp.callables.invoke import RepeatableBorrow as _RepeatableBorrow, invoke_bo
 
 
 @fieldwise_init
+struct SharedRef[F: Movable & Deinitable, o: ImmOrigin](
+    ImplicitlyCopyable,
+    CallContract where conforms_to(F, CallContract),
+    UnaryContract where conforms_to(F, CallContract) and conforms_to(F, Unary),
+    Unary where conforms_to(F, CallContract) and conforms_to(F, Unary),
+    BinaryContract where conforms_to(F, CallContract) and conforms_to(F, Binary),
+    Binary where conforms_to(F, CallContract) and conforms_to(F, Binary),
+    ThunkContract where conforms_to(F, CallContract) and conforms_to(F, Thunk),
+    Thunk where conforms_to(F, CallContract) and conforms_to(F, Thunk),
+    BorrowCallContract where conforms_to(F, BorrowCallable),
+    BorrowCallable where conforms_to(F, BorrowCallable),
+):
+    """A copyable shared reference preserving every shared callable shape.
+
+    Create one with `shared_ref(callback)`. Calls always use the original's
+    shared receiver, even when it also supports mutable or consuming calls.
+    Copying or consuming the reference neither copies nor consumes the original.
+    Its origin keeps the callback alive through lazy and deferred operations.
+
+    Parameters:
+        F: The original library callable's type.
+        o: Its shared origin, including any retained borrow.
+    """
+    var _function: Pointer[Self.F, Self.o]
+    comptime Arg = downcast[Self.F, Unary].Arg if conforms_to(Self.F, Unary) else Never
+    comptime First = downcast[Self.F, Binary].First if conforms_to(Self.F, Binary) else Never
+    comptime Second = downcast[Self.F, Binary].Second if conforms_to(Self.F, Binary) else Never
+    comptime Out = downcast[Self.F, CallContract].Out if conforms_to(Self.F, CallContract) else Never
+    comptime Error = downcast[Self.F, CallContract].Error if conforms_to(Self.F, CallContract) else Never
+    comptime Payload = downcast[Self.F, BorrowCallable].Payload if conforms_to(Self.F, BorrowCallable) else Never
+    comptime Result = downcast[Self.F, BorrowCallable].Result if conforms_to(Self.F, BorrowCallable) else Never
+    comptime Failure = downcast[Self.F, BorrowCallable].Failure if conforms_to(Self.F, BorrowCallable) else Never
+
+    def call(self) raises Self.Error -> Self.Out where conforms_to(Self.F, Thunk):
+        """Invoke the original shared thunk.
+
+        Returns:
+            Its result with the original type and origins.
+
+        Raises:
+            The original `Error`, or nothing when it is `Never`.
+        """
+        comptime C = downcast[Self.F, Thunk]
+        comptime assert Self.Out == C.Out and Self.Error == C.Error
+        try:
+            return rebind_var[Self.Out](_SharedThunkRef[C, Self.o](rebind[Pointer[C, Self.o]](self._function)).call())
+        except error:
+            comptime assert _ErrorCompatible[Self.Error, type_of(error)]
+            _propagate_error[Self.Error](error^)
+
+    def call(self, var value: Self.Arg) raises Self.Error -> Self.Out where conforms_to(Self.F, Unary):
+        """Transfer one argument through the original shared receiver.
+
+        Args:
+            value: The argument, consumed.
+
+        Returns:
+            The original callback's result, with its exact type and origins.
+
+        Raises:
+            The original `Error`, or nothing when it is `Never`.
+        """
+        comptime C = downcast[Self.F, Unary]
+        comptime assert Self.Arg == C.Arg and Self.Out == C.Out and Self.Error == C.Error
+        try:
+            return rebind_var[Self.Out](_SharedUnaryRef[C, Self.o](rebind[Pointer[C, Self.o]](self._function)).call(rebind_var[C.Arg](value^)))
+        except error:
+            comptime assert _ErrorCompatible[Self.Error, type_of(error)]
+            _propagate_error[Self.Error](error^)
+
+    def call(self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out where conforms_to(Self.F, Binary):
+        """Transfer both arguments through the original shared receiver.
+
+        Args:
+            first: The first argument, consumed.
+            second: The second argument, consumed.
+
+        Returns:
+            The original callback's result, with its exact type and origins.
+
+        Raises:
+            The original `Error`, or nothing when it is `Never`.
+        """
+        comptime C = downcast[Self.F, Binary]
+        comptime assert Self.First == C.First and Self.Second == C.Second and Self.Out == C.Out and Self.Error == C.Error
+        try:
+            return rebind_var[Self.Out](_SharedBinaryRef[C, Self.o](rebind[Pointer[C, Self.o]](self._function)).call(rebind_var[C.First](first^), rebind_var[C.Second](second^)))
+        except error:
+            comptime assert _ErrorCompatible[Self.Error, type_of(error)]
+            _propagate_error[Self.Error](error^)
+
+    def invoke(self, ref value: Self.Payload) raises Self.Failure capturing -> Self.Result where conforms_to(Self.F, BorrowCallable):
+        """Read the argument through the original shared borrowing receiver.
+
+        Args:
+            value: The argument, borrowed without copying or consuming it.
+
+        Returns:
+            The original callback's `Result`, with its exact type and origins.
+
+        Raises:
+            The original `Failure`, or nothing when it is `Never`.
+        """
+        comptime C = downcast[Self.F, BorrowCallable]
+        comptime assert Self.Payload == C.Payload and Self.Result == C.Result and Self.Failure == C.Failure
+        try:
+            return rebind_var[Self.Result](_SharedBorrowRef[C, Self.o](rebind[Pointer[C, Self.o]](self._function)).invoke(rebind[C.Payload](value)))
+        except error:
+            comptime assert _ErrorCompatible[Self.Failure, type_of(error)]
+            _propagate_error[Self.Failure](error^)
+
+
+def shared_ref[F: Movable & Deinitable, o: ImmOrigin](ref[o] function: F) -> SharedRef[F, o]:
+    """Borrow a library callback while explicitly selecting its shared receiver.
+
+    For example, `attempt_once(shared_ref(factory))` captures a call while
+    retaining the factory. A stored reference can serve several operations.
+    Use `mut_ref` when calls should select the mutable receiver instead.
+    Deferred computations retain the callback's origin until they finish.
+
+    Parameters:
+        F: The original library callable's type, inferred.
+        o: Its shared origin, inferred.
+
+    Args:
+        function: A library callback supporting at least one shared call shape.
+
+    Returns:
+        A copyable reference preserving all shared shapes, exact payload and
+        result types, native errors, and the original callback's lifetime.
+    """
+    comptime assert conforms_to(F, Unary) | conforms_to(F, Binary) | conforms_to(F, Thunk) | conforms_to(F, BorrowCallable), "shared_ref requires a shared library callable"
+    return SharedRef[F, o](Pointer(to=function))
+
+
+@fieldwise_init
 struct _SharedThunkRef[F: Thunk, o: ImmOrigin](Thunk, ImplicitlyCopyable):
     """Retain a shared factory without copying or consuming its captures."""
     var function: Pointer[Self.F, Self.o]

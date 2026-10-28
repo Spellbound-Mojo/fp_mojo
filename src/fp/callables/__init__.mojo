@@ -19,6 +19,9 @@ of taking it. `invoke_borrowed`, `invoke_borrowed_repeated` and
 `invoke_borrowed_once` provide shared, repeated exclusive and owned one-call
 invocation. The latter accepts every receiver mode, preferring consuming,
 then mutable, then shared.
+`shared_ref(callback)` selects the shared receiver explicitly and keeps every
+shared call shape. The copyable `SharedRef` lends a callback without copying
+its captures and supplies a public reference type for generic contracts.
 `mut_ref(callback)` lends a named library callback to an operation that owns
 its callback, retaining the original state for inspection or reuse afterward.
 The movable `MutableRef` preserves every repeatable shape and its native origin.
@@ -73,4 +76,4 @@ from .invoke import (
 from .native import NativeUnary, as_unary, NativeBinary, as_binary, BinarySignature
 from .native import NativeBorrow, BorrowSignature
 
-from ._receiver import MutableRef, mut_ref
+from ._receiver import SharedRef, shared_ref, MutableRef, mut_ref

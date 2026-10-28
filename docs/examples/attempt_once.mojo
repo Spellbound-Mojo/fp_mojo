@@ -1,5 +1,5 @@
 """Capture a native failure while consuming a thunk's owned state once."""
-from fp.callables import OnceThunk, MutableThunk, mut_ref
+from fp.callables import OnceThunk, MutableThunk, shared_ref, mut_ref
 from fp.functions import partial
 from fp.data import Capture, attempt_once
 
@@ -51,3 +51,7 @@ def main():
     print("counter error:", attempt_once(mut_ref(counter)).swap().get_or(0))
     print("counter value:", attempt_once(mut_ref(counter)).get_or(0))
     print("retained calls:", counter.calls)
+    var sum = partial(add, 2, 3)
+    var reusable = shared_ref(sum)
+    print("shared result:", attempt_once(reusable).get_or(0))
+    print("shared again:", Capture[Error]().run(reusable).get_or(0))

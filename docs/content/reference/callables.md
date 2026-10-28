@@ -66,6 +66,21 @@ that choice for generic code and excludes consuming-only callbacks. The
 result retains its native type and origins. Errors must match `E`, with
 widening permitted from `Never`, as with `invoke_borrowed`.
 
+Use `shared_ref(callback)` to lend a shared library callable explicitly. For
+example, `attempt_once(shared_ref(factory))` leaves the factory available for
+another call, even when it owns noncopyable captures. A stored reference can be
+passed by name repeatedly. It supports the original's shared thunk, unary,
+binary and borrowed-argument shapes, including distinct native error types.
+It always selects the shared receiver, even if the original also has mutable
+or consuming receivers. Adapt native functions before taking a reference.
+
+`SharedRef[F, o]` is implicitly copyable: copying it copies only the reference.
+It retains the original origin through iterators and deferred computations;
+the owner must remain alive. Consuming a reference leaves the original intact.
+Use this public type when describing a borrowed callback in a generic operation
+contract; see [generic wrappers](../guides/generic-wrappers.md#forward-a-shared-callback).
+Ordinary named callbacks in APIs that already borrow them need no extra wrapper.
+
 Use `mut_ref(callback)` when an operation owns its callback but you want to
 inspect or reuse the original state afterward. For example,
 `iterated(range(5)).filter(mut_ref(predicate)).to_list()` updates a named

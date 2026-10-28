@@ -328,6 +328,27 @@ never extends a lifetime or copies a captured owner to make reuse compile.
 The [user guide](../start/ownership.md#reuse-callbacks-by-name) explains these
 choices without requiring the internal view types.
 
+## Explicit shared references
+
+The public `SharedRef[F, o]` preserves all shared shapes of a library callable;
+`shared_ref(callback)` infers its type and origin. Conditional conformance
+exposes each available protocol and exact metadata. Borrowed-argument
+`Result`/`Failure` remain independent of owned-argument `Out`/`Error`.
+The reference is implicitly copyable without copying the original callback.
+
+Each method delegates to the existing shape-specific `_SharedThunkRef`,
+`_SharedUnaryRef`, `_SharedBinaryRef` or `_SharedBorrowRef`. Those typed views
+retain the strong protocol bounds used by Partial and Composition inference.
+Replacing them with aliases to the conditional public reference loses required
+compiler evidence in those generic paths on Mojo 1.2. Keeping the typed owners
+also gives one implementation of each shared invocation. The public facade
+only forwards conditional metadata and the exact native error bridge.
+
+Explicit references do not change existing implicit shared-view admission or
+owned receiver selection. Generic wrappers can describe `SharedRef` in public
+operation contracts and pass that same representation into the operation,
+including when its deferred output type stores the reference.
+
 ## How consumers use the call boundary
 
 | Consumer | Route and receiver |

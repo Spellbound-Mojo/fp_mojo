@@ -13375,6 +13375,170 @@
    "summary": "Whether a unary callback stays usable after a call: it has a shared or exclusive receiver.",
    "traits": []
   },
+  "callables.SharedRef": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Arg"
+    },
+    {
+     "description": "",
+     "name": "First"
+    },
+    {
+     "description": "",
+     "name": "Second"
+    },
+    {
+     "description": "",
+     "name": "Out"
+    },
+    {
+     "description": "",
+     "name": "Error"
+    },
+    {
+     "description": "",
+     "name": "Payload"
+    },
+    {
+     "description": "",
+     "name": "Result"
+    },
+    {
+     "description": "",
+     "name": "Failure"
+    }
+   ],
+   "description": "Create one with `shared_ref(callback)`. Calls always use the original's\nshared receiver, even when it also supports mutable or consuming calls.\nCopying or consuming the reference neither copies nor consumes the original.\nIts origin keeps the callback alive through lazy and deferred operations.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "call": [
+     {
+      "args": [],
+      "description": "",
+      "error": "Self.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The original `Error`, or nothing when it is `Never`.",
+      "returns": {
+       "doc": "Its result with the original type and origins.",
+       "type": "Self.Out"
+      },
+      "signature": "def call(self) raises Self.Error -> Self.Out where conforms_to(Self.F, Thunk)",
+      "summary": "Invoke the original shared thunk."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The argument, consumed.",
+        "name": "value",
+        "type": "Self.Arg",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The original `Error`, or nothing when it is `Never`.",
+      "returns": {
+       "doc": "The original callback's result, with its exact type and origins.",
+       "type": "Self.Out"
+      },
+      "signature": "def call(self, var value: Self.Arg) raises Self.Error -> Self.Out where conforms_to(Self.F, Unary)",
+      "summary": "Transfer one argument through the original shared receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The first argument, consumed.",
+        "name": "first",
+        "type": "Self.First",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The second argument, consumed.",
+        "name": "second",
+        "type": "Self.Second",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The original `Error`, or nothing when it is `Never`.",
+      "returns": {
+       "doc": "The original callback's result, with its exact type and origins.",
+       "type": "Self.Out"
+      },
+      "signature": "def call(self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out where conforms_to(Self.F, Binary)",
+      "summary": "Transfer both arguments through the original shared receiver."
+     }
+    ],
+    "invoke": [
+     {
+      "args": [
+       {
+        "convention": "ref",
+        "description": "The argument, borrowed without copying or consuming it.",
+        "name": "value",
+        "type": "Self.Payload",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.Failure capturing",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The original `Failure`, or nothing when it is `Never`.",
+      "returns": {
+       "doc": "The original callback's `Result`, with its exact type and origins.",
+       "type": "Self.Result"
+      },
+      "signature": "def invoke(self, ref value: Self.Payload) raises Self.Failure capturing -> Self.Result where conforms_to(Self.F, BorrowCallable)",
+      "summary": "Read the argument through the original shared borrowing receiver."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The original library callable's type.",
+     "inferred": false,
+     "name": "F",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "Its shared origin, including any retained borrow.",
+     "inferred": false,
+     "name": "o",
+     "type": "ImmOrigin",
+     "variadic": false
+    }
+   ],
+   "provider": "callables/_receiver",
+   "signature": "struct SharedRef[F: Movable & Deinitable, o: ImmOrigin](ImplicitlyCopyable, CallContract where conforms_to(F, CallContract), UnaryContract where conforms_to(F, CallContract) and conforms_to(F, Unary), Unary where conforms_to(F, CallContract) and conforms_to(F, Unary), BinaryContract where conforms_to(F, CallContract) and conforms_to(F, Binary), Binary where conforms_to(F, CallContract) and conforms_to(F, Binary), ThunkContract where conforms_to(F, CallContract) and conforms_to(F, Thunk), Thunk where conforms_to(F, CallContract) and conforms_to(F, Thunk), BorrowCallContract where conforms_to(F, BorrowCallable), BorrowCallable where conforms_to(F, BorrowCallable),)",
+   "summary": "A copyable shared reference preserving every shared callable shape.",
+   "traits": [
+    "Binary",
+    "BinaryContract",
+    "BorrowCallContract",
+    "BorrowCallable",
+    "CallContract",
+    "Copyable",
+    "ImplicitlyCopyable",
+    "Thunk",
+    "ThunkContract",
+    "Unary",
+    "UnaryContract"
+   ]
+  },
   "callables.Thunk": {
    "aliases": [],
    "description": "",
@@ -15306,6 +15470,51 @@
      },
      "signature": "def mut_ref[F: Movable & Deinitable, o: MutOrigin](ref[o] function: F) -> MutableRef[F, o]",
      "summary": "Borrow a mutable callback for an operation that owns its callback."
+    }
+   ],
+   "provider": "callables/_receiver",
+   "summary": ""
+  },
+  "callables.shared_ref": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "A library callback supporting at least one shared call shape.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "For example, `attempt_once(shared_ref(factory))` captures a call while\nretaining the factory. A stored reference can serve several operations.\nUse `mut_ref` when calls should select the mutable receiver instead.\nDeferred computations retain the callback's origin until they finish.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The original library callable's type, inferred.",
+       "inferred": false,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "Its shared origin, inferred.",
+       "inferred": false,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A copyable reference preserving all shared shapes, exact payload and\nresult types, native errors, and the original callback's lifetime.",
+      "type": "SharedRef[F, o]"
+     },
+     "signature": "def shared_ref[F: Movable & Deinitable, o: ImmOrigin](ref[o] function: F) -> SharedRef[F, o]",
+     "summary": "Borrow a library callback while explicitly selecting its shared receiver."
     }
    ],
    "provider": "callables/_receiver",
@@ -324512,7 +324721,7 @@
    "summary": "Functor, Filterable, FunctorFilter, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Semigroup and Monoid over native values, with explicit instances."
   },
   "callables": {
-   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n| one borrowed argument | `BorrowCallable.invoke` | `BorrowMutableCallable.invoke_mut` | `BorrowOnceCallable.invoke_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. Borrowing callables read their argument instead\nof taking it. `invoke_borrowed`, `invoke_borrowed_repeated` and\n`invoke_borrowed_once` provide shared, repeated exclusive and owned one-call\ninvocation. The latter accepts every receiver mode, preferring consuming,\nthen mutable, then shared.\n`mut_ref(callback)` lends a named library callback to an operation that owns\nits callback, retaining the original state for inspection or reuse afterward.\nThe movable `MutableRef` preserves every repeatable shape and its native origin.\n`CallContract` is the shared result/error metadata of owned-argument callables.\n`RepeatableBorrow` admits shared or mutable borrowing receivers. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped`, `Tupled`, `MappedPair` and `Identity` from `fp.functions` implement these\nprotocols.\n\n`as_binary` stores a plain binary function or thin pointer in `NativeBinary`.\nIt preserves two owned argument types and the exact result and error types.\nNamed adapters can be reused by shared borrow in `zip_with`, `map_with_index`,\n`scan_map` and `scan_left`. The factory does not infer capturing closures.\n`BinarySignature[A, B, R, E].capture(closure)` selects the signature before\ncapturing a binary closure into the same adapter. Its error defaults to `Never`.\n`BorrowSignature[A, R, E].capture(callback)` stores a predicate, observer or\nprojection in `NativeBorrow`. Named uses share the adapter; each call reads\nits payload. Native closures and thin pointer aliases retain their exact types.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Lazy `map`, `filter_map`, `flat_map`, `scan_left` | Native callbacks and shared or mutable library unary/binary values |\n| `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| `fori_loop_mut` | A named shared or mutable library binary body, borrowed exclusively; updated receiver state remains in the caller. |\n| Iterator filter, prefix, partition, search and count predicates | Native predicates, `BorrowCallable` and owned `BorrowMutableCallable` |\n| Family `filter` and `filter_not` | Native predicates, shared views and owned `BorrowMutableCallable` or `BorrowCallable`; `mut_ref` preserves caller-owned state. |\n| `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `Thunk`, `MutableThunk` or `OnceThunk`; consuming, then mutable, then shared receiver priority |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
+   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n| one borrowed argument | `BorrowCallable.invoke` | `BorrowMutableCallable.invoke_mut` | `BorrowOnceCallable.invoke_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. Borrowing callables read their argument instead\nof taking it. `invoke_borrowed`, `invoke_borrowed_repeated` and\n`invoke_borrowed_once` provide shared, repeated exclusive and owned one-call\ninvocation. The latter accepts every receiver mode, preferring consuming,\nthen mutable, then shared.\n`shared_ref(callback)` selects the shared receiver explicitly and keeps every\nshared call shape. The copyable `SharedRef` lends a callback without copying\nits captures and supplies a public reference type for generic contracts.\n`mut_ref(callback)` lends a named library callback to an operation that owns\nits callback, retaining the original state for inspection or reuse afterward.\nThe movable `MutableRef` preserves every repeatable shape and its native origin.\n`CallContract` is the shared result/error metadata of owned-argument callables.\n`RepeatableBorrow` admits shared or mutable borrowing receivers. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped`, `Tupled`, `MappedPair` and `Identity` from `fp.functions` implement these\nprotocols.\n\n`as_binary` stores a plain binary function or thin pointer in `NativeBinary`.\nIt preserves two owned argument types and the exact result and error types.\nNamed adapters can be reused by shared borrow in `zip_with`, `map_with_index`,\n`scan_map` and `scan_left`. The factory does not infer capturing closures.\n`BinarySignature[A, B, R, E].capture(closure)` selects the signature before\ncapturing a binary closure into the same adapter. Its error defaults to `Never`.\n`BorrowSignature[A, R, E].capture(callback)` stores a predicate, observer or\nprojection in `NativeBorrow`. Named uses share the adapter; each call reads\nits payload. Native closures and thin pointer aliases retain their exact types.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Lazy `map`, `filter_map`, `flat_map`, `scan_left` | Native callbacks and shared or mutable library unary/binary values |\n| `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| `fori_loop_mut` | A named shared or mutable library binary body, borrowed exclusively; updated receiver state remains in the caller. |\n| Iterator filter, prefix, partition, search and count predicates | Native predicates, `BorrowCallable` and owned `BorrowMutableCallable` |\n| Family `filter` and `filter_not` | Native predicates, shared views and owned `BorrowMutableCallable` or `BorrowCallable`; `mut_ref` preserves caller-owned state. |\n| `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `Thunk`, `MutableThunk` or `OnceThunk`; consuming, then mutable, then shared receiver priority |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
    "summary": "How the library calls user code: callable protocols, receiver dispatch and native functions as values."
   },
   "combinators": {

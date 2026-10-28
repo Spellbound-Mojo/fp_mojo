@@ -118,6 +118,25 @@ Payload and error equalities include their origins. Forward the existing
 the returned view or deferred computation. The contract does not copy a moved
 capture, extend a lifetime, or convert one native error type into another.
 
+## Forward a shared callback
+
+Use `shared_ref(callback)` when a generic wrapper borrows a shared library
+callable and forwards it to an operation that owns its callback. No capture
+copy is required. For example, a wrapper accepting `F: Thunk` can return
+`Result[F.Out, F.Error]` from `attempt_once(shared_ref(factory))`.
+
+For operation descriptors, spell the callback as the public `SharedRef[F, o]`,
+where the wrapper accepts `ref[o] factory: F`. A sequencing wrapper then uses
+`BeforeContract[I, V, SharedRef[F, o]]` for its admission, output and error,
+and calls `pipeline[I](source^).before(shared_ref(factory)).get()`.
+Use the same explicit reference in both the descriptor and the operation:
+deferred output types retain the actual callback representation and origin.
+
+The reference supports every shared call shape of the original and always
+selects shared invocation. Mutable-only and consuming-only callbacks require
+their existing receiver boundaries. `mut_ref(callback)` remains the choice
+when the wrapper should mutate and retain caller-owned state.
+
 ## Native callbacks and diagnostics
 
 These descriptors describe library callable protocols. Native callbacks retain
