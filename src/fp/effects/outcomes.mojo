@@ -43,6 +43,76 @@ Parameters:
 """
 
 
+@fieldwise_init
+struct ExitCase[E: Movable & Deinitable](Movable):
+    """An exit observed by a finalizer, preserving exact move-only failures.
+
+    Finalizers borrow this value. Failure and cancellation can both be true;
+    errors retain execution order. Success payloads remain owned by the runner.
+
+    Parameters:
+        E: The exact native error type.
+    """
+    var _failure: Optional[EffectFailure[Self.E]]
+    var _canceled: Bool
+
+    def is_success(self) -> Bool:
+        """Return whether the protected operation succeeded.
+
+        Returns:
+            True only for a successful, uncanceled operation.
+        """
+        return not self._failure and not self._canceled
+
+    def is_error(self) -> Bool:
+        """Return whether the protected operation retained any failures.
+
+        Returns:
+            True when at least one exact error is available.
+        """
+        return Bool(self._failure)
+
+    def is_canceled(self) -> Bool:
+        """Return whether cancellation was observed, including failed cleanup.
+
+        Returns:
+            True when the protected operation also observed cancellation.
+        """
+        return self._canceled
+
+    def failure(ref self) -> ref[self._failure] Optional[EffectFailure[Self.E]]:
+        """Borrow the optional exact failure without copying or consuming it.
+
+        Returns:
+            The optional failure, borrowed from this exit case.
+        """
+        return self._failure
+
+
+struct _ExitState[T: Movable & Deinitable, E: Movable & Deinitable](Movable):
+    var value: Optional[Self.T]
+    var exit: ExitCase[Self.E]
+
+    def __init__(out self, var outcome: Outcome[Self.T, Self.E]):
+        self.value = None
+        self.exit = ExitCase[Self.E](None, not outcome)
+        if outcome:
+            var result = outcome.take()
+            if result.is_err():
+                var failure = result^._take_err()
+                self.exit._canceled = failure.canceled
+                self.exit._failure = Optional(failure^)
+            else:
+                self.value = Optional(result^._take_ok())
+
+    def outcome(deinit self) -> Outcome[Self.T, Self.E]:
+        if self.exit._failure:
+            return Optional(Result[Self.T, EffectFailure[Self.E]](Err(self.exit._failure.take())))
+        if self.exit._canceled:
+            return None
+        return Optional(Result[Self.T, EffectFailure[Self.E]](Ok(self.value.take())))
+
+
 def _capture[E: Movable & Deinitable, F: OnceThunk](var function: F
 ) -> Result[F.Out, EffectFailure[E]] where _ErrorCompatible[E, F.Error]:
     var captured = attempt_once(function^)

@@ -328,6 +328,28 @@ synchronously and must return before a cancellation request can be observed.
 Dropping a program or running it with an already-canceled token does not enter
 its scopes or run their finalizers.
 
+`guarantee_case(body, finalizer)` builds cleanup from an `ExitCase[E]`.
+The case distinguishes success, error and cancellation; a failure can also be
+canceled. `failure()` borrows its exact `EffectFailure` without copying it.
+Both finalizer construction and execution are masked and captured. `on_cancel`
+uses the same runner but skips cleanup unless the body observed cancellation.
+
+<!-- example: docs/examples/io_finalization.mojo -->
+
+`uncancelable_with[E](factory)` passes a `Poll[E]` to a deferred factory.
+`poll.apply(program)` restores the cancellation state preceding that region.
+An enclosing mask remains masked. A poll cannot bypass a nested mask or a
+finalizer, and one retained beyond its region is inert. The existing
+`uncancelable(program)` remains the simpler fully masked form.
+
+`scoped_io(callback)` adapts an ordinary borrowing IO factory for
+`guarantee_case`. Implement `ScopedIO` when the returned action needs to borrow
+the exit case itself: `Action[o]` retains the input origin until execution
+completes, while `Value`, `Error` and `BuildError` are independent of it.
+`DelayContract[F, E].Out` names delayed actions in such generic factories.
+Cleanup results and errors cannot escape that fresh borrowed input, although
+independent captured origins remain supported.
+
 Delay captures its callback's error. General algebra callbacks retain their
 native error channel: use `capture_io(program)` before stored-error recovery
 when a map or bind callback can raise. Existing `IO[E].or_else` and Pipeline

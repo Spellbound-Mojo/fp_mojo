@@ -42982,7 +42982,7 @@
     ]
    },
    "parameters": [],
-   "provider": "effects/io",
+   "provider": "effects/_io_core",
    "signature": "struct CancellationToken(Copyable)",
    "summary": "A shared atomic cancellation request; cancellation is cooperative.",
    "traits": [
@@ -43167,6 +43167,42 @@
     "Copyable"
    ]
   },
+  "effects.DelayContract": {
+   "aliases": [
+    {
+     "description": "Whether this callback can be captured in the selected IO family.",
+     "name": "Compatible"
+    },
+    {
+     "description": "The concrete delayed action, retaining all callback origins.",
+     "name": "Out"
+    }
+   ],
+   "description": "",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The exact once-callable thunk type.",
+     "inferred": false,
+     "name": "F",
+     "type": "ThunkContract & Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The selected IO error family.",
+     "inferred": false,
+     "name": "E",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/_io_core",
+   "signature": "struct DelayContract[F: ThunkContract & Movable & Deinitable, E: Movable & Deinitable]",
+   "summary": "Name a delayed action in generic and origin-dependent factories.",
+   "traits": []
+  },
   "effects.EffectFailure": {
    "aliases": [],
    "description": "Errors retain their occurrence order: body first, then finalizers from the\ninnermost scope outwards. Neither errors nor their borrowed origins are\nerased. Native resource scopes always set canceled to False.",
@@ -43216,6 +43252,91 @@
    "traits": [
     "Copyable"
    ]
+  },
+  "effects.ExitCase": {
+   "aliases": [],
+   "description": "Finalizers borrow this value. Failure and cancellation can both be true;\nerrors retain execution order. Success payloads remain owned by the runner.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "failure": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The optional failure, borrowed from this exit case.",
+       "type": "ref[self._failure] Optional[EffectFailure[Self.E]]"
+      },
+      "signature": "def failure(ref self) -> ref[self._failure] Optional[EffectFailure[Self.E]]",
+      "summary": "Borrow the optional exact failure without copying or consuming it."
+     }
+    ],
+    "is_canceled": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "True when the protected operation also observed cancellation.",
+       "type": "Bool"
+      },
+      "signature": "def is_canceled(self) -> Bool",
+      "summary": "Return whether cancellation was observed, including failed cleanup."
+     }
+    ],
+    "is_error": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "True when at least one exact error is available.",
+       "type": "Bool"
+      },
+      "signature": "def is_error(self) -> Bool",
+      "summary": "Return whether the protected operation retained any failures."
+     }
+    ],
+    "is_success": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "True only for a successful, uncanceled operation.",
+       "type": "Bool"
+      },
+      "signature": "def is_success(self) -> Bool",
+      "summary": "Return whether the protected operation succeeded."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The exact native error type.",
+     "inferred": false,
+     "name": "E",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/outcomes",
+   "signature": "struct ExitCase[E: Movable & Deinitable](Movable)",
+   "summary": "An exit observed by a finalizer, preserving exact move-only failures.",
+   "traits": []
   },
   "effects.Fiber": {
    "aliases": [],
@@ -43330,7 +43451,7 @@
      "variadic": false
     }
    ],
-   "provider": "effects/io",
+   "provider": "effects/_io_core",
    "signature": "comptime IO[E: Movable & Deinitable = Error] = ReaderT[ResultT[OptionalFamily, EffectFailure[E]], IOContext[E]]",
    "summary": "A deferred, typed IO family using the existing Monad and error operations.",
    "traits": []
@@ -43385,7 +43506,7 @@
      "variadic": false
     }
    ],
-   "provider": "effects/io",
+   "provider": "effects/_io_core",
    "signature": "struct IOContext[E: Movable & Deinitable](_IOContextType, Copyable)",
    "summary": "A borrowed execution context for custom IO endpoints.",
    "traits": [
@@ -43421,7 +43542,7 @@
      "variadic": false
     }
    ],
-   "provider": "effects/io",
+   "provider": "effects/_io_core",
    "signature": "struct IOContract[P: ReaderAction]",
    "summary": "Admission and exact outcome type for running a concrete IO recipe.",
    "traits": []
@@ -44383,6 +44504,66 @@
    "signature": "struct Permit(Movable)",
    "summary": "One owned semaphore permit, returned automatically when destroyed.",
    "traits": []
+  },
+  "effects.Poll": {
+   "aliases": [
+    {
+     "description": "The concrete recipe returned by apply, for generic factories.",
+     "name": "Applied"
+    }
+   ],
+   "description": "A poll only restores its own currently active region. Nested masks and\nfinalizers remain protected; a poll retained beyond its region is inert.\nRestoring an outer mask leaves cancellation masked. The marker is owned,\nso retaining this value never leaves a pointer into a finished stack frame.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "apply": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed without execution now.",
+        "name": "program",
+        "type": "P",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A compatible IO program in this poll's error family.",
+        "inferred": false,
+        "name": "P",
+        "type": "ReaderAction",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A deferred restoration around the given program.",
+       "type": "_IOPolled[P, Self.E]"
+      },
+      "signature": "def apply[P: ReaderAction](self, var program: P) -> _IOPolled[P, Self.E] where IOContract[P].Compatible and IOContract[P].Error == Self.E",
+      "summary": "Run a program with this region's previous cancellation state."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The selected IO error family.",
+     "inferred": false,
+     "name": "E",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/finalization",
+   "signature": "struct Poll[E: Movable & Deinitable](Copyable)",
+   "summary": "Restore the cancellation state preceding one uncancelable_with region.",
+   "traits": [
+    "Copyable"
+   ]
   },
   "effects.Project": {
    "aliases": [
@@ -46395,6 +46576,72 @@
    "provider": "effects/layers",
    "signature": "comptime ResultT[M: Monad, E: Movable & Deinitable]: Monad & ApplicativeError & ErrorMapping & _Lifting = ResultFamily[E] if M == IdentityFamily else _ResultT[M, E]",
    "summary": "Result over the base Monad `M`: a value is `M`'s carrier of `Result[A, E]`; over Identity, `ResultFamily[E]`.",
+   "traits": []
+  },
+  "effects.ScopedIO": {
+   "aliases": [
+    {
+     "description": "The borrowed input type.",
+     "name": "Input"
+    },
+    {
+     "description": "The completed action's result, independent of the input origin.",
+     "name": "Value"
+    },
+    {
+     "description": "The IO error family, independent of the input origin.",
+     "name": "Error"
+    },
+    {
+     "description": "Native construction error, either Error or Never.",
+     "name": "BuildError"
+    },
+    {
+     "description": "An IO action retaining the input origin until it completes.",
+     "name": "Action"
+    }
+   ],
+   "description": "Action takes the fresh input origin. Value and Error do not: neither the\ncompleted result nor a failure can escape that borrow. Captured independent\norigins remain part of the concrete factory. Use scoped_io for ordinary\nborrowing callbacks whose returned action has an input-independent type.",
+   "fields": [],
+   "kind": "trait",
+   "methods": {
+    "build": [
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "The input borrowed by the constructed action.",
+        "name": "value",
+        "type": "Self.Input",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.BuildError",
+      "parameters": [
+       {
+        "description": "The borrowed input's exact origin.",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "BuildError if constructing the action fails.",
+      "returns": {
+       "doc": "An IO action yielding Value in the selected Error family.",
+       "type": "Self.Action[o]"
+      },
+      "signature": "def build[o: ImmOrigin](deinit self, ref[o] value: Self.Input) raises Self.BuildError -> Self.Action[o]",
+      "summary": "Construct the action; the runner keeps value alive through execution."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "effects/scoped",
+   "signature": "trait ScopedIO(Movable, Deinitable)",
+   "summary": "Build an IO action that may borrow its input until that action finishes.",
    "traits": []
   },
   "effects.Semaphore": {
@@ -48554,7 +48801,7 @@
      "summary": "Request cancellation when executed; masks defer its observation."
     }
    ],
-   "provider": "effects/io",
+   "provider": "effects/_io_core",
    "summary": ""
   },
   "effects.capture_io": {
@@ -48592,7 +48839,7 @@
      "summary": "Capture native errors inside IO before applying stored-error recovery."
     }
    ],
-   "provider": "effects/io",
+   "provider": "effects/_io_core",
    "summary": ""
   },
   "effects.censor": {
@@ -48928,7 +49175,7 @@
      "summary": "Suspend a native function, retaining its exact compatible error type."
     }
    ],
-   "provider": "effects/io",
+   "provider": "effects/_io_core",
    "summary": ""
   },
   "effects.get": {
@@ -48976,13 +49223,13 @@
       },
       {
        "convention": "var",
-       "description": "The deferred finalizer, consumed; it must terminate to finish cancellation.",
+       "description": "The deferred finalizer; its success value is discarded.",
        "name": "finalizer",
        "type": "Q",
        "variadic": false
       }
      ],
-     "description": "Finalization runs after success, failure or cancellation. Its success value\nis discarded. All errors remain ordered body first, then finalizer. Nested\nguarantees finalize from the inside out. Dropping an unopened recipe runs\nneither its body nor its finalizer.",
+     "description": "Finalization runs after success, failure or cancellation. All errors remain\nordered body first, then finalizer. Unopened recipes run neither operation.",
      "error": "",
      "parameters": [
       {
@@ -49010,7 +49257,59 @@
      "summary": "Finalize an entered IO body exactly once, with cancellation masked."
     }
    ],
-   "provider": "effects/io",
+   "provider": "effects/finalization",
+   "summary": ""
+  },
+  "effects.guarantee_case": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The body, consumed and deferred.",
+       "name": "program",
+       "type": "P",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The scoped factory; use scoped_io for ordinary callbacks.",
+       "name": "finalizer",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "Construction and execution of the finalizer are masked and captured. The\neffect may borrow the exit case while running, but its result and errors\ncannot retain that borrow. Neither body errors nor successes are copied.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The body program type.",
+       "inferred": false,
+       "name": "P",
+       "type": "ReaderAction",
+       "variadic": false
+      },
+      {
+       "description": "A ScopedIO factory over ExitCase in the body's error family.",
+       "inferred": false,
+       "name": "F",
+       "type": "ScopedIO",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A program retaining the body result and all body/cleanup errors.",
+      "type": "_IOGuaranteeCase[P, F]"
+     },
+     "signature": "def guarantee_case[P: ReaderAction, F: ScopedIO](var program: P, var finalizer: F) -> _IOGuaranteeCase[P, F] where IOContract[P].Compatible and IOContract[P].Error == F.Error and F.Input == ExitCase[F.Error] and _ErrorCompatible[F.Error, F.BuildError]",
+     "summary": "Finalize with an effect that borrows the body's exact exit case."
+    }
+   ],
+   "provider": "effects/finalization",
    "summary": ""
   },
   "effects.inspect": {
@@ -49605,6 +49904,58 @@
     }
    ],
    "provider": "effects/capabilities",
+   "summary": ""
+  },
+  "effects.on_cancel": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The protected program, consumed.",
+       "name": "program",
+       "type": "P",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The cancellation cleanup, consumed and deferred.",
+       "name": "finalizer",
+       "type": "Q",
+       "variadic": false
+      }
+     ],
+     "description": "Also runs when the body both fails and observes cancellation. Ordinary\nerrors and successes skip cleanup. Errors raised by cleanup are retained.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The body program type.",
+       "inferred": false,
+       "name": "P",
+       "type": "ReaderAction",
+       "variadic": false
+      },
+      {
+       "description": "A cleanup program in the same error family.",
+       "inferred": false,
+       "name": "Q",
+       "type": "ReaderAction",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The body outcome combined with any cancellation-cleanup errors.",
+      "type": "_IOGuarantee[P, Q, True]"
+     },
+     "signature": "def on_cancel[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q) -> _IOGuarantee[P, Q, True] where IOContract[P].Compatible and IOContract[Q].Compatible and IOContract[P].Error == IOContract[Q].Error",
+     "summary": "Run masked cleanup only when the entered body observes cancellation."
+    }
+   ],
+   "provider": "effects/finalization",
    "summary": ""
   },
   "effects.pure_resource": {
@@ -50500,7 +50851,7 @@
      "summary": "Run with a shared cancellation token supplied by the caller."
     }
    ],
-   "provider": "effects/io",
+   "provider": "effects/_io_core",
    "summary": ""
   },
   "effects.run_writer": {
@@ -50548,6 +50899,139 @@
    "provider": "effects/writer",
    "summary": ""
   },
+  "effects.scoped_io": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The factory, consumed without invocation.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "The returned program has a fixed type and cannot borrow the fresh input.\nImplement ScopedIO directly when the action needs that input's origin.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The borrowing factory, preserving its exact captures and errors.",
+       "inferred": false,
+       "name": "F",
+       "type": "BorrowCallContract & Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A scoped factory with the returned IO action's value and error types.",
+      "type": "_ScopedFactory[F]"
+     },
+     "signature": "def scoped_io[F: BorrowCallContract & Movable & Deinitable](var function: F) -> _ScopedFactory[F] where _OnceBorrowAvailable[F] and conforms_to(F.Result, ReaderAction) and IOContract[downcast[F.Result, ReaderAction]].Compatible and _ErrorCompatible[IOContract[downcast[F.Result, ReaderAction]].Error, F.Failure]",
+     "summary": "Adapt a borrowing factory returning IO to ScopedIO without executing it."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Borrowing[P, V]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]"
+     },
+     "signature": "def scoped_io[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](var function: F) -> _ScopedFactory[_NativeBorrow[P, V, Never, F, False]] where conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible",
+     "summary": "Adapt a native borrowing factory returning an IO program."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingBorrowing[P, V, X]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_ScopedFactory[_NativeBorrow[P, V, X, F, True]]"
+     },
+     "signature": "def scoped_io[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](var function: F) -> _ScopedFactory[_NativeBorrow[P, V, X, F, True]] where conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and _ErrorCompatible[IOContract[downcast[V, ReaderAction]].Error, X]",
+     "summary": "Adapt a native factory with a compatible exact construction error."
+    }
+   ],
+   "provider": "effects/scoped",
+   "summary": ""
+  },
   "effects.sleep_io": {
    "description": "",
    "kind": "function",
@@ -50583,7 +51067,7 @@
      "summary": "Describe a synchronous, cooperatively cancelable wait."
     }
    ],
-   "provider": "effects/io",
+   "provider": "effects/_io_core",
    "summary": ""
   },
   "effects.tell": {
@@ -50659,7 +51143,161 @@
      "summary": "Mask cooperative cancellation during an entered program."
     }
    ],
-   "provider": "effects/io",
+   "provider": "effects/_io_core",
+   "summary": ""
+  },
+  "effects.uncancelable_with": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The deferred factory, consumed once.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "The factory receives a poll at execution, inside the new mask. Applying it\nrestores the enclosing state only for that subprogram. Construction errors\nare captured; pending cancellation is observed on leaving the outer mask.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "A consuming factory from Poll[E] to IO[E].",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The exact IO error family, selected explicitly.",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A masked IO recipe with the factory's resulting value type.",
+      "type": "_IOMaskBody[F, E]"
+     },
+     "signature": "def uncancelable_with[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](var function: F) -> _IOMaskBody[F, E] where F.Arg == Poll[E] and _OnceUnaryAvailable[F] and _ErrorCompatible[E, F.Error] and conforms_to(F.Out, ReaderAction) and IOContract[downcast[F.Out, ReaderAction]].Compatible and IOContract[downcast[F.Out, ReaderAction]].Error == E",
+     "summary": "Build a masked region with controlled restoration through Poll."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Unary[P, V]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_IOMaskBody[NativeUnary[P, V, Never, F, False], E]"
+     },
+     "signature": "def uncancelable_with[P: Movable & Deinitable, V: Movable & Deinitable, //, E: Movable & Deinitable, F: _Unary[P, V]](var function: F) -> _IOMaskBody[NativeUnary[P, V, Never, F, False], E] where P == Poll[E] and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == E",
+     "summary": "Adapt a non-raising native Poll factory to the shared masking runner."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingUnary[P, V, X]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_IOMaskBody[NativeUnary[P, V, X, F, True], E]"
+     },
+     "signature": "def uncancelable_with[P: Movable & Deinitable, V: Movable & Deinitable, X: Movable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[P, V, X]](var function: F) -> _IOMaskBody[NativeUnary[P, V, X, F, True], E] where P == Poll[E] and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == E and _ErrorCompatible[E, X]",
+     "summary": "Adapt a raising native Poll factory, preserving its exact errors."
+    }
+   ],
+   "provider": "effects/finalization",
    "summary": ""
   },
   "effects.unsafe_start": {
@@ -50872,7 +51510,7 @@
      "summary": "Adapt a native use callback with the scope's exact error type."
     }
    ],
-   "provider": "effects/io",
+   "provider": "effects/_native_resource_io",
    "summary": ""
   },
   "effects.writer": {

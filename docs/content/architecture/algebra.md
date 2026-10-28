@@ -1099,6 +1099,33 @@ Resource code owns lifecycle transitions; IO code owns cancellation checkpoints
 and masking. Runtime threads and coordination will be separate consumers of
 these contracts, with their host and threading requirements documented explicitly.
 
+The IO kernel lives in `_io_core`, with the existing `effects.io` imports
+retained as a facade. `finalization` owns one entered-body runner shared by
+`guarantee`, `guarantee_case` and `on_cancel`. It splits the body outcome into
+an owned success slot and an `ExitCase`, borrows the case during cleanup, then
+reconstructs the original outcome before the existing `_finish` combiner merges
+cleanup. No success or error payload must be copyable. `on_cancel` observes
+cancellation on the completed body; a request first observed after that point
+does not retroactively select its cleanup.
+
+`ScopedIO` separates a factory's temporary input origin from its completed
+result and error. The constructed `Action[o]` can retain that borrow only until
+the scoped runner consumes the action. The runner captures factory exceptions
+and action exceptions through the same Result boundary used by delay. Fixed
+native return types use `scoped_io`; custom origin-dependent factories implement
+the protocol directly. Neither path erases captured origins.
+
+Every cancellation mask has an owned identity marker. `uncancelable_with`
+constructs a `Poll` carrying the previous context and the marker of its region.
+Applying a poll restores the previous context only when that marker is current.
+A nested mask or finalizer has another marker, so an outer poll cannot remove
+its protection. Restoring an enclosing mask keeps cancellation masked. Keeping
+a poll after the region ends keeps its marker alive, prevents identity reuse,
+and cannot unmask unrelated later work. Mask exits and completed finalization
+settle pending cancellation before an ordinary monadic continuation can run.
+This supports cancellation semantics
+without depending on private Mojo coroutine APIs; execution remains synchronous.
+
 General algebra operations preserve native callback error timing. A raising
 callback in `map` or `flat_map` therefore has a native error channel until an IO
 capture boundary. `capture_io(program)` places that boundary before stored-error

@@ -62,8 +62,12 @@ from .writer import WriterT, Writer, WriterValue, writer, run_writer
 from .layers import OptionalT, ResultT
 from .operations import run, action, lift
 from .projections import LiftProject, asks, inspect
-from .outcomes import EffectFailure, Outcome
+from .outcomes import EffectFailure, Outcome, ExitCase
 from .resources import Resource, ResourceContract, resource, pure_resource
 from .io import IO, IOContract, IOContext, CancellationToken, delay, run_io, capture_io, guarantee, uncancelable, canceled, sleep_io, use_resource
 from .fibers import Fiber, unsafe_start
 from .coordination import Ref, Deferred, Semaphore, Permit, Queue
+
+from .scoped import ScopedIO, scoped_io
+from .finalization import guarantee_case, on_cancel, Poll, uncancelable_with
+from ._io_core import DelayContract

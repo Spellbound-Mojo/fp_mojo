@@ -344,6 +344,9 @@
     },
     "docs/examples/coordination.mojo": {
       "stdout": "counter: 1\ndeferred: ready\nprotected: 42\nqueue: first second\n"
+    },
+    "docs/examples/io_finalization.mojo": {
+      "stdout": "released after success\nresult: 42\nreleased after cancellation\ncanceled: True\n"
     }
   },
   "version": 1

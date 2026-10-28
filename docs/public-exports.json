@@ -4419,7 +4419,7 @@
      }
     ]
    },
-   "provider": "effects/io"
+   "provider": "effects/_io_core"
   },
   "effects.Censor": {
    "declarations": [
@@ -4463,6 +4463,13 @@
    },
    "provider": "effects/coordination"
   },
+  "effects.DelayContract": {
+   "declarations": [
+    "struct DelayContract[F: ThunkContract & Movable & Deinitable, E: Movable & Deinitable]:"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_io_core"
+  },
   "effects.EffectFailure": {
    "declarations": [
     "struct EffectFailure[E: Movable & Deinitable](Movable, Copyable where conforms_to(E, Copyable)):"
@@ -4473,6 +4480,39 @@
      {
       "sha256": "96cb292966c4e6f6142727b91d75a90170acf2eb76786f1f2f44a36807f73541",
       "signature": "def into_errors(deinit self) -> NonEmptyList[Self.E]:"
+     }
+    ]
+   },
+   "provider": "effects/outcomes"
+  },
+  "effects.ExitCase": {
+   "declarations": [
+    "struct ExitCase[E: Movable & Deinitable](Movable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "failure": [
+     {
+      "sha256": "991a78c5aa8529128e8295caa1429f158081490fba2dc0eee89f590b7dcecb9f",
+      "signature": "def failure(ref self) -> ref[self._failure] Optional[EffectFailure[Self.E]]:"
+     }
+    ],
+    "is_canceled": [
+     {
+      "sha256": "531365894ae6bf73fb14e023d077330e9b103f7f196bdc7074c662bac09d2492",
+      "signature": "def is_canceled(self) -> Bool:"
+     }
+    ],
+    "is_error": [
+     {
+      "sha256": "8f4f068bec515d9126c1161b514fc7e7279ced392112240ffe3de1b1322ff7c2",
+      "signature": "def is_error(self) -> Bool:"
+     }
+    ],
+    "is_success": [
+     {
+      "sha256": "db66ad41094fd6d9c1e6fee955d2ec0e1e4e319b3505bebdad93b0bba1576d2a",
+      "signature": "def is_success(self) -> Bool:"
      }
     ]
    },
@@ -4522,7 +4562,7 @@
     "comptime IO[E: Movable & Deinitable = Error] = ReaderT[ResultT[OptionalFamily, EffectFailure[E]], IOContext[E]]"
    ],
    "kind": "type or alias",
-   "provider": "effects/io"
+   "provider": "effects/_io_core"
   },
   "effects.IOContext": {
    "declarations": [
@@ -4543,14 +4583,14 @@
      }
     ]
    },
-   "provider": "effects/io"
+   "provider": "effects/_io_core"
   },
   "effects.IOContract": {
    "declarations": [
     "struct IOContract[P: ReaderAction]:"
    ],
    "kind": "type or alias",
-   "provider": "effects/io"
+   "provider": "effects/_io_core"
   },
   "effects.LiftAsk": {
    "declarations": [
@@ -4737,6 +4777,21 @@
    ],
    "kind": "type or alias",
    "provider": "effects/coordination"
+  },
+  "effects.Poll": {
+   "declarations": [
+    "struct Poll[E: Movable & Deinitable](Copyable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "apply": [
+     {
+      "sha256": "2a1951810a1433a0423c6000ab2d816ea6460af534b0a6fbcad565a13a8b5fc9",
+      "signature": "def apply[P: ReaderAction](self, var program: P) -> _IOPolled[P, Self.E] where IOContract[P].Compatible and IOContract[P].Error == Self.E:"
+     }
+    ]
+   },
+   "provider": "effects/finalization"
   },
   "effects.Project": {
    "declarations": [
@@ -5033,6 +5088,21 @@
    ],
    "kind": "type or alias",
    "provider": "effects/layers"
+  },
+  "effects.ScopedIO": {
+   "declarations": [
+    "trait ScopedIO(Movable, Deinitable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "build": [
+     {
+      "sha256": "d30a6ca03dcca2050d472be822be82a13b7a685e6b5663225eea694d6905f2c7",
+      "signature": "def build[o: ImmOrigin](deinit self, ref[o] value: Self.Input) raises Self.BuildError -> Self.Action[o]:"
+     }
+    ]
+   },
+   "provider": "effects/scoped"
   },
   "effects.Semaphore": {
    "declarations": [
@@ -5371,7 +5441,7 @@
      "signature": "def canceled[E: Movable & Deinitable]() -> _IOCancel[E]:"
     }
    ],
-   "provider": "effects/io"
+   "provider": "effects/_io_core"
   },
   "effects.capture_io": {
    "kind": "function",
@@ -5381,7 +5451,7 @@
      "signature": "def capture_io[P: ReaderAction](var program: P) -> _IOCaptured[P] where IOContract[P].Compatible:"
     }
    ],
-   "provider": "effects/io"
+   "provider": "effects/_io_core"
   },
   "effects.censor": {
    "kind": "function",
@@ -5417,7 +5487,7 @@
      "signature": "def delay[T: Movable & Deinitable, X: Movable & Deinitable, //, E: Movable & Deinitable, F: _RaisingThunk[T, X]](var function: F ) -> _IODelay[E, _NativeThunk[T, X, F, True]] where _ErrorCompatible[E, X]:"
     }
    ],
-   "provider": "effects/io"
+   "provider": "effects/_io_core"
   },
   "effects.get": {
    "kind": "function",
@@ -5437,7 +5507,17 @@
      "signature": "def guarantee[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q ) -> _IOGuarantee[P, Q] where IOContract[P].Compatible and IOContract[Q].Compatible and IOContract[P].Error == IOContract[Q].Error:"
     }
    ],
-   "provider": "effects/io"
+   "provider": "effects/finalization"
+  },
+  "effects.guarantee_case": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "f6aad171c234eb0f25f4293396cfcefc801741c64925ea0573734de69482e15e",
+     "signature": "def guarantee_case[P: ReaderAction, F: ScopedIO](var program: P, var finalizer: F ) -> _IOGuaranteeCase[P, F] where IOContract[P].Compatible and IOContract[P].Error == F.Error and F.Input == ExitCase[F.Error] and _ErrorCompatible[F.Error, F.BuildError]:"
+    }
+   ],
+   "provider": "effects/finalization"
   },
   "effects.inspect": {
    "kind": "function",
@@ -5512,6 +5592,16 @@
     }
    ],
    "provider": "effects/capabilities"
+  },
+  "effects.on_cancel": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "24369ac986d1fac49f70d96ffd2e2dc703824f859e362f18383aeb9d3fa06f68",
+     "signature": "def on_cancel[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q ) -> _IOGuarantee[P, Q, True] where IOContract[P].Compatible and IOContract[Q].Compatible and IOContract[P].Error == IOContract[Q].Error:"
+    }
+   ],
+   "provider": "effects/finalization"
   },
   "effects.pure_resource": {
    "kind": "function",
@@ -5601,7 +5691,7 @@
      "signature": "def run_io[P: ReaderAction](var program: P, token: CancellationToken) -> IOContract[P].Out where IOContract[P].Compatible:"
     }
    ],
-   "provider": "effects/io"
+   "provider": "effects/_io_core"
   },
   "effects.run_writer": {
    "kind": "function",
@@ -5613,6 +5703,24 @@
    ],
    "provider": "effects/writer"
   },
+  "effects.scoped_io": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "0c2c7114e1ec7858b78ad438369a13d6446756de45acad146c6a5b06dab801ab",
+     "signature": "def scoped_io[F: BorrowCallContract & Movable & Deinitable](var function: F) -> _ScopedFactory[F] where _OnceBorrowAvailable[F] and conforms_to(F.Result, ReaderAction) and IOContract[downcast[F.Result, ReaderAction]].Compatible and _ErrorCompatible[IOContract[downcast[F.Result, ReaderAction]].Error, F.Failure]:"
+    },
+    {
+     "sha256": "a3900340050cff609754fdc3566a0b2b0158ed209387fb5de7c2f09c9799ad44",
+     "signature": "def scoped_io[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](var function: F) -> _ScopedFactory[_NativeBorrow[P, V, Never, F, False]] where conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible:"
+    },
+    {
+     "sha256": "00772ef0f838413125a874f11ea0b427caf59e996af502de594d1d20f55073b3",
+     "signature": "def scoped_io[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](var function: F) -> _ScopedFactory[_NativeBorrow[P, V, X, F, True]] where conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and _ErrorCompatible[IOContract[downcast[V, ReaderAction]].Error, X]:"
+    }
+   ],
+   "provider": "effects/scoped"
+  },
   "effects.sleep_io": {
    "kind": "function",
    "overloads": [
@@ -5621,7 +5729,7 @@
      "signature": "def sleep_io[E: Movable & Deinitable](seconds: Float64) raises -> _IOSleep[E]:"
     }
    ],
-   "provider": "effects/io"
+   "provider": "effects/_io_core"
   },
   "effects.tell": {
    "kind": "function",
@@ -5641,7 +5749,25 @@
      "signature": "def uncancelable[P: ReaderAction](var program: P) -> _IOMasked[P] where IOContract[P].Compatible:"
     }
    ],
-   "provider": "effects/io"
+   "provider": "effects/_io_core"
+  },
+  "effects.uncancelable_with": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "038dbd5df40339d6cf7698e5bb29048e409547f16032956b6da840d5fddcc907",
+     "signature": "def uncancelable_with[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](var function: F ) -> _IOMaskBody[F, E] where F.Arg == Poll[E] and _OnceUnaryAvailable[F] and _ErrorCompatible[E, F.Error] and conforms_to(F.Out, ReaderAction) and IOContract[downcast[F.Out, ReaderAction]].Compatible and IOContract[downcast[F.Out, ReaderAction]].Error == E:"
+    },
+    {
+     "sha256": "319525e3a48b1ec317e4f615dfed748d26b4d10849024a29cae6c853c6b049b8",
+     "signature": "def uncancelable_with[P: Movable & Deinitable, V: Movable & Deinitable, //, E: Movable & Deinitable, F: _Unary[P, V]](var function: F ) -> _IOMaskBody[NativeUnary[P, V, Never, F, False], E] where P == Poll[E] and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == E:"
+    },
+    {
+     "sha256": "a60dd05407177da17072cecb3fc69358943cc3daec36e23a0b22b3a5a64f0991",
+     "signature": "def uncancelable_with[P: Movable & Deinitable, V: Movable & Deinitable, X: Movable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[P, V, X]](var function: F ) -> _IOMaskBody[NativeUnary[P, V, X, F, True], E] where P == Poll[E] and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == E and _ErrorCompatible[E, X]:"
+    }
+   ],
+   "provider": "effects/finalization"
   },
   "effects.unsafe_start": {
    "kind": "function",
@@ -5669,7 +5795,7 @@
      "signature": "def use_resource[O: _OpenScope, P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](var scope: Resource[O], var function: F ) -> _IOResource[O, _NativeBorrow[P, V, X, F, True]] where P == O.Release.Value and _ErrorCompatible[O.Release.Error, X]:"
     }
    ],
-   "provider": "effects/io"
+   "provider": "effects/_native_resource_io"
   },
   "effects.writer": {
    "kind": "function",
