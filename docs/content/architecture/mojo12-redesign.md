@@ -3955,3 +3955,25 @@ payloads without destroying a borrowed callback. Focused checks cover inert
 construction, exact prefix-copy counts, one classification per pull, move-only
 input and output, independently moved handles, closure and overflow cleanup,
 explicitly moved callbacks, output origins and ordinary lifetime rejections.
+
+### Lazy Optional mapping infers payloads without replacing explicit evidence
+
+Free and Iter `filter_map` now infer the Optional payload of an owned library
+Unary callback. Their existing explicit `[U]` signatures remain unchanged.
+Shared admission uses an origin-indexed callback view and a defaulted payload
+binding after the inference barrier, supporting both ordinary calls and explicit
+positional or named payload types without consuming a named callback.
+
+`_OptionalElement` extends the existing native-carrier recognition owner with a
+guarded projection. Non-Optional carriers receive an uninhabited placeholder;
+public admission still requires exact equality to Optional of that element.
+`_find_map` reuses the same projection and retains its operation diagnostic.
+All lazy execution stays in `_FilterMap`, including skipping absence, preserving
+present Result errors, transferring move-only payloads and releasing the tail.
+
+Mojo 1.2 does not derive the computed projection from a generic equality such
+as `F.Out == Optional[U]`. Generic wrappers retain `[U]` as the existing explicit
+evidence boundary. The new overloads preserve every prior public signature;
+checks cover inferred and explicit calls, standard shared callback forms,
+Optional[Never], nested Result values, native origins, deferred ownership and
+ordinary rejection of wrong shapes, errors, arities and escaping borrows.

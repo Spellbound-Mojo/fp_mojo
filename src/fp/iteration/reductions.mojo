@@ -8,7 +8,7 @@ from std.builtin.rebind import downcast, rebind_var
 from std.memory import MaybeUninit
 from fp.algebra._accumulation import _Combine, _FirstPresent
 from fp.algebra.protocols import Monoid, _Accumulate, _map_accumulate, _start_as
-from fp.algebra.instances import _ListElement, _NativeFamily, OptionalFamily
+from fp.algebra.instances import _OptionalElement
 from fp.callables.protocols import UnaryContract, BorrowCallable
 from fp.callables._transforms import _Observe
 from fp.callables.products import _take_pair
@@ -67,12 +67,9 @@ def _fold_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, 
 def _find_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
     var function: F, var source: V
 ) raises F.Error -> F.Out:
-    # Guard the element projection so a scalar reaches the operation diagnostic
-    # instead of failing an IterableOwned witness lookup. The fallback is never
-    # executable: the carrier assertion must hold before accumulation.
-    comptime valid = _NativeFamily[F.Out] == OptionalFamily
-    comptime U = _ListElement[F.Out] if valid else Never
-    comptime assert valid, "find_map: Optional result required"
+    # Guarded Optional projection is shared with lazy filter_map admission.
+    comptime U = _OptionalElement[F.Out]
+    comptime assert F.Out == Optional[U], "find_map: Optional result required"
     return rebind_var[F.Out](_map_accumulate[V, F, _FirstPresent[U], F.Error](function^, source^, Optional[U]()))
 
 

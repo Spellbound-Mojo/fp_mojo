@@ -51,6 +51,12 @@ write `stream^.map(f)` or `stream^.to_list()`. A partially consumed iterator
 continues at its current position. The wrapper adds no buffering or allocation,
 and lazy methods do not run callbacks until an element is requested.
 
+A lazy `.filter_map(project)` infers the present value's type from the
+callback's Optional result. Named partials and shared unary adapters can be
+reused across chains; keep them alive until their iterators finish, or transfer
+them with `project^`. A present Result error is an ordinary output, not a
+failure of iteration.
+
 The method names and callback arguments match the free functions, with the
 source supplied by the receiver. For example, `stream^.fold_left(step, initial)`
 and `stream^.reduce(step, initial=initial)` preserve the existing fold contracts.

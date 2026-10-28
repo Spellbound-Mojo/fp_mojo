@@ -29,6 +29,7 @@ from fp.algebra.protocols import Monad
 from fp.algebra.operations import _EntryError, _InferError
 from fp.data._result import _ResultType
 from fp.callables._views import _UnaryViewable, _BorrowViewable
+from fp.algebra.instances import _OptionalElement
 from fp.callables.protocols import BinaryContract
 from fp.callables.invoke import RepeatableBinary
 from fp.callables.native import _Binary, _RaisingBinary, _NativeBinaryRef
@@ -1082,8 +1083,20 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
 
     def filter_map[U: Movable & Deinitable, F: Unary](deinit self, var function: F
     ) -> Iter[FilterMapIterator[F.Arg, U, Self.I, F]] where Self.I.Element == F.Arg and F.Out == Optional[U] and F.Error == Never:
-        """Lazily filter a library `Unary` result; name `U` explicitly."""
+        """Lazily filter a library `Unary` with an explicit Optional payload binding."""
         return Iter(_filter_map[U=U](function^, self._iterator^))
+
+    def filter_map[F: Unary, //](deinit self, var function: F
+    ) -> Iter[FilterMapIterator[F.Arg, _OptionalElement[F.Out], Self.I, F]] where Self.I.Element == F.Arg and F.Out == Optional[_OptionalElement[F.Out]] and F.Error == Never:
+        """Infer the Optional payload and move the callback into the lazy iterator."""
+        return Iter(_filter_map[U=_OptionalElement[F.Out]](function^, self._iterator^))
+
+    def filter_map[F: _UnaryViewable, o: ImmOrigin, //,
+                   U: Movable & Deinitable = _OptionalElement[F._View[o].Out]](
+        deinit self, ref[o] function: F
+    ) -> Iter[FilterMapIterator[F._View[o].Arg, U, Self.I, F._View[o]]] where Self.I.Element == F._View[o].Arg and F._View[o].Out == Optional[U] and F._View[o].Error == Never:
+        """Infer the Optional payload and retain a shared callback until consumption."""
+        return Iter(_filter_map[U=U](function._unary_view(), self._iterator^))
 
     def flat_map[T: Movable & Deinitable, U: Movable & Deinitable](
         deinit self, function: def(var T) thin -> U

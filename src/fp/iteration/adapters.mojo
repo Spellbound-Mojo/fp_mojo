@@ -8,6 +8,7 @@ Standard `chain`, `zip`, `take` and the like stay in `std.iter` and
 
 from fp.callables.products import _OptionalCell
 from fp.callables._views import _UnaryViewable, _BorrowViewable
+from fp.algebra.instances import _OptionalElement
 from fp.callables._scan import _Carry
 from ._callbacks import _snapshot_step
 from fp.callables._predicates import _filter_decision
@@ -606,8 +607,22 @@ def map[I: Movable & Deinitable, F: Unary](var function: F, var source: I
 
 def filter_map[U: Movable & Deinitable, I: Movable & Deinitable, F: Unary](var function: F, var source: I
 ) -> _FilterMap[F.Arg, U, _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[U] and F.Error == Never:
-    """Lazily apply a library `Unary` value returning `Optional[U]`; name `U` explicitly."""
+    """Lazily apply a library `Unary` with an explicit Optional payload binding."""
     return _FilterMap[F.Arg, U, _Source[I], F](function^, _source(source^), False)
+
+
+def filter_map[I: Movable & Deinitable, F: Unary, //](var function: F, var source: I
+) -> _FilterMap[F.Arg, _OptionalElement[F.Out], _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[_OptionalElement[F.Out]] and F.Error == Never:
+    """Infer the Optional payload and move a library callable into the iterator."""
+    return filter_map[U=_OptionalElement[F.Out]](function^, source^)
+
+
+def filter_map[I: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //,
+               U: Movable & Deinitable = _OptionalElement[F._View[o].Out]](
+    ref[o] function: F, var source: I
+) -> _FilterMap[F._View[o].Arg, U, _Source[I], F._View[o]] where _Source[I].Element == F._View[o].Arg and F._View[o].Out == Optional[U] and F._View[o].Error == Never:
+    """Infer the Optional payload and retain a shared callback until consumption."""
+    return filter_map[U=U](function._unary_view(), source^)
 
 
 def flat_map[I: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin](ref[o] function: F, var source: I

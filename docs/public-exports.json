@@ -13577,6 +13577,14 @@
           {
             "signature": "def filter_map[U: Movable & Deinitable, F: Unary](deinit self, var function: F ) -> Iter[FilterMapIterator[F.Arg, U, Self.I, F]] where Self.I.Element == F.Arg and F.Out == Optional[U] and F.Error == Never:",
             "sha256": "f1f269acbc953f560253a21ca8a13d21c24cb7453bb1603d472e3290c4dd51f3"
+          },
+          {
+            "signature": "def filter_map[F: Unary, //](deinit self, var function: F ) -> Iter[FilterMapIterator[F.Arg, _OptionalElement[F.Out], Self.I, F]] where Self.I.Element == F.Arg and F.Out == Optional[_OptionalElement[F.Out]] and F.Error == Never:",
+            "sha256": "bdf65ce5ffece0c119fd64bf80d42e31d96e32ec722b417d3befe0c9fa0d0036"
+          },
+          {
+            "signature": "def filter_map[F: _UnaryViewable, o: ImmOrigin, //, U: Movable & Deinitable = _OptionalElement[F._View[o].Out]]( deinit self, ref[o] function: F ) -> Iter[FilterMapIterator[F._View[o].Arg, U, Self.I, F._View[o]]] where Self.I.Element == F._View[o].Arg and F._View[o].Out == Optional[U] and F._View[o].Error == Never:",
+            "sha256": "9706654727e5f772446f1d23b04a9888f1b25bbb6205281112377090dd4bb725"
           }
         ],
         "flat_map": [
@@ -17578,6 +17586,14 @@
         {
           "signature": "def filter_map[U: Movable & Deinitable, I: Movable & Deinitable, F: Unary](var function: F, var source: I ) -> _FilterMap[F.Arg, U, _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[U] and F.Error == Never:",
           "sha256": "4aa298051c34facc2121ba29fa1741f931d9ec43c20320d06bdf6d0047c1c147"
+        },
+        {
+          "signature": "def filter_map[I: Movable & Deinitable, F: Unary, //](var function: F, var source: I ) -> _FilterMap[F.Arg, _OptionalElement[F.Out], _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[_OptionalElement[F.Out]] and F.Error == Never:",
+          "sha256": "823797748fd72d206c89bf1d005f5bf7c2c4112c072d11d9dcdd67a58ed2efc3"
+        },
+        {
+          "signature": "def filter_map[I: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, U: Movable & Deinitable = _OptionalElement[F._View[o].Out]]( ref[o] function: F, var source: I ) -> _FilterMap[F._View[o].Arg, U, _Source[I], F._View[o]] where _Source[I].Element == F._View[o].Arg and F._View[o].Out == Optional[U] and F._View[o].Error == Never:",
+          "sha256": "2b47d68deaa21fe5e918c9bcb84d9ecfb0d3b1acdd9d1d23ee9d08a07e39105f"
         }
       ],
       "provider": "iteration/adapters"
@@ -19850,6 +19866,14 @@
         {
           "signature": "def filter_map[U: Movable & Deinitable, I: Movable & Deinitable, F: Unary](var function: F, var source: I ) -> _FilterMap[F.Arg, U, _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[U] and F.Error == Never:",
           "sha256": "4aa298051c34facc2121ba29fa1741f931d9ec43c20320d06bdf6d0047c1c147"
+        },
+        {
+          "signature": "def filter_map[I: Movable & Deinitable, F: Unary, //](var function: F, var source: I ) -> _FilterMap[F.Arg, _OptionalElement[F.Out], _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[_OptionalElement[F.Out]] and F.Error == Never:",
+          "sha256": "823797748fd72d206c89bf1d005f5bf7c2c4112c072d11d9dcdd67a58ed2efc3"
+        },
+        {
+          "signature": "def filter_map[I: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, U: Movable & Deinitable = _OptionalElement[F._View[o].Out]]( ref[o] function: F, var source: I ) -> _FilterMap[F._View[o].Arg, U, _Source[I], F._View[o]] where _Source[I].Element == F._View[o].Arg and F._View[o].Out == Optional[U] and F._View[o].Error == Never:",
+          "sha256": "2b47d68deaa21fe5e918c9bcb84d9ecfb0d3b1acdd9d1d23ee9d08a07e39105f"
         }
       ],
       "provider": "iteration/adapters"

@@ -82,6 +82,18 @@ once and retain the first element on ties. `find_map` requires an Optional
 result and stops at its first present result. Raised errors keep their exact
 types; callback and Monoid errors must match when both can raise.
 
+`filter_map(callback)` also infers the present Optional payload for library
+callables, including a moved callback. Named partials, native unary adapters,
+shared compositions and compatible shared Kleisli chains can be reused without
+moving them; the lazy iterator retains their callback borrow. The example's
+`quote` needs no output type annotation and is used in two lazy chains.
+Only the outer Optional is removed: a present Result error or inner absence is
+still a normal output. Lazy callbacks remain non-raising.
+
+Explicit `filter_map[U](...)` and `[U=U]` bindings remain available. Generic
+wrappers that express only `F.Out == Optional[U]` pass `[U]` explicitly to
+preserve that type evidence through the native compiler.
+
 ## Fold scalars, SIMD vectors and documents with one function
 
 <!-- example: docs/examples/generic_fold.mojo -->

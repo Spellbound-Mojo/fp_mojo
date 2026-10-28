@@ -33,6 +33,11 @@ comptime _NativeFamily[V: Movable & Deinitable, Fallback: Functor = IdentityFami
     if conforms_to(V, IterableOwned) else Fallback
 )
 
+# Project Optional payloads only after native carrier recognition. Invalid
+# carriers use an uninhabited placeholder; consumers still require the exact
+# equality V == Optional[_OptionalElement[V]] before invoking any callback.
+comptime _OptionalElement[V: Movable & Deinitable] = _ListElement[V] if _NativeFamily[V] == OptionalFamily else Never
+
 # Recognition requires only Functor. Legacy Applicative entry points select
 # their stronger capability here, retaining the existing Optional fallback.
 comptime _InferredApplicative[V: Movable & Deinitable]: Applicative = (

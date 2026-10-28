@@ -12469,7 +12469,109 @@
       "type": "_FilterMap[F.Arg, U, _Source[I], F]"
      },
      "signature": "def filter_map[U: Movable & Deinitable, I: Movable & Deinitable, F: Unary](var function: F, var source: I) -> _FilterMap[F.Arg, U, _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[U] and F.Error == Never",
-     "summary": "Lazily apply a library `Unary` value returning `Optional[U]`; name `U` explicitly."
+     "summary": "Lazily apply a library `Unary` with an explicit Optional payload binding."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "I",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "I",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_FilterMap[F.Arg, _OptionalElement[F.Out], _Source[I], F]"
+     },
+     "signature": "def filter_map[I: Movable & Deinitable, F: Unary, //](var function: F, var source: I) -> _FilterMap[F.Arg, _OptionalElement[F.Out], _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[_OptionalElement[F.Out]] and F.Error == Never",
+     "summary": "Infer the Optional payload and move a library callable into the iterator."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "I",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "I",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "_UnaryViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "U",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_FilterMap[F._View[o].Arg, U, _Source[I], F._View[o]]"
+     },
+     "signature": "def filter_map[I: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, U: Movable & Deinitable = _OptionalElement[F._View[o].Out]](ref[o] function: F, var source: I) -> _FilterMap[F._View[o].Arg, U, _Source[I], F._View[o]] where _Source[I].Element == F._View[o].Arg and F._View[o].Out == Optional[U] and F._View[o].Error == Never",
+     "summary": "Infer the Optional payload and retain a shared callback until consumption."
     }
    ],
    "provider": "iteration/adapters",
@@ -231306,7 +231408,81 @@
        "type": "Iter[FilterMapIterator[F.Arg, U, Self.I, F]]"
       },
       "signature": "def filter_map[U: Movable & Deinitable, F: Unary](deinit self, var function: F) -> Iter[FilterMapIterator[F.Arg, U, Self.I, F]] where Self.I.Element == F.Arg and F.Out == Optional[U] and F.Error == Never",
-      "summary": "Lazily filter a library `Unary` result; name `U` explicitly."
+      "summary": "Lazily filter a library `Unary` with an explicit Optional payload binding."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "Unary",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[FilterMapIterator[F.Arg, _OptionalElement[F.Out], Self.I, F]]"
+      },
+      "signature": "def filter_map[F: Unary, //](deinit self, var function: F) -> Iter[FilterMapIterator[F.Arg, _OptionalElement[F.Out], Self.I, F]] where Self.I.Element == F.Arg and F.Out == Optional[_OptionalElement[F.Out]] and F.Error == Never",
+      "summary": "Infer the Optional payload and move the callback into the lazy iterator."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[FilterMapIterator[F._View[o].Arg, U, Self.I, F._View[o]]]"
+      },
+      "signature": "def filter_map[F: _UnaryViewable, o: ImmOrigin, //, U: Movable & Deinitable = _OptionalElement[F._View[o].Out]](deinit self, ref[o] function: F) -> Iter[FilterMapIterator[F._View[o].Arg, U, Self.I, F._View[o]]] where Self.I.Element == F._View[o].Arg and F._View[o].Out == Optional[U] and F._View[o].Error == Never",
+      "summary": "Infer the Optional payload and retain a shared callback until consumption."
      }
     ],
     "filter_not": [
@@ -241406,7 +241582,109 @@
       "type": "_FilterMap[F.Arg, U, _Source[I], F]"
      },
      "signature": "def filter_map[U: Movable & Deinitable, I: Movable & Deinitable, F: Unary](var function: F, var source: I) -> _FilterMap[F.Arg, U, _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[U] and F.Error == Never",
-     "summary": "Lazily apply a library `Unary` value returning `Optional[U]`; name `U` explicitly."
+     "summary": "Lazily apply a library `Unary` with an explicit Optional payload binding."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "I",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "I",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_FilterMap[F.Arg, _OptionalElement[F.Out], _Source[I], F]"
+     },
+     "signature": "def filter_map[I: Movable & Deinitable, F: Unary, //](var function: F, var source: I) -> _FilterMap[F.Arg, _OptionalElement[F.Out], _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[_OptionalElement[F.Out]] and F.Error == Never",
+     "summary": "Infer the Optional payload and move a library callable into the iterator."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "I",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "I",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "_UnaryViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "U",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_FilterMap[F._View[o].Arg, U, _Source[I], F._View[o]]"
+     },
+     "signature": "def filter_map[I: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, U: Movable & Deinitable = _OptionalElement[F._View[o].Out]](ref[o] function: F, var source: I) -> _FilterMap[F._View[o].Arg, U, _Source[I], F._View[o]] where _Source[I].Element == F._View[o].Arg and F._View[o].Out == Optional[U] and F._View[o].Error == Never",
+     "summary": "Infer the Optional payload and retain a shared callback until consumption."
     }
    ],
    "provider": "iteration/adapters",

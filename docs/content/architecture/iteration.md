@@ -68,6 +68,15 @@ own semantics: `zip` may pull an earlier input before noticing a later one is
 exhausted, `take(…, 0)` does not pull, and `take_while` consumes the first
 rejected element.
 
+Lazy `filter_map` uses the same guarded native Optional projection as eager
+`find_map`. `_OptionalElement` only inspects an element after native carrier
+recognition; each consumer still requires the exact Optional shape. Owned
+library callables can infer their payload without changing existing explicit
+payload bindings. Shared views retain the callback origin through the existing
+`_FilterMap`, whose pull, absence and cleanup loop is unchanged. Generic
+forwarders with symbolic `F.Out == Optional[U]` retain the explicit `[U]`
+route because that equality does not prove a computed projection on Mojo 1.2.
+
 ## Folds
 
 ```text
