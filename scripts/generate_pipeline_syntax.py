@@ -7,7 +7,7 @@ independent of the supported container count.
 """
 from dataclasses import dataclass
 from combinator_docs import document_first_methods
-from native_signatures import MD, callable_protocol, native_adapter
+from native_signatures import MD, callable_protocol, native_adapter, callback
 
 START = '    # --- container methods (generated) ---\n'
 END = '    # --- end container methods ---\n'
@@ -113,12 +113,16 @@ def filter_methods(carrier, name, description):
         out.append(forward(name, parameters, 'ref predicate: F', source, source,
                            operation, 'predicate', f'{description} {carrier.name} payloads immediately, preserving their container.',
                            'E' if raising else '', f'R == Bool and Self.Value == {source}'))
-    element = f'downcast[C.Payload, {MD}]'
-    source, family = carrier.value(element), carrier.instance(element)
-    condition = f'conforms_to(C.Payload, {MD}) and Self.Value == {source} and C.Result == Bool'
-    out.append(forward(name, [f'C: {callable_protocol("borrow", repeatable=True)}', *carrier.parameters], 'var predicate: C', source, source,
-                       f'_family_{name}[{family}]', 'predicate^', f'{description} {carrier.name} payloads with an owned library predicate.',
-                       'C.Failure', condition))
+    for kind in ('library', 'view'):
+        cb = callback('borrow', kind, 'predicate')
+        parameters = [f'C: {callable_protocol("borrow", repeatable=True)}'] if kind == 'library' else cb.parameters
+        element = f'downcast[{cb.payload}, {MD}]'
+        source, family = carrier.value(element), carrier.instance(element)
+        condition = f'conforms_to({cb.payload}, {MD}) and Self.Value == {source} and {cb.result} == Bool'
+        receiver = 'an owned' if kind == 'library' else 'a shared'
+        out.append(forward(name, [*parameters, *carrier.parameters], cb.argument, source, source,
+                           f'_family_{name}[{family}]', cb.build, f'{description} {carrier.name} payloads with {receiver} library predicate.',
+                           cb.error, condition))
     return ''.join(out)
 
 

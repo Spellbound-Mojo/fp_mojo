@@ -9,6 +9,12 @@ inspect the intermediate steps of a fold.
 Callbacks in lazy adapters cannot raise. To carry a failure through the chain,
 return a `Result` element and handle it when consuming the iterator.
 
+A reusable bound predicate can be written as `partial(below, limit)` and
+passed by name to several filters or prefix operations. Keep it alive until
+each iterator finishes, or pass `predicate^` to transfer ownership. The
+[prefix example](../reference/iteration.md#prefixes-indexed-mapping-and-consuming-terminals)
+uses the same predicate in `.filter(...)` and `.drop_while(...)`.
+
 ## Chain operations with methods
 
 Start with `iterated(source)` to write transformations from left to right.

@@ -429,7 +429,11 @@ Ordinary calls infer their concrete carrier types as before.
 same Filterable primitive. The predicate borrows each payload, returns Bool, and may raise a typed error.
 The independent `Filterable` interface lets custom containers define selection;
 `piped(value).filter[Family](predicate)` uses the same instance. See
-[container filtering](../architecture/functions.md#container-preserving-filter).
+[container filtering](../architecture/functions.md#container-preserving-filter). Named
+partial predicates can be reused without copying their stored prefix at
+admission. The same partial works in inferred Piped container calls and lazy
+filtering; each native invocation keeps its documented bound-argument copies.
+
 
 `filter_map[Family](transform, values^)` uses `FunctorFilter` to transform
 payloads and retain present Optional results. `compact[Family](values^)`

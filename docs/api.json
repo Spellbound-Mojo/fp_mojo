@@ -6756,7 +6756,7 @@
        "variadic": false
       }
      ],
-     "description": "Native functions and closures are accepted directly and borrowed. A library\nBorrowCallable is consumed. Built-in families run now, call once per payload\nin native order, move accepted values unchanged and destroy rejected values.\nEmpty carriers skip calls. Failure destroys remaining input and partial output.\nDeferred families retain their own evaluation and error semantics and may\nretain the native callback borrow. Keep it alive and unmoved until completion.\nGeneric forwarding of a raising native callback names its error with E=.",
+     "description": "Native functions and closures are accepted directly and borrowed. A library\nBorrowCallable is consumed; shared partial predicates may instead be borrowed\nby name. Built-in families run now, call once per payload\nin native order, move accepted values unchanged and destroy rejected values.\nEmpty carriers skip calls. Failure destroys remaining input and partial output.\nDeferred families retain their own evaluation and error semantics and may\nretain the native callback borrow. Keep it alive and unmoved until completion.\nGeneric forwarding of a raising native callback names its error with E=.",
      "error": "FilterContract[I, V, P].Error",
      "parameters": [
       {
@@ -6789,6 +6789,64 @@
      },
      "signature": "def filter[V: Movable & Deinitable, P: BorrowCallable, //, I: Filterable](var predicate: P, var value: V) raises FilterContract[I, V, P].Error -> FilterContract[I, V, P].Out where FilterContract[I, V, P].Compatible",
      "summary": "Filter a carrier through an explicit family, preserving its context."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "predicate",
+       "type": "P",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "FilterContract[I, V, P._BorrowView[o]].Error",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "_BorrowViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Filterable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FilterContract[I, V, P._BorrowView[o]].Out"
+     },
+     "signature": "def filter[V: Movable & Deinitable, P: _BorrowViewable, o: ImmOrigin, //, I: Filterable](ref[o] predicate: P, var value: V) raises FilterContract[I, V, P._BorrowView[o]].Error -> FilterContract[I, V, P._BorrowView[o]].Out where FilterContract[I, V, P._BorrowView[o]].Compatible",
+     "summary": "Filter through an explicit family while retaining a shared predicate."
     },
     {
      "args": [
@@ -7209,6 +7267,64 @@
      },
      "signature": "def filter_not[V: Movable & Deinitable, P: BorrowCallable, //, I: Filterable](var predicate: P, var value: V) raises FilterContract[I, V, P, True].Error -> FilterContract[I, V, P, True].Out where FilterContract[I, V, P, True].Compatible",
      "summary": "Retain payloads the predicate rejects, through an explicit family."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "predicate",
+       "type": "P",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "FilterContract[I, V, P._BorrowView[o], True].Error",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "_BorrowViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Filterable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FilterContract[I, V, P._BorrowView[o], True].Out"
+     },
+     "signature": "def filter_not[V: Movable & Deinitable, P: _BorrowViewable, o: ImmOrigin, //, I: Filterable](ref[o] predicate: P, var value: V) raises FilterContract[I, V, P._BorrowView[o], True].Error -> FilterContract[I, V, P._BorrowView[o], True].Out where FilterContract[I, V, P._BorrowView[o], True].Compatible",
+     "summary": "Filter through an explicit family while retaining a shared predicate."
     },
     {
      "args": [
@@ -11850,6 +11966,57 @@
     {
      "args": [
       {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "predicate",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "I",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "C",
+       "type": "_BorrowViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Filter[_Source[I].Element, _Source[I], C._BorrowView[o]]"
+     },
+     "signature": "def filter[I: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin](ref[o] predicate: C, var source: I) -> _Filter[_Source[I].Element, _Source[I], C._BorrowView[o]] where conforms_to(_Source[I].Element, Movable & Deinitable) and C._BorrowView[o].Payload == _Source[I].Element and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never",
+     "summary": "Retain a shared predicate until lazy filtering completes or is discarded."
+    },
+    {
+     "args": [
+      {
        "convention": "var",
        "description": "",
        "name": "predicate",
@@ -12406,6 +12573,57 @@
      },
      "signature": "def filter_not[T: Movable & Deinitable, I: Movable & Deinitable, //, F: _LazyPredicate[T]](var function: F, var source: I) -> _Filter[T, _Source[I], F, True] where _Source[I].Element == T",
      "summary": "Lazily retain rejected elements with a stored native closure."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "predicate",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "I",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "C",
+       "type": "_BorrowViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Filter[_Source[I].Element, _Source[I], C._BorrowView[o], True]"
+     },
+     "signature": "def filter_not[I: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin](ref[o] predicate: C, var source: I) -> _Filter[_Source[I].Element, _Source[I], C._BorrowView[o], True] where conforms_to(_Source[I].Element, Movable & Deinitable) and C._BorrowView[o].Payload == _Source[I].Element and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never",
+     "summary": "Retain a shared predicate until lazy filtering completes or is discarded."
     },
     {
      "args": [
@@ -49319,6 +49537,50 @@
      {
       "args": [
        {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "I.FilterError[Self.Value, C._BorrowView[o]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "I",
+        "type": "Filterable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[I.Filtered[Self.Value, C._BorrowView[o]]]"
+      },
+      "signature": "def filter[C: _BorrowViewable, o: ImmOrigin, //, I: Filterable](deinit self, ref[o] predicate: C) raises I.FilterError[Self.Value, C._BorrowView[o]] -> Piped[I.Filtered[Self.Value, C._BorrowView[o]]] where I.Element[Self.Value] == C._BorrowView[o].Payload and C._BorrowView[o].Result == Bool",
+      "summary": "Filter through the selected family with a shared predicate."
+     },
+     {
+      "args": [
+       {
         "convention": "var",
         "description": "",
         "name": "predicate",
@@ -49481,6 +49743,43 @@
      {
       "args": [
        {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def filter[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) raises C._BorrowView[o].Failure -> Piped[List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where conforms_to(C._BorrowView[o].Payload, Movable & Deinitable) and Self.Value == List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and C._BorrowView[o].Result == Bool",
+      "summary": "Retain accepted List payloads with a shared library predicate."
+     },
+     {
+      "args": [
+       {
         "convention": "ref",
         "description": "",
         "name": "predicate",
@@ -49606,6 +49905,43 @@
      {
       "args": [
        {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def filter[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) raises C._BorrowView[o].Failure -> Piped[Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where conforms_to(C._BorrowView[o].Payload, Movable & Deinitable) and Self.Value == Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and C._BorrowView[o].Result == Bool",
+      "summary": "Retain accepted Deque payloads with a shared library predicate."
+     },
+     {
+      "args": [
+       {
         "convention": "ref",
         "description": "",
         "name": "predicate",
@@ -49727,6 +50063,43 @@
       },
       "signature": "def filter[C: BorrowCallable](deinit self, var predicate: C) raises C.Failure -> Piped[LinkedList[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool",
       "summary": "Retain accepted LinkedList payloads with an owned library predicate."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def filter[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) raises C._BorrowView[o].Failure -> Piped[LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where conforms_to(C._BorrowView[o].Payload, Movable & Deinitable) and Self.Value == LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and C._BorrowView[o].Result == Bool",
+      "summary": "Retain accepted LinkedList payloads with a shared library predicate."
      },
      {
       "args": [
@@ -49898,6 +50271,57 @@
      {
       "args": [
        {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "K",
+        "type": "KeyElement & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "H",
+        "type": "Hasher & Defaultable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Dict[K, downcast[C._BorrowView[o].Payload, Movable & Deinitable], H]]"
+      },
+      "signature": "def filter[C: _BorrowViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, ref[o] predicate: C) raises C._BorrowView[o].Failure -> Piped[Dict[K, downcast[C._BorrowView[o].Payload, Movable & Deinitable], H]] where conforms_to(C._BorrowView[o].Payload, Movable & Deinitable) and Self.Value == Dict[K, downcast[C._BorrowView[o].Payload, Movable & Deinitable], H] and C._BorrowView[o].Result == Bool",
+      "summary": "Retain accepted Dict payloads with a shared library predicate."
+     },
+     {
+      "args": [
+       {
         "convention": "ref",
         "description": "",
         "name": "predicate",
@@ -50023,6 +50447,43 @@
      {
       "args": [
        {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def filter[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) raises C._BorrowView[o].Failure -> Piped[StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where conforms_to(C._BorrowView[o].Payload, Movable & Deinitable) and Self.Value == StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and C._BorrowView[o].Result == Bool",
+      "summary": "Retain accepted StringDict payloads with a shared library predicate."
+     },
+     {
+      "args": [
+       {
         "convention": "ref",
         "description": "",
         "name": "predicate",
@@ -50144,6 +50605,43 @@
       },
       "signature": "def filter[C: BorrowCallable](deinit self, var predicate: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool",
       "summary": "Retain accepted Optional payloads with an owned library predicate."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def filter[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where conforms_to(C._BorrowView[o].Payload, Movable & Deinitable) and Self.Value == Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and C._BorrowView[o].Result == Bool",
+      "summary": "Retain accepted Optional payloads with a shared library predicate."
      }
     ],
     "filter_effect": [
@@ -52157,6 +52655,50 @@
      {
       "args": [
        {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "I.FilterError[Self.Value, _Negated[C._BorrowView[o]]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "I",
+        "type": "Filterable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[I.Filtered[Self.Value, _Negated[C._BorrowView[o]]]]"
+      },
+      "signature": "def filter_not[C: _BorrowViewable, o: ImmOrigin, //, I: Filterable](deinit self, ref[o] predicate: C) raises I.FilterError[Self.Value, _Negated[C._BorrowView[o]]] -> Piped[I.Filtered[Self.Value, _Negated[C._BorrowView[o]]]] where I.Element[Self.Value] == C._BorrowView[o].Payload and C._BorrowView[o].Result == Bool",
+      "summary": "Filter through the selected family with a shared predicate."
+     },
+     {
+      "args": [
+       {
         "convention": "var",
         "description": "",
         "name": "predicate",
@@ -52319,6 +52861,43 @@
      {
       "args": [
        {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def filter_not[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) raises C._BorrowView[o].Failure -> Piped[List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where conforms_to(C._BorrowView[o].Payload, Movable & Deinitable) and Self.Value == List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and C._BorrowView[o].Result == Bool",
+      "summary": "Retain rejected List payloads with a shared library predicate."
+     },
+     {
+      "args": [
+       {
         "convention": "ref",
         "description": "",
         "name": "predicate",
@@ -52444,6 +53023,43 @@
      {
       "args": [
        {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def filter_not[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) raises C._BorrowView[o].Failure -> Piped[Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where conforms_to(C._BorrowView[o].Payload, Movable & Deinitable) and Self.Value == Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and C._BorrowView[o].Result == Bool",
+      "summary": "Retain rejected Deque payloads with a shared library predicate."
+     },
+     {
+      "args": [
+       {
         "convention": "ref",
         "description": "",
         "name": "predicate",
@@ -52565,6 +53181,43 @@
       },
       "signature": "def filter_not[C: BorrowCallable](deinit self, var predicate: C) raises C.Failure -> Piped[LinkedList[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool",
       "summary": "Retain rejected LinkedList payloads with an owned library predicate."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def filter_not[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) raises C._BorrowView[o].Failure -> Piped[LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where conforms_to(C._BorrowView[o].Payload, Movable & Deinitable) and Self.Value == LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and C._BorrowView[o].Result == Bool",
+      "summary": "Retain rejected LinkedList payloads with a shared library predicate."
      },
      {
       "args": [
@@ -52736,6 +53389,57 @@
      {
       "args": [
        {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "K",
+        "type": "KeyElement & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "H",
+        "type": "Hasher & Defaultable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Dict[K, downcast[C._BorrowView[o].Payload, Movable & Deinitable], H]]"
+      },
+      "signature": "def filter_not[C: _BorrowViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, ref[o] predicate: C) raises C._BorrowView[o].Failure -> Piped[Dict[K, downcast[C._BorrowView[o].Payload, Movable & Deinitable], H]] where conforms_to(C._BorrowView[o].Payload, Movable & Deinitable) and Self.Value == Dict[K, downcast[C._BorrowView[o].Payload, Movable & Deinitable], H] and C._BorrowView[o].Result == Bool",
+      "summary": "Retain rejected Dict payloads with a shared library predicate."
+     },
+     {
+      "args": [
+       {
         "convention": "ref",
         "description": "",
         "name": "predicate",
@@ -52861,6 +53565,43 @@
      {
       "args": [
        {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def filter_not[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) raises C._BorrowView[o].Failure -> Piped[StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where conforms_to(C._BorrowView[o].Payload, Movable & Deinitable) and Self.Value == StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and C._BorrowView[o].Result == Bool",
+      "summary": "Retain rejected StringDict payloads with a shared library predicate."
+     },
+     {
+      "args": [
+       {
         "convention": "ref",
         "description": "",
         "name": "predicate",
@@ -52982,6 +53723,43 @@
       },
       "signature": "def filter_not[C: BorrowCallable](deinit self, var predicate: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool",
       "summary": "Retain rejected Optional payloads with an owned library predicate."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def filter_not[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where conforms_to(C._BorrowView[o].Payload, Movable & Deinitable) and Self.Value == Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and C._BorrowView[o].Result == Bool",
+      "summary": "Retain rejected Optional payloads with a shared library predicate."
      }
     ],
     "find_effect": [
@@ -227623,6 +228401,43 @@
       },
       "signature": "def drop_while[C: BorrowCallable](deinit self, var predicate: C) -> Iter[DropWhileIterator[downcast[C.Payload, Movable & Deinitable], Self.I, C]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never",
       "summary": "Discard the matching prefix; yield the first rejection and stop testing."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[DropWhileIterator[downcast[C._BorrowView[o].Payload, Movable & Deinitable], Self.I, C._BorrowView[o]]]"
+      },
+      "signature": "def drop_while[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) -> Iter[DropWhileIterator[downcast[C._BorrowView[o].Payload, Movable & Deinitable], Self.I, C._BorrowView[o]]] where Self.I.Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never",
+      "summary": "Discard the matching prefix; yield the first rejection and stop testing."
      }
     ],
     "enumerate": [
@@ -227755,6 +228570,43 @@
       },
       "signature": "def filter[T: Movable & Deinitable, //, F: def(T) -> Bool](deinit self, var predicate: F) -> Iter[FilterIterator[T, Self.I, F]] where Self.I.Element == T",
       "summary": "Lazily retain elements with a stored closure predicate."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[FilterIterator[Self.I.Element, Self.I, C._BorrowView[o]]]"
+      },
+      "signature": "def filter[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) -> Iter[FilterIterator[Self.I.Element, Self.I, C._BorrowView[o]]] where conforms_to(Self.I.Element, Movable & Deinitable) and C._BorrowView[o].Payload == Self.I.Element and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never",
+      "summary": "Lazily filter with a retained shared predicate."
      },
      {
       "args": [
@@ -228157,6 +229009,43 @@
       },
       "signature": "def filter_not[T: Movable & Deinitable, //, F: def(T) -> Bool](deinit self, var predicate: F) -> Iter[FilterNotIterator[T, Self.I, F]] where Self.I.Element == T",
       "summary": "Lazily retain rejected elements with a stored native closure."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[FilterNotIterator[Self.I.Element, Self.I, C._BorrowView[o]]]"
+      },
+      "signature": "def filter_not[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) -> Iter[FilterNotIterator[Self.I.Element, Self.I, C._BorrowView[o]]] where conforms_to(Self.I.Element, Movable & Deinitable) and C._BorrowView[o].Payload == Self.I.Element and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never",
+      "summary": "Lazily filter with a retained shared predicate."
      },
      {
       "args": [
@@ -233132,6 +234021,43 @@
       },
       "signature": "def take_while[C: BorrowCallable](deinit self, var predicate: C) -> Iter[TakeWhileIterator[downcast[C.Payload, Movable & Deinitable], Self.I, C]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never",
       "summary": "Yield the initial matching prefix; consume and discard its first rejection."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[TakeWhileIterator[downcast[C._BorrowView[o].Payload, Movable & Deinitable], Self.I, C._BorrowView[o]]]"
+      },
+      "signature": "def take_while[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) -> Iter[TakeWhileIterator[downcast[C._BorrowView[o].Payload, Movable & Deinitable], Self.I, C._BorrowView[o]]] where Self.I.Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never",
+      "summary": "Yield the initial matching prefix; consume and discard its first rejection."
      }
     ],
     "tap_each": [
@@ -236902,6 +237828,57 @@
      },
      "signature": "def drop_while[C: BorrowCallable, V: Movable & Deinitable](var predicate: C, var source: V) -> DropWhileIterator[downcast[C.Payload, Movable & Deinitable], _Source[V], C] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never",
      "summary": "Discard the matching prefix; yield the first rejection and stop testing."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "predicate",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "C",
+       "type": "_BorrowViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "DropWhileIterator[downcast[C._BorrowView[o].Payload, Movable & Deinitable], _Source[V], C._BorrowView[o]]"
+     },
+     "signature": "def drop_while[C: _BorrowViewable, o: ImmOrigin, V: Movable & Deinitable](ref[o] predicate: C, var source: V) -> DropWhileIterator[downcast[C._BorrowView[o].Payload, Movable & Deinitable], _Source[V], C._BorrowView[o]] where _Source[V].Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never",
+     "summary": "Discard the matching prefix; yield the first rejection and stop testing."
     }
    ],
    "provider": "iteration/prefixes",
@@ -237064,6 +238041,57 @@
      },
      "signature": "def filter[T: Movable & Deinitable, I: Movable & Deinitable, //, F: _LazyPredicate[T]](var function: F, var source: I) -> _Filter[T, _Source[I], F] where _Source[I].Element == T",
      "summary": "Lazily keep the elements a closure predicate accepts."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "predicate",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "I",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "C",
+       "type": "_BorrowViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Filter[_Source[I].Element, _Source[I], C._BorrowView[o]]"
+     },
+     "signature": "def filter[I: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin](ref[o] predicate: C, var source: I) -> _Filter[_Source[I].Element, _Source[I], C._BorrowView[o]] where conforms_to(_Source[I].Element, Movable & Deinitable) and C._BorrowView[o].Payload == _Source[I].Element and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never",
+     "summary": "Retain a shared predicate until lazy filtering completes or is discarded."
     },
     {
      "args": [
@@ -237624,6 +238652,57 @@
      },
      "signature": "def filter_not[T: Movable & Deinitable, I: Movable & Deinitable, //, F: _LazyPredicate[T]](var function: F, var source: I) -> _Filter[T, _Source[I], F, True] where _Source[I].Element == T",
      "summary": "Lazily retain rejected elements with a stored native closure."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "predicate",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "I",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "C",
+       "type": "_BorrowViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Filter[_Source[I].Element, _Source[I], C._BorrowView[o], True]"
+     },
+     "signature": "def filter_not[I: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin](ref[o] predicate: C, var source: I) -> _Filter[_Source[I].Element, _Source[I], C._BorrowView[o], True] where conforms_to(_Source[I].Element, Movable & Deinitable) and C._BorrowView[o].Payload == _Source[I].Element and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never",
+     "summary": "Retain a shared predicate until lazy filtering completes or is discarded."
     },
     {
      "args": [
@@ -243958,6 +245037,57 @@
       "type": "TakeWhileIterator[downcast[C.Payload, Movable & Deinitable], _Source[V], C]"
      },
      "signature": "def take_while[C: BorrowCallable, V: Movable & Deinitable](var predicate: C, var source: V) -> TakeWhileIterator[downcast[C.Payload, Movable & Deinitable], _Source[V], C] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never",
+     "summary": "Yield the initial matching prefix; consume and discard its first rejection."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "predicate",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "C",
+       "type": "_BorrowViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "TakeWhileIterator[downcast[C._BorrowView[o].Payload, Movable & Deinitable], _Source[V], C._BorrowView[o]]"
+     },
+     "signature": "def take_while[C: _BorrowViewable, o: ImmOrigin, V: Movable & Deinitable](ref[o] predicate: C, var source: V) -> TakeWhileIterator[downcast[C._BorrowView[o].Payload, Movable & Deinitable], _Source[V], C._BorrowView[o]] where _Source[V].Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never",
      "summary": "Yield the initial matching prefix; consume and discard its first rejection."
     }
    ],

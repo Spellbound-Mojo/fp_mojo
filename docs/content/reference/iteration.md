@@ -25,6 +25,15 @@ their native exhaustion behavior. `.enumerate(start=0)` and
 `.zip_with(other, function)`; its free counterpart is
 `zip_with(function, source, other)`.
 
+A named unary `partial` can be reused in `filter`, `filter_not`, `take_while`
+and `drop_while`, in either free-function or fluent form. The example reuses
+`under_three` to select values and then skip a prefix. These iterators borrow
+the partial until consumed or discarded. Use `predicate^` or a temporary
+partial to transfer its stored prefix to the iterator. Construction copies
+nothing from an existing predicate and invokes nothing; each actual native
+call retains `partial`'s documented bound-argument copies. Lazy predicates
+still must be non-raising and return Bool.
+
 On Mojo 1.2, native callbacks that mutate owned captures require
 `@always_inline`; this includes stored prefix predicates. Alternatively, use a
 library callable with an explicit mutable receiver. See

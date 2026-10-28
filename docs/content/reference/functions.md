@@ -647,6 +647,11 @@ also accept named partials. The remaining native argument is borrowed, so
 these calls do not require a copyable payload. Their bound prefix follows
 the same copy-per-invocation rule as other partial calls.
 
+Named partial predicates also work in algebra filtering, inferred or
+family-parameterized Piped filtering, and lazy `filter`, `filter_not`,
+`take_while` and `drop_while`. A lazy iterator retains the partial's borrow;
+explicit moves and temporary partials transfer its prefix instead.
+
 <!-- example: docs/examples/partial.mojo -->
 
 `partial(twice, value)` copies `4` when it is built and passes a fresh copy on

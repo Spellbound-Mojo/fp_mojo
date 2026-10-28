@@ -1,7 +1,8 @@
-"""Lazy prefix adapters with owned, non-raising runtime predicates."""
+"""Lazy prefix adapters with retained, non-raising runtime predicates."""
 from std.iter import Iterator, IterableOwned
 from std.builtin.rebind import downcast, rebind_var
 from fp.callables.protocols import BorrowCallable
+from fp.callables._views import _BorrowViewable
 from fp.callables.products import _OptionalCell
 from ._advance import _Source, _source, _next_fused
 from ._callbacks import _LazyPredicate, _apply_lazy_predicate
@@ -97,6 +98,11 @@ def take_while[C: BorrowCallable, V: Movable & Deinitable](var predicate: C, var
     """
     return _Prefix[downcast[C.Payload, Movable & Deinitable], _Source[V], C, True](predicate^, _source(source^), True, False)
 
+def take_while[C: _BorrowViewable, o: ImmOrigin, V: Movable & Deinitable](ref[o] predicate: C, var source: V) -> TakeWhileIterator[downcast[C._BorrowView[o].Payload, Movable & Deinitable], _Source[V], C._BorrowView[o]] where _Source[V].Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never:
+    """Yield the initial matching prefix; consume and discard its first rejection.
+    """
+    return _Prefix[downcast[C._BorrowView[o].Payload, Movable & Deinitable], _Source[V], C._BorrowView[o], True](predicate._borrow_view(), _source(source^), True, False)
+
 def drop_while[T: Movable & Deinitable, V: Movable & Deinitable](var predicate: def(T) thin -> Bool, var source: V) -> DropWhileIterator[T, _Source[V], def(T) thin -> Bool] where _Source[V].Element == T:
     """Discard the matching prefix; yield the first rejection and stop testing.
 
@@ -126,4 +132,9 @@ def drop_while[C: BorrowCallable, V: Movable & Deinitable](var predicate: C, var
     """Discard the matching prefix; yield the first rejection and stop testing.
     """
     return _Prefix[downcast[C.Payload, Movable & Deinitable], _Source[V], C, False](predicate^, _source(source^), True, False)
+
+def drop_while[C: _BorrowViewable, o: ImmOrigin, V: Movable & Deinitable](ref[o] predicate: C, var source: V) -> DropWhileIterator[downcast[C._BorrowView[o].Payload, Movable & Deinitable], _Source[V], C._BorrowView[o]] where _Source[V].Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never:
+    """Discard the matching prefix; yield the first rejection and stop testing.
+    """
+    return _Prefix[downcast[C._BorrowView[o].Payload, Movable & Deinitable], _Source[V], C._BorrowView[o], False](predicate._borrow_view(), _source(source^), True, False)
 # --- end iterator expansion syntax ---

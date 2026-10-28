@@ -28,7 +28,7 @@ from fp.algebra._effect_combinators import _AllLive, _BoolLive, _PredicateStep, 
 from fp.algebra.protocols import Monad
 from fp.algebra.operations import _EntryError, _InferError
 from fp.data._result import _ResultType
-from fp.callables._views import _UnaryViewable
+from fp.callables._views import _UnaryViewable, _BorrowViewable
 from fp.callables.protocols import BinaryContract
 from fp.callables.invoke import RepeatableBinary
 from fp.callables.native import _Binary, _RaisingBinary, _NativeBinaryRef
@@ -337,6 +337,11 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """
         return Iter(_take_while(predicate^, self._iterator^))
 
+    def take_while[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) -> Iter[TakeWhileIterator[downcast[C._BorrowView[o].Payload, Movable & Deinitable], Self.I, C._BorrowView[o]]] where Self.I.Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never:
+        """Yield the initial matching prefix; consume and discard its first rejection.
+        """
+        return Iter(_take_while(predicate._borrow_view(), self._iterator^))
+
     def drop_while[T: Movable & Deinitable](deinit self, var predicate: def(T) thin -> Bool) -> Iter[DropWhileIterator[T, Self.I, def(T) thin -> Bool]] where Self.I.Element == T:
         """Discard the matching prefix; yield the first rejection and stop testing.
 
@@ -364,6 +369,11 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Discard the matching prefix; yield the first rejection and stop testing.
         """
         return Iter(_drop_while(predicate^, self._iterator^))
+
+    def drop_while[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) -> Iter[DropWhileIterator[downcast[C._BorrowView[o].Payload, Movable & Deinitable], Self.I, C._BorrowView[o]]] where Self.I.Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never:
+        """Discard the matching prefix; yield the first rejection and stop testing.
+        """
+        return Iter(_drop_while(predicate._borrow_view(), self._iterator^))
 
     def first(deinit self) -> Optional[downcast[Self.I.Element, Movable & Deinitable]] where conforms_to(Self.I.Element, Deinitable):
         """Consume at most one element and return it, or None for empty input.
@@ -956,6 +966,11 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Lazily retain elements with a stored closure predicate."""
         return Iter(_filter(predicate^, self._iterator^))
 
+    def filter[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C
+    ) -> Iter[FilterIterator[Self.I.Element, Self.I, C._BorrowView[o]]] where conforms_to(Self.I.Element, Movable & Deinitable) and C._BorrowView[o].Payload == Self.I.Element and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never:
+        """Lazily filter with a retained shared predicate."""
+        return Iter(_filter(predicate._borrow_view(), self._iterator^))
+
     def filter[C: BorrowCallable](deinit self, var predicate: C
     ) -> Iter[FilterIterator[Self.I.Element, Self.I, C]] where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and C.Failure == Never:
         """Lazily retain elements with a library borrowing predicate."""
@@ -986,6 +1001,11 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
     ) -> Iter[FilterNotIterator[T, Self.I, F]] where Self.I.Element == T:
         """Lazily retain rejected elements with a stored native closure."""
         return Iter(_filter_not(predicate^, self._iterator^))
+
+    def filter_not[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C
+    ) -> Iter[FilterNotIterator[Self.I.Element, Self.I, C._BorrowView[o]]] where conforms_to(Self.I.Element, Movable & Deinitable) and C._BorrowView[o].Payload == Self.I.Element and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never:
+        """Lazily filter with a retained shared predicate."""
+        return Iter(_filter_not(predicate._borrow_view(), self._iterator^))
 
     def filter_not[C: BorrowCallable](deinit self, var predicate: C
     ) -> Iter[FilterNotIterator[Self.I.Element, Self.I, C]] where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and C.Failure == Never:

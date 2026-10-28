@@ -3855,9 +3855,9 @@ partial's borrow, and an explicit move transfers its prefix. The canonical
 `_call` also checks that each protocol entry point retains the exact stored
 function signature before rebinding it, rejecting wrong-arity direct `call` or
 `invoke` methods. Ownership tests track both prefix copies and move-only payload
-destruction, including deferred execution and abandonment. Direct Result and Piped admission share the same descriptor. Lazy APIs still
-accept temporary or moved partials through their existing owned BorrowCallable
-overloads.
+destruction, including deferred execution and abandonment. Direct Result, Piped filtering and lazy filtering/prefix admission share the
+same descriptor. Existing owned BorrowCallable overloads still accept temporary
+or moved partials.
 
 ### Direct Result and Piped callbacks share borrowed receiver admission
 
@@ -3877,3 +3877,21 @@ retain borrowed receivers through deferred execution. Copy and destruction
 checks cover skipped builders, discarded computations, native raises, explicit
 moves, and move-only stored errors. Origin rejections use immutable spans to
 isolate lifetime mismatches from mutable-alias diagnostics.
+
+### Eager and lazy filtering share the retained predicate boundary
+
+Algebra filtering, inferred and family-parameterized Piped filtering, lazy
+filters and lazy prefix operations now admit `_BorrowViewable` predicates.
+Each entry point materializes the same shared receiver and delegates to the
+existing filtering or prefix owner. The carrier generator and prefix generator
+reuse the common callback descriptor; no traversal or stopping loop is copied.
+The public `FilterContract` retains its inversion parameter for `filter_not`,
+so generic forwarding supplies the exact evidence required by that operation.
+
+Iterator construction invokes nothing. A named partial stays borrowed until
+consumption or abandonment; a temporary or explicit move uses the existing
+owned callback route. Lazy predicates still require Bool and Never, while eager
+family filtering retains its exact native error and carrier policy. Ownership
+checks count native prefix copies, verify payloads remain live during each
+predicate call, and cover both prefix stopping rules, iterator abandonment,
+explicit moves, temporary callbacks, and returned spans into external owners.

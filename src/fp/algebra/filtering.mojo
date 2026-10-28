@@ -1,5 +1,6 @@
 """Container filtering and selection rules over the existing accumulation loop."""
 from std.builtin.rebind import rebind_var
+from fp.callables._views import _BorrowViewable
 from fp.callables._predicates import _Negated, _FilterPredicate
 from fp.callables.protocols import BorrowCallable, Unary
 from fp.iteration._callbacks import _predicate_callable
@@ -17,7 +18,8 @@ def filter[V: Movable & Deinitable, P: BorrowCallable, //, I: Filterable](var pr
     """Filter a carrier through an explicit family, preserving its context.
 
     Native functions and closures are accepted directly and borrowed. A library
-    BorrowCallable is consumed. Built-in families run now, call once per payload
+    BorrowCallable is consumed; shared partial predicates may instead be borrowed
+    by name. Built-in families run now, call once per payload
     in native order, move accepted values unchanged and destroy rejected values.
     Empty carriers skip calls. Failure destroys remaining input and partial output.
     Deferred families retain their own evaluation and error semantics and may
@@ -40,6 +42,12 @@ def filter[V: Movable & Deinitable, P: BorrowCallable, //, I: Filterable](var pr
         The family's exact filtering error.
     """
     return _filter_with[V, P, I, False](predicate^, value^)
+
+
+def filter[V: Movable & Deinitable, P: _BorrowViewable, o: ImmOrigin, //, I: Filterable](ref[o] predicate: P, var value: V
+) raises FilterContract[I, V, P._BorrowView[o]].Error -> FilterContract[I, V, P._BorrowView[o]].Out where FilterContract[I, V, P._BorrowView[o]].Compatible:
+    """Filter through an explicit family while retaining a shared predicate."""
+    return filter[I](predicate._borrow_view(), value^)
 
 
 def filter[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //,
@@ -83,6 +91,12 @@ def filter_not[V: Movable & Deinitable, P: BorrowCallable, //, I: Filterable](va
         The family's exact error for filtering with the adapted predicate.
     """
     return _filter_with[V, P, I, True](predicate^, value^)
+
+
+def filter_not[V: Movable & Deinitable, P: _BorrowViewable, o: ImmOrigin, //, I: Filterable](ref[o] predicate: P, var value: V
+) raises FilterContract[I, V, P._BorrowView[o], True].Error -> FilterContract[I, V, P._BorrowView[o], True].Out where FilterContract[I, V, P._BorrowView[o], True].Compatible:
+    """Filter through an explicit family while retaining a shared predicate."""
+    return filter_not[I](predicate._borrow_view(), value^)
 
 
 def filter_not[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //,

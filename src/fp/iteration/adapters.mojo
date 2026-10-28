@@ -7,7 +7,7 @@ Standard `chain`, `zip`, `take` and the like stay in `std.iter` and
 """
 
 from fp.callables.products import _OptionalCell
-from fp.callables._views import _UnaryViewable
+from fp.callables._views import _UnaryViewable, _BorrowViewable
 from fp.callables._scan import _Carry
 from ._callbacks import _snapshot_step
 from fp.callables._predicates import _filter_decision
@@ -168,6 +168,12 @@ def filter_not[T: Movable & Deinitable, I: Movable & Deinitable, //, F: _LazyPre
 ) -> _Filter[T, _Source[I], F, True] where _Source[I].Element == T:
     """Lazily retain rejected elements with a stored native closure."""
     return _Filter[T, _Source[I], F, True](function^, _source(source^), False)
+
+
+def filter_not[I: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin](ref[o] predicate: C, var source: I
+) -> _Filter[_Source[I].Element, _Source[I], C._BorrowView[o], True] where conforms_to(_Source[I].Element, Movable & Deinitable) and C._BorrowView[o].Payload == _Source[I].Element and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never:
+    """Retain a shared predicate until lazy filtering completes or is discarded."""
+    return filter_not(predicate._borrow_view(), source^)
 
 
 def filter_not[I: Movable & Deinitable, C: BorrowCallable](var predicate: C, var source: I
@@ -620,6 +626,12 @@ def scan_left[A: Copyable & Deinitable, I: Movable & Deinitable, F: Binary](var 
 ) -> _Scan[A, F.Second, _Source[I], F] where F.First == A and F.Second == _Source[I].Element and F.Out == A and F.Error == Never:
     """Lazily yield the snapshots of a scan with a library `Binary` step."""
     return _Scan[A, F.Second, _Source[I], F](function^, initial^, _source(source^), False, False)
+
+
+def filter[I: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin](ref[o] predicate: C, var source: I
+) -> _Filter[_Source[I].Element, _Source[I], C._BorrowView[o]] where conforms_to(_Source[I].Element, Movable & Deinitable) and C._BorrowView[o].Payload == _Source[I].Element and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never:
+    """Retain a shared predicate until lazy filtering completes or is discarded."""
+    return filter(predicate._borrow_view(), source^)
 
 
 def filter[I: Movable & Deinitable, C: BorrowCallable](var predicate: C, var source: I
