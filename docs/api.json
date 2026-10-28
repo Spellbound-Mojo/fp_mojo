@@ -13915,7 +13915,7 @@
        "description": "",
        "inferred": false,
        "name": "F",
-       "type": "Unary",
+       "type": "UnaryContract & Movable & Deinitable",
        "variadic": false
       }
      ],
@@ -13925,8 +13925,8 @@
       "doc": "",
       "type": "_FilterMap[F.Arg, U, _Source[I], F]"
      },
-     "signature": "def filter_map[U: Movable & Deinitable, I: Movable & Deinitable, F: Unary](var function: F, var source: I) -> _FilterMap[F.Arg, U, _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[U] and F.Error == Never",
-     "summary": "Lazily apply a library `Unary` with an explicit Optional payload binding."
+     "signature": "def filter_map[U: Movable & Deinitable, I: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var function: F, var source: I) -> _FilterMap[F.Arg, U, _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[U] and F.Error == Never and RepeatableUnary[F]",
+     "summary": "Lazily apply a repeatable library unary callback with an explicit Optional payload binding."
     },
     {
      "args": [
@@ -13959,7 +13959,7 @@
        "description": "",
        "inferred": true,
        "name": "F",
-       "type": "Unary",
+       "type": "UnaryContract & Movable & Deinitable",
        "variadic": false
       }
      ],
@@ -13969,7 +13969,7 @@
       "doc": "",
       "type": "_FilterMap[F.Arg, _OptionalElement[F.Out], _Source[I], F]"
      },
-     "signature": "def filter_map[I: Movable & Deinitable, F: Unary, //](var function: F, var source: I) -> _FilterMap[F.Arg, _OptionalElement[F.Out], _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[_OptionalElement[F.Out]] and F.Error == Never",
+     "signature": "def filter_map[I: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //](var function: F, var source: I) -> _FilterMap[F.Arg, _OptionalElement[F.Out], _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[_OptionalElement[F.Out]] and F.Error == Never and RepeatableUnary[F]",
      "summary": "Infer the Optional payload and move a library callable into the iterator."
     },
     {
@@ -15129,7 +15129,7 @@
        "description": "",
        "inferred": false,
        "name": "F",
-       "type": "Unary",
+       "type": "UnaryContract & Movable & Deinitable",
        "variadic": false
       }
      ],
@@ -15139,8 +15139,8 @@
       "doc": "",
       "type": "_Flatten[_Map[F.Arg, F.Out, _Source[I], F], F.Out]"
      },
-     "signature": "def flat_map[I: Movable & Deinitable, F: Unary](var function: F, var source: I) -> _Flatten[_Map[F.Arg, F.Out, _Source[I], F], F.Out] where _Source[I].Element == F.Arg and F.Error == Never",
-     "summary": "Lazily apply a library `Unary` value and concatenate the inner sources it returns."
+     "signature": "def flat_map[I: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var function: F, var source: I) -> _Flatten[_Map[F.Arg, F.Out, _Source[I], F], F.Out] where _Source[I].Element == F.Arg and F.Error == Never and RepeatableUnary[F]",
+     "summary": "Lazily apply a repeatable library unary value and concatenate the inner sources it returns."
     }
    ],
    "provider": "iteration/adapters",
@@ -17566,7 +17566,7 @@
        "description": "",
        "inferred": false,
        "name": "F",
-       "type": "Unary",
+       "type": "UnaryContract & Movable & Deinitable",
        "variadic": false
       }
      ],
@@ -17576,8 +17576,8 @@
       "doc": "",
       "type": "_Map[F.Arg, F.Out, _Source[I], F]"
      },
-     "signature": "def map[I: Movable & Deinitable, F: Unary](var function: F, var source: I) -> _Map[F.Arg, F.Out, _Source[I], F] where _Source[I].Element == F.Arg and F.Error == Never",
-     "summary": "Lazily apply a library `Unary` value, such as a partial or a composition."
+     "signature": "def map[I: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var function: F, var source: I) -> _Map[F.Arg, F.Out, _Source[I], F] where _Source[I].Element == F.Arg and F.Error == Never and RepeatableUnary[F]",
+     "summary": "Lazily apply a repeatable library unary value, such as a partial or a composition."
     }
    ],
    "provider": "iteration/adapters",
@@ -245352,7 +245352,7 @@
         "variadic": false
        }
       ],
-      "description": "Moves each element into the callback. Only absent `Optional` values are\nskipped; a present `Result.Err` remains an ordinary element. Library\n`Unary` callbacks name the result element parameter explicitly, `U=U`.",
+      "description": "Moves each element into the callback. Only absent `Optional` values are\nskipped; a present `Result.Err` remains an ordinary element.\nLibrary unary callbacks infer the Optional payload; an explicit `U=U` remains available.",
       "error": "",
       "parameters": [
        {
@@ -245447,7 +245447,7 @@
         "description": "",
         "inferred": false,
         "name": "F",
-        "type": "Unary",
+        "type": "UnaryContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -245457,8 +245457,8 @@
        "doc": "",
        "type": "Iter[FilterMapIterator[F.Arg, U, Self.I, F]]"
       },
-      "signature": "def filter_map[U: Movable & Deinitable, F: Unary](deinit self, var function: F) -> Iter[FilterMapIterator[F.Arg, U, Self.I, F]] where Self.I.Element == F.Arg and F.Out == Optional[U] and F.Error == Never",
-      "summary": "Lazily filter a library `Unary` with an explicit Optional payload binding."
+      "signature": "def filter_map[U: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](deinit self, var function: F) -> Iter[FilterMapIterator[F.Arg, U, Self.I, F]] where Self.I.Element == F.Arg and F.Out == Optional[U] and F.Error == Never and RepeatableUnary[F]",
+      "summary": "Lazily filter a repeatable library unary callback with an explicit Optional payload binding."
      },
      {
       "args": [
@@ -245477,7 +245477,7 @@
         "description": "",
         "inferred": true,
         "name": "F",
-        "type": "Unary",
+        "type": "UnaryContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -245487,7 +245487,7 @@
        "doc": "",
        "type": "Iter[FilterMapIterator[F.Arg, _OptionalElement[F.Out], Self.I, F]]"
       },
-      "signature": "def filter_map[F: Unary, //](deinit self, var function: F) -> Iter[FilterMapIterator[F.Arg, _OptionalElement[F.Out], Self.I, F]] where Self.I.Element == F.Arg and F.Out == Optional[_OptionalElement[F.Out]] and F.Error == Never",
+      "signature": "def filter_map[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) -> Iter[FilterMapIterator[F.Arg, _OptionalElement[F.Out], Self.I, F]] where Self.I.Element == F.Arg and F.Out == Optional[_OptionalElement[F.Out]] and F.Error == Never and RepeatableUnary[F]",
       "summary": "Infer the Optional payload and move the callback into the lazy iterator."
      },
      {
@@ -246392,7 +246392,7 @@
         "variadic": false
        }
       ],
-      "description": "Moves each element into the callback and retains the returned native\niterator or owned iterable until it is exhausted or abandoned. Empty inner\nsources are skipped. A borrowed inner source retains its external origin.\nPlain functions, closures and non-raising library `Unary` values are supported.",
+      "description": "Moves each element into the callback and retains the returned native\niterator or owned iterable until it is exhausted or abandoned. Empty inner\nsources are skipped. A borrowed inner source retains its external origin.\nPlain functions, closures and non-raising repeatable library unary values are supported.",
       "error": "",
       "parameters": [
        {
@@ -246517,7 +246517,7 @@
         "description": "",
         "inferred": false,
         "name": "F",
-        "type": "Unary",
+        "type": "UnaryContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -246527,8 +246527,8 @@
        "doc": "",
        "type": "Iter[FlatMapIterator[F.Arg, F.Out, Self.I, F]]"
       },
-      "signature": "def flat_map[F: Unary](deinit self, var function: F) -> Iter[FlatMapIterator[F.Arg, F.Out, Self.I, F]] where Self.I.Element == F.Arg and F.Error == Never",
-      "summary": "Lazily expand elements with a library `Unary` value."
+      "signature": "def flat_map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) -> Iter[FlatMapIterator[F.Arg, F.Out, Self.I, F]] where Self.I.Element == F.Arg and F.Error == Never and RepeatableUnary[F]",
+      "summary": "Lazily expand elements with a repeatable library unary value."
      }
     ],
     "flat_pair_with": [
@@ -248184,7 +248184,7 @@
         "variadic": false
        }
       ],
-      "description": "Each element is moved into the stored callback. Construction pulls nothing.\nPlain functions, capturing closures and non-raising library `Unary` values\nuse the same admission and execution as the free `map`.",
+      "description": "Each element is moved into the stored callback. Construction pulls nothing.\nPlain functions, capturing closures and non-raising repeatable library unary values\nuse the same admission and execution as the free `map`.",
       "error": "",
       "parameters": [
        {
@@ -248309,7 +248309,7 @@
         "description": "",
         "inferred": false,
         "name": "F",
-        "type": "Unary",
+        "type": "UnaryContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -248319,8 +248319,8 @@
        "doc": "",
        "type": "Iter[MapIterator[F.Arg, F.Out, Self.I, F]]"
       },
-      "signature": "def map[F: Unary](deinit self, var function: F) -> Iter[MapIterator[F.Arg, F.Out, Self.I, F]] where Self.I.Element == F.Arg and F.Error == Never",
-      "summary": "Lazily transform each element with a library `Unary` value."
+      "signature": "def map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) -> Iter[MapIterator[F.Arg, F.Out, Self.I, F]] where Self.I.Element == F.Arg and F.Error == Never and RepeatableUnary[F]",
+      "summary": "Lazily transform each element with a repeatable library unary value."
      }
     ],
     "map_with_index": [
@@ -255911,7 +255911,7 @@
        "description": "",
        "inferred": false,
        "name": "F",
-       "type": "Unary",
+       "type": "UnaryContract & Movable & Deinitable",
        "variadic": false
       }
      ],
@@ -255921,8 +255921,8 @@
       "doc": "",
       "type": "_FilterMap[F.Arg, U, _Source[I], F]"
      },
-     "signature": "def filter_map[U: Movable & Deinitable, I: Movable & Deinitable, F: Unary](var function: F, var source: I) -> _FilterMap[F.Arg, U, _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[U] and F.Error == Never",
-     "summary": "Lazily apply a library `Unary` with an explicit Optional payload binding."
+     "signature": "def filter_map[U: Movable & Deinitable, I: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var function: F, var source: I) -> _FilterMap[F.Arg, U, _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[U] and F.Error == Never and RepeatableUnary[F]",
+     "summary": "Lazily apply a repeatable library unary callback with an explicit Optional payload binding."
     },
     {
      "args": [
@@ -255955,7 +255955,7 @@
        "description": "",
        "inferred": true,
        "name": "F",
-       "type": "Unary",
+       "type": "UnaryContract & Movable & Deinitable",
        "variadic": false
       }
      ],
@@ -255965,7 +255965,7 @@
       "doc": "",
       "type": "_FilterMap[F.Arg, _OptionalElement[F.Out], _Source[I], F]"
      },
-     "signature": "def filter_map[I: Movable & Deinitable, F: Unary, //](var function: F, var source: I) -> _FilterMap[F.Arg, _OptionalElement[F.Out], _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[_OptionalElement[F.Out]] and F.Error == Never",
+     "signature": "def filter_map[I: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //](var function: F, var source: I) -> _FilterMap[F.Arg, _OptionalElement[F.Out], _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[_OptionalElement[F.Out]] and F.Error == Never and RepeatableUnary[F]",
      "summary": "Infer the Optional payload and move a library callable into the iterator."
     },
     {
@@ -257396,7 +257396,7 @@
        "description": "",
        "inferred": false,
        "name": "F",
-       "type": "Unary",
+       "type": "UnaryContract & Movable & Deinitable",
        "variadic": false
       }
      ],
@@ -257406,8 +257406,8 @@
       "doc": "",
       "type": "_Flatten[_Map[F.Arg, F.Out, _Source[I], F], F.Out]"
      },
-     "signature": "def flat_map[I: Movable & Deinitable, F: Unary](var function: F, var source: I) -> _Flatten[_Map[F.Arg, F.Out, _Source[I], F], F.Out] where _Source[I].Element == F.Arg and F.Error == Never",
-     "summary": "Lazily apply a library `Unary` value and concatenate the inner sources it returns."
+     "signature": "def flat_map[I: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var function: F, var source: I) -> _Flatten[_Map[F.Arg, F.Out, _Source[I], F], F.Out] where _Source[I].Element == F.Arg and F.Error == Never and RepeatableUnary[F]",
+     "summary": "Lazily apply a repeatable library unary value and concatenate the inner sources it returns."
     }
    ],
    "provider": "iteration/adapters",
@@ -259601,7 +259601,7 @@
        "description": "",
        "inferred": false,
        "name": "F",
-       "type": "Unary",
+       "type": "UnaryContract & Movable & Deinitable",
        "variadic": false
       }
      ],
@@ -259611,8 +259611,8 @@
       "doc": "",
       "type": "_Map[F.Arg, F.Out, _Source[I], F]"
      },
-     "signature": "def map[I: Movable & Deinitable, F: Unary](var function: F, var source: I) -> _Map[F.Arg, F.Out, _Source[I], F] where _Source[I].Element == F.Arg and F.Error == Never",
-     "summary": "Lazily apply a library `Unary` value, such as a partial or a composition."
+     "signature": "def map[I: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var function: F, var source: I) -> _Map[F.Arg, F.Out, _Source[I], F] where _Source[I].Element == F.Arg and F.Error == Never and RepeatableUnary[F]",
+     "summary": "Lazily apply a repeatable library unary value, such as a partial or a composition."
     }
    ],
    "provider": "iteration/adapters",
@@ -291099,7 +291099,7 @@
    "summary": "Pipelines, compositions, argument flipping and partial application."
   },
   "iteration": {
-   "description": "Every operation consumes a **source**: a native iterator, used as it is and\nnever restarted, or an owned collection (any `IterableOwned`, such as `List`,\n`Set` or `Dict`), consumed as `iter(values^)` would. Pass `values^` to consume\na collection, or `iter(values)` to borrow it. Standard adapters (`chain`, `zip`,\n`enumerate`, `take`, `drop`, `peekable`, ...) come from `std.iter` and\n`std.itertools` and combine freely with these.\n\n`iterated(source)` adds consuming method syntax to the same native iterators:\n`iterated(values^).map(f).filter(p).to_list()`. Its `Iter` wrapper implements\n`Iterator` and `IterableOwned`, so standard consuming adapters accept it\ndirectly. Native `take`, `drop`, `enumerate`, variadic `zip` and `chain` are\nalso consuming methods. Wrap another standard adapter's result with `iterated`\nto continue chaining.\n`to_list()` and `collect_list()` are alias methods for the free `collect_list`.\nNamed chains are consumed explicitly, as in `stream^.to_list()`.\nThe core functions `map`, `filter`, `filter_not` and `fold_left` are also exported by\n`fp.combinators`; both imports refer to the same native functions. `Piped` adds\nthe same named methods to eager value chains. Its fold keeps the accumulator\ninside the chain, while `Iter.fold_left` returns the accumulator directly.\n\n**Lazy adapters** (`map`, `filter`, `filter_not`, `filter_map`, `flatten`, `flat_map`,\n`scan_left`, `zip_with`, `map_with_index` and value-taking `take_while`/`drop_while`)\nare native iterators whose advancement raises only\n`StopIteration`:\n\n- Construction is inert: nothing is pulled and no callback runs until the first\n  `next`.\n- They are fused: after a source reports exhaustion it is never pulled again.\n- There is no lookahead: each output pulls only what it needs.\n- Abandoning one destroys its owned state without evaluating the rest.\n\nLazy callbacks do not raise, because a native iterator can raise only\n`StopIteration`; to carry a domain failure, yield `Result` elements and\naggregate them with `collect_results`. A callback is a plain function, a\ncapturing closure or, for `map`, `filter_map`, `flat_map` and `scan_left`, a\nshared-receiver `Unary`/`Binary` value such as a `Partial`. Move a closure that\nowns non-trivial state in with `callback^`. On Mojo 1.1, some native closures\nwith move-only inputs/output and owned mutable state require `@always_inline`\non the callback to preserve state writes at O3; see the native-boundaries\narchitecture chapter. Owners of borrowed captures must\nstay alive and unmoved while the adapter is used. A generic function that\nreturns an adapter names its type with `MapIterator`, `ScanIterator`,\n`FilterIterator`, `FilterNotIterator`, `FilterMapIterator` or `FlatMapIterator`, declares\n`I: Iterator` and `where I.Element == T`, and builds the value through the\nfunction; the types add no storage, and the source origin stays part of the\ntype.\n\n**Folds and terminals** (`fold_left`, `fold_until`, `reduce`,\n`reduce_optional`, `collect_list`, `find`, `any`, `all`) run at once:\n\n| Operation | Non-empty input | Empty input |\n|---|---|---|\n| `fold_left(step, initial, source)` | `n` calls of `step(var A, var T) -> A`, in order | `initial`, no calls |\n| `reduce(step, source, initial=value)` | The same as `fold_left` | `initial`, no calls |\n| `reduce(step, source)` | The first element seeds the accumulator; `n - 1` calls | Raises `EmptyReductionError` |\n| `reduce_optional(step, source)` | As above, wrapped in `Optional` | `None` |\n| `fold_until(step, initial, source)` | Each call returns `ControlFlow[B, A]`; `Break(b)` returns at once | `Continue(initial)` |\n| `collect_list(source)` | A `List` of every element, moved | An empty list |\n| `first(source)` / `last(source)` | First / last remaining element | `None` |\n| `is_empty(source)` | Pulls at most one value; returns `False` | `True` |\n| `count(source)` / `count_where(p, source)` | Visits and counts values / matches | `0` |\n| `contains(source, value)` | Borrows for equality, stops at first match | `False` |\n| `for_each(f, source)` | Moves each value into a callback returning `NoneType` | `None`, no calls |\n| `to_non_empty_list(source)` | `Some(NonEmptyList)` | `None` |\n| `combine_all_optional[S](source)` | Left-to-right Semigroup reduction | `None` |\n| `collect_fold[M](f, source)` | Combines present Optional results with the Monoid | Monoid identity |\n| `find(p, source)` | The first accepted element | `None` |\n| `any(p, source)` / `all(p, source)` | Stops at the first decisive element | `False` / `True` |\n\nSteps are never reassociated. Pure and raising callbacks have separate\noverloads, and a callback's error type propagates unchanged; a callback that\nraises `StopIteration` fails as a callback, never as exhaustion. The first\ndecisive result or failure stops without another pull. On failure, native\ncleanup destroys the source, the current accumulator and the pulled element;\nside effects are not rolled back. Every operation makes `O(n)` callback calls,\nor fewer after an early stop, with constant extra state.\n\nA generic function forwards to these with the native callback constraint and\n`where I.Element == T`. A raising wrapper passes `E=E` at every call and must\nnot read `F.E` or `F.T` from a callback type: Mojo 1.1 does not reliably expose\nthose attributes through a precompiled package. Keep the parameter names shown\nin the tutorial's generic examples; on Mojo 1.1 some renamings lose callback\nconformance.",
+   "description": "Every operation consumes a **source**: a native iterator, used as it is and\nnever restarted, or an owned collection (any `IterableOwned`, such as `List`,\n`Set` or `Dict`), consumed as `iter(values^)` would. Pass `values^` to consume\na collection, or `iter(values)` to borrow it. Standard adapters (`chain`, `zip`,\n`enumerate`, `take`, `drop`, `peekable`, ...) come from `std.iter` and\n`std.itertools` and combine freely with these.\n\n`iterated(source)` adds consuming method syntax to the same native iterators:\n`iterated(values^).map(f).filter(p).to_list()`. Its `Iter` wrapper implements\n`Iterator` and `IterableOwned`, so standard consuming adapters accept it\ndirectly. Native `take`, `drop`, `enumerate`, variadic `zip` and `chain` are\nalso consuming methods. Wrap another standard adapter's result with `iterated`\nto continue chaining.\n`to_list()` and `collect_list()` are alias methods for the free `collect_list`.\nNamed chains are consumed explicitly, as in `stream^.to_list()`.\nThe core functions `map`, `filter`, `filter_not` and `fold_left` are also exported by\n`fp.combinators`; both imports refer to the same native functions. `Piped` adds\nthe same named methods to eager value chains. Its fold keeps the accumulator\ninside the chain, while `Iter.fold_left` returns the accumulator directly.\n\n**Lazy adapters** (`map`, `filter`, `filter_not`, `filter_map`, `flatten`, `flat_map`,\n`scan_left`, `zip_with`, `map_with_index` and value-taking `take_while`/`drop_while`)\nare native iterators whose advancement raises only\n`StopIteration`:\n\n- Construction is inert: nothing is pulled and no callback runs until the first\n  `next`.\n- They are fused: after a source reports exhaustion it is never pulled again.\n- There is no lookahead: each output pulls only what it needs.\n- Abandoning one destroys its owned state without evaluating the rest.\n\nLazy callbacks do not raise, because a native iterator can raise only\n`StopIteration`; to carry a domain failure, yield `Result` elements and\naggregate them with `collect_results`. A callback is a plain function, a\ncapturing closure or a library callable such as a `Partial`. `map`, `filter_map`\nand `flat_map` accept shared or mutable unary receivers; `scan_left` accepts\nshared binary callbacks. Move a closure that\nowns non-trivial state in with `callback^`. On Mojo 1.1, some native closures\nwith move-only inputs/output and owned mutable state require `@always_inline`\non the callback to preserve state writes at O3; see the native-boundaries\narchitecture chapter. Owners of borrowed captures must\nstay alive and unmoved while the adapter is used. A generic function that\nreturns an adapter names its type with `MapIterator`, `ScanIterator`,\n`FilterIterator`, `FilterNotIterator`, `FilterMapIterator` or `FlatMapIterator`, declares\n`I: Iterator` and `where I.Element == T`, and builds the value through the\nfunction; the types add no storage, and the source origin stays part of the\ntype.\n\n**Folds and terminals** (`fold_left`, `fold_until`, `reduce`,\n`reduce_optional`, `collect_list`, `find`, `any`, `all`) run at once:\n\n| Operation | Non-empty input | Empty input |\n|---|---|---|\n| `fold_left(step, initial, source)` | `n` calls of `step(var A, var T) -> A`, in order | `initial`, no calls |\n| `reduce(step, source, initial=value)` | The same as `fold_left` | `initial`, no calls |\n| `reduce(step, source)` | The first element seeds the accumulator; `n - 1` calls | Raises `EmptyReductionError` |\n| `reduce_optional(step, source)` | As above, wrapped in `Optional` | `None` |\n| `fold_until(step, initial, source)` | Each call returns `ControlFlow[B, A]`; `Break(b)` returns at once | `Continue(initial)` |\n| `collect_list(source)` | A `List` of every element, moved | An empty list |\n| `first(source)` / `last(source)` | First / last remaining element | `None` |\n| `is_empty(source)` | Pulls at most one value; returns `False` | `True` |\n| `count(source)` / `count_where(p, source)` | Visits and counts values / matches | `0` |\n| `contains(source, value)` | Borrows for equality, stops at first match | `False` |\n| `for_each(f, source)` | Moves each value into a callback returning `NoneType` | `None`, no calls |\n| `to_non_empty_list(source)` | `Some(NonEmptyList)` | `None` |\n| `combine_all_optional[S](source)` | Left-to-right Semigroup reduction | `None` |\n| `collect_fold[M](f, source)` | Combines present Optional results with the Monoid | Monoid identity |\n| `find(p, source)` | The first accepted element | `None` |\n| `any(p, source)` / `all(p, source)` | Stops at the first decisive element | `False` / `True` |\n\nSteps are never reassociated. Pure and raising callbacks have separate\noverloads, and a callback's error type propagates unchanged; a callback that\nraises `StopIteration` fails as a callback, never as exhaustion. The first\ndecisive result or failure stops without another pull. On failure, native\ncleanup destroys the source, the current accumulator and the pulled element;\nside effects are not rolled back. Every operation makes `O(n)` callback calls,\nor fewer after an early stop, with constant extra state.\n\nA generic function forwards to these with the native callback constraint and\n`where I.Element == T`. A raising wrapper passes `E=E` at every call and must\nnot read `F.E` or `F.T` from a callback type: Mojo 1.1 does not reliably expose\nthose attributes through a precompiled package. Keep the parameter names shown\nin the tutorial's generic examples; on Mojo 1.1 some renamings lose callback\nconformance.",
    "summary": "Lazy adapters, folds, reductions and terminal operations over native iterators."
   },
   "matching": {

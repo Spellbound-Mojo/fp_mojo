@@ -838,7 +838,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Lazily transform each element and continue the chain.
 
         Each element is moved into the stored callback. Construction pulls nothing.
-        Plain functions, capturing closures and non-raising library `Unary` values
+        Plain functions, capturing closures and non-raising repeatable library unary values
         use the same admission and execution as the free `map`.
 
         Parameters:
@@ -865,9 +865,9 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Retain a shared callable view in the lazy pipeline."""
         return Iter(_map(function._unary_view(), self._iterator^))
 
-    def map[F: Unary](deinit self, var function: F
-    ) -> Iter[MapIterator[F.Arg, F.Out, Self.I, F]] where Self.I.Element == F.Arg and F.Error == Never:
-        """Lazily transform each element with a library `Unary` value."""
+    def map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F
+    ) -> Iter[MapIterator[F.Arg, F.Out, Self.I, F]] where Self.I.Element == F.Arg and F.Error == Never and RepeatableUnary[F]:
+        """Lazily transform each element with a repeatable library unary value."""
         return Iter(_map(function^, self._iterator^))
 
 
@@ -1081,8 +1081,8 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Lazily transform elements, yielding present values and skipping `None`.
 
         Moves each element into the callback. Only absent `Optional` values are
-        skipped; a present `Result.Err` remains an ordinary element. Library
-        `Unary` callbacks name the result element parameter explicitly, `U=U`.
+        skipped; a present `Result.Err` remains an ordinary element.
+        Library unary callbacks infer the Optional payload; an explicit `U=U` remains available.
 
         Parameters:
             T: The source element type.
@@ -1103,13 +1103,13 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Lazily transform and filter elements with a stored closure."""
         return Iter(_filter_map(function^, self._iterator^))
 
-    def filter_map[U: Movable & Deinitable, F: Unary](deinit self, var function: F
-    ) -> Iter[FilterMapIterator[F.Arg, U, Self.I, F]] where Self.I.Element == F.Arg and F.Out == Optional[U] and F.Error == Never:
-        """Lazily filter a library `Unary` with an explicit Optional payload binding."""
+    def filter_map[U: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](deinit self, var function: F
+    ) -> Iter[FilterMapIterator[F.Arg, U, Self.I, F]] where Self.I.Element == F.Arg and F.Out == Optional[U] and F.Error == Never and RepeatableUnary[F]:
+        """Lazily filter a repeatable library unary callback with an explicit Optional payload binding."""
         return Iter(_filter_map[U=U](function^, self._iterator^))
 
-    def filter_map[F: Unary, //](deinit self, var function: F
-    ) -> Iter[FilterMapIterator[F.Arg, _OptionalElement[F.Out], Self.I, F]] where Self.I.Element == F.Arg and F.Out == Optional[_OptionalElement[F.Out]] and F.Error == Never:
+    def filter_map[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F
+    ) -> Iter[FilterMapIterator[F.Arg, _OptionalElement[F.Out], Self.I, F]] where Self.I.Element == F.Arg and F.Out == Optional[_OptionalElement[F.Out]] and F.Error == Never and RepeatableUnary[F]:
         """Infer the Optional payload and move the callback into the lazy iterator."""
         return Iter(_filter_map[U=_OptionalElement[F.Out]](function^, self._iterator^))
 
@@ -1128,7 +1128,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Moves each element into the callback and retains the returned native
         iterator or owned iterable until it is exhausted or abandoned. Empty inner
         sources are skipped. A borrowed inner source retains its external origin.
-        Plain functions, closures and non-raising library `Unary` values are supported.
+        Plain functions, closures and non-raising repeatable library unary values are supported.
 
         Parameters:
             T: The source element type.
@@ -1154,9 +1154,9 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Retain a shared callable view in the lazy pipeline."""
         return Iter(_flat_map(function._unary_view(), self._iterator^))
 
-    def flat_map[F: Unary](deinit self, var function: F
-    ) -> Iter[FlatMapIterator[F.Arg, F.Out, Self.I, F]] where Self.I.Element == F.Arg and F.Error == Never:
-        """Lazily expand elements with a library `Unary` value."""
+    def flat_map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F
+    ) -> Iter[FlatMapIterator[F.Arg, F.Out, Self.I, F]] where Self.I.Element == F.Arg and F.Error == Never and RepeatableUnary[F]:
+        """Lazily expand elements with a repeatable library unary value."""
         return Iter(_flat_map(function^, self._iterator^))
 
     # --- sequencing conveniences (generated) ---

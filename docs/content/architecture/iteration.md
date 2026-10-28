@@ -77,6 +77,21 @@ payload bindings. Shared views retain the callback origin through the existing
 forwarders with symbolic `F.Out == Optional[U]` retain the explicit `[U]`
 route because that equality does not prove a computed projection on Mojo 1.2.
 
+Lazy `map`, `filter_map` and `flat_map` admit library callbacks through
+`UnaryContract` plus `RepeatableUnary`, matching the capabilities their existing
+execution driver requires. The same `F` moves into the existing Optional cell;
+`_unary_repeated_as` selects mutable access when available and shared access
+otherwise. `filter_map` checks that capability before its exact Optional result
+proof. Its native branch retains the structural Optional signature needed by
+Mojo's native witness. No new adapter, loop or receiver policy is introduced.
+
+Shared view overloads still retain the original callback origin and supply a
+shared-only view to the driver. Generic owned forwarders use
+`F: UnaryContract & Movable & Deinitable` and require `RepeatableUnary[F]`, exact
+source/input equality and `F.Error == Never`. Existing explicit `F` and Optional
+payload bindings retain their parameter positions. The canonical source and
+flatten owners continue to preserve lazy pull order, exhaustion and cleanup.
+
 ## Folds
 
 ```text
@@ -181,7 +196,9 @@ remains an alternative.
 
 Accepted callbacks are plain functions, capturing closures (move them in with
 `callback^` when they own non-trivial state) and, for the owned-argument
-adapters, shared-receiver `Unary`/`Binary` values such as `Partial`.
+adapters, library callable values such as `Partial`. Lazy `map`, `filter_map`
+and `flat_map` also admit mutable unary receivers; each operation keeps its
+own documented receiver requirements.
 
 ### Generic return types
 

@@ -9,6 +9,25 @@ reuse, explicit moves, and the independent ownership of callback inputs.
 
 <!-- api: iteration -->
 
+## Stateful mapping
+
+`map`, `filter_map` and `flat_map` accept both shared `Unary` and stateful
+`MutableUnary` library callbacks, in free-function and fluent forms. For
+example, `.map(Running(0))` retains a running total between pulls. Move a named
+stateful callback into the iterator with `callback^`; construction calls it
+zero times. The iterator owns and releases its state when exhausted or dropped.
+`filter_map` still infers the Optional payload, and `flat_map` exhausts each
+returned inner source before invoking the callback for the next outer element.
+
+<!-- example: docs/examples/iteration.mojo -->
+
+An owned callback uses its mutable receiver when it has one, otherwise its
+shared receiver. A consuming-only callback cannot serve repeated lazy calls.
+Named shared partials, compositions and other supported wrappers retain their
+existing borrowed reuse. All lazy callbacks must be non-raising; return
+`Result` elements to represent domain failures. Native closures keep their
+existing signature and owned-capture requirements.
+
 ## Prefixes, indexed mapping and consuming terminals
 
 <!-- example: docs/examples/iteration_expansion.mojo -->

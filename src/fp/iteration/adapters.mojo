@@ -18,7 +18,8 @@ from std.builtin.rebind import downcast, rebind_var
 from fp.iteration._advance import _next_fused, _Source, _source
 from fp.iteration._terminal import _find, _quantify, _collect_list
 from fp.iteration._callbacks import _predicate_plain, _predicate_raising, _predicate_thin, _LazyUnary, _LazyStep, _apply_lazy_unary, _apply_lazy_step, _LazyPredicate, _LazyOptional, _apply_lazy_predicate, _apply_lazy_optional
-from fp.callables.protocols import Unary, Binary
+from fp.callables.protocols import Unary, UnaryContract, Binary
+from fp.callables.invoke import RepeatableUnary
 from fp.callables.protocols import BorrowCallable
 from fp.iteration._callbacks import _predicate_callable
 
@@ -593,27 +594,27 @@ Parameters:
 """
 
 
-# Fixed-arity library callables with a shared receiver, such as partials.
+# Fixed-arity library callbacks use their shared or mutable receiver on each pull.
 def map[I: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin](ref[o] function: F, var source: I
 ) -> _Map[F._View[o].Arg, F._View[o].Out, _Source[I], F._View[o]] where _Source[I].Element == F._View[o].Arg and F._View[o].Error == Never:
     """Retain a shared callable view in the lazy iterator."""
     return map(function._unary_view(), source^)
 
 
-def map[I: Movable & Deinitable, F: Unary](var function: F, var source: I
-) -> _Map[F.Arg, F.Out, _Source[I], F] where _Source[I].Element == F.Arg and F.Error == Never:
-    """Lazily apply a library `Unary` value, such as a partial or a composition."""
+def map[I: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var function: F, var source: I
+) -> _Map[F.Arg, F.Out, _Source[I], F] where _Source[I].Element == F.Arg and F.Error == Never and RepeatableUnary[F]:
+    """Lazily apply a repeatable library unary value, such as a partial or a composition."""
     return _Map[F.Arg, F.Out, _Source[I], F](function^, _source(source^), False)
 
 
-def filter_map[U: Movable & Deinitable, I: Movable & Deinitable, F: Unary](var function: F, var source: I
-) -> _FilterMap[F.Arg, U, _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[U] and F.Error == Never:
-    """Lazily apply a library `Unary` with an explicit Optional payload binding."""
+def filter_map[U: Movable & Deinitable, I: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var function: F, var source: I
+) -> _FilterMap[F.Arg, U, _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[U] and F.Error == Never and RepeatableUnary[F]:
+    """Lazily apply a repeatable library unary callback with an explicit Optional payload binding."""
     return _FilterMap[F.Arg, U, _Source[I], F](function^, _source(source^), False)
 
 
-def filter_map[I: Movable & Deinitable, F: Unary, //](var function: F, var source: I
-) -> _FilterMap[F.Arg, _OptionalElement[F.Out], _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[_OptionalElement[F.Out]] and F.Error == Never:
+def filter_map[I: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //](var function: F, var source: I
+) -> _FilterMap[F.Arg, _OptionalElement[F.Out], _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[_OptionalElement[F.Out]] and F.Error == Never and RepeatableUnary[F]:
     """Infer the Optional payload and move a library callable into the iterator."""
     return filter_map[U=_OptionalElement[F.Out]](function^, source^)
 
@@ -632,9 +633,9 @@ def flat_map[I: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin](ref[o] fu
     return flat_map(function._unary_view(), source^)
 
 
-def flat_map[I: Movable & Deinitable, F: Unary](var function: F, var source: I
-) -> _Flatten[_Map[F.Arg, F.Out, _Source[I], F], F.Out] where _Source[I].Element == F.Arg and F.Error == Never:
-    """Lazily apply a library `Unary` value and concatenate the inner sources it returns."""
+def flat_map[I: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var function: F, var source: I
+) -> _Flatten[_Map[F.Arg, F.Out, _Source[I], F], F.Out] where _Source[I].Element == F.Arg and F.Error == Never and RepeatableUnary[F]:
+    """Lazily apply a repeatable library unary value and concatenate the inner sources it returns."""
     return flatten(map(function^, source^))
 
 

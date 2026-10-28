@@ -93,9 +93,9 @@ def _apply_lazy_predicate[T: Movable & Deinitable, F: Movable & Deinitable](
 
 def _apply_lazy_optional[T: Movable & Deinitable, U: Movable & Deinitable,
                          F: Movable & Deinitable](mut function: F, var value: T) -> Optional[U]:
-    comptime if conforms_to(F, Unary):
-        comptime C = downcast[F, Unary]
-        comptime assert C.Error == Never and C.Arg == T and C.Out == Optional[U], "filter_map: exact non-raising unary callable required"
+    comptime if conforms_to(F, UnaryContract):
+        comptime C = downcast[F, UnaryContract & Movable & Deinitable]
+        comptime assert RepeatableUnary[C] and C.Error == Never and C.Arg == T and C.Out == Optional[U], "filter_map: exact non-raising unary callable required"
         return rebind_var[Optional[U]](_unary_repeated_as[Never](rebind[C](function), rebind_var[C.Arg](value^)))
     elif F == def(var T) thin -> Optional[U]:
         return rebind[def(var T) thin -> Optional[U]](function)(value^)
