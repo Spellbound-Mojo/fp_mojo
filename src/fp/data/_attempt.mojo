@@ -1,6 +1,7 @@
 """Native capture front ends; argument bundles and Result storage have separate owners."""
 from ._result import Result, Ok, Err
-from fp.callables.protocols import OnceThunk
+from fp.callables.protocols import ThunkContract
+from fp.callables.invoke import call_once, _OnceThunkAvailable
 from fp.callables.native import (_NativeUnaryRef, _NativeMutatingRef, _NativeMutOwnedRef, _NativeMutOwnedKeywordsRef)
 from fp.callables._binding import _BoundThunk
 from fp.callables._arguments import _ArgumentsZ, _invoke_Z, _ArgumentsK, _invoke_K, _ArgumentsR, _invoke_R, _ArgumentsRK, _invoke_RK, _ArgumentsM, _invoke_M, _ArgumentsMK, _invoke_MK, _ArgumentsO, _invoke_O, _ArgumentsOK, _invoke_OK, _ArgumentsRR, _invoke_RR, _ArgumentsRRK, _invoke_RRK, _ArgumentsRM, _invoke_RM, _ArgumentsRMK, _invoke_RMK, _ArgumentsRO, _invoke_RO, _ArgumentsROK, _invoke_ROK, _ArgumentsMR, _invoke_MR, _ArgumentsMRK, _invoke_MRK, _ArgumentsMM, _invoke_MM, _ArgumentsMMK, _invoke_MMK, _ArgumentsMO, _invoke_MO, _ArgumentsMOK, _invoke_MOK, _ArgumentsOR, _invoke_OR, _ArgumentsORK, _invoke_ORK, _ArgumentsOM, _invoke_OM, _ArgumentsOMK, _invoke_OMK, _ArgumentsOO, _invoke_OO, _ArgumentsOOK, _invoke_OOK
@@ -554,15 +555,18 @@ def attempt_kwargs[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable 
     return attempt_once(_BoundThunk[_ArgumentsMMK[A, B, origin_of(first), origin_of(second), K], T, E, F, origin_of(function), _invoke_MMK[A, B, origin_of(first), origin_of(second), K, T, E, F, True]](arguments^, Pointer(to=function)))
 
 
-def attempt_once[F: OnceThunk](var function: F) -> Result[F.Out, F.Error]:
-    """Consume a `OnceThunk`, call it once and capture its outcome.
+def attempt_once[F: ThunkContract & Movable & Deinitable](var function: F) -> Result[F.Out, F.Error]:
+    """Consume a library thunk, invoke it once and capture its outcome.
 
-    Receiver state, results and errors may be move-only; unused state is
-    destroyed on every path. References in the result or error must belong to
-    owners that outlive the thunk.
+    `call_once` selects its consuming receiver, then mutable, then shared.
+    Receiver state, results and errors may be move-only; owned state is
+    destroyed on every path. Pass `mut_ref(thunk)` to retain the original
+    state for reuse or inspection, including after a captured failure.
+    References in the result or error must belong to owners that outlive the
+    consumed thunk.
 
     Parameters:
-        F: The thunk's type.
+        F: A ThunkContract with a shared, mutable or consuming receiver.
 
     Args:
         function: The thunk, consumed.
@@ -570,6 +574,7 @@ def attempt_once[F: OnceThunk](var function: F) -> Result[F.Out, F.Error]:
     Returns:
         `Ok(result)`, or `Err(error)` for its declared error.
     """
+    comptime assert _OnceThunkAvailable[F], "attempt_once: thunk implements no receiver mode"
     var pending = Optional(function^)
     var context = Pointer(to=pending)
     return _attempt_core[F.Out, F.Error, type_of(context),
@@ -584,13 +589,13 @@ def _attempt_core[R: Movable & Deinitable, E: Movable & Deinitable, C: AnyType,
         return Result[R,E](Err(error^))
 
 
-def _attempt_consuming[F: OnceThunk, origin: MutOrigin](
+def _attempt_consuming[F: ThunkContract & Movable & Deinitable, origin: MutOrigin](
     context: Pointer[Optional[F], origin]
 ) raises F.Error capturing -> F.Out:
     # _attempt_core borrows its native context; this boundary moves the pending
     # owner into call_once. Result/error conversion stays shared.
     var function = context[].take()
-    return function^.call_once()
+    return call_once(function^)
 
 
 # Convention adapters retain the original callback pointer. Both these calls

@@ -154,7 +154,7 @@ it in and calls it once, turning `Ok(12)` into `Ok("value 12")`.
 `fold_owned_once` consumes both `Show` handlers and calls only the one for the
 `Ok` branch, which prints `used once: value 12`.
 
-## Capture the failure of a consuming thunk
+## Capture a thunk’s outcome
 
 <!-- example: docs/examples/attempt_once.mojo -->
 
@@ -162,6 +162,19 @@ it in and calls it once, turning `Ok(12)` into `Ok("value 12")`.
 returns `Ok("used once")`, which prints `message: used once`. An empty message
 raises `7`, so `attempt_once` returns `Err(7)` with the thunk's declared `Int`
 error, and the program prints `error: 7`.
+
+Shared `Thunk` and mutable `MutableThunk` values work with the same function.
+When several modes are available, consuming wins, then mutable, then shared.
+A fully bound `partial(add, 2, 3)` is already a thunk and can be passed directly.
+The result and error types are inferred, including `Never` for pure thunks.
+`Capture[E]().run(thunk^)` uses the same rules: the thunk retains its own error
+type, while `E` selects the errors of native callbacks. The example passes the
+fully bound `partial` directly to `Capture[Error]().run`.
+
+Use `attempt_once(mut_ref(counter))` to retain a named thunk's state. The
+example captures the first counter call's error, then succeeds on the second
+call; `counter.calls` is 2 afterward. Each invocation consumes only the reference.
+Passing `counter^` instead transfers the original callback into the operation.
 
 ## Non-empty collections and validation
 

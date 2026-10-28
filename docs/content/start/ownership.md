@@ -100,6 +100,7 @@ partial application, composition or a reusable owner for captured state.
 | Inspect or reuse callback state after an operation | `mut_ref(callback)` | Lends a named callback exclusively to an operation that owns its callback. The reference retains every repeatable shape and the original origin; consuming it leaves the original intact. |
 | Retain callback state across a conditional loop | `while_loop_mut(predicate, body, carry)` | Borrows a named unary body exclusively and retains its state, including after errors; the predicate only reads the carry. |
 | Retain callback state across a counted loop | `fori_loop_mut(lower, upper, body, carry)` | Borrows a named library body exclusively; state remains in the caller, including after an error. |
+| Capture one library call as a Result | `attempt_once(thunk^)` or `attempt_once(mut_ref(thunk))` | Uses the thunk’s existing receiver modes; a reference keeps the original state available, including after failure. |
 | Control receiver mutation or consumption explicitly | A callable struct | Implement the shared, mutable or consuming protocol required by the operation. |
 
 A two-stage `flow` or `compose` can combine a plain function or stored thin

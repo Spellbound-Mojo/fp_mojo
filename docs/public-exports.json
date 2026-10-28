@@ -3165,8 +3165,8 @@
       "signature": "def run(self, function: def() raises Never thin) -> Result[type_of(None), Never]:"
      },
      {
-      "sha256": "5b5073608de2d1ba1b2d4e9fc06c92171b0d40a952472f8634bd07a8220b2f28",
-      "signature": "def run[F: OnceThunk](self, var function: F) -> Result[F.Out, F.Error]:"
+      "sha256": "03be1015dc92a6d75eec7ffbda4606fee9e8f4ce5890d4024460b15334d9dde6",
+      "signature": "def run[F: ThunkContract & Movable & Deinitable](self, var function: F) -> Result[F.Out, F.Error]:"
      }
     ],
     "stateful": [
@@ -4381,8 +4381,8 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "394cf270db202b929522b286226f5c6fe45d796b725f03ad18022194c69f8dde",
-     "signature": "def attempt_once[F: OnceThunk](var function: F) -> Result[F.Out, F.Error]:"
+     "sha256": "73434b0b4d295686d1125dfa2ec8c86d01cbb62acdd55159987316d306c8107f",
+     "signature": "def attempt_once[F: ThunkContract & Movable & Deinitable](var function: F) -> Result[F.Out, F.Error]:"
     }
    ],
    "provider": "data/_attempt"

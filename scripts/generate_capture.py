@@ -319,7 +319,7 @@ so native cleanup handles a partially transferred value if the callback raises.
 No allocation or type erasure is added.
 """
 from std.collections import StringDict
-from fp.callables.protocols import OnceThunk
+from fp.callables.protocols import ThunkContract
 from fp.callables._binding import _BoundThunk
 from fp.callables.native import _NativeOwnedArg
 from fp.data._result import Result
@@ -386,7 +386,7 @@ for name in ("run", "kwargs", "borrow", "mutable", "take"):
     )
 out += [methods]
 out += ["""    @staticmethod
-    def run[F: OnceThunk](var function: F) -> Result[F.Out, F.Error]:
+    def run[F: ThunkContract & Movable & Deinitable](var function: F) -> Result[F.Out, F.Error]:
         return attempt_once(function^)
 """]
 # Stateful storage uses the same mutable/owned argument bundle. Its native
@@ -490,11 +490,11 @@ def document(text):
     before, public = text[:pos], text[pos:]
     public = public.replace(
         "struct Capture[E: Movable & Deinitable = Error]:\n",
-        'struct Capture[E: Movable & Deinitable = Error]:\n    """Select native errors, bind arguments, and capture one call as a Result.\n\n    `Capture[E].mutable(state).take(value^).run(callback)` fixes the error type,\n    argument types and ownership before callback inference. Use `borrow` for\n    shared access, `mutable` for exclusive access, and `take` for consumption.\n    Up to three mixed positional operands can be followed by `kwargs`. `args` binds\n    zero to eight consumed operands, or extend an owned bundle with `take`. The bundle is movable and runs once.\n    An unused bundle destroys its owned arguments without calling anything.\n\n    Construct `Capture[E]()` before direct `run` or `stateful` admission.\n    This fixes E before a native callback is matched. A reusable context such\n    as `var capture = Capture[E]()` also provides `capture.args(...)`,\n    `capture.borrow(...)`, `capture.mutable(...)`, `capture.take(...)` and\n    `capture.kwargs(...)`; it stores no arguments and is reusable after errors.\n\n    Pure functions produce `Result[R, Never]`; raising functions retain E.\n    No-value callbacks return `Result[None, E]`. Native callbacks are borrowed\n    for the call; OnceThunk owners are consumed and retain their own error.\n    Empty keyword packs require K or a typed dictionary. `stateful` owns an\n    explicit state value for repeated calls through a plain native function.\n    Existing `attempt` entry points remain available for compatibility.\n\n    Parameters:\n        E: The native callback error type, selected before inference; Error by default.\n    """\n',
+        'struct Capture[E: Movable & Deinitable = Error]:\n    """Select native errors, bind arguments, and capture one call as a Result.\n\n    `Capture[E].mutable(state).take(value^).run(callback)` fixes the error type,\n    argument types and ownership before callback inference. Use `borrow` for\n    shared access, `mutable` for exclusive access, and `take` for consumption.\n    Up to three mixed positional operands can be followed by `kwargs`. `args` binds\n    zero to eight consumed operands, or extend an owned bundle with `take`. The bundle is movable and runs once.\n    An unused bundle destroys its owned arguments without calling anything.\n\n    Construct `Capture[E]()` before direct `run` or `stateful` admission.\n    This fixes E before a native callback is matched. A reusable context such\n    as `var capture = Capture[E]()` also provides `capture.args(...)`,\n    `capture.borrow(...)`, `capture.mutable(...)`, `capture.take(...)` and\n    `capture.kwargs(...)`; it stores no arguments and is reusable after errors.\n\n    Pure functions produce `Result[R, Never]`; raising functions retain E.\n    No-value callbacks return `Result[None, E]`. Native callbacks are borrowed\n    for the call; library thunk owners are consumed and retain their own error.\n    Thunks use consuming, mutable, then shared receiver priority. Pass\n    `mut_ref(thunk)` to retain a reusable owner and its updated state.\n    Empty keyword packs require K or a typed dictionary. `stateful` owns an\n    explicit state value for repeated calls through a plain native function.\n    Existing `attempt` entry points remain available for compatibility.\n\n    Parameters:\n        E: The native callback error type, selected before inference; Error by default.\n    """\n',
     )
     descriptions = {
         "run": (
-            "Call once and retain the exact native outcome.",
+            "Call once and retain the exact outcome.",
             "The callback output in Ok, or its declared error in Err.",
         ),
         "borrow": (
@@ -537,7 +537,7 @@ def document(text):
     }
     parameter_docs.update({t: f"The {name} argument type, including its origins." for t, name in zip(ARGUMENT_TYPES, ARGUMENT_NAMES)})
     argument_docs = {
-        "function": "The callback to invoke; borrowed for a native call or consumed for OnceThunk.",
+        "function": "The callback to invoke; native callbacks are borrowed, library thunk owners consumed.",
         "state": "The explicit state, moved into the reusable owner.",
         "value": "The value to bind using this method’s ownership convention.",
         "first": "The first value, consumed.",

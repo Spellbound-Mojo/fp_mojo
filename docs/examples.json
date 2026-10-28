@@ -22,7 +22,7 @@
       "stdout": "generic attempt: receipt=3; declined=-2; balance=-2; calls=2\n"
     },
     "docs/examples/attempt_once.mojo": {
-      "stdout": "message: used once\nerror: 7\n"
+      "stdout": "message: used once\nerror: 7\nbound result: 5\ncounter error: 1\ncounter value: 2\nretained calls: 2\n"
     },
     "docs/examples/attempt_selectors.mojo": {
       "stdout": "length: 4\nbalance: 13\nfailed: True ; balance: -8\n"

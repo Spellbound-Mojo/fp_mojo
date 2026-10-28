@@ -147,9 +147,18 @@ output origins while preserving positional callback/error bindings.
 |---|---|
 | `attempt(f, args...)` | Calls `f` once and returns `Ok(result)` or `Err(error)`, catching only `f`'s declared error type |
 | `attempt_kwargs(f, args..., **options^)` | The same for a callback declaring a native keyword pack, including an empty pack |
-| `attempt_once(thunk^)` | The same for a consuming `OnceThunk`, called once |
+| `attempt_once(thunk^)` | The same for any invocable library thunk, called once through `call_once` |
 | `raise_on_err(r^)` / `r^.raise_on_err()` | Returns the value or raises the stored error with its original type |
 | `collect_results(iterator)` | `Ok(List[T])` of the successes in order, or the first `Err`; stops pulling at the first `Err`. It takes a native iterator, such as `iter(results^)` or a lazy `map` |
+
+`attempt_once` accepts `ThunkContract` metadata with any receiver mode.
+Admission uses the existing callable availability query; execution delegates to
+`call_once`, preserving consuming-first selection and mutable-before-shared
+fallback. `_attempt_core` remains the sole conversion from a raised failure
+to Result. The optional pending owner is emptied before invocation, preserving
+move-only cleanup. `mut_ref(thunk)` consumes only its reference and leaves
+original state available, while fully bound partial applications need no
+consuming adapter. Generic forwarding retains `Result[F.Out, F.Error]`.
 
 `attempt` accepts native functions with zero to two positional arguments, with
 read, owned or `mut` conventions. `attempt_kwargs` handles targets that declare

@@ -9,7 +9,7 @@ so native cleanup handles a partially transferred value if the callback raises.
 No allocation or type erasure is added.
 """
 from std.collections import StringDict
-from fp.callables.protocols import OnceThunk
+from fp.callables.protocols import ThunkContract
 from fp.callables._binding import _BoundThunk
 from fp.callables.native import _NativeOwnedArg
 from fp.data._result import Result
@@ -9311,7 +9311,9 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
 
     Pure functions produce `Result[R, Never]`; raising functions retain E.
     No-value callbacks return `Result[None, E]`. Native callbacks are borrowed
-    for the call; OnceThunk owners are consumed and retain their own error.
+    for the call; library thunk owners are consumed and retain their own error.
+    Thunks use consuming, mutable, then shared receiver priority. Pass
+    `mut_ref(thunk)` to retain a reusable owner and its updated state.
     Empty keyword packs require K or a typed dictionary. `stateful` owns an
     explicit state value for repeated calls through a plain native function.
     Existing `attempt` entry points remain available for compatibility.
@@ -9321,7 +9323,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
     """
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def() -> R](self, ref[q] function: F) -> Result[R, Never]:
-        """Call once and retain the exact native outcome.
+        """Call once and retain the exact outcome.
 
         Parameters:
             R: The callback result type, inferred from the callback.
@@ -9329,7 +9331,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             F: The exact callback type, preserving its native signature and captures.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
 
         Returns:
             The callback output in Ok, or its declared error in Err.
@@ -9338,7 +9340,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def() raises Self.E -> R](self, ref[q] function: F) -> Result[R, Self.E]:
-        """Call once and retain the exact native outcome.
+        """Call once and retain the exact outcome.
 
         Parameters:
             R: The callback result type, inferred from the callback.
@@ -9346,7 +9348,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             F: The exact callback type, preserving its native signature and captures.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
 
         Returns:
             The callback output in Ok, or its declared error in Err.
@@ -9355,14 +9357,14 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
 
     @always_inline
     def run[q: ImmOrigin, //, F: def()](self, ref[q] function: F) -> Result[type_of(None), Never]:
-        """Call once and retain the exact native outcome.
+        """Call once and retain the exact outcome.
 
         Parameters:
             q: The callback origin, inferred from the borrowed function.
             F: The exact callback type, preserving its native signature and captures.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
 
         Returns:
             The callback output in Ok, or its declared error in Err.
@@ -9371,14 +9373,14 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
 
     @always_inline
     def run[q: ImmOrigin, //, F: def() raises Self.E](self, ref[q] function: F) -> Result[type_of(None), Self.E]:
-        """Call once and retain the exact native outcome.
+        """Call once and retain the exact outcome.
 
         Parameters:
             q: The callback origin, inferred from the borrowed function.
             F: The exact callback type, preserving its native signature and captures.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
 
         Returns:
             The callback output in Ok, or its declared error in Err.
@@ -9387,7 +9389,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def() raises Never -> R](self, ref[q] function: F) -> Result[R, Never] where Self.E != Never:
-        """Call once and retain the exact native outcome.
+        """Call once and retain the exact outcome.
 
         Parameters:
             R: The callback result type, inferred from the callback.
@@ -9395,7 +9397,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             F: The exact callback type, preserving its native signature and captures.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
 
         Returns:
             The callback output in Ok, or its declared error in Err.
@@ -9404,14 +9406,14 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
 
     @always_inline
     def run[q: ImmOrigin, //, F: def() raises Never](self, ref[q] function: F) -> Result[type_of(None), Never] where Self.E != Never:
-        """Call once and retain the exact native outcome.
+        """Call once and retain the exact outcome.
 
         Parameters:
             q: The callback origin, inferred from the borrowed function.
             F: The exact callback type, preserving its native signature and captures.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
 
         Returns:
             The callback output in Ok, or its declared error in Err.
@@ -9420,13 +9422,13 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
 
     @always_inline
     def run[R: Movable & Deinitable, //](self, function: def() thin -> R) -> Result[R, Never] where not conforms_to(R, RegisterPassable):
-        """Call once and retain the exact native outcome.
+        """Call once and retain the exact outcome.
 
         Parameters:
             R: The callback result type, inferred from the callback.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
 
         Returns:
             The callback output in Ok, or its declared error in Err.
@@ -9435,13 +9437,13 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
 
     @always_inline
     def run[R: RegisterPassable & Deinitable, //](self, function: def() thin -> R) -> Result[R, Never]:
-        """Call once and retain the exact native outcome.
+        """Call once and retain the exact outcome.
 
         Parameters:
             R: The callback result type, inferred from the callback.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
 
         Returns:
             The callback output in Ok, or its declared error in Err.
@@ -9449,10 +9451,10 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
         return _ArgsZ[Self.E]()._run[R, Never, type_of(function), False](function)
 
     def run(self, function: def() thin) -> Result[type_of(None), Never]:
-        """Call once and retain the exact native outcome.
+        """Call once and retain the exact outcome.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
 
         Returns:
             The callback output in Ok, or its declared error in Err.
@@ -9461,14 +9463,14 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
 
     @always_inline
     def run[R: Movable & Deinitable, X: Movable & Deinitable, //](self, function: def() raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
-        """Call once and retain the exact native outcome.
+        """Call once and retain the exact outcome.
 
         Parameters:
             R: The callback result type, inferred from the callback.
             X: The inferred native callback error type.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
 
         Returns:
             The callback output in Ok, or its declared error in Err.
@@ -9477,14 +9479,14 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
 
     @always_inline
     def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def() raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
-        """Call once and retain the exact native outcome.
+        """Call once and retain the exact outcome.
 
         Parameters:
             R: The callback result type, inferred from the callback.
             X: The inferred native callback error type.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
 
         Returns:
             The callback output in Ok, or its declared error in Err.
@@ -9493,13 +9495,13 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
 
     @always_inline
     def run[X: Movable & Deinitable, //](self, function: def() raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
-        """Call once and retain the exact native outcome.
+        """Call once and retain the exact outcome.
 
         Parameters:
             X: The inferred native callback error type.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
 
         Returns:
             The callback output in Ok, or its declared error in Err.
@@ -9508,13 +9510,13 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
 
     @always_inline
     def run[R: Movable & Deinitable, //](self, function: def() raises Never thin -> R) -> Result[R, Never] where not conforms_to(R, RegisterPassable):
-        """Call once and retain the exact native outcome.
+        """Call once and retain the exact outcome.
 
         Parameters:
             R: The callback result type, inferred from the callback.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
 
         Returns:
             The callback output in Ok, or its declared error in Err.
@@ -9523,13 +9525,13 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
 
     @always_inline
     def run[R: RegisterPassable & Deinitable, //](self, function: def() raises Never thin -> R) -> Result[R, Never]:
-        """Call once and retain the exact native outcome.
+        """Call once and retain the exact outcome.
 
         Parameters:
             R: The callback result type, inferred from the callback.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
 
         Returns:
             The callback output in Ok, or its declared error in Err.
@@ -9537,10 +9539,10 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
         return _ArgsZ[Self.E]()._run[R, Never, type_of(function), True](function)
 
     def run(self, function: def() raises Never thin) -> Result[type_of(None), Never]:
-        """Call once and retain the exact native outcome.
+        """Call once and retain the exact outcome.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
 
         Returns:
             The callback output in Ok, or its declared error in Err.
@@ -9610,14 +9612,14 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
         return _ArgsO[A, Self.E](_ArgumentsZ().take(value^))
 
     @always_inline
-    def run[F: OnceThunk](self, var function: F) -> Result[F.Out, F.Error]:
-        """Call once and retain the exact native outcome.
+    def run[F: ThunkContract & Movable & Deinitable](self, var function: F) -> Result[F.Out, F.Error]:
+        """Call once and retain the exact outcome.
 
         Parameters:
             F: The exact callback type, preserving its native signature and captures.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
 
         Returns:
             The callback output in Ok, or its declared error in Err.
@@ -9633,7 +9635,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             q: The callback origin, inferred from the borrowed function.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
             state: The explicit state, moved into the reusable owner.
 
         Returns:
@@ -9649,7 +9651,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             R: The callback result type, inferred from the callback.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
             state: The explicit state, moved into the reusable owner.
 
         Returns:
@@ -9665,7 +9667,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             R: The callback result type, inferred from the callback.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
             state: The explicit state, moved into the reusable owner.
 
         Returns:
@@ -9681,7 +9683,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             R: The callback result type, inferred from the callback.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
             state: The explicit state, moved into the reusable owner.
 
         Returns:
@@ -9697,7 +9699,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             q: The callback origin, inferred from the borrowed function.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
             state: The explicit state, moved into the reusable owner.
 
         Returns:
@@ -9712,7 +9714,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             A: The first argument type, including its origins.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
             state: The explicit state, moved into the reusable owner.
 
         Returns:
@@ -9730,7 +9732,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             q: The callback origin, inferred from the borrowed function.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
             state: The explicit state, moved into the reusable owner.
 
         Returns:
@@ -9747,7 +9749,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             X: The inferred native callback error type.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
             state: The explicit state, moved into the reusable owner.
 
         Returns:
@@ -9764,7 +9766,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             X: The inferred native callback error type.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
             state: The explicit state, moved into the reusable owner.
 
         Returns:
@@ -9781,7 +9783,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             X: The inferred native callback error type.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
             state: The explicit state, moved into the reusable owner.
 
         Returns:
@@ -9798,7 +9800,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             q: The callback origin, inferred from the borrowed function.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
             state: The explicit state, moved into the reusable owner.
 
         Returns:
@@ -9814,7 +9816,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             X: The inferred native callback error type.
 
         Args:
-            function: The callback to invoke; borrowed for a native call or consumed for OnceThunk.
+            function: The callback to invoke; native callbacks are borrowed, library thunk owners consumed.
             state: The explicit state, moved into the reusable owner.
 
         Returns:

@@ -49,7 +49,7 @@ Where each consumer enters:
 | Family `filter` and `filter_not` | Native predicates, shared views and owned `BorrowMutableCallable` or `BorrowCallable`; `mut_ref` preserves caller-owned state. |
 | `while_loop` predicates | Native predicates and `BorrowCallable` |
 | `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |
-| `attempt_once` | `OnceThunk` |
+| `attempt_once` | `Thunk`, `MutableThunk` or `OnceThunk`; consuming, then mutable, then shared receiver priority |
 | `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |
 | `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |
 

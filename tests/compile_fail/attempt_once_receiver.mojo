@@ -1,4 +1,4 @@
-# error: OnceThunk
+# error: ThunkContract
 from fp.functions import Identity
 from fp.data import attempt_once
 

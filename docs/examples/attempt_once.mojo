@@ -1,6 +1,7 @@
 """Capture a native failure while consuming a thunk's owned state once."""
-from fp.callables import OnceThunk
-from fp.data import attempt_once
+from fp.callables import OnceThunk, MutableThunk, mut_ref
+from fp.functions import partial
+from fp.data import Capture, attempt_once
 
 
 @fieldwise_init
@@ -24,9 +25,29 @@ def show_error(var code: Int) -> Int:
     return code
 
 
+@fieldwise_init
+struct Counter(MutableThunk):
+    comptime Out = Int
+    comptime Error = Int
+    var calls: Int
+    def call_mut(mut self) raises Int -> Int:
+        self.calls += 1
+        if self.calls == 1:
+            raise self.calls
+        return self.calls
+
+
+def add(first: Int, second: Int) -> Int: return first + second
+
+
 def main():
     var message = Message(String('used once'))
     var success = attempt_once(message^)
     _ = success^.fold_owned(show_message, show_error)
     var failure = attempt_once(Message(String()))
     _ = failure^.fold_owned(show_message, show_error)
+    print("bound result:", Capture[Error]().run(partial(add, 2, 3)).get_or(0))
+    var counter = Counter(0)
+    print("counter error:", attempt_once(mut_ref(counter)).swap().get_or(0))
+    print("counter value:", attempt_once(mut_ref(counter)).get_or(0))
+    print("retained calls:", counter.calls)
