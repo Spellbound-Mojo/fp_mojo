@@ -18,7 +18,11 @@ values use Identity: `map` applies its callback to the whole bare value once.
 `pipeline[Family](value)` selects another Functor explicitly, including a
 deferred family. Call `raising[E]()` once to select native callback errors.
 Existing explicit payload bindings, such as `pipeline[T=Int](values)`, remain
-available. Generic wrappers over an unknown value type select a family
+available. For a list literal, use `pipeline[Int]([1, 2])` or
+`pipeline[Int]([])`; this avoids an explicit `List[Int](...)` constructor.
+A bare `pipeline([1, 2])` is ambiguous in Mojo 1.2 because a literal can
+construct a List or use its default Array type.
+Generic wrappers over an unknown value type select a family
 explicitly; use `pipeline[IdentityFamily](value)` for a whole-value stage.
 For native sequences, `.elements()` infers the element family: for example,
 `pipeline(array^).elements().map(transform)`. List, Array, Deque, LinkedList

@@ -3797,3 +3797,19 @@ once, and every native invocation still makes its documented prefix copies.
 Borrowed admission adds no copy of the stored Partial itself. Explicit moves,
 temporary values and deferred receiver lifetimes retain their normal ownership.
 Zero- and multiple-argument partial calls keep their existing protocols.
+
+### List literal selection uses the existing payload binding
+
+Mojo 1.2 infers `[1, 2]` as `Array[Int, 2]` in a generic native call, while a
+List parameter supplies a contextual List type. Combining a structural List
+overload with a generic value overload makes an untyped literal ambiguous;
+`experiments/mojo12-diagnostics/list_literal_overloads.mojo` reproduces this
+without importing the library. An additional structural Array overload and
+routing the List type through its existing family projection did not remove
+the ambiguity in the tested compiler.
+
+The existing `pipeline[Int]([1, 2])` payload binding supplies the required
+context, also for an empty literal. Examples now use that form directly.
+Named Lists retain inferred element mapping, and named Arrays retain their
+whole-value Identity behavior until `.elements()` selects their element
+family. No new overload or literal-specific conversion is introduced.

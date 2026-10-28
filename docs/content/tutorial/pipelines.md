@@ -23,6 +23,12 @@ formats the result with `.then(report)`. Each eager stage completes before the
 next starts. The lazy chain retains an iterator until `.sum_by(square)` consumes
 it. `filter_not(positive)` keeps the two negative values instead.
 
+For a list literal, put its element type on the pipeline:
+`pipeline[Int]([1, 2, 3]).map(square).get()`. Empty lists use the same form:
+`pipeline[Int]([])`. A named List already carries its type, so
+`pipeline(values^)` needs no type arguments. Mojo 1.2 leaves a bare call such
+as `pipeline([1, 2])` ambiguous between List and the default Array literal.
+
 For an Array, `.elements()` selects element mapping and preserves its fixed
 length. The Array of three integers becomes another Array of three integers.
 A type-changing map can produce strings while keeping the same length.
