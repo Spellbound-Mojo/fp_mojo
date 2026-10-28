@@ -144,6 +144,9 @@
     "docs/examples/inferred_traversal.mojo": {
       "stdout": "total: 15\nerror: invalid quantity\ngathered: 2 4\n"
     },
+    "docs/examples/io_execution.mojo": {
+      "stdout": "program ready\nread\nfinalize\nvalue: 42\nfinalize\ncanceled: True\n"
+    },
     "docs/examples/ior_validation.mojo": {
       "stdout": "value: 0\nwarning: zero accepted\nindependent diagnostics: 3\nsequential diagnostics: 2\n"
     },
@@ -230,6 +233,9 @@
     },
     "docs/examples/recovery_contract.mojo": {
       "stdout": "recovered: 4\ndeferred: 7\n"
+    },
+    "docs/examples/resource_scopes.mojo": {
+      "stdout": "recipe ready\nopen: left\nopen: right\nclose: right\nclose: left\nvalue: left+right\n"
     },
     "docs/examples/result_combinators.mojo": {
       "stdout": "checked: 8\n8\nrejected -2\n0\n"

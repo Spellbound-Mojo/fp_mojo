@@ -287,3 +287,55 @@ No new carrier or runtime dictionary is introduced. Dropping a deferred scope
 drops its captures without invoking the callback, and copying a scope requires
 copyable stored inputs. The original imports of tell, listen and censor from
 the writer module remain available.
+
+## Composable native resources
+
+`resource[E](acquire, release)` describes a scope without acquiring it. Its
+consuming `use` borrows the acquired value and returns a Result. `product`
+acquires left then right; `flat_map` derives an inner recipe from an outer
+value. `map` derives an owned projection while retaining its original resource;
+`pure_resource[E]` wraps an existing value with native destruction. Composed
+scopes release in reverse order, including after failed use or partial
+acquisition. The selected E is exact: callbacks raise E or Never. A failed use
+and failed release are both retained in `EffectFailure[E].errors`.
+
+<!-- example: docs/examples/resource_scopes.mojo -->
+
+A use result or error cannot borrow the resource being released. Flat-map's
+inner recipe must also be independent of that fresh outer borrow; independent
+captured owners remain supported. `ResourceContract[A, R, E].Out` names a
+concrete recipe in generic wrappers and factory signatures. Unopened recipes
+destroy their captures without acquiring or releasing anything.
+
+## IO, cancellation and finalization
+
+`IO[E]` is a concrete selection of the existing Reader, Result and Optional
+families. `delay[E]` suspends a native callback; `pure`, `map`, `flat_map`,
+`tail_rec_m` and the existing family operations compose its recipes. `run_io`
+consumes one at a host boundary. It returns `Outcome[A, E]`: None for
+cancellation, Some(Ok(value)) for success, or Some(Err(EffectFailure)) for errors.
+An errored outcome records cancellation too when cleanup fails after a request.
+
+<!-- example: docs/examples/io_execution.mojo -->
+
+`guarantee(body, finalizer)` always finalizes an entered body, with cancellation
+masked. Finalizers run from the inside out and every failure is retained.
+`uncancelable` masks an entered program until its enclosing unmasked context
+resumes. A `CancellationToken` can be shared with `run_io(program, token)`;
+`canceled[E]()` requests cancellation from inside a program. `sleep_io[E]`
+provides a monotonic wait with cooperative checks. Native callbacks run
+synchronously and must return before a cancellation request can be observed.
+Dropping a program or running it with an already-canceled token does not enter
+its scopes or run their finalizers.
+
+Delay captures its callback's error. General algebra callbacks retain their
+native error channel: use `capture_io(program)` before stored-error recovery
+when a map or bind callback can raise. Existing `IO[E].or_else` and Pipeline
+recovery then receive the exact `EffectFailure[E]`; cancellation skips those
+handlers. Host runs and guarantees capture native errors around their bodies.
+
+`use_resource(scope, callback)` defers one complete synchronous native resource
+scope into IO. It checks cancellation before acquisition and after release;
+there is no cancellation gap that can abandon an acquired value. Its callbacks
+are native synchronous operations, not general origin-dependent IO callbacks.
+`IOContract[P]` exposes admission and result types for generic host runners.

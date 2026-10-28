@@ -4228,6 +4228,27 @@
    },
    "provider": "effects/protocols"
   },
+  "effects.CancellationToken": {
+   "declarations": [
+    "struct CancellationToken(Copyable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "cancel": [
+     {
+      "sha256": "aa3e72907756439899652f62271ce3ab825408b778912c9e6cb911c755f27de1",
+      "signature": "def cancel(self):"
+     }
+    ],
+    "requested": [
+     {
+      "sha256": "9a75f3ac26cfdac53d783e32ce88f1379c1ce0598cfabd3941e929b1fea6b92b",
+      "signature": "def requested(self) -> Bool:"
+     }
+    ]
+   },
+   "provider": "effects/io"
+  },
   "effects.Censor": {
    "declarations": [
     "trait Censor(Listen):"
@@ -4242,6 +4263,56 @@
     ]
    },
    "provider": "effects/protocols"
+  },
+  "effects.EffectFailure": {
+   "declarations": [
+    "struct EffectFailure[E: Movable & Deinitable](Movable, Copyable where conforms_to(E, Copyable)):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "into_errors": [
+     {
+      "sha256": "96cb292966c4e6f6142727b91d75a90170acf2eb76786f1f2f44a36807f73541",
+      "signature": "def into_errors(deinit self) -> NonEmptyList[Self.E]:"
+     }
+    ]
+   },
+   "provider": "effects/outcomes"
+  },
+  "effects.IO": {
+   "declarations": [
+    "comptime IO[E: Movable & Deinitable = Error] = ReaderT[ResultT[OptionalFamily, EffectFailure[E]], IOContext[E]]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/io"
+  },
+  "effects.IOContext": {
+   "declarations": [
+    "struct IOContext[E: Movable & Deinitable](_IOContextType, Copyable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "canceled": [
+     {
+      "sha256": "2b8cd94a49eac3904d2e20d19dba205ad32ffb30895ff64d1286f57776684b91",
+      "signature": "def canceled(self) -> Bool:"
+     }
+    ],
+    "request_cancel": [
+     {
+      "sha256": "12a4cd9d5f35c0870e98620f25468ca81e3790c03931fe323f94cabed8222399",
+      "signature": "def request_cancel(self):"
+     }
+    ]
+   },
+   "provider": "effects/io"
+  },
+  "effects.IOContract": {
+   "declarations": [
+    "struct IOContract[P: ReaderAction]:"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/io"
   },
   "effects.LiftAsk": {
    "declarations": [
@@ -4415,6 +4486,13 @@
    "kind": "type or alias",
    "provider": "effects/layers"
   },
+  "effects.Outcome": {
+   "declarations": [
+    "comptime Outcome[T: Movable & Deinitable, E: Movable & Deinitable] = Optional[Result[T, EffectFailure[E]]]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/outcomes"
+  },
   "effects.Project": {
    "declarations": [
     "trait Project:"
@@ -4539,6 +4617,70 @@
     ]
    },
    "provider": "effects/reader"
+  },
+  "effects.Resource": {
+   "declarations": [
+    "struct Resource[O: _OpenScope](_ResourceType):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "flat_map": [
+     {
+      "sha256": "fb6f431e0a13b3a96c470a60b3ac38926354785744169d795d02e6ca36416672",
+      "signature": "def flat_map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F ) -> Resource[_Join[Self.O, F, False]] where F.Payload == Self.Value and conforms_to(F.Result, _ResourceType) and _ErrorCompatible[Self.Error, F.Failure] and downcast[F.Result, _ResourceType].Recipe.Release.Error == Self.Error and _OnceBorrowAvailable[F]:"
+     },
+     {
+      "sha256": "889d2df281a729f67b35d02e95cacf11bc89c6159524355dc61964f7e9eff053",
+      "signature": "def flat_map[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F ) -> Resource[_Join[Self.O, _NativeBorrow[P, V, Never, F, False], False]] where P == Self.Value and conforms_to(V, _ResourceType) and downcast[V, _ResourceType].Recipe.Release.Error == Self.Error:"
+     },
+     {
+      "sha256": "82601781e56217cab51be41a0d56e0d08f5c3236460ad539327242e215de6cc4",
+      "signature": "def flat_map[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F ) -> Resource[_Join[Self.O, _NativeBorrow[P, V, X, F, True], False]] where P == Self.Value and _ErrorCompatible[Self.Error, X] and conforms_to(V, _ResourceType) and downcast[V, _ResourceType].Recipe.Release.Error == Self.Error:"
+     }
+    ],
+    "map": [
+     {
+      "sha256": "aaaf1f5adc222082fbdb993533ab66090bdc8d7eb6ac81538c1989b181671bc1",
+      "signature": "def map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F ) -> Resource[_Join[Self.O, _MapScopeFactory[F, Self.Error], False]] where F.Payload == Self.Value and _ErrorCompatible[Self.Error, F.Failure] and _OnceBorrowAvailable[F]:"
+     },
+     {
+      "sha256": "2e36c95f286a17751f59907cbc45a7cecec194f2d42641e4b2045409541d40c7",
+      "signature": "def map[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F ) -> Resource[_Join[Self.O, _MapScopeFactory[_NativeBorrow[P, V, Never, F, False], Self.Error], False]] where P == Self.Value and _ErrorCompatible[Self.Error, Never]:"
+     },
+     {
+      "sha256": "fb180bc147925aacbd76104db1aec65d275a4683050edfe1970c73a337662bd9",
+      "signature": "def map[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F ) -> Resource[_Join[Self.O, _MapScopeFactory[_NativeBorrow[P, V, X, F, True], Self.Error], False]] where P == Self.Value and _ErrorCompatible[Self.Error, X]:"
+     }
+    ],
+    "product": [
+     {
+      "sha256": "7466e38f35a8ee2e09c7cfdcbb43bf0f1afdfcad8a2a8021d2a7d143e3d669b9",
+      "signature": "def product[P: _OpenScope](deinit self, var right: Resource[P] ) -> Resource[_Join[Self.O, _ConstantResource[Self.Value, P], True]] where P.Release.Error == Self.Error:"
+     }
+    ],
+    "use": [
+     {
+      "sha256": "8913b9aa6fb3b38936b64228318105f82172ef8917fd7157dc18a838f974679f",
+      "signature": "def use[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F ) -> Result[F.Result, EffectFailure[Self.Error]] where F.Payload == Self.Value and _ErrorCompatible[Self.Error, F.Failure] and _OnceBorrowAvailable[F]:"
+     },
+     {
+      "sha256": "fd005d8c59d598147060ef0696afe0c3fc667aed153608b7d2e465ff338eacb5",
+      "signature": "def use[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F ) -> Result[V, EffectFailure[Self.Error]] where P == Self.Value:"
+     },
+     {
+      "sha256": "316f83285bd7195e8229ee6ffab9e1e39c360be98c6fbc5be582f5ef60693537",
+      "signature": "def use[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F ) -> Result[V, EffectFailure[Self.Error]] where P == Self.Value and _ErrorCompatible[Self.Error, X]:"
+     }
+    ]
+   },
+   "provider": "effects/resources"
+  },
+  "effects.ResourceContract": {
+   "declarations": [
+    "struct ResourceContract[A: ThunkContract & Movable & Deinitable, R: UnaryContract & Movable & Deinitable, E: Movable & Deinitable]:"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/resources"
   },
   "effects.ResultT": {
    "declarations": [
@@ -4849,6 +4991,26 @@
    ],
    "provider": "effects/projections"
   },
+  "effects.canceled": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "c061b5bc2ac4296365e0f0a289c10bda55f46fe6433319c0065a4ad8f4c41c43",
+     "signature": "def canceled[E: Movable & Deinitable]() -> _IOCancel[E]:"
+    }
+   ],
+   "provider": "effects/io"
+  },
+  "effects.capture_io": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "3d2f5e6fbd12a30dc05ef865c69f95909ec98b3a6bb1d6850c8cd0d8c39eba0f",
+     "signature": "def capture_io[P: ReaderAction](var program: P) -> _IOCaptured[P] where IOContract[P].Compatible:"
+    }
+   ],
+   "provider": "effects/io"
+  },
   "effects.censor": {
    "kind": "function",
    "overloads": [
@@ -4867,6 +5029,24 @@
    ],
    "provider": "effects/capabilities"
   },
+  "effects.delay": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "a1a36f112c979c8831650ae662f7db36afb04db4c39283a9a105b41475d11679",
+     "signature": "def delay[F: ThunkContract & Movable & Deinitable, //, E: Movable & Deinitable](var function: F ) -> _IODelay[E, F] where _ErrorCompatible[E, F.Error] and _OnceThunkAvailable[F]:"
+    },
+    {
+     "sha256": "6fa10dbe9db9552fdbcb89bb0fab977db15d8405277b61b72e48826b5f05bd89",
+     "signature": "def delay[T: Movable & Deinitable, //, E: Movable & Deinitable, F: _Thunk[T]](var function: F ) -> _IODelay[E, _NativeThunk[T, Never, F, False]]:"
+    },
+    {
+     "sha256": "f1aeda88773283f917bc544915c88cd6fcc756416e3f30f1dfcc7bc6822257f8",
+     "signature": "def delay[T: Movable & Deinitable, X: Movable & Deinitable, //, E: Movable & Deinitable, F: _RaisingThunk[T, X]](var function: F ) -> _IODelay[E, _NativeThunk[T, X, F, True]] where _ErrorCompatible[E, X]:"
+    }
+   ],
+   "provider": "effects/io"
+  },
   "effects.get": {
    "kind": "function",
    "overloads": [
@@ -4876,6 +5056,16 @@
     }
    ],
    "provider": "effects/capabilities"
+  },
+  "effects.guarantee": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "0b8befb56c4b42e6dff3a15c52149dd31b3edca4c3550d802c856f1a990d5ce0",
+     "signature": "def guarantee[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q ) -> _IOGuarantee[P, Q] where IOContract[P].Compatible and IOContract[Q].Compatible and IOContract[P].Error == IOContract[Q].Error:"
+    }
+   ],
+   "provider": "effects/io"
   },
   "effects.inspect": {
    "kind": "function",
@@ -4951,6 +5141,16 @@
    ],
    "provider": "effects/capabilities"
   },
+  "effects.pure_resource": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "5291b82279aa353f38b1c741f5d846dd389ce62ce6eb21127df6d0e42cb48b39",
+     "signature": "def pure_resource[T: Movable & Deinitable, //, E: Movable & Deinitable](var value: T) -> Resource[_PureResource[T, E]]:"
+    }
+   ],
+   "provider": "effects/resources"
+  },
   "effects.put": {
    "kind": "function",
    "overloads": [
@@ -4960,6 +5160,48 @@
     }
    ],
    "provider": "effects/capabilities"
+  },
+  "effects.resource": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "98f0d89a8b46eead18ea40873034b3ee738f00e0592f2be4ecd03fb2ade628b2",
+     "signature": "def resource[A: ThunkContract & Movable & Deinitable, R: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable]( var acquire: A, var release: R ) -> Resource[_Acquire[A, R, E]] where A.Out == R.Arg and _ErrorCompatible[E, A.Error] and _ErrorCompatible[E, R.Error] and _OnceThunkAvailable[A] and _OnceUnaryAvailable[R]:"
+    },
+    {
+     "sha256": "322df81098e7405d6901c62bd7a911c93e73f8264ca412ecc0af982271aa3eac",
+     "signature": "def resource[T: Movable & Deinitable, P: Movable & Deinitable, U: Movable & Deinitable, //, E: Movable & Deinitable, A: _Thunk[T], R: _Unary[P, U]](var acquire: A, var release: R ) -> Resource[_Acquire[_NativeThunk[T, Never, A, False], NativeUnary[P, U, Never, R, False], E]] where T == P and _ErrorCompatible[E, Never] and _ErrorCompatible[E, Never]:"
+    },
+    {
+     "sha256": "bd1a1eb492d910d9b6b1635892fdadc82adda33c4521fe0864913e12d29c3374",
+     "signature": "def resource[T: Movable & Deinitable, P: Movable & Deinitable, U: Movable & Deinitable, Y: Movable & Deinitable, //, E: Movable & Deinitable, A: _Thunk[T], R: _RaisingUnary[P, U, Y]](var acquire: A, var release: R ) -> Resource[_Acquire[_NativeThunk[T, Never, A, False], NativeUnary[P, U, Y, R, True], E]] where T == P and _ErrorCompatible[E, Never] and _ErrorCompatible[E, Y]:"
+    },
+    {
+     "sha256": "39219e7b99beb627dd5f5edc7ccbb673e85ea78245d820e8a7c285f5f5a82dd0",
+     "signature": "def resource[T: Movable & Deinitable, P: Movable & Deinitable, U: Movable & Deinitable, X: Movable & Deinitable, //, E: Movable & Deinitable, A: _RaisingThunk[T, X], R: _Unary[P, U]](var acquire: A, var release: R ) -> Resource[_Acquire[_NativeThunk[T, X, A, True], NativeUnary[P, U, Never, R, False], E]] where T == P and _ErrorCompatible[E, X] and _ErrorCompatible[E, Never]:"
+    },
+    {
+     "sha256": "4fb676cd584c529ceab6ae84fedaa0e81da20669eeb9c7e0d9dd6f9737de5f82",
+     "signature": "def resource[T: Movable & Deinitable, P: Movable & Deinitable, U: Movable & Deinitable, X: Movable & Deinitable, Y: Movable & Deinitable, //, E: Movable & Deinitable, A: _RaisingThunk[T, X], R: _RaisingUnary[P, U, Y]](var acquire: A, var release: R ) -> Resource[_Acquire[_NativeThunk[T, X, A, True], NativeUnary[P, U, Y, R, True], E]] where T == P and _ErrorCompatible[E, X] and _ErrorCompatible[E, Y]:"
+    },
+    {
+     "sha256": "8e3f3a5bde122bdaa48a77e8625ffc12dadeba92c1f1b2c6731275f15981aa13",
+     "signature": "def resource[T: Movable & Deinitable, R: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable, A: _Thunk[T]](var acquire: A, var release: R ) -> Resource[_Acquire[_NativeThunk[T, Never, A, False], R, E]] where T == R.Arg and _ErrorCompatible[E, Never] and _ErrorCompatible[E, R.Error] and _OnceUnaryAvailable[R]:"
+    },
+    {
+     "sha256": "6aa12bc60a6a1f74b8f4877a5158ab2ef0d66a41c8f69e8fbf6103e371c3ea7b",
+     "signature": "def resource[T: Movable & Deinitable, R: UnaryContract & Movable & Deinitable, X: Movable & Deinitable, //, E: Movable & Deinitable, A: _RaisingThunk[T, X]](var acquire: A, var release: R ) -> Resource[_Acquire[_NativeThunk[T, X, A, True], R, E]] where T == R.Arg and _ErrorCompatible[E, X] and _ErrorCompatible[E, R.Error] and _OnceUnaryAvailable[R]:"
+    },
+    {
+     "sha256": "18dc5b3ed9448f3ed611cec183e3475476b9f3b8297a513d8a9721adc0fc43c9",
+     "signature": "def resource[A: ThunkContract & Movable & Deinitable, P: Movable & Deinitable, U: Movable & Deinitable, //, E: Movable & Deinitable, R: _Unary[P, U]](var acquire: A, var release: R ) -> Resource[_Acquire[A, NativeUnary[P, U, Never, R, False], E]] where A.Out == P and _ErrorCompatible[E, A.Error] and _ErrorCompatible[E, Never] and _OnceThunkAvailable[A]:"
+    },
+    {
+     "sha256": "f3b6ed282d08d36e0d20ab3e1a91106c538c074fe1a9ef2841dd4a11a4b7f376",
+     "signature": "def resource[A: ThunkContract & Movable & Deinitable, P: Movable & Deinitable, U: Movable & Deinitable, Y: Movable & Deinitable, //, E: Movable & Deinitable, R: _RaisingUnary[P, U, Y]](var acquire: A, var release: R ) -> Resource[_Acquire[A, NativeUnary[P, U, Y, R, True], E]] where A.Out == P and _ErrorCompatible[E, A.Error] and _ErrorCompatible[E, Y] and _OnceThunkAvailable[A]:"
+    }
+   ],
+   "provider": "effects/resources"
   },
   "effects.run": {
    "kind": "function",
@@ -4975,6 +5217,20 @@
    ],
    "provider": "effects/operations"
   },
+  "effects.run_io": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "86e622d6e150b95f6d20b00f72d395484d763abd685a165ced2f1692f9ba6186",
+     "signature": "def run_io[P: ReaderAction](var program: P) -> IOContract[P].Out where IOContract[P].Compatible:"
+    },
+    {
+     "sha256": "b035b367cef59f4c54fbf2736e8d4a5a6c8472589130175a6adce06e08d4d392",
+     "signature": "def run_io[P: ReaderAction](var program: P, token: CancellationToken) -> IOContract[P].Out where IOContract[P].Compatible:"
+    }
+   ],
+   "provider": "effects/io"
+  },
   "effects.run_writer": {
    "kind": "function",
    "overloads": [
@@ -4985,6 +5241,16 @@
    ],
    "provider": "effects/writer"
   },
+  "effects.sleep_io": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "271b1fdc6b5f00a7409f53f6304c9b8145e1957c3f1725c67d4cab406987ea41",
+     "signature": "def sleep_io[E: Movable & Deinitable](seconds: Float64) raises -> _IOSleep[E]:"
+    }
+   ],
+   "provider": "effects/io"
+  },
   "effects.tell": {
    "kind": "function",
    "overloads": [
@@ -4994,6 +5260,34 @@
     }
    ],
    "provider": "effects/capabilities"
+  },
+  "effects.uncancelable": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "4132314308cf31944f22cae3b55f9ba13185a098b76ec854a282a28dc6629ce4",
+     "signature": "def uncancelable[P: ReaderAction](var program: P) -> _IOMasked[P] where IOContract[P].Compatible:"
+    }
+   ],
+   "provider": "effects/io"
+  },
+  "effects.use_resource": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "d1e1047b3c952f0c375bb5f5961698250f01dfd17ea21a276c021aa129a6341b",
+     "signature": "def use_resource[O: _OpenScope, F: BorrowCallContract & Movable & Deinitable](var scope: Resource[O], var function: F ) -> _IOResource[O, F] where F.Payload == O.Release.Value and _ErrorCompatible[O.Release.Error, F.Failure] and _OnceBorrowAvailable[F]:"
+    },
+    {
+     "sha256": "a3de22713720ef14ff8b5f6f1897b30e0882fc267b6e4b8f54a9a484fc1770e5",
+     "signature": "def use_resource[O: _OpenScope, P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](var scope: Resource[O], var function: F ) -> _IOResource[O, _NativeBorrow[P, V, Never, F, False]] where P == O.Release.Value:"
+    },
+    {
+     "sha256": "d35b07b6f2603e054696653560d99fce3fef089dbe9607f433641926843ebf3d",
+     "signature": "def use_resource[O: _OpenScope, P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](var scope: Resource[O], var function: F ) -> _IOResource[O, _NativeBorrow[P, V, X, F, True]] where P == O.Release.Value and _ErrorCompatible[O.Release.Error, X]:"
+    }
+   ],
+   "provider": "effects/io"
   },
   "effects.writer": {
    "kind": "function",

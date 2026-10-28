@@ -3271,6 +3271,14 @@ sources retain `iterated`.
 
 ### Resource scopes
 
+The native scope contract below is now implemented by `Resource`, `resource`,
+and `pure_resource`. Composition uses map, product and flat_map; `use_resource`
+defers a whole synchronous scope into IO. `EffectFailure[E]` retains errors in
+execution order. Callbacks select one exact E (or Never), with explicit mappings
+required for different native error types. See the [execution contract](algebra.md#resource-and-io-execution-contract)
+for cancellation timing, generic admission and the independent inner-recipe
+restriction.
+
 A scope should own acquisition, use and release as one consumed operation.
 Constructing or discarding an unopened scope recipe must not acquire a
 resource. Acquisition happens when the scope runs; once it succeeds, release

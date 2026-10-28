@@ -62,13 +62,14 @@ and is [measured cold](../contributing/benchmarks.md#measuring-compile-time).
 The library covers function composition and partial application, sequential
 folds and lazy iteration, typed results, algebraic and inductive data types with
 exhaustive pattern matching, functional control flow, and algebraic interfaces
-with monad transformers. Recursion is over finite acyclic data; general
+with monad transformers, consumed resource scopes, and cooperative IO execution.
+Recursion is over finite acyclic data; general
 well-founded recursion is outside this contract. The scope also includes
 documented laws and device-compatible specializations of the non-allocating,
 non-raising core.
 
 Out of scope for now: automatic currying, persistent collections, optics, memoization,
-asynchronous effects, implicit parallelism, a distributed runtime, a GPU kernel
+implicit parallelism, a distributed runtime, a GPU kernel
 framework, open-world runtime class matching, regular-expression matching,
 iterator backtracking, dependent pattern matching, proof checking and automatic
 termination proofs. Conveniences such as `partial_right`, `curry`, `juxt` and

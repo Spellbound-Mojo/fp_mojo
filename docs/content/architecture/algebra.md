@@ -1049,3 +1049,59 @@ the callback's exact error belongs to execution. Lifting retains the layer's
 usual construction errors and execution timing, including Writer identity
 construction. Dropping an unopened recipe drops its captures without invoking
 the projection. Copying a recipe requires copyable stored callbacks.
+
+## Resource and IO execution contract
+
+Resource recipes are inert, consumed descriptions of synchronous native
+acquisition and release. `resource[E](acquire, release)` selects one exact
+native error type; callbacks may raise E or Never. Different error types require
+an explicit common mapping. `use` borrows the acquired value and returns an
+owned result in `Result[A, EffectFailure[E]]`. The result and error cannot borrow
+the acquired value. Independent captured origins remain available.
+
+Acquisition failure skips use and release. After successful acquisition, release
+runs exactly once after use, including a failed use. Both failures are retained
+in order in a non-empty collection, without stringifying or copying errors.
+Product acquires left then right and releases right then left. Flat-map borrows
+the outer value to construct an independent inner recipe; failed construction or
+inner acquisition releases the outer value. It does not build self-referential
+resources borrowing their enclosing lease. Unopened recipes only destroy their
+stored callback owners. Fallible release belongs to this explicit runner, never
+to a destructor.
+
+IO is a selected Reader family over ResultT and Optional. Its context contains a
+shared cancellation token and a local masking flag. Native exceptions are
+captured through the existing one-shot Result boundary; algebraic map, bind,
+error recovery and loops retain their existing execution owners. Cancellation
+is the absent outer Optional, separate from a stored error. `EffectFailure`
+retains a non-empty sequence of exact errors and whether cancellation also
+occurred. All runs consume their concrete program type and preserve its captured
+origins; no callback erasure or interpreter registry is introduced.
+
+Delay runs a native callback once at execution. Cooperative cancellation is
+observed before and after native operations and while waiting; arbitrary native
+code is not preempted. Side effects already performed are not rolled back.
+Guarantee runs its finalizer once after an entered body, with cancellation
+masked, preserving both body and cleanup failures. A request received while
+masked is observed when the surrounding unmasked operation resumes. Programs
+whose finalizer never terminates cannot finish cancellation.
+
+`use_resource` defers one complete synchronous resource scope into IO. It checks
+cancellation before entry and after release. Its native callbacks are synchronous;
+a cancellation request cannot skip release or interrupt acquisition midway.
+As with delay, a long native callback must return before this boundary observes
+cancellation. General IO finalizers are composed with guarantee. This initial
+resource interface does not claim origin-dependent IO acquisition/use callbacks.
+
+Shared callable adapters own invocation conventions, Result capture owns native
+exception conversion, and one outcome combiner owns finalization precedence.
+Resource code owns lifecycle transitions; IO code owns cancellation checkpoints
+and masking. Runtime threads and coordination will be separate consumers of
+these contracts, with their host and threading requirements documented explicitly.
+
+General algebra operations preserve native callback error timing. A raising
+callback in `map` or `flat_map` therefore has a native error channel until an IO
+capture boundary. `capture_io(program)` places that boundary before stored-error
+recovery, so `IO[E].or_else(handler, capture_io(program))` can recover it. Delay,
+guarantee, resource execution and host runs already capture their protected
+native calls. Cancellation remains separate from this error recovery.

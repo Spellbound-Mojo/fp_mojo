@@ -5,7 +5,8 @@ retains its first argument and moves it on consumption or copies it per repeat.
 """
 from std.builtin.rebind import downcast, rebind_var, rebind
 from .invoke import call_once, call_repeated, RepeatableBinary
-from .protocols import OnceThunk, BinaryContract, OnceUnary, MutableUnary
+from .protocols import OnceThunk, BinaryContract, OnceUnary, MutableUnary, ThunkContract, UnaryContract, BorrowCallContract
+from ._receiver import _borrow_once_as
 
 @fieldwise_init
 struct _BoundThunk[B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable,
@@ -38,3 +39,34 @@ struct _BindFirst[F: BinaryContract & Movable & Deinitable](
         comptime C = downcast[Self.F.First, Copyable & Deinitable]
         var first = rebind_var[Self.F.First](rebind[C](self.first).copy())
         return call_repeated(self.function, first^, arg^)
+
+
+# These adapters bind library receivers to the existing one-shot capture
+# boundary. Native argument bundles above remain the owner of native ABI calls.
+@fieldwise_init
+struct _OwnedThunk[F: ThunkContract & Movable & Deinitable](OnceThunk):
+    var function: Self.F
+    comptime Out = Self.F.Out
+    comptime Error = Self.F.Error
+    def call_once(deinit self) raises Self.Error -> Self.Out:
+        return call_once(self.function^)
+
+
+@fieldwise_init
+struct _OwnedUnary[F: UnaryContract & Movable & Deinitable](OnceThunk):
+    var function: Self.F
+    var value: Self.F.Arg
+    comptime Out = Self.F.Out
+    comptime Error = Self.F.Error
+    def call_once(deinit self) raises Self.Error -> Self.Out:
+        return call_once(self.function^, self.value^)
+
+
+@fieldwise_init
+struct _BorrowThunk[F: BorrowCallContract & Movable & Deinitable, o: ImmOrigin](OnceThunk):
+    var function: Self.F
+    var value: Pointer[Self.F.Payload, Self.o]
+    comptime Out = Self.F.Result
+    comptime Error = Self.F.Failure
+    def call_once(deinit self) raises Self.Error -> Self.Out:
+        return _borrow_once_as[Self.Error](self.value[], self.function^)

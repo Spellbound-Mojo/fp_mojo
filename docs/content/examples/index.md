@@ -125,3 +125,6 @@ The [iterator expansion example](../reference/iteration.md#prefixes-indexed-mapp
 combines lazy prefixes, native zip, indexed mapping and explicit terminals.
 
 The [selected workflow](../reference/functions.md#select-family-and-native-errors-before-callbacks) combines traversal, folds and n-ary operations with one native error selection.
+
+- [Composable resource scopes](../reference/effects.md#composable-native-resources) acquire lazily and release in reverse order.
+- [IO execution](../reference/effects.md#io-cancellation-and-finalization) separates cancellation from errors and retains finalizer failures.

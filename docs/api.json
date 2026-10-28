@@ -41313,6 +41313,50 @@
    "summary": "Read an environment in a selected effect family.",
    "traits": []
   },
+  "effects.CancellationToken": {
+   "aliases": [],
+   "description": "Copies share one flag. Requesting cancellation never kills a thread or\ninterrupts native code. IO observes it at its documented checkpoints.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "cancel": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": null,
+      "signature": "def cancel(self)",
+      "summary": "Request cancellation for every computation using this token."
+     }
+    ],
+    "requested": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "True after any copy receives cancel.",
+       "type": "Bool"
+      },
+      "signature": "def requested(self) -> Bool",
+      "summary": "Read whether cancellation was requested, without resetting it."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "effects/io",
+   "signature": "struct CancellationToken(Copyable)",
+   "summary": "A shared atomic cancellation request; cancellation is cooperative.",
+   "traits": [
+    "Copyable"
+   ]
+  },
   "effects.Censor": {
    "aliases": [
     {
@@ -41387,6 +41431,167 @@
     "Listen",
     "Tell"
    ]
+  },
+  "effects.EffectFailure": {
+   "aliases": [],
+   "description": "Errors retain their occurrence order: body first, then finalizers from the\ninnermost scope outwards. Neither errors nor their borrowed origins are\nerased. Native resource scopes always set canceled to False.",
+   "fields": [
+    {
+     "description": "The non-empty sequence of errors, in execution order.",
+     "name": "errors",
+     "type": "NonEmptyList[E]"
+    },
+    {
+     "description": "Whether cancellation also occurred during the failed operation.",
+     "name": "canceled",
+     "type": "Bool"
+    }
+   ],
+   "kind": "struct",
+   "methods": {
+    "into_errors": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The original non-empty collection, without copying its elements.",
+       "type": "NonEmptyList[Self.E]"
+      },
+      "signature": "def into_errors(deinit self) -> NonEmptyList[Self.E]",
+      "summary": "Consume this failure and transfer its error collection."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The selected native error type; payloads may be move-only.",
+     "inferred": false,
+     "name": "E",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/outcomes",
+   "signature": "struct EffectFailure[E: Movable & Deinitable](Movable, Copyable where conforms_to(E, Copyable))",
+   "summary": "One or more exact errors, with cancellation recorded independently.",
+   "traits": [
+    "Copyable"
+   ]
+  },
+  "effects.IO": {
+   "aliases": [],
+   "description": "Use delay, pure[IO[E]], map, flat_map and tail_rec_m to construct recipes;\nrun_io consumes one at the host boundary. Native callbacks run synchronously.\nCancellation uses the outer Optional and cannot be recovered as a stored error.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The exact native error payload type; Error by default.",
+     "inferred": false,
+     "name": "E",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/io",
+   "signature": "comptime IO[E: Movable & Deinitable = Error] = ReaderT[ResultT[OptionalFamily, EffectFailure[E]], IOContext[E]]",
+   "summary": "A deferred, typed IO family using the existing Monad and error operations.",
+   "traits": []
+  },
+  "effects.IOContext": {
+   "aliases": [
+    {
+     "description": "The native error type, before EffectFailure aggregation.",
+     "name": "NativeError"
+    }
+   ],
+   "description": "Masking is local to a context value; token copies share only the atomic\nrequest. Custom endpoints must honor cancellation cooperatively and return\nthe documented Outcome shape without borrowing this temporary context.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "canceled": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "True only when cancellation is both requested and unmasked.",
+       "type": "Bool"
+      },
+      "signature": "def canceled(self) -> Bool",
+      "summary": "Check cancellation at this context's current masking level."
+     }
+    ],
+    "request_cancel": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": null,
+      "signature": "def request_cancel(self)",
+      "summary": "Request cancellation, even if observation is currently masked."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The exact native error type selected by IO.",
+     "inferred": false,
+     "name": "E",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/io",
+   "signature": "struct IOContext[E: Movable & Deinitable](_IOContextType, Copyable)",
+   "summary": "A borrowed execution context for custom IO endpoints.",
+   "traits": [
+    "Copyable",
+    "_IOContextType"
+   ]
+  },
+  "effects.IOContract": {
+   "aliases": [
+    {
+     "description": "The selected native error type, inferred from the program context.",
+     "name": "Error"
+    },
+    {
+     "description": "The success, accumulated failure, or cancellation outcome.",
+     "name": "Out"
+    },
+    {
+     "description": "Exact family membership and errors, with no temporary context escape.",
+     "name": "Compatible"
+    }
+   ],
+   "description": "",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The program type, retaining all callback and payload origins.",
+     "inferred": false,
+     "name": "P",
+     "type": "ReaderAction",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/io",
+   "signature": "struct IOContract[P: ReaderAction]",
+   "summary": "Admission and exact outcome type for running a concrete IO recipe.",
+   "traits": []
   },
   "effects.LiftAsk": {
    "aliases": [
@@ -42307,6 +42512,33 @@
    "summary": "Optional over the base Monad `M`: a value is `M`'s carrier of `Optional[A]`; over Identity, `OptionalFamily`.",
    "traits": []
   },
+  "effects.Outcome": {
+   "aliases": [],
+   "description": "A failure may also record cancellation when a finalizer fails after cancellation.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The owned success type.",
+     "inferred": false,
+     "name": "T",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The exact error payload type, collected by EffectFailure.",
+     "inferred": false,
+     "name": "E",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/outcomes",
+   "signature": "comptime Outcome[T: Movable & Deinitable, E: Movable & Deinitable] = Optional[Result[T, EffectFailure[E]]]",
+   "summary": "An IO outcome: absent for cancellation, present Ok for success or Err for failure.",
+   "traits": []
+  },
   "effects.Project": {
    "aliases": [
     {
@@ -43188,6 +43420,498 @@
     "_Lifting",
     "_LocalLifting"
    ]
+  },
+  "effects.Resource": {
+   "aliases": [
+    {
+     "description": "The concrete recipe type retained by this value.",
+     "name": "Recipe"
+    },
+    {
+     "description": "The acquired value borrowed by use and flat_map.",
+     "name": "Value"
+    },
+    {
+     "description": "The exact native error type collected by all callbacks in this scope.",
+     "name": "Error"
+    }
+   ],
+   "description": "Build with resource, combine with product or flat_map, then consume with use.\nAcquisition occurs only in use. Every successfully acquired resource is\nreleased exactly once, in reverse order, even if use or a later acquisition\nfails. Unopened recipes only destroy their stored callback owners.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "flat_map": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The deferred factory, consumed with this recipe.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "The factory borrows the outer value once. Its independent recipe cannot\nborrow that fresh input origin; no self-referential lease is constructed.\nFactory or inner acquisition failure still releases the outer value.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A borrowing factory returning a Resource of the same error type.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A scope exposing the inner value, released before its outer owner.",
+       "type": "Resource[_Join[Self.O, F, False]]"
+      },
+      "signature": "def flat_map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Resource[_Join[Self.O, F, False]] where F.Payload == Self.Value and conforms_to(F.Result, _ResourceType) and _ErrorCompatible[Self.Error, F.Failure] and downcast[F.Result, _ResourceType].Recipe.Release.Error == Self.Error and _OnceBorrowAvailable[F]",
+      "summary": "Derive an inner scope while retaining the outer resource until release."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Borrowing[P, V]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Resource[_Join[Self.O, _NativeBorrow[P, V, Never, F, False], False]]"
+      },
+      "signature": "def flat_map[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> Resource[_Join[Self.O, _NativeBorrow[P, V, Never, F, False], False]] where P == Self.Value and conforms_to(V, _ResourceType) and downcast[V, _ResourceType].Recipe.Release.Error == Self.Error",
+      "summary": "Adapt an owned native borrowing callback to the shared scope runner."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingBorrowing[P, V, X]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Resource[_Join[Self.O, _NativeBorrow[P, V, X, F, True], False]]"
+      },
+      "signature": "def flat_map[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> Resource[_Join[Self.O, _NativeBorrow[P, V, X, F, True], False]] where P == Self.Value and _ErrorCompatible[Self.Error, X] and conforms_to(V, _ResourceType) and downcast[V, _ResourceType].Recipe.Release.Error == Self.Error",
+      "summary": "Adapt an owned native borrowing callback to the shared scope runner."
+     }
+    ],
+    "map": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The projection, consumed and deferred until acquisition.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "This derives through flat_map and pure_resource. A failed projection\nreleases the original resource; a successful projection is destroyed\nbefore that release. It cannot borrow the fresh acquired input origin.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The borrowing projection callback.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A scope exposing F.Result and retaining the original finalizer.",
+       "type": "Resource[_Join[Self.O, _MapScopeFactory[F, Self.Error], False]]"
+      },
+      "signature": "def map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Resource[_Join[Self.O, _MapScopeFactory[F, Self.Error], False]] where F.Payload == Self.Value and _ErrorCompatible[Self.Error, F.Failure] and _OnceBorrowAvailable[F]",
+      "summary": "Project an owned value while retaining the original resource until release."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Borrowing[P, V]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Resource[_Join[Self.O, _MapScopeFactory[_NativeBorrow[P, V, Never, F, False], Self.Error], False]]"
+      },
+      "signature": "def map[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> Resource[_Join[Self.O, _MapScopeFactory[_NativeBorrow[P, V, Never, F, False], Self.Error], False]] where P == Self.Value and _ErrorCompatible[Self.Error, Never]",
+      "summary": "Adapt an owned native projection to the shared resource derivation."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingBorrowing[P, V, X]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Resource[_Join[Self.O, _MapScopeFactory[_NativeBorrow[P, V, X, F, True], Self.Error], False]]"
+      },
+      "signature": "def map[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> Resource[_Join[Self.O, _MapScopeFactory[_NativeBorrow[P, V, X, F, True], Self.Error], False]] where P == Self.Value and _ErrorCompatible[Self.Error, X]",
+      "summary": "Adapt an owned native projection to the shared resource derivation."
+     }
+    ],
+    "product": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The right scope, consumed and still unopened.",
+        "name": "right",
+        "type": "Resource[P]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The right acquisition recipe, inferred.",
+        "inferred": false,
+        "name": "P",
+        "type": "_OpenScope",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A scope of the pair, released right then left on every exit.",
+       "type": "Resource[_Join[Self.O, _ConstantResource[Self.Value, P], True]]"
+      },
+      "signature": "def product[P: _OpenScope](deinit self, var right: Resource[P]) -> Resource[_Join[Self.O, _ConstantResource[Self.Value, P], True]] where P.Release.Error == Self.Error",
+      "summary": "Acquire both scopes left to right and expose their owned native pair."
+     }
+    ],
+    "use": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The use callback, consumed; skipped if acquisition fails.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "Results and errors cannot borrow the acquired value. Move-only callback\nstate is consumed once. A release result is discarded. If use succeeds\nbut release fails, the unused success value is destroyed.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A borrowing callback with the exact acquired input type.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Ok of the owned result, or all exact errors in execution order.",
+       "type": "Result[F.Result, EffectFailure[Self.Error]]"
+      },
+      "signature": "def use[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Result[F.Result, EffectFailure[Self.Error]] where F.Payload == Self.Value and _ErrorCompatible[Self.Error, F.Failure] and _OnceBorrowAvailable[F]",
+      "summary": "Acquire, borrow for use, and release, preserving every failure."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Borrowing[P, V]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Result[V, EffectFailure[Self.Error]]"
+      },
+      "signature": "def use[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> Result[V, EffectFailure[Self.Error]] where P == Self.Value",
+      "summary": "Adapt an owned native borrowing callback to the shared scope runner."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingBorrowing[P, V, X]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Result[V, EffectFailure[Self.Error]]"
+      },
+      "signature": "def use[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> Result[V, EffectFailure[Self.Error]] where P == Self.Value and _ErrorCompatible[Self.Error, X]",
+      "summary": "Adapt an owned native borrowing callback to the shared scope runner."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The concrete acquisition recipe, inferred by resource and composition.",
+     "inferred": false,
+     "name": "O",
+     "type": "_OpenScope",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/resources",
+   "signature": "struct Resource[O: _OpenScope](_ResourceType)",
+   "summary": "An inert, consumed recipe with explicitly sequenced acquisition and release.",
+   "traits": [
+    "_ResourceType"
+   ]
+  },
+  "effects.ResourceContract": {
+   "aliases": [
+    {
+     "description": "Exact value identity, compatible errors and once-callable receivers.",
+     "name": "Compatible"
+    },
+    {
+     "description": "The concrete unopened Resource type, retaining every captured origin.",
+     "name": "Out"
+    }
+   ],
+   "description": "Use Out to name a resource returned by a deferred factory or generic wrapper.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The acquisition callback type.",
+     "inferred": false,
+     "name": "A",
+     "type": "ThunkContract & Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The consuming release callback type.",
+     "inferred": false,
+     "name": "R",
+     "type": "UnaryContract & Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The selected native error type.",
+     "inferred": false,
+     "name": "E",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/resources",
+   "signature": "struct ResourceContract[A: ThunkContract & Movable & Deinitable, R: UnaryContract & Movable & Deinitable, E: Movable & Deinitable]",
+   "summary": "Admission and exact recipe type for native resource construction.",
+   "traits": []
   },
   "effects.ResultT": {
    "aliases": [],
@@ -45251,6 +45975,74 @@
    "provider": "effects/projections",
    "summary": ""
   },
+  "effects.canceled": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The selected IO error type.",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A deferred IO cancellation request with a unit success type while masked.",
+      "type": "_IOCancel[E]"
+     },
+     "signature": "def canceled[E: Movable & Deinitable]() -> _IOCancel[E]",
+     "summary": "Request cancellation when executed; masks defer its observation."
+    }
+   ],
+   "provider": "effects/io",
+   "summary": ""
+  },
+  "effects.capture_io": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The program, consumed into a deferred capture boundary.",
+       "name": "program",
+       "type": "P",
+       "variadic": false
+      }
+     ],
+     "description": "Delay already captures its callback. A raising native callback passed to\nthe general map or flat_map retains that operation's native error channel.\nWrap the resulting program here before IO[E].or_else or Pipeline.recover\nto make that native error available as an EffectFailure. Cancellation stays\nseparate and never invokes a stored-error recovery handler.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "A compatible concrete IO program.",
+       "inferred": false,
+       "name": "P",
+       "type": "ReaderAction",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The same success and IO error family, with no escaping native error.",
+      "type": "_IOCaptured[P]"
+     },
+     "signature": "def capture_io[P: ReaderAction](var program: P) -> _IOCaptured[P] where IOContract[P].Compatible",
+     "summary": "Capture native errors inside IO before applying stored-error recovery."
+    }
+   ],
+   "provider": "effects/io",
+   "summary": ""
+  },
   "effects.censor": {
    "description": "",
    "kind": "function",
@@ -45447,6 +46239,146 @@
    "provider": "effects/capabilities",
    "summary": ""
   },
+  "effects.delay": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The callback, moved into the unopened recipe.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "No callback runs at construction. Cancellation is checked before and after\nit runs; arbitrary native code is not preempted. A late cancellation may\ndiscard a success, but never discards a raised error. Completed external\neffects are not rolled back. The concrete callback owner moves exactly once.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "A once-callable thunk; shared and mutable receivers are also admitted.",
+       "inferred": true,
+       "name": "F",
+       "type": "ThunkContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The selected IO error type; F raises E or Never.",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "An IO[E] program yielding F.Out.",
+      "type": "_IODelay[E, F]"
+     },
+     "signature": "def delay[F: ThunkContract & Movable & Deinitable, //, E: Movable & Deinitable](var function: F) -> _IODelay[E, F] where _ErrorCompatible[E, F.Error] and _OnceThunkAvailable[F]",
+     "summary": "Suspend one native callback, capturing its exact error at execution."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Thunk[T]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_IODelay[E, _NativeThunk[T, Never, F, False]]"
+     },
+     "signature": "def delay[T: Movable & Deinitable, //, E: Movable & Deinitable, F: _Thunk[T]](var function: F) -> _IODelay[E, _NativeThunk[T, Never, F, False]]",
+     "summary": "Suspend an owned non-raising native function or closure."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingThunk[T, X]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_IODelay[E, _NativeThunk[T, X, F, True]]"
+     },
+     "signature": "def delay[T: Movable & Deinitable, X: Movable & Deinitable, //, E: Movable & Deinitable, F: _RaisingThunk[T, X]](var function: F) -> _IODelay[E, _NativeThunk[T, X, F, True]] where _ErrorCompatible[E, X]",
+     "summary": "Suspend a native function, retaining its exact compatible error type."
+    }
+   ],
+   "provider": "effects/io",
+   "summary": ""
+  },
   "effects.get": {
    "description": "",
    "kind": "function",
@@ -45475,6 +46407,58 @@
     }
    ],
    "provider": "effects/capabilities",
+   "summary": ""
+  },
+  "effects.guarantee": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The body, consumed into the new recipe.",
+       "name": "program",
+       "type": "P",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The deferred finalizer, consumed; it must terminate to finish cancellation.",
+       "name": "finalizer",
+       "type": "Q",
+       "variadic": false
+      }
+     ],
+     "description": "Finalization runs after success, failure or cancellation. Its success value\nis discarded. All errors remain ordered body first, then finalizer. Nested\nguarantees finalize from the inside out. Dropping an unopened recipe runs\nneither its body nor its finalizer.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The body program type.",
+       "inferred": false,
+       "name": "P",
+       "type": "ReaderAction",
+       "variadic": false
+      },
+      {
+       "description": "A finalizer in the same selected IO error family.",
+       "inferred": false,
+       "name": "Q",
+       "type": "ReaderAction",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A program with the body's success type and combined failure outcomes.",
+      "type": "_IOGuarantee[P, Q]"
+     },
+     "signature": "def guarantee[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q) -> _IOGuarantee[P, Q] where IOContract[P].Compatible and IOContract[Q].Compatible and IOContract[P].Error == IOContract[Q].Error",
+     "summary": "Finalize an entered IO body exactly once, with cancellation masked."
+    }
+   ],
+   "provider": "effects/io",
    "summary": ""
   },
   "effects.inspect": {
@@ -46071,6 +47055,51 @@
    "provider": "effects/capabilities",
    "summary": ""
   },
+  "effects.pure_resource": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The already-created value, consumed into the recipe.",
+       "name": "value",
+       "type": "T",
+       "variadic": false
+      }
+     ],
+     "description": "No acquire or release callback is added. An unopened recipe destroys the\nvalue normally; an opened recipe holds it until use finishes. Resource.map\nuses this adapter to retain the original scope through flat_map.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The owned value type, including embedded origins.",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The resource error family selected for subsequent composition.",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "An unopened scope whose only release action is native value destruction.",
+      "type": "Resource[_PureResource[T, E]]"
+     },
+     "signature": "def pure_resource[T: Movable & Deinitable, //, E: Movable & Deinitable](var value: T) -> Resource[_PureResource[T, E]]",
+     "summary": "Own a value in a resource recipe with ordinary native destruction."
+    }
+   ],
+   "provider": "effects/resources",
+   "summary": ""
+  },
   "effects.put": {
    "description": "",
    "kind": "function",
@@ -46107,6 +47136,641 @@
     }
    ],
    "provider": "effects/capabilities",
+   "summary": ""
+  },
+  "effects.resource": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The acquisition thunk, moved into the recipe without calling it.",
+       "name": "acquire",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The release callback, moved and called only after successful acquisition.",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "Select E explicitly. Each callback raises E or Never, and may be move-only.\nRelease consumes the acquired value; its return value is discarded.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The acquisition thunk type, including its owned result.",
+       "inferred": true,
+       "name": "A",
+       "type": "ThunkContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The consuming release callback type.",
+       "inferred": true,
+       "name": "R",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The exact native error type shared by acquisition, use and release.",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "An unopened resource recipe, consumed by use or further composition.",
+      "type": "Resource[_Acquire[A, R, E]]"
+     },
+     "signature": "def resource[A: ThunkContract & Movable & Deinitable, R: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](var acquire: A, var release: R) -> Resource[_Acquire[A, R, E]] where A.Out == R.Arg and _ErrorCompatible[E, A.Error] and _ErrorCompatible[E, R.Error] and _OnceThunkAvailable[A] and _OnceUnaryAvailable[R]",
+     "summary": "Describe a native resource without invoking acquisition or release."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "U",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "A",
+       "type": "_Thunk[T]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_Unary[P, U]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Resource[_Acquire[_NativeThunk[T, Never, A, False], NativeUnary[P, U, Never, R, False], E]]"
+     },
+     "signature": "def resource[T: Movable & Deinitable, P: Movable & Deinitable, U: Movable & Deinitable, //, E: Movable & Deinitable, A: _Thunk[T], R: _Unary[P, U]](var acquire: A, var release: R) -> Resource[_Acquire[_NativeThunk[T, Never, A, False], NativeUnary[P, U, Never, R, False], E]] where T == P and _ErrorCompatible[E, Never] and _ErrorCompatible[E, Never]",
+     "summary": "Own native acquisition and release callbacks without executing either."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "U",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "Y",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "A",
+       "type": "_Thunk[T]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_RaisingUnary[P, U, Y]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Resource[_Acquire[_NativeThunk[T, Never, A, False], NativeUnary[P, U, Y, R, True], E]]"
+     },
+     "signature": "def resource[T: Movable & Deinitable, P: Movable & Deinitable, U: Movable & Deinitable, Y: Movable & Deinitable, //, E: Movable & Deinitable, A: _Thunk[T], R: _RaisingUnary[P, U, Y]](var acquire: A, var release: R) -> Resource[_Acquire[_NativeThunk[T, Never, A, False], NativeUnary[P, U, Y, R, True], E]] where T == P and _ErrorCompatible[E, Never] and _ErrorCompatible[E, Y]",
+     "summary": "Own native acquisition and release callbacks without executing either."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "U",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "A",
+       "type": "_RaisingThunk[T, X]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_Unary[P, U]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Resource[_Acquire[_NativeThunk[T, X, A, True], NativeUnary[P, U, Never, R, False], E]]"
+     },
+     "signature": "def resource[T: Movable & Deinitable, P: Movable & Deinitable, U: Movable & Deinitable, X: Movable & Deinitable, //, E: Movable & Deinitable, A: _RaisingThunk[T, X], R: _Unary[P, U]](var acquire: A, var release: R) -> Resource[_Acquire[_NativeThunk[T, X, A, True], NativeUnary[P, U, Never, R, False], E]] where T == P and _ErrorCompatible[E, X] and _ErrorCompatible[E, Never]",
+     "summary": "Own native acquisition and release callbacks without executing either."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "U",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "Y",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "A",
+       "type": "_RaisingThunk[T, X]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_RaisingUnary[P, U, Y]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Resource[_Acquire[_NativeThunk[T, X, A, True], NativeUnary[P, U, Y, R, True], E]]"
+     },
+     "signature": "def resource[T: Movable & Deinitable, P: Movable & Deinitable, U: Movable & Deinitable, X: Movable & Deinitable, Y: Movable & Deinitable, //, E: Movable & Deinitable, A: _RaisingThunk[T, X], R: _RaisingUnary[P, U, Y]](var acquire: A, var release: R) -> Resource[_Acquire[_NativeThunk[T, X, A, True], NativeUnary[P, U, Y, R, True], E]] where T == P and _ErrorCompatible[E, X] and _ErrorCompatible[E, Y]",
+     "summary": "Own native acquisition and release callbacks without executing either."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "A",
+       "type": "_Thunk[T]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Resource[_Acquire[_NativeThunk[T, Never, A, False], R, E]]"
+     },
+     "signature": "def resource[T: Movable & Deinitable, R: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable, A: _Thunk[T]](var acquire: A, var release: R) -> Resource[_Acquire[_NativeThunk[T, Never, A, False], R, E]] where T == R.Arg and _ErrorCompatible[E, Never] and _ErrorCompatible[E, R.Error] and _OnceUnaryAvailable[R]",
+     "summary": "Adapt native acquisition while retaining a library release receiver."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "A",
+       "type": "_RaisingThunk[T, X]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Resource[_Acquire[_NativeThunk[T, X, A, True], R, E]]"
+     },
+     "signature": "def resource[T: Movable & Deinitable, R: UnaryContract & Movable & Deinitable, X: Movable & Deinitable, //, E: Movable & Deinitable, A: _RaisingThunk[T, X]](var acquire: A, var release: R) -> Resource[_Acquire[_NativeThunk[T, X, A, True], R, E]] where T == R.Arg and _ErrorCompatible[E, X] and _ErrorCompatible[E, R.Error] and _OnceUnaryAvailable[R]",
+     "summary": "Adapt native acquisition while retaining a library release receiver."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "ThunkContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "U",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_Unary[P, U]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Resource[_Acquire[A, NativeUnary[P, U, Never, R, False], E]]"
+     },
+     "signature": "def resource[A: ThunkContract & Movable & Deinitable, P: Movable & Deinitable, U: Movable & Deinitable, //, E: Movable & Deinitable, R: _Unary[P, U]](var acquire: A, var release: R) -> Resource[_Acquire[A, NativeUnary[P, U, Never, R, False], E]] where A.Out == P and _ErrorCompatible[E, A.Error] and _ErrorCompatible[E, Never] and _OnceThunkAvailable[A]",
+     "summary": "Adapt native release while retaining a library acquisition receiver."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "acquire",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "release",
+       "type": "R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "ThunkContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "U",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "Y",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "R",
+       "type": "_RaisingUnary[P, U, Y]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Resource[_Acquire[A, NativeUnary[P, U, Y, R, True], E]]"
+     },
+     "signature": "def resource[A: ThunkContract & Movable & Deinitable, P: Movable & Deinitable, U: Movable & Deinitable, Y: Movable & Deinitable, //, E: Movable & Deinitable, R: _RaisingUnary[P, U, Y]](var acquire: A, var release: R) -> Resource[_Acquire[A, NativeUnary[P, U, Y, R, True], E]] where A.Out == P and _ErrorCompatible[E, A.Error] and _ErrorCompatible[E, Y] and _OnceThunkAvailable[A]",
+     "summary": "Adapt native release while retaining a library acquisition receiver."
+    }
+   ],
+   "provider": "effects/resources",
    "summary": ""
   },
   "effects.run": {
@@ -46212,6 +47876,81 @@
    "provider": "effects/operations",
    "summary": ""
   },
+  "effects.run_io": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The program, consumed once.",
+       "name": "program",
+       "type": "P",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "A compatible IO recipe, including every captured origin.",
+       "inferred": false,
+       "name": "P",
+       "type": "ReaderAction",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "Present Ok for success, present Err for accumulated exact failures, or\nabsence for cancellation. No native callback error escapes this boundary.",
+      "type": "IOContract[P].Out"
+     },
+     "signature": "def run_io[P: ReaderAction](var program: P) -> IOContract[P].Out where IOContract[P].Compatible",
+     "summary": "Consume an IO program synchronously with a fresh cancellation token."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The program, consumed once.",
+       "name": "program",
+       "type": "P",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "The shared token, borrowed and copied into the run context.",
+       "name": "token",
+       "type": "CancellationToken",
+       "variadic": false
+      }
+     ],
+     "description": "The token remains reusable and is never reset. An already-canceled token\nskips the unopened program, including any unentered finalizer scopes.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "A compatible concrete IO recipe.",
+       "inferred": false,
+       "name": "P",
+       "type": "ReaderAction",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The exact IO outcome, with finalizer failures retained on cancellation.",
+      "type": "IOContract[P].Out"
+     },
+     "signature": "def run_io[P: ReaderAction](var program: P, token: CancellationToken) -> IOContract[P].Out where IOContract[P].Compatible",
+     "summary": "Run with a shared cancellation token supplied by the caller."
+    }
+   ],
+   "provider": "effects/io",
+   "summary": ""
+  },
   "effects.run_writer": {
    "description": "",
    "kind": "function",
@@ -46257,6 +47996,44 @@
    "provider": "effects/writer",
    "summary": ""
   },
+  "effects.sleep_io": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "A finite, nonnegative duration no greater than one billion seconds.",
+       "name": "seconds",
+       "type": "Float64",
+       "variadic": false
+      }
+     ],
+     "description": "Uses the monotonic clock and sleeps in intervals of at most one millisecond.\nActual scheduling and cancellation latency depend on the operating system.",
+     "error": "Error",
+     "parameters": [
+      {
+       "description": "The selected IO error family.",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "Error at construction for an invalid duration, before constructing a program.",
+     "returns": {
+      "doc": "An unopened IO wait; zero duration is still a cancellation checkpoint.",
+      "type": "_IOSleep[E]"
+     },
+     "signature": "def sleep_io[E: Movable & Deinitable](seconds: Float64) raises -> _IOSleep[E]",
+     "summary": "Describe a synchronous, cooperatively cancelable wait."
+    }
+   ],
+   "provider": "effects/io",
+   "summary": ""
+  },
   "effects.tell": {
    "description": "",
    "kind": "function",
@@ -46293,6 +48070,219 @@
     }
    ],
    "provider": "effects/capabilities",
+   "summary": ""
+  },
+  "effects.uncancelable": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The body, consumed without execution now.",
+       "name": "program",
+       "type": "P",
+       "variadic": false
+      }
+     ],
+     "description": "Requests remain pending and are observed on returning to an unmasked run.\nNested masks restore the enclosing context. This does not suppress errors.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "A compatible IO program type.",
+       "inferred": false,
+       "name": "P",
+       "type": "ReaderAction",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A deferred program with the same value and error family.",
+      "type": "_IOMasked[P]"
+     },
+     "signature": "def uncancelable[P: ReaderAction](var program: P) -> _IOMasked[P] where IOContract[P].Compatible",
+     "summary": "Mask cooperative cancellation during an entered program."
+    }
+   ],
+   "provider": "effects/io",
+   "summary": ""
+  },
+  "effects.use_resource": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The unopened scope, consumed into the IO recipe.",
+       "name": "scope",
+       "type": "Resource[O]",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The native use callback, consumed without executing now.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "Cancellation is observed before entry and after release. Native acquisition,\nuse and release are synchronous and cannot be interrupted midway. This keeps\nrelease registered until it runs and preserves all native scope failures.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The concrete resource recipe.",
+       "inferred": false,
+       "name": "O",
+       "type": "_OpenScope",
+       "variadic": false
+      },
+      {
+       "description": "A borrowing native-use callback expressed through library contracts.",
+       "inferred": false,
+       "name": "F",
+       "type": "BorrowCallContract & Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "An IO program yielding F.Result, with the scope's exact error family.",
+      "type": "_IOResource[O, F]"
+     },
+     "signature": "def use_resource[O: _OpenScope, F: BorrowCallContract & Movable & Deinitable](var scope: Resource[O], var function: F) -> _IOResource[O, F] where F.Payload == O.Release.Value and _ErrorCompatible[O.Release.Error, F.Failure] and _OnceBorrowAvailable[F]",
+     "summary": "Defer an entire synchronous native resource scope into its IO error family."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "scope",
+       "type": "Resource[O]",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "O",
+       "type": "_OpenScope",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Borrowing[P, V]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_IOResource[O, _NativeBorrow[P, V, Never, F, False]]"
+     },
+     "signature": "def use_resource[O: _OpenScope, P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](var scope: Resource[O], var function: F) -> _IOResource[O, _NativeBorrow[P, V, Never, F, False]] where P == O.Release.Value",
+     "summary": "Adapt a native borrowing use callback into a deferred resource scope."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "scope",
+       "type": "Resource[O]",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "O",
+       "type": "_OpenScope",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingBorrowing[P, V, X]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_IOResource[O, _NativeBorrow[P, V, X, F, True]]"
+     },
+     "signature": "def use_resource[O: _OpenScope, P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](var scope: Resource[O], var function: F) -> _IOResource[O, _NativeBorrow[P, V, X, F, True]] where P == O.Release.Value and _ErrorCompatible[O.Release.Error, X]",
+     "summary": "Adapt a native use callback with the scope's exact error type."
+    }
+   ],
+   "provider": "effects/io",
    "summary": ""
   },
   "effects.writer": {
