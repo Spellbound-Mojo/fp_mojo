@@ -31,6 +31,8 @@ from fp.data._result import _ResultType
 from fp.callables._views import _UnaryViewable, _BorrowViewable
 from fp.algebra.instances import _OptionalElement
 from fp.callables.protocols import BinaryContract
+from fp.callables._views import _BinaryViewable
+from fp.callables._receiver import _SharedBinaryRef
 from fp.callables.invoke import RepeatableBinary
 from fp.callables.native import _Binary, _RaisingBinary, _NativeBinaryRef
 from std.builtin.rebind import rebind_var
@@ -281,6 +283,11 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """
         return Iter(_zip_with(function^, self._iterator^, other^))
 
+    def zip_with[F: _BinaryViewable, o: ImmOrigin, W: Movable & Deinitable](deinit self, var other: W, ref[o] function: F) -> Iter[ZipWithIterator[_SharedBinaryRef[F, o].First, _SharedBinaryRef[F, o].Second, _SharedBinaryRef[F, o].Out, Self.I, _Source[W], _SharedBinaryRef[F, o]]] where Self.I.Element == _SharedBinaryRef[F, o].First and _Source[W].Element == _SharedBinaryRef[F, o].Second and _SharedBinaryRef[F, o].Error == Never and RepeatableBinary[_SharedBinaryRef[F, o]]:
+        """Lazily combine pairs using native left-to-right zip followed by map.
+        """
+        return Iter(_zip_with(_SharedBinaryRef[F, o](Pointer(to=function)), self._iterator^, other^))
+
     def map_with_index[T: Movable & Deinitable, R: Movable & Deinitable](deinit self, var function: def(var Int, var T) thin -> R, *, start: Int = 0) -> Iter[IndexedMapIterator[T, R, Self.I, def(var Int, var T) thin -> R]] where Self.I.Element == T:
         """Lazily map (index, owned element), using native enumerate then map.
 
@@ -309,6 +316,11 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Lazily map (index, owned element), using native enumerate then map.
         """
         return Iter(_map_with_index(function^, self._iterator^, start=start))
+
+    def map_with_index[F: _BinaryViewable, o: ImmOrigin](deinit self, ref[o] function: F, *, start: Int = 0) -> Iter[IndexedMapIterator[_SharedBinaryRef[F, o].Second, _SharedBinaryRef[F, o].Out, Self.I, _SharedBinaryRef[F, o]]] where Self.I.Element == _SharedBinaryRef[F, o].Second and _SharedBinaryRef[F, o].Error == Never and RepeatableBinary[_SharedBinaryRef[F, o]] and _SharedBinaryRef[F, o].First == Int:
+        """Lazily map (index, owned element), using native enumerate then map.
+        """
+        return Iter(_map_with_index(_SharedBinaryRef[F, o](Pointer(to=function)), self._iterator^, start=start))
 
     def take_while[T: Movable & Deinitable](deinit self, var predicate: def(T) thin -> Bool) -> Iter[TakeWhileIterator[T, Self.I, def(T) thin -> Bool]] where Self.I.Element == T:
         """Yield the initial matching prefix; consume and discard its first rejection.

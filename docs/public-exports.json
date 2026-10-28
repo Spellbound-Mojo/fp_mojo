@@ -13261,6 +13261,10 @@
           {
             "signature": "def zip_with[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable](deinit self, var other: W, var function: F) -> Iter[ZipWithIterator[F.First, F.Second, F.Out, Self.I, _Source[W], F]] where Self.I.Element == F.First and _Source[W].Element == F.Second and F.Error == Never and RepeatableBinary[F]:",
             "sha256": "95848489da8ef4760961aa2c6c9af5d2739280237f96eb1c6b0a8ea17d07e95e"
+          },
+          {
+            "signature": "def zip_with[F: _BinaryViewable, o: ImmOrigin, W: Movable & Deinitable](deinit self, var other: W, ref[o] function: F) -> Iter[ZipWithIterator[_SharedBinaryRef[F, o].First, _SharedBinaryRef[F, o].Second, _SharedBinaryRef[F, o].Out, Self.I, _Source[W], _SharedBinaryRef[F, o]]] where Self.I.Element == _SharedBinaryRef[F, o].First and _Source[W].Element == _SharedBinaryRef[F, o].Second and _SharedBinaryRef[F, o].Error == Never and RepeatableBinary[_SharedBinaryRef[F, o]]:",
+            "sha256": "6cec7a98b0edb74c012eb8729a39d250eeb4ca9667467dfcb10eb7138bf8775d"
           }
         ],
         "map_with_index": [
@@ -13275,6 +13279,10 @@
           {
             "signature": "def map_with_index[F: BinaryContract & Movable & Deinitable](deinit self, var function: F, *, start: Int = 0) -> Iter[IndexedMapIterator[F.Second, F.Out, Self.I, F]] where Self.I.Element == F.Second and F.Error == Never and RepeatableBinary[F] and F.First == Int:",
             "sha256": "58785f3a213aac70ab6ac305c833e40aa1d32a28c75604e0132722d4fd95e2d8"
+          },
+          {
+            "signature": "def map_with_index[F: _BinaryViewable, o: ImmOrigin](deinit self, ref[o] function: F, *, start: Int = 0) -> Iter[IndexedMapIterator[_SharedBinaryRef[F, o].Second, _SharedBinaryRef[F, o].Out, Self.I, _SharedBinaryRef[F, o]]] where Self.I.Element == _SharedBinaryRef[F, o].Second and _SharedBinaryRef[F, o].Error == Never and RepeatableBinary[_SharedBinaryRef[F, o]] and _SharedBinaryRef[F, o].First == Int:",
+            "sha256": "e7f3fc9e07c90e063d1ea96a69c4f248d1fa015055fb70ab9e6e7c9e2f4ff7e4"
           }
         ],
         "first": [
@@ -18294,6 +18302,10 @@
         {
           "signature": "def zip_with[F: BinaryContract & Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable](var function: F, var source: V, var other: W) -> ZipWithIterator[F.First, F.Second, F.Out, _Source[V], _Source[W], F] where _Source[V].Element == F.First and _Source[W].Element == F.Second and F.Error == Never and RepeatableBinary[F]:",
           "sha256": "50c7f32612e3f2a5730aabfee088054de75bf3c50497d782e9b57d383723079f"
+        },
+        {
+          "signature": "def zip_with[F: _BinaryViewable, o: ImmOrigin, V: Movable & Deinitable, W: Movable & Deinitable](ref[o] function: F, var source: V, var other: W) -> ZipWithIterator[_SharedBinaryRef[F, o].First, _SharedBinaryRef[F, o].Second, _SharedBinaryRef[F, o].Out, _Source[V], _Source[W], _SharedBinaryRef[F, o]] where _Source[V].Element == _SharedBinaryRef[F, o].First and _Source[W].Element == _SharedBinaryRef[F, o].Second and _SharedBinaryRef[F, o].Error == Never and RepeatableBinary[_SharedBinaryRef[F, o]]:",
+          "sha256": "b7cfe102ad2435cd48b737badefb7ab88d65b984999331e3fb3266bf56866a3e"
         }
       ],
       "provider": "iteration/indexed"
@@ -18312,6 +18324,10 @@
         {
           "signature": "def map_with_index[F: BinaryContract & Movable & Deinitable, V: Movable & Deinitable](var function: F, var source: V, *, start: Int = 0) -> IndexedMapIterator[F.Second, F.Out, _Source[V], F] where _Source[V].Element == F.Second and F.Error == Never and RepeatableBinary[F] and F.First == Int:",
           "sha256": "a30a51228ebf44a1413343cd41515f9494b4b510dca3a474997f6a274ade07cc"
+        },
+        {
+          "signature": "def map_with_index[F: _BinaryViewable, o: ImmOrigin, V: Movable & Deinitable](ref[o] function: F, var source: V, *, start: Int = 0) -> IndexedMapIterator[_SharedBinaryRef[F, o].Second, _SharedBinaryRef[F, o].Out, _Source[V], _SharedBinaryRef[F, o]] where _Source[V].Element == _SharedBinaryRef[F, o].Second and _SharedBinaryRef[F, o].Error == Never and RepeatableBinary[_SharedBinaryRef[F, o]] and _SharedBinaryRef[F, o].First == Int:",
+          "sha256": "aba253e491799c87ef0dfdbd0b8c552504dc12b901e00dba2f88ddcf3de92137"
         }
       ],
       "provider": "iteration/indexed"

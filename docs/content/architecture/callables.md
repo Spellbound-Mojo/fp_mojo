@@ -128,6 +128,7 @@ An explicit move continues through the operation's owned callback overload.
 |---|---|---|
 | One owned operand | `_UnaryViewable._View[o]` | `_SharedUnaryRef` for a fixed-output Unary, or Kleisli's origin-indexed view |
 | One borrowed operand | `_BorrowViewable._BorrowView[o]` | `_SharedBorrowRef` for a BorrowCallable |
+| Two owned operands | `_BinaryViewable` | `_SharedBinaryRef` for a fixed-output Binary |
 
 Unary Partial, NativeUnary and ordinary Composition use the fixed-output view.
 A unary ordinary composition exposes shared admission only when all its stages
@@ -144,6 +145,15 @@ parameter positions and native signature evidence. They forward to the same
 mapping, filtering, accumulation, recovery and iterator owners used by owned
 callbacks. Admission of an ordinary library Unary or BorrowCallable does not
 implicitly grant this private standard-callback adaptation.
+
+Binary Partial, shared binary Composition and the shared binary forms of
+Flipped and FlippedFunction opt into `_BinaryViewable`. This marker needs no
+output projection: Binary already fixes both operands, output and error.
+The same shared descriptor constructs `_SharedBinaryRef` for indexed mapping
+and zipping. Opting in only standard wrappers preserves custom callables:
+a custom implicit-copy value implementing Binary and MutableBinary must keep
+the owned overload's preference for `call_mut`. A general borrowed Binary
+overload would silently choose its shared `call` instead.
 
 Views carry the exact callback origin through iterators, independent branch
 handles and deferred effects. Output origins are preserved independently:

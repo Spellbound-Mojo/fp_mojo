@@ -2,9 +2,15 @@
 
 Entry points borrow these values and own the resulting fixed-signature view.
 The view carries the original receiver's origin, including through lazy or
-otherwise deferred results. Existing owned Unary callbacks keep their contract.
+otherwise deferred results. Existing owned callbacks keep their contract.
 """
-from fp.callables.protocols import Unary, UnaryContract, BorrowCallable
+from fp.callables.protocols import Unary, UnaryContract, BorrowCallable, Binary
+
+trait _BinaryViewable(Binary):
+    # Fixed-output Binary needs no origin-indexed projection. Opt in only the
+    # standard wrappers: borrowing every Binary would change the established
+    # receiver preference of custom shared/mutable implicit-copy callables.
+    pass
 
 trait _UnaryViewable(UnaryContract, Movable, Deinitable):
     comptime _View[o: ImmOrigin]: Unary

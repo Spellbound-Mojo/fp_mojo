@@ -2,17 +2,21 @@
 from std.builtin.rebind import downcast, rebind_var
 from fp.callables.protocols import BinaryContract, Binary, MutableBinary, OnceBinary
 from fp.callables.invoke import call_once, call_repeated, RepeatableBinary
+from fp.callables._views import _BinaryViewable
 
 
 @fieldwise_init
 struct Flipped[F: BinaryContract & Movable & Deinitable](
     Binary where conforms_to(F, Binary),
+    _BinaryViewable where conforms_to(F, Binary),
     MutableBinary where conforms_to(F, Binary) or conforms_to(F, MutableBinary),
     OnceBinary, Copyable where conforms_to(F, Copyable)
 ):
     """A binary callable called with its two arguments swapped, returned by `flip`.
 
     It has the receiver modes of the callable it wraps.
+    A shared binary wrapper can be reused by name in `zip_with` and
+    `map_with_index`; an explicit move transfers the wrapped callback.
 
     Parameters:
         F: The wrapped callable's type, a `Binary`, `MutableBinary` or `OnceBinary`.
@@ -101,12 +105,13 @@ comptime _FlipFn[R: Movable & Deinitable, E: Movable & Deinitable, A0: Movable &
 @fieldwise_init
 struct FlippedFunction[R: Movable & Deinitable, E: Movable & Deinitable, A0: Movable & Deinitable,
                        A1: Movable & Deinitable, Rs: TypeList[Trait=_Swap, ...]](
-    Copyable, Binary where Rs.length == 0
+    Copyable, Binary where Rs.length == 0, _BinaryViewable where Rs.length == 0
 ):
     """A plain function called with its first two arguments swapped, returned by `flip`.
 
     `flip(f)(a, b, rest...)` calls `f(b, a, rest...)`; the remaining arguments
     are borrowed. With no remaining parameters it is also a `Binary`.
+    That binary form can be reused by name in `zip_with` and `map_with_index`.
 
     Parameters:
         R: The function's result type.

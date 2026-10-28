@@ -106,6 +106,11 @@ captures. Pass `callback^` to transfer it through an owned overload. A custom
 callable's shared receiver protocol alone does not promise this automatic
 adaptation; use the ownership form documented by the operation.
 
+For `zip_with` and `map_with_index`, a two-argument partial, shared binary
+composition or binary `flip` wrapper supports the same named reuse. The
+[indexed mapping example](../reference/iteration.md#prefixes-indexed-mapping-and-consuming-terminals)
+uses one partial in both operations.
+
 <!-- example: docs/examples/callback_reuse.mojo -->
 
 `pending` holds shared borrows of `price` and `affordable` without invoking

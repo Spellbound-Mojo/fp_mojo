@@ -27,6 +27,14 @@ their native exhaustion behavior. `.enumerate(start=0)` and
 `.zip_with(other, function)`; its free counterpart is
 `zip_with(function, source, other)`.
 
+`zip_with` and `map_with_index` can reuse a named two-argument `partial`, shared
+binary `flow`/`compose` chain or binary `flip` wrapper. The example binds the
+scale once in `project`, uses it for two indexed maps, then moves it into a zip.
+Both operands are consumed by the operation; Partial's native target borrows
+them during each call. These callbacks must be non-raising, and the indexed
+callback's first input must be Int. Custom callables retain their existing
+receiver selection and ownership forms.
+
 A named unary `partial` works in `filter`, `filter_not`, `take_while` and
 `drop_while`, in free-function and fluent forms. The example reuses
 `under_three` to select values and then skip a prefix. These predicates borrow

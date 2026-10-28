@@ -10,6 +10,7 @@ def selected(divisor: Int, value: Int) -> Optional[String]:
 
 
 def below(limit: Int, value: Int) -> Bool: return value < limit
+def indexed(scale: Int, index: Int, value: Int) -> Int: return scale * index + value
 
 def report(prefix: String, value: Int) -> NoneType:
     print(prefix, value)
@@ -20,9 +21,8 @@ def main():
     def prefix(value: Int) {mut calls} -> Bool:
         calls += 1
         return value < 3
-    def indexed(var index: Int, var value: Int) -> Int:
-        return 10 * index + value
-    var stream = iterated(range(8)).drop_while(prefix).take(2).map_with_index(indexed, start=1)
+    var project = partial(indexed, 10)
+    var stream = iterated(range(8)).drop_while(prefix).take(2).map_with_index(project, start=1)
     print("before consuming:", calls)
     var values = stream^.to_list()
     print("values:", values, "; predicate calls:", calls)
@@ -40,3 +40,5 @@ def main():
     var show = partial(report, String("item:"))
     iterated(range(1)).for_each(show)
     iterated(range(1, 2)).for_each(show)
+    print("indexed again:", iterated(range(2)).map_with_index(project, start=1).collect_list())
+    print("paired:", iterated(range(2)).zip_with(range(3,5), project^).collect_list())

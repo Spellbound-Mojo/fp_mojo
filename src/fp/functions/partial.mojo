@@ -8,7 +8,7 @@ remaining parameters and capturing targets are written as native closures.
 """
 from std.builtin.rebind import rebind, downcast
 from fp.callables.protocols import Thunk, Unary, Binary, BorrowCallable
-from fp.callables._views import _UnaryViewable, _BorrowViewable
+from fp.callables._views import _UnaryViewable, _BorrowViewable, _BinaryViewable
 from fp.callables._receiver import _SharedUnaryRef, _SharedBorrowRef
 
 
@@ -53,7 +53,8 @@ comptime _Fn[R: Movable & Deinitable, E: Movable & Deinitable, Bs: TypeList[Trai
 struct Partial[R: Movable & Deinitable, E: Movable & Deinitable,
                Bs: TypeList[Trait=_Bound, ...], Rs: TypeList[Trait=_Rest, ...]](
     Copyable, Thunk where Rs.length == 0, Unary where Rs.length == 1, Binary where Rs.length == 2,
-    _UnaryViewable where Rs.length == 1, _BorrowViewable where Rs.length == 1
+    _UnaryViewable where Rs.length == 1, _BorrowViewable where Rs.length == 1,
+    _BinaryViewable where Rs.length == 2
 ):
     """A plain function with copies of its leading arguments, returned by `partial`.
 
@@ -68,6 +69,8 @@ struct Partial[R: Movable & Deinitable, E: Movable & Deinitable,
     also implement `BorrowCallable`: predicates, observers and borrowed-payload
     handlers call the same native function without consuming the payload.
     Selected Pipeline operations can reuse these partials by name.
+    With two remaining arguments, a named partial can also be reused by
+    `zip_with` and `map_with_index`; both remaining native arguments are read.
 
     Parameters:
         R: The function's result type.

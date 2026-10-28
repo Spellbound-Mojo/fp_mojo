@@ -54,32 +54,39 @@ def prefixes(mode):
 def indexed(mode):
     out=''
     for name in ['zip_with','map_with_index']:
-        for kind in ['thin','native','library']:
-            iszip=name=='zip_with'; params=([f'A: {MD}',f'B: {MD}',f'R: {MD}'] if iszip else [f'T: {MD}',f'R: {MD}']) if kind!='library' else [f'F: {callable_protocol("binary")} & {MD}']
+        for kind in ['thin','native','library','view']:
+            shared=callback('binary', 'view').renamed({'C':'F'}) if kind=='view' else None
+            iszip=name=='zip_with'
+            if shared:params=list(shared.parameters)
+            elif kind=='library':params=[f'F: {callable_protocol("binary")} & {MD}']
+            else:params=[f'A: {MD}',f'B: {MD}',f'R: {MD}'] if iszip else [f'T: {MD}',f'R: {MD}']
             a='A' if iszip else 'Int'; b='B' if iszip else 'T';r='R'
-            if kind=='library':a='F.First' if iszip else 'Int';b='F.Second';r='F.Out'
-            cb=f'def(var {a}, var {b}) thin -> {r}' if kind=='thin' else 'F'
+            cb=shared.type if shared else 'F'
+            metadata=callable_metadata('binary', cb) if kind in ('library','view') else None
+            if metadata:a=metadata.inputs[0] if iszip else 'Int';b=metadata.inputs[1];r=metadata.result
+            if kind=='thin':cb=f'def(var {a}, var {b}) thin -> {r}'
             if mode=='free':params+=[f'V: {MD}']
             if iszip:params+=[f'W: {MD}']
             if kind=='native':params+=['//',f'F: _Binary[{a}, {b}, R]' if iszip else 'F: _IndexedBinary[T, R]']
             it='_Source[V]' if mode=='free' else 'Self.I'
             condition=f'{it}.Element == '+(a if iszip else b)
             if iszip:condition+=f' and _Source[W].Element == {b}'
-            if kind=='library':condition+=' and F.Error == Never and RepeatableBinary[F]'+(' and F.First == Int' if not iszip else '')
-            args=['var function: '+cb]
+            if metadata:condition+=f' and {metadata.error} == Never and RepeatableBinary[{cb}]'+(f' and {metadata.inputs[0]} == Int' if not iszip else '')
+            args=[shared.argument if shared else 'var function: '+cb]
             if mode=='free':args+=['var source: V']
             if iszip:args+=['var other: W']
             else:args+=['*','start: Int = 0']
             result=f'ZipWithIterator[{a}, {b}, {r}, {it}, _Source[W], {cb}]' if iszip else f'IndexedMapIterator[{b}, {r}, {it}, {cb}]'
+            value=shared.build if shared else 'function'+('' if kind=='thin' else '^')
             if mode=='free':
                 body='var source_iter = '+('_native_zip(source^, other^)' if iszip else '_enumerate(_OwnedSource(source^), start=start)')+'\n'
-                body+=f'return {result}(function{"" if kind=="thin" else "^"}, source_iter^, False)'
+                body+=f'return {result}({value}, source_iter^, False)'
             else:
                 args.insert(0,'deinit self')
                 # Fluent zip takes the peer before the callback.
-                if iszip:args=['deinit self','var other: W','var function: '+cb]
+                if iszip:args=['deinit self','var other: W',shared.argument if shared else 'var function: '+cb]
                 result='Iter['+result+']'
-                body='return Iter(_'+name+'(function'+('' if kind=='thin' else '^')+', self._iterator^'+(', other^)' if iszip else ', start=start)')+')'
+                body='return Iter(_'+name+'('+value+', self._iterator^'+(', other^)' if iszip else ', start=start)')+')'
             summary='Lazily combine pairs using native left-to-right zip followed by map.' if iszip else 'Lazily map (index, owned element), using native enumerate then map.'
             out+=emit(name,params,args,result,condition,body,summary,'Construction is inert; each output moves its inputs into the non-raising callback.\n'+('Native zip can consume an earlier input before a later one ends.\n' if iszip else '')+'Mapping fuses exhaustion and retains owned captures, move-only results and native origins.',indent='' if mode=='free' else '    ',docs=kind=='thin')
     return out

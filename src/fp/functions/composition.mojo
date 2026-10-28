@@ -9,7 +9,7 @@ from ._stages import (_Plan, _Arity, _StageIn, _Classify, _SharedCapability, _Mu
     _first_thunk_shared, _first_thunk_mut, _first_binary_shared, _first_binary_mut)
 from ._pipeline import _PipelineRunner, _pipe_at
 from fp.callables.native import _Thin0F, _Thin1F, _Thin2F
-from fp.callables._views import _UnaryViewable
+from fp.callables._views import _UnaryViewable, _BinaryViewable
 from fp.callables._receiver import _SharedUnaryRef
 
 from fp.callables.products import _OptionalCell as _Cell
@@ -73,6 +73,7 @@ struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](
     MutableUnary where arity == 1 and _AllMutable[Fs],
     OnceUnary where arity == 1 and _AllOnce[Fs],
     Binary where arity == 2 and _AllShared[Fs],
+    _BinaryViewable where arity == 2 and _AllShared[Fs],
     MutableBinary where arity == 2 and _AllMutable[Fs],
     OnceBinary where arity == 2 and _AllOnce[Fs],
 ):
@@ -92,6 +93,8 @@ struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](
     the existing shared receiver view. Use an explicit move to transfer the
     stages, including into deferred results. Mutable and consuming-only chains
     retain their existing owned admission.
+    Shared binary chains can be reused by name in `zip_with` and
+    `map_with_index`, with the same retained callback lifetime.
 
     Parameters:
         reverse: True for `compose`, whose stages run right to left.

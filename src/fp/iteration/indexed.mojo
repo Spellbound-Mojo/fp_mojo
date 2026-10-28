@@ -3,6 +3,8 @@ from std.iter import Iterator, _ZipIterator, _Enumerate, enumerate as _enumerate
 from std.builtin.rebind import downcast
 from fp.callables.native import _Binary
 from fp.callables.protocols import BinaryContract
+from fp.callables._views import _BinaryViewable
+from fp.callables._receiver import _SharedBinaryRef
 from fp.callables.invoke import RepeatableBinary
 from ._advance import _Source
 from ._native import _OwnedSource, _native_zip
@@ -71,6 +73,12 @@ def zip_with[F: BinaryContract & Movable & Deinitable, V: Movable & Deinitable, 
     var source_iter = _native_zip(source^, other^)
     return ZipWithIterator[F.First, F.Second, F.Out, _Source[V], _Source[W], F](function^, source_iter^, False)
 
+def zip_with[F: _BinaryViewable, o: ImmOrigin, V: Movable & Deinitable, W: Movable & Deinitable](ref[o] function: F, var source: V, var other: W) -> ZipWithIterator[_SharedBinaryRef[F, o].First, _SharedBinaryRef[F, o].Second, _SharedBinaryRef[F, o].Out, _Source[V], _Source[W], _SharedBinaryRef[F, o]] where _Source[V].Element == _SharedBinaryRef[F, o].First and _Source[W].Element == _SharedBinaryRef[F, o].Second and _SharedBinaryRef[F, o].Error == Never and RepeatableBinary[_SharedBinaryRef[F, o]]:
+    """Lazily combine pairs using native left-to-right zip followed by map.
+    """
+    var source_iter = _native_zip(source^, other^)
+    return ZipWithIterator[_SharedBinaryRef[F, o].First, _SharedBinaryRef[F, o].Second, _SharedBinaryRef[F, o].Out, _Source[V], _Source[W], _SharedBinaryRef[F, o]](_SharedBinaryRef[F, o](Pointer(to=function)), source_iter^, False)
+
 def map_with_index[T: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable](var function: def(var Int, var T) thin -> R, var source: V, *, start: Int = 0) -> IndexedMapIterator[T, R, _Source[V], def(var Int, var T) thin -> R] where _Source[V].Element == T:
     """Lazily map (index, owned element), using native enumerate then map.
 
@@ -104,4 +112,10 @@ def map_with_index[F: BinaryContract & Movable & Deinitable, V: Movable & Deinit
     """
     var source_iter = _enumerate(_OwnedSource(source^), start=start)
     return IndexedMapIterator[F.Second, F.Out, _Source[V], F](function^, source_iter^, False)
+
+def map_with_index[F: _BinaryViewable, o: ImmOrigin, V: Movable & Deinitable](ref[o] function: F, var source: V, *, start: Int = 0) -> IndexedMapIterator[_SharedBinaryRef[F, o].Second, _SharedBinaryRef[F, o].Out, _Source[V], _SharedBinaryRef[F, o]] where _Source[V].Element == _SharedBinaryRef[F, o].Second and _SharedBinaryRef[F, o].Error == Never and RepeatableBinary[_SharedBinaryRef[F, o]] and _SharedBinaryRef[F, o].First == Int:
+    """Lazily map (index, owned element), using native enumerate then map.
+    """
+    var source_iter = _enumerate(_OwnedSource(source^), start=start)
+    return IndexedMapIterator[_SharedBinaryRef[F, o].Second, _SharedBinaryRef[F, o].Out, _Source[V], _SharedBinaryRef[F, o]](_SharedBinaryRef[F, o](Pointer(to=function)), source_iter^, False)
 # --- end iterator expansion syntax ---

@@ -1,8 +1,20 @@
 """Fixed-arity calls whose error is widened to a caller's common error type."""
 from std.builtin.rebind import downcast, rebind_var, rebind
 from fp._internal.errors import _ErrorCompatible, _propagate_error
-from fp.callables.protocols import UnaryContract, Unary, MutableUnary, OnceUnary, BinaryContract, OnceBinary, MutableBinary, ThunkContract, OnceThunk, BorrowCallContract, BorrowCallable, BorrowOnceCallable
+from fp.callables.protocols import UnaryContract, Unary, MutableUnary, OnceUnary, BinaryContract, Binary, OnceBinary, MutableBinary, ThunkContract, OnceThunk, BorrowCallContract, BorrowCallable, BorrowOnceCallable
 from fp.callables.invoke import RepeatableUnary, RepeatableBinary, RepeatableThunk, call_once, call_repeated, invoke_borrowed, invoke_borrowed_once
+
+
+@fieldwise_init
+struct _SharedBinaryRef[F: Binary, o: ImmOrigin](Binary, ImplicitlyCopyable):
+    """Retain a shared receiver while transferring both operands to its call."""
+    var function: Pointer[Self.F, Self.o]
+    comptime First = Self.F.First
+    comptime Second = Self.F.Second
+    comptime Out = Self.F.Out
+    comptime Error = Self.F.Error
+    def call(self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out:
+        return self.function[].call(first^, second^)
 
 
 @fieldwise_init
