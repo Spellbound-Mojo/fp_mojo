@@ -193,7 +193,7 @@
       ],
       "status": "selected",
       "families": "Functor; Filterable, Monad or FunctorFilter where required",
-      "callbacks": "Native closures and thin pointers; library callable contracts retain receiver modes. Shared callable chains are borrowed directly by map, flat_map, filter_map. Named shared unary flow/compose chains use the same borrowed view admission.",
+      "callbacks": "Native closures and thin pointers; library callable contracts retain receiver modes. Shared callable chains are borrowed directly by map, flat_map, filter_map. Named shared unary flow/compose chains use the same borrowed view admission. Unary partial applications are borrowed without copying their stored prefix; each invocation retains its documented bound-value copies.",
       "ownership": "Transforms consume payloads; predicates and observers borrow them.",
       "errors": "Exact family/callback error; stored errors retain their family.",
       "timing": "Family-controlled, including deferred execution.",
@@ -216,7 +216,12 @@
         "tests/runtime/test_context_composition_views.mojo",
         "tests/ownership/test_context_composition_views_ownership.mojo",
         "tests/compile_fail/composition_view_lifetime.mojo",
-        "tests/compile_fail/composition_view_mutable.mojo"
+        "tests/compile_fail/composition_view_mutable.mojo",
+        "docs/examples/partial.mojo",
+        "tests/runtime/test_context_partial_views.mojo",
+        "tests/ownership/test_context_partial_views_ownership.mojo",
+        "tests/compile_fail/partial_view_lifetime.mojo",
+        "tests/compile_fail/partial_view_origin.mojo"
       ]
     },
     {

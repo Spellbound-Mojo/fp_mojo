@@ -42983,7 +42983,7 @@
      "name": "Error"
     }
    ],
-   "description": "Call it with the remaining arguments, which are borrowed. Each call passes\nthe function a fresh copy of every bound argument, so the stored values are\nnever consumed or changed. With 0, 1 or 2 remaining arguments it is also a\n`Thunk`, `Unary` or `Binary`, which library higher-order functions accept.",
+   "description": "Call it with the remaining arguments, which are borrowed. Each call passes\nthe function a fresh copy of every bound argument, so the stored values are\nnever consumed or changed. With 0, 1 or 2 remaining arguments it is also a\n`Thunk`, `Unary` or `Binary`, which library higher-order functions accept.\nA named unary Partial can be reused as a Pipeline or Result callback without\ncopying its stored prefix for admission. Each invocation still supplies the\nnative function with fresh copies of the bound arguments. An explicit move\ntransfers the Partial, including into deferred computations.",
    "fields": [
     {
      "description": "The stored function.",
@@ -43121,7 +43121,7 @@
     }
    ],
    "provider": "functions/partial",
-   "signature": "struct Partial[R: Movable & Deinitable, E: Movable & Deinitable, Bs: TypeList[Trait=_Bound, ...], Rs: TypeList[Trait=_Rest, ...]](Copyable, Thunk where Rs.length == 0, Unary where Rs.length == 1, Binary where Rs.length == 2)",
+   "signature": "struct Partial[R: Movable & Deinitable, E: Movable & Deinitable, Bs: TypeList[Trait=_Bound, ...], Rs: TypeList[Trait=_Rest, ...]](Copyable, Thunk where Rs.length == 0, Unary where Rs.length == 1, Binary where Rs.length == 2, _UnaryViewable where Rs.length == 1)",
    "summary": "A plain function with copies of its leading arguments, returned by `partial`.",
    "traits": [
     "Binary",
@@ -43130,7 +43130,8 @@
     "Thunk",
     "ThunkContract",
     "Unary",
-    "UnaryContract"
+    "UnaryContract",
+    "_UnaryViewable"
    ]
   },
   "functions.Piped": {

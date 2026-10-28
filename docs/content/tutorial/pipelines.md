@@ -264,6 +264,12 @@ Use `chain^` when transferring its stages to an operation. A deferred operation
 retains a borrowed chain until it runs or is discarded. Mutable and
 consuming-only chains still require ownership; they are not implicitly shared.
 
+Unary `partial` values support the same reuse: bind a prefix once, then pass the
+callback by name to several operations. Each invocation still copies the bound
+values as specified by `partial`; passing the callback does not copy its stored
+prefix. The [partial application example](../reference/functions.md#bind-leading-arguments-with-partial)
+shows a reusable multiplier.
+
 A wrapper generic over a family should forward its public
 operation contract; the [wrapper guide](../guides/generic-wrappers.md) covers
 that advanced case. Ordinary fluent calls need no such contract annotations.

@@ -1,5 +1,5 @@
 """Bind leading arguments of a native function; bind keywords with a closure."""
-from fp.functions import partial
+from fp.functions import partial, pipeline
 
 
 def twice(var x: Int) -> Int:
@@ -17,6 +17,8 @@ def main() raises:
     print(doubled())  # 8
     var triple = partial(scale, 3)
     print(triple(5))  # 15
+    print("mapped:", pipeline(Optional(4)).map(triple).get_or(0))
+    print("reused:", pipeline(6).then(triple).get())
 
     # Keyword binding is a native closure with a capture list.
     var base = 2

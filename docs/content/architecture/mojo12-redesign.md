@@ -3787,3 +3787,13 @@ when no Kleisli family metadata is present. Ordinary composition therefore
 needs no new family inference or target-selection mechanism. Non-unary,
 mutable-only and consuming-only compositions do not expose the shared view;
 their existing calls and ownership requirements remain in place.
+
+### Shared unary partial callbacks
+
+Partial exposes `_UnaryViewable` only when one argument remains. Like shared
+Composition, it returns the existing `_SharedUnaryRef`; all execution stays in
+Partial's current `_call` boundary. The factory still copies each bound value
+once, and every native invocation still makes its documented prefix copies.
+Borrowed admission adds no copy of the stored Partial itself. Explicit moves,
+temporary values and deferred receiver lifetimes retain their normal ownership.
+Zero- and multiple-argument partial calls keep their existing protocols.

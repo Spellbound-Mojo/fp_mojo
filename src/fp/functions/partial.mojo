@@ -8,6 +8,8 @@ remaining parameters and capturing targets are written as native closures.
 """
 from std.builtin.rebind import rebind, downcast
 from fp.callables.protocols import Thunk, Unary, Binary
+from fp.callables._views import _UnaryViewable
+from fp.callables._receiver import _SharedUnaryRef
 
 
 comptime _Bound = Copyable & Deinitable
@@ -50,7 +52,8 @@ comptime _Fn[R: Movable & Deinitable, E: Movable & Deinitable, Bs: TypeList[Trai
 @fieldwise_init
 struct Partial[R: Movable & Deinitable, E: Movable & Deinitable,
                Bs: TypeList[Trait=_Bound, ...], Rs: TypeList[Trait=_Rest, ...]](
-    Copyable, Thunk where Rs.length == 0, Unary where Rs.length == 1, Binary where Rs.length == 2
+    Copyable, Thunk where Rs.length == 0, Unary where Rs.length == 1, Binary where Rs.length == 2,
+    _UnaryViewable where Rs.length == 1
 ):
     """A plain function with copies of its leading arguments, returned by `partial`.
 
@@ -58,6 +61,10 @@ struct Partial[R: Movable & Deinitable, E: Movable & Deinitable,
     the function a fresh copy of every bound argument, so the stored values are
     never consumed or changed. With 0, 1 or 2 remaining arguments it is also a
     `Thunk`, `Unary` or `Binary`, which library higher-order functions accept.
+    A named unary Partial can be reused as a Pipeline or Result callback without
+    copying its stored prefix for admission. Each invocation still supplies the
+    native function with fresh copies of the bound arguments. An explicit move
+    transfers the Partial, including into deferred computations.
 
     Parameters:
         R: The function's result type.
@@ -74,6 +81,13 @@ struct Partial[R: Movable & Deinitable, E: Movable & Deinitable,
     """The stored function."""
     var bound: Tuple[*Self.Bs]
     """The bound arguments."""
+
+    # The existing shared receiver retains this prefix through deferred calls.
+    comptime _View[o: ImmOrigin] = _SharedUnaryRef[downcast[Self, Unary], o]
+
+    def _unary_view[o: ImmOrigin](ref[o] self) -> Self._View[o]:
+        comptime assert Self.Rs.length == 1
+        return Self._View[o](Pointer(to=self))
 
     def __call__(self, *rest: *Self.Rs) raises Self.E -> Self.R:
         """Call the function with the bound arguments followed by `rest`.

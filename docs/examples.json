@@ -196,7 +196,7 @@
       "stdout": "total: 9\nerrors: -2 must be positive; -4 must be positive;\nerrors: -3 must be positive; -5 must be positive;\nvalues: 1 4 9\npair: 2 3\nerrors: -3 must be positive; -4 must be positive;\n"
     },
     "docs/examples/partial.mojo": {
-      "stdout": "8\n8\n15\n18\n"
+      "stdout": "8\n8\n15\nmapped: 12\nreused: 18\n18\n"
     },
     "docs/examples/pipeline_quickstart.mojo": {
       "stdout": "42\n"

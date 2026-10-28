@@ -627,6 +627,14 @@ explicit `Piped[T=Int]` and `Piped[Int].T` become `Piped[Value=Int]` and
 
 ## Bind leading arguments with partial
 
+A named unary partial can be passed directly to Pipeline and Result callbacks,
+then reused in another operation. Admission borrows its stored prefix; each
+native invocation still receives fresh copies of the bound values, preserving
+the partial's original contract. Use `callback^` to transfer the partial to an
+operation. Deferred operations retain its borrow until they run or are
+discarded. A partial returning a native Optional, Result or List can also
+supply the inferred target for `traverse` or `then`.
+
 <!-- example: docs/examples/partial.mojo -->
 
 `partial(twice, value)` copies `4` when it is built and passes a fresh copy on
