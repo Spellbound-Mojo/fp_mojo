@@ -3662,3 +3662,23 @@ Result error-type replacement and custom families' selected error channels,
 including mapping-only rejection and deferred transformer timing. Repeated
 families still require repeatable handlers. Move-only failures, captures,
 returned origins and exact native errors follow the same contract as before.
+
+### Shared handlers in conditional recovery
+
+`recover_if` and `or_else_if` borrow the same shared handler views as their
+unconditional counterparts. The predicate remains a borrowing callable; only
+the matching handler consumes the error. Selected pipeline admission delegates
+to `RecoverIfContract` and `OrElseIfContract`, including receiver repeatability,
+native error compatibility and the family's unmatched-error construction.
+
+Direct Result syntax generates view-forwarding overloads from the same shared
+callback description. They adapt the predicate and handler to the existing
+Result conditional owner; they do not duplicate its selection, ownership or
+error checks. Deferred recovery retains the handler's borrow until execution
+or disposal. An explicit move still transfers the handler, including cleanup
+on success, nonmatch or abandonment.
+
+Intrinsic Result `recover` and conditional recovery use the same views when
+the selected family has neither stored-error capability. The existing negative
+capability proofs keep this convenience from bypassing a mapping-only family
+or a selected transformer layer.

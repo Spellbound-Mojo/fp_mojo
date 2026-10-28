@@ -48,9 +48,9 @@ def main():
         Result[Int, String](Err(String("missing"))),
         Result[Int, String](Err(String("denied"))),
     ]
-    var selective = pipeline[ResultT[ListFamily, String]](failures^).recover_if(is_missing, fallback).get()
+    var selective = pipeline[ResultT[ListFamily, String]](failures^).recover_if(is_missing, restore).get()
     print("selected:", selective[0]._ok().value, "; kept:", selective[1]._err().value)
-    var retried = pipeline(fail[Errors, Int](String("missing"))).or_else_if(is_missing, retry).get()
+    var retried = pipeline(fail[Errors, Int](String("missing"))).or_else_if(is_missing, retrying).get()
     print("selected retry:", retried._ok().value)
 
     var inspected = pipeline(fail[Errors, Int](String("original"))).tap_err(recovery_observer).get()

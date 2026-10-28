@@ -23,7 +23,8 @@ def methods(piped=False):
         conditional, selective = operation.conditional, operation.selective
         mode = primary.mode
         kinds = ('library', 'pure', 'raising')
-        combinations = product(kinds, kinds) if conditional else ((k, None) for k in kinds)
+        handler_kinds = kinds + (('view',) if selective and not piped else ())
+        combinations = product(kinds, handler_kinds) if conditional else ((k, None) for k in kinds)
         for kind, other in combinations:
             t, e = ('T', 'Failure') if piped else ('Self.T', 'Self.E')
             cb = callback(mode, kind, primary.argument)
@@ -96,7 +97,7 @@ def methods(piped=False):
                 body = f'return _result_transform[{t}, {e}, {t}, {e}, {cb.type}, False, True, True]({builds}, self^)'
             else:
                 raise ValueError(f'No Result implementation for {name}')
-            if selective and other != 'library':
+            if selective and other not in ('library', 'view'):
                 if piped:
                     effect = '[Y=Y]' if other == 'raising' else ''
                     body = f'return Piped(rebind_var[{source}](self.value^).{name}{effect}({cb.build}, function))'
@@ -134,7 +135,7 @@ def methods(piped=False):
             doc = summary
             if kind == 'library' and other in (None, 'library'):
                 doc += '\n\n        '+detail+' Native errors propagate unchanged; they never become stored Err values. Native callbacks are borrowed in place; library callbacks are consumed and use their declared receiver mode.'
-                if name == 'recover' and not piped:
+                if name in ('recover', 'recover_if', 'or_else_if') and not piped:
                     doc += ' Shared callable chains may instead be borrowed by passing their name; an explicit move retains the consuming form.'
                 doc += '\n\n        Parameters:\n'
                 if piped: doc += '            T: The Result success type, including its origins.\n            Failure: The stored error type, including its origins.\n'

@@ -33,6 +33,9 @@ for lazy defaults, ownership and native error selection.
 reusable shared Kleisli handlers without copying their captures. They run only
 on `Err`; a successful value skips the handler. Passing `handler^` instead
 transfers ownership, including disposal when the handler is skipped.
+`recover_if(predicate, handler)` and `or_else_if(predicate, handler)` reuse
+these handlers for matching errors. Their predicate borrows the stored error,
+and a nonmatch retains it without calling the handler.
 
 `raise_on_err()` returns the success or raises the stored error with its exact
 type. This also finishes a Result pipeline directly; it consumes the carrier

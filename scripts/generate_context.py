@@ -984,7 +984,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
     for operation in error_operations("conditional"):
         primary, secondary = operation.callbacks
         predicates = native_callbacks(primary.mode, primary.input("Self.I.Element[Self.V]", family + ".Failure"), primary.argument, result_register=True)
-        handlers = list(native_callbacks(secondary.mode, secondary.input("Self.I.Element[Self.V]", family + ".Failure"), secondary.argument, second=True))
+        handlers = list(native_callbacks(secondary.mode, secondary.input("Self.I.Element[Self.V]", family + ".Failure"), secondary.argument, second=True, view=True))
         for p, h in product(predicates, handlers):
             contract_name = "OrElseIfContract" if operation.effect else "RecoverIfContract"
             contract = f"{contract_name}[{family}, Self.V, {p['adapter_type']}, {h['adapter_type']}]"
@@ -994,7 +994,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
             # library forwards. Native error selection and ABI evidence remain
             # at the native admission boundary.
             for cb in (p, h):
-                if cb["adapter_type"] not in ("C", "G"):
+                if cb["is_native"]:
                     conditions += cb["conditions"]
             error = contract + ".Error"
             prelude = p.get("prelude", "") + h.get("prelude", "")
@@ -1130,10 +1130,10 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         summary, detail = operation.documentation
         two = len(operation.callbacks) == 2
         primary = operation.callbacks[0]
-        left = list(native_callbacks(primary.mode, primary.input(T, Err, whole=Source), primary.argument, library=name not in ("or_else", "tap_err"), result_register=True if operation.conditional else None))
+        left = list(native_callbacks(primary.mode, primary.input(T, Err, whole=Source), primary.argument, library=name not in ("or_else", "tap_err"), result_register=True if operation.conditional else None, view=name == "recover"))
         if two:
             secondary = operation.callbacks[1]
-            right = native_callbacks(secondary.mode, secondary.input(T, Err, whole=Source), secondary.argument, second=True)
+            right = native_callbacks(secondary.mode, secondary.input(T, Err, whole=Source), secondary.argument, second=True, view=operation.selective)
             combinations = product(left, right)
         else:
             combinations = ((cb, None) for cb in left)

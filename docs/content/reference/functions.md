@@ -177,6 +177,11 @@ callbacks. These methods support `ApplicativeError` families, including
 Validation and deferred transformers, and preserve the selected family for
 subsequent fluent calls. Deferred callbacks execute when the action runs.
 
+The handler may be a named shared Kleisli chain, reused across conditional and
+unconditional recovery. Direct Result methods support the same calls. The
+predicate keeps its borrowing convention; the shared handler still consumes
+only a matching error. Passing `handler^` transfers its captures instead.
+
 <!-- example: docs/examples/selected_conditional_recovery.mojo -->
 
 `ensure(predicate, make_error)` validates each success through the selected
@@ -602,7 +607,7 @@ overrides that choice. Direct `Result.map(chain)` and
 `Pipeline.map`, `flat_map`, `filter_map`, `traverse`, `par_traverse`,
 `traverse_filter`, `flat_traverse`, `traverse_void`, `find_map`,
 `find_map_effect`, `fold_map_effect`, `sum_by_effect`, `then`, `recover`,
-`or_else` and `value_or` borrow shared
+`or_else`, `value_or`, `recover_if` and `or_else_if` borrow shared
 chains directly. Passing `chain^` instead transfers ownership when the
 selected operation admits a consuming callback. For example,
 `pipeline[Reader[Int]](action^).map(chain)` retains a borrow until execution,
