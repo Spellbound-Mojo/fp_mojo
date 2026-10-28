@@ -367,7 +367,7 @@ the documented `@always_inline` requirement or use explicit mutable state.
 ## Current limits
 
 - Capture binds up to eight owned positional operands. Mixed borrow/mutable
-  conventions and calls with a homogeneous keyword pack support at most two
+  conventions and calls with a homogeneous keyword pack support at most three
   positional operands. Fixed named arguments, omitted defaults and calls beyond
   those limits use a native zero-argument closure or an existing consuming callable.
 - A stored keyword pointer must name its pack `kwargs` in its explicit native
@@ -3698,3 +3698,20 @@ their existing inference boundary. There is no new branch engine or error
 conversion: only the original outcome chooses a handler, including when that
 handler returns a stored failure. Borrowed chains keep their captures and
 deferred origins; explicit moves retain disposal of inactive handlers.
+
+### Three-argument native capture
+
+Capture's finite native convention description now covers three positional
+operands, with or without a homogeneous keyword pack. The argument bundle
+still binds shared, exclusive and owned slots before admitting the callback.
+Stored pointers retain their native ABI, and each read slot has a distinct
+inference witness so independent register types cannot accidentally unify.
+
+The existing storage-field description generates construction, movement and
+disposal. Mixed and keyword calls use the shared native dispatcher; larger
+all-owned calls without keywords retain the existing tuple invocation adapter.
+Every call still reaches `_BoundThunk` and `attempt_once`, so no catching,
+error conversion or ownership engine is duplicated. Abandoning a bundle drops
+its owned payloads and keyword values while releasing its borrowed slots.
+Returned values and captured errors retain their origins, and captured errors
+do not roll back mutations already performed by the callback.

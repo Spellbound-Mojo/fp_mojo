@@ -34,7 +34,7 @@
       "stdout": "generic pipeline: 3; error: -7\n"
     },
     "docs/examples/capture_arguments.mojo": {
-      "stdout": "books: 41\ninvalid quantity\n"
+      "stdout": "books: 41\ninvalid quantity\npurchased books ; balance: 6\n"
     },
     "docs/examples/capture_context.mojo": {
       "stdout": "ready\npaid: 6\ndeclined: -2\nsaved state: 15\n"

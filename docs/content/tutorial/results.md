@@ -277,8 +277,13 @@ The invoice receives four arguments and returns either its receipt or the exact
 String it raises. `value_or(explain)` renders either outcome as a plain String.
 Argument binding does not invoke the callback; `run` does.
 
-Mixed borrow/mutable conventions support up to two positional operands. A
-homogeneous native keyword pack can follow at most two positional operands. An empty pack needs `kwargs[K=Int]()` or a typed dictionary,
+The purchase binds three different conventions: exclusive access to the
+balance, shared access to the price, and ownership of the item name. Keyword
+fees follow those operands. A raised error is captured without rolling back
+changes the callback already made to the balance.
+
+Mixed borrow/mutable conventions support up to three positional operands. A
+homogeneous native keyword pack can follow at most three positional operands. An empty pack needs `kwargs[K=Int]()` or a typed dictionary,
 because there is no value from which to infer K. Fixed named parameters,
 omitted defaults and calls beyond these limits use a zero-argument closure or
 an existing `OnceThunk`. Returning a Result nests it inside Ok; capture does

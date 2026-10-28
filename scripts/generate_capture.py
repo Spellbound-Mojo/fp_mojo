@@ -28,16 +28,17 @@ MODES = {
     "m": ("mutable", "MutOrigin"),
     "o": ("take", None),
 }
-SHAPES = [()] + [(x,) for x in MODES] + list(product(MODES, repeat=2))
-SHAPES += [("o",) * n for n in range(3, MAX_OWNED + 1)]
+MAX_MIXED = 3
+SHAPES = [shape for n in range(MAX_MIXED + 1) for shape in product(MODES, repeat=n)]
+SHAPES += [("o",) * n for n in range(MAX_MIXED + 1, MAX_OWNED + 1)]
 ARGUMENT_TYPES = ("A", "B", *(f"A{i}" for i in range(2, MAX_OWNED)))
 ARGUMENT_NAMES = ("first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth")
 
 
 def keyword_shapes(shape):
-    # Keep mixed conventions and keyword packs at their established boundary.
+    # Mixed conventions and keyword packs share one finite native boundary.
     # Larger owned calls reuse the native tuple adapter without a new ABI.
-    return (False, True) if len(shape) <= 2 else (False,)
+    return (False, True) if len(shape) <= MAX_MIXED else (False,)
 
 
 def tag(shape, kw=False):
@@ -136,7 +137,7 @@ def native(shape, kw):
     ]
     shape_type = storage_type(shape, kw)
     header = f'def _invoke_{nm}[{", ".join(ps)}](function: F, var arguments: {shape_type}) raises E -> R:\n'
-    if len(shape) > 2:
+    if len(shape) > 2 and all(m == "o" for m in shape) and not kw:
         # The existing n-ary boundary owns tuple extraction and native calls.
         # Capture only binds its arguments and adds the canonical catch boundary.
         types = list(ARGUMENT_TYPES[: len(shape)])
@@ -173,7 +174,7 @@ def transitions(shape, kw, *, stored):
         return ""
     out = []
     type_name = storage_type if stored else typename
-    if len(shape) <= 2:
+    if len(shape) <= MAX_MIXED:
         target = type_name(shape, True, "Self.").replace("Self.K", "K")
         if stored:
             values = [field.transfer("self.") for field in fields(shape)] + ["values^"]
@@ -184,7 +185,7 @@ def transitions(shape, kw, *, stored):
             f"    def kwargs[K: {MD}, //](deinit self, /, var **values: K) -> {target}:\n        return {construct}\n\n"
         ]
     modes = {}
-    if len(shape) < 2:
+    if len(shape) < MAX_MIXED:
         modes = MODES
     elif all(m == "o" for m in shape) and len(shape) < MAX_OWNED:
         modes = {"o": MODES["o"]}
@@ -270,8 +271,8 @@ def builder(shape, kw):
     # the selected-error closure signature. It retains the same ABI evidence
     # as inferred-error thin calls, including generic selected error contexts.
     operands = [
-        Operand("Self." + c, m, read_parameter="P" if c == "A" else "Q")
-        for c, m in zip(ARGUMENT_TYPES, shape)
+        Operand("Self." + c, m, read_parameter="P" if i == 0 else "Q" if i == 1 else f"P{i}")
+        for i, (c, m) in enumerate(zip(ARGUMENT_TYPES, shape))
     ]
     for native_kind in ("pure", "raising", "never"):
         raising = native_kind != "pure"
@@ -489,7 +490,7 @@ def document(text):
     before, public = text[:pos], text[pos:]
     public = public.replace(
         "struct Capture[E: Movable & Deinitable = Error]:\n",
-        'struct Capture[E: Movable & Deinitable = Error]:\n    """Select native errors, bind arguments, and capture one call as a Result.\n\n    `Capture[E].mutable(state).take(value^).run(callback)` fixes the error type,\n    argument types and ownership before callback inference. Use `borrow` for\n    shared access, `mutable` for exclusive access, and `take` for consumption.\n    Up to two positional operands can be followed by `kwargs`. `args` binds\n    zero to eight consumed operands, or extend an owned bundle with `take`. The bundle is movable and runs once.\n    An unused bundle destroys its owned arguments without calling anything.\n\n    Construct `Capture[E]()` before direct `run` or `stateful` admission.\n    This fixes E before a native callback is matched. A reusable context such\n    as `var capture = Capture[E]()` also provides `capture.args(...)`,\n    `capture.borrow(...)`, `capture.mutable(...)`, `capture.take(...)` and\n    `capture.kwargs(...)`; it stores no arguments and is reusable after errors.\n\n    Pure functions produce `Result[R, Never]`; raising functions retain E.\n    No-value callbacks return `Result[None, E]`. Native callbacks are borrowed\n    for the call; OnceThunk owners are consumed and retain their own error.\n    Empty keyword packs require K or a typed dictionary. `stateful` owns an\n    explicit state value for repeated calls through a plain native function.\n    Existing `attempt` entry points remain available for compatibility.\n\n    Parameters:\n        E: The native callback error type, selected before inference; Error by default.\n    """\n',
+        'struct Capture[E: Movable & Deinitable = Error]:\n    """Select native errors, bind arguments, and capture one call as a Result.\n\n    `Capture[E].mutable(state).take(value^).run(callback)` fixes the error type,\n    argument types and ownership before callback inference. Use `borrow` for\n    shared access, `mutable` for exclusive access, and `take` for consumption.\n    Up to three mixed positional operands can be followed by `kwargs`. `args` binds\n    zero to eight consumed operands, or extend an owned bundle with `take`. The bundle is movable and runs once.\n    An unused bundle destroys its owned arguments without calling anything.\n\n    Construct `Capture[E]()` before direct `run` or `stateful` admission.\n    This fixes E before a native callback is matched. A reusable context such\n    as `var capture = Capture[E]()` also provides `capture.args(...)`,\n    `capture.borrow(...)`, `capture.mutable(...)`, `capture.take(...)` and\n    `capture.kwargs(...)`; it stores no arguments and is reusable after errors.\n\n    Pure functions produce `Result[R, Never]`; raising functions retain E.\n    No-value callbacks return `Result[None, E]`. Native callbacks are borrowed\n    for the call; OnceThunk owners are consumed and retain their own error.\n    Empty keyword packs require K or a typed dictionary. `stateful` owns an\n    explicit state value for repeated calls through a plain native function.\n    Existing `attempt` entry points remain available for compatibility.\n\n    Parameters:\n        E: The native callback error type, selected before inference; Error by default.\n    """\n',
     )
     descriptions = {
         "run": (
@@ -514,7 +515,7 @@ def document(text):
         ),
         "args": (
             "Bind consumed positional arguments for a single call.",
-            "A consumed-once argument bundle; owned positional calls support up to eight operands. Keyword packs support at most two positional operands.",
+            "A consumed-once argument bundle; owned positional calls support up to eight operands. Mixed conventions and keyword packs support at most three positional operands.",
         ),
         "stateful": (
             "Own explicit state for repeated calls through a plain native function.",

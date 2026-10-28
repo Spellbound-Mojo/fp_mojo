@@ -61,7 +61,7 @@ repeated-call state. Pure callbacks retain Never even when E is another type.
 Type-level factories such as `Capture[E].args(...)` remain available.
 `args` accepts up to eight owned positional arguments; an all-owned bundle
 can also append operands with `take`. Mixed conventions and keyword calls
-retain their two-positional-argument limit.
+support up to three positional operands.
 
 <!-- example: docs/examples/capture_context.mojo -->
 
