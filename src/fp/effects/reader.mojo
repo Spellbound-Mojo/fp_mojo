@@ -15,9 +15,9 @@ from fp.algebra.instances import IdentityFamily
 from fp.callables.protocols import (UnaryContract, BinaryContract, ThunkContract, OnceUnary, MutableUnary,
                                     OnceThunk, MutableBinary, BorrowCallContract, BorrowCallable, BorrowOnceCallable)
 from fp.callables.invoke import RepeatableUnary, RepeatableBinary
-from fp.callables._receiver import _MutableUnaryRef, _borrow_once_as, _binary_repeated_as, _unary_once_as, _thunk_once_as
+from fp.callables._receiver import _OnceBorrowAvailable, _MutableUnaryRef, _borrow_once_as, _binary_repeated_as, _unary_once_as, _thunk_once_as
 from fp._internal.errors import _CommonError, _CommonErrorCompatible, _ErrorCompatible
-from .protocols import Local, Listen, _CarrierOp, _LocalLifting, ReaderAction, ReaderFamily, _EndpointCompatible, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
+from .protocols import Project, Local, Listen, _CarrierOp, _LocalLifting, ReaderAction, ReaderFamily, _EndpointCompatible, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
 from ._adapt import _op_as, _reader_run_as, _map_as, _flat_map_as, _map2_lazy_as
 
 from ._transport import _BimapOp, _LocalOp, _ListenOp, _ListenMapped, _ListenPair
@@ -73,6 +73,22 @@ struct _ReaderLift[M: Monad, R: AnyType, V: Movable & Deinitable](ReaderAction, 
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) -> Self.Out[o]:
         comptime assert Self._RunCompatible[o], "run: incompatible Reader recipe at this environment origin"
         return self.value^
+
+
+@fieldwise_init
+struct _ReaderProject[M: Monad, R: AnyType, F: BorrowCallContract & Movable & Deinitable](
+    ReaderAction, Copyable where conforms_to(F, Copyable)
+):
+    var function: Self.F
+    comptime Family = ReaderT[Self.M, Self.R]
+    comptime Env = Self.R
+    comptime Value = Self.F.Result
+    comptime Out[o: ImmOrigin] = Self.M.Pure[Self.Value]
+    comptime Error[o: ImmOrigin] = Self.F.Failure
+    def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Self.Out[o]:
+        comptime assert Self.F.Payload == Self.R
+        var projected = _borrow_once_as[Self.Error[o]](env, self.function^)
+        return _pure[Self.M](projected^)
 
 
 @fieldwise_init
@@ -381,7 +397,7 @@ struct _ReaderHoist[A: Movable & Deinitable, S: ReaderAction, H: _CarrierOp, Tar
         return _op_as[E](self.operation^, base^)
 
 
-struct ReaderT[M: Monad, R: AnyType](ReaderFamily, Local, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError), ErrorMapping where conforms_to(M, ErrorMapping)):
+struct ReaderT[M: Monad, R: AnyType](Project, ReaderFamily, Local, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError), ErrorMapping where conforms_to(M, ErrorMapping)):
     """Reader over the base Monad `M`: a computation borrows an environment `R` when run and returns an `M` carrier.
 
     Every operation returns a concrete computation that stores its inputs; a
@@ -400,6 +416,27 @@ struct ReaderT[M: Monad, R: AnyType](ReaderFamily, Local, _LocalLifting, Applica
         R: The environment's type.
     """
     comptime Family = Self
+    comptime Input = Self.R
+    comptime ProjectCompatible[F: BorrowCallContract & Movable & Deinitable] = F.Payload == Self.R and _OnceBorrowAvailable[F]
+    comptime Projected[F: BorrowCallContract & Movable & Deinitable] = _ReaderProject[Self.M, Self.R, F]
+    comptime ProjectError[F: BorrowCallContract & Movable & Deinitable] = Never
+
+    @staticmethod
+    def project[F: BorrowCallContract & Movable & Deinitable](var function: F) -> Self.Projected[F]:
+        """Construct a deferred projection without copying the selected input.
+
+        Parameters:
+            F: A borrowing callback admitted by ProjectCompatible.
+
+        Args:
+            function: The projection, consumed; it runs once when the action runs.
+
+        Returns:
+            A deferred carrier of F.Result, including its exact error and origins.
+        """
+        comptime assert Self.ProjectCompatible[F], "project: incompatible selected input or callback"
+        return Self.Projected[F](function^)
+
     comptime AskAvailable = conforms_to(Self.R, Copyable)
     comptime Asked = _ReaderAsk[Self.M, downcast[Self.R, Copyable & Deinitable]]
     comptime AskError = Never

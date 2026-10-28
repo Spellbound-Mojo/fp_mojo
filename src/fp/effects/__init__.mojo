@@ -2,8 +2,8 @@
 
 | Family | Value | Additional operations |
 |---|---|---|
-| `ReaderT[M, R]` | A `ReaderAction`: borrows `R` when run, returns `M`'s carrier | `action`, `run`, `lift`, `ask`, `local` |
-| `StateT[M, S]` | A `StateAction`: consumes `S` when run, returns `M`'s carrier of `(A, S)` | `action`, `run`, `lift`, `get`, `put`, `modify` |
+| `ReaderT[M, R]` | A `ReaderAction`: borrows `R` when run, returns `M`'s carrier | `action`, `run`, `lift`, `ask`, `asks`, `local` |
+| `StateT[M, S]` | A `StateAction`: consumes `S` when run, returns `M`'s carrier of `(A, S)` | `action`, `run`, `lift`, `get`, `inspect`, `put`, `modify` |
 | `WriterT[M, W]` | A `WriterValue` wrapping `M`'s carrier of `(W.Value, A)` | `writer`, `run_writer`, `lift`, `tell`, `listen`, `censor` |
 | `OptionalT[M]` | `M`'s carrier of `Optional[A]` | `lift` |
 | `ResultT[M, E]` | `M`'s carrier of `Result[A, E]` | `lift` |
@@ -48,10 +48,11 @@ eager, deferred and third-party bases. A deferred computation can be copied or
 replayed only when its stored inputs and callbacks support it; copying an owner
 does not make a consuming callback reusable.
 """
-from .protocols import Ask, Local, Stateful, Tell, Listen, Censor, ReaderAction, StateAction, ReaderFamily, StateFamily, WriterFamily
+from .protocols import Project, Ask, Local, Stateful, Tell, Listen, Censor, ReaderAction, StateAction, ReaderFamily, StateFamily, WriterFamily
 from .reader import ReaderT, Reader
 from .capabilities import LiftAsk, LiftLocal, LiftStateful, LiftTell, LiftListen, LiftCensor, ask, local, get, put, modify, tell, listen, censor
 from .state import StateT, State
 from .writer import WriterT, Writer, WriterValue, writer, run_writer
 from .layers import OptionalT, ResultT
 from .operations import run, action, lift
+from .projections import LiftProject, asks, inspect

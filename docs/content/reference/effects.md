@@ -45,6 +45,23 @@ retain their existing syntax.
 
 <!-- api: effects -->
 
+## Project without copying an environment or state
+
+`asks[Reader[Config]](projection)` borrows Config and returns only the requested
+value. `inspect[State[S]](projection)` borrows S and keeps the unchanged state.
+Both work when the input is move-only; `ask` and `get` still require copying.
+Callbacks run when the computation runs, and may raise their exact native error.
+The projection result must be independent of the borrowed run input.
+
+`Project` names the selected `Input` and `Family`. Use
+`LiftProject[Layer, Capability]` to target an immediate base, and nest selections
+for deeper stacks. Generic wrappers forward `ProjectCompatible[F]`, return
+`Projected[F]` and raise `ProjectError[F]`. Native borrowing functions and
+closures work directly; a consuming library callback uses BorrowOnceCallable.
+
+<!-- example: docs/examples/borrowed_projections.mojo -->
+
+
 ## Choose whether a failure keeps its state
 
 <!-- example: docs/examples/state_result.mojo -->

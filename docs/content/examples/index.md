@@ -1,5 +1,9 @@
 # Examples
 
+- [Borrowed environment and state projections](../reference/effects.md#project-without-copying-an-environment-or-state) read move-only inputs.
+- [Absence fallback and effectful looping](../reference/algebra.md#fill-absence-and-repeat-effectful-steps) preserve the selected effect.
+- [Non-empty reductions](../reference/iteration.md#use-a-non-empty-source-guarantee) return guaranteed results directly.
+
 - [Composable monoids](../reference/algebra.md#accumulate-several-outputs-together):
   accumulate a count and log together, and merge dictionary totals by key.
 

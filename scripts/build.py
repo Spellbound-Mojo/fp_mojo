@@ -16,7 +16,7 @@ from fp_tools.artifacts import library_inputs, library_binding, manifest
 from fp_tools.cases import CompileCase, audit_case, execute_case
 from fp_tools.runs import RunContext
 from fp_tools.library import precompile
-from fp_tools.runtime import ROOT, accepted, sha, write_json
+from fp_tools.runtime import ROOT, accepted, positive_int, sha, write_json
 
 
 def main():
@@ -24,6 +24,8 @@ def main():
     parser.add_argument('--output')
     parser.add_argument('--format', choices=('source', 'precompiled'), default='source',
                         help='Source package (default) or single-file Mojo bytecode')
+    parser.add_argument('--compile-timeout', type=positive_int, default=60,
+                        help='Seconds per package/client compilation (default: 60)')
     args = parser.parse_args()
     run = RunContext.start(args.output or f'.cache/packages/{uuid.uuid4().hex}',
                            'package')
@@ -53,7 +55,7 @@ def main():
         bytecode = run.folder/'fp.mojoc'
     if created or args.format == 'precompiled':
         built = precompile(bytecode, run.folder/'package.log', include=include,
-                           source=source_package, timeout=60, timed=True,
+                           source=source_package, timeout=args.compile_timeout, timed=True,
                            memory_limit_bytes=memory_limit)
         if args.format == 'precompiled':
             created = accepted(built) and bytecode.is_file()
@@ -65,14 +67,15 @@ def main():
         expected = data('examples.json')['examples'][source]['stdout']
         case = CompileCase.from_source(source, 3, include=str(run.folder),
                                        expected_stdout=expected, compiler_threads=2,
-                                       compile_timeout=60, measured=True,
+                                       compile_timeout=args.compile_timeout, measured=True,
                                        memory_limit_bytes=memory_limit)
         binary = run.binaries/'algebra_core'
         result = execute_case(case, binary, run.folder/'client')
         failures = audit_case(case, result, binary, folder=run.folder)
         records.append(dict(specification=asdict(case), **result, audit_failures=failures))
 
-    report = dict(**run.metadata(), format=args.format, include_directory=str(run.folder),
+    report = dict(**run.metadata(), format=args.format, compile_timeout=args.compile_timeout,
+                  include_directory=str(run.folder),
                   artifact_created=created, compilation=built,
                   **library_binding(run.folder, packaged),
                   verification_scope='Full-package precompilation and native core example at O3; not full library qualification',

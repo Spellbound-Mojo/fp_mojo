@@ -729,3 +729,28 @@ inventory, API documentation and maintained examples for each implemented pass.
 [cats-traverse]: https://github.com/typelevel/cats/blob/813f1bc8e357991caa587149f1a0ff97cd292d08/core/src/main/scala/cats/Traverse.scala
 [cats-traverse-filter]: https://github.com/typelevel/cats/blob/813f1bc8e357991caa587149f1a0ff97cd292d08/core/src/main/scala/cats/TraverseFilter.scala
 [cats-align]: https://github.com/typelevel/cats/blob/813f1bc8e357991caa587149f1a0ff97cd292d08/core/src/main/scala/cats/Align.scala
+
+## Reductions with a non-empty source
+
+`reduce_non_empty` uses the guaranteed first element of a consumed
+`NonEmptyList` as the accumulator and invokes a shared or mutable binary step
+exactly `n - 1` times. It delegates to the ordinary reduction driver and returns
+the final value directly, with no `EmptyReductionError` or Optional to handle.
+The receiver is retained through an exclusive native pointer during the call;
+this avoids copying mutable callback state or converting it to a closure.
+
+`reduce_map[S]` projects every element and combines the results with a
+Semigroup. It shares the optional accumulation policy used by ordinary
+Semigroup reduction: the first mapped result seeds the accumulator, so no
+identity is needed. `combine_non_empty[S]` uses the same operation with identity
+mapping. Mapping runs `n` times, combination `n - 1` times, in source order.
+No intermediate collection is allocated. Native callback and combination errors
+must match or be Never, and the first error stops before another source pull.
+
+`minimum_by_non_empty` and `maximum_by_non_empty` use the ordinary extremum
+kernel. They borrow each element for its key, compute each key once, move the
+selected element and retain the earliest element on ties. Their result is a
+value rather than an Optional. All these operations accept move-only payloads;
+remaining elements, temporary keys and partial accumulators are destroyed on
+failure. Non-emptiness is established by the source type, never assumed for a
+plain List or an arbitrary iterator.

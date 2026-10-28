@@ -73,3 +73,6 @@ from .validation import ValidationFamily
 from .non_empty import NonEmptyListFamily, NonEmptyListSemigroup
 
 from .ior import IorFamily, IorValidationFamily
+
+from .absence import AbsenceContract, or_else_absent, get_or_else_effect
+from .looping import TailRecContract, tail_rec_m

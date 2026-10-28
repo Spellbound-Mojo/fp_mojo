@@ -12,6 +12,46 @@ from fp.algebra.protocols import Monad, Monoid, _Lifting
 from fp.callables.protocols import BorrowCallContract, UnaryContract
 
 
+trait Project:
+    """Borrow a selected environment or state without copying the whole value.
+
+    The projection returns an owned result and leaves the selected input
+    unchanged. Its result and error cannot borrow the temporary input of a
+    run. Captured origins belonging to longer-lived owners remain intact.
+    Reader and State implement this capability independently of ask/get,
+    which require copying. LiftProject selects a capability through a layer.
+    """
+    comptime Family: Monad
+    """The family in which the projection operates."""
+    comptime Input: AnyType
+    """The exact selected environment or state type."""
+    comptime ProjectCompatible[F: BorrowCallContract & Movable & Deinitable]: Bool
+    """Whether F borrows Input and has an available invocation mode."""
+    comptime Projected[F: BorrowCallContract & Movable & Deinitable]: Movable & Deinitable
+    """The concrete family carrier of the projection's result."""
+    comptime ProjectError[F: BorrowCallContract & Movable & Deinitable]: Movable & Deinitable
+    """The exact construction error; deferred execution errors stay deferred."""
+
+    @staticmethod
+    def project[F: BorrowCallContract & Movable & Deinitable](var function: F
+    ) raises Self.ProjectError[F] -> Self.Projected[F]:
+        """Construct one borrowed projection in this family.
+
+        Parameters:
+            F: An admitted borrowing callback.
+
+        Args:
+            function: The projection, consumed.
+
+        Returns:
+            The family's carrier of F.Result, preserving execution timing.
+
+        Raises:
+            The exact native construction error.
+        """
+        ...
+
+
 trait Ask:
     """Read an environment in a selected effect family.
 

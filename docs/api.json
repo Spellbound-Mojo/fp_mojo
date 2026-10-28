@@ -487,6 +487,72 @@
    "summary": "The bound for constructor fields and results: values that can be moved and destroyed.",
    "traits": []
   },
+  "algebra.AbsenceContract": {
+   "aliases": [
+    {
+     "description": "The present Optional payload type.",
+     "name": "Value"
+    },
+    {
+     "description": "The shared absence continuation used by the base bind.",
+     "name": "Continuation"
+    },
+    {
+     "description": "The selected family's bind contract.",
+     "name": "Operation"
+    },
+    {
+     "description": "Exact Optional shape, fallback payload, branch join and receiver admission.",
+     "name": "Compatible"
+    },
+    {
+     "description": "The base carrier of the selected present or fallback value.",
+     "name": "Out"
+    },
+    {
+     "description": "The exact construction error; deferred errors remain deferred.",
+     "name": "Error"
+    }
+   ],
+   "description": "",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The base family carrying an Optional payload.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad",
+     "variadic": false
+    },
+    {
+     "description": "The exact source carrier, including its native origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The fallback factory, consumed or repeated according to the base.",
+     "inferred": false,
+     "name": "F",
+     "type": "ThunkContract & Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "Retain Optional for or_else_absent; remove it for get_or_else_effect.",
+     "inferred": false,
+     "name": "keep_optional",
+     "type": "Bool",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/absence",
+   "signature": "struct AbsenceContract[I: Monad, V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable, keep_optional: Bool = True]",
+   "summary": "Admission and exact types of lazy fallback inside a base Monad.",
+   "traits": []
+  },
   "algebra.AllContract": {
    "aliases": [],
    "description": "Forward `Compatible`, return `Out` and raise `Error` in generic wrappers.\nComponent predicates have the same meaning as AnyContract. Each branch stops\nat its first False; empty input lifts True. Both operations share one contract\nimplementation and preserve the family's execution and ownership rules.",
@@ -6491,6 +6557,50 @@
     "Semigroup"
    ]
   },
+  "algebra.TailRecContract": {
+   "aliases": [
+    {
+     "description": "The final Break payload type, inferred from the step's carrier.",
+     "name": "Value"
+    },
+    {
+     "description": "The exact construction error, separate from deferred run errors.",
+     "name": "Error"
+    },
+    {
+     "description": "Exact state/result shape and the family's fold, map and error admission.",
+     "name": "Compatible"
+    },
+    {
+     "description": "The family's carrier of the final Break payload.",
+     "name": "Out"
+    }
+   ],
+   "description": "",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The Monad whose dependent fold sequences the steps.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad",
+     "variadic": false
+    },
+    {
+     "description": "A repeatable callback from A to I's carrier of ControlFlow[B, A].",
+     "inferred": false,
+     "name": "F",
+     "type": "UnaryContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/looping",
+   "signature": "struct TailRecContract[I: Monad, F: UnaryContract & Movable & Deinitable]",
+   "summary": "Admission and exact types for a step-driven effectful loop.",
+   "traits": []
+  },
   "algebra.TapErrContract": {
    "aliases": [
     {
@@ -8434,6 +8544,188 @@
    "provider": "algebra/_derived",
    "summary": ""
   },
+  "algebra.get_or_else_effect": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The factory, consumed; called only on an absent payload.",
+       "name": "fallback",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The base carrier, consumed.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "Selection and branching follow or_else_absent. The fallback returns an\neffect of A, so the final carrier no longer contains the Optional layer.",
+     "error": "AbsenceContract[I, V, F, False].Error",
+     "parameters": [
+      {
+       "description": "The base carrier of Optional[A].",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "A factory returning a base carrier of A.",
+       "inferred": true,
+       "name": "F",
+       "type": "ThunkContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The base Monad.",
+       "inferred": false,
+       "name": "I",
+       "type": "Monad",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The exact native bind error, preserving deferred execution.",
+     "returns": {
+      "doc": "A carrier of A in the base family.",
+      "type": "AbsenceContract[I, V, F, False].Out"
+     },
+     "signature": "def get_or_else_effect[V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable, //, I: Monad](var fallback: F, var source: V) raises AbsenceContract[I, V, F, False].Error -> AbsenceContract[I, V, F, False].Out where AbsenceContract[I, V, F, False].Compatible",
+     "summary": "Remove Optional by keeping a present value or running a lazy base effect."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "fallback",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "AbsenceContract[I, V, _NativeThunk[R, Never, F, False], False].Error",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Thunk[R]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "AbsenceContract[I, V, _NativeThunk[R, Never, F, False], False].Out"
+     },
+     "signature": "def get_or_else_effect[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad, F: _Thunk[R]](var fallback: F, var source: V) raises AbsenceContract[I, V, _NativeThunk[R, Never, F, False], False].Error -> AbsenceContract[I, V, _NativeThunk[R, Never, F, False], False].Out where AbsenceContract[I, V, _NativeThunk[R, Never, F, False], False].Compatible",
+     "summary": "Select a fallback supplied as an owned native function or closure."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "fallback",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "AbsenceContract[I, V, _NativeThunk[R, E, F, True], False].Error",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingThunk[R, E]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "AbsenceContract[I, V, _NativeThunk[R, E, F, True], False].Out"
+     },
+     "signature": "def get_or_else_effect[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad, F: _RaisingThunk[R, E]](var fallback: F, var source: V) raises AbsenceContract[I, V, _NativeThunk[R, E, F, True], False].Error -> AbsenceContract[I, V, _NativeThunk[R, E, F, True], False].Out where AbsenceContract[I, V, _NativeThunk[R, E, F, True], False].Compatible",
+     "summary": "Select a fallback supplied as an owned native function or closure."
+    }
+   ],
+   "provider": "algebra/absence",
+   "summary": ""
+  },
   "algebra.if_effect": {
    "description": "",
    "kind": "function",
@@ -9721,6 +10013,188 @@
    "provider": "algebra/operations",
    "summary": ""
   },
+  "algebra.or_else_absent": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The factory, consumed; skipped on presence or base failure.",
+       "name": "fallback",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The original base carrier, consumed.",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "Select the base Monad: IdentityFamily for a native Optional, State for a\nState of Optional, or the base of OptionalT. Present payloads move through\nunchanged. Base failures skip the fallback; earlier state and output stay\nvisible. A branching base calls a repeatable factory for each absent branch.\nThis does not recover stored errors or native exceptions.",
+     "error": "AbsenceContract[I, V, F].Error",
+     "parameters": [
+      {
+       "description": "The base carrier of Optional[A].",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "A factory returning a base carrier of Optional[A].",
+       "inferred": true,
+       "name": "F",
+       "type": "ThunkContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The base Monad, not the OptionalT layer over it.",
+       "inferred": false,
+       "name": "I",
+       "type": "Monad",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The base bind's exact native error, at its usual execution boundary.",
+     "returns": {
+      "doc": "The base carrier of the selected Optional.",
+      "type": "AbsenceContract[I, V, F].Out"
+     },
+     "signature": "def or_else_absent[V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable, //, I: Monad](var fallback: F, var source: V) raises AbsenceContract[I, V, F].Error -> AbsenceContract[I, V, F].Out where AbsenceContract[I, V, F].Compatible",
+     "summary": "Use a lazy effectful fallback only for an absent Optional payload."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "fallback",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "AbsenceContract[I, V, _NativeThunk[R, Never, F, False], True].Error",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Thunk[R]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "AbsenceContract[I, V, _NativeThunk[R, Never, F, False], True].Out"
+     },
+     "signature": "def or_else_absent[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad, F: _Thunk[R]](var fallback: F, var source: V) raises AbsenceContract[I, V, _NativeThunk[R, Never, F, False], True].Error -> AbsenceContract[I, V, _NativeThunk[R, Never, F, False], True].Out where AbsenceContract[I, V, _NativeThunk[R, Never, F, False], True].Compatible",
+     "summary": "Select a fallback supplied as an owned native function or closure."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "fallback",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "AbsenceContract[I, V, _NativeThunk[R, E, F, True], True].Error",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingThunk[R, E]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "AbsenceContract[I, V, _NativeThunk[R, E, F, True], True].Out"
+     },
+     "signature": "def or_else_absent[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad, F: _RaisingThunk[R, E]](var fallback: F, var source: V) raises AbsenceContract[I, V, _NativeThunk[R, E, F, True], True].Error -> AbsenceContract[I, V, _NativeThunk[R, E, F, True], True].Out where AbsenceContract[I, V, _NativeThunk[R, E, F, True], True].Compatible",
+     "summary": "Select a fallback supplied as an owned native function or closure."
+    }
+   ],
+   "provider": "algebra/absence",
+   "summary": ""
+  },
   "algebra.product": {
    "description": "",
    "kind": "function",
@@ -9875,6 +10349,188 @@
     }
    ],
    "provider": "algebra/_derived",
+   "summary": ""
+  },
+  "algebra.tail_rec_m": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The callback, consumed; results and state may be move-only.",
+       "name": "step",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The first state, consumed.",
+       "name": "initial",
+       "type": "A",
+       "variadic": false
+      }
+     ],
+     "description": "A step consumes A and returns an effect of ControlFlow[B, A]. Continue\nsupplies the next state; Break supplies the result. Failure or absence\nstops that branch. The family retains its branching order and deferred\nexecution; a branching family may require copies and grow its result set.\nNo trampoline or recursive callback chain is introduced: this delegates\nto the existing effectful fold and its native while loop. Custom families\nmust provide a stack-safe dependent fold to satisfy the same guarantee.",
+     "error": "TailRecContract[I, F].Error",
+     "parameters": [
+      {
+       "description": "The initial state type, inferred with its native origins.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "A shared or mutable step, called only for live Continue branches.",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The selected Monad family, including its existing fold restrictions.",
+       "inferred": false,
+       "name": "I",
+       "type": "Monad",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The exact compatible native error, preserving the family's timing.",
+     "returns": {
+      "doc": "The effect's carrier of B, or its existing failure/absence outcome.",
+      "type": "TailRecContract[I, F].Out"
+     },
+     "signature": "def tail_rec_m[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Monad](var step: F, var initial: A) raises TailRecContract[I, F].Error -> TailRecContract[I, F].Out where A == F.Arg and TailRecContract[I, F].Compatible",
+     "summary": "Repeat effectful steps until Break, using constant native call-stack space."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "step",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "initial",
+       "type": "A",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "TailRecContract[I, NativeUnary[A, R, Never, F, False]].Error",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Unary[A, R]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "TailRecContract[I, NativeUnary[A, R, Never, F, False]].Out"
+     },
+     "signature": "def tail_rec_m[A: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad, F: _Unary[A, R]](var step: F, var initial: A) raises TailRecContract[I, NativeUnary[A, R, Never, F, False]].Error -> TailRecContract[I, NativeUnary[A, R, Never, F, False]].Out where TailRecContract[I, NativeUnary[A, R, Never, F, False]].Compatible",
+     "summary": "Loop with an owned native consuming function or closure."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "step",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "initial",
+       "type": "A",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "TailRecContract[I, NativeUnary[A, R, E, F, True]].Error",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingUnary[A, R, E]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "TailRecContract[I, NativeUnary[A, R, E, F, True]].Out"
+     },
+     "signature": "def tail_rec_m[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad, F: _RaisingUnary[A, R, E]](var step: F, var initial: A) raises TailRecContract[I, NativeUnary[A, R, E, F, True]].Error -> TailRecContract[I, NativeUnary[A, R, E, F, True]].Out where TailRecContract[I, NativeUnary[A, R, E, F, True]].Compatible",
+     "summary": "Loop with an owned native consuming function or closure."
+    }
+   ],
+   "provider": "algebra/looping",
    "summary": ""
   },
   "algebra.traverse": {
@@ -41424,6 +42080,93 @@
     "Local"
    ]
   },
+  "effects.LiftProject": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Layer"
+    },
+    {
+     "description": "",
+     "name": "Family"
+    },
+    {
+     "description": "",
+     "name": "Input"
+    },
+    {
+     "description": "",
+     "name": "Projected"
+    },
+    {
+     "description": "",
+     "name": "ProjectError"
+    },
+    {
+     "description": "",
+     "name": "ProjectCompatible"
+    }
+   ],
+   "description": "Nest selections to cross several layers. The underlying capability owns\nborrowing and execution; lifting adds no copies of the selected input.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "project": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The projection, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.ProjectError[F]",
+      "parameters": [
+       {
+        "description": "An admitted borrowing callback.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The compatible native construction errors of projection and lift.",
+      "returns": {
+       "doc": "A destination carrier of F.Result.",
+       "type": "Self.Projected[F]"
+      },
+      "signature": "def project[F: BorrowCallContract & Movable & Deinitable](var function: F) raises Self.ProjectError[F] -> Self.Projected[F]",
+      "summary": "Construct the selected base projection and lift its carrier."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The destination transformer family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad & _Lifting",
+     "variadic": false
+    },
+    {
+     "description": "The selected Project capability of its immediate base.",
+     "inferred": false,
+     "name": "C",
+     "type": "Project",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/projections",
+   "signature": "struct LiftProject[I: Monad & _Lifting, C: Project](Project)",
+   "summary": "Select a borrowed projection from the immediate base of a transformer.",
+   "traits": [
+    "Project"
+   ]
+  },
   "effects.LiftStateful": {
    "aliases": [
     {
@@ -41764,6 +42507,72 @@
    "summary": "Optional over the base Monad `M`: a value is `M`'s carrier of `Optional[A]`; over Identity, `OptionalFamily`.",
    "traits": []
   },
+  "effects.Project": {
+   "aliases": [
+    {
+     "description": "The family in which the projection operates.",
+     "name": "Family"
+    },
+    {
+     "description": "The exact selected environment or state type.",
+     "name": "Input"
+    },
+    {
+     "description": "Whether F borrows Input and has an available invocation mode.",
+     "name": "ProjectCompatible"
+    },
+    {
+     "description": "The concrete family carrier of the projection's result.",
+     "name": "Projected"
+    },
+    {
+     "description": "The exact construction error; deferred execution errors stay deferred.",
+     "name": "ProjectError"
+    }
+   ],
+   "description": "The projection returns an owned result and leaves the selected input\nunchanged. Its result and error cannot borrow the temporary input of a\nrun. Captured origins belonging to longer-lived owners remain intact.\nReader and State implement this capability independently of ask/get,\nwhich require copying. LiftProject selects a capability through a layer.",
+   "fields": [],
+   "kind": "trait",
+   "methods": {
+    "project": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The projection, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.ProjectError[F]",
+      "parameters": [
+       {
+        "description": "An admitted borrowing callback.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact native construction error.",
+      "returns": {
+       "doc": "The family's carrier of F.Result, preserving execution timing.",
+       "type": "Self.Projected[F]"
+      },
+      "signature": "def project[F: BorrowCallContract & Movable & Deinitable](var function: F) raises Self.ProjectError[F] -> Self.Projected[F]",
+      "summary": "Construct one borrowed projection in this family."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "effects/protocols",
+   "signature": "trait Project",
+   "summary": "Borrow a selected environment or state without copying the whole value.",
+   "traits": []
+  },
   "effects.Reader": {
    "aliases": [],
    "description": "",
@@ -41875,6 +42684,22 @@
     {
      "description": "",
      "name": "Family"
+    },
+    {
+     "description": "",
+     "name": "Input"
+    },
+    {
+     "description": "",
+     "name": "ProjectCompatible"
+    },
+    {
+     "description": "",
+     "name": "Projected"
+    },
+    {
+     "description": "",
+     "name": "ProjectError"
     },
     {
      "description": "",
@@ -42463,6 +43288,38 @@
       "summary": "Recover the base error in the same borrowed environment when run."
      }
     ],
+    "project": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The projection, consumed; it runs once when the action runs.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A borrowing callback admitted by ProjectCompatible.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A deferred carrier of F.Result, including its exact error and origins.",
+       "type": "Self.Projected[F]"
+      },
+      "signature": "def project[F: BorrowCallContract & Movable & Deinitable](var function: F) -> Self.Projected[F]",
+      "summary": "Construct a deferred projection without copying the selected input."
+     }
+    ],
     "pure": [
      {
       "args": [
@@ -42513,7 +43370,7 @@
     }
    ],
    "provider": "effects/reader",
-   "signature": "struct ReaderT[M: Monad, R: AnyType](ReaderFamily, Local, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError), ErrorMapping where conforms_to(M, ErrorMapping))",
+   "signature": "struct ReaderT[M: Monad, R: AnyType](Project, ReaderFamily, Local, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError), ErrorMapping where conforms_to(M, ErrorMapping))",
    "summary": "Reader over the base Monad `M`: a computation borrows an environment `R` when run and returns an `M` carrier.",
    "traits": [
     "Applicative",
@@ -42523,6 +43380,7 @@
     "Functor",
     "Local",
     "Monad",
+    "Project",
     "ReaderFamily",
     "_Acting",
     "_CapabilityLifting",
@@ -42661,6 +43519,22 @@
     {
      "description": "",
      "name": "Family"
+    },
+    {
+     "description": "",
+     "name": "Input"
+    },
+    {
+     "description": "",
+     "name": "ProjectCompatible"
+    },
+    {
+     "description": "",
+     "name": "Projected"
+    },
+    {
+     "description": "",
+     "name": "ProjectError"
     },
     {
      "description": "",
@@ -43235,6 +44109,38 @@
       "summary": "Run recovery on the saved input state at this boundary."
      }
     ],
+    "project": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The projection, consumed; it runs once when the action runs.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A borrowing callback admitted by ProjectCompatible.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A deferred carrier of F.Result, including its exact error and origins.",
+       "type": "Self.Projected[F]"
+      },
+      "signature": "def project[F: BorrowCallContract & Movable & Deinitable](var function: F) -> Self.Projected[F]",
+      "summary": "Construct a deferred projection without copying the selected input."
+     }
+    ],
     "pure": [
      {
       "args": [
@@ -43285,7 +44191,7 @@
     }
    ],
    "provider": "effects/state",
-   "signature": "struct StateT[M: Monad, S: Movable & Deinitable](StateFamily, Stateful, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable), ErrorMapping where conforms_to(M, ErrorMapping))",
+   "signature": "struct StateT[M: Monad, S: Movable & Deinitable](Project, StateFamily, Stateful, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable), ErrorMapping where conforms_to(M, ErrorMapping))",
    "summary": "State over the base Monad `M`: a computation consumes a state `S` when run and returns an `M` carrier of `(value, state)`.",
    "traits": [
     "Applicative",
@@ -43293,6 +44199,7 @@
     "ErrorMapping",
     "Functor",
     "Monad",
+    "Project",
     "StateFamily",
     "Stateful",
     "_Acting",
@@ -44390,6 +45297,160 @@
    "provider": "effects/capabilities",
    "summary": ""
   },
+  "effects.asks": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The projection, consumed; deferred families run it later.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "The callback borrows the input once at execution and returns an owned\nprojection. Both may be move-only. Native callback overloads preserve\ncaptured origins and exact errors. Use LiftProject to select a base layer.\n`inspect` is the State-oriented spelling of the same Project capability.",
+     "error": "I.ProjectError[F]",
+     "parameters": [
+      {
+       "description": "The borrowing callback, including its result, error and receiver.",
+       "inferred": true,
+       "name": "F",
+       "type": "BorrowCallContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "A Project capability, such as Reader or LiftProject.",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The capability's native construction error. Callback errors follow\nexecution timing and keep their exact types.",
+     "returns": {
+      "doc": "A carrier of F.Result in I.Family, with no copy of I.Input.",
+      "type": "I.Projected[F]"
+     },
+     "signature": "def asks[F: BorrowCallContract & Movable & Deinitable, //, I: Project](var function: F) raises I.ProjectError[F] -> I.Projected[F] where I.ProjectCompatible[F] and F.Payload == I.Input",
+     "summary": "Project a selected environment without copying the environment."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[P, R, Never, F, False]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Borrowing[P, R]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[P, R, Never, F, False]]"
+     },
+     "signature": "def asks[P: AnyType, R: Movable & Deinitable, //, I: Project, F: _Borrowing[P, R]](var function: F) raises I.ProjectError[_NativeBorrow[P, R, Never, F, False]] -> I.Projected[_NativeBorrow[P, R, Never, F, False]] where I.ProjectCompatible[_NativeBorrow[P, R, Never, F, False]] and P == I.Input",
+     "summary": "Project with an owned native borrowing function or closure."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[P, R, E, F, True]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingBorrowing[P, R, E]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[P, R, E, F, True]]"
+     },
+     "signature": "def asks[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Project, F: _RaisingBorrowing[P, R, E]](var function: F) raises I.ProjectError[_NativeBorrow[P, R, E, F, True]] -> I.Projected[_NativeBorrow[P, R, E, F, True]] where I.ProjectCompatible[_NativeBorrow[P, R, E, F, True]] and P == I.Input",
+     "summary": "Project with an owned native borrowing function or closure."
+    }
+   ],
+   "provider": "effects/projections",
+   "summary": ""
+  },
   "effects.censor": {
    "description": "",
    "kind": "function",
@@ -44614,6 +45675,160 @@
     }
    ],
    "provider": "effects/capabilities",
+   "summary": ""
+  },
+  "effects.inspect": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The projection, consumed; it runs at execution.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "State moves the unchanged state into its result after the borrow ends.\nThis uses the same Project capability and invocation boundary as asks.",
+     "error": "I.ProjectError[F]",
+     "parameters": [
+      {
+       "description": "The borrowing callback, including its result, error and receiver.",
+       "inferred": true,
+       "name": "F",
+       "type": "BorrowCallContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "A Project capability, such as State or LiftProject.",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The exact native construction error, separate from deferred execution.",
+     "returns": {
+      "doc": "A carrier of F.Result in I.Family, paired with unchanged state by State.",
+      "type": "I.Projected[F]"
+     },
+     "signature": "def inspect[F: BorrowCallContract & Movable & Deinitable, //, I: Project](var function: F) raises I.ProjectError[F] -> I.Projected[F] where I.ProjectCompatible[F] and F.Payload == I.Input",
+     "summary": "Project selected state without copying or changing the state."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[P, R, Never, F, False]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Borrowing[P, R]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[P, R, Never, F, False]]"
+     },
+     "signature": "def inspect[P: AnyType, R: Movable & Deinitable, //, I: Project, F: _Borrowing[P, R]](var function: F) raises I.ProjectError[_NativeBorrow[P, R, Never, F, False]] -> I.Projected[_NativeBorrow[P, R, Never, F, False]] where I.ProjectCompatible[_NativeBorrow[P, R, Never, F, False]] and P == I.Input",
+     "summary": "Project with an owned native borrowing function or closure."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[P, R, E, F, True]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingBorrowing[P, R, E]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[P, R, E, F, True]]"
+     },
+     "signature": "def inspect[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Project, F: _RaisingBorrowing[P, R, E]](var function: F) raises I.ProjectError[_NativeBorrow[P, R, E, F, True]] -> I.Projected[_NativeBorrow[P, R, E, F, True]] where I.ProjectCompatible[_NativeBorrow[P, R, E, F, True]] and P == I.Input",
+     "summary": "Project with an owned native borrowing function or closure."
+    }
+   ],
+   "provider": "effects/projections",
    "summary": ""
   },
   "effects.lift": {
@@ -278192,6 +279407,44 @@
    "provider": "iteration/terminals",
    "summary": ""
   },
+  "iteration.combine_non_empty": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The non-empty source, consumed from left to right.",
+       "name": "source",
+       "type": "NonEmptyList[S.Value]",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "S.Error",
+     "parameters": [
+      {
+       "description": "The ordered Semigroup of source elements.",
+       "inferred": false,
+       "name": "S",
+       "type": "Semigroup",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The Semigroup's exact error; singleton input cannot raise.",
+     "returns": {
+      "doc": "Its sole value or its ordered reduction, without copying payloads.",
+      "type": "S.Value"
+     },
+     "signature": "def combine_non_empty[S: Semigroup](var source: NonEmptyList[S.Value]) raises S.Error -> S.Value",
+     "summary": "Combine a non-empty source without constructing an identity."
+    }
+   ],
+   "provider": "iteration/non_empty",
+   "summary": ""
+  },
   "iteration.compact": {
    "description": "",
    "kind": "function",
@@ -283612,6 +284865,181 @@
    "provider": "iteration/reductions",
    "summary": ""
   },
+  "iteration.maximum_by_non_empty": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The key projection, consumed and called once per element.",
+       "name": "key",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The non-empty source, consumed; ties retain the first element.",
+       "name": "source",
+       "type": "NonEmptyList[T]",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "C.Failure",
+     "parameters": [
+      {
+       "description": "The consumed element type, including origins.",
+       "inferred": false,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "A repeatable borrowing projection with a Comparable result.",
+       "inferred": false,
+       "name": "C",
+       "type": "BorrowCallable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The exact projection error, destroying partial state and the suffix.",
+     "returns": {
+      "doc": "The earliest element having a maximum key, moved without copying.",
+      "type": "T"
+     },
+     "signature": "def maximum_by_non_empty[T: Movable & Deinitable, C: BorrowCallable](var key: C, var source: NonEmptyList[T]) raises C.Failure -> T where C.Payload == T and conforms_to(C.Result, Comparable)",
+     "summary": "Return the first maximum element through the ordinary extremum kernel."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "key",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "NonEmptyList[T]",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "Never",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Comparable & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Borrowing[P, R]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "T"
+     },
+     "signature": "def maximum_by_non_empty[T: Movable & Deinitable, P: AnyType, R: Comparable & Movable & Deinitable, //, F: _Borrowing[P, R]](var key: F, var source: NonEmptyList[T]) raises Never -> T where P == T",
+     "summary": "Select by an owned native borrowing key projection."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "key",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "NonEmptyList[T]",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "E",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Comparable & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingBorrowing[P, R, E]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "T"
+     },
+     "signature": "def maximum_by_non_empty[T: Movable & Deinitable, P: AnyType, R: Comparable & Movable & Deinitable, E: Movable & Deinitable, //, F: _RaisingBorrowing[P, R, E]](var key: F, var source: NonEmptyList[T]) raises E -> T where P == T",
+     "summary": "Select by an owned native borrowing key projection."
+    }
+   ],
+   "provider": "iteration/non_empty",
+   "summary": ""
+  },
   "iteration.min_by": {
    "description": "",
    "kind": "function",
@@ -283850,6 +285278,181 @@
     }
    ],
    "provider": "iteration/reductions",
+   "summary": ""
+  },
+  "iteration.minimum_by_non_empty": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The key projection, consumed.",
+       "name": "key",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The non-empty source, consumed.",
+       "name": "source",
+       "type": "NonEmptyList[T]",
+       "variadic": false
+      }
+     ],
+     "description": "Keys are computed once per element through the ordinary extremum kernel.\nElements are borrowed for projection and moved for retention. Equal keys\nkeep the earlier element. No payload copies or Optional result are needed.",
+     "error": "C.Failure",
+     "parameters": [
+      {
+       "description": "The consumed element type, including origins.",
+       "inferred": false,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "A repeatable borrowing projection with a Comparable result.",
+       "inferred": false,
+       "name": "C",
+       "type": "BorrowCallable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The exact projection error, destroying partial state and the suffix.",
+     "returns": {
+      "doc": "The earliest element having a minimum key.",
+      "type": "T"
+     },
+     "signature": "def minimum_by_non_empty[T: Movable & Deinitable, C: BorrowCallable](var key: C, var source: NonEmptyList[T]) raises C.Failure -> T where C.Payload == T and conforms_to(C.Result, Comparable)",
+     "summary": "Return the first minimum element of a non-empty source by an owned key."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "key",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "NonEmptyList[T]",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "Never",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Comparable & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Borrowing[P, R]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "T"
+     },
+     "signature": "def minimum_by_non_empty[T: Movable & Deinitable, P: AnyType, R: Comparable & Movable & Deinitable, //, F: _Borrowing[P, R]](var key: F, var source: NonEmptyList[T]) raises Never -> T where P == T",
+     "summary": "Select by an owned native borrowing key projection."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "key",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "NonEmptyList[T]",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "E",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Comparable & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingBorrowing[P, R, E]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "T"
+     },
+     "signature": "def minimum_by_non_empty[T: Movable & Deinitable, P: AnyType, R: Comparable & Movable & Deinitable, E: Movable & Deinitable, //, F: _RaisingBorrowing[P, R, E]](var key: F, var source: NonEmptyList[T]) raises E -> T where P == T",
+     "summary": "Select by an owned native borrowing key projection."
+    }
+   ],
+   "provider": "iteration/non_empty",
    "summary": ""
   },
   "iteration.pad_zip": {
@@ -284995,6 +286598,391 @@
     }
    ],
    "provider": "iteration/folds",
+   "summary": ""
+  },
+  "iteration.reduce_map": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The producer, consumed.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The non-empty source, consumed.",
+       "name": "source",
+       "type": "NonEmptyList[T]",
+       "variadic": false
+      }
+     ],
+     "description": "The first mapped value seeds the accumulator. Mapping runs n times and\ncombination n - 1 times, in source order, with no intermediate collection.\nSingleton input does not call combine. Only a common exact native error\n(or Never) is admitted, just as for ordinary fold_map.",
+     "error": "_CommonError[F.Error, S.Error]",
+     "parameters": [
+      {
+       "description": "The consumed element type, including native origins.",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "A repeatable unary producer of S.Value.",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The ordered Semigroup; no empty identity is required.",
+       "inferred": false,
+       "name": "S",
+       "type": "Semigroup",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The exact common callback and Semigroup error, stopping immediately.",
+     "returns": {
+      "doc": "The owned, combined mapped value.",
+      "type": "S.Value"
+     },
+     "signature": "def reduce_map[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, S: Semigroup](var function: F, var source: NonEmptyList[T]) raises _CommonError[F.Error, S.Error] -> S.Value where F.Arg == T and F.Out == S.Value and RepeatableUnary[F] and _ErrorCompatible[_CommonError[F.Error, S.Error], F.Error] and _ErrorCompatible[_CommonError[F.Error, S.Error], S.Error]",
+     "summary": "Map and combine a non-empty source using only a Semigroup."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "NonEmptyList[T]",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_CommonError[Never, S.Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "S",
+       "type": "Semigroup",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Unary[A, R]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "S.Value"
+     },
+     "signature": "def reduce_map[T: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, //, S: Semigroup, F: _Unary[A, R]](var function: F, var source: NonEmptyList[T]) raises _CommonError[Never, S.Error] -> S.Value where A == T and R == S.Value and _ErrorCompatible[_CommonError[Never, S.Error], Never] and _ErrorCompatible[_CommonError[Never, S.Error], S.Error]",
+     "summary": "Map and reduce with an owned native unary function or closure."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "NonEmptyList[T]",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_CommonError[E, S.Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "S",
+       "type": "Semigroup",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingUnary[A, R, E]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "S.Value"
+     },
+     "signature": "def reduce_map[T: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, S: Semigroup, F: _RaisingUnary[A, R, E]](var function: F, var source: NonEmptyList[T]) raises _CommonError[E, S.Error] -> S.Value where A == T and R == S.Value and _ErrorCompatible[_CommonError[E, S.Error], E] and _ErrorCompatible[_CommonError[E, S.Error], S.Error]",
+     "summary": "Map and reduce with an owned native unary function or closure."
+    }
+   ],
+   "provider": "iteration/non_empty",
+   "summary": ""
+  },
+  "iteration.reduce_non_empty": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The callback, consumed; singleton input skips it.",
+       "name": "step",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The non-empty source, consumed.",
+       "name": "source",
+       "type": "NonEmptyList[T]",
+       "variadic": false
+      }
+     ],
+     "description": "The source invariant supplies the seed; no identity or copies are needed.\nCalls run left to right exactly n - 1 times. Callback failures propagate\nunchanged and destroy the accumulator and unvisited suffix.",
+     "error": "F.Error",
+     "parameters": [
+      {
+       "description": "The exact element and accumulator type, including origins.",
+       "inferred": false,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "A shared or mutable binary callback with both inputs and output T.",
+       "inferred": false,
+       "name": "F",
+       "type": "BinaryContract & Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The callback's exact error, including StopIteration as a callback failure.",
+     "returns": {
+      "doc": "The final owned accumulator.",
+      "type": "T"
+     },
+     "signature": "def reduce_non_empty[T: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var step: F, var source: NonEmptyList[T]) raises F.Error -> T where F.First == T and F.Second == T and F.Out == T and RepeatableBinary[F]",
+     "summary": "Reduce from the first element without an Optional or empty-input error."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "step",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "NonEmptyList[T]",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "Never",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "Q",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Binary[P, Q, R]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "T"
+     },
+     "signature": "def reduce_non_empty[T: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Deinitable, R: Movable & Deinitable, //, F: _Binary[P, Q, R]](var step: F, var source: NonEmptyList[T]) raises Never -> T where P == T and Q == T and R == T",
+     "summary": "Reduce with an owned native binary function or closure."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "step",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "NonEmptyList[T]",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "E",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "Q",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingBinary[P, Q, R, E]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "T"
+     },
+     "signature": "def reduce_non_empty[T: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, F: _RaisingBinary[P, Q, R, E]](var step: F, var source: NonEmptyList[T]) raises E -> T where P == T and Q == T and R == T",
+     "summary": "Reduce with an owned native binary function or closure."
+    }
+   ],
+   "provider": "iteration/non_empty",
    "summary": ""
   },
   "iteration.reduce_optional": {
@@ -314605,7 +316593,7 @@
    "summary": "Typed results, early termination and bridges between raised and stored errors."
   },
   "effects": {
-   "description": "| Family | Value | Additional operations |\n|---|---|---|\n| `ReaderT[M, R]` | A `ReaderAction`: borrows `R` when run, returns `M`'s carrier | `action`, `run`, `lift`, `ask`, `local` |\n| `StateT[M, S]` | A `StateAction`: consumes `S` when run, returns `M`'s carrier of `(A, S)` | `action`, `run`, `lift`, `get`, `put`, `modify` |\n| `WriterT[M, W]` | A `WriterValue` wrapping `M`'s carrier of `(W.Value, A)` | `writer`, `run_writer`, `lift`, `tell`, `listen`, `censor` |\n| `OptionalT[M]` | `M`'s carrier of `Optional[A]` | `lift` |\n| `ResultT[M, E]` | `M`'s carrier of `Result[A, E]` | `lift` |\n\n`Reader[R]`, `State[S]` and `Writer[W]` are the transformers over\n`IdentityFamily`; `OptionalT` and `ResultT` over Identity are `OptionalFamily`\nand `ResultFamily[E]` themselves. Each family is a `Monad` of `fp.algebra`, so\n`map`, `pure`, `flat_map`, `map2_lazy` and `traverse` apply to its values.\nReader and State values are deferred computations: nothing runs until `run`.\n\nAsk/Local and Stateful are compile-time capability dictionaries. Reader and\nState select their own environment or state; LiftAsk, LiftLocal and\nLiftStateful explicitly select a capability from the immediate base. Generic\nprograms use the selected dictionary's Family for algebra operations.\nTell/Listen/Censor select a log; LiftTell, LiftListen and LiftCensor transport\nthose operations through one layer. Listen pairs the payload with an observed\nlog, while censor transforms only the selected computation's output log.\n\nTransformer order matters. `StateT` over `Result` returns no state on failure;\n`ResultT` over `State` can return a failed `Result` together with the updated\nstate. Neither rolls back external mutation. For `ResultT[State[S], E]`, run\nwith `run[State[S]]`, whose result is `Tuple[Result[A, E], S]`, and lift\nState's operations into the ResultT layer; for `StateT[ResultFamily[E], S]`,\nrun with that StateT, whose result is `Result[Tuple[A, S], E]`.\n\n| Stack | Evaluation order | Final shape |\n|---|---|---|\n| `WriterT[Reader[R], W]` | `run_writer`, then Reader `run` | `(log, value)` |\n| `ReaderT[Writer[W], R]` | Reader `run`, then `run_writer` | `(log, value)` |\n| `WriterT[State[S], W]` | `run_writer`, then State `run` | `((log, value), state)` |\n| `StateT[Writer[W], S]` | State `run`, then `run_writer` | `(log, (value, state))` |\n\n`OptionalT[ResultT[M, E]]` carries `M[Result[Optional[A], E]]`, and\n`ResultT[OptionalT[M], E]` carries `M[Optional[Result[A, E]]]`. Either an\nabsence or a stored error skips later callbacks and lazy right operands,\nwithout converting one failure kind into the other. Native exceptions from any\nstage propagate with their exact types instead of becoming `Result` data.\n\nTraversal into a layer delegates to the base's traversal loop with the layer's\naccumulation rule, so the count of pulls and callback calls is the same over\neager, deferred and third-party bases. A deferred computation can be copied or\nreplayed only when its stored inputs and callbacks support it; copying an owner\ndoes not make a consuming callback reusable.",
+   "description": "| Family | Value | Additional operations |\n|---|---|---|\n| `ReaderT[M, R]` | A `ReaderAction`: borrows `R` when run, returns `M`'s carrier | `action`, `run`, `lift`, `ask`, `asks`, `local` |\n| `StateT[M, S]` | A `StateAction`: consumes `S` when run, returns `M`'s carrier of `(A, S)` | `action`, `run`, `lift`, `get`, `inspect`, `put`, `modify` |\n| `WriterT[M, W]` | A `WriterValue` wrapping `M`'s carrier of `(W.Value, A)` | `writer`, `run_writer`, `lift`, `tell`, `listen`, `censor` |\n| `OptionalT[M]` | `M`'s carrier of `Optional[A]` | `lift` |\n| `ResultT[M, E]` | `M`'s carrier of `Result[A, E]` | `lift` |\n\n`Reader[R]`, `State[S]` and `Writer[W]` are the transformers over\n`IdentityFamily`; `OptionalT` and `ResultT` over Identity are `OptionalFamily`\nand `ResultFamily[E]` themselves. Each family is a `Monad` of `fp.algebra`, so\n`map`, `pure`, `flat_map`, `map2_lazy` and `traverse` apply to its values.\nReader and State values are deferred computations: nothing runs until `run`.\n\nAsk/Local and Stateful are compile-time capability dictionaries. Reader and\nState select their own environment or state; LiftAsk, LiftLocal and\nLiftStateful explicitly select a capability from the immediate base. Generic\nprograms use the selected dictionary's Family for algebra operations.\nTell/Listen/Censor select a log; LiftTell, LiftListen and LiftCensor transport\nthose operations through one layer. Listen pairs the payload with an observed\nlog, while censor transforms only the selected computation's output log.\n\nTransformer order matters. `StateT` over `Result` returns no state on failure;\n`ResultT` over `State` can return a failed `Result` together with the updated\nstate. Neither rolls back external mutation. For `ResultT[State[S], E]`, run\nwith `run[State[S]]`, whose result is `Tuple[Result[A, E], S]`, and lift\nState's operations into the ResultT layer; for `StateT[ResultFamily[E], S]`,\nrun with that StateT, whose result is `Result[Tuple[A, S], E]`.\n\n| Stack | Evaluation order | Final shape |\n|---|---|---|\n| `WriterT[Reader[R], W]` | `run_writer`, then Reader `run` | `(log, value)` |\n| `ReaderT[Writer[W], R]` | Reader `run`, then `run_writer` | `(log, value)` |\n| `WriterT[State[S], W]` | `run_writer`, then State `run` | `((log, value), state)` |\n| `StateT[Writer[W], S]` | State `run`, then `run_writer` | `(log, (value, state))` |\n\n`OptionalT[ResultT[M, E]]` carries `M[Result[Optional[A], E]]`, and\n`ResultT[OptionalT[M], E]` carries `M[Optional[Result[A, E]]]`. Either an\nabsence or a stored error skips later callbacks and lazy right operands,\nwithout converting one failure kind into the other. Native exceptions from any\nstage propagate with their exact types instead of becoming `Result` data.\n\nTraversal into a layer delegates to the base's traversal loop with the layer's\naccumulation rule, so the count of pulls and callback calls is the same over\neager, deferred and third-party bases. A deferred computation can be copied or\nreplayed only when its stored inputs and callbacks support it; copying an owner\ndoes not make a consuming callback reusable.",
    "summary": "Reader, State and Writer computations and the OptionalT and ResultT layers, over any base Monad."
   },
   "functions": {

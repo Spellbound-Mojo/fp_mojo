@@ -13,11 +13,11 @@ from fp.algebra.protocols import (_fold_as, _pure, ApplicativeError, ErrorMappin
 from fp.algebra.instances import IdentityFamily
 from fp.callables.protocols import (BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, OnceUnary, MutableUnary, Binary, MutableBinary)
 from fp.callables.invoke import call_once, RepeatableUnary, RepeatableBinary
-from fp.callables._receiver import _binary_repeated_as, _unary_once_as
+from fp.callables._receiver import _OnceBorrowAvailable, _borrow_once_as, _binary_repeated_as, _unary_once_as
 from std.memory import MaybeUninit
 from fp.callables.products import _take_pair, _MapPair, _WithSecond as _WithState
 from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible
-from .protocols import Stateful, Local, Listen, _CarrierOp, _LocalLifting, StateAction, StateFamily, _EndpointCompatible, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
+from .protocols import Project, Stateful, Local, Listen, _CarrierOp, _LocalLifting, StateAction, StateFamily, _EndpointCompatible, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
 from ._adapt import _op_as, _state_run_as, _map_as, _flat_map_as
 
 from ._transport import _BimapOp, _LocalOp, _ListenOp, _ListenMapped, _ListenPair
@@ -54,6 +54,24 @@ struct _StateFail[M: Monad, S: Movable & Deinitable, A: Movable & Deinitable](St
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
         comptime assert Self._RunCompatible, "run: incompatible State recipe"
         return Self.Errors.fail[Tuple[Self.A, Self.S]](self.error^)
+
+
+@fieldwise_init
+struct _StateProject[M: Monad, S: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](
+    StateAction, Copyable where conforms_to(F, Copyable)
+):
+    var function: Self.F
+    comptime Family = StateT[Self.M, Self.S]
+    comptime State = Self.S
+    comptime Value = Self.F.Result
+    comptime Out = Self.M.Pure[Tuple[Self.Value, Self.S]]
+    comptime Error = Self.F.Failure
+    def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self.F.Payload == Self.S
+        # State owns its input, unlike Reader's borrowed run boundary. End the
+        # projection borrow before moving the unchanged state into its carrier.
+        var projected = _borrow_once_as[Self.Error](state, self.function^)
+        return _pure[Self.M]((projected^, state^))
 
 
 @fieldwise_init
@@ -480,7 +498,7 @@ struct _StateHoist[A: Movable & Deinitable, S: StateAction, H: _CarrierOp, Targe
         return _op_as[E](self.operation^, base^)
 
 
-struct StateT[M: Monad, S: Movable & Deinitable](StateFamily, Stateful, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable), ErrorMapping where conforms_to(M, ErrorMapping)):
+struct StateT[M: Monad, S: Movable & Deinitable](Project, StateFamily, Stateful, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable), ErrorMapping where conforms_to(M, ErrorMapping)):
     """State over the base Monad `M`: a computation consumes a state `S` when run and returns an `M` carrier of `(value, state)`.
 
     Computations are built as for `ReaderT` and run with `run`. Traversal is one
@@ -499,6 +517,27 @@ struct StateT[M: Monad, S: Movable & Deinitable](StateFamily, Stateful, _LocalLi
         S: The state's type.
     """
     comptime Family = Self
+    comptime Input = Self.S
+    comptime ProjectCompatible[F: BorrowCallContract & Movable & Deinitable] = F.Payload == Self.S and _OnceBorrowAvailable[F]
+    comptime Projected[F: BorrowCallContract & Movable & Deinitable] = _StateProject[Self.M, Self.S, F]
+    comptime ProjectError[F: BorrowCallContract & Movable & Deinitable] = Never
+
+    @staticmethod
+    def project[F: BorrowCallContract & Movable & Deinitable](var function: F) -> Self.Projected[F]:
+        """Construct a deferred projection without copying the selected input.
+
+        Parameters:
+            F: A borrowing callback admitted by ProjectCompatible.
+
+        Args:
+            function: The projection, consumed; it runs once when the action runs.
+
+        Returns:
+            A deferred carrier of F.Result, including its exact error and origins.
+        """
+        comptime assert Self.ProjectCompatible[F], "project: incompatible selected input or callback"
+        return Self.Projected[F](function^)
+
     comptime GetAvailable = conforms_to(Self.S, Copyable)
     comptime Got = _StateGet[Self.M, downcast[Self.S, Copyable & Deinitable]]
     comptime GetError = Never

@@ -974,3 +974,78 @@ exceptions. Stack order still decides whether a stored failure retains output.
 Qualification covers all five layers, nested and same-monoid selection, external
 dictionaries, generic forwarding, native error phases, copy counts, move-only
 logs/payloads/state/captures, borrowed origins and rejected invalid selections.
+
+## Absence fallback inside a base effect
+
+`or_else_absent[Base](factory, source)` consumes a base carrier of `Optional[A]`.
+The present branch moves its payload through the base's `pure`; the absent
+branch invokes the factory and uses its base carrier of `Optional[A]`.
+`get_or_else_effect` uses the same branch owner but removes the Optional layer:
+its factory and final result carry `A` in the base.
+
+Selection names the **base** family. For a native Optional, select
+`IdentityFamily`; for `OptionalT[State[S]]`, select `State[S]`. This preserves
+the existing meaning of stored-error recovery through `OptionalT`: absence is
+a separate condition, and base failures never trigger an absence factory.
+
+The existing Optional choice kernel owns branch selection, and base bind owns
+evaluation, branching and deferred execution. A factory is consumed at most
+once by a linear base. A branching base requires a repeatable factory and calls
+it once for each absent branch; results are not cached across branches.
+Skipped factories and discarded sources release their owned captures. Earlier
+state changes and Writer output remain visible; external effects are never
+rolled back. Native errors stay raised with their exact type and normal timing.
+
+`AbsenceContract[Base, V, F, keep_optional]` supplies the public `Compatible`,
+`Out` and `Error` projections for forwarding library callbacks. It checks the
+exact Optional payload, fallback carrier, join and callback receiver. Different
+concrete deferred carriers may join without boxing or erasing origins.
+
+## Step-driven effectful loops
+
+`tail_rec_m[Family](step, initial)` repeats a step from `A` to a family carrier
+of `ControlFlow[B, A]`. `Continue[A]` moves the next state into another step;
+`Break[B]` supplies the final result. A failed or absent effect stops its branch
+without another step. List keeps its ordinary branch order and copying rules.
+Construction and execution remain separate for Reader and State, including
+when the step reads an environment or updates state.
+
+The implementation supplies an unbounded unit source, a Continue liveness
+policy and a step adapter to the existing dependent fold. The native while
+loop remains its execution owner. The unit source is necessary because native
+`repeat` requires a finite count. Neither a trampoline nor recursive callback
+composition is added. Stack usage is constant in the number of steps for the
+built-in families; state, logs and branching results can still grow. Custom
+families must implement a stack-safe dependent fold to satisfy that guarantee.
+An always-continuing computation does not terminate automatically.
+
+`TailRecContract[Family, F]` infers the Break payload and supplies `Compatible`,
+`Out` and `Error`. The state must exactly equal the callback argument, including
+origins; the callback must be repeatable. Existing fold admission still applies
+to transformer order and base carriers. Failures destroy owned state and
+callback captures, with native errors distinct from the effect's stored errors.
+
+## Borrowed environment and state projections
+
+`Project` is a compile-time capability independent of `Ask` and `Stateful`.
+It selects an `Input` and `Family` and provides a borrowing projection returning
+a carrier of the callback's owned result. Reader and State implement it for
+their own environment and state. `asks` and `inspect` are environment- and
+state-oriented spellings of this one capability; `LiftProject[Layer, Capability]`
+selects it through an immediate base layer. This does not add requirements to
+existing user implementations of Ask or Stateful.
+
+Projections are deferred, consume their callback and run it exactly once at the
+selected read boundary. They need no copy of the environment or state and
+support `BorrowOnceCallable` captures. Reader borrows its run environment;
+State ends the projection borrow before moving the unchanged state into its
+base carrier. These distinct native run signatures delegate invocation to the
+same borrowing-call owner. The result or error cannot retain a borrow into a
+temporary run input. Independently captured owners keep their exact origins.
+
+`ProjectCompatible[F]`, `Projected[F]` and `ProjectError[F]` describe admission,
+result and construction error. Reader and State construction is non-raising;
+the callback's exact error belongs to execution. Lifting retains the layer's
+usual construction errors and execution timing, including Writer identity
+construction. Dropping an unopened recipe drops its captures without invoking
+the projection. Copying a recipe requires copyable stored callbacks.

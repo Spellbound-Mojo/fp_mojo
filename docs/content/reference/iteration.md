@@ -9,6 +9,22 @@ reuse, explicit moves, and the independent ownership of callback inputs.
 
 <!-- api: iteration -->
 
+## Use a non-empty source guarantee
+
+`reduce_non_empty(step, values)` returns the accumulator directly, seeded from
+the first element. `reduce_map[Semigroup](projection, values)` combines mapped
+values without requiring an empty identity. `combine_non_empty[Semigroup]`
+combines the original elements. Each takes NonEmptyList, moves payloads and
+preserves left-to-right order. A singleton skips the binary combine operation.
+
+`minimum_by_non_empty` and `maximum_by_non_empty` borrow each element to compute
+its key once and return the selected owned element directly. Equal keys keep
+the earliest element. Callback errors keep their native types and destroy the
+unvisited suffix; ordinary Lists use the existing Optional-returning reductions.
+
+<!-- example: docs/examples/non_empty_reductions.mojo -->
+
+
 ## Stateful mapping
 
 `map`, `filter_map` and `flat_map` accept both shared `Unary` and stateful

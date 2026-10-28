@@ -13,8 +13,8 @@ kernel as typed failures.
 from std.builtin.rebind import downcast, rebind_var
 from fp.callables.native import _LazyUnary, _LazyOptional, _call_native_borrow, _call_native_binary
 from fp.data.control import ControlFlow
-from fp.callables.protocols import BorrowCallable, UnaryContract, Binary
-from fp.callables.invoke import BorrowCallCompatible, invoke_borrowed, RepeatableUnary
+from fp.callables.protocols import BorrowCallable, UnaryContract, Binary, BinaryContract
+from fp.callables.invoke import BorrowCallCompatible, invoke_borrowed, RepeatableUnary, RepeatableBinary
 from fp.callables._receiver import _unary_repeated_as, _binary_repeated_as
 
 
@@ -182,6 +182,18 @@ def _binary_fixed[A: Movable & Deinitable, T: Movable & Deinitable, F: Binary](
 ) raises F.Error capturing -> A:
     comptime assert F.First == A and F.Second == T and F.Out == A, "fold: step must take and return the accumulator"
     return rebind_var[A](function.call(rebind_var[F.First](accumulator^), rebind_var[F.Second](value^)))
+
+
+def _binary_repeated[A: Movable & Deinitable, T: Movable & Deinitable,
+                     F: BinaryContract & Movable & Deinitable, o: MutOrigin](
+    var accumulator: A, var value: T, function: Pointer[F, o]
+) raises F.Error capturing -> A:
+    # The terminal driver borrows its context. Retain an exclusive receiver
+    # explicitly so mutable callbacks need neither a copy nor a native closure.
+    comptime assert RepeatableBinary[F]
+    comptime assert F.First == A and F.Second == T and F.Out == A
+    return rebind_var[A](_binary_repeated_as[F.Error](function[],
+        rebind_var[F.First](accumulator^), rebind_var[F.Second](value^)))
 
 
 def _control_fixed[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, F: Binary](

@@ -515,6 +515,30 @@ conditional aliases through a guarded `Functor` boundary.
 
 <!-- api: algebra -->
 
+## Fill absence and repeat effectful steps
+
+`or_else_absent[Base](factory, source)` supplies a lazy fallback for an Optional
+inside a base effect. `get_or_else_effect[Base]` removes the Optional layer by
+using an effect of the payload as its fallback. Select IdentityFamily for a
+native Optional, or the base of OptionalT. Present values and base failures
+skip the factory; earlier state and output are retained. A branching base calls
+a repeatable factory for each absent branch.
+
+`tail_rec_m[Family](step, initial)` repeatedly runs a step returning an effect
+of `ControlFlow[B, A]`. Continue supplies the next state; Break supplies the
+result. The existing effectful fold gives built-in families constant call-stack
+usage in the number of steps, with no recursive callback chain. Family failure,
+branching, ownership and deferred-execution rules remain in force.
+
+<!-- example: docs/examples/absence_and_looping.mojo -->
+
+Generic wrappers use `AbsenceContract` and `TailRecContract` to forward
+`Compatible`, `Out` and `Error` for library callbacks. The latter infers B from
+the step's result. Native errors retain their exact types, and are separate from
+stored failures. An infinite Continue sequence stays infinite; growing state,
+logs and branch results still use memory.
+
+
 ## Accumulate several outputs together
 
 Use `ProductMonoid` for several independently accumulated values, and nest it

@@ -989,3 +989,21 @@ On each proposed toolchain:
 Mojo 1.2.0.dev2026092305 (eea89a4d) was checked in an isolated environment and
 reproduced the closure-return and pack limitations above. That historical probe
 is separate from the stable 1.2.0 compatibility migration described above.
+
+### Borrowed projection callbacks
+
+`asks` and `inspect` infer the native callback input and check its exact equality
+with the selected Project input. The borrowing contract has one fixed result type;
+a function whose returned origin depends on its borrowed parameter is not an
+admitted projection. It cannot let a temporary environment or state escape.
+For such an unsupported function, Mojo 1.2 can crash during ordinary callback
+inference. Binding `F=type_of(callback)` at the call produces the intended
+signature rejection; `ergonomics_projection_input_escape.mojo` records that
+boundary. This does not permit the dependent result or erase its origin.
+
+A result borrowing an independently captured owner remains origin-bearing.
+Explicit library borrowing callables support that case, as covered by
+`test_borrowed_projections.mojo`. Native closures whose captured and declared
+result origins cause the compiler's implicit-move alias check to fire remain
+rejected; an explicit borrowing callable retains the same origins without
+requiring that native closure encoding.
