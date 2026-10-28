@@ -13439,6 +13439,10 @@
           {
             "signature": "def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, W: Movable & Deinitable](deinit self, var other: W, var function: F) -> Iter[AlignWithIterator[A, B, F.Out, Self.I, _Source[W], F]] where Self.I.Element == A and _Source[W].Element == B and F.Arg == Ior[A, B] and F.Error == Never and RepeatableUnary[F]:",
             "sha256": "3cd57fb4f63438c764f2c661ee19c14eb415474fb7bafc2dd76bee1ace76bd92"
+          },
+          {
+            "signature": "def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, W: Movable & Deinitable](deinit self, var other: W, ref[o] function: F) -> Iter[AlignWithIterator[A, B, F._View[o].Out, Self.I, _Source[W], F._View[o]]] where Self.I.Element == A and _Source[W].Element == B and F._View[o].Arg == Ior[A, B] and F._View[o].Error == Never and RepeatableUnary[F._View[o]]:",
+            "sha256": "9284b1428e5233463776929d5957fa451c9ffa671639396857cbddcab9689834"
           }
         ],
         "scan_map": [
@@ -18536,6 +18540,10 @@
         {
           "signature": "def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable](var function: F, var source: V, var other: W) -> AlignWithIterator[A, B, F.Out, _Source[V], _Source[W], F] where _Source[V].Element == A and _Source[W].Element == B and F.Arg == Ior[A, B] and F.Error == Never and RepeatableUnary[F]:",
           "sha256": "bf29ca6e58f2b167febb9fd39f1e5731d9d1fe31da64890a15fa7c5df97529da"
+        },
+        {
+          "signature": "def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, W: Movable & Deinitable](ref[o] function: F, var source: V, var other: W) -> AlignWithIterator[A, B, F._View[o].Out, _Source[V], _Source[W], F._View[o]] where _Source[V].Element == A and _Source[W].Element == B and F._View[o].Arg == Ior[A, B] and F._View[o].Error == Never and RepeatableUnary[F._View[o]]:",
+          "sha256": "d0bf7a6475869dbba2148d7911e038fce0d7f39ee400f8bed7f778ab253ad49f"
         }
       ],
       "provider": "iteration/alignment"

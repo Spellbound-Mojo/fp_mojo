@@ -149,7 +149,16 @@
         "tests/compile_fail/filter_map_inference_lifetime.mojo",
         "tests/compile_fail/filter_map_inference_origin.mojo",
         "tests/compile_fail/filter_map_inference_owned_scalar.mojo",
-        "tests/compile_fail/filter_map_inference_scalar.mojo"
+        "tests/compile_fail/filter_map_inference_scalar.mojo",
+        "tests/runtime/test_align_callback_views.mojo",
+        "tests/ownership/test_align_callback_views_ownership.mojo",
+        "tests/compile_fail/align_callback_view_arity.mojo",
+        "tests/compile_fail/align_callback_view_error.mojo",
+        "tests/compile_fail/align_callback_view_input.mojo",
+        "tests/compile_fail/align_callback_view_lifetime.mojo",
+        "tests/compile_fail/align_callback_view_native_lifetime.mojo",
+        "tests/compile_fail/align_callback_view_origin.mojo",
+        "tests/compile_fail/align_callback_view_sides.mojo"
       ]
     },
     "control": {

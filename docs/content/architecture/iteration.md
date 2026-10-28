@@ -557,6 +557,13 @@ an absent/absent pair. These derived operations must reuse Ior's existing owned
 field extraction. Defer default-padding `zip_all` until its repeated-default
 copy or factory contract is useful enough to add.
 
+`align_with` retains shared library callbacks through the common origin-indexed
+Unary view. Free and Iter admission use the same callback descriptor and keep
+the existing source-side type bindings. The view is stored by `_Map` over
+`_Align`; it introduces no alignment state or invocation loop. Named callbacks
+stay borrowed through lazy consumption, while explicit moves retain the owned
+overload. Receiver origins and independent output origins remain distinct.
+
 ### State and effect follow-ups
 
 Cats' `mapAccumulate` returns the final state and a complete output collection.

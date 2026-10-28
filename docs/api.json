@@ -229415,6 +229415,71 @@
       },
       "signature": "def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, W: Movable & Deinitable](deinit self, var other: W, var function: F) -> Iter[AlignWithIterator[A, B, F.Out, Self.I, _Source[W], F]] where Self.I.Element == A and _Source[W].Element == B and F.Arg == Ior[A, B] and F.Error == Never and RepeatableUnary[F]",
       "summary": "Map each owned Ior from alignment through a non-raising callback."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "other",
+        "type": "W",
+        "variadic": false
+       },
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "W",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Iter[AlignWithIterator[A, B, F._View[o].Out, Self.I, _Source[W], F._View[o]]]"
+      },
+      "signature": "def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, W: Movable & Deinitable](deinit self, var other: W, ref[o] function: F) -> Iter[AlignWithIterator[A, B, F._View[o].Out, Self.I, _Source[W], F._View[o]]] where Self.I.Element == A and _Source[W].Element == B and F._View[o].Arg == Ior[A, B] and F._View[o].Error == Never and RepeatableUnary[F._View[o]]",
+      "summary": "Map each owned Ior from alignment through a non-raising callback."
      }
     ],
     "all": [
@@ -239001,6 +239066,85 @@
       "type": "AlignWithIterator[A, B, F.Out, _Source[V], _Source[W], F]"
      },
      "signature": "def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable](var function: F, var source: V, var other: W) -> AlignWithIterator[A, B, F.Out, _Source[V], _Source[W], F] where _Source[V].Element == A and _Source[W].Element == B and F.Arg == Ior[A, B] and F.Error == Never and RepeatableUnary[F]",
+     "summary": "Map each owned Ior from alignment through a non-raising callback."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "other",
+       "type": "W",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_UnaryViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "W",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "AlignWithIterator[A, B, F._View[o].Out, _Source[V], _Source[W], F._View[o]]"
+     },
+     "signature": "def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, W: Movable & Deinitable](ref[o] function: F, var source: V, var other: W) -> AlignWithIterator[A, B, F._View[o].Out, _Source[V], _Source[W], F._View[o]] where _Source[V].Element == A and _Source[W].Element == B and F._View[o].Arg == Ior[A, B] and F._View[o].Error == Never and RepeatableUnary[F._View[o]]",
      "summary": "Map each owned Ior from alignment through a non-raising callback."
     }
    ],

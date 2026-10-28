@@ -774,6 +774,11 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """
         return Iter(_align_with[A=A, B=B](function^, self._iterator^, other^))
 
+    def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, W: Movable & Deinitable](deinit self, var other: W, ref[o] function: F) -> Iter[AlignWithIterator[A, B, F._View[o].Out, Self.I, _Source[W], F._View[o]]] where Self.I.Element == A and _Source[W].Element == B and F._View[o].Arg == Ior[A, B] and F._View[o].Error == Never and RepeatableUnary[F._View[o]]:
+        """Map each owned Ior from alignment through a non-raising callback.
+        """
+        return Iter(_align_with[A=A, B=B](function._unary_view(), self._iterator^, other^))
+
     def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, R: Movable & Deinitable](deinit self, var function: def(var A, var T) thin -> R, var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, def(var A, var T) thin -> R]] where Self.I.Element == T and R == Tuple[A, Y]:
         """Lazily consume (carry, input) into (new carry, output), yielding one output per input.
 

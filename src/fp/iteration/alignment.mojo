@@ -3,6 +3,7 @@ from std.iter import Iterator, IterableOwned
 from std.builtin.rebind import downcast
 from fp.data.ior import Ior, _ior_parts, _ior_from_parts
 from fp.callables.protocols import Unary, UnaryContract
+from fp.callables._views import _UnaryViewable
 from fp.callables.invoke import RepeatableUnary
 from ._advance import _Source, _source, _next_optional_fused
 from ._callbacks import _LazyUnary
@@ -160,4 +161,10 @@ def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: UnaryContrac
     """
     var aligned = _Align[A, B, _Source[V], _Source[W]](_source(source^), _source(other^), False, False)
     return AlignWithIterator[A, B, F.Out, _Source[V], _Source[W], F](function^, aligned^, False)
+
+def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, W: Movable & Deinitable](ref[o] function: F, var source: V, var other: W) -> AlignWithIterator[A, B, F._View[o].Out, _Source[V], _Source[W], F._View[o]] where _Source[V].Element == A and _Source[W].Element == B and F._View[o].Arg == Ior[A, B] and F._View[o].Error == Never and RepeatableUnary[F._View[o]]:
+    """Map each owned Ior from alignment through a non-raising callback.
+    """
+    var aligned = _Align[A, B, _Source[V], _Source[W]](_source(source^), _source(other^), False, False)
+    return AlignWithIterator[A, B, F._View[o].Out, _Source[V], _Source[W], F._View[o]](function._unary_view(), aligned^, False)
 # --- end iterator expansion syntax ---

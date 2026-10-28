@@ -148,6 +148,13 @@ identify the input sides; they do not mean failure or success here.
 at least one present field. Fluent calls are `.align(other)`,
 `.align_with(other, function)` and `.pad_zip(other)`.
 
+`align_with` can reuse a named unary `partial`, `as_unary` adapter or shared
+composition. The example uses `describe_pair` twice, then transfers it with
+`describe_pair^`. A named callback stays borrowed until the lazy iterator is
+consumed or discarded; reuse adds no capture copies. Each callback receives an
+owned Ior and may return any movable value, including Optional or Result
+without removing their outer layer.
+
 All three are lazy, preserve each input's current position and use constant
 iterator state. Each output pulls each live side at most once, left before
 right; an exhausted side stays exhausted. Payloads and callback captures can be

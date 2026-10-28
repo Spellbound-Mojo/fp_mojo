@@ -223,32 +223,36 @@ def alignment(mode):
     src='source^' if mode=='free' else 'self._iterator^'
     detail='Construction pulls nothing; each output pulls each live side once, left before right.\nExhausted sides are never polled again. Left and Right denote source sides.\nState is constant-sized; move-only payloads, captures and origins are preserved.'
     for name in ['align','pad_zip','align_with']:
-        for kind in (['thin','native','library'] if name=='align_with' else ['plain']):
+        for kind in (['thin','native','library','view'] if name=='align_with' else ['plain']):
+            shared=callback('owned', 'view').renamed({'C':'F'}) if kind=='view' else None
             params=[f'A: {MD}',f'B: {MD}']; cond=f'{it}.Element == A and {jt}.Element == B'
             args=[]; cb='';u=''
             if name=='align_with':
-                if kind=='library':
-                    params+=[f'F: {callable_protocol("owned")} & {MD}'];cb='F';u='F.Out'
-                    cond+=' and F.Arg == Ior[A, B] and F.Error == Never and RepeatableUnary[F]'
+                if kind in ('library','view'):
+                    params+=list(shared.parameters) if shared else [f'F: {callable_protocol("owned")} & {MD}']
+                    cb=shared.type if shared else 'F'
+                    metadata=callable_metadata('owned', cb);u=metadata.result
+                    cond+=f' and {metadata.inputs[0]} == Ior[A, B] and {metadata.error} == Never and RepeatableUnary[{cb}]'
                 else:
                     params+=[f'T: {MD}',f'U: {MD}'];u='U'
                     cb='def(var T) thin -> U' if kind=='thin' else 'F'
                     cond+=' and T == Ior[A, B]'
-                args+=['var function: '+cb]
+                args+=[shared.argument if shared else 'var function: '+cb]
             if mode=='free':params+=[f'V: {MD}'];args+=['var source: V']
             params+=[f'W: {MD}'];args+=['var other: W']
             if kind=='native':params+=['//','F: _LazyUnary[T, U]']
             result=f'AlignIterator[A, B, {it}, {jt}]' if name=='align' else f'PadZipIterator[A, B, {it}, {jt}]' if name=='pad_zip' else f'AlignWithIterator[A, B, {u}, {it}, {jt}, {cb}]'
+            value=shared.build if shared else 'function'+('' if kind=='thin' else '^')
             if mode=='free':
                 aligned=f'_Align[A, B, {it}, {jt}](_source(source^), _source(other^), False, False)'
-                body='return '+aligned if name=='align' else f'var aligned = {aligned}\nreturn {result}('+('_Pad[A, B]()' if name=='pad_zip' else 'function'+('' if kind=='thin' else '^'))+', aligned^, False)'
+                body='return '+aligned if name=='align' else f'var aligned = {aligned}\nreturn {result}('+('_Pad[A, B]()' if name=='pad_zip' else value)+', aligned^, False)'
             else:
-                args=['deinit self','var other: W']+(['var function: '+cb] if name=='align_with' else [])
+                args=['deinit self','var other: W']+([shared.argument if shared else 'var function: '+cb] if name=='align_with' else [])
                 explicit='[A=A, B=B'+(', T=T, U=U' if kind in ['thin','native'] else '')+']'
-                call=f'_{name}{explicit}('+('function'+('' if kind=='thin' else '^')+', ' if name=='align_with' else '')+f'{src}, other^)'
+                call=f'_{name}{explicit}('+(value+', ' if name=='align_with' else '')+f'{src}, other^)'
                 result=f'Iter[{result}]';body=f'return Iter({call})'
             summary={'align':'Align positions to Ior until both sources end, without truncating either side.','pad_zip':'Align positions to pairs of Optional fields, never yielding two absent fields.','align_with':'Map each owned Ior from alignment through a non-raising callback.'}[name]
-            out+=emit(name,params,args,result,cond,body,summary,detail,indent=ind,docs=kind!='native' and kind!='library')
+            out+=emit(name,params,args,result,cond,body,summary,detail,indent=ind,docs=kind in ('plain','thin'))
     return out
 
 
