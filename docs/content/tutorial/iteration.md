@@ -92,6 +92,11 @@ source; the tail is never evaluated.
 The second chain makes three `odd` calls on `range(1, 4)` and two `pair`
 expansions, and yields `[1, 11, 3, 13]`.
 
+A projection bound with `partial(price, unit_price)` can be reused by name in
+`.sum_by(cost)` and `.max_by(cost)`, as well as eager Pipeline reductions.
+The [reusable projection example](../reference/iteration.md#reuse-projections-in-reductions)
+shows the same callback across these forms.
+
 ## Choose the terminal operation
 
 | Need | Operation | Empty input |

@@ -5160,6 +5160,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == List[F.Arg]
         return Piped(_run_terminal(_FindMapRun[F](function^), rebind_var[List[F.Arg]](self.value^)))
 
+    def find_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[F._View[o].Out] where Self.Value == List[F._View[o].Arg]:
+        """Return the first present transformed result, stopping without another pull."""
+        comptime assert Self.Value == List[F._View[o].Arg]
+        return Piped(_run_terminal(_FindMapRun[F._View[o]](function._unary_view()), rebind_var[List[F._View[o].Arg]](self.value^)))
+
     def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == List[A]:
         """Project and combine in order with a monoid; empty input returns its identity.
 
@@ -5191,6 +5196,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Project and combine in order with a monoid; empty input returns its identity."""
         comptime assert Self.Value == List[F.Arg]
         return Piped(_run_terminal(_FoldMapRun[F, M, _CommonError[F.Error, M.Error]](function^), rebind_var[List[F.Arg]](self.value^)))
+
+    def fold_map[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> Piped[M.Value] where Self.Value == List[F._View[o].Arg]:
+        """Project and combine in order with a monoid; empty input returns its identity."""
+        comptime assert Self.Value == List[F._View[o].Arg]
+        return Piped(_run_terminal(_FoldMapRun[F._View[o], M, _CommonError[F._View[o].Error, M.Error]](function._unary_view()), rebind_var[List[F._View[o].Arg]](self.value^)))
 
     def combine_all[M: Monoid](deinit self) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == List[M.Value]:
         """Combine in order with a monoid; empty input returns its identity.
@@ -5238,6 +5248,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == List[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, True](function^), rebind_var[List[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
 
+    def min_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):
+        """Return the element with the smallest key; empty input is absent and ties keep the first."""
+        comptime assert Self.Value == List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
+        return Piped(_run_terminal(_ExtremumRun[downcast[C._BorrowView[o].Payload, Movable & Deinitable], C._BorrowView[o], True](function._borrow_view()), rebind_var[List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^)))
+
     def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == List[downcast[P, Movable & Deinitable]] and conforms_to(R, Comparable & Movable & Deinitable):
         """Return the element with the largest key; empty input is absent and ties keep the first.
 
@@ -5268,6 +5283,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == List[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, False](function^), rebind_var[List[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
+
+    def max_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):
+        """Return the element with the largest key; empty input is absent and ties keep the first."""
+        comptime assert Self.Value == List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
+        return Piped(_run_terminal(_ExtremumRun[downcast[C._BorrowView[o].Payload, Movable & Deinitable], C._BorrowView[o], False](function._borrow_view()), rebind_var[List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^)))
 
     def sum(deinit self) raises Never -> Piped[Int] where Self.Value == List[Int]:
         """Add in order from zero, preserving the numeric type and SIMD lanes.
@@ -5317,6 +5337,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == List[F.Arg]
         return Piped(_run_terminal(_FoldMapRun[F, _IntSum, F.Error](function^), rebind_var[List[F.Arg]](self.value^)))
 
+    def sum_by[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Int] where Self.Value == List[F._View[o].Arg] and F._View[o].Out == Int:
+        """Project and add in one pass from zero, without an intermediate collection."""
+        comptime assert Self.Value == List[F._View[o].Arg]
+        return Piped(_run_terminal(_FoldMapRun[F._View[o], _IntSum, F._View[o].Error](function._unary_view()), rebind_var[List[F._View[o].Arg]](self.value^)))
+
     def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == List[A] and R == SIMD[dtype, size]:
         """Project and add in one pass from zero, without an intermediate collection."""
         comptime assert Self.Value == List[A]
@@ -5331,6 +5356,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Project and add in one pass from zero, without an intermediate collection."""
         comptime assert Self.Value == List[F.Arg]
         return Piped(_run_terminal(_FoldMapRun[F, _SIMDSum[dtype, size], F.Error](function^), rebind_var[List[F.Arg]](self.value^)))
+
+    def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[SIMD[dtype, size]] where Self.Value == List[F._View[o].Arg] and F._View[o].Out == SIMD[dtype, size]:
+        """Project and add in one pass from zero, without an intermediate collection."""
+        comptime assert Self.Value == List[F._View[o].Arg]
+        return Piped(_run_terminal(_FoldMapRun[F._View[o], _SIMDSum[dtype, size], F._View[o].Error](function._unary_view()), rebind_var[List[F._View[o].Arg]](self.value^)))
 
 
     def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[R] where Self.Value == Array[A, N]:
@@ -5348,6 +5378,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Array[F.Arg, N]
         return Piped(_array_terminal(_FindMapRun[F](function^), rebind_var[Array[F.Arg, N]](self.value^)))
 
+    def find_map[F: _UnaryViewable, o: ImmOrigin, N: Int, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[F._View[o].Out] where Self.Value == Array[F._View[o].Arg, N]:
+        """Return the first present transformed result, stopping without another pull."""
+        comptime assert Self.Value == Array[F._View[o].Arg, N]
+        return Piped(_array_terminal(_FindMapRun[F._View[o]](function._unary_view()), rebind_var[Array[F._View[o].Arg, N]](self.value^)))
+
     def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Array[A, N]:
         """Project and combine in order with a monoid; empty input returns its identity."""
         comptime assert Self.Value == Array[A, N]
@@ -5362,6 +5397,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Project and combine in order with a monoid; empty input returns its identity."""
         comptime assert Self.Value == Array[F.Arg, N]
         return Piped(_array_terminal(_FoldMapRun[F, M, _CommonError[F.Error, M.Error]](function^), rebind_var[Array[F.Arg, N]](self.value^)))
+
+    def fold_map[F: _UnaryViewable, o: ImmOrigin, N: Int, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> Piped[M.Value] where Self.Value == Array[F._View[o].Arg, N]:
+        """Project and combine in order with a monoid; empty input returns its identity."""
+        comptime assert Self.Value == Array[F._View[o].Arg, N]
+        return Piped(_array_terminal(_FoldMapRun[F._View[o], M, _CommonError[F._View[o].Error, M.Error]](function._unary_view()), rebind_var[Array[F._View[o].Arg, N]](self.value^)))
 
     def combine_all[N: Int, //, M: Monoid](deinit self) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Array[M.Value, N]:
         """Combine in order with a monoid; empty input returns its identity."""
@@ -5383,6 +5423,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N]
         return Piped(_array_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, True](function^), rebind_var[Array[downcast[C.Payload, Movable & Deinitable], N]](self.value^)))
 
+    def min_by[C: _BorrowViewable, o: ImmOrigin, N: Int, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Array[downcast[C._BorrowView[o].Payload, Movable & Deinitable], N] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):
+        """Return the element with the smallest key; empty input is absent and ties keep the first."""
+        comptime assert Self.Value == Array[downcast[C._BorrowView[o].Payload, Movable & Deinitable], N]
+        return Piped(_array_terminal(_ExtremumRun[downcast[C._BorrowView[o].Payload, Movable & Deinitable], C._BorrowView[o], True](function._borrow_view()), rebind_var[Array[downcast[C._BorrowView[o].Payload, Movable & Deinitable], N]](self.value^)))
+
     def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and conforms_to(R, Comparable & Movable & Deinitable):
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Array[downcast[P, Movable & Deinitable], N]
@@ -5397,6 +5442,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N]
         return Piped(_array_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, False](function^), rebind_var[Array[downcast[C.Payload, Movable & Deinitable], N]](self.value^)))
+
+    def max_by[C: _BorrowViewable, o: ImmOrigin, N: Int, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Array[downcast[C._BorrowView[o].Payload, Movable & Deinitable], N] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):
+        """Return the element with the largest key; empty input is absent and ties keep the first."""
+        comptime assert Self.Value == Array[downcast[C._BorrowView[o].Payload, Movable & Deinitable], N]
+        return Piped(_array_terminal(_ExtremumRun[downcast[C._BorrowView[o].Payload, Movable & Deinitable], C._BorrowView[o], False](function._borrow_view()), rebind_var[Array[downcast[C._BorrowView[o].Payload, Movable & Deinitable], N]](self.value^)))
 
     def sum[N: Int, //](deinit self) raises Never -> Piped[Int] where Self.Value == Array[Int, N]:
         """Add in order from zero, preserving the numeric type and SIMD lanes."""
@@ -5423,6 +5473,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Array[F.Arg, N]
         return Piped(_array_terminal(_FoldMapRun[F, _IntSum, F.Error](function^), rebind_var[Array[F.Arg, N]](self.value^)))
 
+    def sum_by[F: _UnaryViewable, o: ImmOrigin, N: Int, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Int] where Self.Value == Array[F._View[o].Arg, N] and F._View[o].Out == Int:
+        """Project and add in one pass from zero, without an intermediate collection."""
+        comptime assert Self.Value == Array[F._View[o].Arg, N]
+        return Piped(_array_terminal(_FoldMapRun[F._View[o], _IntSum, F._View[o].Error](function._unary_view()), rebind_var[Array[F._View[o].Arg, N]](self.value^)))
+
     def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == Array[A, N] and R == SIMD[dtype, size]:
         """Project and add in one pass from zero, without an intermediate collection."""
         comptime assert Self.Value == Array[A, N]
@@ -5437,6 +5492,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Project and add in one pass from zero, without an intermediate collection."""
         comptime assert Self.Value == Array[F.Arg, N]
         return Piped(_array_terminal(_FoldMapRun[F, _SIMDSum[dtype, size], F.Error](function^), rebind_var[Array[F.Arg, N]](self.value^)))
+
+    def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, N: Int, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[SIMD[dtype, size]] where Self.Value == Array[F._View[o].Arg, N] and F._View[o].Out == SIMD[dtype, size]:
+        """Project and add in one pass from zero, without an intermediate collection."""
+        comptime assert Self.Value == Array[F._View[o].Arg, N]
+        return Piped(_array_terminal(_FoldMapRun[F._View[o], _SIMDSum[dtype, size], F._View[o].Error](function._unary_view()), rebind_var[Array[F._View[o].Arg, N]](self.value^)))
 
 
     def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[R] where Self.Value == Deque[A]:
@@ -5454,6 +5514,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Deque[F.Arg]
         return Piped(_run_terminal(_FindMapRun[F](function^), rebind_var[Deque[F.Arg]](self.value^)))
 
+    def find_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[F._View[o].Out] where Self.Value == Deque[F._View[o].Arg]:
+        """Return the first present transformed result, stopping without another pull."""
+        comptime assert Self.Value == Deque[F._View[o].Arg]
+        return Piped(_run_terminal(_FindMapRun[F._View[o]](function._unary_view()), rebind_var[Deque[F._View[o].Arg]](self.value^)))
+
     def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Deque[A]:
         """Project and combine in order with a monoid; empty input returns its identity."""
         comptime assert Self.Value == Deque[A]
@@ -5468,6 +5533,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Project and combine in order with a monoid; empty input returns its identity."""
         comptime assert Self.Value == Deque[F.Arg]
         return Piped(_run_terminal(_FoldMapRun[F, M, _CommonError[F.Error, M.Error]](function^), rebind_var[Deque[F.Arg]](self.value^)))
+
+    def fold_map[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> Piped[M.Value] where Self.Value == Deque[F._View[o].Arg]:
+        """Project and combine in order with a monoid; empty input returns its identity."""
+        comptime assert Self.Value == Deque[F._View[o].Arg]
+        return Piped(_run_terminal(_FoldMapRun[F._View[o], M, _CommonError[F._View[o].Error, M.Error]](function._unary_view()), rebind_var[Deque[F._View[o].Arg]](self.value^)))
 
     def combine_all[M: Monoid](deinit self) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Deque[M.Value]:
         """Combine in order with a monoid; empty input returns its identity."""
@@ -5489,6 +5559,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, True](function^), rebind_var[Deque[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
 
+    def min_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):
+        """Return the element with the smallest key; empty input is absent and ties keep the first."""
+        comptime assert Self.Value == Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
+        return Piped(_run_terminal(_ExtremumRun[downcast[C._BorrowView[o].Payload, Movable & Deinitable], C._BorrowView[o], True](function._borrow_view()), rebind_var[Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^)))
+
     def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Deque[downcast[P, Movable & Deinitable]] and conforms_to(R, Comparable & Movable & Deinitable):
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Deque[downcast[P, Movable & Deinitable]]
@@ -5503,6 +5578,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, False](function^), rebind_var[Deque[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
+
+    def max_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):
+        """Return the element with the largest key; empty input is absent and ties keep the first."""
+        comptime assert Self.Value == Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
+        return Piped(_run_terminal(_ExtremumRun[downcast[C._BorrowView[o].Payload, Movable & Deinitable], C._BorrowView[o], False](function._borrow_view()), rebind_var[Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^)))
 
     def sum(deinit self) raises Never -> Piped[Int] where Self.Value == Deque[Int]:
         """Add in order from zero, preserving the numeric type and SIMD lanes."""
@@ -5529,6 +5609,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Deque[F.Arg]
         return Piped(_run_terminal(_FoldMapRun[F, _IntSum, F.Error](function^), rebind_var[Deque[F.Arg]](self.value^)))
 
+    def sum_by[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Int] where Self.Value == Deque[F._View[o].Arg] and F._View[o].Out == Int:
+        """Project and add in one pass from zero, without an intermediate collection."""
+        comptime assert Self.Value == Deque[F._View[o].Arg]
+        return Piped(_run_terminal(_FoldMapRun[F._View[o], _IntSum, F._View[o].Error](function._unary_view()), rebind_var[Deque[F._View[o].Arg]](self.value^)))
+
     def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == Deque[A] and R == SIMD[dtype, size]:
         """Project and add in one pass from zero, without an intermediate collection."""
         comptime assert Self.Value == Deque[A]
@@ -5543,6 +5628,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Project and add in one pass from zero, without an intermediate collection."""
         comptime assert Self.Value == Deque[F.Arg]
         return Piped(_run_terminal(_FoldMapRun[F, _SIMDSum[dtype, size], F.Error](function^), rebind_var[Deque[F.Arg]](self.value^)))
+
+    def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[SIMD[dtype, size]] where Self.Value == Deque[F._View[o].Arg] and F._View[o].Out == SIMD[dtype, size]:
+        """Project and add in one pass from zero, without an intermediate collection."""
+        comptime assert Self.Value == Deque[F._View[o].Arg]
+        return Piped(_run_terminal(_FoldMapRun[F._View[o], _SIMDSum[dtype, size], F._View[o].Error](function._unary_view()), rebind_var[Deque[F._View[o].Arg]](self.value^)))
 
 
     def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[R] where Self.Value == LinkedList[A]:
@@ -5560,6 +5650,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == LinkedList[F.Arg]
         return Piped(_run_terminal(_FindMapRun[F](function^), rebind_var[LinkedList[F.Arg]](self.value^)))
 
+    def find_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[F._View[o].Out] where Self.Value == LinkedList[F._View[o].Arg]:
+        """Return the first present transformed result, stopping without another pull."""
+        comptime assert Self.Value == LinkedList[F._View[o].Arg]
+        return Piped(_run_terminal(_FindMapRun[F._View[o]](function._unary_view()), rebind_var[LinkedList[F._View[o].Arg]](self.value^)))
+
     def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == LinkedList[A]:
         """Project and combine in order with a monoid; empty input returns its identity."""
         comptime assert Self.Value == LinkedList[A]
@@ -5574,6 +5669,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Project and combine in order with a monoid; empty input returns its identity."""
         comptime assert Self.Value == LinkedList[F.Arg]
         return Piped(_run_terminal(_FoldMapRun[F, M, _CommonError[F.Error, M.Error]](function^), rebind_var[LinkedList[F.Arg]](self.value^)))
+
+    def fold_map[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> Piped[M.Value] where Self.Value == LinkedList[F._View[o].Arg]:
+        """Project and combine in order with a monoid; empty input returns its identity."""
+        comptime assert Self.Value == LinkedList[F._View[o].Arg]
+        return Piped(_run_terminal(_FoldMapRun[F._View[o], M, _CommonError[F._View[o].Error, M.Error]](function._unary_view()), rebind_var[LinkedList[F._View[o].Arg]](self.value^)))
 
     def combine_all[M: Monoid](deinit self) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == LinkedList[M.Value]:
         """Combine in order with a monoid; empty input returns its identity."""
@@ -5595,6 +5695,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, True](function^), rebind_var[LinkedList[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
 
+    def min_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):
+        """Return the element with the smallest key; empty input is absent and ties keep the first."""
+        comptime assert Self.Value == LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
+        return Piped(_run_terminal(_ExtremumRun[downcast[C._BorrowView[o].Payload, Movable & Deinitable], C._BorrowView[o], True](function._borrow_view()), rebind_var[LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^)))
+
     def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[P, Movable & Deinitable]] and conforms_to(R, Comparable & Movable & Deinitable):
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == LinkedList[downcast[P, Movable & Deinitable]]
@@ -5609,6 +5714,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, False](function^), rebind_var[LinkedList[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
+
+    def max_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):
+        """Return the element with the largest key; empty input is absent and ties keep the first."""
+        comptime assert Self.Value == LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
+        return Piped(_run_terminal(_ExtremumRun[downcast[C._BorrowView[o].Payload, Movable & Deinitable], C._BorrowView[o], False](function._borrow_view()), rebind_var[LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^)))
 
     def sum(deinit self) raises Never -> Piped[Int] where Self.Value == LinkedList[Int]:
         """Add in order from zero, preserving the numeric type and SIMD lanes."""
@@ -5635,6 +5745,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == LinkedList[F.Arg]
         return Piped(_run_terminal(_FoldMapRun[F, _IntSum, F.Error](function^), rebind_var[LinkedList[F.Arg]](self.value^)))
 
+    def sum_by[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Int] where Self.Value == LinkedList[F._View[o].Arg] and F._View[o].Out == Int:
+        """Project and add in one pass from zero, without an intermediate collection."""
+        comptime assert Self.Value == LinkedList[F._View[o].Arg]
+        return Piped(_run_terminal(_FoldMapRun[F._View[o], _IntSum, F._View[o].Error](function._unary_view()), rebind_var[LinkedList[F._View[o].Arg]](self.value^)))
+
     def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == LinkedList[A] and R == SIMD[dtype, size]:
         """Project and add in one pass from zero, without an intermediate collection."""
         comptime assert Self.Value == LinkedList[A]
@@ -5649,6 +5764,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Project and add in one pass from zero, without an intermediate collection."""
         comptime assert Self.Value == LinkedList[F.Arg]
         return Piped(_run_terminal(_FoldMapRun[F, _SIMDSum[dtype, size], F.Error](function^), rebind_var[LinkedList[F.Arg]](self.value^)))
+
+    def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[SIMD[dtype, size]] where Self.Value == LinkedList[F._View[o].Arg] and F._View[o].Out == SIMD[dtype, size]:
+        """Project and add in one pass from zero, without an intermediate collection."""
+        comptime assert Self.Value == LinkedList[F._View[o].Arg]
+        return Piped(_run_terminal(_FoldMapRun[F._View[o], _SIMDSum[dtype, size], F._View[o].Error](function._unary_view()), rebind_var[LinkedList[F._View[o].Arg]](self.value^)))
 
 
     def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[R] where Self.Value == Dict[K, A, H]:
@@ -5666,6 +5786,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Dict[K, F.Arg, H]
         return Piped(_dict_terminal(_FindMapRun[F](function^), rebind_var[Dict[K, F.Arg, H]](self.value^)))
 
+    def find_map[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[F._View[o].Out] where Self.Value == Dict[K, F._View[o].Arg, H]:
+        """Return the first present transformed result, stopping without another pull."""
+        comptime assert Self.Value == Dict[K, F._View[o].Arg, H]
+        return Piped(_dict_terminal(_FindMapRun[F._View[o]](function._unary_view()), rebind_var[Dict[K, F._View[o].Arg, H]](self.value^)))
+
     def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, A, H]:
         """Project and combine in order with a monoid; empty input returns its identity."""
         comptime assert Self.Value == Dict[K, A, H]
@@ -5680,6 +5805,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Project and combine in order with a monoid; empty input returns its identity."""
         comptime assert Self.Value == Dict[K, F.Arg, H]
         return Piped(_dict_terminal(_FoldMapRun[F, M, _CommonError[F.Error, M.Error]](function^), rebind_var[Dict[K, F.Arg, H]](self.value^)))
+
+    def fold_map[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, F._View[o].Arg, H]:
+        """Project and combine in order with a monoid; empty input returns its identity."""
+        comptime assert Self.Value == Dict[K, F._View[o].Arg, H]
+        return Piped(_dict_terminal(_FoldMapRun[F._View[o], M, _CommonError[F._View[o].Error, M.Error]](function._unary_view()), rebind_var[Dict[K, F._View[o].Arg, H]](self.value^)))
 
     def combine_all[K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, M: Monoid](deinit self) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, M.Value, H]:
         """Combine in order with a monoid; empty input returns its identity."""
@@ -5701,6 +5831,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H]
         return Piped(_dict_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, True](function^), rebind_var[Dict[K, downcast[C.Payload, Movable & Deinitable], H]](self.value^)))
 
+    def min_by[C: _BorrowViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C._BorrowView[o].Payload, Movable & Deinitable], H] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):
+        """Return the element with the smallest key; empty input is absent and ties keep the first."""
+        comptime assert Self.Value == Dict[K, downcast[C._BorrowView[o].Payload, Movable & Deinitable], H]
+        return Piped(_dict_terminal(_ExtremumRun[downcast[C._BorrowView[o].Payload, Movable & Deinitable], C._BorrowView[o], True](function._borrow_view()), rebind_var[Dict[K, downcast[C._BorrowView[o].Payload, Movable & Deinitable], H]](self.value^)))
+
     def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable):
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]
@@ -5715,6 +5850,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Dict[K, downcast[C.Payload, Movable & Deinitable], H]
         return Piped(_dict_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, False](function^), rebind_var[Dict[K, downcast[C.Payload, Movable & Deinitable], H]](self.value^)))
+
+    def max_by[C: _BorrowViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C._BorrowView[o].Payload, Movable & Deinitable], H] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):
+        """Return the element with the largest key; empty input is absent and ties keep the first."""
+        comptime assert Self.Value == Dict[K, downcast[C._BorrowView[o].Payload, Movable & Deinitable], H]
+        return Piped(_dict_terminal(_ExtremumRun[downcast[C._BorrowView[o].Payload, Movable & Deinitable], C._BorrowView[o], False](function._borrow_view()), rebind_var[Dict[K, downcast[C._BorrowView[o].Payload, Movable & Deinitable], H]](self.value^)))
 
     def sum[K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self) raises Never -> Piped[Int] where Self.Value == Dict[K, Int, H]:
         """Add in order from zero, preserving the numeric type and SIMD lanes."""
@@ -5741,6 +5881,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Dict[K, F.Arg, H]
         return Piped(_dict_terminal(_FoldMapRun[F, _IntSum, F.Error](function^), rebind_var[Dict[K, F.Arg, H]](self.value^)))
 
+    def sum_by[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Int] where Self.Value == Dict[K, F._View[o].Arg, H] and F._View[o].Out == Int:
+        """Project and add in one pass from zero, without an intermediate collection."""
+        comptime assert Self.Value == Dict[K, F._View[o].Arg, H]
+        return Piped(_dict_terminal(_FoldMapRun[F._View[o], _IntSum, F._View[o].Error](function._unary_view()), rebind_var[Dict[K, F._View[o].Arg, H]](self.value^)))
+
     def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, A, H] and R == SIMD[dtype, size]:
         """Project and add in one pass from zero, without an intermediate collection."""
         comptime assert Self.Value == Dict[K, A, H]
@@ -5755,6 +5900,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Project and add in one pass from zero, without an intermediate collection."""
         comptime assert Self.Value == Dict[K, F.Arg, H]
         return Piped(_dict_terminal(_FoldMapRun[F, _SIMDSum[dtype, size], F.Error](function^), rebind_var[Dict[K, F.Arg, H]](self.value^)))
+
+    def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, F._View[o].Arg, H] and F._View[o].Out == SIMD[dtype, size]:
+        """Project and add in one pass from zero, without an intermediate collection."""
+        comptime assert Self.Value == Dict[K, F._View[o].Arg, H]
+        return Piped(_dict_terminal(_FoldMapRun[F._View[o], _SIMDSum[dtype, size], F._View[o].Error](function._unary_view()), rebind_var[Dict[K, F._View[o].Arg, H]](self.value^)))
 
 
     def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[R] where Self.Value == StringDict[A]:
@@ -5772,6 +5922,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == StringDict[F.Arg]
         return Piped(_string_dict_terminal(_FindMapRun[F](function^), rebind_var[StringDict[F.Arg]](self.value^)))
 
+    def find_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[F._View[o].Out] where Self.Value == StringDict[F._View[o].Arg]:
+        """Return the first present transformed result, stopping without another pull."""
+        comptime assert Self.Value == StringDict[F._View[o].Arg]
+        return Piped(_string_dict_terminal(_FindMapRun[F._View[o]](function._unary_view()), rebind_var[StringDict[F._View[o].Arg]](self.value^)))
+
     def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == StringDict[A]:
         """Project and combine in order with a monoid; empty input returns its identity."""
         comptime assert Self.Value == StringDict[A]
@@ -5786,6 +5941,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Project and combine in order with a monoid; empty input returns its identity."""
         comptime assert Self.Value == StringDict[F.Arg]
         return Piped(_string_dict_terminal(_FoldMapRun[F, M, _CommonError[F.Error, M.Error]](function^), rebind_var[StringDict[F.Arg]](self.value^)))
+
+    def fold_map[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> Piped[M.Value] where Self.Value == StringDict[F._View[o].Arg]:
+        """Project and combine in order with a monoid; empty input returns its identity."""
+        comptime assert Self.Value == StringDict[F._View[o].Arg]
+        return Piped(_string_dict_terminal(_FoldMapRun[F._View[o], M, _CommonError[F._View[o].Error, M.Error]](function._unary_view()), rebind_var[StringDict[F._View[o].Arg]](self.value^)))
 
     def combine_all[M: Monoid](deinit self) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == StringDict[M.Value]:
         """Combine in order with a monoid; empty input returns its identity."""
@@ -5807,6 +5967,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_string_dict_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, True](function^), rebind_var[StringDict[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
 
+    def min_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):
+        """Return the element with the smallest key; empty input is absent and ties keep the first."""
+        comptime assert Self.Value == StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
+        return Piped(_string_dict_terminal(_ExtremumRun[downcast[C._BorrowView[o].Payload, Movable & Deinitable], C._BorrowView[o], True](function._borrow_view()), rebind_var[StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^)))
+
     def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == StringDict[downcast[P, Movable & Deinitable]] and conforms_to(R, Comparable & Movable & Deinitable):
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == StringDict[downcast[P, Movable & Deinitable]]
@@ -5821,6 +5986,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == StringDict[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_string_dict_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, False](function^), rebind_var[StringDict[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
+
+    def max_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):
+        """Return the element with the largest key; empty input is absent and ties keep the first."""
+        comptime assert Self.Value == StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
+        return Piped(_string_dict_terminal(_ExtremumRun[downcast[C._BorrowView[o].Payload, Movable & Deinitable], C._BorrowView[o], False](function._borrow_view()), rebind_var[StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^)))
 
     def sum(deinit self) raises Never -> Piped[Int] where Self.Value == StringDict[Int]:
         """Add in order from zero, preserving the numeric type and SIMD lanes."""
@@ -5847,6 +6017,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == StringDict[F.Arg]
         return Piped(_string_dict_terminal(_FoldMapRun[F, _IntSum, F.Error](function^), rebind_var[StringDict[F.Arg]](self.value^)))
 
+    def sum_by[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Int] where Self.Value == StringDict[F._View[o].Arg] and F._View[o].Out == Int:
+        """Project and add in one pass from zero, without an intermediate collection."""
+        comptime assert Self.Value == StringDict[F._View[o].Arg]
+        return Piped(_string_dict_terminal(_FoldMapRun[F._View[o], _IntSum, F._View[o].Error](function._unary_view()), rebind_var[StringDict[F._View[o].Arg]](self.value^)))
+
     def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == StringDict[A] and R == SIMD[dtype, size]:
         """Project and add in one pass from zero, without an intermediate collection."""
         comptime assert Self.Value == StringDict[A]
@@ -5861,6 +6036,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Project and add in one pass from zero, without an intermediate collection."""
         comptime assert Self.Value == StringDict[F.Arg]
         return Piped(_string_dict_terminal(_FoldMapRun[F, _SIMDSum[dtype, size], F.Error](function^), rebind_var[StringDict[F.Arg]](self.value^)))
+
+    def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[SIMD[dtype, size]] where Self.Value == StringDict[F._View[o].Arg] and F._View[o].Out == SIMD[dtype, size]:
+        """Project and add in one pass from zero, without an intermediate collection."""
+        comptime assert Self.Value == StringDict[F._View[o].Arg]
+        return Piped(_string_dict_terminal(_FoldMapRun[F._View[o], _SIMDSum[dtype, size], F._View[o].Error](function._unary_view()), rebind_var[StringDict[F._View[o].Arg]](self.value^)))
 
 
     def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[R] where Self.Value == Optional[A]:
@@ -5878,6 +6058,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Optional[F.Arg]
         return Piped(_run_terminal(_FindMapRun[F](function^), rebind_var[Optional[F.Arg]](self.value^)))
 
+    def find_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[F._View[o].Out] where Self.Value == Optional[F._View[o].Arg]:
+        """Return the first present transformed result, stopping without another pull."""
+        comptime assert Self.Value == Optional[F._View[o].Arg]
+        return Piped(_run_terminal(_FindMapRun[F._View[o]](function._unary_view()), rebind_var[Optional[F._View[o].Arg]](self.value^)))
+
     def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Optional[A]:
         """Project and combine in order with a monoid; empty input returns its identity."""
         comptime assert Self.Value == Optional[A]
@@ -5892,6 +6077,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Project and combine in order with a monoid; empty input returns its identity."""
         comptime assert Self.Value == Optional[F.Arg]
         return Piped(_run_terminal(_FoldMapRun[F, M, _CommonError[F.Error, M.Error]](function^), rebind_var[Optional[F.Arg]](self.value^)))
+
+    def fold_map[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> Piped[M.Value] where Self.Value == Optional[F._View[o].Arg]:
+        """Project and combine in order with a monoid; empty input returns its identity."""
+        comptime assert Self.Value == Optional[F._View[o].Arg]
+        return Piped(_run_terminal(_FoldMapRun[F._View[o], M, _CommonError[F._View[o].Error, M.Error]](function._unary_view()), rebind_var[Optional[F._View[o].Arg]](self.value^)))
 
     def combine_all[M: Monoid](deinit self) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Optional[M.Value]:
         """Combine in order with a monoid; empty input returns its identity."""
@@ -5913,6 +6103,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, True](function^), rebind_var[Optional[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
 
+    def min_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):
+        """Return the element with the smallest key; empty input is absent and ties keep the first."""
+        comptime assert Self.Value == Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
+        return Piped(_run_terminal(_ExtremumRun[downcast[C._BorrowView[o].Payload, Movable & Deinitable], C._BorrowView[o], True](function._borrow_view()), rebind_var[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^)))
+
     def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Optional[downcast[P, Movable & Deinitable]] and conforms_to(R, Comparable & Movable & Deinitable):
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Optional[downcast[P, Movable & Deinitable]]
@@ -5927,6 +6122,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         comptime assert Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]]
         return Piped(_run_terminal(_ExtremumRun[downcast[C.Payload, Movable & Deinitable], C, False](function^), rebind_var[Optional[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
+
+    def max_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):
+        """Return the element with the largest key; empty input is absent and ties keep the first."""
+        comptime assert Self.Value == Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
+        return Piped(_run_terminal(_ExtremumRun[downcast[C._BorrowView[o].Payload, Movable & Deinitable], C._BorrowView[o], False](function._borrow_view()), rebind_var[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^)))
 
     def sum(deinit self) raises Never -> Piped[Int] where Self.Value == Optional[Int]:
         """Add in order from zero, preserving the numeric type and SIMD lanes."""
@@ -5953,6 +6153,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Optional[F.Arg]
         return Piped(_run_terminal(_FoldMapRun[F, _IntSum, F.Error](function^), rebind_var[Optional[F.Arg]](self.value^)))
 
+    def sum_by[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Int] where Self.Value == Optional[F._View[o].Arg] and F._View[o].Out == Int:
+        """Project and add in one pass from zero, without an intermediate collection."""
+        comptime assert Self.Value == Optional[F._View[o].Arg]
+        return Piped(_run_terminal(_FoldMapRun[F._View[o], _IntSum, F._View[o].Error](function._unary_view()), rebind_var[Optional[F._View[o].Arg]](self.value^)))
+
     def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == Optional[A] and R == SIMD[dtype, size]:
         """Project and add in one pass from zero, without an intermediate collection."""
         comptime assert Self.Value == Optional[A]
@@ -5967,6 +6172,11 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Project and add in one pass from zero, without an intermediate collection."""
         comptime assert Self.Value == Optional[F.Arg]
         return Piped(_run_terminal(_FoldMapRun[F, _SIMDSum[dtype, size], F.Error](function^), rebind_var[Optional[F.Arg]](self.value^)))
+
+    def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[SIMD[dtype, size]] where Self.Value == Optional[F._View[o].Arg] and F._View[o].Out == SIMD[dtype, size]:
+        """Project and add in one pass from zero, without an intermediate collection."""
+        comptime assert Self.Value == Optional[F._View[o].Arg]
+        return Piped(_run_terminal(_FoldMapRun[F._View[o], _SIMDSum[dtype, size], F._View[o].Error](function._unary_view()), rebind_var[Optional[F._View[o].Arg]](self.value^)))
 
 
     def traverse_tap[C: BorrowCallContract & Movable & Deinitable, //, S: Traversable, G: Applicative, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, S.TraverseError[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]] -> Piped[S.Traversed[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]] where S.Element[Self.Value] == downcast[C.Payload, Movable & Deinitable] and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _CarrierCompatible[G, C.Result] and S.TargetCompatible[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]:

@@ -421,7 +421,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         operation = TERMINALS[name]
         borrowed = operation.borrowing
         for numeric in (("int", "simd") if name == "sum_by" else (None,)):
-            callbacks = borrowing_callbacks(element, "function") if borrowed else owning_callbacks("owned", element, "function", view=name == "find_map")
+            callbacks = borrowing_callbacks(element, "function") if borrowed else owning_callbacks("owned", element, "function", view=True)
             for cb in callbacks:
                 c, result, error = cb["adapter_type"], cb["result"], cb["error"]
                 params = list(cb["params"])

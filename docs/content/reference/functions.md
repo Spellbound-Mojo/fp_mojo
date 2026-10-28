@@ -326,6 +326,13 @@ repeatable library callables, including mutable state; borrowing keys use
 must agree when both can raise. These eager reductions select the result's
 native family and preserve the selected native error for subsequent stages.
 
+A named unary `partial`, stored `as_unary` adapter or shared composition can
+be reused directly in `sum_by`, `fold_map` and `find_map`, across selected
+Pipeline, Piped and iterator forms. These immediate calls borrow the callback;
+`callback^` transfers it. Partial key functions also work in `min_by` and
+`max_by`, without copying move-only payloads. See the
+[reusable projection example](iteration.md#reuse-projections-in-reductions).
+
 Structural mapping methods keep the selected family. `fill(value)` copies a constant
 into each payload position; `replace(old, new)` copies `new` into positions
 equal to `old` and moves other payloads unchanged. `tuple_left(value)` and

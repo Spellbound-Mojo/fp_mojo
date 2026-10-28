@@ -2012,6 +2012,11 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[_NativeFamily[M.Value], M.Value, Self.E](_fold_map[Self.V, C, M, _CommonError[C.Error, M.Error]](function^, self.value^))
 
     @always_inline
+    def fold_map[C: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: C) raises _CommonError[C._View[o].Error, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and C._View[o].Out == M.Value and RepeatableUnary[C._View[o]] and _ErrorCompatible[_CommonError[C._View[o].Error, M.Error], M.Error] and _ErrorCompatible[_CommonError[C._View[o].Error, M.Error], C._View[o].Error]:
+        """Reduce the consumed source in order through the canonical terminal driver."""
+        return Pipeline[_NativeFamily[M.Value], M.Value, Self.E](_fold_map[Self.V, C._View[o], M, _CommonError[C._View[o].Error, M.Error]](function._unary_view(), self.value^))
+
+    @always_inline
     def fold_map[R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where R == M.Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]:
         """Reduce the consumed source in order through the canonical terminal driver."""
         return Pipeline[_NativeFamily[M.Value], M.Value, Self.E](_fold_map[Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o], M, _CommonError[Never, M.Error]](_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o](Pointer(to=function)), self.value^))
@@ -2065,6 +2070,11 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E](_fold_map[Self.V, C, _IntSum, _CommonError[C.Error, _IntSum.Error]](function^, self.value^))
 
     @always_inline
+    def sum_by[C: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises _CommonError[C._View[o].Error, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and C._View[o].Out == _IntSum.Value and RepeatableUnary[C._View[o]] and _ErrorCompatible[_CommonError[C._View[o].Error, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[C._View[o].Error, _IntSum.Error], C._View[o].Error]:
+        """Reduce the consumed source in order through the canonical terminal driver."""
+        return Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E](_fold_map[Self.V, C._View[o], _IntSum, _CommonError[C._View[o].Error, _IntSum.Error]](function._unary_view(), self.value^))
+
+    @always_inline
     def sum_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where R == _IntSum.Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]:
         """Reduce the consumed source in order through the canonical terminal driver."""
         return Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E](_fold_map[Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o], _IntSum, _CommonError[Never, _IntSum.Error]](_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o](Pointer(to=function)), self.value^))
@@ -2103,6 +2113,11 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
     def sum_by[C: UnaryContract & Movable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, var function: C) raises _CommonError[C.Error, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where C.Arg == _FoldElement[Self.V] and C.Out == _SIMDSum[dtype, size].Value and RepeatableUnary[C] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[C.Error, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[C.Error, _SIMDSum[dtype, size].Error], C.Error]:
         """Reduce the consumed source in order through the canonical terminal driver."""
         return Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E](_fold_map[Self.V, C, _SIMDSum[dtype, size], _CommonError[C.Error, _SIMDSum[dtype, size].Error]](function^, self.value^))
+
+    @always_inline
+    def sum_by[C: _UnaryViewable, o: ImmOrigin, //, dtype: DType, size: SIMDLength](deinit self, ref[o] function: C) raises _CommonError[C._View[o].Error, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and C._View[o].Out == _SIMDSum[dtype, size].Value and RepeatableUnary[C._View[o]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[C._View[o].Error, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[C._View[o].Error, _SIMDSum[dtype, size].Error], C._View[o].Error]:
+        """Reduce the consumed source in order through the canonical terminal driver."""
+        return Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E](_fold_map[Self.V, C._View[o], _SIMDSum[dtype, size], _CommonError[C._View[o].Error, _SIMDSum[dtype, size].Error]](function._unary_view(), self.value^))
 
     @always_inline
     def sum_by[R: Movable & Deinitable, o: ImmOrigin, //, dtype: DType, size: SIMDLength, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where R == _SIMDSum[dtype, size].Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]:

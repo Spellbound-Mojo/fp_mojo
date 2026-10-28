@@ -1,5 +1,6 @@
 """Derived terminal rules over the canonical accumulation driver."""
 from fp.callables._identity import Identity as _Same
+from fp.callables._views import _UnaryViewable, _BorrowViewable
 from fp.callables.native import _Unary, _RaisingUnary, _NativeUnaryRef, _Borrowing, _RaisingBorrowing, _NativeBorrowRef
 from ._advance import _Source
 
@@ -7,7 +8,7 @@ from std.builtin.rebind import downcast, rebind_var
 from std.memory import MaybeUninit
 from fp.algebra._accumulation import _Combine, _FirstPresent
 from fp.algebra.protocols import Monoid, _Accumulate, _map_accumulate, _start_as
-from fp.algebra.instances import _ListElement
+from fp.algebra.instances import _ListElement, _NativeFamily, OptionalFamily
 from fp.callables.protocols import UnaryContract, BorrowCallable
 from fp.callables._transforms import _Observe
 from fp.callables.products import _take_pair
@@ -59,15 +60,19 @@ def _fold_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, 
               E: Movable & Deinitable = _CommonError[F.Error, M.Error]](
     var function: F, var source: V
 ) raises E -> M.Value:
-    comptime assert _ErrorCompatible[E, M.Error] and _ErrorCompatible[E, F.Error]
+    comptime assert _ErrorCompatible[E, M.Error] and _ErrorCompatible[E, F.Error], "fold_map: callback and monoid error types must match"
     return _map_accumulate[V, F, _Combine[M], E](function^, source^, _start_as[E, _Combine[M]]())
 
 
 def _find_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
     var function: F, var source: V
 ) raises F.Error -> F.Out:
-    comptime U = _ListElement[F.Out]
-    comptime assert F.Out == Optional[U], "find_map: Optional result required"
+    # Guard the element projection so a scalar reaches the operation diagnostic
+    # instead of failing an IterableOwned witness lookup. The fallback is never
+    # executable: the carrier assertion must hold before accumulation.
+    comptime valid = _NativeFamily[F.Out] == OptionalFamily
+    comptime U = _ListElement[F.Out] if valid else Never
+    comptime assert valid, "find_map: Optional result required"
     return rebind_var[F.Out](_map_accumulate[V, F, _FirstPresent[U], F.Error](function^, source^, Optional[U]()))
 
 
@@ -169,6 +174,10 @@ def find_map[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, /
     """Return the first present transformed result, stopping without another pull."""
     return _find_map(function^, source^)
 
+def find_map[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: F, var source: V) raises F._View[o].Error -> F._View[o].Out where _Source[V].Element == F._View[o].Arg:
+    """Return the first present transformed result, stopping without another pull."""
+    return _find_map(function._unary_view(), source^)
+
 def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid, F: _Unary[A, R]](ref[o] function: F, var source: V) raises _CommonError[Never, M.Error] -> M.Value where _Source[V].Element == A:
     """Project and combine in order with a monoid; empty input returns its identity.
 
@@ -199,6 +208,10 @@ def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: 
 def fold_map[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, M: Monoid](var function: F, var source: V) raises _CommonError[F.Error, M.Error] -> M.Value where _Source[V].Element == F.Arg:
     """Project and combine in order with a monoid; empty input returns its identity."""
     return _fold_map[M=M](function^, source^)
+
+def fold_map[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid](ref[o] function: F, var source: V) raises _CommonError[F._View[o].Error, M.Error] -> M.Value where _Source[V].Element == F._View[o].Arg:
+    """Project and combine in order with a monoid; empty input returns its identity."""
+    return _fold_map[M=M](function._unary_view(), source^)
 
 def combine_all[V: Movable & Deinitable, //, M: Monoid](var source: V) raises _CommonError[Never, M.Error] -> M.Value where _Source[V].Element == M.Value:
     """Combine in order with a monoid; empty input returns its identity.
@@ -248,6 +261,10 @@ def min_by[C: BorrowCallable, V: Movable & Deinitable, //](var function: C, var 
     """Return the element with the smallest key; empty input is absent and ties keep the first."""
     return _extremum[T=downcast[C.Payload, Movable & Deinitable], C=C, smallest=True](function^, source^)
 
+def min_by[C: _BorrowViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: C, var source: V) raises C._BorrowView[o].Failure -> Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):
+    """Return the element with the smallest key; empty input is absent and ties keep the first."""
+    return _extremum[T=downcast[C._BorrowView[o].Payload, Movable & Deinitable], C=C._BorrowView[o], smallest=True](function._borrow_view(), source^)
+
 def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, F: _Borrowing[P, R]](ref[o] function: F, var source: V) raises Never -> Optional[downcast[P, Movable & Deinitable]] where _Source[V].Element == downcast[P, Movable & Deinitable] and conforms_to(R, Comparable & Movable & Deinitable):
     """Return the element with the largest key; empty input is absent and ties keep the first.
 
@@ -277,6 +294,10 @@ def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deini
 def max_by[C: BorrowCallable, V: Movable & Deinitable, //](var function: C, var source: V) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable):
     """Return the element with the largest key; empty input is absent and ties keep the first."""
     return _extremum[T=downcast[C.Payload, Movable & Deinitable], C=C, smallest=False](function^, source^)
+
+def max_by[C: _BorrowViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: C, var source: V) raises C._BorrowView[o].Failure -> Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):
+    """Return the element with the largest key; empty input is absent and ties keep the first."""
+    return _extremum[T=downcast[C._BorrowView[o].Payload, Movable & Deinitable], C=C._BorrowView[o], smallest=False](function._borrow_view(), source^)
 
 def sum[V: Movable & Deinitable, //](var source: V) raises Never -> Int where _Source[V].Element == Int:
     """Add in order from zero, preserving the numeric type and SIMD lanes.
@@ -329,6 +350,10 @@ def sum_by[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //]
     """Project and add in one pass from zero, without an intermediate collection."""
     return _fold_map[M=_IntSum, E=F.Error](function^, source^)
 
+def sum_by[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: F, var source: V) raises F._View[o].Error -> Int where _Source[V].Element == F._View[o].Arg and F._View[o].Out == Int:
+    """Project and add in one pass from zero, without an intermediate collection."""
+    return _fold_map[M=_IntSum, E=F._View[o].Error](function._unary_view(), source^)
+
 def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, F: _Unary[A, R]](ref[o] function: F, var source: V) raises Never -> SIMD[dtype, size] where _Source[V].Element == A and R == SIMD[dtype, size]:
     """Project and add in one pass from zero, without an intermediate collection."""
     return _fold_map[M=_SIMDSum[dtype, size], E=Never](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), source^)
@@ -340,5 +365,9 @@ def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable &
 def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //](var function: F, var source: V) raises F.Error -> SIMD[dtype, size] where _Source[V].Element == F.Arg and F.Out == SIMD[dtype, size]:
     """Project and add in one pass from zero, without an intermediate collection."""
     return _fold_map[M=_SIMDSum[dtype, size], E=F.Error](function^, source^)
+
+def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: F, var source: V) raises F._View[o].Error -> SIMD[dtype, size] where _Source[V].Element == F._View[o].Arg and F._View[o].Out == SIMD[dtype, size]:
+    """Project and add in one pass from zero, without an intermediate collection."""
+    return _fold_map[M=_SIMDSum[dtype, size], E=F._View[o].Error](function._unary_view(), source^)
 
 # --- end terminal syntax ---

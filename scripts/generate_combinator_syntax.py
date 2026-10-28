@@ -1,7 +1,7 @@
 """Thin terminal admission signatures shared by free functions and fluent APIs."""
 from combinator_docs import document_first_methods
 from operation_specs import TERMINALS
-from native_signatures import MD, callable_protocol, callable_metadata, native_adapter
+from native_signatures import MD, callback, callable_protocol, callable_metadata, native_adapter
 
 START = '# --- terminal syntax (generated) ---\n'
 END = '# --- end terminal syntax ---\n'
@@ -18,7 +18,7 @@ def terminal_methods(mode, carrier=None):
     for name, numeric in operations:
         operation = TERMINALS[name]
         callback_arg = operation.callback
-        for kind in (('pure', 'raising', 'library') if callback_arg else ('none',)):
+        for kind in (('pure', 'raising', 'library', 'view') if callback_arg else ('none',)):
             native = kind in {'pure', 'raising'}
             borrowing = operation.borrowing
             params, explicit = [], []
@@ -33,6 +33,12 @@ def terminal_methods(mode, carrier=None):
                 metadata = callable_metadata('borrow' if borrowing else 'owned', 'C' if borrowing else 'F')
                 element = f'downcast[{metadata.inputs[0]}, {MD}]' if borrowing else metadata.inputs[0]
                 callback_result = metadata.result
+            elif kind == 'view':
+                view = callback('borrow' if borrowing else 'owned', kind)
+                if not borrowing: view = view.renamed({'C': 'F'})
+                params += view.parameters
+                element = f'downcast[{view.payload}, {MD}]' if borrowing else view.payload
+                callback_result = view.result
             else:
                 element = numeric_type if name == 'sum' else 'M.Value'
                 callback_result = element
@@ -49,6 +55,8 @@ def terminal_methods(mode, carrier=None):
             elif kind == 'library':
                 error, cb = metadata.error, 'C' if borrowing else 'F'
                 build, arg = 'function^', f'var function: {cb}'
+            elif kind == 'view':
+                error, cb, build, arg = view.error, view.type, view.build, view.argument
             else:
                 error, cb, build, arg = 'Never', f'_Same[{element}]', f'_Same[{element}]()', ''
             params += (['//'] if params else []) + explicit

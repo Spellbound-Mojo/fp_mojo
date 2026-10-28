@@ -2977,6 +2977,10 @@
             "sha256": "594df686a3e7adffeb74cb63a9c7745ffd48392200636705c68ec7bb52c37a24"
           },
           {
+            "signature": "def find_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[F._View[o].Out] where Self.Value == List[F._View[o].Arg]:",
+            "sha256": "02c84a044464bab9e5c17d458fea9a24b47c66fe296c0ba855effcaa05f2bbd0"
+          },
+          {
             "signature": "def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[R] where Self.Value == Array[A, N]:",
             "sha256": "5f241fdcf0137bdeda4666cc97b46505e2fe4dadacd0fdd16e12bbc1f7845ca7"
           },
@@ -2987,6 +2991,10 @@
           {
             "signature": "def find_map[F: UnaryContract & Movable & Deinitable, N: Int, //](deinit self, var function: F) raises F.Error -> Piped[F.Out] where Self.Value == Array[F.Arg, N]:",
             "sha256": "bb28546e1d8e03ece6d2644f99f7c8501a0cdd7c8c770e1f9822020b83b12a2f"
+          },
+          {
+            "signature": "def find_map[F: _UnaryViewable, o: ImmOrigin, N: Int, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[F._View[o].Out] where Self.Value == Array[F._View[o].Arg, N]:",
+            "sha256": "105185e2dbe84dbf7cc674599caca2a29336996a7704ed12e81cb1bdc3964de5"
           },
           {
             "signature": "def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[R] where Self.Value == Deque[A]:",
@@ -3001,6 +3009,10 @@
             "sha256": "efa4106709d2c8d8b69a87c97dffd63739c7ffc2ea583ff1bfd50f852aa01c00"
           },
           {
+            "signature": "def find_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[F._View[o].Out] where Self.Value == Deque[F._View[o].Arg]:",
+            "sha256": "0b5b3fd0b0f823aee2bdf934ae242cfaf3efc22b6992edaa63ebae9b275f670e"
+          },
+          {
             "signature": "def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[R] where Self.Value == LinkedList[A]:",
             "sha256": "cdd2e020d146a007aa86ff84c9dbaad4c404f02fc9bde2f109db7f5a350b714a"
           },
@@ -3011,6 +3023,10 @@
           {
             "signature": "def find_map[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[F.Out] where Self.Value == LinkedList[F.Arg]:",
             "sha256": "cb66ff1a40f6d404e0b53140bb83238cd09d63343ba5a6cadce51599e3f86830"
+          },
+          {
+            "signature": "def find_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[F._View[o].Out] where Self.Value == LinkedList[F._View[o].Arg]:",
+            "sha256": "500c76ebddaa8aefc0e9faf4c71704230ac79ef510426ae5df6917b022890cbd"
           },
           {
             "signature": "def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[R] where Self.Value == Dict[K, A, H]:",
@@ -3025,6 +3041,10 @@
             "sha256": "879ff2481410d3be4aeb791a33c2fdf049d2d59d3cc3566cd28e40d5985abc0b"
           },
           {
+            "signature": "def find_map[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[F._View[o].Out] where Self.Value == Dict[K, F._View[o].Arg, H]:",
+            "sha256": "ff92b3ab3725b7aae355535fa11709fa30ce228002dfafe90c8d8c2a4823acc9"
+          },
+          {
             "signature": "def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[R] where Self.Value == StringDict[A]:",
             "sha256": "e330f079eab584d63b3886f31c9edd26dc8e27c19f12345c086685fafae773a4"
           },
@@ -3037,6 +3057,10 @@
             "sha256": "d42f683d569333395031ba5c1a9c1701095874404592dbb1e58805c9fa749c96"
           },
           {
+            "signature": "def find_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[F._View[o].Out] where Self.Value == StringDict[F._View[o].Arg]:",
+            "sha256": "25c78ff85eb5f0794c377cefa23ae25673950876eb2b3256b0fef3189c960bbd"
+          },
+          {
             "signature": "def find_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[R] where Self.Value == Optional[A]:",
             "sha256": "8d0366547324be99c6197006ec4dc166773120bdd080b41771cd1ee32bd6bdc8"
           },
@@ -3047,6 +3071,10 @@
           {
             "signature": "def find_map[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[F.Out] where Self.Value == Optional[F.Arg]:",
             "sha256": "077eae2cb2991213c4484892c05ef3ff26856463ad4191f93b8b419da118d37f"
+          },
+          {
+            "signature": "def find_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[F._View[o].Out] where Self.Value == Optional[F._View[o].Arg]:",
+            "sha256": "78b3e08d72a01dfd13ea90b39610f39cd70c5e53c5216f1f4d7223c940ad8ce2"
           }
         ],
         "fold_map": [
@@ -3063,6 +3091,10 @@
             "sha256": "472e045a7e3dc4e2c78e9e1c80e55c57bc05e2cff1c81f2e2de1f139c80ccf10"
           },
           {
+            "signature": "def fold_map[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> Piped[M.Value] where Self.Value == List[F._View[o].Arg]:",
+            "sha256": "a4985d6e7d708aa49799fc6318f6c5805d64768a6d26d848c63841fc41fe5071"
+          },
+          {
             "signature": "def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Array[A, N]:",
             "sha256": "0ca75b35411632daf5f11840545297808d30505bfa17ae07ef6a6b65f2b67547"
           },
@@ -3073,6 +3105,10 @@
           {
             "signature": "def fold_map[F: UnaryContract & Movable & Deinitable, N: Int, //, M: Monoid](deinit self, var function: F) raises _CommonError[F.Error, M.Error] -> Piped[M.Value] where Self.Value == Array[F.Arg, N]:",
             "sha256": "d3103ae1529e8fe8bb0edc4d8195eb05b5c7abb4e16c01130343c45118f81349"
+          },
+          {
+            "signature": "def fold_map[F: _UnaryViewable, o: ImmOrigin, N: Int, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> Piped[M.Value] where Self.Value == Array[F._View[o].Arg, N]:",
+            "sha256": "380c622779b73373126b19bbfebc017e0f019361a0dcc65e9aabe4c832a419de"
           },
           {
             "signature": "def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Deque[A]:",
@@ -3087,6 +3123,10 @@
             "sha256": "868b976372e29b2970b79a349799a694b58273b598dde28ba0a3f94685b378a0"
           },
           {
+            "signature": "def fold_map[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> Piped[M.Value] where Self.Value == Deque[F._View[o].Arg]:",
+            "sha256": "eb7b6e2d2facbb9dc0b9cbc29b09026257df02da1a9223a0eea96cb38d965661"
+          },
+          {
             "signature": "def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == LinkedList[A]:",
             "sha256": "21432f469956b4f421e365f93d37eb7142ca6040da82e24d06f2f252eceddaff"
           },
@@ -3097,6 +3137,10 @@
           {
             "signature": "def fold_map[F: UnaryContract & Movable & Deinitable, //, M: Monoid](deinit self, var function: F) raises _CommonError[F.Error, M.Error] -> Piped[M.Value] where Self.Value == LinkedList[F.Arg]:",
             "sha256": "777e3895221e1caa6851205ceecd35850abdfa6e6a3b689756075f5d4a914592"
+          },
+          {
+            "signature": "def fold_map[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> Piped[M.Value] where Self.Value == LinkedList[F._View[o].Arg]:",
+            "sha256": "09940b8b8578d1c19c63b10efb6250479315135816d18bd877ddd0b8f74ee6d2"
           },
           {
             "signature": "def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, A, H]:",
@@ -3111,6 +3155,10 @@
             "sha256": "c25a80774a59362930284147a8111784743ca375e08a1ba28058db03ced493b2"
           },
           {
+            "signature": "def fold_map[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, F._View[o].Arg, H]:",
+            "sha256": "136d14ceb37e06b190830a484442eb672243ea5cb4db360bd20c7cc02761e57c"
+          },
+          {
             "signature": "def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == StringDict[A]:",
             "sha256": "753ee9450853afdbb61bcc0eba13092d29adc2690f319eeac1542a8a93e652dc"
           },
@@ -3123,6 +3171,10 @@
             "sha256": "1d2feef19fc40252cd2537cc110bcc53d909ab4ba682245b89f97027fc0ab2ea"
           },
           {
+            "signature": "def fold_map[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> Piped[M.Value] where Self.Value == StringDict[F._View[o].Arg]:",
+            "sha256": "dd00c79a3b3b86a7c37e2a5564c37f62098437ef9352b03ad09a8eb6637fca92"
+          },
+          {
             "signature": "def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> Piped[M.Value] where Self.Value == Optional[A]:",
             "sha256": "4635e493e0a3e3193281d8eab2fcf0d94cd449c9c7b8c6e7a7ba0431e779e420"
           },
@@ -3133,6 +3185,10 @@
           {
             "signature": "def fold_map[F: UnaryContract & Movable & Deinitable, //, M: Monoid](deinit self, var function: F) raises _CommonError[F.Error, M.Error] -> Piped[M.Value] where Self.Value == Optional[F.Arg]:",
             "sha256": "5fcdce47f7e51c89ea0cf28ef734c4ec3f2dbd9a87ae56591a43d0f11e30da15"
+          },
+          {
+            "signature": "def fold_map[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> Piped[M.Value] where Self.Value == Optional[F._View[o].Arg]:",
+            "sha256": "297674c4163ca5dcb8620f6bfbf852c10ed047a9ab4cefdbc6b318104125dc55"
           }
         ],
         "combine_all": [
@@ -3179,6 +3235,10 @@
             "sha256": "5d4129ee3362af56320eecea5c53612478d5e4624de753bb1fbecbc56d7917bf"
           },
           {
+            "signature": "def min_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+            "sha256": "618c50e7523f69d8c6a3907141bec5b4d7aa5d70e4726b5ce664ead523e5fbbc"
+          },
+          {
             "signature": "def min_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and conforms_to(R, Comparable & Movable & Deinitable):",
             "sha256": "aba77ca56c95e3934ebdc7228df6139f0d02f9d94860fdfd3fecc52808daceb5"
           },
@@ -3189,6 +3249,10 @@
           {
             "signature": "def min_by[C: BorrowCallable, N: Int, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N] and conforms_to(C.Result, Comparable & Movable & Deinitable):",
             "sha256": "f7e285ac7ebbb58ca3cd40e80f777eed8e8d904a7f0e8d421120641b1c8d98a3"
+          },
+          {
+            "signature": "def min_by[C: _BorrowViewable, o: ImmOrigin, N: Int, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Array[downcast[C._BorrowView[o].Payload, Movable & Deinitable], N] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+            "sha256": "a76efa292d8a58274b9f0abf0b46f58a36be7bc7393d585db47652b1f5dc1898"
           },
           {
             "signature": "def min_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Deque[downcast[P, Movable & Deinitable]] and conforms_to(R, Comparable & Movable & Deinitable):",
@@ -3203,6 +3267,10 @@
             "sha256": "1c5d81ba08abd8c91b0dba7367072188cbfb066c3d984fb8bd5e6485ae6ec6a1"
           },
           {
+            "signature": "def min_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+            "sha256": "d1fe6a2708d2e5858ea180de4f7a95c87abdb604af7eb1d4bc4a0814f233af3a"
+          },
+          {
             "signature": "def min_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[P, Movable & Deinitable]] and conforms_to(R, Comparable & Movable & Deinitable):",
             "sha256": "cad6529317009a2ed10dd6804c60005aa6c764dbb37b01e03a1198774de2a980"
           },
@@ -3213,6 +3281,10 @@
           {
             "signature": "def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable):",
             "sha256": "e9dc9d028c5fe6b0be81223db10184ee5bfe105044355fc24564eb4de3d34fdb"
+          },
+          {
+            "signature": "def min_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+            "sha256": "946a55c592646cd6fca4a8d52f8fabdbec0121ee39eba7f3fa29a2d1dd3eee18"
           },
           {
             "signature": "def min_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable):",
@@ -3227,6 +3299,10 @@
             "sha256": "55681b31bfb89aa8952daba21ada580f2790c03ee61a655a2a7c23c759cf3cbc"
           },
           {
+            "signature": "def min_by[C: _BorrowViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C._BorrowView[o].Payload, Movable & Deinitable], H] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+            "sha256": "6654c2e0296b13271d173fa02ea6e5fd0289c5b8e64480af25704808c04bd86e"
+          },
+          {
             "signature": "def min_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == StringDict[downcast[P, Movable & Deinitable]] and conforms_to(R, Comparable & Movable & Deinitable):",
             "sha256": "75465a43d22c8d4b49fca6e45cc51736169fdf223e80db442345909aed932444"
           },
@@ -3239,6 +3315,10 @@
             "sha256": "1180c2e17751fc7405ec99f6945be87792edc90e646f5a3c640ccc48553ecb75"
           },
           {
+            "signature": "def min_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+            "sha256": "77ea4979465498ae4d040d28e5eeee758040b403bc18116e57545f0eaf92f87c"
+          },
+          {
             "signature": "def min_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Optional[downcast[P, Movable & Deinitable]] and conforms_to(R, Comparable & Movable & Deinitable):",
             "sha256": "ca2d209dab5314abb23e051bdb71a7852e7ad0ace67df5edf43827a8c212955e"
           },
@@ -3249,6 +3329,10 @@
           {
             "signature": "def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable):",
             "sha256": "cea870f178a9d402f27e09964aac90d38aa31e9eff2323aa49bdd794a9567b14"
+          },
+          {
+            "signature": "def min_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+            "sha256": "363b6af22e67973aaac5c14757754e8dced5c1e6055727ea6eb50266a7411aab"
           }
         ],
         "max_by": [
@@ -3265,6 +3349,10 @@
             "sha256": "e98860481bc4123731e047018a57ee9d416935ddbff49b0dea1067b4fb5147d9"
           },
           {
+            "signature": "def max_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+            "sha256": "c1e76b0a02b467366adbe302c5a27a319af62780baab962ec599e778a4846336"
+          },
+          {
             "signature": "def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and conforms_to(R, Comparable & Movable & Deinitable):",
             "sha256": "50deb59ea96d35ee4e010904f7f773135d0a3fa926782cf98df94761f4485361"
           },
@@ -3275,6 +3363,10 @@
           {
             "signature": "def max_by[C: BorrowCallable, N: Int, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N] and conforms_to(C.Result, Comparable & Movable & Deinitable):",
             "sha256": "034b6c3a948ba28dc1f4e1e8e12918b5567eeeac74a2d3335feeb2bd0987cda3"
+          },
+          {
+            "signature": "def max_by[C: _BorrowViewable, o: ImmOrigin, N: Int, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Array[downcast[C._BorrowView[o].Payload, Movable & Deinitable], N] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+            "sha256": "6e114405a9fe3bb5e4f2d589957c1503432e09787d941d6adfc12d9f03832b70"
           },
           {
             "signature": "def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Deque[downcast[P, Movable & Deinitable]] and conforms_to(R, Comparable & Movable & Deinitable):",
@@ -3289,6 +3381,10 @@
             "sha256": "7f3e335cee2e0ca4bbcdc97c532a484f3d1090af064b56638304c606521ae11a"
           },
           {
+            "signature": "def max_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+            "sha256": "53245ee35dec25359d9dc083d908918b0702f818ae260f0e5e7d3526b46454d9"
+          },
+          {
             "signature": "def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[P, Movable & Deinitable]] and conforms_to(R, Comparable & Movable & Deinitable):",
             "sha256": "6f1d25ed994aa3fa4b88438a2ed10ad1b219d52d60b680b08a47c379f891e358"
           },
@@ -3299,6 +3395,10 @@
           {
             "signature": "def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable):",
             "sha256": "ca6551ee459195a6d0c7ac8ede593339fe2dc387b6d5293e716b930da9147649"
+          },
+          {
+            "signature": "def max_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+            "sha256": "4753be690b199276107a053c256c7b1045eb31876e0a5acebdeb1041a168d518"
           },
           {
             "signature": "def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H] and conforms_to(R, Comparable & Movable & Deinitable):",
@@ -3313,6 +3413,10 @@
             "sha256": "bf9ad881ddc1b2226c0eda0fca28a041a24f85f0cb21d0d9f1091545b1406bc8"
           },
           {
+            "signature": "def max_by[C: _BorrowViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C._BorrowView[o].Payload, Movable & Deinitable], H] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+            "sha256": "a8d5c8b293aef2b7d143a98632a9c241f89e35d5e15c123478ba391fed2d4253"
+          },
+          {
             "signature": "def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == StringDict[downcast[P, Movable & Deinitable]] and conforms_to(R, Comparable & Movable & Deinitable):",
             "sha256": "1cfb721123e014e5f747cc4b64b5d837bd67cdd2a6a5677253370f23f830bd5b"
           },
@@ -3325,6 +3429,10 @@
             "sha256": "d37442ac64b4d867b9d1000edac8152c54a5243adf168d99017ec277291094e1"
           },
           {
+            "signature": "def max_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+            "sha256": "8b88c4e2a8a870aef930c2dd13a5b6eb645fcd8609dda92782e8a2c244dd33bf"
+          },
+          {
             "signature": "def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Optional[downcast[P, Movable & Deinitable]] and conforms_to(R, Comparable & Movable & Deinitable):",
             "sha256": "b2c45f1869ce4a8dc3370b874aa3bccdf7592c8b685f44a132e0f8f7080b8ed8"
           },
@@ -3335,6 +3443,10 @@
           {
             "signature": "def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable):",
             "sha256": "f68d3b9604467d3c1572ea24718d9f17bbf9600de7c7fe2d3963d16fcd35742f"
+          },
+          {
+            "signature": "def max_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+            "sha256": "6f1a2267a0a98486ad0d02f4953c736442a57be638e25bd213aba35aeb2e039d"
           }
         ],
         "sum": [
@@ -3409,6 +3521,10 @@
             "sha256": "f382a8d9ac5b7831c3a9de17d26d3bcfbd1bbcc49a34cd1389222546c9d2ad8d"
           },
           {
+            "signature": "def sum_by[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Int] where Self.Value == List[F._View[o].Arg] and F._View[o].Out == Int:",
+            "sha256": "3a9c04aba6e5766bb9fce12d5d8d863ba98eab54c71f3c3e54901af209d47692"
+          },
+          {
             "signature": "def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == List[A] and R == SIMD[dtype, size]:",
             "sha256": "d805f39d0685c9c73685ec9098317f31af5ba8f69ad7759d2b53ea85ca8cc798"
           },
@@ -3419,6 +3535,10 @@
           {
             "signature": "def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[SIMD[dtype, size]] where Self.Value == List[F.Arg] and F.Out == SIMD[dtype, size]:",
             "sha256": "c0a0eab343d820c63e2db1f006edbcf24bed29d06f555cece9515fa39b0776bc"
+          },
+          {
+            "signature": "def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[SIMD[dtype, size]] where Self.Value == List[F._View[o].Arg] and F._View[o].Out == SIMD[dtype, size]:",
+            "sha256": "95c1920d1d28f04a9067278522ce04051965905dc06773ae86f78a2528de1622"
           },
           {
             "signature": "def sum_by[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[Int] where Self.Value == Array[A, N] and R == Int:",
@@ -3433,6 +3553,10 @@
             "sha256": "34f392980b024cf91da87aba4147e01b25338e5b3db81d9587a9b51f26a53f64"
           },
           {
+            "signature": "def sum_by[F: _UnaryViewable, o: ImmOrigin, N: Int, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Int] where Self.Value == Array[F._View[o].Arg, N] and F._View[o].Out == Int:",
+            "sha256": "5d7e3010af5c6444a60c4a418347dd098c7c582370d40952cc556d7adccda52e"
+          },
+          {
             "signature": "def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == Array[A, N] and R == SIMD[dtype, size]:",
             "sha256": "9c0e63477c074a5b00d13d7d966c26c82c1a2b4076618e68fae3290641d8fbad"
           },
@@ -3443,6 +3567,10 @@
           {
             "signature": "def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, N: Int, //](deinit self, var function: F) raises F.Error -> Piped[SIMD[dtype, size]] where Self.Value == Array[F.Arg, N] and F.Out == SIMD[dtype, size]:",
             "sha256": "9bb4392dc0984e5c2b197c08ed717355298aabbd60d767f5c609b7bf6c2ec29e"
+          },
+          {
+            "signature": "def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, N: Int, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[SIMD[dtype, size]] where Self.Value == Array[F._View[o].Arg, N] and F._View[o].Out == SIMD[dtype, size]:",
+            "sha256": "5202c5ed0be81adb69ef92b4935dc1afd7da331378eefe70ba2a65eb2466c985"
           },
           {
             "signature": "def sum_by[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[Int] where Self.Value == Deque[A] and R == Int:",
@@ -3457,6 +3585,10 @@
             "sha256": "3bc492a729456d8a2581d11d657f92041a1b46e9cf881c7ff776f6f6eade20c4"
           },
           {
+            "signature": "def sum_by[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Int] where Self.Value == Deque[F._View[o].Arg] and F._View[o].Out == Int:",
+            "sha256": "597ce5057daeb6def76ea625f0faaa6914e361c9dc66d2773ef6a43753614584"
+          },
+          {
             "signature": "def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == Deque[A] and R == SIMD[dtype, size]:",
             "sha256": "02dbc103aa504792a3704ca5bf91e457956affca60f07d20eb7d7050018d49a4"
           },
@@ -3467,6 +3599,10 @@
           {
             "signature": "def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[SIMD[dtype, size]] where Self.Value == Deque[F.Arg] and F.Out == SIMD[dtype, size]:",
             "sha256": "2d1fda8a7ddaee68785aca4255c7fb2e1c764fb30c8b5c4c9d4d59ce161c14b9"
+          },
+          {
+            "signature": "def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[SIMD[dtype, size]] where Self.Value == Deque[F._View[o].Arg] and F._View[o].Out == SIMD[dtype, size]:",
+            "sha256": "81a5debac36ffe4ee3c871a2554a989b6d8fabdeeba918e7b0830750bb90166e"
           },
           {
             "signature": "def sum_by[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[Int] where Self.Value == LinkedList[A] and R == Int:",
@@ -3481,6 +3617,10 @@
             "sha256": "658e1107f37b3c0adaafcd3dde0c1207c610e35c54c93ab7c2346e6063ec77ac"
           },
           {
+            "signature": "def sum_by[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Int] where Self.Value == LinkedList[F._View[o].Arg] and F._View[o].Out == Int:",
+            "sha256": "3997097fbddb59424e6497a1436d5a7172d83cec903d2deda65a2b308d4d76c5"
+          },
+          {
             "signature": "def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == LinkedList[A] and R == SIMD[dtype, size]:",
             "sha256": "8080c9fe1dc518340a1b995ae75416bdf7c0ba43a3bd2a46ae7a8978bf02e433"
           },
@@ -3491,6 +3631,10 @@
           {
             "signature": "def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[SIMD[dtype, size]] where Self.Value == LinkedList[F.Arg] and F.Out == SIMD[dtype, size]:",
             "sha256": "bbba3e6e4850b4f8cd0cf8726742964d42db4eddac7bf76816359144e6e7ef59"
+          },
+          {
+            "signature": "def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[SIMD[dtype, size]] where Self.Value == LinkedList[F._View[o].Arg] and F._View[o].Out == SIMD[dtype, size]:",
+            "sha256": "ad4b50a2756ff8f29fe51c812bc8d9bfe4e4e1c13dc653c9fd886cce6a84aa1e"
           },
           {
             "signature": "def sum_by[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[Int] where Self.Value == Dict[K, A, H] and R == Int:",
@@ -3505,6 +3649,10 @@
             "sha256": "26eb2af440d37e65101015422a957259de8e1673bfeb09479ba2e0a0a8a268d9"
           },
           {
+            "signature": "def sum_by[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Int] where Self.Value == Dict[K, F._View[o].Arg, H] and F._View[o].Out == Int:",
+            "sha256": "2a712ef0c12e0212adedfb46dbb898d1380ecd1f604cb518d2190f2700c243a7"
+          },
+          {
             "signature": "def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, A, H] and R == SIMD[dtype, size]:",
             "sha256": "e91403b308f7a89559dd3f1095d470f64b9f0d81f7636bbcc7ae5cd23a958900"
           },
@@ -3515,6 +3663,10 @@
           {
             "signature": "def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, F.Arg, H] and F.Out == SIMD[dtype, size]:",
             "sha256": "9cfb5eb55a709931a473facb851627e1b1fa5c29165fa6f7b2a3cfe5d955d0ea"
+          },
+          {
+            "signature": "def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, F._View[o].Arg, H] and F._View[o].Out == SIMD[dtype, size]:",
+            "sha256": "e1f171a12408bac8f26d7676432140c85df9485b4c544de567ead0e87e07da78"
           },
           {
             "signature": "def sum_by[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[Int] where Self.Value == StringDict[A] and R == Int:",
@@ -3529,6 +3681,10 @@
             "sha256": "c415c6ddf0ec04b492207f5c511e8b9c98e492b671bb0bbaa1b8d741f7914d6d"
           },
           {
+            "signature": "def sum_by[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Int] where Self.Value == StringDict[F._View[o].Arg] and F._View[o].Out == Int:",
+            "sha256": "af7185e050ff3ee305454e7a65126f89f75fde6710d3e96661388a5316905bf1"
+          },
+          {
             "signature": "def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == StringDict[A] and R == SIMD[dtype, size]:",
             "sha256": "e64e4c125ff6986dba11b91b60d1d435eab365c5553b7ad3f510e60887b650ef"
           },
@@ -3539,6 +3695,10 @@
           {
             "signature": "def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[SIMD[dtype, size]] where Self.Value == StringDict[F.Arg] and F.Out == SIMD[dtype, size]:",
             "sha256": "d418b03b2906f202acebac7a5671702a572835cc5e0129df69fe57670fdd5c12"
+          },
+          {
+            "signature": "def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[SIMD[dtype, size]] where Self.Value == StringDict[F._View[o].Arg] and F._View[o].Out == SIMD[dtype, size]:",
+            "sha256": "4fc6cf5208988c38c9e29b18599bffce523e444a3f2125ac94eb5f10a1413f9e"
           },
           {
             "signature": "def sum_by[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[Int] where Self.Value == Optional[A] and R == Int:",
@@ -3553,6 +3713,10 @@
             "sha256": "6ec2583033bc87ed9cfa2e7ed24ea7dee8aca1c7e0579ace0dbf294a3f9716a6"
           },
           {
+            "signature": "def sum_by[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Int] where Self.Value == Optional[F._View[o].Arg] and F._View[o].Out == Int:",
+            "sha256": "bf5b0efd11ad7986c6cc408570ecb35208b07917bb093f13e6e31050e2ccca07"
+          },
+          {
             "signature": "def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> Piped[SIMD[dtype, size]] where Self.Value == Optional[A] and R == SIMD[dtype, size]:",
             "sha256": "87a40d590177bab1d54cdd0c984f48e43d40dee471363cd8a032313ba08d3ae6"
           },
@@ -3563,6 +3727,10 @@
           {
             "signature": "def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[SIMD[dtype, size]] where Self.Value == Optional[F.Arg] and F.Out == SIMD[dtype, size]:",
             "sha256": "fc4dc6c216ab98b5c8b76c0cb3e725a94b70d3955a7965b7a73d2411be1be12b"
+          },
+          {
+            "signature": "def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[SIMD[dtype, size]] where Self.Value == Optional[F._View[o].Arg] and F._View[o].Out == SIMD[dtype, size]:",
+            "sha256": "32c5ff569acad01f89405014cca60caebcb8c2180af5deb0bb94cc5fd00f5350"
           }
         ],
         "traverse_tap": [
@@ -5100,6 +5268,10 @@
             "sha256": "1b618ad038bdcc30231abadb5c27f3d6f2f7d0ad275fd806c1c8bf6cbd66a15c"
           },
           {
+            "signature": "def fold_map[C: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: C) raises _CommonError[C._View[o].Error, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and C._View[o].Out == M.Value and RepeatableUnary[C._View[o]] and _ErrorCompatible[_CommonError[C._View[o].Error, M.Error], M.Error] and _ErrorCompatible[_CommonError[C._View[o].Error, M.Error], C._View[o].Error]:",
+            "sha256": "b95cf3b97c54863c87cfdd88d7fa5b28f834bf6c99c9c41a7e83353801b6ea52"
+          },
+          {
             "signature": "def fold_map[R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises _CommonError[Never, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where R == M.Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]] and _ErrorCompatible[_CommonError[Never, M.Error], M.Error] and _ErrorCompatible[_CommonError[Never, M.Error], Never]:",
             "sha256": "561d76a56bd96a9844e0c60689c66490c6d418e005e674c3799b1a4ccb4cddac"
           },
@@ -5134,6 +5306,10 @@
             "sha256": "c17f835d74806e7a8e68527ef3d49ef8bc4da00ebc0c7b91c1f727a91f74d981"
           },
           {
+            "signature": "def sum_by[C: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises _CommonError[C._View[o].Error, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and C._View[o].Out == _IntSum.Value and RepeatableUnary[C._View[o]] and _ErrorCompatible[_CommonError[C._View[o].Error, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[C._View[o].Error, _IntSum.Error], C._View[o].Error]:",
+            "sha256": "ee2aece8c020c70e8d989f0deedd93f5edc4529cdc7400bfeb5399549f19303e"
+          },
+          {
             "signature": "def sum_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises _CommonError[Never, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where R == _IntSum.Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[Never, _IntSum.Error], Never]:",
             "sha256": "2534b5ab4fdcecc6dddaa8f7a196d2488a0f9a0d8cdea9e3b791d3308d40fa34"
           },
@@ -5164,6 +5340,10 @@
           {
             "signature": "def sum_by[C: UnaryContract & Movable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, var function: C) raises _CommonError[C.Error, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where C.Arg == _FoldElement[Self.V] and C.Out == _SIMDSum[dtype, size].Value and RepeatableUnary[C] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[C.Error, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[C.Error, _SIMDSum[dtype, size].Error], C.Error]:",
             "sha256": "32d8d01bb2b3788133dc2389fc6de839880457a1e72aab56ddae7c5ae9b63453"
+          },
+          {
+            "signature": "def sum_by[C: _UnaryViewable, o: ImmOrigin, //, dtype: DType, size: SIMDLength](deinit self, ref[o] function: C) raises _CommonError[C._View[o].Error, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and C._View[o].Out == _SIMDSum[dtype, size].Value and RepeatableUnary[C._View[o]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[C._View[o].Error, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[C._View[o].Error, _SIMDSum[dtype, size].Error], C._View[o].Error]:",
+            "sha256": "f18ddab446edcb33bc68da2e51a1fbc49ce8f3b018350731f6f9f66a38900dc5"
           },
           {
             "signature": "def sum_by[R: Movable & Deinitable, o: ImmOrigin, //, dtype: DType, size: SIMDLength, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises _CommonError[Never, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where R == _SIMDSum[dtype, size].Value and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[Never, _SIMDSum[dtype, size].Error], Never]:",
@@ -13701,6 +13881,10 @@
           {
             "signature": "def find_map[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> F.Out where Self.I.Element == F.Arg:",
             "sha256": "48b2dacc3310e26c54a149dda4ec8a992af20221d28ba48494612d4459035e45"
+          },
+          {
+            "signature": "def find_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> F._View[o].Out where Self.I.Element == F._View[o].Arg:",
+            "sha256": "c921ab921eb4552b85a282ca3721f005ae4f80d6626b4dab80e11dd6df16b668"
           }
         ],
         "fold_map": [
@@ -13715,6 +13899,10 @@
           {
             "signature": "def fold_map[F: UnaryContract & Movable & Deinitable, //, M: Monoid](deinit self, var function: F) raises _CommonError[F.Error, M.Error] -> M.Value where Self.I.Element == F.Arg:",
             "sha256": "4292ac6c22fe850b896b27e2e6ca0aaae2225098dae1f39db52f86f5c563bd8d"
+          },
+          {
+            "signature": "def fold_map[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> M.Value where Self.I.Element == F._View[o].Arg:",
+            "sha256": "8b257d307be1026abdd6135f343bed2ff38957a28f1ca7aac730ddd95f332d4b"
           }
         ],
         "combine_all": [
@@ -13735,6 +13923,10 @@
           {
             "signature": "def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable):",
             "sha256": "a23698ee0a65be61230f7f1251721df521b319d5348f1469d8d9257937365f2a"
+          },
+          {
+            "signature": "def min_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] where Self.I.Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+            "sha256": "1e06e6476a69cd193beaf1d699985044e1560f4ef9f87c4fe9c382f3e4d2c02d"
           }
         ],
         "max_by": [
@@ -13749,6 +13941,10 @@
           {
             "signature": "def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable):",
             "sha256": "9715aeb26a207e23266e2b69aa091f78ef9ed0fb257804f7edb02a797fcfe9cb"
+          },
+          {
+            "signature": "def max_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] where Self.I.Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+            "sha256": "a8d61da372f07fd85053fd10b045036204679b54e53dd43bb02772f9100647e0"
           }
         ],
         "sum": [
@@ -13775,6 +13971,10 @@
             "sha256": "19d06b2e03d6838e4a997a91dd10118987ca1dcad1fdd323e1c3f0b988dda29c"
           },
           {
+            "signature": "def sum_by[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Int where Self.I.Element == F._View[o].Arg and F._View[o].Out == Int:",
+            "sha256": "dc751449d2b2176261c75742b2662856138b38f02ca1a57319fafd28c7e6e548"
+          },
+          {
             "signature": "def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> SIMD[dtype, size] where Self.I.Element == A and R == SIMD[dtype, size]:",
             "sha256": "86961f72d16bfc4542b1479069f15f53e0b0b131b345342bce066dc29c38c546"
           },
@@ -13785,6 +13985,10 @@
           {
             "signature": "def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> SIMD[dtype, size] where Self.I.Element == F.Arg and F.Out == SIMD[dtype, size]:",
             "sha256": "c83d5e5bd8683f587fb0d4293fb3af730229e7befea72f637d258ff16d34f71a"
+          },
+          {
+            "signature": "def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> SIMD[dtype, size] where Self.I.Element == F._View[o].Arg and F._View[o].Out == SIMD[dtype, size]:",
+            "sha256": "9609aac0ae9b1095d07d2e22849c062fbcad8ac92ca250fc83d05ac95c13debf"
           }
         ],
         "fold_left": [
@@ -17748,6 +17952,10 @@
         {
           "signature": "def find_map[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //](var function: F, var source: V) raises F.Error -> F.Out where _Source[V].Element == F.Arg:",
           "sha256": "24a5586902be6ff3c7f6cdb94cfe46b7b23c3c91cbea5078c944f8f303b4603b"
+        },
+        {
+          "signature": "def find_map[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: F, var source: V) raises F._View[o].Error -> F._View[o].Out where _Source[V].Element == F._View[o].Arg:",
+          "sha256": "468779c8a3316570ae5d8302dd59d9b9266d93ea9dbb241583c5cd2d47a07801"
         }
       ],
       "provider": "iteration/reductions"
@@ -17766,6 +17974,10 @@
         {
           "signature": "def fold_map[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, M: Monoid](var function: F, var source: V) raises _CommonError[F.Error, M.Error] -> M.Value where _Source[V].Element == F.Arg:",
           "sha256": "28d6a5d807d97a5ee0c8d1d1cb22e6778f3236b5284f7a3be96c665976753e34"
+        },
+        {
+          "signature": "def fold_map[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid](ref[o] function: F, var source: V) raises _CommonError[F._View[o].Error, M.Error] -> M.Value where _Source[V].Element == F._View[o].Arg:",
+          "sha256": "660fd6b435c19f2973e09aadbb3e9dfd496d5be69c0c6c79678985d5d08ecc44"
         }
       ],
       "provider": "iteration/reductions"
@@ -17794,6 +18006,10 @@
         {
           "signature": "def min_by[C: BorrowCallable, V: Movable & Deinitable, //](var function: C, var source: V) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable):",
           "sha256": "f325ea988d0ba391ba0a11b90d481924711af72912787c68cf961595a9fdf8c0"
+        },
+        {
+          "signature": "def min_by[C: _BorrowViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: C, var source: V) raises C._BorrowView[o].Failure -> Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+          "sha256": "7492a414a8713df4b2da44137e74b8ff9ca28810add3492d8c69943dd58d0779"
         }
       ],
       "provider": "iteration/reductions"
@@ -17812,6 +18028,10 @@
         {
           "signature": "def max_by[C: BorrowCallable, V: Movable & Deinitable, //](var function: C, var source: V) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable):",
           "sha256": "b9313649587ec91c0b0021d0c0f0edbb2a67a6503d59b35323a809d107e29a77"
+        },
+        {
+          "signature": "def max_by[C: _BorrowViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: C, var source: V) raises C._BorrowView[o].Failure -> Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+          "sha256": "e66b1c1350e5268783cd6c3bd30f6d223c0eb30061002fcdafcd53744beb880b"
         }
       ],
       "provider": "iteration/reductions"
@@ -17846,6 +18066,10 @@
           "sha256": "c45ce7a2aea587ed89be88cc8efb7529ffa867e5dc01fb6de54649730b9018c3"
         },
         {
+          "signature": "def sum_by[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: F, var source: V) raises F._View[o].Error -> Int where _Source[V].Element == F._View[o].Arg and F._View[o].Out == Int:",
+          "sha256": "48b2be21c222e1c3510c4cd12f8b978f268509e72ff6ff7c8c74caf1e3f78398"
+        },
+        {
           "signature": "def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, F: _Unary[A, R]](ref[o] function: F, var source: V) raises Never -> SIMD[dtype, size] where _Source[V].Element == A and R == SIMD[dtype, size]:",
           "sha256": "62ff4b63cd39a83abe148ae49927f0bcef094c530d3efd7b66c769f3c9d71489"
         },
@@ -17856,6 +18080,10 @@
         {
           "signature": "def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //](var function: F, var source: V) raises F.Error -> SIMD[dtype, size] where _Source[V].Element == F.Arg and F.Out == SIMD[dtype, size]:",
           "sha256": "d54a0767238c65bb7849c24dc5fb95535bd669cdd863acca6ab11690aef661f8"
+        },
+        {
+          "signature": "def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: F, var source: V) raises F._View[o].Error -> SIMD[dtype, size] where _Source[V].Element == F._View[o].Arg and F._View[o].Out == SIMD[dtype, size]:",
+          "sha256": "34d947b0262f54d64b07fb0a542e4c3a4879bbf1bcd58dda22ea25c2656c2b40"
         }
       ],
       "provider": "iteration/reductions"
@@ -19890,6 +20118,10 @@
         {
           "signature": "def find_map[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //](var function: F, var source: V) raises F.Error -> F.Out where _Source[V].Element == F.Arg:",
           "sha256": "24a5586902be6ff3c7f6cdb94cfe46b7b23c3c91cbea5078c944f8f303b4603b"
+        },
+        {
+          "signature": "def find_map[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: F, var source: V) raises F._View[o].Error -> F._View[o].Out where _Source[V].Element == F._View[o].Arg:",
+          "sha256": "468779c8a3316570ae5d8302dd59d9b9266d93ea9dbb241583c5cd2d47a07801"
         }
       ],
       "provider": "iteration/reductions"
@@ -19908,6 +20140,10 @@
         {
           "signature": "def fold_map[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, M: Monoid](var function: F, var source: V) raises _CommonError[F.Error, M.Error] -> M.Value where _Source[V].Element == F.Arg:",
           "sha256": "28d6a5d807d97a5ee0c8d1d1cb22e6778f3236b5284f7a3be96c665976753e34"
+        },
+        {
+          "signature": "def fold_map[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid](ref[o] function: F, var source: V) raises _CommonError[F._View[o].Error, M.Error] -> M.Value where _Source[V].Element == F._View[o].Arg:",
+          "sha256": "660fd6b435c19f2973e09aadbb3e9dfd496d5be69c0c6c79678985d5d08ecc44"
         }
       ],
       "provider": "iteration/reductions"
@@ -19936,6 +20172,10 @@
         {
           "signature": "def min_by[C: BorrowCallable, V: Movable & Deinitable, //](var function: C, var source: V) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable):",
           "sha256": "f325ea988d0ba391ba0a11b90d481924711af72912787c68cf961595a9fdf8c0"
+        },
+        {
+          "signature": "def min_by[C: _BorrowViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: C, var source: V) raises C._BorrowView[o].Failure -> Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+          "sha256": "7492a414a8713df4b2da44137e74b8ff9ca28810add3492d8c69943dd58d0779"
         }
       ],
       "provider": "iteration/reductions"
@@ -19954,6 +20194,10 @@
         {
           "signature": "def max_by[C: BorrowCallable, V: Movable & Deinitable, //](var function: C, var source: V) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable):",
           "sha256": "b9313649587ec91c0b0021d0c0f0edbb2a67a6503d59b35323a809d107e29a77"
+        },
+        {
+          "signature": "def max_by[C: _BorrowViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: C, var source: V) raises C._BorrowView[o].Failure -> Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+          "sha256": "e66b1c1350e5268783cd6c3bd30f6d223c0eb30061002fcdafcd53744beb880b"
         }
       ],
       "provider": "iteration/reductions"
@@ -19988,6 +20232,10 @@
           "sha256": "c45ce7a2aea587ed89be88cc8efb7529ffa867e5dc01fb6de54649730b9018c3"
         },
         {
+          "signature": "def sum_by[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: F, var source: V) raises F._View[o].Error -> Int where _Source[V].Element == F._View[o].Arg and F._View[o].Out == Int:",
+          "sha256": "48b2be21c222e1c3510c4cd12f8b978f268509e72ff6ff7c8c74caf1e3f78398"
+        },
+        {
           "signature": "def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, F: _Unary[A, R]](ref[o] function: F, var source: V) raises Never -> SIMD[dtype, size] where _Source[V].Element == A and R == SIMD[dtype, size]:",
           "sha256": "62ff4b63cd39a83abe148ae49927f0bcef094c530d3efd7b66c769f3c9d71489"
         },
@@ -19998,6 +20246,10 @@
         {
           "signature": "def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //](var function: F, var source: V) raises F.Error -> SIMD[dtype, size] where _Source[V].Element == F.Arg and F.Out == SIMD[dtype, size]:",
           "sha256": "d54a0767238c65bb7849c24dc5fb95535bd669cdd863acca6ab11690aef661f8"
+        },
+        {
+          "signature": "def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: F, var source: V) raises F._View[o].Error -> SIMD[dtype, size] where _Source[V].Element == F._View[o].Arg and F._View[o].Out == SIMD[dtype, size]:",
+          "sha256": "34d947b0262f54d64b07fb0a542e4c3a4879bbf1bcd58dda22ea25c2656c2b40"
         }
       ],
       "provider": "iteration/reductions"

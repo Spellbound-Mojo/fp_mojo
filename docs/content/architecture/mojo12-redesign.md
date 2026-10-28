@@ -3895,3 +3895,28 @@ family filtering retains its exact native error and carrier policy. Ownership
 checks count native prefix copies, verify payloads remain live during each
 predicate call, and cover both prefix stopping rules, iterator abandonment,
 explicit moves, temporary callbacks, and returned spans into external owners.
+
+### Reduction syntax retains shared callback receivers
+
+The terminal syntax generator now requests `_UnaryViewable` or
+`_BorrowViewable` descriptors for free reductions, Iter methods and each Piped
+carrier. Selected Pipeline's ordinary `sum_by` and `fold_map` admit the same
+owned-operand view already used by `find_map`. Extrema retain the borrowed
+operand contract. Existing owned library and native callback signatures,
+including positional type bindings, are preserved.
+
+Every form forwards to the canonical `_fold_map`, `_find_map` or `_extremum`
+runner. These runners retain the existing accumulation policies, source
+normalization, array boundary, ordering, stopping, exact native errors and
+cleanup. A view only borrows its receiver for the immediate reduction; output
+origins come from the callback and payload contract. No wrapper allocation,
+payload copy or second reduction loop is added.
+
+`_find_map` uses the existing guarded native-family recognition before
+projecting an Optional element. An invalid scalar result now reaches the
+operation's Optional requirement rather than a failed IterableOwned witness
+lookup. `_fold_map` names its incompatible callback/monoid error constraint.
+Rejection fixtures require the actual diagnostic, rather than a matching
+substring in quoted source code. Ownership checks cover noncopyable native
+captures, partial-prefix copy counts, move-only input and output, first-match
+stopping, first-on-tie extrema, callback errors and outputs into external owners.

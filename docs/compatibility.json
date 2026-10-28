@@ -765,7 +765,7 @@
       ],
       "status": "selected",
       "families": "Native iterator and owned iterable sources; result selects its native family",
-      "callbacks": "Repeatable consuming projections or shared borrowing keys; stored native thin pointers supported Shared chains are borrowed by find_map.",
+      "callbacks": "Repeatable consuming projections or shared borrowing keys; stored native thin pointers supported. Named unary partials, native adapters and shared compositions are borrowed by sum_by, fold_map and find_map; partial keys are borrowed by min_by and max_by. Explicit moves retain owned admission.",
       "ownership": "Consume inputs; retain first extrema on ties and preserve result origins. Array uses shared temporary List conversion.",
       "errors": "Exact callback or monoid errors; incompatible raised types reject at admission",
       "timing": "Immediate ordered reduction; find_map stops without another pull, extrema evaluate each key once",
@@ -782,7 +782,19 @@
         "tests/runtime/test_context_query_callable_views.mojo",
         "tests/ownership/test_context_query_callable_views_ownership.mojo",
         "tests/compile_fail/query_callable_view_once.mojo",
-        "tests/compile_fail/query_callable_view_origin.mojo"
+        "tests/compile_fail/query_callable_view_origin.mojo",
+        "tests/runtime/test_terminal_callback_views.mojo",
+        "tests/ownership/test_terminal_callback_views_ownership.mojo",
+        "tests/compile_fail/terminal_callback_view_find_result.mojo",
+        "tests/compile_fail/terminal_callback_view_input.mojo",
+        "tests/compile_fail/terminal_callback_view_key_convention.mojo",
+        "tests/compile_fail/terminal_callback_view_key_result.mojo",
+        "tests/compile_fail/terminal_callback_view_monoid_error.mojo",
+        "tests/compile_fail/terminal_callback_view_move.mojo",
+        "tests/compile_fail/terminal_callback_view_origin.mojo",
+        "tests/compile_fail/terminal_callback_view_selected_input.mojo",
+        "tests/compile_fail/terminal_callback_view_sum_result.mojo",
+        "tests/compile_fail/terminal_callback_view_find_collection.mojo"
       ]
     },
     {

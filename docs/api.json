@@ -13088,6 +13088,57 @@
      },
      "signature": "def find_map[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //](var function: F, var source: V) raises F.Error -> F.Out where _Source[V].Element == F.Arg",
      "summary": "Return the first present transformed result, stopping without another pull."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "F._View[o].Error",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "_UnaryViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "F._View[o].Out"
+     },
+     "signature": "def find_map[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: F, var source: V) raises F._View[o].Error -> F._View[o].Out where _Source[V].Element == F._View[o].Arg",
+     "summary": "Return the first present transformed result, stopping without another pull."
     }
    ],
    "provider": "iteration/reductions",
@@ -14579,6 +14630,64 @@
       "type": "M.Value"
      },
      "signature": "def fold_map[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, M: Monoid](var function: F, var source: V) raises _CommonError[F.Error, M.Error] -> M.Value where _Source[V].Element == F.Arg",
+     "summary": "Project and combine in order with a monoid; empty input returns its identity."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_CommonError[F._View[o].Error, M.Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "_UnaryViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "M.Value"
+     },
+     "signature": "def fold_map[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid](ref[o] function: F, var source: V) raises _CommonError[F._View[o].Error, M.Error] -> M.Value where _Source[V].Element == F._View[o].Arg",
      "summary": "Project and combine in order with a monoid; empty input returns its identity."
     }
    ],
@@ -16099,6 +16208,57 @@
      },
      "signature": "def max_by[C: BorrowCallable, V: Movable & Deinitable, //](var function: C, var source: V) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
      "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "C._BorrowView[o].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "C",
+       "type": "_BorrowViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]"
+     },
+     "signature": "def max_by[C: _BorrowViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: C, var source: V) raises C._BorrowView[o].Failure -> Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable)",
+     "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
     }
    ],
    "provider": "iteration/reductions",
@@ -16287,6 +16447,57 @@
       "type": "Optional[downcast[C.Payload, Movable & Deinitable]]"
      },
      "signature": "def min_by[C: BorrowCallable, V: Movable & Deinitable, //](var function: C, var source: V) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+     "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "C._BorrowView[o].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "C",
+       "type": "_BorrowViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]"
+     },
+     "signature": "def min_by[C: _BorrowViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: C, var source: V) raises C._BorrowView[o].Failure -> Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable)",
      "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
     }
    ],
@@ -16903,6 +17114,57 @@
       }
      ],
      "description": "",
+     "error": "F._View[o].Error",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "_UnaryViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Int"
+     },
+     "signature": "def sum_by[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: F, var source: V) raises F._View[o].Error -> Int where _Source[V].Element == F._View[o].Arg and F._View[o].Out == Int",
+     "summary": "Project and add in one pass from zero, without an intermediate collection."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
      "error": "Never",
      "parameters": [
       {
@@ -17106,6 +17368,71 @@
       "type": "SIMD[dtype, size]"
      },
      "signature": "def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //](var function: F, var source: V) raises F.Error -> SIMD[dtype, size] where _Source[V].Element == F.Arg and F.Out == SIMD[dtype, size]",
+     "summary": "Project and add in one pass from zero, without an intermediate collection."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "F._View[o].Error",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "dtype",
+       "type": "DType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "size",
+       "type": "SIMDLength",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "_UnaryViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "SIMD[dtype, size]"
+     },
+     "signature": "def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: F, var source: V) raises F._View[o].Error -> SIMD[dtype, size] where _Source[V].Element == F._View[o].Arg and F._View[o].Out == SIMD[dtype, size]",
      "summary": "Project and add in one pass from zero, without an intermediate collection."
     }
    ],
@@ -54298,6 +54625,43 @@
        }
       ],
       "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[F._View[o].Out]"
+      },
+      "signature": "def find_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[F._View[o].Out] where Self.Value == List[F._View[o].Arg]",
+      "summary": "Return the first present transformed result, stopping without another pull."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "Never",
       "parameters": [
        {
@@ -54458,6 +54822,50 @@
        }
       ],
       "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "N",
+        "type": "Int",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[F._View[o].Out]"
+      },
+      "signature": "def find_map[F: _UnaryViewable, o: ImmOrigin, N: Int, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[F._View[o].Out] where Self.Value == Array[F._View[o].Arg, N]",
+      "summary": "Return the first present transformed result, stopping without another pull."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "Never",
       "parameters": [
        {
@@ -54597,6 +55005,43 @@
        }
       ],
       "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[F._View[o].Out]"
+      },
+      "signature": "def find_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[F._View[o].Out] where Self.Value == Deque[F._View[o].Arg]",
+      "summary": "Return the first present transformed result, stopping without another pull."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "Never",
       "parameters": [
        {
@@ -54723,6 +55168,43 @@
        "type": "Piped[F.Out]"
       },
       "signature": "def find_map[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[F.Out] where Self.Value == LinkedList[F.Arg]",
+      "summary": "Return the first present transformed result, stopping without another pull."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[F._View[o].Out]"
+      },
+      "signature": "def find_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[F._View[o].Out] where Self.Value == LinkedList[F._View[o].Arg]",
       "summary": "Return the first present transformed result, stopping without another pull."
      },
      {
@@ -54917,6 +55399,57 @@
        }
       ],
       "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "K",
+        "type": "KeyElement & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "H",
+        "type": "Hasher & Defaultable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[F._View[o].Out]"
+      },
+      "signature": "def find_map[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[F._View[o].Out] where Self.Value == Dict[K, F._View[o].Arg, H]",
+      "summary": "Return the first present transformed result, stopping without another pull."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "Never",
       "parameters": [
        {
@@ -55056,6 +55589,43 @@
        }
       ],
       "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[F._View[o].Out]"
+      },
+      "signature": "def find_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[F._View[o].Out] where Self.Value == StringDict[F._View[o].Arg]",
+      "summary": "Return the first present transformed result, stopping without another pull."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "Never",
       "parameters": [
        {
@@ -55182,6 +55752,43 @@
        "type": "Piped[F.Out]"
       },
       "signature": "def find_map[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[F.Out] where Self.Value == Optional[F.Arg]",
+      "summary": "Return the first present transformed result, stopping without another pull."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[F._View[o].Out]"
+      },
+      "signature": "def find_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[F._View[o].Out] where Self.Value == Optional[F._View[o].Arg]",
       "summary": "Return the first present transformed result, stopping without another pull."
      }
     ],
@@ -59924,6 +60531,50 @@
        }
       ],
       "description": "",
+      "error": "_CommonError[F._View[o].Error, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[M.Value]"
+      },
+      "signature": "def fold_map[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> Piped[M.Value] where Self.Value == List[F._View[o].Arg]",
+      "summary": "Project and combine in order with a monoid; empty input returns its identity."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "_CommonError[Never, M.Error]",
       "parameters": [
        {
@@ -60105,6 +60756,57 @@
        }
       ],
       "description": "",
+      "error": "_CommonError[F._View[o].Error, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "N",
+        "type": "Int",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[M.Value]"
+      },
+      "signature": "def fold_map[F: _UnaryViewable, o: ImmOrigin, N: Int, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> Piped[M.Value] where Self.Value == Array[F._View[o].Arg, N]",
+      "summary": "Project and combine in order with a monoid; empty input returns its identity."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "_CommonError[Never, M.Error]",
       "parameters": [
        {
@@ -60265,6 +60967,50 @@
        }
       ],
       "description": "",
+      "error": "_CommonError[F._View[o].Error, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[M.Value]"
+      },
+      "signature": "def fold_map[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> Piped[M.Value] where Self.Value == Deque[F._View[o].Arg]",
+      "summary": "Project and combine in order with a monoid; empty input returns its identity."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "_CommonError[Never, M.Error]",
       "parameters": [
        {
@@ -60412,6 +61158,50 @@
        "type": "Piped[M.Value]"
       },
       "signature": "def fold_map[F: UnaryContract & Movable & Deinitable, //, M: Monoid](deinit self, var function: F) raises _CommonError[F.Error, M.Error] -> Piped[M.Value] where Self.Value == LinkedList[F.Arg]",
+      "summary": "Project and combine in order with a monoid; empty input returns its identity."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[F._View[o].Error, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[M.Value]"
+      },
+      "signature": "def fold_map[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> Piped[M.Value] where Self.Value == LinkedList[F._View[o].Arg]",
       "summary": "Project and combine in order with a monoid; empty input returns its identity."
      },
      {
@@ -60627,6 +61417,64 @@
        }
       ],
       "description": "",
+      "error": "_CommonError[F._View[o].Error, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "K",
+        "type": "KeyElement & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "H",
+        "type": "Hasher & Defaultable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[M.Value]"
+      },
+      "signature": "def fold_map[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> Piped[M.Value] where Self.Value == Dict[K, F._View[o].Arg, H]",
+      "summary": "Project and combine in order with a monoid; empty input returns its identity."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "_CommonError[Never, M.Error]",
       "parameters": [
        {
@@ -60787,6 +61635,50 @@
        }
       ],
       "description": "",
+      "error": "_CommonError[F._View[o].Error, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[M.Value]"
+      },
+      "signature": "def fold_map[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> Piped[M.Value] where Self.Value == StringDict[F._View[o].Arg]",
+      "summary": "Project and combine in order with a monoid; empty input returns its identity."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "_CommonError[Never, M.Error]",
       "parameters": [
        {
@@ -60934,6 +61826,50 @@
        "type": "Piped[M.Value]"
       },
       "signature": "def fold_map[F: UnaryContract & Movable & Deinitable, //, M: Monoid](deinit self, var function: F) raises _CommonError[F.Error, M.Error] -> Piped[M.Value] where Self.Value == Optional[F.Arg]",
+      "summary": "Project and combine in order with a monoid; empty input returns its identity."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[F._View[o].Error, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[M.Value]"
+      },
+      "signature": "def fold_map[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> Piped[M.Value] where Self.Value == Optional[F._View[o].Arg]",
       "summary": "Project and combine in order with a monoid; empty input returns its identity."
      }
     ],
@@ -72037,6 +72973,43 @@
         "convention": "ref[o]",
         "description": "",
         "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def max_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable)",
+      "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
         "type": "F",
         "variadic": false
        }
@@ -72197,6 +73170,50 @@
         "convention": "ref[o]",
         "description": "",
         "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "N",
+        "type": "Int",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def max_by[C: _BorrowViewable, o: ImmOrigin, N: Int, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Array[downcast[C._BorrowView[o].Payload, Movable & Deinitable], N] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable)",
+      "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
         "type": "F",
         "variadic": false
        }
@@ -72336,6 +73353,43 @@
         "convention": "ref[o]",
         "description": "",
         "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def max_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable)",
+      "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
         "type": "F",
         "variadic": false
        }
@@ -72467,6 +73521,43 @@
        "type": "Piped[Optional[downcast[C.Payload, Movable & Deinitable]]]"
       },
       "signature": "def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def max_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable)",
       "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
      },
      {
@@ -72656,6 +73747,57 @@
         "convention": "ref[o]",
         "description": "",
         "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "K",
+        "type": "KeyElement & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "H",
+        "type": "Hasher & Defaultable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def max_by[C: _BorrowViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C._BorrowView[o].Payload, Movable & Deinitable], H] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable)",
+      "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
         "type": "F",
         "variadic": false
        }
@@ -72795,6 +73937,43 @@
         "convention": "ref[o]",
         "description": "",
         "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def max_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable)",
+      "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
         "type": "F",
         "variadic": false
        }
@@ -72926,6 +74105,43 @@
        "type": "Piped[Optional[downcast[C.Payload, Movable & Deinitable]]]"
       },
       "signature": "def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def max_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable)",
       "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
      }
     ],
@@ -73067,6 +74283,43 @@
        "type": "Piped[Optional[downcast[C.Payload, Movable & Deinitable]]]"
       },
       "signature": "def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == List[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def min_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable)",
       "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
      },
      {
@@ -73235,6 +74488,50 @@
         "convention": "ref[o]",
         "description": "",
         "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "N",
+        "type": "Int",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def min_by[C: _BorrowViewable, o: ImmOrigin, N: Int, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Array[downcast[C._BorrowView[o].Payload, Movable & Deinitable], N] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable)",
+      "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
         "type": "F",
         "variadic": false
        }
@@ -73374,6 +74671,43 @@
         "convention": "ref[o]",
         "description": "",
         "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def min_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable)",
+      "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
         "type": "F",
         "variadic": false
        }
@@ -73505,6 +74839,43 @@
        "type": "Piped[Optional[downcast[C.Payload, Movable & Deinitable]]]"
       },
       "signature": "def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def min_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable)",
       "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
      },
      {
@@ -73694,6 +75065,57 @@
         "convention": "ref[o]",
         "description": "",
         "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "K",
+        "type": "KeyElement & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "H",
+        "type": "Hasher & Defaultable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def min_by[C: _BorrowViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Dict[K, downcast[C._BorrowView[o].Payload, Movable & Deinitable], H] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable)",
+      "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
         "type": "F",
         "variadic": false
        }
@@ -73833,6 +75255,43 @@
         "convention": "ref[o]",
         "description": "",
         "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def min_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable)",
+      "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
         "type": "F",
         "variadic": false
        }
@@ -73964,6 +75423,43 @@
        "type": "Piped[Optional[downcast[C.Payload, Movable & Deinitable]]]"
       },
       "signature": "def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]]"
+      },
+      "signature": "def min_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where Self.Value == Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable)",
       "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
      }
     ],
@@ -88567,6 +90063,43 @@
        }
       ],
       "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Int]"
+      },
+      "signature": "def sum_by[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Int] where Self.Value == List[F._View[o].Arg] and F._View[o].Out == Int",
+      "summary": "Project and add in one pass from zero, without an intermediate collection."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "Never",
       "parameters": [
        {
@@ -88748,6 +90281,57 @@
        }
       ],
       "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[SIMD[dtype, size]]"
+      },
+      "signature": "def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[SIMD[dtype, size]] where Self.Value == List[F._View[o].Arg] and F._View[o].Out == SIMD[dtype, size]",
+      "summary": "Project and add in one pass from zero, without an intermediate collection."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "Never",
       "parameters": [
        {
@@ -88895,6 +90479,50 @@
        "type": "Piped[Int]"
       },
       "signature": "def sum_by[F: UnaryContract & Movable & Deinitable, N: Int, //](deinit self, var function: F) raises F.Error -> Piped[Int] where Self.Value == Array[F.Arg, N] and F.Out == Int",
+      "summary": "Project and add in one pass from zero, without an intermediate collection."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "N",
+        "type": "Int",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Int]"
+      },
+      "signature": "def sum_by[F: _UnaryViewable, o: ImmOrigin, N: Int, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Int] where Self.Value == Array[F._View[o].Arg, N] and F._View[o].Out == Int",
       "summary": "Project and add in one pass from zero, without an intermediate collection."
      },
      {
@@ -89110,6 +90738,64 @@
        }
       ],
       "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "N",
+        "type": "Int",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[SIMD[dtype, size]]"
+      },
+      "signature": "def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, N: Int, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[SIMD[dtype, size]] where Self.Value == Array[F._View[o].Arg, N] and F._View[o].Out == SIMD[dtype, size]",
+      "summary": "Project and add in one pass from zero, without an intermediate collection."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "Never",
       "parameters": [
        {
@@ -89236,6 +90922,43 @@
        "type": "Piped[Int]"
       },
       "signature": "def sum_by[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[Int] where Self.Value == Deque[F.Arg] and F.Out == Int",
+      "summary": "Project and add in one pass from zero, without an intermediate collection."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Int]"
+      },
+      "signature": "def sum_by[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Int] where Self.Value == Deque[F._View[o].Arg] and F._View[o].Out == Int",
       "summary": "Project and add in one pass from zero, without an intermediate collection."
      },
      {
@@ -89430,6 +91153,57 @@
        }
       ],
       "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[SIMD[dtype, size]]"
+      },
+      "signature": "def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[SIMD[dtype, size]] where Self.Value == Deque[F._View[o].Arg] and F._View[o].Out == SIMD[dtype, size]",
+      "summary": "Project and add in one pass from zero, without an intermediate collection."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "Never",
       "parameters": [
        {
@@ -89556,6 +91330,43 @@
        "type": "Piped[Int]"
       },
       "signature": "def sum_by[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[Int] where Self.Value == LinkedList[F.Arg] and F.Out == Int",
+      "summary": "Project and add in one pass from zero, without an intermediate collection."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Int]"
+      },
+      "signature": "def sum_by[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Int] where Self.Value == LinkedList[F._View[o].Arg] and F._View[o].Out == Int",
       "summary": "Project and add in one pass from zero, without an intermediate collection."
      },
      {
@@ -89750,6 +91561,57 @@
        }
       ],
       "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[SIMD[dtype, size]]"
+      },
+      "signature": "def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[SIMD[dtype, size]] where Self.Value == LinkedList[F._View[o].Arg] and F._View[o].Out == SIMD[dtype, size]",
+      "summary": "Project and add in one pass from zero, without an intermediate collection."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "Never",
       "parameters": [
        {
@@ -89918,6 +91780,57 @@
        "type": "Piped[Int]"
       },
       "signature": "def sum_by[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[Int] where Self.Value == Dict[K, F.Arg, H] and F.Out == Int",
+      "summary": "Project and add in one pass from zero, without an intermediate collection."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "K",
+        "type": "KeyElement & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "H",
+        "type": "Hasher & Defaultable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Int]"
+      },
+      "signature": "def sum_by[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Int] where Self.Value == Dict[K, F._View[o].Arg, H] and F._View[o].Out == Int",
       "summary": "Project and add in one pass from zero, without an intermediate collection."
      },
      {
@@ -90154,6 +92067,71 @@
        }
       ],
       "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "K",
+        "type": "KeyElement & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "H",
+        "type": "Hasher & Defaultable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[SIMD[dtype, size]]"
+      },
+      "signature": "def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[SIMD[dtype, size]] where Self.Value == Dict[K, F._View[o].Arg, H] and F._View[o].Out == SIMD[dtype, size]",
+      "summary": "Project and add in one pass from zero, without an intermediate collection."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "Never",
       "parameters": [
        {
@@ -90280,6 +92258,43 @@
        "type": "Piped[Int]"
       },
       "signature": "def sum_by[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[Int] where Self.Value == StringDict[F.Arg] and F.Out == Int",
+      "summary": "Project and add in one pass from zero, without an intermediate collection."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Int]"
+      },
+      "signature": "def sum_by[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Int] where Self.Value == StringDict[F._View[o].Arg] and F._View[o].Out == Int",
       "summary": "Project and add in one pass from zero, without an intermediate collection."
      },
      {
@@ -90474,6 +92489,57 @@
        }
       ],
       "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[SIMD[dtype, size]]"
+      },
+      "signature": "def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[SIMD[dtype, size]] where Self.Value == StringDict[F._View[o].Arg] and F._View[o].Out == SIMD[dtype, size]",
+      "summary": "Project and add in one pass from zero, without an intermediate collection."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "Never",
       "parameters": [
        {
@@ -90600,6 +92666,43 @@
        "type": "Piped[Int]"
       },
       "signature": "def sum_by[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[Int] where Self.Value == Optional[F.Arg] and F.Out == Int",
+      "summary": "Project and add in one pass from zero, without an intermediate collection."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[Int]"
+      },
+      "signature": "def sum_by[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[Int] where Self.Value == Optional[F._View[o].Arg] and F._View[o].Out == Int",
       "summary": "Project and add in one pass from zero, without an intermediate collection."
      },
      {
@@ -90781,6 +92884,57 @@
        "type": "Piped[SIMD[dtype, size]]"
       },
       "signature": "def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> Piped[SIMD[dtype, size]] where Self.Value == Optional[F.Arg] and F.Out == SIMD[dtype, size]",
+      "summary": "Project and add in one pass from zero, without an intermediate collection."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Piped[SIMD[dtype, size]]"
+      },
+      "signature": "def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Piped[SIMD[dtype, size]] where Self.Value == Optional[F._View[o].Arg] and F._View[o].Out == SIMD[dtype, size]",
       "summary": "Project and add in one pass from zero, without an intermediate collection."
      }
     ],
@@ -130870,6 +133024,50 @@
        "type": "Pipeline[_NativeFamily[M.Value], M.Value, Self.E]"
       },
       "signature": "def fold_map[C: UnaryContract & Movable & Deinitable, //, M: Monoid](deinit self, var function: C) raises _CommonError[C.Error, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where C.Arg == _FoldElement[Self.V] and C.Out == M.Value and RepeatableUnary[C] and _ErrorCompatible[_CommonError[C.Error, M.Error], M.Error] and _ErrorCompatible[_CommonError[C.Error, M.Error], C.Error]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C._View[o].Error, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[M.Value], M.Value, Self.E]"
+      },
+      "signature": "def fold_map[C: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: C) raises _CommonError[C._View[o].Error, M.Error] -> Pipeline[_NativeFamily[M.Value], M.Value, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and C._View[o].Out == M.Value and RepeatableUnary[C._View[o]] and _ErrorCompatible[_CommonError[C._View[o].Error, M.Error], M.Error] and _ErrorCompatible[_CommonError[C._View[o].Error, M.Error], C._View[o].Error]",
       "summary": "Reduce the consumed source in order through the canonical terminal driver."
      },
      {
@@ -207688,6 +209886,43 @@
        }
       ],
       "description": "",
+      "error": "_CommonError[C._View[o].Error, _IntSum.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E]"
+      },
+      "signature": "def sum_by[C: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises _CommonError[C._View[o].Error, _IntSum.Error] -> Pipeline[_NativeFamily[_IntSum.Value], _IntSum.Value, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and C._View[o].Out == _IntSum.Value and RepeatableUnary[C._View[o]] and _ErrorCompatible[_CommonError[C._View[o].Error, _IntSum.Error], _IntSum.Error] and _ErrorCompatible[_CommonError[C._View[o].Error, _IntSum.Error], C._View[o].Error]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "_CommonError[Never, _IntSum.Error]",
       "parameters": [
        {
@@ -207985,6 +210220,57 @@
        "type": "Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E]"
       },
       "signature": "def sum_by[C: UnaryContract & Movable & Deinitable, //, dtype: DType, size: SIMDLength](deinit self, var function: C) raises _CommonError[C.Error, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where C.Arg == _FoldElement[Self.V] and C.Out == _SIMDSum[dtype, size].Value and RepeatableUnary[C] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[C.Error, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[C.Error, _SIMDSum[dtype, size].Error], C.Error]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C._View[o].Error, _SIMDSum[dtype, size].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E]"
+      },
+      "signature": "def sum_by[C: _UnaryViewable, o: ImmOrigin, //, dtype: DType, size: SIMDLength](deinit self, ref[o] function: C) raises _CommonError[C._View[o].Error, _SIMDSum[dtype, size].Error] -> Pipeline[_NativeFamily[_SIMDSum[dtype, size].Value], _SIMDSum[dtype, size].Value, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and C._View[o].Out == _SIMDSum[dtype, size].Value and RepeatableUnary[C._View[o]] and _SIMDSum[dtype, size].Admitted and _ErrorCompatible[_CommonError[C._View[o].Error, _SIMDSum[dtype, size].Error], _SIMDSum[dtype, size].Error] and _ErrorCompatible[_CommonError[C._View[o].Error, _SIMDSum[dtype, size].Error], C._View[o].Error]",
       "summary": "Reduce the consumed source in order through the canonical terminal driver."
      },
      {
@@ -229550,6 +231836,43 @@
       },
       "signature": "def find_map[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> F.Out where Self.I.Element == F.Arg",
       "summary": "Return the first present transformed result, stopping without another pull."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "F._View[o].Out"
+      },
+      "signature": "def find_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> F._View[o].Out where Self.I.Element == F._View[o].Arg",
+      "summary": "Return the first present transformed result, stopping without another pull."
      }
     ],
     "find_map_effect": [
@@ -230824,6 +233147,50 @@
       },
       "signature": "def fold_map[F: UnaryContract & Movable & Deinitable, //, M: Monoid](deinit self, var function: F) raises _CommonError[F.Error, M.Error] -> M.Value where Self.I.Element == F.Arg",
       "summary": "Project and combine in order with a monoid; empty input returns its identity."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[F._View[o].Error, M.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "M.Value"
+      },
+      "signature": "def fold_map[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> M.Value where Self.I.Element == F._View[o].Arg",
+      "summary": "Project and combine in order with a monoid; empty input returns its identity."
      }
     ],
     "fold_map_effect": [
@@ -231885,6 +234252,43 @@
       },
       "signature": "def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
       "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]"
+      },
+      "signature": "def max_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] where Self.I.Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable)",
+      "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
      }
     ],
     "min_by": [
@@ -232025,6 +234429,43 @@
        "type": "Optional[downcast[C.Payload, Movable & Deinitable]]"
       },
       "signature": "def min_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+      "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._BorrowView[o].Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]"
+      },
+      "signature": "def min_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] where Self.I.Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable)",
       "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
      }
     ],
@@ -233707,6 +236148,43 @@
        }
       ],
       "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Int"
+      },
+      "signature": "def sum_by[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Int where Self.I.Element == F._View[o].Arg and F._View[o].Out == Int",
+      "summary": "Project and add in one pass from zero, without an intermediate collection."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "Never",
       "parameters": [
        {
@@ -233875,6 +236353,57 @@
        "type": "SIMD[dtype, size]"
       },
       "signature": "def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> SIMD[dtype, size] where Self.I.Element == F.Arg and F.Out == SIMD[dtype, size]",
+      "summary": "Project and add in one pass from zero, without an intermediate collection."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "SIMD[dtype, size]"
+      },
+      "signature": "def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> SIMD[dtype, size] where Self.I.Element == F._View[o].Arg and F._View[o].Out == SIMD[dtype, size]",
       "summary": "Project and add in one pass from zero, without an intermediate collection."
      }
     ],
@@ -239400,6 +241929,57 @@
      },
      "signature": "def find_map[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //](var function: F, var source: V) raises F.Error -> F.Out where _Source[V].Element == F.Arg",
      "summary": "Return the first present transformed result, stopping without another pull."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "F._View[o].Error",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "_UnaryViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "F._View[o].Out"
+     },
+     "signature": "def find_map[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: F, var source: V) raises F._View[o].Error -> F._View[o].Out where _Source[V].Element == F._View[o].Arg",
+     "summary": "Return the first present transformed result, stopping without another pull."
     }
    ],
    "provider": "iteration/reductions",
@@ -240930,6 +243510,64 @@
      },
      "signature": "def fold_map[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, M: Monoid](var function: F, var source: V) raises _CommonError[F.Error, M.Error] -> M.Value where _Source[V].Element == F.Arg",
      "summary": "Project and combine in order with a monoid; empty input returns its identity."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_CommonError[F._View[o].Error, M.Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "_UnaryViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "M.Value"
+     },
+     "signature": "def fold_map[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid](ref[o] function: F, var source: V) raises _CommonError[F._View[o].Error, M.Error] -> M.Value where _Source[V].Element == F._View[o].Arg",
+     "summary": "Project and combine in order with a monoid; empty input returns its identity."
     }
    ],
    "provider": "iteration/reductions",
@@ -242348,6 +244986,57 @@
      },
      "signature": "def max_by[C: BorrowCallable, V: Movable & Deinitable, //](var function: C, var source: V) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
      "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "C._BorrowView[o].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "C",
+       "type": "_BorrowViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]"
+     },
+     "signature": "def max_by[C: _BorrowViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: C, var source: V) raises C._BorrowView[o].Failure -> Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable)",
+     "summary": "Return the element with the largest key; empty input is absent and ties keep the first."
     }
    ],
    "provider": "iteration/reductions",
@@ -242536,6 +245225,57 @@
       "type": "Optional[downcast[C.Payload, Movable & Deinitable]]"
      },
      "signature": "def min_by[C: BorrowCallable, V: Movable & Deinitable, //](var function: C, var source: V) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable)",
+     "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "C._BorrowView[o].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "C",
+       "type": "_BorrowViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]"
+     },
+     "signature": "def min_by[C: _BorrowViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: C, var source: V) raises C._BorrowView[o].Failure -> Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] where _Source[V].Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable)",
      "summary": "Return the element with the smallest key; empty input is absent and ties keep the first."
     }
    ],
@@ -244687,6 +247427,57 @@
       }
      ],
      "description": "",
+     "error": "F._View[o].Error",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "_UnaryViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Int"
+     },
+     "signature": "def sum_by[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: F, var source: V) raises F._View[o].Error -> Int where _Source[V].Element == F._View[o].Arg and F._View[o].Out == Int",
+     "summary": "Project and add in one pass from zero, without an intermediate collection."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
      "error": "Never",
      "parameters": [
       {
@@ -244890,6 +247681,71 @@
       "type": "SIMD[dtype, size]"
      },
      "signature": "def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //](var function: F, var source: V) raises F.Error -> SIMD[dtype, size] where _Source[V].Element == F.Arg and F.Out == SIMD[dtype, size]",
+     "summary": "Project and add in one pass from zero, without an intermediate collection."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[o]",
+       "description": "",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "F._View[o].Error",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "dtype",
+       "type": "DType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "size",
+       "type": "SIMDLength",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "_UnaryViewable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "o",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "SIMD[dtype, size]"
+     },
+     "signature": "def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //](ref[o] function: F, var source: V) raises F._View[o].Error -> SIMD[dtype, size] where _Source[V].Element == F._View[o].Arg and F._View[o].Out == SIMD[dtype, size]",
      "summary": "Project and add in one pass from zero, without an intermediate collection."
     }
    ],

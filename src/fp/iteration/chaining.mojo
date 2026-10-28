@@ -1760,6 +1760,10 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Return the first present transformed result, stopping without another pull."""
         return _find_map(function^, self._iterator^)
 
+    def find_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> F._View[o].Out where Self.I.Element == F._View[o].Arg:
+        """Return the first present transformed result, stopping without another pull."""
+        return _find_map(function._unary_view(), self._iterator^)
+
     def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, F: _Unary[A, R]](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> M.Value where Self.I.Element == A:
         """Project and combine in order with a monoid; empty input returns its identity.
 
@@ -1788,6 +1792,10 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
     def fold_map[F: UnaryContract & Movable & Deinitable, //, M: Monoid](deinit self, var function: F) raises _CommonError[F.Error, M.Error] -> M.Value where Self.I.Element == F.Arg:
         """Project and combine in order with a monoid; empty input returns its identity."""
         return _fold_map[M=M](function^, self._iterator^)
+
+    def fold_map[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> M.Value where Self.I.Element == F._View[o].Arg:
+        """Project and combine in order with a monoid; empty input returns its identity."""
+        return _fold_map[M=M](function._unary_view(), self._iterator^)
 
     def combine_all[M: Monoid](deinit self) raises _CommonError[Never, M.Error] -> M.Value where Self.I.Element == M.Value:
         """Combine in order with a monoid; empty input returns its identity.
@@ -1831,6 +1839,10 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Return the element with the smallest key; empty input is absent and ties keep the first."""
         return _extremum[T=downcast[C.Payload, Movable & Deinitable], C=C, smallest=True](function^, self._iterator^)
 
+    def min_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] where Self.I.Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):
+        """Return the element with the smallest key; empty input is absent and ties keep the first."""
+        return _extremum[T=downcast[C._BorrowView[o].Payload, Movable & Deinitable], C=C._BorrowView[o], smallest=True](function._borrow_view(), self._iterator^)
+
     def max_by[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: _Borrowing[P, R]](deinit self, ref[o] function: F) raises Never -> Optional[downcast[P, Movable & Deinitable]] where Self.I.Element == downcast[P, Movable & Deinitable] and conforms_to(R, Comparable & Movable & Deinitable):
         """Return the element with the largest key; empty input is absent and ties keep the first.
 
@@ -1858,6 +1870,10 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
     def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Optional[downcast[C.Payload, Movable & Deinitable]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and conforms_to(C.Result, Comparable & Movable & Deinitable):
         """Return the element with the largest key; empty input is absent and ties keep the first."""
         return _extremum[T=downcast[C.Payload, Movable & Deinitable], C=C, smallest=False](function^, self._iterator^)
+
+    def max_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] where Self.I.Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):
+        """Return the element with the largest key; empty input is absent and ties keep the first."""
+        return _extremum[T=downcast[C._BorrowView[o].Payload, Movable & Deinitable], C=C._BorrowView[o], smallest=False](function._borrow_view(), self._iterator^)
 
     def sum(deinit self) raises Never -> Int where Self.I.Element == Int:
         """Add in order from zero, preserving the numeric type and SIMD lanes.
@@ -1902,6 +1918,10 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Project and add in one pass from zero, without an intermediate collection."""
         return _fold_map[M=_IntSum, E=F.Error](function^, self._iterator^)
 
+    def sum_by[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> Int where Self.I.Element == F._View[o].Arg and F._View[o].Out == Int:
+        """Project and add in one pass from zero, without an intermediate collection."""
+        return _fold_map[M=_IntSum, E=F._View[o].Error](function._unary_view(), self._iterator^)
+
     def sum_by[dtype: DType, size: SIMDLength, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: _Unary[A, R]](deinit self, ref[o] function: F) raises Never -> SIMD[dtype, size] where Self.I.Element == A and R == SIMD[dtype, size]:
         """Project and add in one pass from zero, without an intermediate collection."""
         return _fold_map[M=_SIMDSum[dtype, size], E=Never](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), self._iterator^)
@@ -1913,6 +1933,10 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
     def sum_by[dtype: DType, size: SIMDLength, F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises F.Error -> SIMD[dtype, size] where Self.I.Element == F.Arg and F.Out == SIMD[dtype, size]:
         """Project and add in one pass from zero, without an intermediate collection."""
         return _fold_map[M=_SIMDSum[dtype, size], E=F.Error](function^, self._iterator^)
+
+    def sum_by[dtype: DType, size: SIMDLength, F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises F._View[o].Error -> SIMD[dtype, size] where Self.I.Element == F._View[o].Arg and F._View[o].Out == SIMD[dtype, size]:
+        """Project and add in one pass from zero, without an intermediate collection."""
+        return _fold_map[M=_SIMDSum[dtype, size], E=F._View[o].Error](function._unary_view(), self._iterator^)
 
     # --- end terminal syntax ---
 

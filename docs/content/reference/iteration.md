@@ -52,6 +52,23 @@ starts from the Monoid's identity and combines only present callback results,
 without an intermediate collection. Callback and Monoid failures stop before
 another pull; if both can raise, their error types must match.
 
+## Reuse projections in reductions
+
+<!-- example: docs/examples/reusable_projections.mojo -->
+
+Pass a named unary `partial`, `as_unary` adapter or shared `flow`/`compose`
+chain directly to `sum_by`, `fold_map` or `find_map`. Free functions and
+`Iter`, `Piped` and selected `Pipeline` methods borrow the callback for the
+reduction; it can be used again afterward. Passing `callback^` still transfers
+ownership. No callback copies or new intermediate collections are introduced.
+
+`min_by` and `max_by` borrow each candidate, so a unary `partial` also works
+as a reusable key function. An adapter that consumes its argument cannot be
+used as a borrowing key. Extrema keep the original element, evaluate each key
+once and retain the first element on ties. `find_map` requires an Optional
+result and stops at its first present result. Raised errors keep their exact
+types; callback and Monoid errors must match when both can raise.
+
 ## Fold scalars, SIMD vectors and documents with one function
 
 <!-- example: docs/examples/generic_fold.mojo -->
