@@ -2875,10 +2875,10 @@ struct Piped[Value: Movable & Deinitable](Movable):
 
     def map[F: UnaryContract & Movable & Deinitable, N: Int](
         deinit self, var function: F
-    ) raises F.Error -> Piped[Array[F.Out, N]] where Self.Value == Array[F.Arg, N]:
+    ) raises F.Error -> Piped[Array[F.Out, N]] where Self.Value == Array[F.Arg, N] and _MapCompatible[_ArrayFamily[N], Array[F.Arg, N], F]:
         """Map Array payloads with an owned library callback."""
         comptime assert Self.Value == Array[F.Arg, N]
-        return Piped(_family_map[_ArrayFamily[N]](function^, rebind_var[Array[F.Arg, N]](self.value^)))
+        return Piped(_ArrayFamily[N].map(function^, rebind_var[Array[F.Arg, N]](self.value^)))
 
     def map[F: _UnaryViewable, o: ImmOrigin, N: Int](
         deinit self, ref[o] function: F
@@ -2903,10 +2903,10 @@ struct Piped[Value: Movable & Deinitable](Movable):
 
     def map[F: UnaryContract & Movable & Deinitable](
         deinit self, var function: F
-    ) raises F.Error -> Piped[Deque[F.Out]] where Self.Value == Deque[F.Arg]:
+    ) raises F.Error -> Piped[Deque[F.Out]] where Self.Value == Deque[F.Arg] and _MapCompatible[_DequeFamily, Deque[F.Arg], F]:
         """Map Deque payloads with an owned library callback."""
         comptime assert Self.Value == Deque[F.Arg]
-        return Piped(_family_map[_DequeFamily](function^, rebind_var[Deque[F.Arg]](self.value^)))
+        return Piped(_DequeFamily.map(function^, rebind_var[Deque[F.Arg]](self.value^)))
 
     def map[F: _UnaryViewable, o: ImmOrigin](
         deinit self, ref[o] function: F
@@ -2931,10 +2931,10 @@ struct Piped[Value: Movable & Deinitable](Movable):
 
     def map[F: UnaryContract & Movable & Deinitable](
         deinit self, var function: F
-    ) raises F.Error -> Piped[LinkedList[F.Out]] where Self.Value == LinkedList[F.Arg]:
+    ) raises F.Error -> Piped[LinkedList[F.Out]] where Self.Value == LinkedList[F.Arg] and _MapCompatible[_LinkedListFamily, LinkedList[F.Arg], F]:
         """Map LinkedList payloads with an owned library callback."""
         comptime assert Self.Value == LinkedList[F.Arg]
-        return Piped(_family_map[_LinkedListFamily](function^, rebind_var[LinkedList[F.Arg]](self.value^)))
+        return Piped(_LinkedListFamily.map(function^, rebind_var[LinkedList[F.Arg]](self.value^)))
 
     def map[F: _UnaryViewable, o: ImmOrigin](
         deinit self, ref[o] function: F
@@ -2959,10 +2959,10 @@ struct Piped[Value: Movable & Deinitable](Movable):
 
     def map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](
         deinit self, var function: F
-    ) raises F.Error -> Piped[Dict[K, F.Out, H]] where Self.Value == Dict[K, F.Arg, H]:
+    ) raises F.Error -> Piped[Dict[K, F.Out, H]] where Self.Value == Dict[K, F.Arg, H] and _MapCompatible[_DictFamily[K, F.Arg, H], Dict[K, F.Arg, H], F]:
         """Map Dict payloads with an owned library callback."""
         comptime assert Self.Value == Dict[K, F.Arg, H]
-        return Piped(_family_map[_DictFamily[K, F.Arg, H]](function^, rebind_var[Dict[K, F.Arg, H]](self.value^)))
+        return Piped(_DictFamily[K, F.Arg, H].map(function^, rebind_var[Dict[K, F.Arg, H]](self.value^)))
 
     def map[F: _UnaryViewable, o: ImmOrigin, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](
         deinit self, ref[o] function: F
@@ -2987,10 +2987,10 @@ struct Piped[Value: Movable & Deinitable](Movable):
 
     def map[F: UnaryContract & Movable & Deinitable](
         deinit self, var function: F
-    ) raises F.Error -> Piped[StringDict[F.Out]] where Self.Value == StringDict[F.Arg]:
+    ) raises F.Error -> Piped[StringDict[F.Out]] where Self.Value == StringDict[F.Arg] and _MapCompatible[_StringDictFamily[F.Arg], StringDict[F.Arg], F]:
         """Map StringDict payloads with an owned library callback."""
         comptime assert Self.Value == StringDict[F.Arg]
-        return Piped(_family_map[_StringDictFamily[F.Arg]](function^, rebind_var[StringDict[F.Arg]](self.value^)))
+        return Piped(_StringDictFamily[F.Arg].map(function^, rebind_var[StringDict[F.Arg]](self.value^)))
 
     def map[F: _UnaryViewable, o: ImmOrigin](
         deinit self, ref[o] function: F
@@ -3015,10 +3015,10 @@ struct Piped[Value: Movable & Deinitable](Movable):
 
     def map[F: UnaryContract & Movable & Deinitable](
         deinit self, var function: F
-    ) raises F.Error -> Piped[Optional[F.Out]] where Self.Value == Optional[F.Arg]:
+    ) raises F.Error -> Piped[Optional[F.Out]] where Self.Value == Optional[F.Arg] and _MapCompatible[OptionalFamily, Optional[F.Arg], F]:
         """Map Optional payloads with an owned library callback."""
         comptime assert Self.Value == Optional[F.Arg]
-        return Piped(_family_map[OptionalFamily](function^, rebind_var[Optional[F.Arg]](self.value^)))
+        return Piped(OptionalFamily.map(function^, rebind_var[Optional[F.Arg]](self.value^)))
 
     def map[F: _UnaryViewable, o: ImmOrigin](
         deinit self, ref[o] function: F
@@ -3043,10 +3043,10 @@ struct Piped[Value: Movable & Deinitable](Movable):
 
     def map[F: UnaryContract & Movable & Deinitable, Failure: Movable & Deinitable](
         deinit self, var function: F
-    ) raises F.Error -> Piped[Result[F.Out, Failure]] where Self.Value == Result[F.Arg, Failure]:
+    ) raises F.Error -> Piped[Result[F.Out, Failure]] where Self.Value == Result[F.Arg, Failure] and _MapCompatible[ResultFamily[Failure], Result[F.Arg, Failure], F]:
         """Map Result payloads with an owned library callback."""
         comptime assert Self.Value == Result[F.Arg, Failure]
-        return Piped(_family_map[ResultFamily[Failure]](function^, rebind_var[Result[F.Arg, Failure]](self.value^)))
+        return Piped(ResultFamily[Failure].map(function^, rebind_var[Result[F.Arg, Failure]](self.value^)))
 
     def map[F: _UnaryViewable, o: ImmOrigin, Failure: Movable & Deinitable](
         deinit self, ref[o] function: F
@@ -3391,8 +3391,8 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
         return Piped(_family_filter_not[OptionalFamily](predicate._borrow_view(), rebind_var[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^)))
 
-    def fill[T: Movable & Deinitable, U: Copyable & Deinitable, //, I: Functor](deinit self, var value: U) raises I.MapError[Self.Value, _Fill[T, U]] -> Piped[I.Mapped[Self.Value, _Fill[T, U]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Fill[T, U]]:
-        """Copy value into every payload position.
+    def fill[T: Movable & Deinitable, U: Movable & Deinitable, //, I: Functor](deinit self, var value: U) raises I.MapError[Self.Value, _Fill[T, U]] -> Piped[I.Mapped[Self.Value, _Fill[T, U]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Fill[T, U]]:
+        """Replace payloads with value, moving it for a single call or copying for repeated calls.
 
         Parameters:
             T: The element type, including its native origins.
@@ -4289,8 +4289,8 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_map2_as[ResultFamily[Failure], X=downcast[ResultFamily[Failure].Element[Self.Value], UnaryContract & Movable & Deinitable].Error](_Apply[downcast[ResultFamily[Failure].Element[Self.Value], UnaryContract & Movable & Deinitable]](), rebind_var[Result[downcast[ResultFamily[Failure].Element[Self.Value], UnaryContract & Movable & Deinitable], Failure]](self.value^), rebind_var[Result[downcast[ResultFamily[Failure].Element[Self.Value], UnaryContract & Movable & Deinitable].Arg, Failure]](values^)))
 
-    def fill[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[List[U]] where Self.Value == List[T]:
-        """Copy value into every payload position."""
+    def fill[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[List[U]] where Self.Value == List[T] and _MapCompatible[ListFamily, List[T], _Fill[T, U]]:
+        """Replace payloads with value, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == List[T]
         return Piped(ListFamily.map(_Fill[T, U](value^), rebind_var[List[T]](self.value^)))
 
@@ -4472,8 +4472,8 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == List[T]
         return Piped(_traverse_as[ListFamily, ValidationFamily[S], List[T], _Same[T], S.Error](_Same[T](), rebind_var[List[T]](self.value^)))
 
-    def fill[T: Movable & Deinitable, U: Copyable & Deinitable, N: Int](deinit self, var value: U) -> Piped[Array[U, N]] where Self.Value == Array[T, N]:
-        """Copy value into every payload position."""
+    def fill[T: Movable & Deinitable, U: Movable & Deinitable, N: Int](deinit self, var value: U) -> Piped[Array[U, N]] where Self.Value == Array[T, N] and _MapCompatible[_ArrayFamily[N], Array[T, N], _Fill[T, U]]:
+        """Replace payloads with value, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == Array[T, N]
         return Piped(_ArrayFamily[N].map(_Fill[T, U](value^), rebind_var[Array[T, N]](self.value^)))
 
@@ -4527,8 +4527,8 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Array[T, N]
         return Piped(_ArrayFamily[N].map(_Observe[T, C, False](function^), rebind_var[Array[T, N]](self.value^)))
 
-    def fill[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[Deque[U]] where Self.Value == Deque[T]:
-        """Copy value into every payload position."""
+    def fill[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Deque[U]] where Self.Value == Deque[T] and _MapCompatible[_DequeFamily, Deque[T], _Fill[T, U]]:
+        """Replace payloads with value, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == Deque[T]
         return Piped(_DequeFamily.map(_Fill[T, U](value^), rebind_var[Deque[T]](self.value^)))
 
@@ -4607,8 +4607,8 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Deque[Optional[T]]
         return Piped(_DequeFamily.filter_map(_Same[Optional[T]](), rebind_var[Deque[Optional[T]]](self.value^)))
 
-    def fill[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[LinkedList[U]] where Self.Value == LinkedList[T]:
-        """Copy value into every payload position."""
+    def fill[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[LinkedList[U]] where Self.Value == LinkedList[T] and _MapCompatible[_LinkedListFamily, LinkedList[T], _Fill[T, U]]:
+        """Replace payloads with value, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == LinkedList[T]
         return Piped(_LinkedListFamily.map(_Fill[T, U](value^), rebind_var[LinkedList[T]](self.value^)))
 
@@ -4687,8 +4687,8 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == LinkedList[Optional[T]]
         return Piped(_LinkedListFamily.filter_map(_Same[Optional[T]](), rebind_var[LinkedList[Optional[T]]](self.value^)))
 
-    def fill[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H]:
-        """Copy value into every payload position."""
+    def fill[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H] and _MapCompatible[_DictFamily[K, T, H], Dict[K, T, H], _Fill[T, U]]:
+        """Replace payloads with value, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_DictFamily[K, T, H].map(_Fill[T, U](value^), rebind_var[Dict[K, T, H]](self.value^)))
 
@@ -4767,8 +4767,8 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Dict[K, Optional[T], H]
         return Piped(_DictFamily[K, Optional[T], H].filter_map(_Same[Optional[T]](), rebind_var[Dict[K, Optional[T], H]](self.value^)))
 
-    def fill[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[StringDict[U]] where Self.Value == StringDict[T]:
-        """Copy value into every payload position."""
+    def fill[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[StringDict[U]] where Self.Value == StringDict[T] and _MapCompatible[_StringDictFamily[T], StringDict[T], _Fill[T, U]]:
+        """Replace payloads with value, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == StringDict[T]
         return Piped(_StringDictFamily[T].map(_Fill[T, U](value^), rebind_var[StringDict[T]](self.value^)))
 
@@ -4847,8 +4847,8 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == StringDict[Optional[T]]
         return Piped(_StringDictFamily[Optional[T]].filter_map(_Same[Optional[T]](), rebind_var[StringDict[Optional[T]]](self.value^)))
 
-    def fill[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[Optional[U]] where Self.Value == Optional[T]:
-        """Copy value into every payload position."""
+    def fill[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Optional[U]] where Self.Value == Optional[T] and _MapCompatible[OptionalFamily, Optional[T], _Fill[T, U]]:
+        """Replace payloads with value, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == Optional[T]
         return Piped(OptionalFamily.map(_Fill[T, U](value^), rebind_var[Optional[T]](self.value^)))
 
@@ -5002,8 +5002,8 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Optional[T]
         return Piped(_traverse_as[OptionalFamily, ValidationFamily[S], Optional[T], _Same[T], Never](_Same[T](), rebind_var[Optional[T]](self.value^)))
 
-    def fill[T: Movable & Deinitable, U: Copyable & Deinitable, Failure: Movable & Deinitable](deinit self, var value: U) -> Piped[Result[U, Failure]] where Self.Value == Result[T, Failure]:
-        """Copy value into every payload position."""
+    def fill[T: Movable & Deinitable, U: Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var value: U) -> Piped[Result[U, Failure]] where Self.Value == Result[T, Failure] and _MapCompatible[ResultFamily[Failure], Result[T, Failure], _Fill[T, U]]:
+        """Replace payloads with value, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == Result[T, Failure]
         return Piped(ResultFamily[Failure].map(_Fill[T, U](value^), rebind_var[Result[T, Failure]](self.value^)))
 

@@ -1,4 +1,4 @@
-# error: List callbacks must be repeatable
+# error: no matching function in call to 'map'
 from fp.data import NonEmptyList
 from fp.algebra import NonEmptyListFamily, map
 from fp.callables import OnceUnary

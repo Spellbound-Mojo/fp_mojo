@@ -161,10 +161,14 @@ def document_first_methods(source, names=NAMES):
                 elif arg == 'other': description = 'The already evaluated second carrier, consumed. Constructing it is not deferred by this call.'
                 elif arg == 'old': description = 'The value to compare against each payload, consumed.'
                 elif arg == 'new': description = 'The replacement, consumed and copied only for matching payloads.'
+                elif arg == 'value' and name == 'fill' and owner == 'Piped':
+                    description = 'The replacement, consumed; a single call moves it, while repeated calls require Copyable and copy it.'
                 else: description = 'The constant, consumed and copied once per emitted payload.'
                 sections.append(f'    {arg}: {description}')
             sections.append('')
-        sections += ['Returns:', '    '+RETURNS[name]]
+        returns = ('The source shape with replacement payloads; empty input stays empty and stored errors pass through.'
+                   if name == 'fill' and owner == 'Piped' else RETURNS[name])
+        sections += ['Returns:', '    '+returns]
         if parsed['error']:
             sections += ['', 'Raises:', '    The exact callback, monoid or family error; Never for a non-raising operation.']
         new = body + '\n\n' + '\n'.join(prefix + x if x else '' for x in sections) + '\n' + prefix + '"""\n'

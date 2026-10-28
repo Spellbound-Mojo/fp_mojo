@@ -349,6 +349,21 @@ owned receiver selection. Generic wrappers can describe `SharedRef` in public
 operation contracts and pass that same representation into the operation,
 including when its deferred output type stores the reference.
 
+## Constant replacement ownership
+
+`_Fill` owns the replacement used by eager family and lazy iterator fills.
+Its consuming receiver moves that value; its shared receiver exists only when
+the replacement is Copyable and makes one copy per call. Families keep their
+existing invocation policy: Optional, Result and Identity invoke once, while
+collections and lazy iterators require repetition. Reader retains the same
+callback until its action runs or is discarded. No fill-specific family list
+or execution loop is introduced.
+
+Native collection `MapCompatible` predicates include the repeatable receiver
+requirement already enforced by their mapping drivers. This makes move-only
+fill rejection occur at admission and gives generic map contracts an accurate
+family proof. Input identities, errors and origin requirements remain intact.
+
 ## How consumers use the call boundary
 
 | Consumer | Route and receiver |

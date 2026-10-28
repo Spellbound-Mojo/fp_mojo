@@ -66988,7 +66988,7 @@
         "description": "The constant or result payload type; repeated constants must be Copyable.",
         "inferred": true,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        },
        {
@@ -67005,8 +67005,8 @@
        "doc": "The source shape with a copy of value at each payload position; empty input stays empty.",
        "type": "Piped[I.Mapped[Self.Value, _Fill[T, U]]]"
       },
-      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable, //, I: Functor](deinit self, var value: U) raises I.MapError[Self.Value, _Fill[T, U]] -> Piped[I.Mapped[Self.Value, _Fill[T, U]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Fill[T, U]]",
-      "summary": "Copy value into every payload position."
+      "signature": "def fill[T: Movable & Deinitable, U: Movable & Deinitable, //, I: Functor](deinit self, var value: U) raises I.MapError[Self.Value, _Fill[T, U]] -> Piped[I.Mapped[Self.Value, _Fill[T, U]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Fill[T, U]]",
+      "summary": "Replace payloads with value, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -67032,7 +67032,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -67042,8 +67042,8 @@
        "doc": "",
        "type": "Piped[List[U]]"
       },
-      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[List[U]] where Self.Value == List[T]",
-      "summary": "Copy value into every payload position."
+      "signature": "def fill[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[List[U]] where Self.Value == List[T] and _MapCompatible[ListFamily, List[T], _Fill[T, U]]",
+      "summary": "Replace payloads with value, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -67069,7 +67069,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        },
        {
@@ -67086,8 +67086,8 @@
        "doc": "",
        "type": "Piped[Array[U, N]]"
       },
-      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable, N: Int](deinit self, var value: U) -> Piped[Array[U, N]] where Self.Value == Array[T, N]",
-      "summary": "Copy value into every payload position."
+      "signature": "def fill[T: Movable & Deinitable, U: Movable & Deinitable, N: Int](deinit self, var value: U) -> Piped[Array[U, N]] where Self.Value == Array[T, N] and _MapCompatible[_ArrayFamily[N], Array[T, N], _Fill[T, U]]",
+      "summary": "Replace payloads with value, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -67113,7 +67113,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -67123,8 +67123,8 @@
        "doc": "",
        "type": "Piped[Deque[U]]"
       },
-      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[Deque[U]] where Self.Value == Deque[T]",
-      "summary": "Copy value into every payload position."
+      "signature": "def fill[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Deque[U]] where Self.Value == Deque[T] and _MapCompatible[_DequeFamily, Deque[T], _Fill[T, U]]",
+      "summary": "Replace payloads with value, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -67150,7 +67150,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -67160,8 +67160,8 @@
        "doc": "",
        "type": "Piped[LinkedList[U]]"
       },
-      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[LinkedList[U]] where Self.Value == LinkedList[T]",
-      "summary": "Copy value into every payload position."
+      "signature": "def fill[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[LinkedList[U]] where Self.Value == LinkedList[T] and _MapCompatible[_LinkedListFamily, LinkedList[T], _Fill[T, U]]",
+      "summary": "Replace payloads with value, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -67187,7 +67187,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        },
        {
@@ -67211,8 +67211,8 @@
        "doc": "",
        "type": "Piped[Dict[K, U, H]]"
       },
-      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H]",
-      "summary": "Copy value into every payload position."
+      "signature": "def fill[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H] and _MapCompatible[_DictFamily[K, T, H], Dict[K, T, H], _Fill[T, U]]",
+      "summary": "Replace payloads with value, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -67238,7 +67238,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -67248,8 +67248,8 @@
        "doc": "",
        "type": "Piped[StringDict[U]]"
       },
-      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[StringDict[U]] where Self.Value == StringDict[T]",
-      "summary": "Copy value into every payload position."
+      "signature": "def fill[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[StringDict[U]] where Self.Value == StringDict[T] and _MapCompatible[_StringDictFamily[T], StringDict[T], _Fill[T, U]]",
+      "summary": "Replace payloads with value, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -67275,7 +67275,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -67285,8 +67285,8 @@
        "doc": "",
        "type": "Piped[Optional[U]]"
       },
-      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[Optional[U]] where Self.Value == Optional[T]",
-      "summary": "Copy value into every payload position."
+      "signature": "def fill[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Optional[U]] where Self.Value == Optional[T] and _MapCompatible[OptionalFamily, Optional[T], _Fill[T, U]]",
+      "summary": "Replace payloads with value, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -67312,7 +67312,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        },
        {
@@ -67329,8 +67329,8 @@
        "doc": "",
        "type": "Piped[Result[U, Failure]]"
       },
-      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable, Failure: Movable & Deinitable](deinit self, var value: U) -> Piped[Result[U, Failure]] where Self.Value == Result[T, Failure]",
-      "summary": "Copy value into every payload position."
+      "signature": "def fill[T: Movable & Deinitable, U: Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var value: U) -> Piped[Result[U, Failure]] where Self.Value == Result[T, Failure] and _MapCompatible[ResultFamily[Failure], Result[T, Failure], _Fill[T, U]]",
+      "summary": "Replace payloads with value, moving it for a single call or copying for repeated calls."
      }
     ],
     "filter": [
@@ -83877,7 +83877,7 @@
        "doc": "",
        "type": "Piped[Array[F.Out, N]]"
       },
-      "signature": "def map[F: UnaryContract & Movable & Deinitable, N: Int](deinit self, var function: F) raises F.Error -> Piped[Array[F.Out, N]] where Self.Value == Array[F.Arg, N]",
+      "signature": "def map[F: UnaryContract & Movable & Deinitable, N: Int](deinit self, var function: F) raises F.Error -> Piped[Array[F.Out, N]] where Self.Value == Array[F.Arg, N] and _MapCompatible[_ArrayFamily[N], Array[F.Arg, N], F]",
       "summary": "Map Array payloads with an owned library callback."
      },
      {
@@ -84046,7 +84046,7 @@
        "doc": "",
        "type": "Piped[Deque[F.Out]]"
       },
-      "signature": "def map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) raises F.Error -> Piped[Deque[F.Out]] where Self.Value == Deque[F.Arg]",
+      "signature": "def map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) raises F.Error -> Piped[Deque[F.Out]] where Self.Value == Deque[F.Arg] and _MapCompatible[_DequeFamily, Deque[F.Arg], F]",
       "summary": "Map Deque payloads with an owned library callback."
      },
      {
@@ -84208,7 +84208,7 @@
        "doc": "",
        "type": "Piped[LinkedList[F.Out]]"
       },
-      "signature": "def map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) raises F.Error -> Piped[LinkedList[F.Out]] where Self.Value == LinkedList[F.Arg]",
+      "signature": "def map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) raises F.Error -> Piped[LinkedList[F.Out]] where Self.Value == LinkedList[F.Arg] and _MapCompatible[_LinkedListFamily, LinkedList[F.Arg], F]",
       "summary": "Map LinkedList payloads with an owned library callback."
      },
      {
@@ -84412,7 +84412,7 @@
        "doc": "",
        "type": "Piped[Dict[K, F.Out, H]]"
       },
-      "signature": "def map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var function: F) raises F.Error -> Piped[Dict[K, F.Out, H]] where Self.Value == Dict[K, F.Arg, H]",
+      "signature": "def map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var function: F) raises F.Error -> Piped[Dict[K, F.Out, H]] where Self.Value == Dict[K, F.Arg, H] and _MapCompatible[_DictFamily[K, F.Arg, H], Dict[K, F.Arg, H], F]",
       "summary": "Map Dict payloads with an owned library callback."
      },
      {
@@ -84588,7 +84588,7 @@
        "doc": "",
        "type": "Piped[StringDict[F.Out]]"
       },
-      "signature": "def map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) raises F.Error -> Piped[StringDict[F.Out]] where Self.Value == StringDict[F.Arg]",
+      "signature": "def map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) raises F.Error -> Piped[StringDict[F.Out]] where Self.Value == StringDict[F.Arg] and _MapCompatible[_StringDictFamily[F.Arg], StringDict[F.Arg], F]",
       "summary": "Map StringDict payloads with an owned library callback."
      },
      {
@@ -84750,7 +84750,7 @@
        "doc": "",
        "type": "Piped[Optional[F.Out]]"
       },
-      "signature": "def map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) raises F.Error -> Piped[Optional[F.Out]] where Self.Value == Optional[F.Arg]",
+      "signature": "def map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F) raises F.Error -> Piped[Optional[F.Out]] where Self.Value == Optional[F.Arg] and _MapCompatible[OptionalFamily, Optional[F.Arg], F]",
       "summary": "Map Optional payloads with an owned library callback."
      },
      {
@@ -84933,7 +84933,7 @@
        "doc": "",
        "type": "Piped[Result[F.Out, Failure]]"
       },
-      "signature": "def map[F: UnaryContract & Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var function: F) raises F.Error -> Piped[Result[F.Out, Failure]] where Self.Value == Result[F.Arg, Failure]",
+      "signature": "def map[F: UnaryContract & Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var function: F) raises F.Error -> Piped[Result[F.Out, Failure]] where Self.Value == Result[F.Arg, Failure] and _MapCompatible[ResultFamily[Failure], Result[F.Arg, Failure], F]",
       "summary": "Map Result payloads with an owned library callback."
      },
      {
@@ -134015,7 +134015,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The value consumed here and copied into each payload position.",
+        "description": "The replacement, consumed; a single call moves it, while repeated calls require Copyable and copy it.",
         "name": "value",
         "type": "U",
         "variadic": false
@@ -134032,10 +134032,10 @@
         "variadic": false
        },
        {
-        "description": "The copied value type, including its origins.",
+        "description": "The replacement type, including origins; repeated calls require Copyable.",
         "inferred": true,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -134045,8 +134045,8 @@
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
        "type": "Pipeline[_MappedFamily[Self.I, _Fill[T, U].Out], Self.I.Mapped[Self.V, _Fill[T, U]], Self.E]"
       },
-      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _Fill[T, U]] -> Pipeline[_MappedFamily[Self.I, _Fill[T, U].Out], Self.I.Mapped[Self.V, _Fill[T, U]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Fill[T, U]]",
-      "summary": "Copy value into every payload position."
+      "signature": "def fill[T: Movable & Deinitable, U: Movable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _Fill[T, U]] -> Pipeline[_MappedFamily[Self.I, _Fill[T, U].Out], Self.I.Mapped[Self.V, _Fill[T, U]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Fill[T, U]]",
+      "summary": "Replace payloads with value, moving it for a single call or copying for repeated calls."
      }
     ],
     "filter": [

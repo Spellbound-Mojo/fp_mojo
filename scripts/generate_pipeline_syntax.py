@@ -83,12 +83,17 @@ def map_methods(carrier):
                            'E' if raising else ''))
     source, result, family = carrier.value('F.Arg'), carrier.value('F.Out'), carrier.instance('F.Arg')
     admission = f'Self.Value == {source}'
-    operation = f'_family_map[{family}]'
+    # The exact native carrier and callback input are already fixed here.
+    # Delegate to its primitive, as List does, without re-projecting those
+    # types through the generic map entry's symbolic constraint.
+    operation = f'{family}.map'
     if carrier.name == 'List':
         # This signature fixes the exact carrier/payload and receiver mode.
         # Forward to its primitive without re-projecting generic input types.
         admission += ' and RepeatableUnary[F]'
-        operation = f'{family}.map'
+    else:
+        # Forward the same family proof required by the generic map entry.
+        admission += f' and _MapCompatible[{family}, {source}, F]'
     out.append(forward('map', [f'F: {callable_protocol("owned")} & {MD}', *carrier.parameters],
                        'var function: F', result, source, operation, 'function^',
                        f'Map {carrier.name} payloads with an owned library callback.', 'F.Error',
@@ -167,8 +172,8 @@ def container_methods():
 # Each transformation has one callback implementation. These are only native
 # admission signatures; explicit families and Iter use the same callbacks.
 TRANSFORMS = (
-    ('fill', 'T: Movable & Deinitable', ('U: Copyable & Deinitable',),
-     'var value: U', 'U', '_Fill[T, U]', 'value^', 'Copy value into every payload position.'),
+    ('fill', 'T: Movable & Deinitable', ('U: Movable & Deinitable',),
+     'var value: U', 'U', '_Fill[T, U]', 'value^', 'Replace payloads with value, moving it for a single call or copying for repeated calls.'),
     ('replace', 'T: Copyable & Equatable & Deinitable', (),
      'var old: T, var new: T', 'T', '_Replace[T]', 'old^, new^', 'Replace equal payloads, moving unmatched values unchanged.'),
     ('void', 'T: Movable & Deinitable', (),
@@ -189,6 +194,10 @@ def transform_methods(carrier=None):
         result = carrier.value(element) if carrier else f'I.Mapped[Self.Value, {callback}]'
         condition = f'Self.Value == {source}' if carrier else 'I.Element[Self.Value] == T'
         if not carrier: condition += f' and _MapCompatible[I, Self.Value, {callback}]'
+        elif name == 'fill':
+            # The callback's shared receiver exists only for Copyable constants.
+            # Let each native family's existing map policy admit repetition.
+            condition += f' and _MapCompatible[{family}, {source}, {callback}]'
         effect = '' if carrier else f' raises I.MapError[Self.Value, {callback}]'
         nominal = f'        comptime assert Self.Value == {source}\n' if carrier else ''
         value = f'rebind_var[{source}](self.value^)' if carrier else 'self.value^'

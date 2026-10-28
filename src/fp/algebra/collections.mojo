@@ -57,7 +57,7 @@ or Monad.
 
 
 struct _ArrayFamily[N: Int](Functor):
-    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == Array[F.Arg, Self.N]
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == Array[F.Arg, Self.N] and RepeatableUnary[F]
     comptime Element[V: Movable & Deinitable] = _ListElement[V]
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Array[F.Out, Self.N]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error
@@ -97,7 +97,7 @@ struct _DequeAppend[T: Movable & Deinitable](_Accumulate):
 
 
 struct _DequeFamily(Functor, Filterable, FunctorFilter):
-    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == Deque[F.Arg]
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == Deque[F.Arg] and RepeatableUnary[F]
     comptime Element[V: Movable & Deinitable] = _ListElement[V]
     comptime Filtered[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = V
     comptime FilterError[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = P.Failure
@@ -156,7 +156,7 @@ struct _LinkedAppend[T: Movable & Deinitable](_Accumulate):
 
 
 struct _LinkedListFamily(Functor, Filterable, FunctorFilter):
-    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == LinkedList[F.Arg]
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == LinkedList[F.Arg] and RepeatableUnary[F]
     comptime Element[V: Movable & Deinitable] = _ListElement[V]
     comptime Filtered[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = V
     comptime FilterError[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = P.Failure
@@ -226,7 +226,7 @@ struct _DictInsert[K: KeyElement & Deinitable, T: Movable & Deinitable, H: Hashe
 
 
 struct _DictFamily[K: KeyElement & Deinitable, A: Movable & Deinitable, H: Hasher & Defaultable & Deinitable](RebindingFunctor, Filterable, FunctorFilter):
-    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == Dict[Self.K, Self.A, Self.H] and F.Arg == Self.A
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == Dict[Self.K, Self.A, Self.H] and F.Arg == Self.A and RepeatableUnary[F]
     comptime WithElement[A: Movable & Deinitable] = _DictFamily[Self.K, A, Self.H]
     comptime Element[V: Movable & Deinitable] = Self.A
     comptime Filtered[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = V
@@ -285,7 +285,7 @@ def _take_entry[K: KeyElement & Deinitable, T: Movable & Deinitable, H: Hasher &
 
 
 struct _StringDictFamily[A: Movable & Deinitable](RebindingFunctor, Filterable, FunctorFilter):
-    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == StringDict[Self.A] and F.Arg == Self.A
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == StringDict[Self.A] and F.Arg == Self.A and RepeatableUnary[F]
     comptime WithElement[A: Movable & Deinitable] = _StringDictFamily[A]
     comptime Element[V: Movable & Deinitable] = Self.A
     comptime Filtered[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = V

@@ -1,4 +1,4 @@
-# error: Dict callbacks must be repeatable
+# error: no matching method in call to 'map'
 from fp.functions import pipeline_values
 from fp.callables import OnceUnary
 

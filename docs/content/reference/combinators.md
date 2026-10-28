@@ -9,7 +9,7 @@ and, for conditional composition, `fp.algebra`.
 | Method | Meaning |
 |---|---|
 | `.map(transform)` | Transform each payload |
-| `.fill(value)` | Copy `value` into every payload position |
+| `.fill(value)` | Replace payloads with `value`; single-call families move it, repeated mappings copy it |
 | `.replace(old, new)` | Replace equal payloads; keep unmatched values |
 | `.void()` | Replace each payload with `NoneType`, preserving shape |
 | `.tuple_left(value)` | Produce `(value.copy(), element)` |
@@ -430,8 +430,18 @@ use an intermediate nested or Optional collection and a second pass, with
 linear work in the traversed and emitted elements per successful branch.
 `sequence_void` uses the discard accumulator and creates no output collection.
 
-`fill` and tuple constants require `Copyable` and make one copy per emitted
-payload. Empty inputs remain empty. `replace` compares whole payloads, requires
+`fill` moves its replacement for a single invocation, including Optional,
+Result and Identity mappings. These accept move-only replacements. Compared
+with the earlier copying behavior, successful single-call fills now also avoid
+an extra copy for Copyable replacements. Repeated collections and lazy iterator
+fills require `Copyable` and make one copy per emitted payload; the requirement
+also applies to an empty collection. Deferred effects follow their existing
+map receiver policy and retain the replacement until execution or disposal.
+Empty inputs remain empty, and stored errors pass through. Both still consume
+and destroy unused replacements.
+
+Tuple constants require `Copyable` and make one copy per emitted payload.
+`replace` compares whole payloads, requires
 the same element type for `old` and `new`, copies `new` only on matches, and
 moves unmatched elements unchanged. It does not perform substring replacement.
 

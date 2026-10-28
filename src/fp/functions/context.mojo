@@ -1805,15 +1805,15 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _IfEffect[_Binding[Self.I], _NativeThunk[R, X, def() raises X thin -> R, True], _NativeThunk[S, Y, def() raises Y thin -> S, True]]], Self.E](_if_effect[_Binding[Self.I], Self.V, _NativeThunk[R, X, def() raises X thin -> R, True], _NativeThunk[S, Y, def() raises Y thin -> S, True], _Binding[Self.I].BindError[Self.V, _ErrorProbe[Bool, _Binding[Self.I]._Joined[R, S], _CommonError[X, Y]]]](self.value^, _NativeThunk[R, X, def() raises X thin -> R, True](on_true), _NativeThunk[S, Y, def() raises Y thin -> S, True](on_false)))
 
     @always_inline
-    def fill[T: Movable & Deinitable, U: Copyable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _Fill[T, U]] -> Pipeline[_MappedFamily[Self.I, _Fill[T, U].Out], Self.I.Mapped[Self.V, _Fill[T, U]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Fill[T, U]]:
-        """Copy value into every payload position.
+    def fill[T: Movable & Deinitable, U: Movable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _Fill[T, U]] -> Pipeline[_MappedFamily[Self.I, _Fill[T, U].Out], Self.I.Mapped[Self.V, _Fill[T, U]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Fill[T, U]]:
+        """Replace payloads with value, moving it for a single call or copying for repeated calls.
 
         Parameters:
             T: The carrier payload type.
-            U: The copied value type, including its origins.
+            U: The replacement type, including origins; repeated calls require Copyable.
 
         Args:
-            value: The value consumed here and copied into each payload position.
+            value: The replacement, consumed; a single call moves it, while repeated calls require Copyable and copy it.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.

@@ -47,11 +47,21 @@ struct _Apply[U: UnaryContract & Movable & Deinitable](Binary, Copyable, Default
 
 
 @fieldwise_init
-struct _Fill[T: Movable & Deinitable, U: Copyable & Deinitable](Unary):
+struct _Fill[T: Movable & Deinitable, U: Movable & Deinitable](
+    OnceUnary, Unary where conforms_to(U, Copyable)
+):
+    """Move a replacement for one call; copy it only through a shared receiver.
+
+    The family selects its normal invocation mode. Repeated mapping requires
+    the shared receiver and therefore a Copyable replacement; a single call
+    can transfer move-only state. Skipped mappings still dispose of the owner.
+    """
     var value: Self.U
     comptime Arg = Self.T
     comptime Out = Self.U
-    def call(self, var arg: Self.T) -> Self.U:
+    def call_once(deinit self, var arg: Self.T) -> Self.U:
+        return self.value^
+    def call(self, var arg: Self.T) -> Self.U where conforms_to(Self.U, Copyable):
         return self.value.copy()
 
 

@@ -360,8 +360,15 @@ Pipeline, Piped and iterator forms. These immediate calls borrow the callback;
 `max_by`, without copying move-only payloads. See the
 [reusable projection example](iteration.md#reuse-projections-in-reductions).
 
-Structural mapping methods keep the selected family. `fill(value)` copies a constant
-into each payload position; `replace(old, new)` copies `new` into positions
+Structural mapping methods keep the selected family. `fill(value)` replaces each
+payload with the supplied value. Single-call families, including Optional,
+Result and Identity, move the replacement without copying it, so it can own
+move-only state such as a List. Repeated collection mapping requires `Copyable`
+and copies once per emitted payload. Deferred families retain the replacement
+until execution or disposal; their existing map policy determines invocation.
+Empty or failed inputs still consume and discard the unused replacement.
+
+`replace(old, new)` copies `new` into positions
 equal to `old` and moves other payloads unchanged. `tuple_left(value)` and
 `tuple_right(value)` pair each payload with a copy of the constant. `void()`
 discards payloads while retaining the carrier shape and stored errors.

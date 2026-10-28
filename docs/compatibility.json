@@ -230,7 +230,25 @@
         "tests/compile_fail/merge_once_shared.mojo",
         "tests/compile_fail/merge_origin.mojo",
         "tests/compile_fail/merge_owned.mojo",
-        "tests/compile_fail/merge_right_mutable.mojo"
+        "tests/compile_fail/merge_right_mutable.mojo",
+        "tests/runtime/test_owned_fill.mojo",
+        "tests/ownership/test_owned_fill.mojo",
+        "tests/compile_fail/owned_fill_array.mojo",
+        "tests/compile_fail/owned_fill_deque.mojo",
+        "tests/compile_fail/owned_fill_dict.mojo",
+        "tests/compile_fail/owned_fill_explicit_list.mojo",
+        "tests/compile_fail/owned_fill_free.mojo",
+        "tests/compile_fail/owned_fill_iterator.mojo",
+        "tests/compile_fail/owned_fill_legacy_list.mojo",
+        "tests/compile_fail/owned_fill_linked_list.mojo",
+        "tests/compile_fail/owned_fill_list.mojo",
+        "tests/compile_fail/owned_fill_list_empty.mojo",
+        "tests/compile_fail/owned_fill_output_origin.mojo",
+        "tests/compile_fail/owned_fill_replacement_reuse.mojo",
+        "tests/compile_fail/owned_fill_source_reuse.mojo",
+        "tests/compile_fail/owned_fill_string_dict.mojo",
+        "tests/compile_fail/owned_fill_non_empty.mojo",
+        "tests/runtime/test_owned_fill_forwarding.mojo"
       ]
     },
     "adt": {

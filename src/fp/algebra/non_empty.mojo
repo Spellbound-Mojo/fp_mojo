@@ -3,6 +3,7 @@ from std.builtin.rebind import rebind_var
 from std.iter import IterableOwned
 from fp.data.non_empty_list import NonEmptyList
 from fp.callables.protocols import BorrowCallContract, Unary, UnaryContract, BorrowCallable
+from fp.callables.invoke import RepeatableUnary
 from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible
 from .protocols import Traversable, Filterable, FunctorFilter, Applicative, Semigroup
 from .instances import ListFamily, _ListElement
@@ -65,7 +66,7 @@ struct NonEmptyListFamily(Traversable, Filterable, FunctorFilter):
     This family does not introduce a second collection loop.
     """
     comptime CarrierCompatible[V: Movable & Deinitable] = V == NonEmptyList[Self.Element[V]] if conforms_to(V, IterableOwned) else False
-    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == NonEmptyList[F.Arg]
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == NonEmptyList[F.Arg] and RepeatableUnary[F]
     comptime Element[V: Movable & Deinitable] = _ListElement[V]
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = NonEmptyList[F.Out]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Error

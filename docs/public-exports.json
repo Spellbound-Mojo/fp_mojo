@@ -7267,40 +7267,40 @@
     ],
     "fill": [
      {
-      "sha256": "e3a6be51fc47e188f33444a26464ee9c0745262b7ab5e47a7965ecea3753ee59",
-      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable, //, I: Functor](deinit self, var value: U) raises I.MapError[Self.Value, _Fill[T, U]] -> Piped[I.Mapped[Self.Value, _Fill[T, U]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Fill[T, U]]:"
+      "sha256": "6b5738b205b59fbb0e7c6ec56952790d62ffe611dd8c91e8b1ff09055196c8ad",
+      "signature": "def fill[T: Movable & Deinitable, U: Movable & Deinitable, //, I: Functor](deinit self, var value: U) raises I.MapError[Self.Value, _Fill[T, U]] -> Piped[I.Mapped[Self.Value, _Fill[T, U]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Fill[T, U]]:"
      },
      {
-      "sha256": "2fea48ab38f059e1ffa943c11400798d341887b2f2154619f373ec342af6af20",
-      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[List[U]] where Self.Value == List[T]:"
+      "sha256": "0487f4b1ccfd069854115f6a03e7904e12419d2a395326c5de5fd0d06b7967ed",
+      "signature": "def fill[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[List[U]] where Self.Value == List[T] and _MapCompatible[ListFamily, List[T], _Fill[T, U]]:"
      },
      {
-      "sha256": "fe3c89a341bd8d2c2b3f22fcb1fc7f4de240a42606536817984eefeed49c7c74",
-      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable, N: Int](deinit self, var value: U) -> Piped[Array[U, N]] where Self.Value == Array[T, N]:"
+      "sha256": "4eb0ff253f37cf263d398dbb8b7d4cb0a4f7c1d606a40ff6fa7b6a4ecdf6d230",
+      "signature": "def fill[T: Movable & Deinitable, U: Movable & Deinitable, N: Int](deinit self, var value: U) -> Piped[Array[U, N]] where Self.Value == Array[T, N] and _MapCompatible[_ArrayFamily[N], Array[T, N], _Fill[T, U]]:"
      },
      {
-      "sha256": "63fd02bcd5e0693a088490215a6e8e809ec753da4d77a748a23d43b18924d55e",
-      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[Deque[U]] where Self.Value == Deque[T]:"
+      "sha256": "67a71dd997c9624b3d87867e2d200cbf517072662479e80c97821f064f894b4c",
+      "signature": "def fill[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Deque[U]] where Self.Value == Deque[T] and _MapCompatible[_DequeFamily, Deque[T], _Fill[T, U]]:"
      },
      {
-      "sha256": "be6875ccef0bc780e65d2d4bc8a75345f1b5f9c4f6a05d4f1eb4df5075e800c0",
-      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[LinkedList[U]] where Self.Value == LinkedList[T]:"
+      "sha256": "dedd48bf2b1c8eb739904836d03903b8ab4de03be538e1e36d14d3abe813995b",
+      "signature": "def fill[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[LinkedList[U]] where Self.Value == LinkedList[T] and _MapCompatible[_LinkedListFamily, LinkedList[T], _Fill[T, U]]:"
      },
      {
-      "sha256": "97136f56b7345063b2378b0418914c5d52527b4b0caa6918fe2caa85614925a0",
-      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H]:"
+      "sha256": "c1257eb306321dc05bce665d887e78929bdc138a67c1092b51dd52db5e0f62e5",
+      "signature": "def fill[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H] and _MapCompatible[_DictFamily[K, T, H], Dict[K, T, H], _Fill[T, U]]:"
      },
      {
-      "sha256": "078c8a1608b8d9024a0d66234a47a0c16c4b458bad07593a5ae572ad93a4eb9a",
-      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[StringDict[U]] where Self.Value == StringDict[T]:"
+      "sha256": "a87c6d7f38120fe87dcd581fd080045d5f78607ba445507051ff9068f723b141",
+      "signature": "def fill[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[StringDict[U]] where Self.Value == StringDict[T] and _MapCompatible[_StringDictFamily[T], StringDict[T], _Fill[T, U]]:"
      },
      {
-      "sha256": "d88e15be273e80ff7fdb6f39e19de22db5df8d7a8b2bbc2f865a06b39bc86d17",
-      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[Optional[U]] where Self.Value == Optional[T]:"
+      "sha256": "da21b16b1dff5f12c2138db1ebd270452e61652ee3b1a1cb37679ce058a69243",
+      "signature": "def fill[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Optional[U]] where Self.Value == Optional[T] and _MapCompatible[OptionalFamily, Optional[T], _Fill[T, U]]:"
      },
      {
-      "sha256": "616b8c02877ff01799e28b15b396ac29aa8a626f9380552b7969cfeed0868ae4",
-      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable, Failure: Movable & Deinitable](deinit self, var value: U) -> Piped[Result[U, Failure]] where Self.Value == Result[T, Failure]:"
+      "sha256": "6ec689c51bde2bf611754c322492ffb028bb38a9d5a29ae0d9404b2df5a050ba",
+      "signature": "def fill[T: Movable & Deinitable, U: Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var value: U) -> Piped[Result[U, Failure]] where Self.Value == Result[T, Failure] and _MapCompatible[ResultFamily[Failure], Result[T, Failure], _Fill[T, U]]:"
      }
     ],
     "filter": [
@@ -8563,8 +8563,8 @@
       "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable, N: Int, //, E: Movable & Deinitable, F: def(var T) raises E -> U]( deinit self, ref function: F ) raises E -> Piped[Array[U, N]] where Self.Value == Array[T, N]:"
      },
      {
-      "sha256": "2a0bb987efbcd132f449a48289f9ff7b252a841d234d709cb884c091e64dcfd5",
-      "signature": "def map[F: UnaryContract & Movable & Deinitable, N: Int]( deinit self, var function: F ) raises F.Error -> Piped[Array[F.Out, N]] where Self.Value == Array[F.Arg, N]:"
+      "sha256": "2e714061a9ce068196465c281a2314790af40a8c0fe3732d961f75c59042249a",
+      "signature": "def map[F: UnaryContract & Movable & Deinitable, N: Int]( deinit self, var function: F ) raises F.Error -> Piped[Array[F.Out, N]] where Self.Value == Array[F.Arg, N] and _MapCompatible[_ArrayFamily[N], Array[F.Arg, N], F]:"
      },
      {
       "sha256": "1515f6d3346749dc1dddbc6688ffc448c4d514c426471031e55566c11dea83b5",
@@ -8579,8 +8579,8 @@
       "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable, //, E: Movable & Deinitable, F: def(var T) raises E -> U]( deinit self, ref function: F ) raises E -> Piped[Deque[U]] where Self.Value == Deque[T]:"
      },
      {
-      "sha256": "a4bbb8b4802687378b845ba3a44c74ca0513d7781bc0c9dff121d74295150e56",
-      "signature": "def map[F: UnaryContract & Movable & Deinitable]( deinit self, var function: F ) raises F.Error -> Piped[Deque[F.Out]] where Self.Value == Deque[F.Arg]:"
+      "sha256": "140d94f164ff5595bbb31f3e5fa032d3b3adeb1a85696c57bd132469aefa7444",
+      "signature": "def map[F: UnaryContract & Movable & Deinitable]( deinit self, var function: F ) raises F.Error -> Piped[Deque[F.Out]] where Self.Value == Deque[F.Arg] and _MapCompatible[_DequeFamily, Deque[F.Arg], F]:"
      },
      {
       "sha256": "75b9a19d6ec237a673c7a468ec97594c3df9d1be75561acbaf2688f7e8590626",
@@ -8595,8 +8595,8 @@
       "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable, //, E: Movable & Deinitable, F: def(var T) raises E -> U]( deinit self, ref function: F ) raises E -> Piped[LinkedList[U]] where Self.Value == LinkedList[T]:"
      },
      {
-      "sha256": "3091c844caacfb2cc365ba73b9b255923f4630d70bd3691ebfa3a663e6d1679c",
-      "signature": "def map[F: UnaryContract & Movable & Deinitable]( deinit self, var function: F ) raises F.Error -> Piped[LinkedList[F.Out]] where Self.Value == LinkedList[F.Arg]:"
+      "sha256": "076740d04b3aaa8d1c993334db0945803bac50d3a5647cede02d705831f7b572",
+      "signature": "def map[F: UnaryContract & Movable & Deinitable]( deinit self, var function: F ) raises F.Error -> Piped[LinkedList[F.Out]] where Self.Value == LinkedList[F.Arg] and _MapCompatible[_LinkedListFamily, LinkedList[F.Arg], F]:"
      },
      {
       "sha256": "47edfe41bbe3adfc453a397848c7528cdd78023af2570143c9111f6436cf7c7b",
@@ -8611,8 +8611,8 @@
       "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, E: Movable & Deinitable, F: def(var T) raises E -> U]( deinit self, ref function: F ) raises E -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H]:"
      },
      {
-      "sha256": "ed61622deda5816e45fa9e311fae9542f530d43a324ab351af2e5a7110f8cb48",
-      "signature": "def map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable]( deinit self, var function: F ) raises F.Error -> Piped[Dict[K, F.Out, H]] where Self.Value == Dict[K, F.Arg, H]:"
+      "sha256": "9c02f40c1274c5d20e70d0e73576a30fb449f4a955b5d5c6a2a2026614b83e75",
+      "signature": "def map[F: UnaryContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable]( deinit self, var function: F ) raises F.Error -> Piped[Dict[K, F.Out, H]] where Self.Value == Dict[K, F.Arg, H] and _MapCompatible[_DictFamily[K, F.Arg, H], Dict[K, F.Arg, H], F]:"
      },
      {
       "sha256": "09a24eae1923ccbb06c10809b93c6abf8998baec59f8ab4ff9f6f11999f5bd00",
@@ -8627,8 +8627,8 @@
       "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable, //, E: Movable & Deinitable, F: def(var T) raises E -> U]( deinit self, ref function: F ) raises E -> Piped[StringDict[U]] where Self.Value == StringDict[T]:"
      },
      {
-      "sha256": "73a5e2a82ed1e04980d23d2a12a5b25b8ac6b530ee4996455b444206775630c8",
-      "signature": "def map[F: UnaryContract & Movable & Deinitable]( deinit self, var function: F ) raises F.Error -> Piped[StringDict[F.Out]] where Self.Value == StringDict[F.Arg]:"
+      "sha256": "7f367c88ae13569f51619734a54325bf0a68bb7c6cd37857a30ba24a3798dcb8",
+      "signature": "def map[F: UnaryContract & Movable & Deinitable]( deinit self, var function: F ) raises F.Error -> Piped[StringDict[F.Out]] where Self.Value == StringDict[F.Arg] and _MapCompatible[_StringDictFamily[F.Arg], StringDict[F.Arg], F]:"
      },
      {
       "sha256": "136773102e0394b866b1b4da33f21e35f239e0fd7ef497f8c225a63a48fd7a15",
@@ -8643,8 +8643,8 @@
       "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable, //, E: Movable & Deinitable, F: def(var T) raises E -> U]( deinit self, ref function: F ) raises E -> Piped[Optional[U]] where Self.Value == Optional[T]:"
      },
      {
-      "sha256": "4794b68950f1252553fcdc246f5eeae21b49356e064aa36a7c210110bdc7b932",
-      "signature": "def map[F: UnaryContract & Movable & Deinitable]( deinit self, var function: F ) raises F.Error -> Piped[Optional[F.Out]] where Self.Value == Optional[F.Arg]:"
+      "sha256": "7ed1d3a828791043e1c4dff1885906c7e71dbe174b16a93005990e2b6f45dff9",
+      "signature": "def map[F: UnaryContract & Movable & Deinitable]( deinit self, var function: F ) raises F.Error -> Piped[Optional[F.Out]] where Self.Value == Optional[F.Arg] and _MapCompatible[OptionalFamily, Optional[F.Arg], F]:"
      },
      {
       "sha256": "e941d6efb300d813d253db5ea243795c710e2c7efc8cd4111ccf36418df72eac",
@@ -8659,8 +8659,8 @@
       "signature": "def map[T: Movable & Deinitable, U: Movable & Deinitable, Failure: Movable & Deinitable, //, E: Movable & Deinitable, F: def(var T) raises E -> U]( deinit self, ref function: F ) raises E -> Piped[Result[U, Failure]] where Self.Value == Result[T, Failure]:"
      },
      {
-      "sha256": "36fd3f50bf5bbeef1d6c9190c4a85aca56c24ba10582b3a666f7b89e61581aa7",
-      "signature": "def map[F: UnaryContract & Movable & Deinitable, Failure: Movable & Deinitable]( deinit self, var function: F ) raises F.Error -> Piped[Result[F.Out, Failure]] where Self.Value == Result[F.Arg, Failure]:"
+      "sha256": "ae2221300db5427b641a7b018d72946610882779253a54731900ccf7857eb025",
+      "signature": "def map[F: UnaryContract & Movable & Deinitable, Failure: Movable & Deinitable]( deinit self, var function: F ) raises F.Error -> Piped[Result[F.Out, Failure]] where Self.Value == Result[F.Arg, Failure] and _MapCompatible[ResultFamily[Failure], Result[F.Arg, Failure], F]:"
      },
      {
       "sha256": "f4a37ef7830bffa9cb2fabbe40d48845f561841f066efca599eba6a1e17dabde",
@@ -12002,8 +12002,8 @@
     ],
     "fill": [
      {
-      "sha256": "98c69b98127cd4fcce9da0c52f9d88ebb5054892383806f9dc000ccd77f5d389",
-      "signature": "def fill[T: Movable & Deinitable, U: Copyable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _Fill[T, U]] -> Pipeline[_MappedFamily[Self.I, _Fill[T, U].Out], Self.I.Mapped[Self.V, _Fill[T, U]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Fill[T, U]]:"
+      "sha256": "1b5857a4f53beaeb0b46be40ce44140fc453ff8a545c4a7ad614c2cf51f6b215",
+      "signature": "def fill[T: Movable & Deinitable, U: Movable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _Fill[T, U]] -> Pipeline[_MappedFamily[Self.I, _Fill[T, U].Out], Self.I.Mapped[Self.V, _Fill[T, U]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Fill[T, U]]:"
      }
     ],
     "filter": [

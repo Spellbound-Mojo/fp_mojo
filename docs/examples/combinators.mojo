@@ -52,3 +52,6 @@ def main() raises:
     var options: List[Optional[Int]] = [None, Optional(4), Optional(5)]
     assert_equal(pipeline(options^).compact().sum().get(), 9)
     print(result)
+    var replacement: List[Int] = [7, 11]
+    var filled = pipeline(Optional(1)).fill(replacement^).get()
+    print("owned replacement:", filled.value())
