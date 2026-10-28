@@ -3566,3 +3566,25 @@ constructed before source binding, including for deferred targets; combination
 and effect execution retain the target's timing. The caller constructed the
 existing effect values before this operation, so the convenience does not
 claim to defer their construction.
+
+### Borrowing reusable chains in selected pipelines
+
+`Pipeline.map`, `flat_map`, `filter_map`, `traverse` and `par_traverse` accept
+the same shared callable view used by Piped, direct algebra operations and
+iterators. The existing `_UnaryViewable` owner supplies an origin-indexed
+`Unary`; generated admission uses its exact input, output and raised-error
+types. Kleisli exposes its already selected family through its existing
+program marker. Traversal preserves that family, including custom and deferred
+policies; other view providers use native carrier recognition. This avoids
+rediscovering an effect policy through nested result projections, which Mojo
+1.2 can leave symbolic when checking a composed chain's raised error. Explicit
+targets still override the default and pass the same carrier contracts. No callback
+storage, execution loop, family policy or error conversion is added.
+
+The shared signature description now also owns view metadata previously
+assembled by the legacy recovery generator. Legacy generated signatures stay
+unchanged. A named shared chain is borrowed without copying its captures; an
+explicit move still selects the consuming callback surface where admitted.
+Deferred computations retain the borrow or the moved owner, respectively.
+Mutable-only and consuming-only chains do not acquire shared-call capability.
+Source, stored-error and returned-computation origins remain checked by Mojo.

@@ -187,7 +187,7 @@
       ],
       "status": "selected",
       "families": "Functor; Filterable, Monad or FunctorFilter where required",
-      "callbacks": "Native closures and thin pointers; library callable contracts retain receiver modes.",
+      "callbacks": "Native closures and thin pointers; library callable contracts retain receiver modes. Shared callable chains are borrowed directly by map, flat_map, filter_map.",
       "ownership": "Transforms consume payloads; predicates and observers borrow them.",
       "errors": "Exact family/callback error; stored errors retain their family.",
       "timing": "Family-controlled, including deferred execution.",
@@ -202,7 +202,10 @@
         "tests/ownership/test_context_observers_ownership.mojo",
         "tests/runtime/test_context_native_signatures_basic.mojo",
         "tests/runtime/test_context_native_signatures_generic.mojo",
-        "tests/ownership/test_context_native_signatures_ownership.mojo"
+        "tests/ownership/test_context_native_signatures_ownership.mojo",
+        "tests/runtime/test_context_callable_views.mojo",
+        "tests/ownership/test_context_callable_views_ownership.mojo",
+        "tests/compile_fail/context_callable_view_move.mojo"
       ]
     },
     {
@@ -282,7 +285,7 @@
       ],
       "status": "selected",
       "families": "Traversable source; Applicative target; filtering also requires FunctorFilter; Native traversal methods infer native Optional, Result and List targets when J is omitted",
-      "callbacks": "Consuming transform or borrowing retention callback; single-use where the source permits.",
+      "callbacks": "Consuming transform or borrowing retention callback; single-use where the source permits. Shared callable chains are borrowed directly by traverse, preserving their selected effect family.",
       "ownership": "Original move-only values retained when the target does not duplicate them.",
       "errors": "Source errors, target failures and raised errors stay distinct.",
       "timing": "Selects target family; Reader defers callbacks and compaction.",
@@ -305,7 +308,10 @@
         "tests/compile_fail/inferred_traversal_error.mojo",
         "tests/compile_fail/inferred_traversal_once.mojo",
         "tests/compile_fail/inferred_derived_filter_effect_once.mojo",
-        "tests/compile_fail/inferred_derived_traverse_tap_error.mojo"
+        "tests/compile_fail/inferred_derived_traverse_tap_error.mojo",
+        "tests/runtime/test_context_callable_views.mojo",
+        "tests/ownership/test_context_callable_views_ownership.mojo",
+        "tests/compile_fail/context_callable_view_move.mojo"
       ]
     },
     {
@@ -768,7 +774,7 @@
       ],
       "status": "selected",
       "families": "Validation policy for native Results; n-ary methods retain the source family, traversal selects Result",
-      "callbacks": "Fixed native arities 1\u20138 or library tuple callables. Stored n-ary thin pointers are owned and retain exact argument/result conventions.",
+      "callbacks": "Fixed native arities 1\u20138 or library tuple callables. Stored n-ary thin pointers are owned and retain exact argument/result conventions. Shared callable chains are borrowed directly by par_traverse.",
       "ownership": "Consume evaluated operands, callbacks and sources; release unvisited inputs and partial output on native failure",
       "errors": "Stored errors accumulate through an inferred ListMonoid or explicit Semigroup; native raises stop immediately",
       "timing": "Ordered synchronous accumulation; a single n-ary operand never invokes the error combiner",
@@ -783,7 +789,10 @@
         "tests/runtime/test_context_accumulating_effects.mojo",
         "tests/ownership/test_context_accumulating_ownership.mojo",
         "tests/runtime/test_context_native_nary_abi.mojo",
-        "tests/ownership/test_context_native_nary_ownership.mojo"
+        "tests/ownership/test_context_native_nary_ownership.mojo",
+        "tests/runtime/test_context_callable_views.mojo",
+        "tests/ownership/test_context_callable_views_ownership.mojo",
+        "tests/compile_fail/context_callable_view_move.mojo"
       ]
     },
     {

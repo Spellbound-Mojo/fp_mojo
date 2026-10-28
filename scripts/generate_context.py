@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from itertools import product
+from native_signatures import callback as described_callback
 from native_signatures import MD, callable_metadata, Operand, variants, argument as native_argument, callable_protocol, native_adapter
 import re
 from api_docs import parse_signature
@@ -40,6 +41,14 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
 
     def callback(mode, kind, payload, arg, second=False, repeatable=False):
         C, R, o = ("G", "S", "q") if second else ("C", "R", "o")
+        if kind == "view":
+            cb = described_callback(mode, kind, arg, second=second)
+            return dict(
+                params=cb.parameters + cb.explicit, argument=cb.argument,
+                adapter_type=cb.type, build=cb.build, result=cb.result,
+                error=cb.error, conditions=[cb.payload + " == " + payload],
+                target=f"_ViewTarget[{C}, {o}]",
+            )
         if kind == "library":
             trait = callable_protocol(mode, repeatable=repeatable)
             metadata = callable_metadata(mode, C)
@@ -89,11 +98,11 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
             conditions=["Self.E != Never"] if kind == "never" else [f"_ErrorCompatible[Self.E, {E}]"] if kind == "thin_raising" else [],
         )
 
-    def native_callbacks(mode, payload, arg, *, second=False, repeatable=False, library=True, result_register=None):
+    def native_callbacks(mode, payload, arg, *, second=False, repeatable=False, library=True, result_register=None, view=False):
         # Known operands project their exact native convention; only the result
         # needs separate register/memory bounds during callback inference.
         # Closure borrows and owned thin-pointer storage keep the same adapters.
-        for kind in (("library",) if library else ()) + ("pure", "raising", "never"):
+        for kind in (("library",) if library else ()) + (("view",) if view else ()) + ("pure", "raising", "never"):
             yield callback(mode, kind, payload, arg, second=second, repeatable=repeatable)
         # Read parameters need explicit TrivialRegisterPassable evidence at
         # overload selection; a conditional read-type projection loses it.
@@ -117,8 +126,8 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
     def borrowing_callbacks(payload, arg, repeatable=True):
         return native_callbacks("borrow", payload, arg, repeatable=repeatable)
 
-    def owning_callbacks(mode, payload, arg):
-        return native_callbacks(mode, payload, arg)
+    def owning_callbacks(mode, payload, arg, *, view=False):
+        return native_callbacks(mode, payload, arg, view=view)
 
     def nary_callbacks(payloads, arg):
         return native_callbacks("nary", payloads, arg, library=False)
@@ -148,7 +157,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         params = list(cb["params"])
         if "//" not in params: params += ["//"]
         boundary = params.index("//") + 1
-        native = f'_InferredApplicative[{cb["result"]}]'
+        native = cb.get("target", f'_InferredApplicative[{cb["result"]}]')
         candidate = {"Applicative": native, "Monad": f"_Binding[{native}]"}[capability]
         params[boundary:boundary] = [f'J: {capability} = {candidate}']
         for i in range(boundary + 1, len(params)):
@@ -328,7 +337,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
     for sequence in (False, True):
         element = "Self.I.Element[Self.V]"
         identity = f"Identity[{element}]"
-        callbacks = [dict(params=[],argument="",adapter_type=identity,build=f"{identity}()",result=element,error="Never",conditions=[])] if sequence else owning_callbacks("owned", element, "function")
+        callbacks = [dict(params=[],argument="",adapter_type=identity,build=f"{identity}()",result=element,error="Never",conditions=[])] if sequence else owning_callbacks("owned", element, "function", view=True)
         for cb in callbacks:
             policy = f"S: Semigroup = _ListErrors[{cb['result']}]"
             family = "ValidationFamily[S]"
@@ -568,7 +577,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
 
 
 
-    for cb in owning_callbacks("owned", "Self.I.Element[Self.V]", "function"):
+    for cb in owning_callbacks("owned", "Self.I.Element[Self.V]", "function", view=True):
         params = inferred_target_parameters(cb)
         family = "_Traversing[Self.I]"
         contract = f"TraverseContract[{family}, J, Self.V, {cb['adapter_type']}]"
@@ -806,7 +815,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         callbacks = (
             borrowing_callbacks("Self.I.Element[Self.V]", arg)
             if name == "filter_not"
-            else native_callbacks(mode, "Self.I.Element[Self.V]", arg, repeatable=filtering)
+            else native_callbacks(mode, "Self.I.Element[Self.V]", arg, repeatable=filtering, view=not filtering)
         )
         for cb in callbacks:
             params = cb["params"]

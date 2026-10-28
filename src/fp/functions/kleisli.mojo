@@ -121,7 +121,8 @@ struct _Join[I: Monad, L: _Program, R: _Program, mode: Int](_Program, Copyable w
         return _compose_steps[Self.I, Self.mode](self.left.exclusive(), self.right.exclusive())
 
 
-trait _KleisliValue: ...
+trait _KleisliValue:
+    comptime _Family: Monad
 
 
 @fieldwise_init
@@ -143,6 +144,7 @@ struct Kleisli[I: Monad, P: _Program](_KleisliValue, OnceUnary, _UnaryViewable w
         P: The inferred stored program; use the factory to construct one.
     """
     var _program: Self.P
+    comptime _Family = Self.I
     comptime Arg = Self.P.Owned.Arg
     comptime Out = Self.P.Owned.Out
     comptime Error = Self.P.Owned.Error

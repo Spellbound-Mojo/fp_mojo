@@ -124,17 +124,26 @@ class Callback:
 
 
 def callback(mode, kind, arg="function", second=False):
-    """Describe legacy inferred admission without choosing operation semantics.
+    """Describe callback admission without choosing operation semantics.
 
-    Selected-context emitters retain their existing admission policy. This
-    builder preserves the legacy explicit parameter positions and native
-    callback borrow, and uses the shared protocol and adapter names above.
+    Legacy native signatures retain their explicit parameter positions and
+    callback borrows. Origin-indexed views are also shared by selected-context
+    emitters, which retain their own admission policy.
     """
     f, p, r, x, o = (
         ("G", "Q", "S", "Y", "q")
         if second
         else ("C", "A" if mode == "owned" else "P", "R", "X", "o")
     )
+    if kind == "view":
+        if mode != "owned":
+            raise ValueError("Shared unary views consume their explicit operand")
+        view = f"{f}._View[{o}]"
+        return Callback(
+            [f"{f}: _UnaryViewable", f"{o}: ImmOrigin"], [],
+            f"ref[{o}] {arg}: {f}", view, f"{arg}._unary_view()",
+            view + ".Arg", view + ".Out", view + ".Error", mode,
+        )
     if kind == "library":
         trait = callable_protocol(mode)
         metadata = callable_metadata(mode, f)

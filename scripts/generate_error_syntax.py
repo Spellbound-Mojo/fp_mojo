@@ -6,17 +6,8 @@ MD = 'Movable & Deinitable'
 
 
 def _handler_callback(mode, kind, *, second=False):
-    """Specialize the shared owned callback description for legacy views."""
-    cb = callback(mode, kind if kind != 'view' else 'library', 'handler', second=second)
-    if kind == 'view':
-        assert mode == 'owned'
-        function, origin = cb.type, 'q' if second else 'o'
-        cb.parameters = [f'{function}: _UnaryViewable', f'{origin}: ImmOrigin']
-        cb.argument = f'ref[{origin}] handler: {function}'
-        cb.type = f'{function}._View[{origin}]'
-        cb.build = 'handler._unary_view()'
-        cb.payload, cb.result, cb.error = cb.type + '.Arg', cb.type + '.Out', cb.type + '.Error'
-    return cb
+    """Use shared callback metadata, including origin-indexed receiver views."""
+    return callback(mode, kind, 'handler', second=second)
 
 
 def methods():

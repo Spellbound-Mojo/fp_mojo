@@ -567,13 +567,22 @@ and List expands each branch in order.
 
 <!-- example: docs/examples/kleisli.mojo -->
 
-Both `piped(values^).map(chain)` and `iterated(values^).map(chain)` accept the
+Both `pipeline(values^).map(chain)` and `iterated(values^).map(chain)` accept the
 chain directly and borrow it without copying its callbacks. The eager form
 maps immediately; the iterator calls it as elements are pulled. These forms
 keep each returned Result as an element. Use
-`.traverse[ResultFamily[String]](chain)` to gather successes into one Result
-and stop at the first stored error. Direct `Result.map(chain)` and
+`.traverse(chain)` on a selected pipeline to gather successes into one Result
+and stop at the first stored error. Traversal inherits the chain's selected
+family, including custom policies and Reader; an explicit `[Target]` still
+overrides that choice. Direct `Result.map(chain)` and
 `Result.flat_map(chain)` work as well; `flat_map` sequences the returned Result.
+
+`Pipeline.map`, `flat_map`, `filter_map`, `traverse` and `par_traverse` borrow
+shared chains directly. Passing `chain^` instead transfers ownership when the
+selected operation admits a consuming callback. For example,
+`pipeline[Reader[Int]](action^).map(chain)` retains a borrow until execution,
+while `.map(chain^)` moves the chain into the deferred computation.
+Legacy `piped` retains its existing borrowed-callable support.
 
 `chain.call(input)` borrows shared callbacks, `chain.call_mut(input)` reuses
 mutable callback state, and `chain^.call_once(input)` consumes the chain.

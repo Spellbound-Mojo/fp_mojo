@@ -34,6 +34,8 @@ from fp.callables.invoke import call_once, RepeatableUnary, RepeatableBinary
 from fp.callables._nary import _OwnedNativeNary1, _OwnedNativeNary2, _OwnedNativeNary3, _OwnedNativeNary4, _OwnedNativeNary5, _OwnedNativeNary6, _OwnedNativeNary7, _OwnedNativeNary8, _NativeNary1, _NativeNary2, _NativeNary3, _NativeNary4, _NativeNary5, _NativeNary6, _NativeNary7, _NativeNary8
 from fp.callables._transforms import _Apply, _Replace, _TupleWith, _Fill, _ValueThunk, _Pair, _Observe, _BorrowedUnary, _IgnoreInput
 from fp.callables._predicates import _FilterPredicate
+from fp.callables._views import _UnaryViewable
+from .kleisli import _KleisliValue
 from fp.callables._identity import Identity
 from fp.functions.composition import Composition
 from fp.iteration._advance import _Source
@@ -170,6 +172,13 @@ struct _InferredEffectFoldStage[V: Movable & Deinitable, A: Movable & Deinitable
         """Infer a native target from the step and execute through the selected fold stage."""
         return _EffectFoldStage[J, Self.V, Self.A, Self.E](self.value^, self.initial^).run(_NativeBinary[Self.A, _FoldElement[Self.V], R, X, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True](function))
     # --- end inferred effect fold admission ---
+
+
+# Effectful programs already selected their policy; preserve that evidence.
+comptime _ViewTarget[C: _UnaryViewable, o: ImmOrigin]: Applicative = (
+    downcast[C, _KleisliValue]._Family if conforms_to(C, _KleisliValue)
+    else _InferredApplicative[C._View[o].Out]
+)
 
 
 @fieldwise_init
@@ -1380,6 +1389,11 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             The exact callback or family error; it never becomes a stored Result error.
         """
         return Pipeline[ResultFamily[S.Value], _Traversing[Self.I].Traversed[ValidationFamily[S], Self.V, C], Self.E](_traverse_as[_Traversing[Self.I], ValidationFamily[S], Self.V, C, _Traversing[Self.I].TraverseError[ValidationFamily[S], Self.V, C]](function^, self.value^))
+
+    @always_inline
+    def par_traverse[C: _UnaryViewable, o: ImmOrigin, //, S: Semigroup = _ListErrors[C._View[o].Out]](deinit self, ref[o] function: C) raises _Traversing[Self.I].TraverseError[ValidationFamily[S], Self.V, C._View[o]] -> Pipeline[ResultFamily[S.Value], _Traversing[Self.I].Traversed[ValidationFamily[S], Self.V, C._View[o]], Self.E] where conforms_to(Self.I, Traversable) and _TraverseCompatible[_Traversing[Self.I], Self.V, C._View[o]] and _Traversing[Self.I].TargetCompatible[ValidationFamily[S], Self.V, C._View[o]] and _CarrierCompatible[ValidationFamily[S], C._View[o].Out] and C._View[o].Arg == Self.I.Element[Self.V]:
+        """Traverse with ordered Validation accumulation and continue with the resulting Result."""
+        return Pipeline[ResultFamily[S.Value], _Traversing[Self.I].Traversed[ValidationFamily[S], Self.V, C._View[o]], Self.E](_traverse_as[_Traversing[Self.I], ValidationFamily[S], Self.V, C._View[o], _Traversing[Self.I].TraverseError[ValidationFamily[S], Self.V, C._View[o]]](function._unary_view(), self.value^))
 
     @always_inline
     def par_traverse[R: Movable & Deinitable, o: ImmOrigin, C: def(var Self.I.Element[Self.V]) -> R, //, S: Semigroup = _ListErrors[R]](deinit self, ref[o] function: C) raises _Traversing[Self.I].TraverseError[ValidationFamily[S], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]] -> Pipeline[ResultFamily[S.Value], _Traversing[Self.I].Traversed[ValidationFamily[S], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], Self.E] where conforms_to(Self.I, Traversable) and _TraverseCompatible[_Traversing[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]] and _Traversing[Self.I].TargetCompatible[ValidationFamily[S], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]] and _CarrierCompatible[ValidationFamily[S], R]:
@@ -2912,6 +2926,11 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, C].Out, Self.E](_Traversing[Self.I].traverse[J](function^, self.value^))
 
     @always_inline
+    def traverse[C: _UnaryViewable, o: ImmOrigin, //, J: Applicative = _ViewTarget[C, o]](deinit self, ref[o] function: C) raises TraverseContract[_Traversing[Self.I], J, Self.V, C._View[o]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, C._View[o]].Out, Self.E] where conforms_to(Self.I, Traversable) and C._View[o].Arg == Self.I.Element[Self.V] and TraverseContract[_Traversing[Self.I], J, Self.V, C._View[o]].FamilyCompatible:
+        """Traverse into the selected target effect and continue in that family."""
+        return Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, C._View[o]].Out, Self.E](_Traversing[Self.I].traverse[J](function._unary_view(), self.value^))
+
+    @always_inline
     def traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(var Self.I.Element[Self.V]) -> R = def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].FamilyCompatible:
         """Traverse into the selected target effect and continue in that family."""
         return Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E](_Traversing[Self.I].traverse[J](_NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o](Pointer(to=function)), self.value^))
@@ -3769,6 +3788,11 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[MapContract[Self.I, Self.V, C].Family, MapContract[Self.I, Self.V, C].Out, Self.E](Self.I.map(function^, self.value^))
 
     @always_inline
+    def map[C: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises MapContract[Self.I, Self.V, C._View[o]].Error -> Pipeline[MapContract[Self.I, Self.V, C._View[o]].Family, MapContract[Self.I, Self.V, C._View[o]].Out, Self.E] where conforms_to(Self.I, Functor) and C._View[o].Arg == Self.I.Element[Self.V] and MapContract[Self.I, Self.V, C._View[o]].FamilyCompatible:
+        """Apply map through the selected family's Functor capability."""
+        return Pipeline[MapContract[Self.I, Self.V, C._View[o]].Family, MapContract[Self.I, Self.V, C._View[o]].Out, Self.E](Self.I.map(function._unary_view(), self.value^))
+
+    @always_inline
     def map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error -> Pipeline[MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Family, MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, Functor) and MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].FamilyCompatible:
         """Apply map through the selected family's Functor capability."""
         return Pipeline[MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Family, MapContract[Self.I, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E](Self.I.map(_NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o](Pointer(to=function)), self.value^))
@@ -3968,6 +3992,11 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, C].Out, Self.E](_Binding[Self.I].flat_map(function^, self.value^))
 
     @always_inline
+    def flat_map[C: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises BindContract[_Binding[Self.I], Self.V, C._View[o]].Error -> Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, C._View[o]].Out, Self.E] where conforms_to(Self.I, Monad) and C._View[o].Arg == Self.I.Element[Self.V] and BindContract[_Binding[Self.I], Self.V, C._View[o]].FamilyCompatible:
+        """Apply flat_map through the selected family's Monad capability."""
+        return Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, C._View[o]].Out, Self.E](_Binding[Self.I].flat_map(function._unary_view(), self.value^))
+
+    @always_inline
     def flat_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error -> Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, Monad) and BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].FamilyCompatible:
         """Apply flat_map through the selected family's Monad capability."""
         return Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E](_Binding[Self.I].flat_map(_NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o](Pointer(to=function)), self.value^))
@@ -4019,6 +4048,11 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             The exact callback or family error; it never becomes a stored Result error.
         """
         return Pipeline[FilterMapContract[_Compacting[Self.I], Self.V, C].Family, FilterMapContract[_Compacting[Self.I], Self.V, C].Out, Self.E](_Compacting[Self.I].filter_map(function^, self.value^))
+
+    @always_inline
+    def filter_map[C: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises FilterMapContract[_Compacting[Self.I], Self.V, C._View[o]].Error -> Pipeline[FilterMapContract[_Compacting[Self.I], Self.V, C._View[o]].Family, FilterMapContract[_Compacting[Self.I], Self.V, C._View[o]].Out, Self.E] where conforms_to(Self.I, FunctorFilter) and C._View[o].Arg == Self.I.Element[Self.V]:
+        """Apply filter_map through the selected family's FunctorFilter capability."""
+        return Pipeline[FilterMapContract[_Compacting[Self.I], Self.V, C._View[o]].Family, FilterMapContract[_Compacting[Self.I], Self.V, C._View[o]].Out, Self.E](_Compacting[Self.I].filter_map(function._unary_view(), self.value^))
 
     @always_inline
     def filter_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises FilterMapContract[_Compacting[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error -> Pipeline[FilterMapContract[_Compacting[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Family, FilterMapContract[_Compacting[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, FunctorFilter):

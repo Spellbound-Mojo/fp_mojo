@@ -106806,6 +106806,43 @@
        }
       ],
       "description": "",
+      "error": "FilterMapContract[_Compacting[Self.I], Self.V, C._View[o]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[FilterMapContract[_Compacting[Self.I], Self.V, C._View[o]].Family, FilterMapContract[_Compacting[Self.I], Self.V, C._View[o]].Out, Self.E]"
+      },
+      "signature": "def filter_map[C: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises FilterMapContract[_Compacting[Self.I], Self.V, C._View[o]].Error -> Pipeline[FilterMapContract[_Compacting[Self.I], Self.V, C._View[o]].Family, FilterMapContract[_Compacting[Self.I], Self.V, C._View[o]].Out, Self.E] where conforms_to(Self.I, FunctorFilter) and C._View[o].Arg == Self.I.Element[Self.V]",
+      "summary": "Apply filter_map through the selected family's FunctorFilter capability."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "FilterMapContract[_Compacting[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error",
       "parameters": [
        {
@@ -108747,6 +108784,43 @@
        "type": "Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, C].Out, Self.E]"
       },
       "signature": "def flat_map[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises BindContract[_Binding[Self.I], Self.V, C].Error -> Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, C].Out, Self.E] where conforms_to(Self.I, Monad) and C.Arg == Self.I.Element[Self.V] and BindContract[_Binding[Self.I], Self.V, C].FamilyCompatible",
+      "summary": "Apply flat_map through the selected family's Monad capability."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "BindContract[_Binding[Self.I], Self.V, C._View[o]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, C._View[o]].Out, Self.E]"
+      },
+      "signature": "def flat_map[C: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises BindContract[_Binding[Self.I], Self.V, C._View[o]].Error -> Pipeline[Self.I, BindContract[_Binding[Self.I], Self.V, C._View[o]].Out, Self.E] where conforms_to(Self.I, Monad) and C._View[o].Arg == Self.I.Element[Self.V] and BindContract[_Binding[Self.I], Self.V, C._View[o]].FamilyCompatible",
       "summary": "Apply flat_map through the selected family's Monad capability."
      },
      {
@@ -117929,6 +118003,43 @@
        "type": "Pipeline[MapContract[Self.I, Self.V, C].Family, MapContract[Self.I, Self.V, C].Out, Self.E]"
       },
       "signature": "def map[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises MapContract[Self.I, Self.V, C].Error -> Pipeline[MapContract[Self.I, Self.V, C].Family, MapContract[Self.I, Self.V, C].Out, Self.E] where conforms_to(Self.I, Functor) and C.Arg == Self.I.Element[Self.V] and MapContract[Self.I, Self.V, C].FamilyCompatible",
+      "summary": "Apply map through the selected family's Functor capability."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "MapContract[Self.I, Self.V, C._View[o]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[MapContract[Self.I, Self.V, C._View[o]].Family, MapContract[Self.I, Self.V, C._View[o]].Out, Self.E]"
+      },
+      "signature": "def map[C: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises MapContract[Self.I, Self.V, C._View[o]].Error -> Pipeline[MapContract[Self.I, Self.V, C._View[o]].Family, MapContract[Self.I, Self.V, C._View[o]].Out, Self.E] where conforms_to(Self.I, Functor) and C._View[o].Arg == Self.I.Element[Self.V] and MapContract[Self.I, Self.V, C._View[o]].FamilyCompatible",
       "summary": "Apply map through the selected family's Functor capability."
      },
      {
@@ -149583,6 +149694,50 @@
        }
       ],
       "description": "",
+      "error": "_Traversing[Self.I].TraverseError[ValidationFamily[S], Self.V, C._View[o]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "Semigroup",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[ResultFamily[S.Value], _Traversing[Self.I].Traversed[ValidationFamily[S], Self.V, C._View[o]], Self.E]"
+      },
+      "signature": "def par_traverse[C: _UnaryViewable, o: ImmOrigin, //, S: Semigroup = _ListErrors[C._View[o].Out]](deinit self, ref[o] function: C) raises _Traversing[Self.I].TraverseError[ValidationFamily[S], Self.V, C._View[o]] -> Pipeline[ResultFamily[S.Value], _Traversing[Self.I].Traversed[ValidationFamily[S], Self.V, C._View[o]], Self.E] where conforms_to(Self.I, Traversable) and _TraverseCompatible[_Traversing[Self.I], Self.V, C._View[o]] and _Traversing[Self.I].TargetCompatible[ValidationFamily[S], Self.V, C._View[o]] and _CarrierCompatible[ValidationFamily[S], C._View[o].Out] and C._View[o].Arg == Self.I.Element[Self.V]",
+      "summary": "Traverse with ordered Validation accumulation and continue with the resulting Result."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "_Traversing[Self.I].TraverseError[ValidationFamily[S], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]",
       "parameters": [
        {
@@ -178953,6 +179108,50 @@
        "type": "Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, C].Out, Self.E]"
       },
       "signature": "def traverse[C: UnaryContract & Movable & Deinitable, //, J: Applicative = _InferredApplicative[C.Out]](deinit self, var function: C) raises TraverseContract[_Traversing[Self.I], J, Self.V, C].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, C].Out, Self.E] where conforms_to(Self.I, Traversable) and C.Arg == Self.I.Element[Self.V] and TraverseContract[_Traversing[Self.I], J, Self.V, C].FamilyCompatible",
+      "summary": "Traverse into the selected target effect and continue in that family."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "TraverseContract[_Traversing[Self.I], J, Self.V, C._View[o]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "J",
+        "type": "Applicative",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, C._View[o]].Out, Self.E]"
+      },
+      "signature": "def traverse[C: _UnaryViewable, o: ImmOrigin, //, J: Applicative = _ViewTarget[C, o]](deinit self, ref[o] function: C) raises TraverseContract[_Traversing[Self.I], J, Self.V, C._View[o]].Error -> Pipeline[J, TraverseContract[_Traversing[Self.I], J, Self.V, C._View[o]].Out, Self.E] where conforms_to(Self.I, Traversable) and C._View[o].Arg == Self.I.Element[Self.V] and TraverseContract[_Traversing[Self.I], J, Self.V, C._View[o]].FamilyCompatible",
       "summary": "Traverse into the selected target effect and continue in that family."
      },
      {
