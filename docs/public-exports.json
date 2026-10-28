@@ -2963,6 +2963,18 @@
     {
      "sha256": "5af3072b9b0cb54691a9127982da87e94f9c1a58e8ddd95ed45ea8c7d676c9d5",
      "signature": "def scan[A: Movable & Deinitable, F: Binary, //, Y: Movable & Deinitable, unroll: Int = 1, static_length: Int = -1]( f: F, var init: A, *, length: Optional[Int] = None, reverse: Bool = False ) raises ScanError[F.Error] -> Tuple[A, List[Y]] where F.First == A and F.Second == Tuple[] and F.Out == Tuple[A, Y]:"
+    },
+    {
+     "sha256": "6932d808a9ed13d32d6dc24dc7a86c68ad7f107049f429d1a90fd48b2bb9b8f5",
+     "signature": "def scan[A: Movable & Deinitable, X: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, Y: Movable & Deinitable, unroll: Int = 1, static_length: Int = -1]( var f: F, var init: A, var xs: List[X], *, length: Optional[Int] = None, reverse: Bool = False ) raises ScanError[F.Error] -> Tuple[A,List[Y]] where RepeatableBinary[F] and F.First == A and F.Second == X and F.Out == Tuple[A,Y]:"
+    },
+    {
+     "sha256": "3f252d180a0edfb544b48718aa9da6df142c6419a6bf65075adb6f1dcf008060",
+     "signature": "def scan[A: Movable & Deinitable, I: Iterator, F: BinaryContract & Movable & Deinitable, //, Y: Movable & Deinitable, unroll: Int = 1, static_length: Int = -1]( var f: F, var init: A, var xs: I, *, length: Optional[Int] = None, reverse: Bool = False ) raises ScanError[F.Error] -> Tuple[A,List[Y]] where RepeatableBinary[F] and F.First == A and F.Second == I.Element and F.Out == Tuple[A,Y]:"
+    },
+    {
+     "sha256": "c0bd35836128b973c0eb202a78e7386b686a29fd52774bf9da81d531199c6b4d",
+     "signature": "def scan[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, Y: Movable & Deinitable, unroll: Int = 1, static_length: Int = -1]( var f: F, var init: A, *, length: Optional[Int] = None, reverse: Bool = False ) raises ScanError[F.Error] -> Tuple[A,List[Y]] where RepeatableBinary[F] and F.First == A and F.Second == Tuple[] and F.Out == Tuple[A,Y]:"
     }
    ],
    "provider": "control/scan"

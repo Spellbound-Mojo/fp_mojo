@@ -378,7 +378,25 @@
         "tests/compile_fail/fori_owned_output.mojo",
         "tests/compile_fail/fori_owned_output_origin.mojo",
         "tests/compile_fail/fori_owned_reuse.mojo",
-        "tests/compile_fail/fori_owned_static_once.mojo"
+        "tests/compile_fail/fori_owned_static_once.mojo",
+        "tests/runtime/test_control_scan_owned.mojo",
+        "tests/ownership/test_control_scan_owned.mojo",
+        "tests/compile_fail/control_scan_owned_bare.mojo",
+        "tests/compile_fail/control_scan_owned_carry.mojo",
+        "tests/compile_fail/control_scan_owned_carry_origin.mojo",
+        "tests/compile_fail/control_scan_owned_dynamic_unroll.mojo",
+        "tests/compile_fail/control_scan_owned_error.mojo",
+        "tests/compile_fail/control_scan_owned_error_origin.mojo",
+        "tests/compile_fail/control_scan_owned_input.mojo",
+        "tests/compile_fail/control_scan_owned_iterator.mojo",
+        "tests/compile_fail/control_scan_owned_negative_unroll.mojo",
+        "tests/compile_fail/control_scan_owned_no_input.mojo",
+        "tests/compile_fail/control_scan_owned_once.mojo",
+        "tests/compile_fail/control_scan_owned_output.mojo",
+        "tests/compile_fail/control_scan_owned_output_origin.mojo",
+        "tests/compile_fail/control_scan_owned_reuse.mojo",
+        "tests/compile_fail/control_scan_owned_shape.mojo",
+        "tests/compile_fail/control_scan_owned_static_length.mojo"
       ]
     },
     "algebra": {

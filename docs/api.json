@@ -23982,7 +23982,7 @@
       "type": "Tuple[A, List[Y]]"
      },
      "signature": "def scan[A: Movable & Deinitable, X: Movable & Deinitable, F: Binary, //, Y: Movable & Deinitable, unroll: Int = 1, static_length: Int = -1](f: F, var init: A, var xs: List[X], *, length: Optional[Int] = None, reverse: Bool = False) raises ScanError[F.Error] -> Tuple[A, List[Y]] where F.First == A and F.Second == X and F.Out == Tuple[A, Y]",
-     "summary": "Scan a `List` with a library `Binary` step; name the output type, `scan[Y](step, ...)`."
+     "summary": "Scan a `List` with a borrowed library step; infer output or select `scan[Y]`."
     },
     {
      "args": [
@@ -24555,6 +24555,271 @@
      },
      "signature": "def scan[A: Movable & Deinitable, F: Binary, //, Y: Movable & Deinitable, unroll: Int = 1, static_length: Int = -1](f: F, var init: A, *, length: Optional[Int] = None, reverse: Bool = False) raises ScanError[F.Error] -> Tuple[A, List[Y]] where F.First == A and F.Second == Tuple[] and F.Out == Tuple[A, Y]",
      "summary": "Scan `length` times with no input and a library `Binary` step."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The step owner, consumed without copying.",
+       "name": "f",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The initial carry, consumed.",
+       "name": "init",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The input, consumed.",
+       "name": "xs",
+       "type": "List[X]",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "The required length, checked before invoking any step.",
+       "name": "length",
+       "type": "Optional[Int]",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "Whether to invoke steps from the last input to the first.",
+       "name": "reverse",
+       "type": "Bool",
+       "variadic": false
+      }
+     ],
+     "description": "Mutable invocation takes priority over shared invocation; consuming-only\nsteps cannot repeat. Pass `mut_ref(step)` to retain its updated state.\nNamed shared callbacks keep their borrowed overload. The owned callback is\ndestroyed after success, failure, empty input or a length error.\nThe List and carry are consumed; outputs retain input order, including in reverse.",
+     "error": "ScanError[F.Error]",
+     "parameters": [
+      {
+       "description": "The exact carry type, including origins.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The exact input element type, including origins.",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "A shared or mutable binary callback returning (carry, output).",
+       "inferred": true,
+       "name": "F",
+       "type": "BinaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The output type, inferred from F.Out or explicitly selected.",
+       "inferred": false,
+       "name": "Y",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "Steps per rolled iteration; zero fully expands a static length.",
+       "inferred": false,
+       "name": "unroll",
+       "type": "Int",
+       "variadic": false
+      },
+      {
+       "description": "A compile-time input length, or -1 when unspecified.",
+       "inferred": false,
+       "name": "static_length",
+       "type": "Int",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "ScanLengthError for an invalid length, or ScanStepError[F.Error] inside\nScanError[F.Error] for the exact callback error, including StopIteration.",
+     "returns": {
+      "doc": "The final carry and collected outputs; neither payload needs copying.",
+      "type": "Tuple[A,List[Y]]"
+     },
+     "signature": "def scan[A: Movable & Deinitable, X: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, Y: Movable & Deinitable, unroll: Int = 1, static_length: Int = -1](var f: F, var init: A, var xs: List[X], *, length: Optional[Int] = None, reverse: Bool = False) raises ScanError[F.Error] -> Tuple[A,List[Y]] where RepeatableBinary[F] and F.First == A and F.Second == X and F.Out == Tuple[A,Y]",
+     "summary": "Scan with an owned repeatable library step over List input."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The step owner, consumed without copying.",
+       "name": "f",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The initial carry, consumed.",
+       "name": "init",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The input, consumed.",
+       "name": "xs",
+       "type": "I",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "The required length, checked before invoking any step.",
+       "name": "length",
+       "type": "Optional[Int]",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "Whether to invoke steps from the last input to the first.",
+       "name": "reverse",
+       "type": "Bool",
+       "variadic": false
+      }
+     ],
+     "description": "Mutable invocation takes priority over shared invocation; consuming-only\nsteps cannot repeat. Pass `mut_ref(step)` to retain its updated state.\nNamed shared callbacks keep their borrowed overload. The owned callback is\ndestroyed after success, failure, empty input or a length error.\nThe finite iterator is collected before the first step or length validation.\nOutputs retain input positions, including in reverse.",
+     "error": "ScanError[F.Error]",
+     "parameters": [
+      {
+       "description": "The exact carry type, including origins.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The finite native iterator type.",
+       "inferred": true,
+       "name": "I",
+       "type": "Iterator",
+       "variadic": false
+      },
+      {
+       "description": "A shared or mutable binary callback returning (carry, output).",
+       "inferred": true,
+       "name": "F",
+       "type": "BinaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The output type, inferred from F.Out or explicitly selected.",
+       "inferred": false,
+       "name": "Y",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "Steps per rolled iteration; zero fully expands a static length.",
+       "inferred": false,
+       "name": "unroll",
+       "type": "Int",
+       "variadic": false
+      },
+      {
+       "description": "A compile-time input length, or -1 when unspecified.",
+       "inferred": false,
+       "name": "static_length",
+       "type": "Int",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "ScanLengthError for an invalid length, or ScanStepError[F.Error] inside\nScanError[F.Error] for the exact callback error, including StopIteration.",
+     "returns": {
+      "doc": "The final carry and collected outputs; neither payload needs copying.",
+      "type": "Tuple[A,List[Y]]"
+     },
+     "signature": "def scan[A: Movable & Deinitable, I: Iterator, F: BinaryContract & Movable & Deinitable, //, Y: Movable & Deinitable, unroll: Int = 1, static_length: Int = -1](var f: F, var init: A, var xs: I, *, length: Optional[Int] = None, reverse: Bool = False) raises ScanError[F.Error] -> Tuple[A,List[Y]] where RepeatableBinary[F] and F.First == A and F.Second == I.Element and F.Out == Tuple[A,Y]",
+     "summary": "Scan with an owned repeatable library step over iterator input."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The step owner, consumed without copying.",
+       "name": "f",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The initial carry, consumed.",
+       "name": "init",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "The required length, checked before invoking any step.",
+       "name": "length",
+       "type": "Optional[Int]",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "Whether to invoke steps from the last input to the first.",
+       "name": "reverse",
+       "type": "Bool",
+       "variadic": false
+      }
+     ],
+     "description": "Mutable invocation takes priority over shared invocation; consuming-only\nsteps cannot repeat. Pass `mut_ref(step)` to retain its updated state.\nNamed shared callbacks keep their borrowed overload. The owned callback is\ndestroyed after success, failure, empty input or a length error.\nGive `length` or `static_length`. Each step receives `Tuple[]` as its input.\nIn reverse, the collected outputs are reversed after all steps.",
+     "error": "ScanError[F.Error]",
+     "parameters": [
+      {
+       "description": "The exact carry type, including origins.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "A shared or mutable binary callback returning (carry, output).",
+       "inferred": true,
+       "name": "F",
+       "type": "BinaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The output type, inferred from F.Out or explicitly selected.",
+       "inferred": false,
+       "name": "Y",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "Steps per rolled iteration; zero fully expands a static length.",
+       "inferred": false,
+       "name": "unroll",
+       "type": "Int",
+       "variadic": false
+      },
+      {
+       "description": "A compile-time input length, or -1 when unspecified.",
+       "inferred": false,
+       "name": "static_length",
+       "type": "Int",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "ScanLengthError for an invalid length, or ScanStepError[F.Error] inside\nScanError[F.Error] for the exact callback error, including StopIteration.",
+     "returns": {
+      "doc": "The final carry and collected outputs; neither payload needs copying.",
+      "type": "Tuple[A,List[Y]]"
+     },
+     "signature": "def scan[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, Y: Movable & Deinitable, unroll: Int = 1, static_length: Int = -1](var f: F, var init: A, *, length: Optional[Int] = None, reverse: Bool = False) raises ScanError[F.Error] -> Tuple[A,List[Y]] where RepeatableBinary[F] and F.First == A and F.Second == Tuple[] and F.Out == Tuple[A,Y]",
+     "summary": "Scan with an owned repeatable library step and no input."
     }
    ],
    "provider": "control/scan",
@@ -320892,7 +321157,7 @@
    "summary": "Direct combinators shared with fluent pipelines."
   },
   "control": {
-   "description": "They follow the sequential value semantics of JAX's control-flow operations,\nwithout tensor stacking, tracing, autodiff or a JIT. Branch with Mojo's `if`.\n\nThe carry may be any value: a scalar, a SIMD value, a string, a container or a\nmove-only owner. Its type stays fixed, and nothing copies it. A callback is a\nplain function or a closure, with separate pure and raising overloads, or a\nshared-receiver library value: `Unary` for a `while_loop` body, `Binary` taking\n`(Int, carry)` for a `fori_loop` body, and a `Binary` step for `scan`, whose\noutput type is then named, `scan[Y](step, ...)`. A `while_loop` predicate may\nbe a `BorrowCallable`. A call needing keywords or defaults is written as a\nclosure. Callbacks keep one receiver throughout.\n\nUse `fori_loop_mut` to borrow a named library body exclusively and retain its\nmutable state after the call. It accepts shared or mutable binary callbacks,\npreferring mutable invocation when both are available. `fori_loop` also owns\nmoved or temporary repeatable bodies with that preference; `mut_ref(body)`\nretains the original state. Named shared bodies keep their borrowed behavior.\nBoth forms share bounds, unrolling and errors.\n\n`while_loop_mut(predicate, body, carry)` borrows a named unary body exclusively\nwith the same repeated receiver preference. It also owns shared or mutable\nborrowing predicates; pass `mut_ref(predicate)` to retain their updated state.\nNamed shared `BorrowCallable` predicates, plain functions and stored thin\npointers keep their borrowed admission. Capturing predicates\nand pointer aliases use `BorrowSignature[A, Bool, E].capture(callback)`.\n\nErrors stop the loop at once. A predicate and a body must raise one error type,\nincluding any embedded origins, or one of them nothing. Nothing retries or\nrolls back effects.\n\nThe compile-time parameter `unroll` expands that many steps per rolled\niteration, with exact bounds checks for the final partial chunk; `1`, the\ndefault, keeps a rolled loop. `unroll=0` fully expands a statically bounded\nloop: `fori_loop[lower, upper, unroll=0](body, initial)` or\n`scan[static_length=N, unroll=0](...)`. Full unrolling without static bounds,\na negative factor and an invalid static length are compile errors.\n`while_loop` has no unroll parameter.",
+   "description": "They follow the sequential value semantics of JAX's control-flow operations,\nwithout tensor stacking, tracing, autodiff or a JIT. Branch with Mojo's `if`.\n\nThe carry may be any value: a scalar, a SIMD value, a string, a container or a\nmove-only owner. Its type stays fixed, and nothing copies it. A callback is a\nplain function or a closure, with separate pure and raising overloads, or a\nshared-receiver library value: `Unary` for a `while_loop` body, `Binary` taking\n`(Int, carry)` for a `fori_loop` body, and a `Binary` step for `scan`. A\nscan infers its output type; `scan[Y](step, ...)` selects it explicitly.\nOwned scan steps may also be `MutableBinary`, with mutable invocation preferred;\n`mut_ref(step)` retains the original state. A `while_loop` predicate may\nbe a `BorrowCallable`. A call needing keywords or defaults is written as a\nclosure. Callbacks keep one receiver throughout.\n\nUse `fori_loop_mut` to borrow a named library body exclusively and retain its\nmutable state after the call. It accepts shared or mutable binary callbacks,\npreferring mutable invocation when both are available. `fori_loop` also owns\nmoved or temporary repeatable bodies with that preference; `mut_ref(body)`\nretains the original state. Named shared bodies keep their borrowed behavior.\nBoth forms share bounds, unrolling and errors.\n\n`while_loop_mut(predicate, body, carry)` borrows a named unary body exclusively\nwith the same repeated receiver preference. It also owns shared or mutable\nborrowing predicates; pass `mut_ref(predicate)` to retain their updated state.\nNamed shared `BorrowCallable` predicates, plain functions and stored thin\npointers keep their borrowed admission. Capturing predicates\nand pointer aliases use `BorrowSignature[A, Bool, E].capture(callback)`.\n\nErrors stop the loop at once. A predicate and a body must raise one error type,\nincluding any embedded origins, or one of them nothing. Nothing retries or\nrolls back effects.\n\nThe compile-time parameter `unroll` expands that many steps per rolled\niteration, with exact bounds checks for the final partial chunk; `1`, the\ndefault, keeps a rolled loop. `unroll=0` fully expands a statically bounded\nloop: `fori_loop[lower, upper, unroll=0](body, initial)` or\n`scan[static_length=N, unroll=0](...)`. Full unrolling without static bounds,\na negative factor and an invalid static length are compile errors.\n`while_loop` has no unroll parameter.",
    "summary": "Functional loops and scans over native Mojo values: `while_loop`, `while_loop_mut`, `fori_loop`, `fori_loop_mut` and `scan`."
   },
   "data": {

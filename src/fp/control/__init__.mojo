@@ -7,8 +7,10 @@ The carry may be any value: a scalar, a SIMD value, a string, a container or a
 move-only owner. Its type stays fixed, and nothing copies it. A callback is a
 plain function or a closure, with separate pure and raising overloads, or a
 shared-receiver library value: `Unary` for a `while_loop` body, `Binary` taking
-`(Int, carry)` for a `fori_loop` body, and a `Binary` step for `scan`, whose
-output type is then named, `scan[Y](step, ...)`. A `while_loop` predicate may
+`(Int, carry)` for a `fori_loop` body, and a `Binary` step for `scan`. A
+scan infers its output type; `scan[Y](step, ...)` selects it explicitly.
+Owned scan steps may also be `MutableBinary`, with mutable invocation preferred;
+`mut_ref(step)` retains the original state. A `while_loop` predicate may
 be a `BorrowCallable`. A call needing keywords or defaults is written as a
 closure. Callbacks keep one receiver throughout.
 

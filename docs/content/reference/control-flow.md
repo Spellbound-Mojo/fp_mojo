@@ -51,6 +51,19 @@ non-raising predicate and a body `F` can use `E=F.Error`, matching the wrapper's
 `raises F.Error`. Ordinary calls infer the error. The explicit selection must
 equal that inferred error, so it cannot widen or replace an error type.
 
+A library `scan` step returns `(next_carry, output)`. Its output type is inferred;
+`scan[Y](step, carry, source)` remains available when explicit selection is useful.
+Pass a moved or temporary shared or mutable step to transfer ownership, or
+`mut_ref(step)` to inspect its state after the scan. Mutable invocation wins for
+owned steps; named shared steps remain borrowed. Consuming-only steps cannot
+repeat. This applies to Lists, finite iterators and scans without an input.
+
+Iterator inputs are fully collected before any step runs. Length validation then
+runs before callbacks; a mismatch releases the owned step, carry and input.
+Callback failures stop immediately and preserve their exact type inside
+`ScanStepError`, including `StopIteration`. Reverse scans invoke the callback in
+reverse input order but return outputs in their original positions.
+
 <!-- api: control -->
 
 ## Write loops and a scan as expressions
@@ -71,3 +84,7 @@ The owned example passes `Weighted(0)` directly to `fori_loop` and also returns
 The mutable while-loop example reuses a captured predicate and increases its
 step size through `advance.calls`: the carries are `0`, `1`, `3`, `6`, `10`.
 The result is `10`, and the body retains four calls.
+
+The owned scan example passes `WeightedScan(0)` directly. Its state increases the
+weight on each input, producing carry `14` and outputs `[1, 5, 14]`. The output
+type is inferred from the callback's pair result.

@@ -3,7 +3,9 @@ from std.iter import Iterator
 from std.utils import Variant
 from std.builtin.rebind import rebind_var
 from fp.callables._scan import _Carry, _ScanOutputs
-from fp.callables.protocols import Binary
+from fp.callables.protocols import Binary, BinaryContract
+from fp.callables.invoke import RepeatableBinary
+from fp.iteration._callbacks import _binary_repeated
 from fp.callables.native import _call_native_binary
 from fp.iteration._terminal import _collect_list
 from fp._internal.errors import _propagate_error
@@ -157,7 +159,7 @@ def _scan_fixed[A: Movable & Deinitable, X: Movable & Deinitable,
 
 
 # Native conformance distinguishes pure and raising callbacks. Binary library
-# callables use an explicit Y parameter, as with iteration.filter_map[U].
+# callables infer Y from their exact result; an explicit Y remains available.
 # Every facade shares length validation, movement, scheduling and cleanup.
 
 
@@ -238,7 +240,7 @@ def scan[A: Movable & Deinitable,
          static_length: Int = -1](
     f: F, var init: A, var xs: List[X], *, length: Optional[Int] = None, reverse: Bool = False
 ) raises ScanError[F.Error] -> Tuple[A, List[Y]] where F.First == A and F.Second == X and F.Out == Tuple[A, Y]:
-    """Scan a `List` with a library `Binary` step; name the output type, `scan[Y](step, ...)`."""
+    """Scan a `List` with a borrowed library step; infer output or select `scan[Y]`."""
     return _scan[A, X, Y, F, F.Error, _scan_fixed[A, X, Y, F], unroll, static_length](
         f, init^, xs^, length, reverse)
 
@@ -330,3 +332,126 @@ def scan[A: Movable & Deinitable,
     """Scan `length` times with no input and a library `Binary` step."""
     return _scan[A, Tuple[], Y, F, F.Error, _scan_fixed[A, Tuple[], Y, F], unroll, static_length, True](
         f, init^, List[Tuple[]](), length, reverse)
+
+
+def _scan_owned[A: Movable & Deinitable, X: Movable & Deinitable,
+                Y: Movable & Deinitable, F: BinaryContract & Movable & Deinitable,
+                unroll: Int, static_length: Int, no_input: Bool = False](
+    var function: F, var initial: A, var xs: List[X], length: Optional[Int], reverse: Bool
+) raises ScanError[F.Error] -> Tuple[A,List[Y]] where RepeatableBinary[F] and F.First == A and F.Second == X and F.Out == Tuple[A,Y]:
+    # The existing driver owns validation, ordering and cleanup; the canonical
+    # repeated bridge retains exclusive access without copying the callback.
+    return _scan[A, X, Y, Pointer[F,origin_of(function)], F.Error,
+        _binary_repeated[A,X,F,origin_of(function),Tuple[A,Y]],unroll,static_length,no_input](
+        Pointer(to=function),initial^,xs^,length,reverse)
+
+
+def scan[A: Movable & Deinitable, X: Movable & Deinitable, F: BinaryContract & Movable & Deinitable,
+         //, Y: Movable & Deinitable, unroll: Int = 1, static_length: Int = -1](
+    var f: F, var init: A, var xs: List[X], *, length: Optional[Int] = None, reverse: Bool = False
+) raises ScanError[F.Error] -> Tuple[A,List[Y]] where RepeatableBinary[F] and F.First == A and F.Second == X and F.Out == Tuple[A,Y]:
+    """Scan with an owned repeatable library step over List input.
+
+    Mutable invocation takes priority over shared invocation; consuming-only
+    steps cannot repeat. Pass `mut_ref(step)` to retain its updated state.
+    Named shared callbacks keep their borrowed overload. The owned callback is
+    destroyed after success, failure, empty input or a length error.
+    The List and carry are consumed; outputs retain input order, including in reverse.
+
+    Parameters:
+        A: The exact carry type, including origins.
+        X: The exact input element type, including origins.
+        F: A shared or mutable binary callback returning (carry, output).
+        Y: The output type, inferred from F.Out or explicitly selected.
+        unroll: Steps per rolled iteration; zero fully expands a static length.
+        static_length: A compile-time input length, or -1 when unspecified.
+
+    Args:
+        f: The step owner, consumed without copying.
+        init: The initial carry, consumed.
+        xs: The input, consumed.
+        length: The required length, checked before invoking any step.
+        reverse: Whether to invoke steps from the last input to the first.
+
+    Returns:
+        The final carry and collected outputs; neither payload needs copying.
+
+    Raises:
+        ScanLengthError for an invalid length, or ScanStepError[F.Error] inside
+        ScanError[F.Error] for the exact callback error, including StopIteration.
+    """
+    return _scan_owned[A,X,Y,F,unroll,static_length,False](f^,init^,xs^,length,reverse)
+
+
+def scan[A: Movable & Deinitable, I: Iterator, F: BinaryContract & Movable & Deinitable,
+         //, Y: Movable & Deinitable, unroll: Int = 1, static_length: Int = -1](
+    var f: F, var init: A, var xs: I, *, length: Optional[Int] = None, reverse: Bool = False
+) raises ScanError[F.Error] -> Tuple[A,List[Y]] where RepeatableBinary[F] and F.First == A and F.Second == I.Element and F.Out == Tuple[A,Y]:
+    """Scan with an owned repeatable library step over iterator input.
+
+    Mutable invocation takes priority over shared invocation; consuming-only
+    steps cannot repeat. Pass `mut_ref(step)` to retain its updated state.
+    Named shared callbacks keep their borrowed overload. The owned callback is
+    destroyed after success, failure, empty input or a length error.
+    The finite iterator is collected before the first step or length validation.
+    Outputs retain input positions, including in reverse.
+
+    Parameters:
+        A: The exact carry type, including origins.
+        I: The finite native iterator type.
+        F: A shared or mutable binary callback returning (carry, output).
+        Y: The output type, inferred from F.Out or explicitly selected.
+        unroll: Steps per rolled iteration; zero fully expands a static length.
+        static_length: A compile-time input length, or -1 when unspecified.
+
+    Args:
+        f: The step owner, consumed without copying.
+        init: The initial carry, consumed.
+        xs: The input, consumed.
+        length: The required length, checked before invoking any step.
+        reverse: Whether to invoke steps from the last input to the first.
+
+    Returns:
+        The final carry and collected outputs; neither payload needs copying.
+
+    Raises:
+        ScanLengthError for an invalid length, or ScanStepError[F.Error] inside
+        ScanError[F.Error] for the exact callback error, including StopIteration.
+    """
+    return _scan_owned[A,F.Second,Y,F,unroll,static_length,False](f^,init^,_collect_list[F.Second,I](xs^),length,reverse)
+
+
+def scan[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable,
+         //, Y: Movable & Deinitable, unroll: Int = 1, static_length: Int = -1](
+    var f: F, var init: A, *, length: Optional[Int] = None, reverse: Bool = False
+) raises ScanError[F.Error] -> Tuple[A,List[Y]] where RepeatableBinary[F] and F.First == A and F.Second == Tuple[] and F.Out == Tuple[A,Y]:
+    """Scan with an owned repeatable library step and no input.
+
+    Mutable invocation takes priority over shared invocation; consuming-only
+    steps cannot repeat. Pass `mut_ref(step)` to retain its updated state.
+    Named shared callbacks keep their borrowed overload. The owned callback is
+    destroyed after success, failure, empty input or a length error.
+    Give `length` or `static_length`. Each step receives `Tuple[]` as its input.
+    In reverse, the collected outputs are reversed after all steps.
+
+    Parameters:
+        A: The exact carry type, including origins.
+        F: A shared or mutable binary callback returning (carry, output).
+        Y: The output type, inferred from F.Out or explicitly selected.
+        unroll: Steps per rolled iteration; zero fully expands a static length.
+        static_length: A compile-time input length, or -1 when unspecified.
+
+    Args:
+        f: The step owner, consumed without copying.
+        init: The initial carry, consumed.
+        length: The required length, checked before invoking any step.
+        reverse: Whether to invoke steps from the last input to the first.
+
+    Returns:
+        The final carry and collected outputs; neither payload needs copying.
+
+    Raises:
+        ScanLengthError for an invalid length, or ScanStepError[F.Error] inside
+        ScanError[F.Error] for the exact callback error, including StopIteration.
+    """
+    return _scan_owned[A,Tuple[],Y,F,unroll,static_length,True](f^,init^,List[Tuple[]](),length,reverse)

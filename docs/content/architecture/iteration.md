@@ -852,3 +852,26 @@ or a callback error. `_fold_left`, `_fold_until`, `_reduce_optional`, and
 `_reduce_value` continue to own traversal and error handling. Generated public
 admission forwards to these owners, and fluent methods forward to the public
 free operation with the callback type retained.
+
+
+## Owned steps in eager control scans
+
+`control.scan` accepts owned repeatable binary callbacks for List, finite
+iterator and no-input scans. The thin admissions delegate to `_scan_owned`,
+which retains the local owner through a native pointer and passes the existing
+`_binary_repeated` bridge to `_scan`. Receiver priority remains in the canonical
+callable dispatcher. The scan driver still owns length checks, input reversal,
+indexed scheduling, error wrapping and the shared `_ScanOutputs` carry/output
+owner. No callback state is copied and no second traversal is introduced.
+
+Named shared callbacks keep their borrowed overloads. `mut_ref` retains an
+original mutable receiver after success or failure. The same exact pair
+constraint infers output types on Mojo 1.2 for both borrowed and owned library
+callbacks; existing positional and named output selection remain available.
+The iterator admission uses `F.Second` after proving equality with `I.Element`,
+retaining the deinitialization evidence needed to collect move-only inputs.
+
+The contract intentionally differs from iterator `map_accumulate`: control scans
+collect an iterator before stepping, support reverse and static unrolling, and
+wrap step errors separately from length errors. Both continue to share owned
+carry/output movement through `_ScanOutputs`.

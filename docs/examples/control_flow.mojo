@@ -52,6 +52,18 @@ struct StopAfter(BorrowMutableCallable):
         return self.checks <= self.steps
 
 
+@fieldwise_init
+struct WeightedScan(MutableBinary):
+    comptime First = Int
+    comptime Second = Int
+    comptime Out = Tuple[Int, Int]
+    var calls: Int
+    def call_mut(mut self, var carry: Int, var value: Int) -> Self.Out:
+        self.calls += 1
+        carry += self.calls * value
+        return (carry, carry)
+
+
 def main() raises:
     print("while:", while_loop(below_ten, double, 1))
     print("fori:", fori_loop(0, 5, add_index, 0))
@@ -72,3 +84,5 @@ def main() raises:
     var limited = while_loop_mut(mut_ref(stop),measured,0)
     print("stateful predicate:", limited, "checks:", stop.checks, "steps:", measured.calls)
     print("owned fori:", fori_loop[0,4,unroll=0](Weighted(0),0))
+    var weighted_scan = scan(WeightedScan(0), 0, iter(range(1, 4)))
+    print("owned scan:", weighted_scan[0], weighted_scan[1])
