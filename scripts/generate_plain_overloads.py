@@ -174,10 +174,11 @@ def composition_extension_methods():
     ):
         for arity in arities:
             for factory in native_factories(('thunk', 'owned', 'binary')[arity], ['A', 'B'][:arity]):
-                declarations = [f'{p}: {bound}' for p, bound in (*factory.parameters, *factory.pointer.parameters)] + ['//']
+                declarations = [f'{p}: {bound}' for p, bound in (*factory.parameters, *factory.pointer.parameters)]
+                parameters = '[' + ', '.join(declarations + ['//']) + ']' if declarations else ''
                 conditions = factory.pointer.conditions
                 where = ' where ' + ' and '.join(conditions) if conditions else ''
-                out.append(f'\n    def {name}[{", ".join(declarations)}](\n'
+                out.append(f'\n    def {name}{parameters}(\n'
                            f'        deinit self, {factory.argument}\n'
                            f'    ) -> Self.{result}[{factory.adapter}]{where}:\n'
                            f'        """{verb} a plain function or stored pointer without invoking it."""\n'
@@ -443,6 +444,44 @@ def tupled_source(path):
     return spliced(path, ''.join(out), TUPLED_START, TUPLED_END, '')
 
 
+def untupled_source(path):
+    out = []
+    descriptions = dict(T="The native pair input type.", R="The native result type.",
+                        E="The native error type.", q="The temporary pointer admission borrow's origin.",
+                        A="The first argument's type, inferred from the pair input.",
+                        B="The second argument's type, inferred from the pair input.")
+    for factory in native_factories('owned', ['T']):
+        parameters = [*factory.parameters, *factory.pointer.parameters]
+        pair_parameters = [('A', 'Movable & Deinitable'), ('B', 'Movable & Deinitable')]
+        declarations = [f'{name}: {bound}' for name, bound in parameters] + ['//']
+        declarations += [f'{name}: {bound}' for name, bound in pair_parameters]
+        conditions = [*factory.pointer.conditions, 'T == Tuple[A, B]']
+        documented = ''.join(f'        {name}: {descriptions[name]}\n'
+                             for name, _ in parameters + pair_parameters)
+        out.append(f'''def untupled[{", ".join(declarations)}](
+    {factory.argument}
+) -> Untupled[A, B, {factory.adapter}] where {" and ".join(conditions)}:
+    """Adapt a plain unary pair consumer or stored thin pointer to two arguments.
+
+    Both argument types are inferred from the native pair input. Construction
+    stores the pointer; pair transfer and execution use ordinary composition.
+
+    Parameters:
+{documented}
+    Args:
+        function: The unary native pair consumer or stored pointer.
+
+    Returns:
+        A binary composition preserving the native result and error types.
+    """
+    return untupled[A, B]({factory.adapter}(function))
+
+
+''')
+    return spliced(path, ''.join(out), '# --- untupled native admission (generated) ---\n',
+                   '# --- end untupled native admission ---\n', '')
+
+
 def pair_projection_source(path):
     out = []
     descriptions = dict(A="The transformed element's type.", R="The callback result type.",
@@ -589,6 +628,7 @@ def main():
         ('iteration/derived.mojo', lambda path: spliced(path, traversal_syntax.methods('free'), traversal_syntax.START, traversal_syntax.END, traversal_syntax.HEADER)),
         ('functions/composition.mojo', composition_source),
         ('functions/tupled.mojo', tupled_source),
+        ('functions/untupled.mojo', untupled_source),
         ('functions/products.mojo', products_source),
         ('matching/matcher.mojo', lambda path: spliced(path, match_overloads(), MATCH_START, MATCH_END, MATCH_HEADER)),
     ):

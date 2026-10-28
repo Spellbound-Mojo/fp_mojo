@@ -703,6 +703,22 @@ one transfers ownership. A mutable-only wrapper uses `call_mut`, and a
 consuming wrapper uses `wrapper^.call_once(pair)` or a compatible operation.
 Composition still passes tuples whole unless this adapter is explicit.
 
+Use `untupled(function)` for the reverse direction: `untupled(f)(a, b)` calls
+`f((a, b))`. For example, `untupled(split(display, excited))(8, String("paid"))`
+produces `(String("price=8"), String("paid!"))` without constructing the pair
+at the call site. Both argument types are inferred from the pair consumer.
+Plain functions, stored thin pointers and unary library callables work directly;
+capturing closures use `as_unary` first.
+
+The returned `Untupled[A, B, F]` is an ordinary binary composition. It moves the
+arguments into the callback's pair without copying either element, retains the
+callback's receiver modes and exact errors, and supports `.then(next)`.
+Named shared results can be reused in `zip_with` and `scan_left`. Mutable-only
+results use `call_mut`, and consuming results use `result^.call_once(a, b)`.
+When forwarding an abstract callback from generic code, pass the known pair
+types with `untupled[A, B](callback^)` and declare the wrapper's associated
+`Untupled[A, B, F].Error` as the error type, as for other generic compositions.
+
 Use `first[Other](callback)` or `second[Other](callback)` to transform just one
 pair element. `Other` is the untouched element's type: for example,
 `first[String](partial(scale, 3))((2, String("order-7")))` yields

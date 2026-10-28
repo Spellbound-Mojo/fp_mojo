@@ -380,6 +380,16 @@ def native_factories(mode, payloads, *, name="function", result="R", error="E", 
         for void in (False, True):
             for abi in variants(operands, None if void else result):
                 pointer = factory_pointer(abi, name=name, origin=origin)
+                if void and not pointer.parameters:
+                    continue
+                if void:
+                    # A literal no-return signature fixes the result ABI. Its
+                    # symbolic-input fallback must compete by value as well:
+                    # borrowing it lets a typed-result alternative win before
+                    # Mojo can prove that alternative's input ABI constraint.
+                    # The exact no-return signature also admits register inputs;
+                    # additional register alternatives would be ambiguous.
+                    pointer = FactoryPointer((), (), name)
                 parameters = abi.parameters + (((error, MD),) if raising else ())
                 signature = ("def(" + ", ".join(argument(p, "o", thin=True, known=False) for p in payloads) + ")"
                              + (" raises " + error if raising else "") + " thin"

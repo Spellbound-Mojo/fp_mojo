@@ -17,6 +17,7 @@ compose(fn, ..., f1, f0)(args)   = fn(...f1(f0(args))...)
 flip(f)(a, b, rest)              = f(b, a, rest)
 partial(f, a, b)(rest)           = f(copy(a), copy(b), rest)
 tupled(f)((a, b))               = f(a, b)
+untupled(f)(a, b)               = f((a, b))
 first[Other](f)((a, b))         = (f(a), b)
 second[Other](f)((a, b))        = (a, f(b))
 split(f, g)((a, b))             = (f(a), g(b))
@@ -67,6 +68,27 @@ retain their existing mutable native invocation convention; that branch still
 uses the same `_take_pair` ownership primitive. Adapting a pair never changes
 which receiver mode a consumer requests, promotes an error without the existing
 compatibility proof, or unpacks tuples implicitly in composition.
+
+`untupled` reverses the input adaptation using `flow(_Pair[A, B](), f)`.
+`Untupled` is an alias for that binary composition; it adds no storage, receiver
+selection, error joining or invocation path. The existing `_Pair` moves both
+arguments into a native tuple. The factory's exact `F.Arg == Tuple[A, B]`
+constraint infers the element types for concrete callbacks and rejects other
+shapes. Generic callers can supply the element types already known to them and
+use the composition's associated `Error`, retaining its native specialization.
+The composition planner's capability proof admits shared, mutable and consuming
+pair consumers without weakening any receiver requirement.
+
+Native factories share `native_factories` with `as_unary` and the other function
+adapters. Literal no-return signatures admit symbolic-input pointers by value:
+there is no unresolved result ABI, and borrowing that fallback would allow
+Mojo to select a typed-result alternative whose input ABI cannot yet be proven.
+One literal signature per effect admits both memory and register inputs;
+additional register-specific no-return alternatives would be ambiguous.
+The pointer still enters the same native owner without invocation. This rule
+also fixes generic no-return forwarding through the existing unary, binary,
+pair-projection and composition factories. Typed-result admission keeps its
+existing temporary borrow when the result ABI is symbolic.
 
 `first` and `second` follow
 [Cats' `Strong` pair transformations](https://github.com/typelevel/cats/blob/main/core/src/main/scala/cats/arrow/Strong.scala).

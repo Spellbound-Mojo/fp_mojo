@@ -7194,14 +7194,7 @@ def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterP
     return pipe(value^, NativeUnary[A, R, Never, type_of(function), False](function), stage)
 
 
-def pipe[V: Movable & Deinitable, A: Movable & Deinitable, F: Unary, q: ImmOrigin, //](
-    var value: V, ref[q] function: def(var A) thin, stage: F
-) raises _Plan[NativeUnary[A, type_of(None), Never, type_of(function), False], F].Failure -> _Plan[NativeUnary[A, type_of(None), Never, type_of(function), False], F].Result:
-    """Apply a plain function or stored pointer beside one borrowed library stage."""
-    return pipe(value^, NativeUnary[A, type_of(None), Never, type_of(function), False](function), stage)
-
-
-def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, F: Unary, //](
+def pipe[V: Movable & Deinitable, A: Movable & Deinitable, F: Unary, //](
     var value: V, function: def(var A) thin, stage: F
 ) raises _Plan[NativeUnary[A, type_of(None), Never, type_of(function), False], F].Failure -> _Plan[NativeUnary[A, type_of(None), Never, type_of(function), False], F].Result:
     """Apply a plain function or stored pointer beside one borrowed library stage."""
@@ -7236,14 +7229,7 @@ def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterP
     return pipe(value^, NativeUnary[A, R, X, type_of(function), True](function), stage)
 
 
-def pipe[V: Movable & Deinitable, A: Movable & Deinitable, X: Movable & Deinitable, F: Unary, q: ImmOrigin, //](
-    var value: V, ref[q] function: def(var A) raises X thin, stage: F
-) raises _Plan[NativeUnary[A, type_of(None), X, type_of(function), True], F].Failure -> _Plan[NativeUnary[A, type_of(None), X, type_of(function), True], F].Result:
-    """Apply a plain function or stored pointer beside one borrowed library stage."""
-    return pipe(value^, NativeUnary[A, type_of(None), X, type_of(function), True](function), stage)
-
-
-def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, X: Movable & Deinitable, F: Unary, //](
+def pipe[V: Movable & Deinitable, A: Movable & Deinitable, X: Movable & Deinitable, F: Unary, //](
     var value: V, function: def(var A) raises X thin, stage: F
 ) raises _Plan[NativeUnary[A, type_of(None), X, type_of(function), True], F].Failure -> _Plan[NativeUnary[A, type_of(None), X, type_of(function), True], F].Result:
     """Apply a plain function or stored pointer beside one borrowed library stage."""
@@ -7278,14 +7264,7 @@ def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterP
     return pipe(value^, stage, NativeUnary[A, R, Never, type_of(function), False](function))
 
 
-def pipe[V: Movable & Deinitable, A: Movable & Deinitable, F: Unary, q: ImmOrigin, //](
-    var value: V, stage: F, ref[q] function: def(var A) thin
-) raises _Plan[F, NativeUnary[A, type_of(None), Never, type_of(function), False]].Failure -> _Plan[F, NativeUnary[A, type_of(None), Never, type_of(function), False]].Result:
-    """Apply a plain function or stored pointer beside one borrowed library stage."""
-    return pipe(value^, stage, NativeUnary[A, type_of(None), Never, type_of(function), False](function))
-
-
-def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, F: Unary, //](
+def pipe[V: Movable & Deinitable, A: Movable & Deinitable, F: Unary, //](
     var value: V, stage: F, function: def(var A) thin
 ) raises _Plan[F, NativeUnary[A, type_of(None), Never, type_of(function), False]].Failure -> _Plan[F, NativeUnary[A, type_of(None), Never, type_of(function), False]].Result:
     """Apply a plain function or stored pointer beside one borrowed library stage."""
@@ -7320,14 +7299,7 @@ def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterP
     return pipe(value^, stage, NativeUnary[A, R, X, type_of(function), True](function))
 
 
-def pipe[V: Movable & Deinitable, A: Movable & Deinitable, X: Movable & Deinitable, F: Unary, q: ImmOrigin, //](
-    var value: V, stage: F, ref[q] function: def(var A) raises X thin
-) raises _Plan[F, NativeUnary[A, type_of(None), X, type_of(function), True]].Failure -> _Plan[F, NativeUnary[A, type_of(None), X, type_of(function), True]].Result:
-    """Apply a plain function or stored pointer beside one borrowed library stage."""
-    return pipe(value^, stage, NativeUnary[A, type_of(None), X, type_of(function), True](function))
-
-
-def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, X: Movable & Deinitable, F: Unary, //](
+def pipe[V: Movable & Deinitable, A: Movable & Deinitable, X: Movable & Deinitable, F: Unary, //](
     var value: V, stage: F, function: def(var A) raises X thin
 ) raises _Plan[F, NativeUnary[A, type_of(None), X, type_of(function), True]].Failure -> _Plan[F, NativeUnary[A, type_of(None), X, type_of(function), True]].Result:
     """Apply a plain function or stored pointer beside one borrowed library stage."""
