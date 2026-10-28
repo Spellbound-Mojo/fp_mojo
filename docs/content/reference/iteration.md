@@ -3,7 +3,9 @@
 `fp.iteration` provides lazy mapping, filtering and scans, together with folds,
 reductions and searches over native iterators and owned collections. The
 [iteration tutorial](../tutorial/iteration.md) follows values through a lazy
-chain and shows how a terminal operation consumes them.
+chain and shows how a terminal operation consumes them. The
+[callback guide](../start/ownership.md#reuse-callbacks-by-name) explains named
+reuse, explicit moves, and the independent ownership of callback inputs.
 
 <!-- api: iteration -->
 
@@ -18,21 +20,19 @@ stops at the shortest input; earlier inputs can be pulled before a later input
 ends. `chain` concatenates sources with the same element type.
 
 Use `.take_while[predicate]()` and `.drop_while[predicate]()` for native
-compile-time thin predicates, or pass a callback value for an owned captured
-predicate. The value-taking forms fuse exhaustion; standard adapters keep
+compile-time thin predicates, or pass a captured or reusable predicate value.
+The value-taking forms fuse exhaustion; standard adapters keep
 their native exhaustion behavior. `.enumerate(start=0)` and
 `.map_with_index(function, start=0)` put the index first. The binary method is
 `.zip_with(other, function)`; its free counterpart is
 `zip_with(function, source, other)`.
 
-A named unary `partial` can be reused in `filter`, `filter_not`, `take_while`
-and `drop_while`, in either free-function or fluent form. The example reuses
-`under_three` to select values and then skip a prefix. These iterators borrow
-the partial until consumed or discarded. Use `predicate^` or a temporary
-partial to transfer its stored prefix to the iterator. Construction copies
-nothing from an existing predicate and invokes nothing; each actual native
-call retains `partial`'s documented bound-argument copies. Lazy predicates
-still must be non-raising and return Bool.
+A named unary `partial` works in `filter`, `filter_not`, `take_while` and
+`drop_while`, in free-function and fluent forms. The example reuses
+`under_three` to select values and then skip a prefix. These predicates borrow
+each candidate, must be non-raising and return Bool. Construction invokes
+nothing; the iterator retains a named predicate's borrow until consumption or
+abandonment.
 
 On Mojo 1.2, native callbacks that mutate owned captures require
 `@always_inline`; this includes stored prefix predicates. Alternatively, use a
@@ -52,28 +52,21 @@ starts from the Monoid's identity and combines only present callback results,
 without an intermediate collection. Callback and Monoid failures stop before
 another pull; if both can raise, their error types must match.
 
-A named unary `partial` can be reused in `count_where`, `for_each` and
-`collect_fold`, through either the free functions or Iter methods. The example
-reuses `under_three` for counting, `evens` for optional folds, and `show` as a
-sink. Counting borrows each candidate; sinks and optional folds consume their
-input. `for_each` and `collect_fold` also borrow named native adapters and
-shared compositions. Callback reuse introduces no capture copy; Partial's
-normal bound-argument copies still occur on each native invocation.
-
-These operations complete before releasing the callback borrow. Explicit
-`callback^` arguments transfer ownership. Empty input calls no callback;
-`collect_fold` still constructs the Monoid identity first, and an identity
-failure destroys the source without pulling it.
+The example reuses named partials in `count_where`, `for_each` and
+`collect_fold`, through free functions and Iter methods. Counting borrows each
+candidate; sinks and optional folds consume their input. `for_each` and
+`collect_fold` also accept named native adapters and shared compositions.
+Empty input calls no callback; `collect_fold` still constructs the Monoid
+identity first, and an identity failure destroys the source without pulling it.
 
 ## Reuse projections in reductions
 
 <!-- example: docs/examples/reusable_projections.mojo -->
 
-Pass a named unary `partial`, `as_unary` adapter or shared `flow`/`compose`
-chain directly to `sum_by`, `fold_map` or `find_map`. Free functions and
-`Iter`, `Piped` and selected `Pipeline` methods borrow the callback for the
-reduction; it can be used again afterward. Passing `callback^` still transfers
-ownership. No callback copies or new intermediate collections are introduced.
+`sum_by`, `fold_map` and `find_map` accept named unary partials, native
+adapters and shared compositions through free functions, Iter, Piped and
+selected Pipeline methods. These reductions run immediately without building
+an intermediate collection; the example reuses `price` across them.
 
 `min_by` and `max_by` borrow each candidate, so a unary `partial` also works
 as a reusable key function. An adapter that consumes its argument cannot be
@@ -83,10 +76,9 @@ result and stops at its first present result. Raised errors keep their exact
 types; callback and Monoid errors must match when both can raise.
 
 `filter_map(callback)` also infers the present Optional payload for library
-callables, including a moved callback. Named partials, native unary adapters,
-shared compositions and compatible shared Kleisli chains can be reused without
-moving them; the lazy iterator retains their callback borrow. The example's
-`quote` needs no output type annotation and is used in two lazy chains.
+callables, including a moved callback. It supports named partials, native unary
+adapters, shared compositions and compatible shared Kleisli chains. The
+example's `quote` needs no output type annotation and is used in two lazy chains.
 Only the outer Optional is removed: a present Result error or inner absence is
 still a normal output. Lazy callbacks remain non-raising.
 
@@ -122,8 +114,8 @@ payloads respectively. A named unary `partial` can be reused in either
 operation. `partition_map` also accepts reusable native adapters and shared
 compositions. The example uses `evens` for two partitions and `route` for two
 classifications. Their branch handles retain a shared callback borrow; keep
-the callback alive while a branch may still use it. Passing `callback^` or a
-temporary transfers ownership. Both lazy callbacks remain non-raising.
+the callback alive while any branch may still use it. Both lazy callbacks
+remain non-raising.
 
 `unzip` splits native pairs. Each source item is
 processed once, in demand order; both outputs of an overflowing pair are
@@ -150,9 +142,8 @@ at least one present field. Fluent calls are `.align(other)`,
 
 `align_with` can reuse a named unary `partial`, `as_unary` adapter or shared
 composition. The example uses `describe_pair` twice, then transfers it with
-`describe_pair^`. A named callback stays borrowed until the lazy iterator is
-consumed or discarded; reuse adds no capture copies. Each callback receives an
-owned Ior and may return any movable value, including Optional or Result
+`describe_pair^`. Each callback receives an owned Ior and may return any
+movable value, including Optional or Result
 without removing their outer layer.
 
 All three are lazy, preserve each input's current position and use constant

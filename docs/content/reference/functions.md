@@ -4,6 +4,9 @@
 application. Start fluent code with `pipeline(value)`, use `flow` or `compose`
 to build a reusable function, and `partial` to bind leading arguments.
 The [pipeline tutorial](../tutorial/pipelines.md) starts with a complete program.
+The [callback guide](../start/ownership.md#choose-a-callback-form) compares native
+functions, partials, ordinary composition and Kleisli composition, and explains
+when to pass a named callback or move it with `^`.
 
 Use `.map(transform)` for selected payloads and `.then(stage)` for the whole
 value. Native collection operations execute immediately, and `.get()` extracts
@@ -279,12 +282,12 @@ returns False.
 
 These four operations keep the semantic family and native-error context;
 payload-dependent families rebind after pair_with.
-Payloads move without requiring copies. Library callbacks use `BorrowCallable`
-and are consumed; native closures are borrowed and thin pointers are copied.
-Deferred families retain their evaluation timing and may keep the callback
-borrow until execution or disposal. Keep such callbacks alive and unmoved;
-overlapping mutable captures still follow Mojo's aliasing rules. A raised error
-stops eager processing and destroys remaining inputs and partial output.
+Payloads move without requiring copies. Library callbacks use `BorrowCallable`;
+named unary partials use shared admission, while other library callbacks follow
+the selected overload's ownership convention. Native closures are borrowed and
+thin pointers are copied. Deferred families retain their evaluation timing and
+any callback borrow. A raised error stops eager processing and destroys
+remaining inputs and partial output. See [callback lifetimes](../start/ownership.md#reuse-callbacks-by-name).
 
 `pipeline_values(dictionary^)` selects values of Dict or StringDict. Keys,
 key order, native hasher type and container type survive each transformation.
@@ -638,26 +641,19 @@ explicit `Piped[T=Int]` and `Piped[Int].T` become `Piped[Value=Int]` and
 
 ## Bind leading arguments with partial
 
-A named unary partial can be passed directly to Pipeline and Result callbacks,
-then reused in another operation. Admission borrows its stored prefix; each
-native invocation still receives fresh copies of the bound values, preserving
-the partial's original contract. Use `callback^` to transfer the partial to an
-operation. Deferred operations retain its borrow until they run or are
-discarded. A partial returning a native Optional, Result or List can also
-supply the inferred target for `traverse` or `then`.
+`partial(function, prefix...)` binds leading positional arguments of a plain
+native function. It copies the bound prefix at construction and on each call;
+the remaining arguments are borrowed. Use a native closure for keyword binding,
+captured targets, or owned and mutable remaining parameters.
 
-The same unary partial can serve as a predicate, observer or borrowed-payload
-handler in selected pipelines. For example, bind a threshold once with
-`partial(above, 2)`, then reuse it in `.filter(predicate)` and
-`.filter_not(predicate)`. `.tap_each`, `.pair_with`, `.ensure` and `.fold`
-also accept named partials. The remaining native argument is borrowed, so
-these calls do not require a copyable payload. Their bound prefix follows
-the same copy-per-invocation rule as other partial calls.
-
-Named partial predicates also work in algebra filtering, inferred or
-family-parameterized Piped filtering, and lazy `filter`, `filter_not`,
-`take_while` and `drop_while`. A lazy iterator retains the partial's borrow;
-explicit moves and temporary partials transfer its prefix instead.
+A named unary partial works as a transform, predicate or observer in supported
+Pipeline, Result, Piped and iterator operations. For example, bind a threshold
+with `partial(above, 2)` and reuse it in `.filter(predicate)` and
+`.filter_not(predicate)`. Borrowing-payload calls such as `.tap_each`,
+`.pair_with`, `.ensure` and `.fold` do not require a copyable payload.
+The [reuse example](../start/ownership.md#reuse-callbacks-by-name) shows eager and
+lazy calls sharing the same partials. A partial returning native Optional,
+Result or List can also supply the inferred target for `traverse` or `then`.
 
 <!-- example: docs/examples/partial.mojo -->
 

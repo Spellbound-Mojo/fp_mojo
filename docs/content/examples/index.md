@@ -28,6 +28,7 @@ compile them through source and precompiled package imports at O0 and O3 with
 | `chained_pipeline.mojo` | A ten-stage chain with `pipeline(...).raising[E]().then(...)`: plain functions, closures and partials | [fp.functions](../reference/functions.md#chain-ten-stages-with-pipeline) |
 | `kleisli.mojo` | Reusable effectful functions with clean eager and lazy callback syntax | [fp.functions](../reference/functions.md#compose-effectful-functions) |
 | `partial.mojo` | Binding leading arguments with `partial`; binding a keyword with a closure | [fp.functions](../reference/functions.md#bind-leading-arguments-with-partial) |
+| `callback_reuse.mojo` | Share callbacks between eager and lazy operations, then transfer ownership | [Callback reuse](../start/ownership.md#reuse-callbacks-by-name) |
 | `quickstart.mojo` | The released-package quickstart using `pipe` | [Package installation](../start/installation.md#install-the-package) |
 | `callable_pipeline.mojo` | A fixed-stage pipeline of plain functions over a consumed list | [Function reference](../reference/functions.md#other-pipeline-entry-points) |
 | `callable_pipeline_generic.mojo` | Forwarding the fixed-stage pipe API through a generic function | [Function reference](../reference/functions.md#other-pipeline-entry-points) |

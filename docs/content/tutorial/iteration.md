@@ -10,8 +10,9 @@ Callbacks in lazy adapters cannot raise. To carry a failure through the chain,
 return a `Result` element and handle it when consuming the iterator.
 
 A reusable bound predicate can be written as `partial(below, limit)` and
-passed by name to several filters or prefix operations. Keep it alive until
-each iterator finishes, or pass `predicate^` to transfer ownership. The
+passed by name to several filters or prefix operations. The
+[callback guide](../start/ownership.md#reuse-callbacks-by-name) shows how to share
+callbacks between eager and lazy operations, or transfer them with `^`. The
 [prefix example](../reference/iteration.md#prefixes-indexed-mapping-and-consuming-terminals)
 uses the same predicate in `.filter(...)` and `.drop_while(...)`.
 

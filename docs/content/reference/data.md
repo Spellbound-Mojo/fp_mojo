@@ -57,15 +57,14 @@ several operations. Direct Result and Piped Result methods borrow that stored
 callback: `.ensure`, `.tap_err`, `.flat_tap_err`, `.attempt_tap`,
 `.recover_if` and `.or_else_if` use their existing branch and error rules.
 A predicate or observer borrows its payload; recovery still consumes the
-matching stored error. Explicit moves transfer callback storage.
+matching stored error. See [callback reuse](../start/ownership.md#reuse-callbacks-by-name)
+for explicit moves and deferred lifetimes.
 
 <!-- example: docs/examples/reusable_result_handlers.mojo -->
 
 Family-parameterized Piped calls, such as `.tap_err[Family](observer)`, also
-retain named partials without copying their stored prefix. If that family
-defers execution, keep the partial alive until the resulting computation
-runs or is discarded. Each actual native invocation retains `partial`'s
-normal bound-argument copies; skipped branches do not invoke the callback.
+retain named partials through the selected family's execution. Skipped branches
+do not invoke the callback or copy its bound arguments.
 
 ## Reuse an error context
 

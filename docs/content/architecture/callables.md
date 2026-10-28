@@ -116,6 +116,43 @@ payload; iterator predicates, `while_loop` predicates and Result folds use this
 route. The library never asserts two origins equal or rebinds a result to a
 different origin to make a call compile.
 
+## Shared callback views
+
+Callback storage and receiver invocation have separate owners. An operation
+with shared admission borrows a supported standard callback and stores its
+origin-indexed view. The view has the fixed callable protocol expected by the
+existing operation; it introduces no dispatch loop, capture copy or allocation.
+An explicit move continues through the operation's owned callback overload.
+
+| Operand contract | Admission | Retained receiver |
+|---|---|---|
+| One owned operand | `_UnaryViewable._View[o]` | `_SharedUnaryRef` for a fixed-output Unary, or Kleisli's origin-indexed view |
+| One borrowed operand | `_BorrowViewable._BorrowView[o]` | `_SharedBorrowRef` for a BorrowCallable |
+
+Unary Partial, NativeUnary and ordinary Composition use the fixed-output view.
+A unary ordinary composition exposes shared admission only when all its stages
+support shared calls. Kleisli uses its planner's shared view because an
+effectful result can depend on the callback receiver's origin;
+`_UnaryViewable` therefore extends
+`UnaryContract`, not `Unary`. A unary Partial also provides the borrowed-input
+view, forwarding both protocols to its one native call owner. Its prefix-copy
+semantics remain part of invocation rather than admission.
+
+The common syntax descriptor selects the correct view, associated input,
+result and error types. Individual operation generators retain family policy,
+parameter positions and native signature evidence. They forward to the same
+mapping, filtering, accumulation, recovery and iterator owners used by owned
+callbacks. Admission of an ordinary library Unary or BorrowCallable does not
+implicitly grant this private standard-callback adaptation.
+
+Views carry the exact callback origin through iterators, independent branch
+handles and deferred effects. Output origins are preserved independently:
+an output borrowing an external owner need not borrow a local callback, while
+an output that retains a receiver borrow keeps that receiver alive. The library
+never extends a lifetime or copies a captured owner to make reuse compile.
+The [user guide](../start/ownership.md#reuse-callbacks-by-name) explains these
+choices without requiring the internal view types.
+
 ## How consumers use the call boundary
 
 | Consumer | Route and receiver |
@@ -124,7 +161,7 @@ different origin to make a call compile.
 | `piped(...).then` | One native function, closure or `Unary` value per call, inferred at that call |
 | `flip` | A `Binary` value (receiver modes kept) or a plain function through a read pack |
 | `partial` | A plain function stored directly; the result implements `Thunk`/`Unary`/`Binary` |
-| `map`, `filter_map`, `flat_map`, `scan_left`, folds, reductions | Native callbacks or shared-receiver `Unary`/`Binary`; one receiver for the whole run |
+| `map`, `filter_map`, `flat_map`, `scan_left`, folds, reductions | Native callbacks or the operation's unary/binary protocol; owned callbacks and supported shared views use the same driver |
 | `filter`, `find`, `any`, `all` | Native predicates or `BorrowCallable`; candidates are borrowed |
 | `attempt`, `attempt_kwargs`, `attempt_once` | Native calls or a `OnceThunk`, then the Result bridge in `fp.data` |
 | Result methods and folds | Native, fixed-arity or borrowed callbacks, called on the stored case |

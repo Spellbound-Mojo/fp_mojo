@@ -16,11 +16,10 @@ including `raises Never` and no-value returns. Native pointers remain implicitly
 copyable; captured closures retain their own copyability and borrowed origins.
 Creating an adapter never invokes the callback.
 
-A named `as_unary` adapter can be reused directly in Pipeline and Result
-callbacks, even when its captured values cannot be copied. These operations
-borrow the adapter; they neither copy its captures nor extract its function.
-Use `callback^` to transfer ownership. Deferred operations keep the borrow
-until they run or are discarded, so keep the adapter alive for that duration.
+A named `as_unary` adapter can be reused in supported Pipeline, Result and
+iterator callbacks, including with noncopyable captures. The example borrows
+`formatter` twice and then moves it. See [callback reuse](../start/ownership.md#reuse-callbacks-by-name)
+for lifetimes and the distinction between receiver and payload ownership.
 Native functions and closures can still be passed directly when storage as
 a library callable is unnecessary.
 

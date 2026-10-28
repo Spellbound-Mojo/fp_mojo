@@ -77,6 +77,69 @@ Each callable protocol states how its receiver is used:
 Argument conventions are independent of receiver access: a shared callable can
 consume its arguments, and a consuming callable can borrow them.
 
+## Choose a callback form
+
+Start with a native function or closure. Use a library callable when you need
+partial application, composition or a reusable owner for captured state.
+
+| Need | Form | Contract |
+|---|---|---|
+| Call an existing function or capture local values | Native function or closure | The operation's signature determines whether it borrows or owns the callback. Captured references retain their origins. |
+| Bind leading positional arguments | `partial(function, prefix...)` | Copies the bound arguments when built and on every invocation; the remaining arguments are borrowed. Use a closure for keyword binding or owned/mutable remaining arguments. |
+| Compose ordinary transformations | `flow(first, second)` or `compose(second, first)` | Passes each whole result to the next stage; `flow` reads left to right. |
+| Compose functions returning an effect | `kleisli[Family](first).then(second)` | Uses that family's bind: for example, Result stops at Err and Optional stops at absence. |
+| Store a native unary callback as a library value | `as_unary(function)` or `as_unary(closure^)` | Owns the callback without changing its argument, result or error types. Shared callback entry points can borrow the adapter later. |
+| Control receiver mutation or consumption explicitly | A callable struct | Implement the shared, mutable or consuming protocol required by the operation. |
+
+These choices do not change the operation. Mapping a callback that returns a
+Result keeps that Result as an element; `traverse` gathers effectful results,
+and `flat_map` sequences a returned carrier. A lazy `filter_map` removes one
+Optional layer. A stored Err is data; a native raised error remains a separate
+failure channel.
+
+## Reuse callbacks by name
+
+For operations with shared callback support, pass a named unary `partial`,
+`as_unary` adapter, shared unary `flow`/`compose` chain or compatible shared
+Kleisli chain directly. The operation borrows the callback without copying its
+captures. Pass `callback^` to transfer it through an owned overload. A custom
+callable's shared receiver protocol alone does not promise this automatic
+adaptation; use the ownership form documented by the operation.
+
+<!-- example: docs/examples/callback_reuse.mojo -->
+
+`pending` holds shared borrows of `price` and `affordable` without invoking
+them. The eager pipeline can use both callbacks while that lazy chain exists.
+It keeps prices `3` and `6`; consuming `pending` also keeps `9`. The reduction
+then reuses `price` to produce `18`. The final `price^` transfers the partial
+into `owned`, which produces `[3, 6]`.
+
+Callback ownership and payload ownership are separate choices:
+
+| Operation in the example | Callback receiver | Input payload |
+|---|---|---|
+| `map(price)` | Borrowed | Consumed by mapping; Partial's native target reads it during the call |
+| `filter(affordable)` | Borrowed | Borrowed by the predicate, then retained or discarded by filtering |
+| `map(price^)` | Owned by the iterator | Consumed by mapping |
+
+A unary partial supports both payload conventions. An `as_unary` adapter has
+an owned-argument contract, so it cannot replace a borrowing predicate or key
+merely because its receiver is reusable. Partial's bound-prefix copies still
+occur on every actual native call; callback admission adds no copy.
+
+Keep a borrowed callback alive and unmoved while an iterator, branch handle,
+deferred computation or returned view still needs it. An immediate operation
+returning an independent value releases the borrow when it finishes. Consuming
+or abandoning a lazy operation releases its callback view; owning a callback
+through `^` transfers responsibility for destroying it. Moving an owner does
+not extend the lifetime of references captured inside it.
+
+The reference for each operation specifies the admitted callback shape,
+receiver modes and errors. Lazy callbacks must be non-raising; terminal
+operations may propagate their declared native errors. Shared calls can be
+repeated; a consuming-only callback cannot be used where an operation needs
+multiple calls.
+
 ## Keep failure channels apart
 
 The library keeps these outcomes apart:

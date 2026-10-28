@@ -33,6 +33,9 @@
     "docs/examples/callable_pipeline_generic.mojo": {
       "stdout": "generic pipeline: 3; error: -7\n"
     },
+    "docs/examples/callback_reuse.mojo": {
+      "stdout": "eager: [3, 6]\nlazy: [3, 6, 9]\ntotal: 18\nmoved: [3, 6]\n"
+    },
     "docs/examples/capture_arguments.mojo": {
       "stdout": "books: 41\ninvalid quantity\npurchased books ; balance: 6\n"
     },
