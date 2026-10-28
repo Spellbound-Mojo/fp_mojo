@@ -189,15 +189,19 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
             f'        """{summary}"""\n{prelude}        return {returned}\n'
         )
 
-    # Borrowing observation keeps the existing shared receiver contract. The
+    # Observation delegates receiver selection to its retention adapter. The
     # whole-value tap runs once now; payload observers belong to the family's
     # map, which may defer evaluation and retain the native callback borrow.
     for name in ("tap", "tap_each", "pair_with"):
         payload = "Self.V" if name == "tap" else "Self.I.Element[Self.V]"
-        for cb in borrowing_callbacks(payload, "function"):
-            observer = f"_Observe[{payload}, {cb['adapter_type']}, {name == 'pair_with'}]"
+        for cb in borrowing_callbacks(payload, "function", repeatable=False):
+            owned_single = name == "tap" and cb["adapter_type"] == "C"
+            owner = "_ObserveOnce" if owned_single else "_Observe"
+            observer = f"{owner}[{payload}, {cb['adapter_type']}, {name == 'pair_with'}]"
             built = f"{observer}({cb['build']})"
             conditions = cb["conditions"]
+            if cb["adapter_type"] == "C":
+                conditions += ["_OnceBorrowAvailable[C]" if owned_single else "RepeatableBorrow[C]"]
             if name == "tap":
                 result, error = "Self.V", cb["error"]
                 expr = f"call_once({built}, self.value^)"

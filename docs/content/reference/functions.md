@@ -282,10 +282,17 @@ returns False.
 
 These four operations keep the semantic family and native-error context;
 payload-dependent families rebind after pair_with.
-Payloads move without requiring copies. Library callbacks use `BorrowCallable`;
-named unary partials use shared admission, while other library callbacks follow
-the selected overload's ownership convention. Native closures are borrowed and
-thin pointers are copied. Deferred families retain their evaluation timing and
+Payloads move without requiring copies. Owned observers can implement
+`BorrowMutableCallable` or `BorrowCallable`. `tap_each` and `pair_with` retain
+one callback throughout the family's map and prefer its mutable receiver.
+They require `RepeatableBorrow`, including on single-element families, so the
+same callback contract works across carriers. Whole-value `tap` also accepts
+`BorrowOnceCallable`: it prefers a consuming receiver, then mutable, then
+shared, because it invokes the observer exactly once. These rules apply to
+Piped and selected Pipeline methods without extra type arguments.
+
+`filter_not` uses `BorrowCallable`; named unary partials retain shared
+admission. Native closures are borrowed and thin pointers are copied. Deferred families retain their evaluation timing and
 any callback borrow. A raised error stops eager processing and destroys
 remaining inputs and partial output. See [callback lifetimes](../start/ownership.md#reuse-callbacks-by-name).
 

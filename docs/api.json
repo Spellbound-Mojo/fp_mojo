@@ -89117,7 +89117,7 @@
         "description": "",
         "inferred": true,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        },
        {
@@ -89134,7 +89134,7 @@
        "doc": "",
        "type": "Piped[I.Mapped[Self.Value, _Observe[T, C, True]]]"
       },
-      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable, //, I: Functor](deinit self, var function: C) raises I.MapError[Self.Value, _Observe[T, C, True]] -> Piped[I.Mapped[Self.Value, _Observe[T, C, True]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Observe[T, C, True]] and C.Payload == T",
+      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, //, I: Functor](deinit self, var function: C) raises I.MapError[Self.Value, _Observe[T, C, True]] -> Piped[I.Mapped[Self.Value, _Observe[T, C, True]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Observe[T, C, True]] and C.Payload == T and RepeatableBorrow[C]",
       "summary": "Borrow each payload for projection and retain it beside the result."
      },
      {
@@ -89270,7 +89270,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -89280,7 +89280,7 @@
        "doc": "",
        "type": "Piped[List[Tuple[T, C.Result]]]"
       },
-      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[List[Tuple[T, C.Result]]] where Self.Value == List[T] and C.Payload == T",
+      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[List[Tuple[T, C.Result]]] where Self.Value == List[T] and C.Payload == T and RepeatableBorrow[C]",
       "summary": "Borrow each payload for projection and retain it beside the result."
      },
      {
@@ -89430,7 +89430,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        },
        {
@@ -89447,7 +89447,7 @@
        "doc": "",
        "type": "Piped[Array[Tuple[T, C.Result], N]]"
       },
-      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable, N: Int](deinit self, var function: C) raises C.Failure -> Piped[Array[Tuple[T, C.Result], N]] where Self.Value == Array[T, N] and C.Payload == T",
+      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, N: Int](deinit self, var function: C) raises C.Failure -> Piped[Array[Tuple[T, C.Result], N]] where Self.Value == Array[T, N] and C.Payload == T and RepeatableBorrow[C]",
       "summary": "Borrow each payload for projection and retain it beside the result."
      },
      {
@@ -89583,7 +89583,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -89593,7 +89593,7 @@
        "doc": "",
        "type": "Piped[Deque[Tuple[T, C.Result]]]"
       },
-      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[Deque[Tuple[T, C.Result]]] where Self.Value == Deque[T] and C.Payload == T",
+      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Deque[Tuple[T, C.Result]]] where Self.Value == Deque[T] and C.Payload == T and RepeatableBorrow[C]",
       "summary": "Borrow each payload for projection and retain it beside the result."
      },
      {
@@ -89729,7 +89729,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -89739,7 +89739,7 @@
        "doc": "",
        "type": "Piped[LinkedList[Tuple[T, C.Result]]]"
       },
-      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[LinkedList[Tuple[T, C.Result]]] where Self.Value == LinkedList[T] and C.Payload == T",
+      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[LinkedList[Tuple[T, C.Result]]] where Self.Value == LinkedList[T] and C.Payload == T and RepeatableBorrow[C]",
       "summary": "Borrow each payload for projection and retain it beside the result."
      },
      {
@@ -89903,7 +89903,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        },
        {
@@ -89927,7 +89927,7 @@
        "doc": "",
        "type": "Piped[Dict[K, Tuple[T, C.Result], H]]"
       },
-      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, Tuple[T, C.Result], H]] where Self.Value == Dict[K, T, H] and C.Payload == T",
+      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, Tuple[T, C.Result], H]] where Self.Value == Dict[K, T, H] and C.Payload == T and RepeatableBorrow[C]",
       "summary": "Borrow each payload for projection and retain it beside the result."
      },
      {
@@ -90063,7 +90063,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -90073,7 +90073,7 @@
        "doc": "",
        "type": "Piped[StringDict[Tuple[T, C.Result]]]"
       },
-      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[StringDict[Tuple[T, C.Result]]] where Self.Value == StringDict[T] and C.Payload == T",
+      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[StringDict[Tuple[T, C.Result]]] where Self.Value == StringDict[T] and C.Payload == T and RepeatableBorrow[C]",
       "summary": "Borrow each payload for projection and retain it beside the result."
      },
      {
@@ -90209,7 +90209,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -90219,7 +90219,7 @@
        "doc": "",
        "type": "Piped[Optional[Tuple[T, C.Result]]]"
       },
-      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[Optional[Tuple[T, C.Result]]] where Self.Value == Optional[T] and C.Payload == T",
+      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Optional[Tuple[T, C.Result]]] where Self.Value == Optional[T] and C.Payload == T and RepeatableBorrow[C]",
       "summary": "Borrow each payload for projection and retain it beside the result."
      },
      {
@@ -90369,7 +90369,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        },
        {
@@ -90386,7 +90386,7 @@
        "doc": "",
        "type": "Piped[Result[Tuple[T, C.Result], Failure]]"
       },
-      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable, Failure: Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Result[Tuple[T, C.Result], Failure]] where Self.Value == Result[T, Failure] and C.Payload == T",
+      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Result[Tuple[T, C.Result], Failure]] where Self.Value == Result[T, Failure] and C.Payload == T and RepeatableBorrow[C]",
       "summary": "Borrow each payload for projection and retain it beside the result."
      }
     ],
@@ -103725,7 +103725,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -103735,7 +103735,7 @@
        "doc": "",
        "type": "Self"
       },
-      "signature": "def tap[C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Self where C.Payload == Self.Value",
+      "signature": "def tap[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Self where C.Payload == Self.Value and _OnceBorrowAvailable[C]",
       "summary": "Inspect the whole pipeline value once and continue with it unchanged."
      }
     ],
@@ -103887,7 +103887,7 @@
         "description": "",
         "inferred": true,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        },
        {
@@ -103904,7 +103904,7 @@
        "doc": "",
        "type": "Piped[I.Mapped[Self.Value, _Observe[T, C, False]]]"
       },
-      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable, //, I: Functor](deinit self, var function: C) raises I.MapError[Self.Value, _Observe[T, C, False]] -> Piped[I.Mapped[Self.Value, _Observe[T, C, False]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Observe[T, C, False]] and C.Payload == T",
+      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, //, I: Functor](deinit self, var function: C) raises I.MapError[Self.Value, _Observe[T, C, False]] -> Piped[I.Mapped[Self.Value, _Observe[T, C, False]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Observe[T, C, False]] and C.Payload == T and RepeatableBorrow[C]",
       "summary": "Borrow each payload for inspection and retain it unchanged."
      },
      {
@@ -104040,7 +104040,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -104050,7 +104050,7 @@
        "doc": "",
        "type": "Piped[List[T]]"
       },
-      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[List[T]] where Self.Value == List[T] and C.Payload == T",
+      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[List[T]] where Self.Value == List[T] and C.Payload == T and RepeatableBorrow[C]",
       "summary": "Borrow each payload for inspection and retain it unchanged."
      },
      {
@@ -104200,7 +104200,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        },
        {
@@ -104217,7 +104217,7 @@
        "doc": "",
        "type": "Piped[Array[T, N]]"
       },
-      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable, N: Int](deinit self, var function: C) raises C.Failure -> Piped[Array[T, N]] where Self.Value == Array[T, N] and C.Payload == T",
+      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, N: Int](deinit self, var function: C) raises C.Failure -> Piped[Array[T, N]] where Self.Value == Array[T, N] and C.Payload == T and RepeatableBorrow[C]",
       "summary": "Borrow each payload for inspection and retain it unchanged."
      },
      {
@@ -104353,7 +104353,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -104363,7 +104363,7 @@
        "doc": "",
        "type": "Piped[Deque[T]]"
       },
-      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[Deque[T]] where Self.Value == Deque[T] and C.Payload == T",
+      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Deque[T]] where Self.Value == Deque[T] and C.Payload == T and RepeatableBorrow[C]",
       "summary": "Borrow each payload for inspection and retain it unchanged."
      },
      {
@@ -104499,7 +104499,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -104509,7 +104509,7 @@
        "doc": "",
        "type": "Piped[LinkedList[T]]"
       },
-      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[LinkedList[T]] where Self.Value == LinkedList[T] and C.Payload == T",
+      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[LinkedList[T]] where Self.Value == LinkedList[T] and C.Payload == T and RepeatableBorrow[C]",
       "summary": "Borrow each payload for inspection and retain it unchanged."
      },
      {
@@ -104673,7 +104673,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        },
        {
@@ -104697,7 +104697,7 @@
        "doc": "",
        "type": "Piped[Dict[K, T, H]]"
       },
-      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H] and C.Payload == T",
+      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H] and C.Payload == T and RepeatableBorrow[C]",
       "summary": "Borrow each payload for inspection and retain it unchanged."
      },
      {
@@ -104833,7 +104833,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -104843,7 +104843,7 @@
        "doc": "",
        "type": "Piped[StringDict[T]]"
       },
-      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[StringDict[T]] where Self.Value == StringDict[T] and C.Payload == T",
+      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[StringDict[T]] where Self.Value == StringDict[T] and C.Payload == T and RepeatableBorrow[C]",
       "summary": "Borrow each payload for inspection and retain it unchanged."
      },
      {
@@ -104979,7 +104979,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -104989,7 +104989,7 @@
        "doc": "",
        "type": "Piped[Optional[T]]"
       },
-      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[Optional[T]] where Self.Value == Optional[T] and C.Payload == T",
+      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Optional[T]] where Self.Value == Optional[T] and C.Payload == T and RepeatableBorrow[C]",
       "summary": "Borrow each payload for inspection and retain it unchanged."
      },
      {
@@ -105139,7 +105139,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        },
        {
@@ -105156,7 +105156,7 @@
        "doc": "",
        "type": "Piped[Result[T, Failure]]"
       },
-      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable, Failure: Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and C.Payload == T",
+      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and C.Payload == T and RepeatableBorrow[C]",
       "summary": "Borrow each payload for inspection and retain it unchanged."
      }
     ],
@@ -181960,7 +181960,7 @@
         "description": "The first library callback type, retaining its receiver and origins.",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -181970,7 +181970,7 @@
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
        "type": "Pipeline[_MappedFamily[Self.I, _Observe[Self.I.Element[Self.V], C, True].Out], Self.I.Mapped[Self.V, _Observe[Self.I.Element[Self.V], C, True]], Self.E]"
       },
-      "signature": "def pair_with[C: BorrowCallable](deinit self, var function: C) raises Self.I.MapError[Self.V, _Observe[Self.I.Element[Self.V], C, True]] -> Pipeline[_MappedFamily[Self.I, _Observe[Self.I.Element[Self.V], C, True].Out], Self.I.Mapped[Self.V, _Observe[Self.I.Element[Self.V], C, True]], Self.E] where C.Payload == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Observe[Self.I.Element[Self.V], C, True]]",
+      "signature": "def pair_with[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises Self.I.MapError[Self.V, _Observe[Self.I.Element[Self.V], C, True]] -> Pipeline[_MappedFamily[Self.I, _Observe[Self.I.Element[Self.V], C, True].Out], Self.I.Mapped[Self.V, _Observe[Self.I.Element[Self.V], C, True]], Self.E] where C.Payload == Self.I.Element[Self.V] and RepeatableBorrow[C] and _MapCompatible[Self.I, Self.V, _Observe[Self.I.Element[Self.V], C, True]]",
       "summary": "Borrow each payload and retain it beside the projection result."
      },
      {
@@ -223256,7 +223256,7 @@
         "description": "The first library callback type, retaining its receiver and origins.",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -223266,7 +223266,7 @@
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
        "type": "Pipeline[Self.I, Self.V, Self.E]"
       },
-      "signature": "def tap[C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Pipeline[Self.I, Self.V, Self.E] where C.Payload == Self.V",
+      "signature": "def tap[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Pipeline[Self.I, Self.V, Self.E] where C.Payload == Self.V and _OnceBorrowAvailable[C]",
       "summary": "Inspect the whole value once now and retain it unchanged."
      },
      {
@@ -223753,7 +223753,7 @@
         "description": "The first library callback type, retaining its receiver and origins.",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -223763,7 +223763,7 @@
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
        "type": "Pipeline[_MappedFamily[Self.I, _Observe[Self.I.Element[Self.V], C, False].Out], Self.I.Mapped[Self.V, _Observe[Self.I.Element[Self.V], C, False]], Self.E]"
       },
-      "signature": "def tap_each[C: BorrowCallable](deinit self, var function: C) raises Self.I.MapError[Self.V, _Observe[Self.I.Element[Self.V], C, False]] -> Pipeline[_MappedFamily[Self.I, _Observe[Self.I.Element[Self.V], C, False].Out], Self.I.Mapped[Self.V, _Observe[Self.I.Element[Self.V], C, False]], Self.E] where C.Payload == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Observe[Self.I.Element[Self.V], C, False]]",
+      "signature": "def tap_each[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises Self.I.MapError[Self.V, _Observe[Self.I.Element[Self.V], C, False]] -> Pipeline[_MappedFamily[Self.I, _Observe[Self.I.Element[Self.V], C, False].Out], Self.I.Mapped[Self.V, _Observe[Self.I.Element[Self.V], C, False]], Self.E] where C.Payload == Self.I.Element[Self.V] and RepeatableBorrow[C] and _MapCompatible[Self.I, Self.V, _Observe[Self.I.Element[Self.V], C, False]]",
       "summary": "Inspect each payload through the family and discard observer results."
      },
      {

@@ -222,7 +222,7 @@ def observe_methods(carrier=None):
                 bridge = native_adapter('borrow', ['P'], 'R', error, 'F', kind == 'raising', origin='o')
                 arg, build = 'ref[o] function: F', f'{bridge}(Pointer(to=function))'
             else:
-                params += [f'C: {callable_protocol("borrow", repeatable=True)}', *(carrier.parameters if carrier else ('//', 'I: Functor'))]
+                params += [f'C: {callable_protocol("borrow")} & {MD}', *(carrier.parameters if carrier else ('//', 'I: Functor'))]
                 error, bridge, arg, build = 'C.Failure', 'C', 'var function: C', 'function^'
             source = carrier.value(payload) if carrier else 'Self.Value'
             family = carrier.instance(payload) if carrier else 'I'
@@ -232,7 +232,7 @@ def observe_methods(carrier=None):
             condition = f'Self.Value == {source}' if carrier else f'I.Element[Self.Value] == {payload}'
             if not carrier: condition += f' and _MapCompatible[I, Self.Value, {callback}]'
             if not native:
-                condition += ' and C.Payload == T'
+                condition += ' and C.Payload == T and RepeatableBorrow[C]'
             nominal = f'        comptime assert Self.Value == {source}\n' if carrier else ''
             value = f'rebind_var[{source}](self.value^)' if carrier else 'self.value^'
             out.append(f'''

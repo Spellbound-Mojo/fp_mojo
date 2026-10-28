@@ -30,6 +30,8 @@ from fp.algebra._effect_combinators import _IfEffect, _if_effect, _AllLive, _Boo
 from fp.algebra._accumulation import _FirstPresent
 from fp.callables.native import _NativeOwnedArg, _NativeUnaryRef, _NativeBorrowRef, _NativeBorrow, _NativeThunkRef, _NativeThunk, NativeUnary, _NativeBinaryRef, _NativeBinary
 from fp.callables.invoke import RepeatableBorrow
+from fp.callables._receiver import _OnceBorrowAvailable
+from fp.callables._transforms import _ObserveOnce
 from fp.callables.protocols import UnaryContract, BorrowCallable, BorrowCallContract, ThunkContract, BinaryContract, Binary
 from fp.callables.invoke import call_once, RepeatableUnary, RepeatableBinary
 from fp.callables._nary import _OwnedNativeNary1, _OwnedNativeNary2, _OwnedNativeNary3, _OwnedNativeNary4, _OwnedNativeNary5, _OwnedNativeNary6, _OwnedNativeNary7, _OwnedNativeNary8, _NativeNary1, _NativeNary2, _NativeNary3, _NativeNary4, _NativeNary5, _NativeNary6, _NativeNary7, _NativeNary8
@@ -327,7 +329,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[NonEmptyListFamily, Self.V, Self.E](self.value^)
 
     @always_inline
-    def tap[C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Pipeline[Self.I, Self.V, Self.E] where C.Payload == Self.V:
+    def tap[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Pipeline[Self.I, Self.V, Self.E] where C.Payload == Self.V and _OnceBorrowAvailable[C]:
         """Inspect the whole value once now and retain it unchanged.
 
         Parameters:
@@ -342,7 +344,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         Raises:
             The exact callback or family error; it never becomes a stored Result error.
         """
-        return Pipeline[Self.I, Self.V, Self.E](call_once(_Observe[Self.V, C, False](function^), self.value^))
+        return Pipeline[Self.I, Self.V, Self.E](call_once(_ObserveOnce[Self.V, C, False](function^), self.value^))
 
     @always_inline
     def tap[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Pipeline[Self.I, Self.V, Self.E] where C._BorrowView[o].Payload == Self.V:
@@ -405,7 +407,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[Self.I, Self.V, Self.E](call_once(_Observe[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False](_NativeBorrow[P, R, X, def(P) raises X thin -> R, True](function)), self.value^))
 
     @always_inline
-    def tap_each[C: BorrowCallable](deinit self, var function: C) raises Self.I.MapError[Self.V, _Observe[Self.I.Element[Self.V], C, False]] -> Pipeline[_MappedFamily[Self.I, _Observe[Self.I.Element[Self.V], C, False].Out], Self.I.Mapped[Self.V, _Observe[Self.I.Element[Self.V], C, False]], Self.E] where C.Payload == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Observe[Self.I.Element[Self.V], C, False]]:
+    def tap_each[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises Self.I.MapError[Self.V, _Observe[Self.I.Element[Self.V], C, False]] -> Pipeline[_MappedFamily[Self.I, _Observe[Self.I.Element[Self.V], C, False].Out], Self.I.Mapped[Self.V, _Observe[Self.I.Element[Self.V], C, False]], Self.E] where C.Payload == Self.I.Element[Self.V] and RepeatableBorrow[C] and _MapCompatible[Self.I, Self.V, _Observe[Self.I.Element[Self.V], C, False]]:
         """Inspect each payload through the family and discard observer results.
 
         Parameters:
@@ -483,7 +485,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[_MappedFamily[Self.I, _Observe[Self.I.Element[Self.V], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False].Out], Self.I.Mapped[Self.V, _Observe[Self.I.Element[Self.V], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False]], Self.E](Self.I.map(_Observe[Self.I.Element[Self.V], _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False](_NativeBorrow[P, R, X, def(P) raises X thin -> R, True](function)), self.value^))
 
     @always_inline
-    def pair_with[C: BorrowCallable](deinit self, var function: C) raises Self.I.MapError[Self.V, _Observe[Self.I.Element[Self.V], C, True]] -> Pipeline[_MappedFamily[Self.I, _Observe[Self.I.Element[Self.V], C, True].Out], Self.I.Mapped[Self.V, _Observe[Self.I.Element[Self.V], C, True]], Self.E] where C.Payload == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Observe[Self.I.Element[Self.V], C, True]]:
+    def pair_with[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises Self.I.MapError[Self.V, _Observe[Self.I.Element[Self.V], C, True]] -> Pipeline[_MappedFamily[Self.I, _Observe[Self.I.Element[Self.V], C, True].Out], Self.I.Mapped[Self.V, _Observe[Self.I.Element[Self.V], C, True]], Self.E] where C.Payload == Self.I.Element[Self.V] and RepeatableBorrow[C] and _MapCompatible[Self.I, Self.V, _Observe[Self.I.Element[Self.V], C, True]]:
         """Borrow each payload and retain it beside the projection result.
 
         Parameters:

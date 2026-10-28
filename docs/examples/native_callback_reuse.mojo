@@ -50,3 +50,4 @@ def main():
     print("reused predicate:", pipeline[Int]([1, 4, 2]).filter(selected).get())
     print("stateful predicate:", iterated(range(5)).filter(EveryOther(0)).collect_list())
     print("stateful projection:", iterated(range(1, 4)).pair_with(RunningKey(0)).collect_list())
+    print("family projection:", pipeline[Int]([1, 2, 3]).pair_with(RunningKey(0)).get())

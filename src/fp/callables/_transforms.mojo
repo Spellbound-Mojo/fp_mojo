@@ -165,6 +165,15 @@ struct _IgnoreInput[T: Movable & Deinitable, F: ThunkContract & Movable & Deinit
         return call_repeated(self.function)
 
 
+def _observe_repeated[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, paired: Bool](
+    var value: T, mut function: C
+) raises C.Failure -> Tuple[T, C.Result] if paired else T:
+    """Share repeated borrowing and payload retention across observation adapters."""
+    comptime assert C.Payload == T and _RepeatableBorrow[C]
+    var result = _borrow_repeated_as[C.Failure](value, function)
+    return _observed[T, C.Result, paired](value^, result^)
+
+
 @fieldwise_init
 struct _ObserveOnce[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, paired: Bool](
     OnceUnary, MutableUnary where _RepeatableBorrow[C], Copyable where conforms_to(C, Copyable)
@@ -184,21 +193,26 @@ struct _ObserveOnce[T: Movable & Deinitable, C: BorrowCallContract & Movable & D
         return _observed[Self.T, Self.C.Result, Self.paired](arg^, result^)
 
     def call_mut(mut self, var arg: Self.T) raises Self.Error -> Self.Out:
-        comptime assert Self.C.Payload == Self.T and _RepeatableBorrow[Self.C]
-        var result = _borrow_repeated_as[Self.Error](arg, self.function)
-        return _observed[Self.T, Self.C.Result, Self.paired](arg^, result^)
+        return _observe_repeated[Self.T, Self.C, Self.paired](arg^, self.function)
 
 
 @fieldwise_init
-struct _Observe[T: Movable & Deinitable, C: BorrowCallable, paired: Bool](Unary):
+struct _Observe[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, paired: Bool](
+    UnaryContract, Movable, Deinitable,
+    Unary where conforms_to(C, BorrowCallable), MutableUnary where _RepeatableBorrow[C]
+):
     var function: Self.C
     comptime Arg = Self.T
     comptime Out = Tuple[Self.T, Self.C.Result] if Self.paired else Self.T
     comptime Error = Self.C.Failure
     def call(self, var arg: Self.T) raises Self.Error -> Self.Out:
         comptime assert Self.C.Payload == Self.T
-        var result = invoke_borrowed[Self.Error](arg, self.function)
+        comptime Shared = downcast[Self.C, BorrowCallable]
+        comptime assert conforms_to(Self.C, BorrowCallable)
+        var result = invoke_borrowed[Self.Error](arg, rebind[Shared](self.function))
         return _observed[Self.T, Self.C.Result, Self.paired](arg^, result^)
+    def call_mut(mut self, var arg: Self.T) raises Self.Error -> Self.Out:
+        return _observe_repeated[Self.T, Self.C, Self.paired](arg^, self.function)
 
 
 @fieldwise_init

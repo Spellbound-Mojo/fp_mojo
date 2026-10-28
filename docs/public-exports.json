@@ -8634,8 +8634,8 @@
       "signature": "def pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises I.MapError[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True]] -> Piped[I.Mapped[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True]]] where I.Element[Self.Value] == downcast[P, Movable & Deinitable] and _MapCompatible[I, Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True]]:"
      },
      {
-      "sha256": "1ecc0840694f7520152cd756d0bd21a808d9381f065d65c95ab7be905b583b85",
-      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable, //, I: Functor](deinit self, var function: C) raises I.MapError[Self.Value, _Observe[T, C, True]] -> Piped[I.Mapped[Self.Value, _Observe[T, C, True]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Observe[T, C, True]] and C.Payload == T:"
+      "sha256": "970df0ca3fb46a8e3adfa24ffbb52de8a11bd6f9286e7c2c51e1afd052159049",
+      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, //, I: Functor](deinit self, var function: C) raises I.MapError[Self.Value, _Observe[T, C, True]] -> Piped[I.Mapped[Self.Value, _Observe[T, C, True]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Observe[T, C, True]] and C.Payload == T and RepeatableBorrow[C]:"
      },
      {
       "sha256": "fc1b7b5da0e14d0a455319aa12f43c92adf07ef46ee152656daca8e991bd4d94",
@@ -8646,8 +8646,8 @@
       "signature": "def pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[List[Tuple[downcast[P, Movable & Deinitable], R]]] where Self.Value == List[downcast[P, Movable & Deinitable]]:"
      },
      {
-      "sha256": "707a0354c3f6ff15eb792d6aa843215e4c00350ce581943f7025ad37f0ca63d8",
-      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[List[Tuple[T, C.Result]]] where Self.Value == List[T] and C.Payload == T:"
+      "sha256": "a27a1a5b447a1043c92ad1b648a1c3f22e400000ff088362a287112e37f9519b",
+      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[List[Tuple[T, C.Result]]] where Self.Value == List[T] and C.Payload == T and RepeatableBorrow[C]:"
      },
      {
       "sha256": "5dbd6011024a7feb5ab70df7669692bc48e589c7d747b15eeae7e7a68d2f927d",
@@ -8658,8 +8658,8 @@
       "signature": "def pair_with[P: AnyType, R: Movable & Deinitable, N: Int, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Array[Tuple[downcast[P, Movable & Deinitable], R], N]] where Self.Value == Array[downcast[P, Movable & Deinitable], N]:"
      },
      {
-      "sha256": "18efd7ee2c9ef11ea7d4ce95b1c64caa62a5a9f69e2755e523b87a81becc0257",
-      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable, N: Int](deinit self, var function: C) raises C.Failure -> Piped[Array[Tuple[T, C.Result], N]] where Self.Value == Array[T, N] and C.Payload == T:"
+      "sha256": "46ffe248dcefc42b6cdf53afd9d2552469e7cc26f9050822274d6eb3b1efe847",
+      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, N: Int](deinit self, var function: C) raises C.Failure -> Piped[Array[Tuple[T, C.Result], N]] where Self.Value == Array[T, N] and C.Payload == T and RepeatableBorrow[C]:"
      },
      {
       "sha256": "eef473ca506af6146103a850a77be743de65651ed5ac33d587f58a2bbd0c805e",
@@ -8670,8 +8670,8 @@
       "signature": "def pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Deque[Tuple[downcast[P, Movable & Deinitable], R]]] where Self.Value == Deque[downcast[P, Movable & Deinitable]]:"
      },
      {
-      "sha256": "ee0241ab538e09f412da72a74a060d0f81f6aa625975b9abc608498d50b4d5ae",
-      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[Deque[Tuple[T, C.Result]]] where Self.Value == Deque[T] and C.Payload == T:"
+      "sha256": "c6205659a2d12f29af5f21bfb3b4cbaac6f696fd68cf102fb47d4a21a3152e42",
+      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Deque[Tuple[T, C.Result]]] where Self.Value == Deque[T] and C.Payload == T and RepeatableBorrow[C]:"
      },
      {
       "sha256": "1c2ec5351ffee3a7bafcedb1c83fd2be6c7bb47ec578b67a52c3971f79106cc1",
@@ -8682,8 +8682,8 @@
       "signature": "def pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[LinkedList[Tuple[downcast[P, Movable & Deinitable], R]]] where Self.Value == LinkedList[downcast[P, Movable & Deinitable]]:"
      },
      {
-      "sha256": "23f4a7d0de4261256d6e4433cadaf7859eb5d7e1bf6e339d8ac24dab3bdc20e9",
-      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[LinkedList[Tuple[T, C.Result]]] where Self.Value == LinkedList[T] and C.Payload == T:"
+      "sha256": "fddf1cc6295cde022a94a1a655a2f9de9d9c78e077d16647ee1dc9057db43e97",
+      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[LinkedList[Tuple[T, C.Result]]] where Self.Value == LinkedList[T] and C.Payload == T and RepeatableBorrow[C]:"
      },
      {
       "sha256": "e1594123e200ed085788ae9c680302eb056cb70ac50e0a51a61e707237971ad9",
@@ -8694,8 +8694,8 @@
       "signature": "def pair_with[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Dict[K, Tuple[downcast[P, Movable & Deinitable], R], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]:"
      },
      {
-      "sha256": "32941fe880b082778ebde6a344be8b3cffc4b625b2f5250d93f5b52adfcf17ec",
-      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, Tuple[T, C.Result], H]] where Self.Value == Dict[K, T, H] and C.Payload == T:"
+      "sha256": "f93d2c33341a701232cecd5e5885950b95bbc3cd9562b7129fc826adff2418a7",
+      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, Tuple[T, C.Result], H]] where Self.Value == Dict[K, T, H] and C.Payload == T and RepeatableBorrow[C]:"
      },
      {
       "sha256": "030a61bce5e77a9a59a280f59f78a067483495808ddeaad64fa9c6e1eab84dff",
@@ -8706,8 +8706,8 @@
       "signature": "def pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[StringDict[Tuple[downcast[P, Movable & Deinitable], R]]] where Self.Value == StringDict[downcast[P, Movable & Deinitable]]:"
      },
      {
-      "sha256": "147d123f7b4aa9098d50ad5e9c4cd8f55cb43d6cecc1b686eb4a88ed026cad58",
-      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[StringDict[Tuple[T, C.Result]]] where Self.Value == StringDict[T] and C.Payload == T:"
+      "sha256": "5403308a96003e4c4d2cb1095e0795c21d3b9eac500dd0fd13c1973dbc4e03db",
+      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[StringDict[Tuple[T, C.Result]]] where Self.Value == StringDict[T] and C.Payload == T and RepeatableBorrow[C]:"
      },
      {
       "sha256": "6698b1635f42a230b6e5366ef02a627dd0ef81635258a4db94b513069d364603",
@@ -8718,8 +8718,8 @@
       "signature": "def pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Optional[Tuple[downcast[P, Movable & Deinitable], R]]] where Self.Value == Optional[downcast[P, Movable & Deinitable]]:"
      },
      {
-      "sha256": "fa5543e8c67d4ac2b64b30fae9e0722ab253b84f4db7998f9572384c10c68d52",
-      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[Optional[Tuple[T, C.Result]]] where Self.Value == Optional[T] and C.Payload == T:"
+      "sha256": "0848817b7d17303ea60bfa4d76c2ce8ec444d5ee8fe6f26ba78e3f6b7aac5147",
+      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Optional[Tuple[T, C.Result]]] where Self.Value == Optional[T] and C.Payload == T and RepeatableBorrow[C]:"
      },
      {
       "sha256": "2ae9532f692c77f81b7d296c07c1bb3aca43f9200e7eecb8f3d655884383f130",
@@ -8730,8 +8730,8 @@
       "signature": "def pair_with[P: AnyType, R: Movable & Deinitable, Failure: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Result[Tuple[downcast[P, Movable & Deinitable], R], Failure]] where Self.Value == Result[downcast[P, Movable & Deinitable], Failure]:"
      },
      {
-      "sha256": "4d7b44706fb9e7b0230b2eeb17b2873e8a2aa298d7d8b78f2709d030b45178f3",
-      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallable, Failure: Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Result[Tuple[T, C.Result], Failure]] where Self.Value == Result[T, Failure] and C.Payload == T:"
+      "sha256": "f4dc86c449c7358345ab175045ae2004c072a055ca3e17c24d7d3905b7d5a1f1",
+      "signature": "def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Result[Tuple[T, C.Result], Failure]] where Self.Value == Result[T, Failure] and C.Payload == T and RepeatableBorrow[C]:"
      }
     ],
     "par_map_n": [
@@ -9592,8 +9592,8 @@
       "signature": "def tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Self where Self.Value == P:"
      },
      {
-      "sha256": "43a3fbf6454975a1ba41992def17133024dd493e4fd2de33a927453ad34c4704",
-      "signature": "def tap[C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Self where C.Payload == Self.Value:"
+      "sha256": "78bcb59022c5afbe64a8a520251f6bd0f73f154a941da376d9650e715e174637",
+      "signature": "def tap[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Self where C.Payload == Self.Value and _OnceBorrowAvailable[C]:"
      }
     ],
     "tap_each": [
@@ -9606,8 +9606,8 @@
       "signature": "def tap_each[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises I.MapError[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False]] -> Piped[I.Mapped[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False]]] where I.Element[Self.Value] == downcast[P, Movable & Deinitable] and _MapCompatible[I, Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False]]:"
      },
      {
-      "sha256": "299859d1f9e8b4f419d691f3ce3a8d7af539eeed30873bd37941adac494a42ca",
-      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable, //, I: Functor](deinit self, var function: C) raises I.MapError[Self.Value, _Observe[T, C, False]] -> Piped[I.Mapped[Self.Value, _Observe[T, C, False]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Observe[T, C, False]] and C.Payload == T:"
+      "sha256": "29fc54141c4e9f5a4f47815dc54659d06e6e0f7c2c4c90d393223c3e4882e13f",
+      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, //, I: Functor](deinit self, var function: C) raises I.MapError[Self.Value, _Observe[T, C, False]] -> Piped[I.Mapped[Self.Value, _Observe[T, C, False]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Observe[T, C, False]] and C.Payload == T and RepeatableBorrow[C]:"
      },
      {
       "sha256": "de4a03dcfcd88a5961daa1179fdbb3b1147f0f1582925aa9acb64fdf565e7de9",
@@ -9618,8 +9618,8 @@
       "signature": "def tap_each[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[List[downcast[P, Movable & Deinitable]]] where Self.Value == List[downcast[P, Movable & Deinitable]]:"
      },
      {
-      "sha256": "71d38b8fdaa347599d9b24e1d2d836329f394b19311c4fd0f7f596886705c0e5",
-      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[List[T]] where Self.Value == List[T] and C.Payload == T:"
+      "sha256": "601e429cbcb183a9a34158b802a8890761f0d42ae59c338593ad47a8cdd48300",
+      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[List[T]] where Self.Value == List[T] and C.Payload == T and RepeatableBorrow[C]:"
      },
      {
       "sha256": "a85ab2e5bda2c3ad66dd97108aeefca07c68102c30139890e80492d89dc9c9fb",
@@ -9630,8 +9630,8 @@
       "signature": "def tap_each[P: AnyType, R: Movable & Deinitable, N: Int, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Array[downcast[P, Movable & Deinitable], N]] where Self.Value == Array[downcast[P, Movable & Deinitable], N]:"
      },
      {
-      "sha256": "cd9b9efd089baabec8fad85316f4d3ae578731a75c169b12e4cd42299ff28491",
-      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable, N: Int](deinit self, var function: C) raises C.Failure -> Piped[Array[T, N]] where Self.Value == Array[T, N] and C.Payload == T:"
+      "sha256": "2499537f4f1abd06f9651b4479ef780b5562bca5d8905399917c7ca24a7674e9",
+      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, N: Int](deinit self, var function: C) raises C.Failure -> Piped[Array[T, N]] where Self.Value == Array[T, N] and C.Payload == T and RepeatableBorrow[C]:"
      },
      {
       "sha256": "43e7d5d161e746c4f8cc3c927a7cc6f07bcc304e2c9415eb5b2fd65c0912d8e3",
@@ -9642,8 +9642,8 @@
       "signature": "def tap_each[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Deque[downcast[P, Movable & Deinitable]]] where Self.Value == Deque[downcast[P, Movable & Deinitable]]:"
      },
      {
-      "sha256": "5561111ee396eb0ec1737abd5e65cfc95387fd5afa070fb439f471bbbbef47a2",
-      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[Deque[T]] where Self.Value == Deque[T] and C.Payload == T:"
+      "sha256": "9d816dc976c0a519ea3d323d132a798ddcf00a93a43c334e33694ce53e36389c",
+      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Deque[T]] where Self.Value == Deque[T] and C.Payload == T and RepeatableBorrow[C]:"
      },
      {
       "sha256": "cfcc90e456995c6bbc17ce34ba81ad8b007edcc2e05a040c9b426f09d52b7409",
@@ -9654,8 +9654,8 @@
       "signature": "def tap_each[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[LinkedList[downcast[P, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[P, Movable & Deinitable]]:"
      },
      {
-      "sha256": "6ccbb08133570ebcc94cde8b3650dfcf13d3a0303323ccbda273614ab4c8abd4",
-      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[LinkedList[T]] where Self.Value == LinkedList[T] and C.Payload == T:"
+      "sha256": "e6b19224508a3a81515120d9474471dbbb4063650b87c2c6b3fe0908acdf81ec",
+      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[LinkedList[T]] where Self.Value == LinkedList[T] and C.Payload == T and RepeatableBorrow[C]:"
      },
      {
       "sha256": "1ece3c6904639dfe951ad921e1cde8d3ca319713748d0b35982823fe77dade14",
@@ -9666,8 +9666,8 @@
       "signature": "def tap_each[P: AnyType, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Dict[K, downcast[P, Movable & Deinitable], H]] where Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]:"
      },
      {
-      "sha256": "0f19965b77fc7faabf14a1d0551cc5b7e2fcae002893d73686d9b812512e704a",
-      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H] and C.Payload == T:"
+      "sha256": "a025a9afc977c7a5d8a5bccc43311dd8e38950316440bd2ab2b985a4847a5435",
+      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H] and C.Payload == T and RepeatableBorrow[C]:"
      },
      {
       "sha256": "e496d38e2a6955e37717b5e7554be5d9889be54d16e14436253aadf632834507",
@@ -9678,8 +9678,8 @@
       "signature": "def tap_each[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[StringDict[downcast[P, Movable & Deinitable]]] where Self.Value == StringDict[downcast[P, Movable & Deinitable]]:"
      },
      {
-      "sha256": "b7e4927aaf8e68f2f9ef25ba9b972c477d61dbd478b8753d5e208140407bcc65",
-      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[StringDict[T]] where Self.Value == StringDict[T] and C.Payload == T:"
+      "sha256": "257a83fd5bedf68b75050f4532dc05601e99fb8e00089fd3ff99bbc22df06f8c",
+      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[StringDict[T]] where Self.Value == StringDict[T] and C.Payload == T and RepeatableBorrow[C]:"
      },
      {
       "sha256": "ca396c3ce0b9d84cde03859fdfd88d655c2ce1a4e30baabe08c8e578e523f66a",
@@ -9690,8 +9690,8 @@
       "signature": "def tap_each[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Optional[downcast[P, Movable & Deinitable]]:"
      },
      {
-      "sha256": "3303ac36aaa3ee4588fb2f05dd647ce6ce87fe1a622ed566f668819d5433b12f",
-      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[Optional[T]] where Self.Value == Optional[T] and C.Payload == T:"
+      "sha256": "0dffbbeb3a6dd2a25109fe4e86c89a1c8cea0efedc37869a5d81d1efa9b1389f",
+      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Optional[T]] where Self.Value == Optional[T] and C.Payload == T and RepeatableBorrow[C]:"
      },
      {
       "sha256": "a4de4529144e106fbd48100b76ff89c0b2f78a56c7b9a8f16f7d815ab87f1082",
@@ -9702,8 +9702,8 @@
       "signature": "def tap_each[P: AnyType, R: Movable & Deinitable, Failure: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](deinit self, ref[o] function: F) raises E -> Piped[Result[downcast[P, Movable & Deinitable], Failure]] where Self.Value == Result[downcast[P, Movable & Deinitable], Failure]:"
      },
      {
-      "sha256": "977327e1b7578dc6dba8485a373182f977f9b85f675edd824786673a2b20ecbe",
-      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallable, Failure: Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and C.Payload == T:"
+      "sha256": "2b75675da6c387af0914645c8aaa8d19826fe552674b6856ebaf87e699ecfd31",
+      "signature": "def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and C.Payload == T and RepeatableBorrow[C]:"
      }
     ],
     "tap_err": [
@@ -15399,8 +15399,8 @@
     ],
     "pair_with": [
      {
-      "sha256": "06696d28e31f420801e518b5d4e52bd0ea1d4db4eb592f60cd4352931f132c8f",
-      "signature": "def pair_with[C: BorrowCallable](deinit self, var function: C) raises Self.I.MapError[Self.V, _Observe[Self.I.Element[Self.V], C, True]] -> Pipeline[_MappedFamily[Self.I, _Observe[Self.I.Element[Self.V], C, True].Out], Self.I.Mapped[Self.V, _Observe[Self.I.Element[Self.V], C, True]], Self.E] where C.Payload == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Observe[Self.I.Element[Self.V], C, True]]:"
+      "sha256": "a93fc4ed78493c4b1383c2ad557d2f8a36af9b4863495efb99f168f07b0435e5",
+      "signature": "def pair_with[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises Self.I.MapError[Self.V, _Observe[Self.I.Element[Self.V], C, True]] -> Pipeline[_MappedFamily[Self.I, _Observe[Self.I.Element[Self.V], C, True].Out], Self.I.Mapped[Self.V, _Observe[Self.I.Element[Self.V], C, True]], Self.E] where C.Payload == Self.I.Element[Self.V] and RepeatableBorrow[C] and _MapCompatible[Self.I, Self.V, _Observe[Self.I.Element[Self.V], C, True]]:"
      },
      {
       "sha256": "60d6fc34312716c3f0a420ed4d58b79b5a44223868f68a473d5c8f241255b9db",
@@ -18289,8 +18289,8 @@
     ],
     "tap": [
      {
-      "sha256": "893d5effb270e1f91812f06121f63b965b7fc7d0cae97786f33928a052e02085",
-      "signature": "def tap[C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Pipeline[Self.I, Self.V, Self.E] where C.Payload == Self.V:"
+      "sha256": "19378aa5b77c3114cfb225a88a8600740e5df4ded458e432ca0cf8575e8b59f7",
+      "signature": "def tap[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Pipeline[Self.I, Self.V, Self.E] where C.Payload == Self.V and _OnceBorrowAvailable[C]:"
      },
      {
       "sha256": "447ac5be0b5f39be7e08c41a3af0265f1870370efbf875c092d56e53564df274",
@@ -18343,8 +18343,8 @@
     ],
     "tap_each": [
      {
-      "sha256": "7cd41ce86593d0ec92fd90487a64416dde60ccbb2e4ad6ac032aab75f6dcb8bc",
-      "signature": "def tap_each[C: BorrowCallable](deinit self, var function: C) raises Self.I.MapError[Self.V, _Observe[Self.I.Element[Self.V], C, False]] -> Pipeline[_MappedFamily[Self.I, _Observe[Self.I.Element[Self.V], C, False].Out], Self.I.Mapped[Self.V, _Observe[Self.I.Element[Self.V], C, False]], Self.E] where C.Payload == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Observe[Self.I.Element[Self.V], C, False]]:"
+      "sha256": "b31e86bf9afdd275847679f895d9378300e7e4053bee66f7e97c8c1347a86fee",
+      "signature": "def tap_each[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises Self.I.MapError[Self.V, _Observe[Self.I.Element[Self.V], C, False]] -> Pipeline[_MappedFamily[Self.I, _Observe[Self.I.Element[Self.V], C, False].Out], Self.I.Mapped[Self.V, _Observe[Self.I.Element[Self.V], C, False]], Self.E] where C.Payload == Self.I.Element[Self.V] and RepeatableBorrow[C] and _MapCompatible[Self.I, Self.V, _Observe[Self.I.Element[Self.V], C, False]]:"
      },
      {
       "sha256": "910e69d54ea4abee36ee12a127ae31a811818d164970bb0ceb2aabaf412ede85",

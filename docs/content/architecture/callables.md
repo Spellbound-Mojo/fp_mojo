@@ -81,8 +81,19 @@ repeatable receiver, guarded by `RepeatableBorrow` at admission. Its
 then `_observed` retains that payload beside the projection or discards the
 projection. `_extremum` still delegates to `_map_accumulate` and `_Choose`:
 keys are computed once and strict comparison retains the first tie. No
-observer loop, receiver policy, or cleanup path is duplicated. The older
-shared observation adapter remains the owner for shared family observation.
+observer loop, receiver policy, or cleanup path is duplicated.
+
+Family observation retains `_Observe` as its adapter type, preserving existing
+generic `Family.Mapped` and `Family.MapError` signatures. It exposes a shared
+receiver when the callback is shared and a mutable receiver when it is
+repeatable. Mojo 1.2 requires their common `UnaryContract`, `Movable`, and
+`Deinitable` ancestors explicitly because these conformances have different
+conditions. Both `_Observe` and `_ObserveOnce` delegate repeated execution
+to `_observe_repeated`; `_observed` remains the payload-retention owner.
+Whole-value owned `tap` selects `_ObserveOnce` and its consuming-first policy.
+Per-element family observers retain their repeatability requirement, even
+when a particular carrier contains at most one element. Deferred family
+mapping still owns timing, callback storage, and error delivery.
 
 `as_unary(f)` moves a native function or closure into a `NativeUnary`, a `Unary`. `Partial`
 implements `Thunk`, `Unary` or `Binary` when zero, one or two arguments remain;

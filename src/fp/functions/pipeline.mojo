@@ -35,6 +35,8 @@ from fp.algebra._derived import _map2_as, product as _family_product
 from fp.callables._transforms import _Pair, _ValueThunk, _Apply
 from fp.callables.native import _Binary, _RaisingBinary, _NativeBinaryRef
 from fp.callables.invoke import RepeatableBorrow
+from fp.callables._receiver import _OnceBorrowAvailable
+from fp.callables._transforms import _ObserveOnce
 from fp.callables.protocols import BinaryContract
 
 from fp.iteration.reductions import _FoldMapRun, _FindMapRun, _ExtremumRun, _run_terminal, _IntSum, _SIMDSum
@@ -739,10 +741,10 @@ struct Piped[Value: Movable & Deinitable](Movable):
         var inspect = _Observe[Self.Value, _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function)))
         return Self(inspect.call(self.value^))
 
-    def tap[C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Self where C.Payload == Self.Value:
+    def tap[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Self where C.Payload == Self.Value and _OnceBorrowAvailable[C]:
         """Inspect the whole pipeline value once and continue with it unchanged."""
-        var inspect = _Observe[Self.Value, C, False](function^)
-        return Self(inspect.call(self.value^))
+        var inspect = _ObserveOnce[Self.Value, C, False](function^)
+        return Self(inspect^.call_once(self.value^))
 
     def then[R: Movable & Deinitable, A: Movable & Deinitable, //, F: def(var A) -> R](deinit self, function: F) -> Piped[R] where A == Self.Value:
         """Apply a pure stage and continue the chain with its result.
@@ -3505,7 +3507,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Borrow each payload for projection and retain it beside the result."""
         return Piped(I.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), self.value^))
 
-    def pair_with[T: Movable & Deinitable, C: BorrowCallable, //, I: Functor](deinit self, var function: C) raises I.MapError[Self.Value, _Observe[T, C, True]] -> Piped[I.Mapped[Self.Value, _Observe[T, C, True]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Observe[T, C, True]] and C.Payload == T:
+    def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, //, I: Functor](deinit self, var function: C) raises I.MapError[Self.Value, _Observe[T, C, True]] -> Piped[I.Mapped[Self.Value, _Observe[T, C, True]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Observe[T, C, True]] and C.Payload == T and RepeatableBorrow[C]:
         """Borrow each payload for projection and retain it beside the result."""
         return Piped(I.map(_Observe[T, C, True](function^), self.value^))
 
@@ -3534,7 +3536,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Borrow each payload for inspection and retain it unchanged."""
         return Piped(I.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), self.value^))
 
-    def tap_each[T: Movable & Deinitable, C: BorrowCallable, //, I: Functor](deinit self, var function: C) raises I.MapError[Self.Value, _Observe[T, C, False]] -> Piped[I.Mapped[Self.Value, _Observe[T, C, False]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Observe[T, C, False]] and C.Payload == T:
+    def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, //, I: Functor](deinit self, var function: C) raises I.MapError[Self.Value, _Observe[T, C, False]] -> Piped[I.Mapped[Self.Value, _Observe[T, C, False]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Observe[T, C, False]] and C.Payload == T and RepeatableBorrow[C]:
         """Borrow each payload for inspection and retain it unchanged."""
         return Piped(I.map(_Observe[T, C, False](function^), self.value^))
 
@@ -4322,7 +4324,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == List[downcast[P, Movable & Deinitable]]
         return Piped(ListFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[List[downcast[P, Movable & Deinitable]]](self.value^)))
 
-    def pair_with[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[List[Tuple[T, C.Result]]] where Self.Value == List[T] and C.Payload == T:
+    def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[List[Tuple[T, C.Result]]] where Self.Value == List[T] and C.Payload == T and RepeatableBorrow[C]:
         """Borrow each payload for projection and retain it beside the result."""
         comptime assert Self.Value == List[T]
         return Piped(ListFamily.map(_Observe[T, C, True](function^), rebind_var[List[T]](self.value^)))
@@ -4337,7 +4339,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == List[downcast[P, Movable & Deinitable]]
         return Piped(ListFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[List[downcast[P, Movable & Deinitable]]](self.value^)))
 
-    def tap_each[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[List[T]] where Self.Value == List[T] and C.Payload == T:
+    def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[List[T]] where Self.Value == List[T] and C.Payload == T and RepeatableBorrow[C]:
         """Borrow each payload for inspection and retain it unchanged."""
         comptime assert Self.Value == List[T]
         return Piped(ListFamily.map(_Observe[T, C, False](function^), rebind_var[List[T]](self.value^)))
@@ -4505,7 +4507,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Array[downcast[P, Movable & Deinitable], N]
         return Piped(_ArrayFamily[N].map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Array[downcast[P, Movable & Deinitable], N]](self.value^)))
 
-    def pair_with[T: Movable & Deinitable, C: BorrowCallable, N: Int](deinit self, var function: C) raises C.Failure -> Piped[Array[Tuple[T, C.Result], N]] where Self.Value == Array[T, N] and C.Payload == T:
+    def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, N: Int](deinit self, var function: C) raises C.Failure -> Piped[Array[Tuple[T, C.Result], N]] where Self.Value == Array[T, N] and C.Payload == T and RepeatableBorrow[C]:
         """Borrow each payload for projection and retain it beside the result."""
         comptime assert Self.Value == Array[T, N]
         return Piped(_ArrayFamily[N].map(_Observe[T, C, True](function^), rebind_var[Array[T, N]](self.value^)))
@@ -4520,7 +4522,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Array[downcast[P, Movable & Deinitable], N]
         return Piped(_ArrayFamily[N].map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Array[downcast[P, Movable & Deinitable], N]](self.value^)))
 
-    def tap_each[T: Movable & Deinitable, C: BorrowCallable, N: Int](deinit self, var function: C) raises C.Failure -> Piped[Array[T, N]] where Self.Value == Array[T, N] and C.Payload == T:
+    def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, N: Int](deinit self, var function: C) raises C.Failure -> Piped[Array[T, N]] where Self.Value == Array[T, N] and C.Payload == T and RepeatableBorrow[C]:
         """Borrow each payload for inspection and retain it unchanged."""
         comptime assert Self.Value == Array[T, N]
         return Piped(_ArrayFamily[N].map(_Observe[T, C, False](function^), rebind_var[Array[T, N]](self.value^)))
@@ -4560,7 +4562,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Deque[downcast[P, Movable & Deinitable]]
         return Piped(_DequeFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Deque[downcast[P, Movable & Deinitable]]](self.value^)))
 
-    def pair_with[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[Deque[Tuple[T, C.Result]]] where Self.Value == Deque[T] and C.Payload == T:
+    def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Deque[Tuple[T, C.Result]]] where Self.Value == Deque[T] and C.Payload == T and RepeatableBorrow[C]:
         """Borrow each payload for projection and retain it beside the result."""
         comptime assert Self.Value == Deque[T]
         return Piped(_DequeFamily.map(_Observe[T, C, True](function^), rebind_var[Deque[T]](self.value^)))
@@ -4575,7 +4577,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Deque[downcast[P, Movable & Deinitable]]
         return Piped(_DequeFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Deque[downcast[P, Movable & Deinitable]]](self.value^)))
 
-    def tap_each[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[Deque[T]] where Self.Value == Deque[T] and C.Payload == T:
+    def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Deque[T]] where Self.Value == Deque[T] and C.Payload == T and RepeatableBorrow[C]:
         """Borrow each payload for inspection and retain it unchanged."""
         comptime assert Self.Value == Deque[T]
         return Piped(_DequeFamily.map(_Observe[T, C, False](function^), rebind_var[Deque[T]](self.value^)))
@@ -4640,7 +4642,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == LinkedList[downcast[P, Movable & Deinitable]]
         return Piped(_LinkedListFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[LinkedList[downcast[P, Movable & Deinitable]]](self.value^)))
 
-    def pair_with[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[LinkedList[Tuple[T, C.Result]]] where Self.Value == LinkedList[T] and C.Payload == T:
+    def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[LinkedList[Tuple[T, C.Result]]] where Self.Value == LinkedList[T] and C.Payload == T and RepeatableBorrow[C]:
         """Borrow each payload for projection and retain it beside the result."""
         comptime assert Self.Value == LinkedList[T]
         return Piped(_LinkedListFamily.map(_Observe[T, C, True](function^), rebind_var[LinkedList[T]](self.value^)))
@@ -4655,7 +4657,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == LinkedList[downcast[P, Movable & Deinitable]]
         return Piped(_LinkedListFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[LinkedList[downcast[P, Movable & Deinitable]]](self.value^)))
 
-    def tap_each[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[LinkedList[T]] where Self.Value == LinkedList[T] and C.Payload == T:
+    def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[LinkedList[T]] where Self.Value == LinkedList[T] and C.Payload == T and RepeatableBorrow[C]:
         """Borrow each payload for inspection and retain it unchanged."""
         comptime assert Self.Value == LinkedList[T]
         return Piped(_LinkedListFamily.map(_Observe[T, C, False](function^), rebind_var[LinkedList[T]](self.value^)))
@@ -4720,7 +4722,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]
         return Piped(_DictFamily[K, downcast[P, Movable & Deinitable], H].map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Dict[K, downcast[P, Movable & Deinitable], H]](self.value^)))
 
-    def pair_with[T: Movable & Deinitable, C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, Tuple[T, C.Result], H]] where Self.Value == Dict[K, T, H] and C.Payload == T:
+    def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, Tuple[T, C.Result], H]] where Self.Value == Dict[K, T, H] and C.Payload == T and RepeatableBorrow[C]:
         """Borrow each payload for projection and retain it beside the result."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_DictFamily[K, T, H].map(_Observe[T, C, True](function^), rebind_var[Dict[K, T, H]](self.value^)))
@@ -4735,7 +4737,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Dict[K, downcast[P, Movable & Deinitable], H]
         return Piped(_DictFamily[K, downcast[P, Movable & Deinitable], H].map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Dict[K, downcast[P, Movable & Deinitable], H]](self.value^)))
 
-    def tap_each[T: Movable & Deinitable, C: BorrowCallable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H] and C.Payload == T:
+    def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Dict[K, T, H]] where Self.Value == Dict[K, T, H] and C.Payload == T and RepeatableBorrow[C]:
         """Borrow each payload for inspection and retain it unchanged."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_DictFamily[K, T, H].map(_Observe[T, C, False](function^), rebind_var[Dict[K, T, H]](self.value^)))
@@ -4800,7 +4802,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == StringDict[downcast[P, Movable & Deinitable]]
         return Piped(_StringDictFamily[downcast[P, Movable & Deinitable]].map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[StringDict[downcast[P, Movable & Deinitable]]](self.value^)))
 
-    def pair_with[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[StringDict[Tuple[T, C.Result]]] where Self.Value == StringDict[T] and C.Payload == T:
+    def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[StringDict[Tuple[T, C.Result]]] where Self.Value == StringDict[T] and C.Payload == T and RepeatableBorrow[C]:
         """Borrow each payload for projection and retain it beside the result."""
         comptime assert Self.Value == StringDict[T]
         return Piped(_StringDictFamily[T].map(_Observe[T, C, True](function^), rebind_var[StringDict[T]](self.value^)))
@@ -4815,7 +4817,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == StringDict[downcast[P, Movable & Deinitable]]
         return Piped(_StringDictFamily[downcast[P, Movable & Deinitable]].map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[StringDict[downcast[P, Movable & Deinitable]]](self.value^)))
 
-    def tap_each[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[StringDict[T]] where Self.Value == StringDict[T] and C.Payload == T:
+    def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[StringDict[T]] where Self.Value == StringDict[T] and C.Payload == T and RepeatableBorrow[C]:
         """Borrow each payload for inspection and retain it unchanged."""
         comptime assert Self.Value == StringDict[T]
         return Piped(_StringDictFamily[T].map(_Observe[T, C, False](function^), rebind_var[StringDict[T]](self.value^)))
@@ -4880,7 +4882,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Optional[downcast[P, Movable & Deinitable]]
         return Piped(OptionalFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Optional[downcast[P, Movable & Deinitable]]](self.value^)))
 
-    def pair_with[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[Optional[Tuple[T, C.Result]]] where Self.Value == Optional[T] and C.Payload == T:
+    def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Optional[Tuple[T, C.Result]]] where Self.Value == Optional[T] and C.Payload == T and RepeatableBorrow[C]:
         """Borrow each payload for projection and retain it beside the result."""
         comptime assert Self.Value == Optional[T]
         return Piped(OptionalFamily.map(_Observe[T, C, True](function^), rebind_var[Optional[T]](self.value^)))
@@ -4895,7 +4897,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Optional[downcast[P, Movable & Deinitable]]
         return Piped(OptionalFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Optional[downcast[P, Movable & Deinitable]]](self.value^)))
 
-    def tap_each[T: Movable & Deinitable, C: BorrowCallable](deinit self, var function: C) raises C.Failure -> Piped[Optional[T]] where Self.Value == Optional[T] and C.Payload == T:
+    def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Optional[T]] where Self.Value == Optional[T] and C.Payload == T and RepeatableBorrow[C]:
         """Borrow each payload for inspection and retain it unchanged."""
         comptime assert Self.Value == Optional[T]
         return Piped(OptionalFamily.map(_Observe[T, C, False](function^), rebind_var[Optional[T]](self.value^)))
@@ -5035,7 +5037,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Result[downcast[P, Movable & Deinitable], Failure]
         return Piped(ResultFamily[Failure].map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Result[downcast[P, Movable & Deinitable], Failure]](self.value^)))
 
-    def pair_with[T: Movable & Deinitable, C: BorrowCallable, Failure: Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Result[Tuple[T, C.Result], Failure]] where Self.Value == Result[T, Failure] and C.Payload == T:
+    def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Result[Tuple[T, C.Result], Failure]] where Self.Value == Result[T, Failure] and C.Payload == T and RepeatableBorrow[C]:
         """Borrow each payload for projection and retain it beside the result."""
         comptime assert Self.Value == Result[T, Failure]
         return Piped(ResultFamily[Failure].map(_Observe[T, C, True](function^), rebind_var[Result[T, Failure]](self.value^)))
@@ -5050,7 +5052,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Result[downcast[P, Movable & Deinitable], Failure]
         return Piped(ResultFamily[Failure].map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Result[downcast[P, Movable & Deinitable], Failure]](self.value^)))
 
-    def tap_each[T: Movable & Deinitable, C: BorrowCallable, Failure: Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and C.Payload == T:
+    def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and C.Payload == T and RepeatableBorrow[C]:
         """Borrow each payload for inspection and retain it unchanged."""
         comptime assert Self.Value == Result[T, Failure]
         return Piped(ResultFamily[Failure].map(_Observe[T, C, False](function^), rebind_var[Result[T, Failure]](self.value^)))
