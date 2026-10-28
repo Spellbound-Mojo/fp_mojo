@@ -37,4 +37,4 @@ def main() raises:
     var all_values: List[String] = ["10", "11"]
     var gathered = pipeline(all_values^).traverse(chain).get()
     assert_equal(gathered^.raise_on_err(), ["accepted: 10", "accepted: 11"])
-    print(chain.call(String("12")).raise_on_err())
+    print(pipeline(String("12")).then(chain).raise_on_err())

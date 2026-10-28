@@ -216,7 +216,7 @@
       ],
       "status": "selected",
       "families": "Whole carrier; then selects its output Functor",
-      "callbacks": "Native or library callbacks; tap uses BorrowCallable.",
+      "callbacks": "Native or library callbacks; tap uses BorrowCallable. Shared chains are borrowed by then and supply their selected family.",
       "ownership": "then consumes the carrier; tap borrows and retains it.",
       "errors": "Exact callback error, including Never.",
       "timing": "One immediate invocation.",
@@ -226,7 +226,11 @@
       ],
       "evidence": [
         "tests/runtime/test_context_stages_transitions.mojo",
-        "tests/runtime/test_context_observers_behavior.mojo"
+        "tests/runtime/test_context_observers_behavior.mojo",
+        "tests/runtime/test_context_stage_sum_callable_views.mojo",
+        "tests/ownership/test_context_stage_sum_callable_views_ownership.mojo",
+        "tests/compile_fail/stage_sum_callable_view_then_move.mojo",
+        "tests/compile_fail/stage_sum_callable_view_sum_move.mojo"
       ]
     },
     {
@@ -389,7 +393,7 @@
       ],
       "status": "selected",
       "families": "Native source; infer native Optional, Result or List Monad targets. Explicit targets retain custom policies; fold_map_effect[Monoid] and combine_all_effect[Monoid] bind the combining rule and [Target, Monoid] also selects the effect.",
-      "callbacks": "Borrowing predicates; consuming unary/binary transformations; repeatable shared or mutable library receivers. Bind fold_effect(initial).run(step). Shared chains are borrowed by find_map_effect and fold_map_effect, preserving their selected target family.",
+      "callbacks": "Borrowing predicates; consuming unary/binary transformations; repeatable shared or mutable library receivers. Bind fold_effect(initial).run(step). Shared chains are borrowed by find_map_effect and fold_map_effect, preserving their selected target family. sum_by_effect borrows shared chains and preserves their selected target, inferring numeric type and width.",
       "ownership": "Moves inputs, retains first matches and releases partial accumulators; Arrays use O(N) temporary List storage. An unexecuted fold binding owns and destroys its source and seed.",
       "errors": "Exact native errors, stored target failures and borrowed origins remain distinct.",
       "timing": "Target owns branch stopping and deferral; monoid identity is constructed before source binding.",
@@ -435,7 +439,11 @@
         "tests/runtime/test_context_query_callable_views.mojo",
         "tests/ownership/test_context_query_callable_views_ownership.mojo",
         "tests/compile_fail/query_callable_view_once.mojo",
-        "tests/compile_fail/query_callable_view_origin.mojo"
+        "tests/compile_fail/query_callable_view_origin.mojo",
+        "tests/runtime/test_context_stage_sum_callable_views.mojo",
+        "tests/ownership/test_context_stage_sum_callable_views_ownership.mojo",
+        "tests/compile_fail/stage_sum_callable_view_then_move.mojo",
+        "tests/compile_fail/stage_sum_callable_view_sum_move.mojo"
       ]
     },
     {
@@ -836,7 +844,8 @@
         "docs/examples/traversal_composition.mojo",
         "tests/runtime/test_pipeline_raise.mojo",
         "tests/ownership/test_pipeline_raise_ownership.mojo",
-        "tests/compile_fail/pipeline_raise_effect.mojo"
+        "tests/compile_fail/pipeline_raise_effect.mojo",
+        "tests/runtime/test_context_stage_sum_callable_views.mojo"
       ]
     },
     {

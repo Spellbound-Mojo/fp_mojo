@@ -1,5 +1,6 @@
 """Parse and total in one pass, preserving the first stored error."""
-from fp.functions import pipeline
+from fp.functions import pipeline, kleisli
+from fp.algebra import ResultFamily
 from fp.data import Result, Ok, Err
 from std.testing import assert_equal
 
@@ -11,11 +12,12 @@ def main() raises:
         try: value = atol(text)
         except: return Err(String("invalid amount"))
         return Ok(value)
-    var total = pipeline(List[String](["12", "15"])).sum_by_effect(amount).get_or(0)
+    var parser = kleisli[ResultFamily[String]](amount)
+    var total = pipeline(List[String](["12", "15"])).sum_by_effect(parser).get_or(0)
     assert_equal(total, 27)
     print("total:", total)
     calls = 0
-    var reason = pipeline(List[String](["12", "bad", "99"])).sum_by_effect(amount).swap().get_or("")
+    var reason = pipeline(List[String](["12", "bad", "99"])).sum_by_effect(parser).swap().get_or("")
     assert_equal(reason, "invalid amount"); assert_equal(calls, 2)
     print("error:", reason)
     print("parsed:", calls)

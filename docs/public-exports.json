@@ -3932,6 +3932,10 @@
             "sha256": "983668b7023765539cb62010f4c1672c794e43ada267d63bfc35c0b507113d95"
           },
           {
+            "signature": "def then[C: _UnaryViewable, o: ImmOrigin, //, J: Functor = _ViewFamily[C, o]](deinit self, ref[o] function: C) raises C._View[o].Error -> Pipeline[J, C._View[o].Out, Self.E] where C._View[o].Arg == Self.V:",
+            "sha256": "9795df54990ad2897daaf3658b15dbb327e98d4e68694ec3920ecfe7c44e54c4"
+          },
+          {
             "signature": "def then[R: Movable & Deinitable, o: ImmOrigin, C: def(var Self.V) -> R, //, J: Functor = _NativeFamily[R]](deinit self, ref[o] function: C) raises Never -> Pipeline[J, R, Self.E]:",
             "sha256": "c7e3e72accdf34169992c1cccde18d0b522d6c832a7322f13bb9c3d8762dda1e"
           },
@@ -5516,6 +5520,14 @@
           {
             "signature": "def sum_by_effect[C: UnaryContract & Movable & Deinitable, dtype: DType, size: SIMDLength, //, J: Monad](deinit self, var function: C) raises FoldMapContract[J, _SIMDSum[dtype, size], Self.V, C].Error -> Pipeline[J, FoldMapContract[J, _SIMDSum[dtype, size], Self.V, C].Out, Self.E] where C.Arg == _FoldElement[Self.V] and J.Element[C.Out] == _SIMDSum[dtype, size].Value and _SIMDSum[dtype, size].Admitted and FoldMapContract[J, _SIMDSum[dtype, size], Self.V, C].Compatible:",
             "sha256": "b03c01199ce5855040208075aa3455bb7b04d06675321d98ecf69f739cc646da"
+          },
+          {
+            "signature": "def sum_by_effect[C: _UnaryViewable, o: ImmOrigin, dtype: DType, size: SIMDLength, //, J: Monad](deinit self, ref[o] function: C) raises FoldMapContract[J, _SIMDSum[dtype, size], Self.V, C._View[o]].Error -> Pipeline[J, FoldMapContract[J, _SIMDSum[dtype, size], Self.V, C._View[o]].Out, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and J.Element[C._View[o].Out] == _SIMDSum[dtype, size].Value and _SIMDSum[dtype, size].Admitted and FoldMapContract[J, _SIMDSum[dtype, size], Self.V, C._View[o]].Compatible:",
+            "sha256": "37c7756cc8ca4683813b7286dea763a6a01e39604e2d5e9eb42614f5d6cbaaff"
+          },
+          {
+            "signature": "def sum_by_effect[C: _UnaryViewable, o: ImmOrigin, dtype: DType, size: SIMDLength, //](deinit self, ref[o] function: C) raises FoldMapContract[_Binding[_ViewTarget[C, o]], _SIMDSum[dtype, size], Self.V, C._View[o]].Error -> Pipeline[_Binding[_ViewTarget[C, o]], FoldMapContract[_Binding[_ViewTarget[C, o]], _SIMDSum[dtype, size], Self.V, C._View[o]].Out, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and _Binding[_ViewTarget[C, o]].Element[C._View[o].Out] == _SIMDSum[dtype, size].Value and _SIMDSum[dtype, size].Admitted and FoldMapContract[_Binding[_ViewTarget[C, o]], _SIMDSum[dtype, size], Self.V, C._View[o]].Compatible:",
+            "sha256": "ac1d5b2cffdb9d291047807da86ef7f0894b3a63e4e840ae6d0f410fa288e8ef"
           },
           {
             "signature": "def sum_by_effect[R: Movable & Deinitable, o: ImmOrigin, dtype: DType, size: SIMDLength, //, J: Monad, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises FoldMapContract[J, _SIMDSum[dtype, size], Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, FoldMapContract[J, _SIMDSum[dtype, size], Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where J.Element[R] == _SIMDSum[dtype, size].Value and _SIMDSum[dtype, size].Admitted and FoldMapContract[J, _SIMDSum[dtype, size], Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible:",
@@ -10550,8 +10562,8 @@
         ],
         "raise_on_err": [
           {
-            "signature": "def raise_on_err(deinit self) raises _Failure[Self.V] -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]:",
-            "sha256": "a8b578718ed7bac4f2ed5dead5c35dd7770e6596f374ccb4c6f5e234cb8fbc48"
+            "signature": "def raise_on_err[T: Movable & Deinitable, X: Movable & Deinitable, //](deinit self) raises X -> T where Self.V == Result[T, X]:",
+            "sha256": "331fdb7b1652b57389c4db96f9c4dd24225d347ebda0b122537c6b6f382d2c34"
           }
         ],
         "swap": [

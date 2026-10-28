@@ -3617,3 +3617,32 @@ already selected family, instead of reconstructing it from nested output
 projections. Explicit family/monoid bindings retain their original positions.
 No fold loop, accumulator ownership, identity creation, error conversion or
 cleanup rule is duplicated.
+
+### Shared whole-value stages and numeric effect folds
+
+`then(chain)` and `sum_by_effect(chain)` use the existing shared view, preserving
+the chain's selected family. View-family recognition now has the same split
+as native carrier recognition: a Functor classification with a caller-selected
+fallback, followed by Applicative admission for effectful operations. Plain
+view providers still select their native result family at a whole-value stage;
+a Kleisli over Identity retains that policy even if its payload is a container.
+
+Numeric views already carry their complete output type and selected family.
+The inferred sum boundary binds that family expression directly before asking
+Mojo to infer numeric type and width. A defaulted family parameter does not
+provide enough evidence at that inference step on 1.2. The explicit `[Target]`
+boundary remains available. Both select the existing SIMD sum monoid and
+FoldMapContract; native callbacks keep their existing carrier-shape boundaries.
+No numeric operator, accumulation loop, error rule or ownership path is added.
+
+Whole-value stages still call once through the canonical invocation owner.
+Borrowed chains retain their native origins in deferred output, while explicit
+moves transfer the program and release its captures on execution or disposal.
+
+The native `raise_on_err()` terminal matches its already known Result carrier
+as `Result[T, X]` and infers the payload and stored error from that shape.
+Projecting the error again through a composed callable's output can remain
+symbolic in Mojo 1.2's raises checking, despite referring to the same type.
+Structural admission keeps ordinary calls annotation-free and delegates
+consumption and raising to Result itself. Native Result generic forwarding,
+move-only errors, Never and borrowed origins retain the same contract.

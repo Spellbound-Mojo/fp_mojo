@@ -150331,15 +150331,30 @@
      {
       "args": [],
       "description": "",
-      "error": "_Failure[Self.V]",
-      "parameters": [],
+      "error": "X",
+      "parameters": [
+       {
+        "description": "The carrier payload type.",
+        "inferred": true,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The stored error type, inferred from the Result carrier.",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
       "raises": true,
       "raises_doc": "The stored Result error, retaining its exact type and origins; independent of the selected callback error.",
       "returns": {
        "doc": "The moved Result success value, without a pipeline wrapper.",
-       "type": "_Success[Self.V]"
+       "type": "T"
       },
-      "signature": "def raise_on_err(deinit self) raises _Failure[Self.V] -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]",
+      "signature": "def raise_on_err[T: Movable & Deinitable, X: Movable & Deinitable, //](deinit self) raises X -> T where Self.V == Result[T, X]",
       "summary": "Consume the native Result carrier, returning its success or raising its stored error."
      }
     ],
@@ -175844,6 +175859,115 @@
        }
       ],
       "description": "",
+      "error": "FoldMapContract[J, _SIMDSum[dtype, size], Self.V, C._View[o]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "J",
+        "type": "Monad",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[J, FoldMapContract[J, _SIMDSum[dtype, size], Self.V, C._View[o]].Out, Self.E]"
+      },
+      "signature": "def sum_by_effect[C: _UnaryViewable, o: ImmOrigin, dtype: DType, size: SIMDLength, //, J: Monad](deinit self, ref[o] function: C) raises FoldMapContract[J, _SIMDSum[dtype, size], Self.V, C._View[o]].Error -> Pipeline[J, FoldMapContract[J, _SIMDSum[dtype, size], Self.V, C._View[o]].Out, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and J.Element[C._View[o].Out] == _SIMDSum[dtype, size].Value and _SIMDSum[dtype, size].Admitted and FoldMapContract[J, _SIMDSum[dtype, size], Self.V, C._View[o]].Compatible",
+      "summary": "Sum numeric effects in source order through the target Monad; empty input lifts zero."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "FoldMapContract[_Binding[_ViewTarget[C, o]], _SIMDSum[dtype, size], Self.V, C._View[o]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "dtype",
+        "type": "DType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "size",
+        "type": "SIMDLength",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_Binding[_ViewTarget[C, o]], FoldMapContract[_Binding[_ViewTarget[C, o]], _SIMDSum[dtype, size], Self.V, C._View[o]].Out, Self.E]"
+      },
+      "signature": "def sum_by_effect[C: _UnaryViewable, o: ImmOrigin, dtype: DType, size: SIMDLength, //](deinit self, ref[o] function: C) raises FoldMapContract[_Binding[_ViewTarget[C, o]], _SIMDSum[dtype, size], Self.V, C._View[o]].Error -> Pipeline[_Binding[_ViewTarget[C, o]], FoldMapContract[_Binding[_ViewTarget[C, o]], _SIMDSum[dtype, size], Self.V, C._View[o]].Out, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and _Binding[_ViewTarget[C, o]].Element[C._View[o].Out] == _SIMDSum[dtype, size].Value and _SIMDSum[dtype, size].Admitted and FoldMapContract[_Binding[_ViewTarget[C, o]], _SIMDSum[dtype, size], Self.V, C._View[o]].Compatible",
+      "summary": "Sum numeric effects in source order through the target Monad; empty input lifts zero."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "FoldMapContract[J, _SIMDSum[dtype, size], Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Error",
       "parameters": [
        {
@@ -178660,6 +178784,50 @@
        "type": "Pipeline[J, C.Out, Self.E]"
       },
       "signature": "def then[C: UnaryContract & Movable & Deinitable, //, J: Functor = _NativeFamily[C.Out]](deinit self, var function: C) raises C.Error -> Pipeline[J, C.Out, Self.E] where C.Arg == Self.V",
+      "summary": "Consume the whole value with one stage and select its output family."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "J",
+        "type": "Functor",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[J, C._View[o].Out, Self.E]"
+      },
+      "signature": "def then[C: _UnaryViewable, o: ImmOrigin, //, J: Functor = _ViewFamily[C, o]](deinit self, ref[o] function: C) raises C._View[o].Error -> Pipeline[J, C._View[o].Out, Self.E] where C._View[o].Arg == Self.V",
       "summary": "Consume the whole value with one stage and select its output family."
      },
      {

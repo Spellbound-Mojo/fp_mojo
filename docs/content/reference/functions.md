@@ -272,6 +272,10 @@ values and keys can be move-only. Use `.raising[E]()` for native errors as usual
 It selects List, Optional or Result for those output types and Identity for
 other outputs. Use `then[Family](stage)` when returning a custom carrier, or
 `then[IdentityFamily](stage)` to treat a native container as one payload.
+`then(chain)` borrows a shared Kleisli chain and retains its already selected
+family, including custom policies and Identity over a native container.
+`then[Family](chain)` overrides that choice. Deferred output can retain the
+chain borrow; `then(chain^)` transfers ownership instead.
 The selected native error remains in effect across these transitions.
 
 `fold_left(step, initial)`, `fold_until(step, initial)` and
@@ -383,7 +387,11 @@ Optional, Result and List results; `sum_effect()` sums existing numeric effects.
 Both support Int and integral or floating-point SIMD payloads, including scalar
 floats. Empty input lifts zero; sums preserve source and branch order and stop
 on target failure. An explicit `[Target]` retains custom Monad policies without
-requiring numeric type annotations. They share the existing monoid fold.
+requiring numeric type annotations. `sum_by_effect(chain)` also borrows reusable
+shared chains and inherits their selected effect family, including Reader and
+custom policies. Numeric type and SIMD width still come from the chain's output;
+`sum_by_effect[Target](chain)` retains explicit selection. They share the existing
+monoid fold.
 
 These operations require repeatable library callbacks; consuming unary and
 binary callbacks may use mutable receiver state. Reader and State defer source
@@ -587,7 +595,8 @@ overrides that choice. Direct `Result.map(chain)` and
 
 `Pipeline.map`, `flat_map`, `filter_map`, `traverse`, `par_traverse`,
 `traverse_filter`, `flat_traverse`, `traverse_void`, `find_map`,
-`find_map_effect` and `fold_map_effect` borrow shared chains directly. Passing `chain^` instead transfers ownership when the
+`find_map_effect`, `fold_map_effect`, `sum_by_effect` and `then` borrow shared
+chains directly. Passing `chain^` instead transfers ownership when the
 selected operation admits a consuming callback. For example,
 `pipeline[Reader[Int]](action^).map(chain)` retains a borrow until execution,
 while `.map(chain^)` moves the chain into the deferred computation.

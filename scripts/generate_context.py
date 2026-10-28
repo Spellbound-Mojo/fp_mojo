@@ -47,7 +47,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
                 params=cb.parameters + cb.explicit, argument=cb.argument,
                 adapter_type=cb.type, build=cb.build, result=cb.result,
                 error=cb.error, conditions=[cb.payload + " == " + payload],
-                target=f"_ViewTarget[{C}, {o}]",
+                target=f"_ViewTarget[{C}, {o}]", family=f"_ViewFamily[{C}, {o}]",
             )
         if kind == "library":
             trait = callable_protocol(mode, repeatable=repeatable)
@@ -211,9 +211,10 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
 
     # Whole-value stages reselect the output family. The optional family comes
     # after the inference barrier, so then[Family](f) is also available.
-    for cb in owning_callbacks("owned", "Self.V", "function"):
+    for cb in owning_callbacks("owned", "Self.V", "function", view=True):
         params = [p for p in cb["params"] if p != "//"]
-        params += ["//", f"J: Functor = _NativeFamily[{cb['result']}]"]
+        family = cb.get("family", f"_NativeFamily[{cb['result']}]")
+        params += ["//", f"J: Functor = {family}"]
         emit(
             "then",
             cb,
@@ -556,7 +557,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
             ("List", "ListFamily"),
             (None, "J"),
         ):
-            callbacks = owning_callbacks("owned", element, "function") if name == "sum_by_effect" else [dict(
+            callbacks = owning_callbacks("owned", element, "function", view=carrier is None) if name == "sum_by_effect" else [dict(
                 params=[], argument="", adapter_type=f"Identity[{element}]",
                 build=f"Identity[{element}]()", result=element, conditions=[])]
             for cb in callbacks:
@@ -564,19 +565,26 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
                 if "//" not in params: params += ["//"]
                 params[params.index("//"):params.index("//")] = ["dtype: DType", "size: SIMDLength"]
                 if carrier is None:
-                    params.insert(params.index("//") + 1, "J: Monad")
-                    shape = f"J.Element[{cb['result']}] == {monoid}.Value"
+                    explicit = list(params)
+                    explicit.insert(explicit.index("//") + 1, "J: Monad")
+                    targets = [("J", explicit, f"J.Element[{cb['result']}] == {monoid}.Value")]
+                    if "target" in cb:
+                        # A view already knows its result and family. Bind that
+                        # expression directly so numeric inference has no J to solve.
+                        selected = inferred_target(cb, capability="Monad")
+                        targets.append((selected, params, f"{selected}.Element[{cb['result']}] == {monoid}.Value"))
                 elif carrier == "Result":
-                    family = f"ResultFamily[_Failure[{cb['result']}]]"
-                    shape = f"conforms_to({cb['result']}, _ResultType) and _Success[{cb['result']}] == {monoid}.Value"
+                    selected = f"ResultFamily[_Failure[{cb['result']}]]"
+                    targets = [(selected, params, f"conforms_to({cb['result']}, _ResultType) and _Success[{cb['result']}] == {monoid}.Value")]
                 else:
-                    shape = f"{cb['result']} == {carrier}[{monoid}.Value]"
-                plan = operation.bind(family, "Self.V", element, cb["adapter_type"], cb["build"], cb["result"], monoid=monoid)
-                contract = plan.contract
-                conditions = cb["conditions"] + [shape, f"{monoid}.Admitted", contract + ".Compatible"]
-                emit(name, cb, params, cb["argument"], contract + ".Out", contract + ".Error", family,
-                     conditions, plan.invoke(contract + ".Error", "self.value^"),
-                     "Sum numeric effects in source order through the target Monad; empty input lifts zero.")
+                    targets = [(family, params, f"{cb['result']} == {carrier}[{monoid}.Value]")]
+                for selected, target_params, shape in targets:
+                    plan = operation.bind(selected, "Self.V", element, cb["adapter_type"], cb["build"], cb["result"], monoid=monoid)
+                    contract = plan.contract
+                    conditions = cb["conditions"] + [shape, f"{monoid}.Admitted", contract + ".Compatible"]
+                    emit(name, cb, target_params, cb["argument"], contract + ".Out", contract + ".Error", selected,
+                         conditions, plan.invoke(contract + ".Error", "self.value^"),
+                         "Sum numeric effects in source order through the target Monad; empty input lifts zero.")
 
 
 
@@ -1099,9 +1107,16 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         ("to_optional", f"Optional[{T}]", "", "Consume the native Result carrier, retaining only its success in an Optional."),
         ("raise_on_err", T, f" raises {Err}", "Consume the native Result carrier, returning its success or raising its stored error."),
     ):
-        body.append(f'\n    def {name}(deinit self){effect} -> {output} where {" and ".join(result_conditions)}:\n'
-                    f'        """{summary}"""\n'
-                    f'        return rebind_var[{Source}](self.value^).{name}()\n')
+        if name == "raise_on_err":
+            # Match the known carrier structurally. Projecting its error again
+            # can leave composed callback metadata symbolic in a raises clause.
+            body.append(f'\n    def raise_on_err[T: {MD}, X: {MD}, //](deinit self) raises X -> T where Self.V == Result[T, X]:\n'
+                        f'        """{summary}"""\n'
+                        '        return rebind_var[Result[T, X]](self.value^).raise_on_err()\n')
+        else:
+            body.append(f'\n    def {name}(deinit self){effect} -> {output} where {" and ".join(result_conditions)}:\n'
+                        f'        """{summary}"""\n'
+                        f'        return rebind_var[{Source}](self.value^).{name}()\n')
     swapped = f"Result[{Err}, {T}]"
     body.append(f'\n    def swap(deinit self) -> Pipeline[ResultFamily[{T}], {swapped}, Self.E] where {" and ".join(result_conditions)}:\n'
                 '        """Exchange native Result success and stored failure, retaining the selected native error."""\n'
@@ -1178,6 +1193,7 @@ def documented(source):
     """Document the primary overload of each family of public methods."""
     seen = set()
     params = {
+        "X": "The stored error type, inferred from the Result carrier.",
         "A": "The accumulator type, inferred from the initial value and preserved by every step.",
         "M": "The Monoid used for the identity and ordered combination of mapped values.",
         "N": "The fixed native Array length, inferred from its carrier type.",

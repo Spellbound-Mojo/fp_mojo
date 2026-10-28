@@ -175,10 +175,11 @@ struct _InferredEffectFoldStage[V: Movable & Deinitable, A: Movable & Deinitable
 
 
 # Effectful programs already selected their policy; preserve that evidence.
-comptime _ViewTarget[C: _UnaryViewable, o: ImmOrigin]: Applicative = (
+comptime _ViewFamily[C: _UnaryViewable, o: ImmOrigin, Fallback: Functor = IdentityFamily]: Functor = (
     downcast[C, _KleisliValue]._Family if conforms_to(C, _KleisliValue)
-    else _InferredApplicative[C._View[o].Out]
+    else _NativeFamily[C._View[o].Out, Fallback]
 )
+comptime _ViewTarget[C: _UnaryViewable, o: ImmOrigin]: Applicative = downcast[_ViewFamily[C, o, OptionalFamily], Applicative]
 
 
 @fieldwise_init
@@ -561,6 +562,11 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             The exact callback or family error; it never becomes a stored Result error.
         """
         return Pipeline[J, C.Out, Self.E](call_once(function^, rebind_var[C.Arg](self.value^)))
+
+    @always_inline
+    def then[C: _UnaryViewable, o: ImmOrigin, //, J: Functor = _ViewFamily[C, o]](deinit self, ref[o] function: C) raises C._View[o].Error -> Pipeline[J, C._View[o].Out, Self.E] where C._View[o].Arg == Self.V:
+        """Consume the whole value with one stage and select its output family."""
+        return Pipeline[J, C._View[o].Out, Self.E](call_once(function._unary_view(), rebind_var[C._View[o].Arg](self.value^)))
 
     @always_inline
     def then[R: Movable & Deinitable, o: ImmOrigin, C: def(var Self.V) -> R, //, J: Functor = _NativeFamily[R]](deinit self, ref[o] function: C) raises Never -> Pipeline[J, R, Self.E]:
@@ -2859,6 +2865,16 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
     def sum_by_effect[C: UnaryContract & Movable & Deinitable, dtype: DType, size: SIMDLength, //, J: Monad](deinit self, var function: C) raises FoldMapContract[J, _SIMDSum[dtype, size], Self.V, C].Error -> Pipeline[J, FoldMapContract[J, _SIMDSum[dtype, size], Self.V, C].Out, Self.E] where C.Arg == _FoldElement[Self.V] and J.Element[C.Out] == _SIMDSum[dtype, size].Value and _SIMDSum[dtype, size].Admitted and FoldMapContract[J, _SIMDSum[dtype, size], Self.V, C].Compatible:
         """Sum numeric effects in source order through the target Monad; empty input lifts zero."""
         return Pipeline[J, FoldMapContract[J, _SIMDSum[dtype, size], Self.V, C].Out, Self.E](_fold_map_effect[J, _SIMDSum[dtype, size], Self.V, C, FoldMapContract[J, _SIMDSum[dtype, size], Self.V, C].Error](function^, self.value^))
+
+    @always_inline
+    def sum_by_effect[C: _UnaryViewable, o: ImmOrigin, dtype: DType, size: SIMDLength, //, J: Monad](deinit self, ref[o] function: C) raises FoldMapContract[J, _SIMDSum[dtype, size], Self.V, C._View[o]].Error -> Pipeline[J, FoldMapContract[J, _SIMDSum[dtype, size], Self.V, C._View[o]].Out, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and J.Element[C._View[o].Out] == _SIMDSum[dtype, size].Value and _SIMDSum[dtype, size].Admitted and FoldMapContract[J, _SIMDSum[dtype, size], Self.V, C._View[o]].Compatible:
+        """Sum numeric effects in source order through the target Monad; empty input lifts zero."""
+        return Pipeline[J, FoldMapContract[J, _SIMDSum[dtype, size], Self.V, C._View[o]].Out, Self.E](_fold_map_effect[J, _SIMDSum[dtype, size], Self.V, C._View[o], FoldMapContract[J, _SIMDSum[dtype, size], Self.V, C._View[o]].Error](function._unary_view(), self.value^))
+
+    @always_inline
+    def sum_by_effect[C: _UnaryViewable, o: ImmOrigin, dtype: DType, size: SIMDLength, //](deinit self, ref[o] function: C) raises FoldMapContract[_Binding[_ViewTarget[C, o]], _SIMDSum[dtype, size], Self.V, C._View[o]].Error -> Pipeline[_Binding[_ViewTarget[C, o]], FoldMapContract[_Binding[_ViewTarget[C, o]], _SIMDSum[dtype, size], Self.V, C._View[o]].Out, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and _Binding[_ViewTarget[C, o]].Element[C._View[o].Out] == _SIMDSum[dtype, size].Value and _SIMDSum[dtype, size].Admitted and FoldMapContract[_Binding[_ViewTarget[C, o]], _SIMDSum[dtype, size], Self.V, C._View[o]].Compatible:
+        """Sum numeric effects in source order through the target Monad; empty input lifts zero."""
+        return Pipeline[_Binding[_ViewTarget[C, o]], FoldMapContract[_Binding[_ViewTarget[C, o]], _SIMDSum[dtype, size], Self.V, C._View[o]].Out, Self.E](_fold_map_effect[_Binding[_ViewTarget[C, o]], _SIMDSum[dtype, size], Self.V, C._View[o], FoldMapContract[_Binding[_ViewTarget[C, o]], _SIMDSum[dtype, size], Self.V, C._View[o]].Error](function._unary_view(), self.value^))
 
     @always_inline
     def sum_by_effect[R: Movable & Deinitable, o: ImmOrigin, dtype: DType, size: SIMDLength, //, J: Monad, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises FoldMapContract[J, _SIMDSum[dtype, size], Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, FoldMapContract[J, _SIMDSum[dtype, size], Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where J.Element[R] == _SIMDSum[dtype, size].Value and _SIMDSum[dtype, size].Admitted and FoldMapContract[J, _SIMDSum[dtype, size], Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible:
@@ -7210,8 +7226,12 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         """
         return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).to_optional()
 
-    def raise_on_err(deinit self) raises _Failure[Self.V] -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]:
+    def raise_on_err[T: Movable & Deinitable, X: Movable & Deinitable, //](deinit self) raises X -> T where Self.V == Result[T, X]:
         """Consume the native Result carrier, returning its success or raising its stored error.
+
+        Parameters:
+            T: The carrier payload type.
+            X: The stored error type, inferred from the Result carrier.
 
         Returns:
             The moved Result success value, without a pipeline wrapper.
@@ -7219,7 +7239,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         Raises:
             The stored Result error, retaining its exact type and origins; independent of the selected callback error.
         """
-        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).raise_on_err()
+        return rebind_var[Result[T, X]](self.value^).raise_on_err()
 
     def swap(deinit self) -> Pipeline[ResultFamily[_Success[Self.V]], Result[_Failure[Self.V], _Success[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]]:
         """Exchange native Result success and stored failure, retaining the selected native error.
