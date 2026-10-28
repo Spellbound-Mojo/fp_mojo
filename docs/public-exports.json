@@ -261,6 +261,33 @@
       },
       "provider": "callables/native"
     },
+    "callables.BinarySignature": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct BinarySignature[A: Movable & Deinitable, B: Movable & Deinitable,"
+      ],
+      "methods": {
+        "capture": [
+          {
+            "signature": "def capture[F: _Binary[Self.A, Self.B, Self.R]](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Never, F, False] where Self.E == Never and Self.R != type_of(None):",
+            "sha256": "ec079d88da5f36cee6306023245c19b8e56b2414f0f55ff5009ff14c5f8eba17"
+          },
+          {
+            "signature": "def capture[F: def(var Self.A, var Self.B)](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Never, F, False] where Self.E == Never and Self.R == type_of(None):",
+            "sha256": "11b4f4c8a0ec7e5f92b883ef84f04b77314d3fee36224900065d917613ae4e64"
+          },
+          {
+            "signature": "def capture[F: _RaisingBinary[Self.A, Self.B, Self.R, Self.E]](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Self.E, F, True] where Self.R != type_of(None):",
+            "sha256": "2d2831ee8d5ccd324bf5bb6ebd6e2ac043f7d057faf4a9ef51b52328b4390afb"
+          },
+          {
+            "signature": "def capture[F: def(var Self.A, var Self.B) raises Self.E](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Self.E, F, True] where Self.R == type_of(None):",
+            "sha256": "9d91b65d6e60f4e5e46e68219c3829b526fb162543e94451065f6e9a0098645d"
+          }
+        ]
+      },
+      "provider": "callables/native"
+    },
     "callables.NativeUnary": {
       "kind": "type or alias",
       "declarations": [

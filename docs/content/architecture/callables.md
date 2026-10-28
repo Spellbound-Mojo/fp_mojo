@@ -98,10 +98,24 @@ Both pointer factories use `native_factories` and one declaration renderer.
 The binary factory spells the two owned operands and their native ABI variants;
 it admits plain declarations and stored thin pointers without function-trait
 overload inference. The current factory does not infer captured closures.
-Explicitly typed `NativeBinary` construction retains the underlying closure
-storage capability, including noncopyable captures; it does not add another
-inference path to the factory. Pointer admission copies the pointer, never
-invokes it, and retains no borrow of its source variable.
+Pointer admission copies the pointer, never invokes it, and retains no borrow
+of its source variable.
+
+`BinarySignature[A, B, R, E].capture` selects the entire signature before
+admitting a closure. The selected type supplies every input, result and error;
+only the callback's concrete `F` is inferred at the static method boundary.
+Four generated admission forms distinguish pure/raising and value/no-value
+signatures. They reuse `_Binary` and `_RaisingBinary` for value signatures and
+spell native no-value traits literally. Each delegates storage to `NativeBinary`.
+There is no new invocation, error handling, receiver policy or capture copy.
+Plain declarations retain Mojo's contextual conversions: for example, selecting
+`NoneType` can materialize an explicit unit result from a no-return declaration.
+
+Selecting types in the receiver avoids overload inference of those types from
+an incompatible callback. The rejection fixtures exercise mutable arguments,
+wrong input/result/error types, wrong arity and noncallables without an explicit
+`F` binding. The normal `as_binary` factory keeps its thin-only admission;
+existing explicitly typed `NativeBinary` construction also remains available.
 
 Mojo 1.1 records a native function's signature only when the value passes
 through a parameter of that exact function type (`F: def(A) -> R`); a plain

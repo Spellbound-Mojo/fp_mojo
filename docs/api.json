@@ -9615,6 +9615,170 @@
    "summary": "The types of a callable that takes two owned arguments.",
    "traits": []
   },
+  "callables.BinarySignature": {
+   "aliases": [],
+   "description": "`BinarySignature[A, B, R].capture(closure)` infers the closure's concrete\ntype and returns a `NativeBinary`. Supply `E` for a raising callback.\nThe default `Never` accepts both pure and explicitly `raises Never`\nsignatures. Use `type_of(None)` for a procedure with no return value;\nan explicit `NoneType` result remains distinct.\n\nSignature selection precedes callback admission, so rejected conventions\ndo not require inference of the input, result or error types from the\ncallback. No callback runs during capture. Ownership, copyability and\nembedded origins remain those of the stored callable.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "capture": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, moved into the adapter with its captures.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The callback's exact native type, inferred at this boundary.",
+        "inferred": false,
+        "name": "F",
+        "type": "_Binary[Self.A, Self.B, Self.R]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBinary` preserving the callback's types and ownership.",
+       "type": "NativeBinary[Self.A, Self.B, Self.R, Never, F, False]"
+      },
+      "signature": "def capture[F: _Binary[Self.A, Self.B, Self.R]](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Never, F, False] where Self.E == Never and Self.R != type_of(None)",
+      "summary": "Capture a callback with the selected signature without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, moved into the adapter with its captures.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The callback's exact native type, inferred at this boundary.",
+        "inferred": false,
+        "name": "F",
+        "type": "def(var Self.A, var Self.B)",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBinary` preserving the callback's types and ownership.",
+       "type": "NativeBinary[Self.A, Self.B, Self.R, Never, F, False]"
+      },
+      "signature": "def capture[F: def(var Self.A, var Self.B)](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Never, F, False] where Self.E == Never and Self.R == type_of(None)",
+      "summary": "Capture a callback with the selected signature without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, moved into the adapter with its captures.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The callback's exact native type, inferred at this boundary.",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingBinary[Self.A, Self.B, Self.R, Self.E]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBinary` preserving the callback's types and ownership.",
+       "type": "NativeBinary[Self.A, Self.B, Self.R, Self.E, F, True]"
+      },
+      "signature": "def capture[F: _RaisingBinary[Self.A, Self.B, Self.R, Self.E]](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Self.E, F, True] where Self.R != type_of(None)",
+      "summary": "Capture a callback with the selected signature without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, moved into the adapter with its captures.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The callback's exact native type, inferred at this boundary.",
+        "inferred": false,
+        "name": "F",
+        "type": "def(var Self.A, var Self.B) raises Self.E",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBinary` preserving the callback's types and ownership.",
+       "type": "NativeBinary[Self.A, Self.B, Self.R, Self.E, F, True]"
+      },
+      "signature": "def capture[F: def(var Self.A, var Self.B) raises Self.E](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Self.E, F, True] where Self.R == type_of(None)",
+      "summary": "Capture a callback with the selected signature without invoking it."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The first owned argument's type.",
+     "inferred": false,
+     "name": "A",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The second owned argument's type.",
+     "inferred": false,
+     "name": "B",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The result type.",
+     "inferred": false,
+     "name": "R",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The raised error type, defaulting to `Never`.",
+     "inferred": false,
+     "name": "E",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "callables/native",
+   "signature": "struct BinarySignature[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable = Never]",
+   "summary": "Select a binary signature before capturing a native closure.",
+   "traits": []
+  },
   "callables.BorrowCallCompatible": {
    "aliases": [],
    "description": "True when `T` is exactly `H.Payload`, including embedded origins, and `H`\nraises `E` or nothing. A generic function that forwards a borrowed callback\ncarries it in its `where` clause.",
@@ -289624,7 +289788,7 @@
    "summary": "Functor, Filterable, FunctorFilter, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Semigroup and Monoid over native values, with explicit instances."
   },
   "callables": {
-   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. `BorrowCallable` and `BorrowOnceCallable` borrow\ntheir argument instead of taking it, and `invoke_borrowed` and\n`invoke_borrowed_once` call them. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped` and `Identity` from `fp.functions` implement these\nprotocols.\n\n`as_binary` stores a plain binary function or thin pointer in `NativeBinary`.\nIt preserves two owned argument types and the exact result and error types.\nNamed adapters can be reused by shared borrow in `zip_with`, `map_with_index`,\n`scan_map` and `scan_left`. The factory does not infer capturing closures.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Owned iteration callbacks, `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| Iteration predicates, `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `OnceThunk` |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
+   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. `BorrowCallable` and `BorrowOnceCallable` borrow\ntheir argument instead of taking it, and `invoke_borrowed` and\n`invoke_borrowed_once` call them. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped` and `Identity` from `fp.functions` implement these\nprotocols.\n\n`as_binary` stores a plain binary function or thin pointer in `NativeBinary`.\nIt preserves two owned argument types and the exact result and error types.\nNamed adapters can be reused by shared borrow in `zip_with`, `map_with_index`,\n`scan_map` and `scan_left`. The factory does not infer capturing closures.\n`BinarySignature[A, B, R, E].capture(closure)` selects the signature before\ncapturing a binary closure into the same adapter. Its error defaults to `Never`.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Owned iteration callbacks, `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| Iteration predicates, `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `OnceThunk` |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
    "summary": "How the library calls user code: callable protocols, receiver dispatch and native functions as values."
   },
   "combinators": {

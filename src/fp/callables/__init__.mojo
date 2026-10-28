@@ -23,6 +23,8 @@ protocols.
 It preserves two owned argument types and the exact result and error types.
 Named adapters can be reused by shared borrow in `zip_with`, `map_with_index`,
 `scan_map` and `scan_left`. The factory does not infer capturing closures.
+`BinarySignature[A, B, R, E].capture(closure)` selects the signature before
+capturing a binary closure into the same adapter. Its error defaults to `Never`.
 
 Where each consumer enters:
 
@@ -52,4 +54,4 @@ from .invoke import (
     call_once, call_repeated, RepeatableUnary, RepeatableBinary, RepeatableThunk,
     BorrowCallCompatible, invoke_borrowed, invoke_borrowed_once,
 )
-from .native import NativeUnary, as_unary, NativeBinary, as_binary
+from .native import NativeUnary, as_unary, NativeBinary, as_binary, BinarySignature

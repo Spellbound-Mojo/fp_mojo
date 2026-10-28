@@ -1,6 +1,7 @@
 """Keep an owned native closure reusable as a library callable."""
 from fp.functions import pipeline, as_unary, as_binary
 from fp.iteration import iterated
+from fp.callables import BinarySignature
 
 
 def add(var first: Int, var second: Int) -> Int: return first + second
@@ -17,3 +18,8 @@ def main():
     var combine = as_binary(add)
     print("running:", iterated(range(1, 4)).scan_left(combine, 0).collect_list())
     print("zipped:", iterated(range(2)).zip_with(range(3, 5), combine).collect_list())
+    var sum_prefix = String("sum=")
+    def format_sum(var first: Int, var second: Int) {var sum_prefix^} -> String:
+        return sum_prefix + String(first + second)
+    var format = BinarySignature[Int, Int, String].capture(format_sum^)
+    print("captured binary:", format(2, 3), format(4, 5))

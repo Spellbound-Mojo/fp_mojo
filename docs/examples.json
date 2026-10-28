@@ -181,7 +181,7 @@
       "stdout": "retained: [1, 1, 3, 3]\npaired: [(1, 11), (1, 21), (3, 13), (3, 23)]\nbefore: [1, 1, 2, 2]\nfollowed_by: [7, 8, 7, 8]\noptional present: False\n"
     },
     "docs/examples/native_callback_reuse.mojo": {
-      "stdout": "first: item-2\nagain: item-3\nmoved: item-4\nrunning: [0, 1, 3, 6]\nzipped: [3, 5]\n"
+      "stdout": "first: item-2\nagain: item-3\nmoved: item-4\nrunning: [0, 1, 3, 6]\nzipped: [3, 5]\ncaptured binary: sum=5 sum=9\n"
     },
     "docs/examples/non_empty_validation.mojo": {
       "stdout": "errors: 2\n-1 must be positive\n-2 must be positive\nfirst: 2 count: 3\n"

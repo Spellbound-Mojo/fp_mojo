@@ -360,6 +360,91 @@ comptime _NativeBinary[A: Movable & Deinitable, B: Movable & Deinitable, R: Mova
                       E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool] = NativeBinary[A, B, R, E, F, raising]
 
 
+struct BinarySignature[A: Movable & Deinitable, B: Movable & Deinitable,
+                       R: Movable & Deinitable, E: Movable & Deinitable = Never]:
+    """Select a binary signature before capturing a native closure.
+
+    `BinarySignature[A, B, R].capture(closure)` infers the closure's concrete
+    type and returns a `NativeBinary`. Supply `E` for a raising callback.
+    The default `Never` accepts both pure and explicitly `raises Never`
+    signatures. Use `type_of(None)` for a procedure with no return value;
+    an explicit `NoneType` result remains distinct.
+
+    Signature selection precedes callback admission, so rejected conventions
+    do not require inference of the input, result or error types from the
+    callback. No callback runs during capture. Ownership, copyability and
+    embedded origins remain those of the stored callable.
+
+    Parameters:
+        A: The first owned argument's type.
+        B: The second owned argument's type.
+        R: The result type.
+        E: The raised error type, defaulting to `Never`.
+    """
+    # --- native binary capture (generated) ---
+    @staticmethod
+    def capture[F: _Binary[Self.A, Self.B, Self.R]](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Never, F, False] where Self.E == Never and Self.R != type_of(None):
+        """Capture a callback with the selected signature without invoking it.
+
+        Parameters:
+            F: The callback's exact native type, inferred at this boundary.
+
+        Args:
+            function: The callback, moved into the adapter with its captures.
+
+        Returns:
+            A `NativeBinary` preserving the callback's types and ownership.
+        """
+        return NativeBinary[Self.A, Self.B, Self.R, Never, F, False](function^)
+
+    @staticmethod
+    def capture[F: def(var Self.A, var Self.B)](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Never, F, False] where Self.E == Never and Self.R == type_of(None):
+        """Capture a callback with the selected signature without invoking it.
+
+        Parameters:
+            F: The callback's exact native type, inferred at this boundary.
+
+        Args:
+            function: The callback, moved into the adapter with its captures.
+
+        Returns:
+            A `NativeBinary` preserving the callback's types and ownership.
+        """
+        return NativeBinary[Self.A, Self.B, Self.R, Never, F, False](function^)
+
+    @staticmethod
+    def capture[F: _RaisingBinary[Self.A, Self.B, Self.R, Self.E]](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Self.E, F, True] where Self.R != type_of(None):
+        """Capture a callback with the selected signature without invoking it.
+
+        Parameters:
+            F: The callback's exact native type, inferred at this boundary.
+
+        Args:
+            function: The callback, moved into the adapter with its captures.
+
+        Returns:
+            A `NativeBinary` preserving the callback's types and ownership.
+        """
+        return NativeBinary[Self.A, Self.B, Self.R, Self.E, F, True](function^)
+
+    @staticmethod
+    def capture[F: def(var Self.A, var Self.B) raises Self.E](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Self.E, F, True] where Self.R == type_of(None):
+        """Capture a callback with the selected signature without invoking it.
+
+        Parameters:
+            F: The callback's exact native type, inferred at this boundary.
+
+        Args:
+            function: The callback, moved into the adapter with its captures.
+
+        Returns:
+            A `NativeBinary` preserving the callback's types and ownership.
+        """
+        return NativeBinary[Self.A, Self.B, Self.R, Self.E, F, True](function^)
+
+    # --- end native binary capture ---
+
+
 comptime _Unary[A: Movable & Deinitable, R: Movable & Deinitable] = def(var A) -> R
 
 

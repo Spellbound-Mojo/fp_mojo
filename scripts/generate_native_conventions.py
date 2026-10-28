@@ -14,6 +14,8 @@ ADAPTER_START = "# --- native unary admission (generated) ---\n"
 ADAPTER_END = "# --- end native unary admission ---\n"
 BINARY_START = "# --- native binary admission (generated) ---\n"
 BINARY_END = "# --- end native binary admission ---\n"
+CAPTURE_START = "    # --- native binary capture (generated) ---\n"
+CAPTURE_END = "    # --- end native binary capture ---\n"
 
 def markers(name):
     indent = "        " if NATIVE_INVOCATIONS[name].view else "    "
@@ -127,6 +129,39 @@ BINARY_PARAMETERS = {
 }
 
 
+def binary_capture_methods():
+    """Admit a closure after its complete native signature has been selected."""
+    out = []
+    for raising in (False, True):
+        for void in (False, True):
+            failure = "Self.E" if raising else "Never"
+            if void:
+                bound = "def(var Self.A, var Self.B)" + (" raises Self.E" if raising else "")
+            else:
+                bound = ("_RaisingBinary[Self.A, Self.B, Self.R, Self.E]" if raising
+                         else "_Binary[Self.A, Self.B, Self.R]")
+            conditions = ([] if raising else ["Self.E == Never"]) + [
+                "Self.R " + ("==" if void else "!=") + " type_of(None)"]
+            owner = f"NativeBinary[Self.A, Self.B, Self.R, {failure}, F, {raising}]"
+            out.append(f'''    @staticmethod
+    def capture[F: {bound}](var function: F) -> {owner} where {" and ".join(conditions)}:
+        """Capture a callback with the selected signature without invoking it.
+
+        Parameters:
+            F: The callback's exact native type, inferred at this boundary.
+
+        Args:
+            function: The callback, moved into the adapter with its captures.
+
+        Returns:
+            A `NativeBinary` preserving the callback's types and ownership.
+        """
+        return {owner}(function^)
+
+''')
+    return "".join(out)
+
+
 def source(text=None):
     text = OUTPUT.read_text() if text is None else text
     for name in NATIVE_INVOCATIONS:
@@ -140,6 +175,9 @@ def source(text=None):
     before, remaining = text.split(BINARY_START, 1)
     _, after = remaining.split(BINARY_END, 1)
     text = before + BINARY_START + pointer_factories("binary", ["A", "B"], "as_binary", owner="NativeBinary") + BINARY_END + after
+    before, remaining = text.split(CAPTURE_START, 1)
+    _, after = remaining.split(CAPTURE_END, 1)
+    text = before + CAPTURE_START + binary_capture_methods() + CAPTURE_END + after
     return text.rstrip() + "\n"
 
 

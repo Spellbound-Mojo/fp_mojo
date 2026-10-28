@@ -26,6 +26,15 @@ As with `NativeUnary`, `.function()` borrows the stored callable and
 it does not infer capturing closures. A callable struct gives explicit control
 over captures and receiver modes.
 
+Capture a binary closure with `BinarySignature[A, B, R, E].capture(closure^)`.
+Select the two input types and result type; `E` defaults to `Never` for pure
+callbacks and explicit `raises Never`. A raising callback supplies its error
+type as the fourth parameter. The result is the same reusable `NativeBinary`,
+with its closure type, copyability and capture origins retained automatically.
+The example uses `BinarySignature[Int, Int, String]` for a formatter that owns
+its prefix, without naming the closure's generated type or a raising flag.
+A closure containing only borrowed references can be passed by name.
+
 A procedure with no return value differs from a function returning `NoneType`.
 Pipeline and composition mismatch diagnostics name the former
 `type_of(None) (no return value)`. Declare an explicit `-> NoneType` result
