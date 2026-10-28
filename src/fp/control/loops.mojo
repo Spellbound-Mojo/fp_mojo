@@ -499,3 +499,64 @@ def fori_loop_mut[A: Movable & Deinitable, F: BinaryContract & Movable & Deinita
     return _indexed[A, Pointer[F, origin_of(body_fun)], F.Error,
         _indexed_repeated[A, F, origin_of(body_fun)], unroll, True, lower, upper](
         lower, upper, Pointer(to=body_fun), init_val^)
+
+
+def fori_loop[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable,
+              //, unroll: Int = 1](
+    lower: Int, upper: Int, var body_fun: F, var init_val: A
+) raises F.Error -> A where RepeatableBinary[F] and F.First == Int and F.Second == A and F.Out == A:
+    """Consume a repeatable body and run a dynamically bounded counted loop.
+
+    Mutable invocation wins over shared invocation. The owner is destroyed
+    after success or failure, including for empty bounds. Pass `mut_ref(body)`
+    to retain the original receiver and its state. The carry moves through
+    each step without copying. Bounds and unrolling follow `fori_loop_mut`.
+
+    Parameters:
+        A: The exact carry type, including its borrowed origins.
+        F: A shared or mutable binary callback taking (Int, carry).
+        unroll: Steps per rolled iteration; positive for dynamic bounds.
+
+    Args:
+        lower: The first index.
+        upper: The excluded upper bound.
+        body_fun: The callback owner, consumed for the entire loop.
+        init_val: The initial carry, consumed.
+
+    Returns:
+        The final carry, or the initial carry when the bounds are empty.
+
+    Raises:
+        The body's exact error; execution stops before the next step.
+    """
+    return fori_loop_mut[unroll=unroll](lower, upper, body_fun, init_val^)
+
+
+def fori_loop[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable,
+              //, lower: Int, upper: Int, unroll: Int = 1](
+    var body_fun: F, var init_val: A
+) raises F.Error -> A where RepeatableBinary[F] and F.First == Int and F.Second == A and F.Out == A:
+    """Consume a repeatable body and run a statically bounded counted loop.
+
+    Receiver choice, errors and ownership follow the dynamic owned form.
+    `unroll=0` fully expands the same ordered steps. The body is destroyed
+    even for empty bounds; `mut_ref(body)` retains its original state.
+
+    Parameters:
+        A: The exact carry type, including its borrowed origins.
+        F: A shared or mutable binary callback taking (Int, carry).
+        lower: The first index, known at compile time.
+        upper: The excluded upper bound, known at compile time.
+        unroll: Steps per rolled iteration, or zero for full static expansion.
+
+    Args:
+        body_fun: The callback owner, consumed for the entire loop.
+        init_val: The initial carry, consumed.
+
+    Returns:
+        The final carry, or the initial carry when the bounds are empty.
+
+    Raises:
+        The body's exact error; execution stops before the next step.
+    """
+    return fori_loop_mut[lower, upper, unroll=unroll](body_fun, init_val^)

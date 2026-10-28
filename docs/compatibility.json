@@ -349,7 +349,7 @@
     },
     "control": {
       "scope": "Loops, state transitions and early termination.",
-      "restrictions": "Native callback signatures and exact common raised errors remain part of admission.",
+      "restrictions": "Native callback signatures and exact common raised errors remain part of admission. An invalid native fori_loop callback with a mut Int index can crash Mojo 1.2 during inference; library callable index constraints reject normally.",
       "evidence": [
         "docs/examples/control_flow.mojo",
         "tests/runtime/test_fori_loop_mut.mojo",
@@ -364,7 +364,21 @@
         "tests/compile_fail/fori_loop_mut_origin.mojo",
         "tests/compile_fail/fori_loop_mut_readonly.mojo",
         "tests/compile_fail/fori_loop_mut_result.mojo",
-        "tests/compile_fail/fori_loop_mut_temporary.mojo"
+        "tests/compile_fail/fori_loop_mut_temporary.mojo",
+        "tests/runtime/test_fori_loop_owned.mojo",
+        "tests/ownership/test_fori_loop_owned.mojo",
+        "tests/compile_fail/fori_owned_bare.mojo",
+        "tests/compile_fail/fori_owned_carry.mojo",
+        "tests/compile_fail/fori_owned_dynamic_unroll.mojo",
+        "tests/compile_fail/fori_owned_error.mojo",
+        "tests/compile_fail/fori_owned_error_origin.mojo",
+        "tests/compile_fail/fori_owned_index.mojo",
+        "tests/compile_fail/fori_owned_negative_unroll.mojo",
+        "tests/compile_fail/fori_owned_once.mojo",
+        "tests/compile_fail/fori_owned_output.mojo",
+        "tests/compile_fail/fori_owned_output_origin.mojo",
+        "tests/compile_fail/fori_owned_reuse.mojo",
+        "tests/compile_fail/fori_owned_static_once.mojo"
       ]
     },
     "algebra": {

@@ -71,3 +71,4 @@ def main() raises:
     var measured = Advance(0)
     var limited = while_loop_mut(mut_ref(stop),measured,0)
     print("stateful predicate:", limited, "checks:", stop.checks, "steps:", measured.calls)
+    print("owned fori:", fori_loop[0,4,unroll=0](Weighted(0),0))

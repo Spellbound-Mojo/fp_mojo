@@ -9,8 +9,16 @@ Use `fori_loop_mut(lower, upper, body, carry)` when a named library body needs
 exclusive access to its receiver. Its updates remain in `body` after the call,
 including updates made before a raised error. The body implements
 `MutableBinary` or `Binary` with `(Int, Carry) -> Carry`; mutable invocation wins
-when both are available, matching `call_repeated`. `fori_loop` keeps its shared
-receiver behavior. Native functions and closures continue to use `fori_loop`.
+when both are available, matching `call_repeated`. Native functions and closures
+continue to use `fori_loop`.
+
+Ordinary `fori_loop` also accepts a moved or temporary library body. Use
+`fori_loop(0, 4, body^, carry)` when the loop owns its callback, or
+`fori_loop(0, 4, mut_ref(body), carry)` to retain the updated body. Both prefer
+mutable invocation before shared invocation and reject consuming-only callbacks.
+A named shared body remains borrowed and uses its shared receiver. The same
+rules apply to `fori_loop[lower, upper, unroll=0](body^, carry)`. An owned body
+is consumed and destroyed even when the bounds are empty.
 
 The mutable entry point has the same static form,
 `fori_loop_mut[lower, upper, unroll=0](body, carry)`, and the same bounds and
@@ -57,6 +65,8 @@ order, `[6, 5, 3]`.
 
 The mutable counted-loop example retains its increasing weight in `body`.
 The four steps produce `20`, and the body records four calls after the loop.
+The owned example passes `Weighted(0)` directly to `fori_loop` and also returns
+`20`, without introducing a named callback or selecting a different operation.
 
 The mutable while-loop example reuses a captured predicate and increases its
 step size through `advance.calls`: the carries are `0`, `1`, `3`, `6`, `10`.

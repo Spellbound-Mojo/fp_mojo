@@ -641,6 +641,14 @@ caller's body and delegates to `_binary_repeated_as`. That existing receiver
 policy chooses mutable invocation before shared invocation. Bounds, unrolling,
 error propagation and carry ownership remain with the indexed kernel.
 
+Owned `fori_loop` overloads take a repeatable binary value, then delegate to
+`fori_loop_mut` with that local owner. Dynamic and static forms add no execution
+or receiver policy. Moved and temporary bodies therefore use the same mutable
+preference; named shared bodies retain their original borrowed overload.
+`mut_ref(body)` supplies the existing exclusive reference adapter when the caller
+needs to inspect state afterward. Both the carry and callback are destroyed
+exactly once on failure, and an empty loop still consumes the owned callback.
+
 `while_loop_mut` likewise delegates scheduling and cleanup to `_loops._while`.
 Both library overloads enter `_while_mut_owned`, the sole validation and
 receiver-storage boundary. Named shared predicates use the existing
@@ -668,12 +676,13 @@ boundary. Inferring the function trait directly in the mutable-loop overload
 set crashes Mojo 1.2 on invalid input or result conventions; selecting a full
 signature first keeps ordinary rejection diagnostics and native origins.
 
-The explicit receiver name follows `call_mut`. Combining shared and exclusive
+The explicit receiver name follows `call_mut`. Combining shared and exclusively borrowed
 library admissions under one `fori_loop` overload set is ambiguous for a body
 that supports both modes on Mojo 1.2. Excluding shared bodies from the mutable
 overload then prevents forwarding an arbitrary `MutableBinary`. Separate
-receiver entry points preserve existing shared calls and let generic mutable
-wrappers forward without negative capability constraints or explicit casts.
+borrowed receiver entry points preserve existing shared calls and let generic
+mutable wrappers forward without negative capability constraints or explicit
+casts. Owned admission is distinct and can share the ordinary operation name.
 
 Native callback bridges remain signature-specific: lazy scans own and mutably
 call their captures, while control scan borrows its native callback. Control

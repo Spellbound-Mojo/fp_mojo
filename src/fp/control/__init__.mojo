@@ -14,8 +14,10 @@ closure. Callbacks keep one receiver throughout.
 
 Use `fori_loop_mut` to borrow a named library body exclusively and retain its
 mutable state after the call. It accepts shared or mutable binary callbacks,
-preferring mutable invocation when both are available. `fori_loop` retains
-its shared receiver behavior. Both forms share bounds, unrolling and errors.
+preferring mutable invocation when both are available. `fori_loop` also owns
+moved or temporary repeatable bodies with that preference; `mut_ref(body)`
+retains the original state. Named shared bodies keep their borrowed behavior.
+Both forms share bounds, unrolling and errors.
 
 `while_loop_mut(predicate, body, carry)` borrows a named unary body exclusively
 with the same repeated receiver preference. It also owns shared or mutable

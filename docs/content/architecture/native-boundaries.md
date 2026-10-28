@@ -8,6 +8,15 @@ API without a separate review.
 
 ## Mojo 1.2 compatibility
 
+- An invalid native `fori_loop` callback taking its index as `mut Int` can crash
+  Mojo 1.2 during inference instead of producing a diagnostic. The minimal
+  call is `fori_loop(0, 2, bad, 0)`, where
+  `bad(mut index: Int, var carry: Int) -> Int` returns the carry. This reproduces
+  on the baseline before owned library-body overloads and on the updated source.
+  It remains an unsupported native signature, not a passing rejection test.
+  Library bodies use `BinaryContract` and exact metadata constraints; their
+  invalid index types receive ordinary diagnostics.
+
 - `std.hash` replaces `std.hashlib`. Native `Dict` hasher parameters require
   `Defaultable & Hasher & Deinitable`; dictionary adapters carry those same bounds.
 - Native function traits no longer expose named signature aliases such as

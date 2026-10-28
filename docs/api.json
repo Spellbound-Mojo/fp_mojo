@@ -23407,6 +23407,136 @@
      },
      "signature": "def fori_loop[A: Movable & Deinitable, F: Binary, //, lower: Int, upper: Int, unroll: Int = 1](body_fun: F, var init_val: A) raises F.Error -> A where F.First == Int and F.Second == A and F.Out == A",
      "summary": "Counted loop with static bounds and a library `Binary` body."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The first index.",
+       "name": "lower",
+       "type": "Int",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "The excluded upper bound.",
+       "name": "upper",
+       "type": "Int",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The callback owner, consumed for the entire loop.",
+       "name": "body_fun",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The initial carry, consumed.",
+       "name": "init_val",
+       "type": "A",
+       "variadic": false
+      }
+     ],
+     "description": "Mutable invocation wins over shared invocation. The owner is destroyed\nafter success or failure, including for empty bounds. Pass `mut_ref(body)`\nto retain the original receiver and its state. The carry moves through\neach step without copying. Bounds and unrolling follow `fori_loop_mut`.",
+     "error": "F.Error",
+     "parameters": [
+      {
+       "description": "The exact carry type, including its borrowed origins.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "A shared or mutable binary callback taking (Int, carry).",
+       "inferred": true,
+       "name": "F",
+       "type": "BinaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "Steps per rolled iteration; positive for dynamic bounds.",
+       "inferred": false,
+       "name": "unroll",
+       "type": "Int",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The body's exact error; execution stops before the next step.",
+     "returns": {
+      "doc": "The final carry, or the initial carry when the bounds are empty.",
+      "type": "A"
+     },
+     "signature": "def fori_loop[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, unroll: Int = 1](lower: Int, upper: Int, var body_fun: F, var init_val: A) raises F.Error -> A where RepeatableBinary[F] and F.First == Int and F.Second == A and F.Out == A",
+     "summary": "Consume a repeatable body and run a dynamically bounded counted loop."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The callback owner, consumed for the entire loop.",
+       "name": "body_fun",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The initial carry, consumed.",
+       "name": "init_val",
+       "type": "A",
+       "variadic": false
+      }
+     ],
+     "description": "Receiver choice, errors and ownership follow the dynamic owned form.\n`unroll=0` fully expands the same ordered steps. The body is destroyed\neven for empty bounds; `mut_ref(body)` retains its original state.",
+     "error": "F.Error",
+     "parameters": [
+      {
+       "description": "The exact carry type, including its borrowed origins.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "A shared or mutable binary callback taking (Int, carry).",
+       "inferred": true,
+       "name": "F",
+       "type": "BinaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The first index, known at compile time.",
+       "inferred": false,
+       "name": "lower",
+       "type": "Int",
+       "variadic": false
+      },
+      {
+       "description": "The excluded upper bound, known at compile time.",
+       "inferred": false,
+       "name": "upper",
+       "type": "Int",
+       "variadic": false
+      },
+      {
+       "description": "Steps per rolled iteration, or zero for full static expansion.",
+       "inferred": false,
+       "name": "unroll",
+       "type": "Int",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The body's exact error; execution stops before the next step.",
+     "returns": {
+      "doc": "The final carry, or the initial carry when the bounds are empty.",
+      "type": "A"
+     },
+     "signature": "def fori_loop[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, lower: Int, upper: Int, unroll: Int = 1](var body_fun: F, var init_val: A) raises F.Error -> A where RepeatableBinary[F] and F.First == Int and F.Second == A and F.Out == A",
+     "summary": "Consume a repeatable body and run a statically bounded counted loop."
     }
    ],
    "provider": "control/loops",
@@ -320762,7 +320892,7 @@
    "summary": "Direct combinators shared with fluent pipelines."
   },
   "control": {
-   "description": "They follow the sequential value semantics of JAX's control-flow operations,\nwithout tensor stacking, tracing, autodiff or a JIT. Branch with Mojo's `if`.\n\nThe carry may be any value: a scalar, a SIMD value, a string, a container or a\nmove-only owner. Its type stays fixed, and nothing copies it. A callback is a\nplain function or a closure, with separate pure and raising overloads, or a\nshared-receiver library value: `Unary` for a `while_loop` body, `Binary` taking\n`(Int, carry)` for a `fori_loop` body, and a `Binary` step for `scan`, whose\noutput type is then named, `scan[Y](step, ...)`. A `while_loop` predicate may\nbe a `BorrowCallable`. A call needing keywords or defaults is written as a\nclosure. Callbacks keep one receiver throughout.\n\nUse `fori_loop_mut` to borrow a named library body exclusively and retain its\nmutable state after the call. It accepts shared or mutable binary callbacks,\npreferring mutable invocation when both are available. `fori_loop` retains\nits shared receiver behavior. Both forms share bounds, unrolling and errors.\n\n`while_loop_mut(predicate, body, carry)` borrows a named unary body exclusively\nwith the same repeated receiver preference. It also owns shared or mutable\nborrowing predicates; pass `mut_ref(predicate)` to retain their updated state.\nNamed shared `BorrowCallable` predicates, plain functions and stored thin\npointers keep their borrowed admission. Capturing predicates\nand pointer aliases use `BorrowSignature[A, Bool, E].capture(callback)`.\n\nErrors stop the loop at once. A predicate and a body must raise one error type,\nincluding any embedded origins, or one of them nothing. Nothing retries or\nrolls back effects.\n\nThe compile-time parameter `unroll` expands that many steps per rolled\niteration, with exact bounds checks for the final partial chunk; `1`, the\ndefault, keeps a rolled loop. `unroll=0` fully expands a statically bounded\nloop: `fori_loop[lower, upper, unroll=0](body, initial)` or\n`scan[static_length=N, unroll=0](...)`. Full unrolling without static bounds,\na negative factor and an invalid static length are compile errors.\n`while_loop` has no unroll parameter.",
+   "description": "They follow the sequential value semantics of JAX's control-flow operations,\nwithout tensor stacking, tracing, autodiff or a JIT. Branch with Mojo's `if`.\n\nThe carry may be any value: a scalar, a SIMD value, a string, a container or a\nmove-only owner. Its type stays fixed, and nothing copies it. A callback is a\nplain function or a closure, with separate pure and raising overloads, or a\nshared-receiver library value: `Unary` for a `while_loop` body, `Binary` taking\n`(Int, carry)` for a `fori_loop` body, and a `Binary` step for `scan`, whose\noutput type is then named, `scan[Y](step, ...)`. A `while_loop` predicate may\nbe a `BorrowCallable`. A call needing keywords or defaults is written as a\nclosure. Callbacks keep one receiver throughout.\n\nUse `fori_loop_mut` to borrow a named library body exclusively and retain its\nmutable state after the call. It accepts shared or mutable binary callbacks,\npreferring mutable invocation when both are available. `fori_loop` also owns\nmoved or temporary repeatable bodies with that preference; `mut_ref(body)`\nretains the original state. Named shared bodies keep their borrowed behavior.\nBoth forms share bounds, unrolling and errors.\n\n`while_loop_mut(predicate, body, carry)` borrows a named unary body exclusively\nwith the same repeated receiver preference. It also owns shared or mutable\nborrowing predicates; pass `mut_ref(predicate)` to retain their updated state.\nNamed shared `BorrowCallable` predicates, plain functions and stored thin\npointers keep their borrowed admission. Capturing predicates\nand pointer aliases use `BorrowSignature[A, Bool, E].capture(callback)`.\n\nErrors stop the loop at once. A predicate and a body must raise one error type,\nincluding any embedded origins, or one of them nothing. Nothing retries or\nrolls back effects.\n\nThe compile-time parameter `unroll` expands that many steps per rolled\niteration, with exact bounds checks for the final partial chunk; `1`, the\ndefault, keeps a rolled loop. `unroll=0` fully expands a statically bounded\nloop: `fori_loop[lower, upper, unroll=0](body, initial)` or\n`scan[static_length=N, unroll=0](...)`. Full unrolling without static bounds,\na negative factor and an invalid static length are compile errors.\n`while_loop` has no unroll parameter.",
    "summary": "Functional loops and scans over native Mojo values: `while_loop`, `while_loop_mut`, `fori_loop`, `fori_loop_mut` and `scan`."
   },
   "data": {

@@ -2899,6 +2899,14 @@
     {
      "sha256": "4ad4297493026215279763084c990df43fa6630d8155532779e0e87377e4aefa",
      "signature": "def fori_loop[A: Movable & Deinitable, F: Binary, //, lower: Int, upper: Int, unroll: Int = 1]( body_fun: F, var init_val: A ) raises F.Error -> A where F.First == Int and F.Second == A and F.Out == A:"
+    },
+    {
+     "sha256": "860e28b17a7571196c1b1a09ed5f22a9e6d8a236a7ad980becf5ebe8307c3830",
+     "signature": "def fori_loop[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, unroll: Int = 1]( lower: Int, upper: Int, var body_fun: F, var init_val: A ) raises F.Error -> A where RepeatableBinary[F] and F.First == Int and F.Second == A and F.Out == A:"
+    },
+    {
+     "sha256": "bd788af969edc43a67475be6adb3f7a1257a958e4e637d1874a7b511affa4162",
+     "signature": "def fori_loop[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, lower: Int, upper: Int, unroll: Int = 1]( var body_fun: F, var init_val: A ) raises F.Error -> A where RepeatableBinary[F] and F.First == Int and F.Second == A and F.Out == A:"
     }
    ],
    "provider": "control/loops"
