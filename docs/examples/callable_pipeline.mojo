@@ -1,5 +1,5 @@
 """Immediate pipeline of plain functions over a consumed list and a terminal fold."""
-from fp.functions import pipe
+from fp.functions import pipe, partial
 from fp.iteration import filter, collect_list
 from fp.iteration import fold_left
 from std.testing import assert_equal
@@ -14,6 +14,7 @@ def total(var values: List[Int]) -> Int:
     return fold_left(plus, 0, values^)
 
 def receipt(var value: Int) -> String: return "total=" + String(value)
+def surcharge(amount: Int, value: Int) -> Int: return amount + value
 
 @fieldwise_init
 struct ReceiptFailure(Movable):
@@ -32,3 +33,8 @@ def main() raises:
     try: _ = pipe(-4, checked, receipt)
     except error: invalid = error.invalid_total
     assert_equal(invalid, -4)
+    var fee = partial(surcharge, 2)
+    var formatter: def(var Int) thin -> String = receipt
+    print("with fee:", pipe(10, fee, formatter))
+    var prices: List[Int] = [1, 2]
+    print("reused fee:", pipe(prices^, total, fee))

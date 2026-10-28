@@ -98,6 +98,12 @@ The composition owns the library stage and a copy of the pointer; no callback
 runs during construction. Unary capturing closures still use `as_unary` when
 stored as composition stages.
 
+For immediate application, `pipe(value, first, second)` accepts a plain
+function or stored thin pointer beside a shared library stage. It borrows
+the library stage for the call, so a named partial remains available afterward.
+The [immediate pipeline example](../reference/functions.md#other-pipeline-entry-points)
+reuses one surcharge callback with formatting and totaling functions.
+
 These choices do not change the operation. Mapping a callback that returns a
 Result keeps that Result as an element; `traverse` gathers effectful results,
 and `flat_map` sequences a returned carrier. A lazy `filter_map` removes one

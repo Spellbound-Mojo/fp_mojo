@@ -28,7 +28,7 @@
       "stdout": "any: True\nall: False\n"
     },
     "docs/examples/callable_pipeline.mojo": {
-      "stdout": "total=10\n"
+      "stdout": "total=10\nwith fee: total=12\nreused fee: 5\n"
     },
     "docs/examples/callable_pipeline_generic.mojo": {
       "stdout": "generic pipeline: 3; error: -7\n"

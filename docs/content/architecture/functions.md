@@ -66,6 +66,14 @@ to preserve the native signature before reaching this boundary: a concrete
 register pointer cannot be converted to an unconstrained memory signature
 inside a user wrapper. Generic library callable contracts avoid that conversion.
 
+The same native factory descriptor supplies inferred two-stage mixed `pipe`.
+Its library stage is a borrowed `Unary`, matching the original immediate
+pipeline contract. The generated overload constructs only the native pointer
+adapter and forwards both stages to `pipe`; it introduces no composition
+storage or new runner. The planner keeps native no-value output distinct from
+an explicit `NoneType` result. Existing `E` and `Results` bindings stay on
+their original explicit overloads, which retain their promotion contract.
+
 A pipeline's result type is inferred from the stages. `functions._stages` builds
 one compile-time plan (`_Plan`) from the stages' types: it tabulates each stage's
 result type as a `TypeList` with a known length and reduces it to the final

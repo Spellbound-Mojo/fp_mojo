@@ -233409,7 +233409,7 @@
        "variadic": true
       }
      ],
-     "description": "Each stage runs once, in order, and receives the previous stage's result as\nan owned value; tuples and `Result` values pass whole. Two to eight plain\nfunctions are accepted as they are, `pipe(value, parse, check, render)`;\nlibrary values such as partials and compositions, and closures promoted\nwith `as_unary`, are accepted in any number. A stage whose input is not the\nprevious result is a compile error that names the stage. `pipe[E=Failure]`\nstates the common error, and `pipe[Results, E]` every result type.\n\nLimitations:\n    At most eight plain functions per call, because Mojo 1.1 cannot read a\n    function's signature from a variadic pack: nest calls, group stages\n    with `flow`, or chain them with `piped`. Plain functions mixed with\n    library values are promoted with `as_unary`. Stages that raise\n    different error types are mapped to one type first.",
+     "description": "Each stage runs once, in order, and receives the previous stage's result as\nan owned value; tuples and `Result` values pass whole. Two to eight plain\nfunctions are accepted as they are, `pipe(value, parse, check, render)`;\nlibrary values such as partials and compositions, and closures promoted\nwith `as_unary`, are accepted in any number. A stage whose input is not the\nprevious result is a compile error that names the stage. `pipe[E=Failure]`\nstates the common error, and `pipe[Results, E]` every result type.\n\nAn inferred two-stage call can mix a plain function or stored thin pointer\nwith a shared library stage directly, in either position. The library\nstage is borrowed and remains reusable after the call.\n\nLimitations:\n    At most eight plain functions per call, because Mojo 1.1 cannot read a\n    function's signature from a variadic pack: nest calls, group stages\n    with `flow`, or chain them with `piped`. Longer mixed calls and explicit\n    error/result bindings promote native stages with `as_unary`, as do\n    capturing closures in mixed calls. Stages that raise\n    different error types are mapped to one type first.",
      "error": "_Plan[*Fs].Failure",
      "parameters": [
       {
@@ -234576,6 +234576,1650 @@
      },
      "signature": "def pipe[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, A8: Movable & Deinitable, P1: Movable & Deinitable, P2: Movable & Deinitable, P3: Movable & Deinitable, P4: Movable & Deinitable, P5: Movable & Deinitable, P6: Movable & Deinitable, P7: Movable & Deinitable, E0: Movable & Deinitable, E1: Movable & Deinitable, E2: Movable & Deinitable, E3: Movable & Deinitable, E4: Movable & Deinitable, E5: Movable & Deinitable, E6: Movable & Deinitable, E7: Movable & Deinitable, //](var value: A0, f0: def(var A0) raises E0 thin -> A1, f1: def(var P1) raises E1 thin -> A2, f2: def(var P2) raises E2 thin -> A3, f3: def(var P3) raises E3 thin -> A4, f4: def(var P4) raises E4 thin -> A5, f5: def(var P5) raises E5 thin -> A6, f6: def(var P6) raises E6 thin -> A7, f7: def(var P7) raises E7 thin -> A8) raises _CommonError[_CommonError[_CommonError[_CommonError[_CommonError[_CommonError[_CommonError[E0, E1], E2], E3], E4], E5], E6], E7] -> A8",
      "summary": "Apply 8 plain functions in order."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[NativeUnary[A, R, Never, type_of(function), False], F].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[NativeUnary[A, R, Never, type_of(function), False], F].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, F: Unary, q: ImmOrigin, //](var value: V, ref[q] function: def(var A) thin -> R, stage: F) raises _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Failure -> _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Result",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[NativeUnary[A, R, Never, type_of(function), False], F].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[NativeUnary[A, R, Never, type_of(function), False], F].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Unary, //](var value: V, function: def(var A) thin -> R, stage: F) raises _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Failure -> _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Result where not conforms_to(A, RegisterPassable)",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[NativeUnary[A, R, Never, type_of(function), False], F].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[NativeUnary[A, R, Never, type_of(function), False], F].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Unary, //](var value: V, function: def(var A) thin -> R, stage: F) raises _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Failure -> _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Result where not conforms_to(R, RegisterPassable)",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[NativeUnary[A, R, Never, type_of(function), False], F].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[NativeUnary[A, R, Never, type_of(function), False], F].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Unary, //](var value: V, function: def(var A) thin -> R, stage: F) raises _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Failure -> _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Result",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[NativeUnary[A, type_of(None), Never, type_of(function), False], F].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[NativeUnary[A, type_of(None), Never, type_of(function), False], F].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, F: Unary, q: ImmOrigin, //](var value: V, ref[q] function: def(var A) thin, stage: F) raises _Plan[NativeUnary[A, type_of(None), Never, type_of(function), False], F].Failure -> _Plan[NativeUnary[A, type_of(None), Never, type_of(function), False], F].Result",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[NativeUnary[A, type_of(None), Never, type_of(function), False], F].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[NativeUnary[A, type_of(None), Never, type_of(function), False], F].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, F: Unary, //](var value: V, function: def(var A) thin, stage: F) raises _Plan[NativeUnary[A, type_of(None), Never, type_of(function), False], F].Failure -> _Plan[NativeUnary[A, type_of(None), Never, type_of(function), False], F].Result",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises X thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[NativeUnary[A, R, X, type_of(function), True], F].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[NativeUnary[A, R, X, type_of(function), True], F].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Unary, q: ImmOrigin, //](var value: V, ref[q] function: def(var A) raises X thin -> R, stage: F) raises _Plan[NativeUnary[A, R, X, type_of(function), True], F].Failure -> _Plan[NativeUnary[A, R, X, type_of(function), True], F].Result",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises X thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[NativeUnary[A, R, X, type_of(function), True], F].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[NativeUnary[A, R, X, type_of(function), True], F].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, F: Unary, //](var value: V, function: def(var A) raises X thin -> R, stage: F) raises _Plan[NativeUnary[A, R, X, type_of(function), True], F].Failure -> _Plan[NativeUnary[A, R, X, type_of(function), True], F].Result where not conforms_to(A, RegisterPassable)",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises X thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[NativeUnary[A, R, X, type_of(function), True], F].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[NativeUnary[A, R, X, type_of(function), True], F].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Unary, //](var value: V, function: def(var A) raises X thin -> R, stage: F) raises _Plan[NativeUnary[A, R, X, type_of(function), True], F].Failure -> _Plan[NativeUnary[A, R, X, type_of(function), True], F].Result where not conforms_to(R, RegisterPassable)",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises X thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[NativeUnary[A, R, X, type_of(function), True], F].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[NativeUnary[A, R, X, type_of(function), True], F].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, F: Unary, //](var value: V, function: def(var A) raises X thin -> R, stage: F) raises _Plan[NativeUnary[A, R, X, type_of(function), True], F].Failure -> _Plan[NativeUnary[A, R, X, type_of(function), True], F].Result",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises X thin",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[NativeUnary[A, type_of(None), X, type_of(function), True], F].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[NativeUnary[A, type_of(None), X, type_of(function), True], F].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, X: Movable & Deinitable, F: Unary, q: ImmOrigin, //](var value: V, ref[q] function: def(var A) raises X thin, stage: F) raises _Plan[NativeUnary[A, type_of(None), X, type_of(function), True], F].Failure -> _Plan[NativeUnary[A, type_of(None), X, type_of(function), True], F].Result",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises X thin",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[NativeUnary[A, type_of(None), X, type_of(function), True], F].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[NativeUnary[A, type_of(None), X, type_of(function), True], F].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, X: Movable & Deinitable, F: Unary, //](var value: V, function: def(var A) raises X thin, stage: F) raises _Plan[NativeUnary[A, type_of(None), X, type_of(function), True], F].Failure -> _Plan[NativeUnary[A, type_of(None), X, type_of(function), True], F].Result",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, F: Unary, q: ImmOrigin, //](var value: V, stage: F, ref[q] function: def(var A) thin -> R) raises _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Failure -> _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Result",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Unary, //](var value: V, stage: F, function: def(var A) thin -> R) raises _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Failure -> _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Result where not conforms_to(A, RegisterPassable)",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Unary, //](var value: V, stage: F, function: def(var A) thin -> R) raises _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Failure -> _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Result where not conforms_to(R, RegisterPassable)",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Unary, //](var value: V, stage: F, function: def(var A) thin -> R) raises _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Failure -> _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Result",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[F, NativeUnary[A, type_of(None), Never, type_of(function), False]].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[F, NativeUnary[A, type_of(None), Never, type_of(function), False]].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, F: Unary, q: ImmOrigin, //](var value: V, stage: F, ref[q] function: def(var A) thin) raises _Plan[F, NativeUnary[A, type_of(None), Never, type_of(function), False]].Failure -> _Plan[F, NativeUnary[A, type_of(None), Never, type_of(function), False]].Result",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[F, NativeUnary[A, type_of(None), Never, type_of(function), False]].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[F, NativeUnary[A, type_of(None), Never, type_of(function), False]].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, F: Unary, //](var value: V, stage: F, function: def(var A) thin) raises _Plan[F, NativeUnary[A, type_of(None), Never, type_of(function), False]].Failure -> _Plan[F, NativeUnary[A, type_of(None), Never, type_of(function), False]].Result",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises X thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[F, NativeUnary[A, R, X, type_of(function), True]].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[F, NativeUnary[A, R, X, type_of(function), True]].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Unary, q: ImmOrigin, //](var value: V, stage: F, ref[q] function: def(var A) raises X thin -> R) raises _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Failure -> _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Result",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises X thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[F, NativeUnary[A, R, X, type_of(function), True]].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[F, NativeUnary[A, R, X, type_of(function), True]].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, F: Unary, //](var value: V, stage: F, function: def(var A) raises X thin -> R) raises _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Failure -> _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Result where not conforms_to(A, RegisterPassable)",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises X thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[F, NativeUnary[A, R, X, type_of(function), True]].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[F, NativeUnary[A, R, X, type_of(function), True]].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Unary, //](var value: V, stage: F, function: def(var A) raises X thin -> R) raises _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Failure -> _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Result where not conforms_to(R, RegisterPassable)",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises X thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[F, NativeUnary[A, R, X, type_of(function), True]].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[F, NativeUnary[A, R, X, type_of(function), True]].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, F: Unary, //](var value: V, stage: F, function: def(var A) raises X thin -> R) raises _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Failure -> _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Result",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises X thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[F, NativeUnary[A, type_of(None), X, type_of(function), True]].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[F, NativeUnary[A, type_of(None), X, type_of(function), True]].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, X: Movable & Deinitable, F: Unary, q: ImmOrigin, //](var value: V, stage: F, ref[q] function: def(var A) raises X thin) raises _Plan[F, NativeUnary[A, type_of(None), X, type_of(function), True]].Failure -> _Plan[F, NativeUnary[A, type_of(None), X, type_of(function), True]].Result",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "stage",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises X thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_Plan[F, NativeUnary[A, type_of(None), X, type_of(function), True]].Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "Unary",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_Plan[F, NativeUnary[A, type_of(None), X, type_of(function), True]].Result"
+     },
+     "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, X: Movable & Deinitable, F: Unary, //](var value: V, stage: F, function: def(var A) raises X thin) raises _Plan[F, NativeUnary[A, type_of(None), X, type_of(function), True]].Failure -> _Plan[F, NativeUnary[A, type_of(None), X, type_of(function), True]].Result",
+     "summary": "Apply a plain function or stored pointer beside one borrowed library stage."
     }
    ],
    "provider": "functions/pipeline",
@@ -283204,7 +284848,7 @@
    "summary": "Functor, Filterable, FunctorFilter, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Semigroup and Monoid over native values, with explicit instances."
   },
   "callables": {
-   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. `BorrowCallable` and `BorrowOnceCallable` borrow\ntheir argument instead of taking it, and `invoke_borrowed` and\n`invoke_borrowed_once` call them. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped` and `Identity` from `fp.functions` implement these\nprotocols.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; two-stage `flow`/`compose` also mix a plain function or stored thin pointer with one library stage directly. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Owned iteration callbacks, `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| Iteration predicates, `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `OnceThunk` |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
+   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. `BorrowCallable` and `BorrowOnceCallable` borrow\ntheir argument instead of taking it, and `invoke_borrowed` and\n`invoke_borrowed_once` call them. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped` and `Identity` from `fp.functions` implement these\nprotocols.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Owned iteration callbacks, `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| Iteration predicates, `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `OnceThunk` |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
    "summary": "How the library calls user code: callable protocols, receiver dispatch and native functions as values."
   },
   "combinators": {
@@ -283224,7 +284868,7 @@
    "summary": "Reader, State and Writer computations and the OptionalT and ResultT layers, over any base Monad."
   },
   "functions": {
-   "description": "Use `pipe(value, f, g)` to apply stages now, `flow(f, g)` or `compose(g, f)` to\nbuild a reusable composition, and `piped(value).then(f).get()` to chain any\nnumber of stages one call at a time. `flip` swaps two arguments and `partial`\nbinds leading arguments.\n\nTwo-stage `flow` and `compose` can mix a plain function or stored thin pointer\nwith a library callable directly, in either position. Compositions own their\nstages and preserve their shared, mutable or consuming receiver capabilities.\n\n`Piped.map(transform)` preserves supported native containers, mapping their\npayloads immediately through `fp.algebra`. Use `.map[Family](transform)` for an\nexplicit Functor instance, including third-party containers. `filter(predicate)`\nalso runs immediately, preserving containers that can represent rejection; `fold_left(step, initial)` consumes an iterable\nimmediately and keeps the accumulator in the chain. `get()` extracts the stored\nvalue. Use `then(function)` to transform the whole value and `iterated` for lazy\nelement mapping and filtering.\n\nA stage is a plain function, a closure promoted with `as_unary`, or a library\nvalue that implements `Unary`, such as a `Partial` or a `Composition`. Each\nstage's input must equal the previous stage's result. Values move from stage to\nstage without copies, stages are borrowed, and a raised error stops the chain\nwith its own type; a returned `Result` is ordinary data.\n\n`kleisli[Family](f).then(g)` composes effectful functions through the family's\nmonadic bind. Its `map` transforms successful payloads; ordinary container\n`map(chain)` borrows the chain automatically, including in lazy iterators.",
+   "description": "Use `pipe(value, f, g)` to apply stages now, `flow(f, g)` or `compose(g, f)` to\nbuild a reusable composition, and `piped(value).then(f).get()` to chain any\nnumber of stages one call at a time. `flip` swaps two arguments and `partial`\nbinds leading arguments.\n\nTwo-stage `flow` and `compose` can mix a plain function or stored thin pointer\nwith a library callable directly, in either position. Compositions own their\nstages and preserve their shared, mutable or consuming receiver capabilities.\nInferred two-stage `pipe` also accepts a native/library pair, borrowing its\nshared library stage for immediate execution.\n\n`Piped.map(transform)` preserves supported native containers, mapping their\npayloads immediately through `fp.algebra`. Use `.map[Family](transform)` for an\nexplicit Functor instance, including third-party containers. `filter(predicate)`\nalso runs immediately, preserving containers that can represent rejection; `fold_left(step, initial)` consumes an iterable\nimmediately and keeps the accumulator in the chain. `get()` extracts the stored\nvalue. Use `then(function)` to transform the whole value and `iterated` for lazy\nelement mapping and filtering.\n\nA stage is a plain function, a closure promoted with `as_unary`, or a library\nvalue that implements `Unary`, such as a `Partial` or a `Composition`. Each\nstage's input must equal the previous stage's result. Values move from stage to\nstage without copies, stages are borrowed, and a raised error stops the chain\nwith its own type; a returned `Result` is ordinary data.\n\n`kleisli[Family](f).then(g)` composes effectful functions through the family's\nmonadic bind. Its `map` transforms successful payloads; ordinary container\n`map(chain)` borrows the chain automatically, including in lazy iterators.",
    "summary": "Pipelines, compositions, argument flipping and partial application."
   },
   "iteration": {

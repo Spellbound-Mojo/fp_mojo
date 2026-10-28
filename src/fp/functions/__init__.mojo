@@ -8,6 +8,8 @@ binds leading arguments.
 Two-stage `flow` and `compose` can mix a plain function or stored thin pointer
 with a library callable directly, in either position. Compositions own their
 stages and preserve their shared, mutable or consuming receiver capabilities.
+Inferred two-stage `pipe` also accepts a native/library pair, borrowing its
+shared library stage for immediate execution.
 
 `Piped.map(transform)` preserves supported native containers, mapping their
 payloads immediately through `fp.algebra`. Use `.map[Family](transform)` for an

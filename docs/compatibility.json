@@ -88,7 +88,19 @@
         "tests/compile_fail/mixed_composition_noncallable.mojo",
         "tests/compile_fail/mixed_composition_once_reused.mojo",
         "tests/compile_fail/mixed_composition_once_shared.mojo",
-        "tests/compile_fail/mixed_composition_origin.mojo"
+        "tests/compile_fail/mixed_composition_origin.mojo",
+        "tests/runtime/test_mixed_pipe.mojo",
+        "tests/ownership/test_mixed_pipe_ownership.mojo",
+        "tests/compile_fail/mixed_pipe_arity.mojo",
+        "tests/compile_fail/mixed_pipe_connection.mojo",
+        "tests/compile_fail/mixed_pipe_error.mojo",
+        "tests/compile_fail/mixed_pipe_initial.mojo",
+        "tests/compile_fail/mixed_pipe_mutable.mojo",
+        "tests/compile_fail/mixed_pipe_native_first.mojo",
+        "tests/compile_fail/mixed_pipe_native_last.mojo",
+        "tests/compile_fail/mixed_pipe_once.mojo",
+        "tests/compile_fail/mixed_pipe_origin.mojo",
+        "tests/compile_fail/mixed_pipe_void.mojo"
       ]
     },
     "adt": {

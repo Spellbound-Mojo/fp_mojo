@@ -114,6 +114,12 @@ site, which the library uses where closures cannot reach:
   Consumers retain their own library-stage bounds and parameter order around
   that descriptor. The consolidation emits byte-for-byte identical native
   and composition source, including public signatures and overload order.
+- Inferred two-stage mixed `pipe` uses that factory descriptor to normalize
+  one native unary stage and borrows the other through `Unary`. It forwards
+  both to the original immediate pipeline. The existing plan, stage checks
+  and `_ImmediateRunner` still own execution, errors and payload cleanup.
+  This admission does not store or consume the library stage, and retains
+  the existing explicit error/result bindings through their original overloads.
 - Match clauses are plain functions and lambdas without captures, through one
   generated overload per clause count; each clause's signature is read at a
   parameter of its own function type.

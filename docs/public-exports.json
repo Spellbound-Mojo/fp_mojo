@@ -17110,6 +17110,102 @@
         {
           "signature": "def pipe[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable, A3: Movable & Deinitable, A4: Movable & Deinitable, A5: Movable & Deinitable, A6: Movable & Deinitable, A7: Movable & Deinitable, A8: Movable & Deinitable, P1: Movable & Deinitable, P2: Movable & Deinitable, P3: Movable & Deinitable, P4: Movable & Deinitable, P5: Movable & Deinitable, P6: Movable & Deinitable, P7: Movable & Deinitable, E0: Movable & Deinitable, E1: Movable & Deinitable, E2: Movable & Deinitable, E3: Movable & Deinitable, E4: Movable & Deinitable, E5: Movable & Deinitable, E6: Movable & Deinitable, E7: Movable & Deinitable, //]( var value: A0, f0: def(var A0) raises E0 thin -> A1, f1: def(var P1) raises E1 thin -> A2, f2: def(var P2) raises E2 thin -> A3, f3: def(var P3) raises E3 thin -> A4, f4: def(var P4) raises E4 thin -> A5, f5: def(var P5) raises E5 thin -> A6, f6: def(var P6) raises E6 thin -> A7, f7: def(var P7) raises E7 thin -> A8 ) raises _CommonError[_CommonError[_CommonError[_CommonError[_CommonError[_CommonError[_CommonError[E0, E1], E2], E3], E4], E5], E6], E7] -> A8:",
           "sha256": "c36c2b00f53a6ffec627ac2928f9ab41d48f178e9df120845f4948e90bf05267"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, F: Unary, q: ImmOrigin, //]( var value: V, ref[q] function: def(var A) thin -> R, stage: F ) raises _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Failure -> _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Result:",
+          "sha256": "216393ad9571bd6da4398698a370f67c9c74e51cc403dfaa015683693b8b953c"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Unary, //]( var value: V, function: def(var A) thin -> R, stage: F ) raises _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Failure -> _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Result where not conforms_to(A, RegisterPassable):",
+          "sha256": "8b2f2fb5e01e0b5151d374c6900256d6a103809c65b1a1f2e03f2977a15e5bd3"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Unary, //]( var value: V, function: def(var A) thin -> R, stage: F ) raises _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Failure -> _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Result where not conforms_to(R, RegisterPassable):",
+          "sha256": "6bd06aa1c609d2aa25fe12537a81df6d66d1c9a1f5350d3ae21d281cfa8ba586"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Unary, //]( var value: V, function: def(var A) thin -> R, stage: F ) raises _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Failure -> _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Result:",
+          "sha256": "726fa883c6c9216593d6d40ec5de642672ac677a2937afc5b911137b64067560"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, F: Unary, q: ImmOrigin, //]( var value: V, ref[q] function: def(var A) thin, stage: F ) raises _Plan[NativeUnary[A, type_of(None), Never, type_of(function), False], F].Failure -> _Plan[NativeUnary[A, type_of(None), Never, type_of(function), False], F].Result:",
+          "sha256": "3bafea6014145a2b908544d6cd14c5c7abd252959d91217cca6f0f00ef1bb64c"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, F: Unary, //]( var value: V, function: def(var A) thin, stage: F ) raises _Plan[NativeUnary[A, type_of(None), Never, type_of(function), False], F].Failure -> _Plan[NativeUnary[A, type_of(None), Never, type_of(function), False], F].Result:",
+          "sha256": "a7bd7842e53a902958c41834980a2b0980de4735b2a565c6f5aafca068c796c0"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Unary, q: ImmOrigin, //]( var value: V, ref[q] function: def(var A) raises X thin -> R, stage: F ) raises _Plan[NativeUnary[A, R, X, type_of(function), True], F].Failure -> _Plan[NativeUnary[A, R, X, type_of(function), True], F].Result:",
+          "sha256": "105611121035ac2d0e41500620204625cf8f08de7440f8942b3a77669003e3e4"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, F: Unary, //]( var value: V, function: def(var A) raises X thin -> R, stage: F ) raises _Plan[NativeUnary[A, R, X, type_of(function), True], F].Failure -> _Plan[NativeUnary[A, R, X, type_of(function), True], F].Result where not conforms_to(A, RegisterPassable):",
+          "sha256": "51673713984e9164dfccdd4b67385be29e39b0f724a4b8a57867130ea85caae4"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Unary, //]( var value: V, function: def(var A) raises X thin -> R, stage: F ) raises _Plan[NativeUnary[A, R, X, type_of(function), True], F].Failure -> _Plan[NativeUnary[A, R, X, type_of(function), True], F].Result where not conforms_to(R, RegisterPassable):",
+          "sha256": "b1810fd548361e7fc55f940f695b8fc23e68de7c14e3f711a315d010377636b8"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, F: Unary, //]( var value: V, function: def(var A) raises X thin -> R, stage: F ) raises _Plan[NativeUnary[A, R, X, type_of(function), True], F].Failure -> _Plan[NativeUnary[A, R, X, type_of(function), True], F].Result:",
+          "sha256": "848c05ae6d30ea255f0d869ca5d01b93f1b14e2bd93c56912dfd5b48d74dde46"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, X: Movable & Deinitable, F: Unary, q: ImmOrigin, //]( var value: V, ref[q] function: def(var A) raises X thin, stage: F ) raises _Plan[NativeUnary[A, type_of(None), X, type_of(function), True], F].Failure -> _Plan[NativeUnary[A, type_of(None), X, type_of(function), True], F].Result:",
+          "sha256": "680855a08627b8b98a4434d0d9386ef23b5d4ed382426a3fb1c8ab6a19f1701c"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, X: Movable & Deinitable, F: Unary, //]( var value: V, function: def(var A) raises X thin, stage: F ) raises _Plan[NativeUnary[A, type_of(None), X, type_of(function), True], F].Failure -> _Plan[NativeUnary[A, type_of(None), X, type_of(function), True], F].Result:",
+          "sha256": "33c8883d805631358304f291da24b31701aa4ca14454726485f4b26d1ceac1f4"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, F: Unary, q: ImmOrigin, //]( var value: V, stage: F, ref[q] function: def(var A) thin -> R ) raises _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Failure -> _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Result:",
+          "sha256": "c009507003b2adef57482c78198931614a6ec9e2dba8142b7b1ce95188027e9a"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Unary, //]( var value: V, stage: F, function: def(var A) thin -> R ) raises _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Failure -> _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Result where not conforms_to(A, RegisterPassable):",
+          "sha256": "d1efac61e8aa4625868044a433c954f72c3cde1b9bb358470a5bbc74b5c0da9c"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Unary, //]( var value: V, stage: F, function: def(var A) thin -> R ) raises _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Failure -> _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Result where not conforms_to(R, RegisterPassable):",
+          "sha256": "3953da90f1b6177d29071b46471d7c85e42a2fdade600e66a975241700b08d31"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Unary, //]( var value: V, stage: F, function: def(var A) thin -> R ) raises _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Failure -> _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Result:",
+          "sha256": "d1919aedf3676f994252b39e9a5e8c39d0c31d95bc5c0f89693cb36f3ab02167"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, F: Unary, q: ImmOrigin, //]( var value: V, stage: F, ref[q] function: def(var A) thin ) raises _Plan[F, NativeUnary[A, type_of(None), Never, type_of(function), False]].Failure -> _Plan[F, NativeUnary[A, type_of(None), Never, type_of(function), False]].Result:",
+          "sha256": "2cc58124944c34c30672cc4d126f6db6873eb46058227ee0c48e5411e56639ad"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, F: Unary, //]( var value: V, stage: F, function: def(var A) thin ) raises _Plan[F, NativeUnary[A, type_of(None), Never, type_of(function), False]].Failure -> _Plan[F, NativeUnary[A, type_of(None), Never, type_of(function), False]].Result:",
+          "sha256": "6a80b7310ac533ea4dacf1c70071315ea322f7f891d363f80328821b902fd319"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Unary, q: ImmOrigin, //]( var value: V, stage: F, ref[q] function: def(var A) raises X thin -> R ) raises _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Failure -> _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Result:",
+          "sha256": "e8eae9f27813d4c5f2e6a582b30abc4cfabb374f49d69bede2411fff3b9aa550"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, F: Unary, //]( var value: V, stage: F, function: def(var A) raises X thin -> R ) raises _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Failure -> _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Result where not conforms_to(A, RegisterPassable):",
+          "sha256": "e62e5861399ae1268a053c848b358e08abb0498ad297dd08f6e7d5bec1e93782"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Unary, //]( var value: V, stage: F, function: def(var A) raises X thin -> R ) raises _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Failure -> _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Result where not conforms_to(R, RegisterPassable):",
+          "sha256": "9bcc470821787f365c0f3aa1894437128e451133e9ce4ef1bd4eb453149bc4a2"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, F: Unary, //]( var value: V, stage: F, function: def(var A) raises X thin -> R ) raises _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Failure -> _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Result:",
+          "sha256": "b6f5d5ba3fd4acd72b10a18c3acae210eb2eeb8fb9c0640ba41d1b52836236ec"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: Movable & Deinitable, X: Movable & Deinitable, F: Unary, q: ImmOrigin, //]( var value: V, stage: F, ref[q] function: def(var A) raises X thin ) raises _Plan[F, NativeUnary[A, type_of(None), X, type_of(function), True]].Failure -> _Plan[F, NativeUnary[A, type_of(None), X, type_of(function), True]].Result:",
+          "sha256": "f5a0759a68bac3569665f595930e5aba0479788006c9e02b1b624f9c9c911bbb"
+        },
+        {
+          "signature": "def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, X: Movable & Deinitable, F: Unary, //]( var value: V, stage: F, function: def(var A) raises X thin ) raises _Plan[F, NativeUnary[A, type_of(None), X, type_of(function), True]].Failure -> _Plan[F, NativeUnary[A, type_of(None), X, type_of(function), True]].Result:",
+          "sha256": "ea442ee5953044ee80c67a17c65c6b17678d1c75a5a11d161ba95c69eec0769f"
         }
       ],
       "provider": "functions/pipeline"

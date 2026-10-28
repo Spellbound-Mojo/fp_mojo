@@ -620,10 +620,16 @@ This fixed-stage example filters the whole input List, totals it and formats
 skipped. This is the existing `pipe` contract; it is separate from Pipeline's
 payload operations and `.raising[E]()` selection.
 
-When a `pipe` call mixes closures or library values with native functions,
-promote the native functions with `as_unary`. The explicit forms
-`pipe[E=Failure]` and `pipe[Results, Failure]` also take promoted functions and
-library values. A `pipeline(...).then(...)` chain accepts those forms directly.
+An inferred two-stage `pipe` can mix one plain function or stored thin pointer
+with one shared library callable directly. The example reuses `fee` beside
+the stored formatter and plain `total`, producing `"total=12"` and `5`.
+The library stage is borrowed for the immediate call; its captures are not
+copied or consumed. A native raise skips the following stage.
+
+Longer mixed `pipe` calls and the explicit forms `pipe[E=Failure]` and
+`pipe[Results, Failure]` retain their existing promotion rules: use `as_unary`
+for native unary stages. Capturing closures also use `as_unary` for mixed
+calls. A `pipeline(...).then(...)` chain accepts callbacks directly.
 
 <!-- example: docs/examples/callable_pipeline_generic.mojo -->
 

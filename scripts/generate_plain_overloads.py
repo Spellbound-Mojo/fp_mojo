@@ -84,6 +84,31 @@ def pipe_overloads():
         out.append('\n\ndef pipe[%s, //](\n    var value: A0, %s\n) raises %s -> A%d:\n'
                    '    """Apply %d plain functions in order."""\n    return pipe[E=%s](value^, %s)\n'
                    % (decls(n, 1), params, common(n), n, n, common(n), wrapped))
+    return ''.join(out) + mixed_pipe_overloads()
+
+
+def mixed_pipe_overloads():
+    """Borrow a shared library stage beside one admitted native pointer."""
+    out = []
+    for native_first in (True, False):
+        for factory in native_factories('owned', ['A'], error='X'):
+            parameters = [('V', MD), *factory.parameters, ('F', 'Unary'), *factory.pointer.parameters]
+            declarations = [f'{p}: {bound}' for p, bound in parameters] + ['//']
+            arguments = [factory.argument, 'stage: F']
+            types = [factory.adapter, 'F']
+            values = [factory.adapter + '(function)', 'stage']
+            if not native_first:
+                arguments.reverse()
+                types.reverse()
+                values.reverse()
+            plan = '_Plan[' + ', '.join(types) + ']'
+            conditions = factory.pointer.conditions
+            where = ' where ' + ' and '.join(conditions) if conditions else ''
+            out.append(f'\n\ndef pipe[{", ".join(declarations)}](\n'
+                       f'    var value: V, {", ".join(arguments)}\n'
+                       f') raises {plan}.Failure -> {plan}.Result{where}:\n'
+                       '    """Apply a plain function or stored pointer beside one borrowed library stage."""\n'
+                       f'    return pipe(value^, {", ".join(values)})\n')
     return ''.join(out)
 
 
