@@ -283,7 +283,8 @@ library steps use the standalone folds' shared `Binary` contract. The resulting
 value selects its family by the same rule as `then`.
 
 `find_map(transform)` consumes items until the first present Optional result,
-without another source pull. `fold_map[Monoid](transform)` projects and combines
+without another source pull. It also borrows reusable Kleisli chains returning
+Optional directly. `fold_map[Monoid](transform)` projects and combines
 in order; `combine_all[Monoid]()` combines the elements themselves. Empty input
 returns the monoid identity. `sum()` and `sum_by(transform)` infer Int or numeric
 SIMD types and preserve every lane; explicit `[dtype, size]` bindings also work.
@@ -368,7 +369,10 @@ Existing `Piped.fold_effect(step, initial)` retains its original syntax.
 values and combines them in order, starting with the identity. The callback
 infers a native Optional, Result or List target. The original
 `fold_map_effect[Target, Monoid](transform)` form retains explicit custom
-policies and positional callback type bindings.
+policies and positional callback type bindings. Both `find_map_effect(chain)`
+and `fold_map_effect[Monoid](chain)` borrow a reusable shared Kleisli chain and
+inherit its selected family, including Reader and custom policies. Deferred
+results retain that borrow until execution finishes.
 `combine_all_effect[Monoid]()` combines existing effectful values through the
 same mapped fold with its canonical identity callable. It infers native targets;
 `combine_all_effect[Target, Monoid]()` selects a custom policy. Empty input lifts
@@ -582,8 +586,8 @@ overrides that choice. Direct `Result.map(chain)` and
 `Result.flat_map(chain)` work as well; `flat_map` sequences the returned Result.
 
 `Pipeline.map`, `flat_map`, `filter_map`, `traverse`, `par_traverse`,
-`traverse_filter`, `flat_traverse` and `traverse_void` borrow
-shared chains directly. Passing `chain^` instead transfers ownership when the
+`traverse_filter`, `flat_traverse`, `traverse_void`, `find_map`,
+`find_map_effect` and `fold_map_effect` borrow shared chains directly. Passing `chain^` instead transfers ownership when the
 selected operation admits a consuming callback. For example,
 `pipeline[Reader[Int]](action^).map(chain)` retains a borrow until execution,
 while `.map(chain^)` moves the chain into the deferred computation.

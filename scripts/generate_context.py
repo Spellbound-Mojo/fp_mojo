@@ -147,6 +147,10 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
                 params += cb["params"]
         return params + (["//"] + explicit if explicit else [])
 
+    def inferred_target(cb, *, capability="Applicative"):
+        candidate = cb.get("target", f'_InferredApplicative[{cb["result"]}]')
+        return {"Applicative": candidate, "Monad": f"_Binding[{candidate}]"}[capability]
+
     def inferred_target_parameters(cb, *, capability="Applicative"):
         # Native carrier recognition proposes a target; the existing operation
         # contract still admits that target and preserves its exact semantics.
@@ -157,8 +161,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         params = list(cb["params"])
         if "//" not in params: params += ["//"]
         boundary = params.index("//") + 1
-        native = cb.get("target", f'_InferredApplicative[{cb["result"]}]')
-        candidate = {"Applicative": native, "Monad": f"_Binding[{native}]"}[capability]
+        candidate = inferred_target(cb, capability=capability)
         params[boundary:boundary] = [f'J: {capability} = {candidate}']
         for i in range(boundary + 1, len(params)):
             name, constraint = params[i].split(": ", 1)
@@ -411,7 +414,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         operation = TERMINALS[name]
         borrowed = operation.borrowing
         for numeric in (("int", "simd") if name == "sum_by" else (None,)):
-            callbacks = borrowing_callbacks(element, "function") if borrowed else owning_callbacks("owned", element, "function")
+            callbacks = borrowing_callbacks(element, "function") if borrowed else owning_callbacks("owned", element, "function", view=name == "find_map")
             for cb in callbacks:
                 c, result, error = cb["adapter_type"], cb["result"], cb["error"]
                 params = list(cb["params"])
@@ -453,7 +456,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         callbacks = (
             borrowing_callbacks(element, "function") if borrowing else
             owning_callbacks(operation.mode,
-                             ("Self.A", element) if folding else element, "function")
+                             ("Self.A", element) if folding else element, "function", view=not folding)
         )
         for cb in callbacks:
             params = list(cb["params"])
@@ -495,7 +498,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
             if mapped_fold:
                 # Binding the monoid leaves the native effect inferable from
                 # the callback. Keep the original [J, M] surface independently.
-                inferred = f"_Binding[_InferredApplicative[{cb['result']}]]"
+                inferred = inferred_target(cb, capability="Monad")
                 native_plan = operation.bind(inferred, "Self.V", element, c, cb["build"], cb["result"], monoid="M")
                 native_contract = native_plan.contract
                 emit(name, cb, [p for p in params if p != "J: Monad"], cb["argument"],

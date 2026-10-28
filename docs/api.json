@@ -108145,6 +108145,43 @@
        }
       ],
       "description": "",
+      "error": "C._View[o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_NativeFamily[C._View[o].Out], C._View[o].Out, Self.E]"
+      },
+      "signature": "def find_map[C: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._View[o].Error -> Pipeline[_NativeFamily[C._View[o].Out], C._View[o].Out, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and C._View[o].Out == Optional[_ListElement[C._View[o].Out]] and RepeatableUnary[C._View[o]]",
+      "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "Never",
       "parameters": [
        {
@@ -108437,6 +108474,50 @@
        "type": "Pipeline[J, FindMapContract[J, Self.V, C].Out, Self.E]"
       },
       "signature": "def find_map_effect[C: UnaryContract & Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[C.Out]]](deinit self, var function: C) raises FindMapContract[J, Self.V, C].Error -> Pipeline[J, FindMapContract[J, Self.V, C].Out, Self.E] where C.Arg == _FoldElement[Self.V] and FindMapContract[J, Self.V, C].Compatible",
+      "summary": "Consume the source through the target Monad's ordered effectful reduction."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "FindMapContract[J, Self.V, C._View[o]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "J",
+        "type": "Monad",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[J, FindMapContract[J, Self.V, C._View[o]].Out, Self.E]"
+      },
+      "signature": "def find_map_effect[C: _UnaryViewable, o: ImmOrigin, //, J: Monad = _Binding[_ViewTarget[C, o]]](deinit self, ref[o] function: C) raises FindMapContract[J, Self.V, C._View[o]].Error -> Pipeline[J, FindMapContract[J, Self.V, C._View[o]].Out, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and FindMapContract[J, Self.V, C._View[o]].Compatible",
       "summary": "Consume the source through the target Monad's ordered effectful reduction."
      },
      {
@@ -112251,6 +112332,101 @@
        "type": "Pipeline[_Binding[_InferredApplicative[C.Out]], FoldMapContract[_Binding[_InferredApplicative[C.Out]], M, Self.V, C].Out, Self.E]"
       },
       "signature": "def fold_map_effect[C: UnaryContract & Movable & Deinitable, //, M: Monoid](deinit self, var function: C) raises FoldMapContract[_Binding[_InferredApplicative[C.Out]], M, Self.V, C].Error -> Pipeline[_Binding[_InferredApplicative[C.Out]], FoldMapContract[_Binding[_InferredApplicative[C.Out]], M, Self.V, C].Out, Self.E] where C.Arg == _FoldElement[Self.V] and FoldMapContract[_Binding[_InferredApplicative[C.Out]], M, Self.V, C].Compatible",
+      "summary": "Infer the native effect from the callback and combine through the selected monoid."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "FoldMapContract[J, M, Self.V, C._View[o]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "J",
+        "type": "Monad",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[J, FoldMapContract[J, M, Self.V, C._View[o]].Out, Self.E]"
+      },
+      "signature": "def fold_map_effect[C: _UnaryViewable, o: ImmOrigin, //, J: Monad, M: Monoid](deinit self, ref[o] function: C) raises FoldMapContract[J, M, Self.V, C._View[o]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, C._View[o]].Out, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and FoldMapContract[J, M, Self.V, C._View[o]].Compatible",
+      "summary": "Consume the source through the target Monad's ordered effectful reduction."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "FoldMapContract[_Binding[_ViewTarget[C, o]], M, Self.V, C._View[o]].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "M",
+        "type": "Monoid",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[_Binding[_ViewTarget[C, o]], FoldMapContract[_Binding[_ViewTarget[C, o]], M, Self.V, C._View[o]].Out, Self.E]"
+      },
+      "signature": "def fold_map_effect[C: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: C) raises FoldMapContract[_Binding[_ViewTarget[C, o]], M, Self.V, C._View[o]].Error -> Pipeline[_Binding[_ViewTarget[C, o]], FoldMapContract[_Binding[_ViewTarget[C, o]], M, Self.V, C._View[o]].Out, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and FoldMapContract[_Binding[_ViewTarget[C, o]], M, Self.V, C._View[o]].Compatible",
       "summary": "Infer the native effect from the callback and combine through the selected monoid."
      },
      {

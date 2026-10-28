@@ -4886,6 +4886,10 @@
             "sha256": "4a15e74a148baa1695581b6672b135dc3d2b5b8dfe25da1a6c58f7c972075e6f"
           },
           {
+            "signature": "def find_map[C: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._View[o].Error -> Pipeline[_NativeFamily[C._View[o].Out], C._View[o].Out, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and C._View[o].Out == Optional[_ListElement[C._View[o].Out]] and RepeatableUnary[C._View[o]]:",
+            "sha256": "46a59bf819897b99ec94495a0b49c3b54fa73006b069faf9ba0bef724b39b4bb"
+          },
+          {
             "signature": "def find_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where R == Optional[_ListElement[R]] and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]]:",
             "sha256": "b9819a1ab6b841127fe7729147b4e5dbf38d7d6cf02eefa2fcf990bda04bf786"
           },
@@ -5286,6 +5290,10 @@
             "sha256": "769926a6eced81f98ff364eb7ca709ed15bd8db320d5ff7c83118b5302102cbb"
           },
           {
+            "signature": "def find_map_effect[C: _UnaryViewable, o: ImmOrigin, //, J: Monad = _Binding[_ViewTarget[C, o]]](deinit self, ref[o] function: C) raises FindMapContract[J, Self.V, C._View[o]].Error -> Pipeline[J, FindMapContract[J, Self.V, C._View[o]].Out, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and FindMapContract[J, Self.V, C._View[o]].Compatible:",
+            "sha256": "971fe7d3da062c795b893cbfa96190e3acbc605275d4fe61a968871d49be4727"
+          },
+          {
             "signature": "def find_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[R]], C: def(var _FoldElement[Self.V]) -> R = def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible:",
             "sha256": "c307e6c82f04325f3ef2131d689ae489e9e9f71330390d4c14fa633d58c69302"
           },
@@ -5332,6 +5340,14 @@
           {
             "signature": "def fold_map_effect[C: UnaryContract & Movable & Deinitable, //, M: Monoid](deinit self, var function: C) raises FoldMapContract[_Binding[_InferredApplicative[C.Out]], M, Self.V, C].Error -> Pipeline[_Binding[_InferredApplicative[C.Out]], FoldMapContract[_Binding[_InferredApplicative[C.Out]], M, Self.V, C].Out, Self.E] where C.Arg == _FoldElement[Self.V] and FoldMapContract[_Binding[_InferredApplicative[C.Out]], M, Self.V, C].Compatible:",
             "sha256": "3ee9923b045f0b9f8591b3c936dd4afecfede9971057974cfad9b6eaee2aa202"
+          },
+          {
+            "signature": "def fold_map_effect[C: _UnaryViewable, o: ImmOrigin, //, J: Monad, M: Monoid](deinit self, ref[o] function: C) raises FoldMapContract[J, M, Self.V, C._View[o]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, C._View[o]].Out, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and FoldMapContract[J, M, Self.V, C._View[o]].Compatible:",
+            "sha256": "db226e479dfddc1f1d46f4219a3bd9e9df6bef935a415fa3ff7644a02e84b692"
+          },
+          {
+            "signature": "def fold_map_effect[C: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: C) raises FoldMapContract[_Binding[_ViewTarget[C, o]], M, Self.V, C._View[o]].Error -> Pipeline[_Binding[_ViewTarget[C, o]], FoldMapContract[_Binding[_ViewTarget[C, o]], M, Self.V, C._View[o]].Out, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and FoldMapContract[_Binding[_ViewTarget[C, o]], M, Self.V, C._View[o]].Compatible:",
+            "sha256": "2c7f42dbf6e577679d61ddd1ccd013191ae96d267941386c8b5e4fcfb1ce9291"
           },
           {
             "signature": "def fold_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, M: Monoid, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible:",

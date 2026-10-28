@@ -3602,3 +3602,18 @@ ownership implementation. Shared views preserve the receiver origin through
 deferred target effects; owned payloads still move through the original
 traversal or loop. Retained payload/error origins and exact raised errors are
 unchanged, and unsupported nested carriers are rejected at admission.
+
+### Reusable projections in search and monoid folds
+
+`find_map`, `find_map_effect` and `fold_map_effect` adapt shared callable views
+through the existing consuming projection contracts. Plain search retains its
+Optional terminal and source driver; effectful search and mapped folding retain
+the target Monad's stopping, branching and deferred execution. A view does not
+turn a consuming-only or mutable-only receiver into a shared callback.
+
+The generator's target-expression helper is shared by defaulted target
+parameters and the monoid-only fold surface. Both preserve an effectful chain's
+already selected family, instead of reconstructing it from nested output
+projections. Explicit family/monoid bindings retain their original positions.
+No fold loop, accumulator ownership, identity creation, error conversion or
+cleanup rule is duplicated.

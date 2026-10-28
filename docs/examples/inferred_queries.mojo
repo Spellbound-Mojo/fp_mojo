@@ -1,6 +1,7 @@
 """Search and test with native effects, inferring their target families."""
 from fp.data import Result, Ok, Err
-from fp.functions import pipeline
+from fp.functions import pipeline, kleisli
+from fp.algebra import ResultFamily
 from std.testing import assert_equal
 
 def enabled(value: Int) -> Result[Bool, String]:
@@ -21,7 +22,9 @@ def main() raises:
     var first = pipeline(range(1, 5)).find_effect(enabled).raise_on_err()
     assert_equal(first.value(), 2)
     print("first:", first.value())
-    var named = pipeline(range(1, 5)).find_map_effect(label).raise_on_err()
+    var naming = kleisli[ResultFamily[String]](label)
+    var named = pipeline(range(1, 5)).find_map_effect(naming).raise_on_err()
+    assert_equal(pipeline(List[Int]([4])).find_map_effect(naming).raise_on_err().value(), "item-4")
     assert_equal(named.value(), "item-3")
     print("label:", named.value())
     var failure = pipeline(List[Int]([-1, 2])).any_effect(enabled).swap().get_or("")

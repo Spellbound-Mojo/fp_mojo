@@ -1932,6 +1932,11 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[_NativeFamily[C.Out], C.Out, Self.E](_find_map(function^, self.value^))
 
     @always_inline
+    def find_map[C: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._View[o].Error -> Pipeline[_NativeFamily[C._View[o].Out], C._View[o].Out, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and C._View[o].Out == Optional[_ListElement[C._View[o].Out]] and RepeatableUnary[C._View[o]]:
+        """Reduce the consumed source in order through the canonical terminal driver."""
+        return Pipeline[_NativeFamily[C._View[o].Out], C._View[o].Out, Self.E](_find_map(function._unary_view(), self.value^))
+
+    @always_inline
     def find_map[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[_NativeFamily[R], R, Self.E] where R == Optional[_ListElement[R]] and RepeatableUnary[_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]]:
         """Reduce the consumed source in order through the canonical terminal driver."""
         return Pipeline[_NativeFamily[R], R, Self.E](_find_map(_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o](Pointer(to=function)), self.value^))
@@ -2533,6 +2538,11 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[J, FindMapContract[J, Self.V, C].Out, Self.E](_fold_effect[J, Self.V, _SearchStep[_ListElement[J.Element[C.Out]], C], _FirstPresent[_ListElement[J.Element[C.Out]]], FindMapContract[J, Self.V, C].Error](_SearchStep[_ListElement[J.Element[C.Out]], C](function^), Optional[_ListElement[J.Element[C.Out]]](), self.value^))
 
     @always_inline
+    def find_map_effect[C: _UnaryViewable, o: ImmOrigin, //, J: Monad = _Binding[_ViewTarget[C, o]]](deinit self, ref[o] function: C) raises FindMapContract[J, Self.V, C._View[o]].Error -> Pipeline[J, FindMapContract[J, Self.V, C._View[o]].Out, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and FindMapContract[J, Self.V, C._View[o]].Compatible:
+        """Consume the source through the target Monad's ordered effectful reduction."""
+        return Pipeline[J, FindMapContract[J, Self.V, C._View[o]].Out, Self.E](_fold_effect[J, Self.V, _SearchStep[_ListElement[J.Element[C._View[o].Out]], C._View[o]], _FirstPresent[_ListElement[J.Element[C._View[o].Out]]], FindMapContract[J, Self.V, C._View[o]].Error](_SearchStep[_ListElement[J.Element[C._View[o].Out]], C._View[o]](function._unary_view()), Optional[_ListElement[J.Element[C._View[o].Out]]](), self.value^))
+
+    @always_inline
     def find_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[R]], C: def(var _FoldElement[Self.V]) -> R = def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible:
         """Consume the source through the target Monad's ordered effectful reduction."""
         return Pipeline[J, FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E](_fold_effect[J, Self.V, _SearchStep[_ListElement[J.Element[R]], _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]], _FirstPresent[_ListElement[J.Element[R]]], FindMapContract[J, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Error](_SearchStep[_ListElement[J.Element[R]], _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]](_NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o](Pointer(to=function))), Optional[_ListElement[J.Element[R]]](), self.value^))
@@ -2609,6 +2619,16 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
     def fold_map_effect[C: UnaryContract & Movable & Deinitable, //, M: Monoid](deinit self, var function: C) raises FoldMapContract[_Binding[_InferredApplicative[C.Out]], M, Self.V, C].Error -> Pipeline[_Binding[_InferredApplicative[C.Out]], FoldMapContract[_Binding[_InferredApplicative[C.Out]], M, Self.V, C].Out, Self.E] where C.Arg == _FoldElement[Self.V] and FoldMapContract[_Binding[_InferredApplicative[C.Out]], M, Self.V, C].Compatible:
         """Infer the native effect from the callback and combine through the selected monoid."""
         return Pipeline[_Binding[_InferredApplicative[C.Out]], FoldMapContract[_Binding[_InferredApplicative[C.Out]], M, Self.V, C].Out, Self.E](_fold_map_effect[_Binding[_InferredApplicative[C.Out]], M, Self.V, C, FoldMapContract[_Binding[_InferredApplicative[C.Out]], M, Self.V, C].Error](function^, self.value^))
+
+    @always_inline
+    def fold_map_effect[C: _UnaryViewable, o: ImmOrigin, //, J: Monad, M: Monoid](deinit self, ref[o] function: C) raises FoldMapContract[J, M, Self.V, C._View[o]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, C._View[o]].Out, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and FoldMapContract[J, M, Self.V, C._View[o]].Compatible:
+        """Consume the source through the target Monad's ordered effectful reduction."""
+        return Pipeline[J, FoldMapContract[J, M, Self.V, C._View[o]].Out, Self.E](_fold_map_effect[J, M, Self.V, C._View[o], FoldMapContract[J, M, Self.V, C._View[o]].Error](function._unary_view(), self.value^))
+
+    @always_inline
+    def fold_map_effect[C: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: C) raises FoldMapContract[_Binding[_ViewTarget[C, o]], M, Self.V, C._View[o]].Error -> Pipeline[_Binding[_ViewTarget[C, o]], FoldMapContract[_Binding[_ViewTarget[C, o]], M, Self.V, C._View[o]].Out, Self.E] where C._View[o].Arg == _FoldElement[Self.V] and FoldMapContract[_Binding[_ViewTarget[C, o]], M, Self.V, C._View[o]].Compatible:
+        """Infer the native effect from the callback and combine through the selected monoid."""
+        return Pipeline[_Binding[_ViewTarget[C, o]], FoldMapContract[_Binding[_ViewTarget[C, o]], M, Self.V, C._View[o]].Out, Self.E](_fold_map_effect[_Binding[_ViewTarget[C, o]], M, Self.V, C._View[o], FoldMapContract[_Binding[_ViewTarget[C, o]], M, Self.V, C._View[o]].Error](function._unary_view(), self.value^))
 
     @always_inline
     def fold_map_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad, M: Monoid, C: def(var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where FoldMapContract[J, M, Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible:

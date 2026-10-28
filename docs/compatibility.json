@@ -389,7 +389,7 @@
       ],
       "status": "selected",
       "families": "Native source; infer native Optional, Result or List Monad targets. Explicit targets retain custom policies; fold_map_effect[Monoid] and combine_all_effect[Monoid] bind the combining rule and [Target, Monoid] also selects the effect.",
-      "callbacks": "Borrowing predicates; consuming unary/binary transformations; repeatable shared or mutable library receivers. Bind fold_effect(initial).run(step).",
+      "callbacks": "Borrowing predicates; consuming unary/binary transformations; repeatable shared or mutable library receivers. Bind fold_effect(initial).run(step). Shared chains are borrowed by find_map_effect and fold_map_effect, preserving their selected target family.",
       "ownership": "Moves inputs, retains first matches and releases partial accumulators; Arrays use O(N) temporary List storage. An unexecuted fold binding owns and destroys its source and seed.",
       "errors": "Exact native errors, stored target failures and borrowed origins remain distinct.",
       "timing": "Target owns branch stopping and deferral; monoid identity is constructed before source binding.",
@@ -431,7 +431,11 @@
         "tests/ownership/test_context_combine_effect_ownership.mojo",
         "tests/compile_fail/combine_effect_branch_ownership.mojo",
         "tests/compile_fail/combine_effect_origin.mojo",
-        "docs/examples/combine_effects.mojo"
+        "docs/examples/combine_effects.mojo",
+        "tests/runtime/test_context_query_callable_views.mojo",
+        "tests/ownership/test_context_query_callable_views_ownership.mojo",
+        "tests/compile_fail/query_callable_view_once.mojo",
+        "tests/compile_fail/query_callable_view_origin.mojo"
       ]
     },
     {
@@ -701,7 +705,7 @@
       ],
       "status": "selected",
       "families": "Native iterator and owned iterable sources; result selects its native family",
-      "callbacks": "Repeatable consuming projections or shared borrowing keys; stored native thin pointers supported",
+      "callbacks": "Repeatable consuming projections or shared borrowing keys; stored native thin pointers supported Shared chains are borrowed by find_map.",
       "ownership": "Consume inputs; retain first extrema on ties and preserve result origins. Array uses shared temporary List conversion.",
       "errors": "Exact callback or monoid errors; incompatible raised types reject at admission",
       "timing": "Immediate ordered reduction; find_map stops without another pull, extrema evaluate each key once",
@@ -714,7 +718,11 @@
         "tests/runtime/test_context_reductions_generic.mojo",
         "tests/runtime/test_context_reductions_errors.mojo",
         "tests/runtime/test_context_reductions_native.mojo",
-        "tests/ownership/test_context_reductions_ownership.mojo"
+        "tests/ownership/test_context_reductions_ownership.mojo",
+        "tests/runtime/test_context_query_callable_views.mojo",
+        "tests/ownership/test_context_query_callable_views_ownership.mojo",
+        "tests/compile_fail/query_callable_view_once.mojo",
+        "tests/compile_fail/query_callable_view_origin.mojo"
       ]
     },
     {
