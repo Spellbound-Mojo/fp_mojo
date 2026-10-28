@@ -603,6 +603,9 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
     def map_err[Q: Movable & Deinitable, A: Movable & Deinitable, //, F: def(var A) -> Q, U: Movable & Deinitable = Q](deinit self, function: F) -> Result[Self.T, U] where A == Self.E and Q == U:
         """Transform the stored error; a success passes through and `function` does not run.
 
+        Named shared callable chains are borrowed without copying captures.
+        An explicit move transfers the handler to the consuming library form.
+
         Parameters:
             Q: The callback result, inferred with its origins.
             A: The callback input type, including origins.
@@ -631,6 +634,11 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
     ) raises F.Error -> Result[Self.T, F.Out] where F.Arg == Self.E:
         """Transform the error with a library unary callback."""
         return _result_transform[Self.T, Self.E, Self.T, F.Out, F, False, True](function^, self^)
+
+    def map_err[F: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: F
+    ) raises F._View[o].Error -> Result[Self.T, F._View[o].Out] where F._View[o].Arg == Self.E:
+        """Borrow a reusable stored-error mapper without copying its captures."""
+        return self^.map_err(function._unary_view())
 
     def or_else[Q: Movable & Deinitable, A: Movable & Deinitable, //, F: def(var A) -> Q, U: Movable & Deinitable = downcast[Q, _ResultType].Error](
         deinit self, function: F
@@ -1113,7 +1121,7 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
     def map_both[C: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var on_ok: C, var on_err: G) raises _CommonError[C.Error, G.Error] -> Result[C.Out, G.Out] where C.Arg == Self.T and G.Arg == Self.E and (C.Error == Never or G.Error == Never or C.Error == G.Error):
         """Transform either payload, preserving its Result constructor.
 
-        The selected handler consumes its payload. The success and stored error types may both change. Execution is immediate. Native handlers are borrowed in place; library handlers are consumed and use their declared receiver mode, including disposal of the skipped handler. Payloads, captures and native raised errors keep their ownership and origins. No Copyable requirement is added.
+        The selected handler consumes its payload. The success and stored error types may both change. Execution is immediate. Native handlers are borrowed in place; library handlers are consumed and use their declared receiver mode, including disposal of the skipped handler. Payloads, captures and native raised errors keep their ownership and origins. No Copyable requirement is added. Named shared callable chains are borrowed; move either handler explicitly to transfer its captures.
 
         Parameters:
             C: The success handler type.
@@ -1143,6 +1151,10 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             return context[](rebind_var[Self.E](payload^))
         return _result_both[Self.T, Self.E, C.Out, S, C.Out, S, C.Error, Y, _CommonError[C.Error, Y], C, Pointer[G, q], True, False, _call_transform[Self.T, C], invoke_on_err](self^, on_ok^, Pointer(to=on_err))
 
+    def map_both[C: UnaryContract & Movable & Deinitable, G: _UnaryViewable, q: ImmOrigin](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Error, G._View[q].Error] -> Result[C.Out, G._View[q].Out] where C.Arg == Self.T and G._View[q].Arg == Self.E and (C.Error == Never or G._View[q].Error == Never or C.Error == G._View[q].Error):
+        """Transform either payload, preserving its Result constructor."""
+        return _result_both[Self.T, Self.E, C.Out, G._View[q].Out, C.Out, G._View[q].Out, C.Error, G._View[q].Error, _CommonError[C.Error, G._View[q].Error], C, G._View[q], True, False, _call_transform[Self.T, C], _call_transform[Self.E, G._View[q]]](self^, on_ok^, on_err._unary_view())
+
     def map_both[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(var Self.T) -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises G.Error -> Result[R, G.Out] where G.Arg == Self.E:
         """Transform either payload, preserving its Result constructor."""
         def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
@@ -1164,6 +1176,12 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
             return context[](rebind_var[Self.E](payload^))
         return _result_both[Self.T, Self.E, R, S, R, S, Never, Y, Y, Pointer[C, o], Pointer[G, q], True, False, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err))
+
+    def map_both[R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, C: def(var Self.T) -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises G._View[q].Error -> Result[R, G._View[q].Out] where G._View[q].Arg == Self.E:
+        """Transform either payload, preserving its Result constructor."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        return _result_both[Self.T, Self.E, R, G._View[q].Out, R, G._View[q].Out, Never, G._View[q].Error, G._View[q].Error, Pointer[C, o], G._View[q], True, False, invoke_on_ok, _call_transform[Self.E, G._View[q]]](self^, Pointer(to=on_ok), on_err._unary_view())
 
     def map_both[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[X, G.Error] -> Result[R, G.Out] where G.Arg == Self.E and (X == Never or G.Error == Never or X == G.Error):
         """Transform either payload, preserving its Result constructor."""
@@ -1187,10 +1205,36 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             return context[](rebind_var[Self.E](payload^))
         return _result_both[Self.T, Self.E, R, S, R, S, X, Y, _CommonError[X, Y], Pointer[C, o], Pointer[G, q], True, False, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err))
 
+    def map_both[R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[X, G._View[q].Error] -> Result[R, G._View[q].Out] where G._View[q].Arg == Self.E and (X == Never or G._View[q].Error == Never or X == G._View[q].Error):
+        """Transform either payload, preserving its Result constructor."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        return _result_both[Self.T, Self.E, R, G._View[q].Out, R, G._View[q].Out, X, G._View[q].Error, _CommonError[X, G._View[q].Error], Pointer[C, o], G._View[q], True, False, invoke_on_ok, _call_transform[Self.E, G._View[q]]](self^, Pointer(to=on_ok), on_err._unary_view())
+
+    def map_both[C: _UnaryViewable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[C._View[o].Error, G.Error] -> Result[C._View[o].Out, G.Out] where C._View[o].Arg == Self.T and G.Arg == Self.E and (C._View[o].Error == Never or G.Error == Never or C._View[o].Error == G.Error):
+        """Transform either payload, preserving its Result constructor."""
+        return _result_both[Self.T, Self.E, C._View[o].Out, G.Out, C._View[o].Out, G.Out, C._View[o].Error, G.Error, _CommonError[C._View[o].Error, G.Error], C._View[o], G, True, False, _call_transform[Self.T, C._View[o]], _call_transform[Self.E, G]](self^, on_ok._unary_view(), on_err^)
+
+    def map_both[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var Self.E) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises C._View[o].Error -> Result[C._View[o].Out, S] where C._View[o].Arg == Self.T:
+        """Transform either payload, preserving its Result constructor."""
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return _result_both[Self.T, Self.E, C._View[o].Out, S, C._View[o].Out, S, C._View[o].Error, Never, C._View[o].Error, C._View[o], Pointer[G, q], True, False, _call_transform[Self.T, C._View[o]], invoke_on_err](self^, on_ok._unary_view(), Pointer(to=on_err))
+
+    def map_both[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._View[o].Error, Y] -> Result[C._View[o].Out, S] where C._View[o].Arg == Self.T and (C._View[o].Error == Never or Y == Never or C._View[o].Error == Y):
+        """Transform either payload, preserving its Result constructor."""
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return _result_both[Self.T, Self.E, C._View[o].Out, S, C._View[o].Out, S, C._View[o].Error, Y, _CommonError[C._View[o].Error, Y], C._View[o], Pointer[G, q], True, False, _call_transform[Self.T, C._View[o]], invoke_on_err](self^, on_ok._unary_view(), Pointer(to=on_err))
+
+    def map_both[C: _UnaryViewable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._View[o].Error, G._View[q].Error] -> Result[C._View[o].Out, G._View[q].Out] where C._View[o].Arg == Self.T and G._View[q].Arg == Self.E and (C._View[o].Error == Never or G._View[q].Error == Never or C._View[o].Error == G._View[q].Error):
+        """Transform either payload, preserving its Result constructor."""
+        return _result_both[Self.T, Self.E, C._View[o].Out, G._View[q].Out, C._View[o].Out, G._View[q].Out, C._View[o].Error, G._View[q].Error, _CommonError[C._View[o].Error, G._View[q].Error], C._View[o], G._View[q], True, False, _call_transform[Self.T, C._View[o]], _call_transform[Self.E, G._View[q]]](self^, on_ok._unary_view(), on_err._unary_view())
+
     def redeem[C: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var on_ok: C, var on_err: G) raises _CommonError[C.Error, G.Error] -> Result[C.Out, Self.E] where C.Arg == Self.T and G.Arg == Self.E and C.Out == G.Out and (C.Error == Never or G.Error == Never or C.Error == G.Error):
         """Turn either branch into a success with a common value type.
 
-        Both handlers return the same value type. The selected result is wrapped in Ok, retaining the original stored error type. Execution is immediate. Native handlers are borrowed in place; library handlers are consumed and use their declared receiver mode, including disposal of the skipped handler. Payloads, captures and native raised errors keep their ownership and origins. No Copyable requirement is added.
+        Both handlers return the same value type. The selected result is wrapped in Ok, retaining the original stored error type. Execution is immediate. Native handlers are borrowed in place; library handlers are consumed and use their declared receiver mode, including disposal of the skipped handler. Payloads, captures and native raised errors keep their ownership and origins. No Copyable requirement is added. Named shared callable chains are borrowed; move either handler explicitly to transfer its captures.
 
         Parameters:
             C: The success handler type.
@@ -1220,6 +1264,10 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             return context[](rebind_var[Self.E](payload^))
         return _result_both[Self.T, Self.E, C.Out, Self.E, C.Out, S, C.Error, Y, _CommonError[C.Error, Y], C, Pointer[G, q], True, True, _call_transform[Self.T, C], invoke_on_err](self^, on_ok^, Pointer(to=on_err))
 
+    def redeem[C: UnaryContract & Movable & Deinitable, G: _UnaryViewable, q: ImmOrigin](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Error, G._View[q].Error] -> Result[C.Out, Self.E] where C.Arg == Self.T and G._View[q].Arg == Self.E and C.Out == G._View[q].Out and (C.Error == Never or G._View[q].Error == Never or C.Error == G._View[q].Error):
+        """Turn either branch into a success with a common value type."""
+        return _result_both[Self.T, Self.E, C.Out, Self.E, C.Out, G._View[q].Out, C.Error, G._View[q].Error, _CommonError[C.Error, G._View[q].Error], C, G._View[q], True, True, _call_transform[Self.T, C], _call_transform[Self.E, G._View[q]]](self^, on_ok^, on_err._unary_view())
+
     def redeem[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(var Self.T) -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises G.Error -> Result[R, Self.E] where G.Arg == Self.E and R == G.Out:
         """Turn either branch into a success with a common value type."""
         def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
@@ -1241,6 +1289,12 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
             return context[](rebind_var[Self.E](payload^))
         return _result_both[Self.T, Self.E, R, Self.E, R, S, Never, Y, Y, Pointer[C, o], Pointer[G, q], True, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err))
+
+    def redeem[R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, C: def(var Self.T) -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises G._View[q].Error -> Result[R, Self.E] where G._View[q].Arg == Self.E and R == G._View[q].Out:
+        """Turn either branch into a success with a common value type."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        return _result_both[Self.T, Self.E, R, Self.E, R, G._View[q].Out, Never, G._View[q].Error, G._View[q].Error, Pointer[C, o], G._View[q], True, True, invoke_on_ok, _call_transform[Self.E, G._View[q]]](self^, Pointer(to=on_ok), on_err._unary_view())
 
     def redeem[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[X, G.Error] -> Result[R, Self.E] where G.Arg == Self.E and R == G.Out and (X == Never or G.Error == Never or X == G.Error):
         """Turn either branch into a success with a common value type."""
@@ -1264,10 +1318,36 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             return context[](rebind_var[Self.E](payload^))
         return _result_both[Self.T, Self.E, R, Self.E, R, S, X, Y, _CommonError[X, Y], Pointer[C, o], Pointer[G, q], True, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err))
 
+    def redeem[R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[X, G._View[q].Error] -> Result[R, Self.E] where G._View[q].Arg == Self.E and R == G._View[q].Out and (X == Never or G._View[q].Error == Never or X == G._View[q].Error):
+        """Turn either branch into a success with a common value type."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        return _result_both[Self.T, Self.E, R, Self.E, R, G._View[q].Out, X, G._View[q].Error, _CommonError[X, G._View[q].Error], Pointer[C, o], G._View[q], True, True, invoke_on_ok, _call_transform[Self.E, G._View[q]]](self^, Pointer(to=on_ok), on_err._unary_view())
+
+    def redeem[C: _UnaryViewable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[C._View[o].Error, G.Error] -> Result[C._View[o].Out, Self.E] where C._View[o].Arg == Self.T and G.Arg == Self.E and C._View[o].Out == G.Out and (C._View[o].Error == Never or G.Error == Never or C._View[o].Error == G.Error):
+        """Turn either branch into a success with a common value type."""
+        return _result_both[Self.T, Self.E, C._View[o].Out, Self.E, C._View[o].Out, G.Out, C._View[o].Error, G.Error, _CommonError[C._View[o].Error, G.Error], C._View[o], G, True, True, _call_transform[Self.T, C._View[o]], _call_transform[Self.E, G]](self^, on_ok._unary_view(), on_err^)
+
+    def redeem[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var Self.E) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises C._View[o].Error -> Result[C._View[o].Out, Self.E] where C._View[o].Arg == Self.T and C._View[o].Out == S:
+        """Turn either branch into a success with a common value type."""
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return _result_both[Self.T, Self.E, C._View[o].Out, Self.E, C._View[o].Out, S, C._View[o].Error, Never, C._View[o].Error, C._View[o], Pointer[G, q], True, True, _call_transform[Self.T, C._View[o]], invoke_on_err](self^, on_ok._unary_view(), Pointer(to=on_err))
+
+    def redeem[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._View[o].Error, Y] -> Result[C._View[o].Out, Self.E] where C._View[o].Arg == Self.T and C._View[o].Out == S and (C._View[o].Error == Never or Y == Never or C._View[o].Error == Y):
+        """Turn either branch into a success with a common value type."""
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return _result_both[Self.T, Self.E, C._View[o].Out, Self.E, C._View[o].Out, S, C._View[o].Error, Y, _CommonError[C._View[o].Error, Y], C._View[o], Pointer[G, q], True, True, _call_transform[Self.T, C._View[o]], invoke_on_err](self^, on_ok._unary_view(), Pointer(to=on_err))
+
+    def redeem[C: _UnaryViewable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._View[o].Error, G._View[q].Error] -> Result[C._View[o].Out, Self.E] where C._View[o].Arg == Self.T and G._View[q].Arg == Self.E and C._View[o].Out == G._View[q].Out and (C._View[o].Error == Never or G._View[q].Error == Never or C._View[o].Error == G._View[q].Error):
+        """Turn either branch into a success with a common value type."""
+        return _result_both[Self.T, Self.E, C._View[o].Out, Self.E, C._View[o].Out, G._View[q].Out, C._View[o].Error, G._View[q].Error, _CommonError[C._View[o].Error, G._View[q].Error], C._View[o], G._View[q], True, True, _call_transform[Self.T, C._View[o]], _call_transform[Self.E, G._View[q]]](self^, on_ok._unary_view(), on_err._unary_view())
+
     def redeem_with[C: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var on_ok: C, var on_err: G) raises _CommonError[C.Error, G.Error] -> C.Out where C.Arg == Self.T and G.Arg == Self.E and C.Out == G.Out and (C.Error == Never or G.Error == Never or C.Error == G.Error):
         """Continue either branch with the selected handler Result.
 
-        Both handlers return the same Result type, which may change both success and stored error types. Only the original branch selects a handler; a returned Err never invokes the other handler. Execution is immediate. Native handlers are borrowed in place; library handlers are consumed and use their declared receiver mode, including disposal of the skipped handler. Payloads, captures and native raised errors keep their ownership and origins. No Copyable requirement is added.
+        Both handlers return the same Result type, which may change both success and stored error types. Only the original branch selects a handler; a returned Err never invokes the other handler. Execution is immediate. Native handlers are borrowed in place; library handlers are consumed and use their declared receiver mode, including disposal of the skipped handler. Payloads, captures and native raised errors keep their ownership and origins. No Copyable requirement is added. Named shared callable chains are borrowed; move either handler explicitly to transfer its captures.
 
         Parameters:
             C: The success handler type.
@@ -1297,6 +1377,10 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             return context[](rebind_var[Self.E](payload^))
         return rebind_var[C.Out](_result_both[Self.T, Self.E, downcast[C.Out, _ResultType].Value, downcast[C.Out, _ResultType].Error, C.Out, S, C.Error, Y, _CommonError[C.Error, Y], C, Pointer[G, q], False, True, _call_transform[Self.T, C], invoke_on_err](self^, on_ok^, Pointer(to=on_err)))
 
+    def redeem_with[C: UnaryContract & Movable & Deinitable, G: _UnaryViewable, q: ImmOrigin](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Error, G._View[q].Error] -> C.Out where C.Arg == Self.T and G._View[q].Arg == Self.E and C.Out == G._View[q].Out and (C.Error == Never or G._View[q].Error == Never or C.Error == G._View[q].Error):
+        """Continue either branch with the selected handler Result."""
+        return rebind_var[C.Out](_result_both[Self.T, Self.E, downcast[C.Out, _ResultType].Value, downcast[C.Out, _ResultType].Error, C.Out, G._View[q].Out, C.Error, G._View[q].Error, _CommonError[C.Error, G._View[q].Error], C, G._View[q], False, True, _call_transform[Self.T, C], _call_transform[Self.E, G._View[q]]](self^, on_ok^, on_err._unary_view()))
+
     def redeem_with[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(var Self.T) -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, var on_err: G) raises G.Error -> R where R == Result[U, V] and G.Arg == Self.E and R == G.Out:
         """Continue either branch with the selected handler Result."""
         def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
@@ -1319,6 +1403,12 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             return context[](rebind_var[Self.E](payload^))
         return rebind_var[R](_result_both[Self.T, Self.E, downcast[R, _ResultType].Value, downcast[R, _ResultType].Error, R, S, Never, Y, Y, Pointer[C, o], Pointer[G, q], False, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err)))
 
+    def redeem_with[R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, C: def(var Self.T) -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises G._View[q].Error -> R where R == Result[U, V] and G._View[q].Arg == Self.E and R == G._View[q].Out:
+        """Continue either branch with the selected handler Result."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        return rebind_var[R](_result_both[Self.T, Self.E, downcast[R, _ResultType].Value, downcast[R, _ResultType].Error, R, G._View[q].Out, Never, G._View[q].Error, G._View[q].Error, Pointer[C, o], G._View[q], False, True, invoke_on_ok, _call_transform[Self.E, G._View[q]]](self^, Pointer(to=on_ok), on_err._unary_view()))
+
     def redeem_with[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[X, G.Error] -> R where R == Result[U, V] and G.Arg == Self.E and R == G.Out and (X == Never or G.Error == Never or X == G.Error):
         """Continue either branch with the selected handler Result."""
         def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> R:
@@ -1340,6 +1430,32 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
             return context[](rebind_var[Self.E](payload^))
         return rebind_var[R](_result_both[Self.T, Self.E, downcast[R, _ResultType].Value, downcast[R, _ResultType].Error, R, S, X, Y, _CommonError[X, Y], Pointer[C, o], Pointer[G, q], False, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err)))
+
+    def redeem_with[R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[X, G._View[q].Error] -> R where R == Result[U, V] and G._View[q].Arg == Self.E and R == G._View[q].Out and (X == Never or G._View[q].Error == Never or X == G._View[q].Error):
+        """Continue either branch with the selected handler Result."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        return rebind_var[R](_result_both[Self.T, Self.E, downcast[R, _ResultType].Value, downcast[R, _ResultType].Error, R, G._View[q].Out, X, G._View[q].Error, _CommonError[X, G._View[q].Error], Pointer[C, o], G._View[q], False, True, invoke_on_ok, _call_transform[Self.E, G._View[q]]](self^, Pointer(to=on_ok), on_err._unary_view()))
+
+    def redeem_with[C: _UnaryViewable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[C._View[o].Error, G.Error] -> C._View[o].Out where C._View[o].Arg == Self.T and G.Arg == Self.E and C._View[o].Out == G.Out and (C._View[o].Error == Never or G.Error == Never or C._View[o].Error == G.Error):
+        """Continue either branch with the selected handler Result."""
+        return rebind_var[C._View[o].Out](_result_both[Self.T, Self.E, downcast[C._View[o].Out, _ResultType].Value, downcast[C._View[o].Out, _ResultType].Error, C._View[o].Out, G.Out, C._View[o].Error, G.Error, _CommonError[C._View[o].Error, G.Error], C._View[o], G, False, True, _call_transform[Self.T, C._View[o]], _call_transform[Self.E, G]](self^, on_ok._unary_view(), on_err^))
+
+    def redeem_with[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var Self.E) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises C._View[o].Error -> C._View[o].Out where C._View[o].Arg == Self.T and C._View[o].Out == S:
+        """Continue either branch with the selected handler Result."""
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return rebind_var[C._View[o].Out](_result_both[Self.T, Self.E, downcast[C._View[o].Out, _ResultType].Value, downcast[C._View[o].Out, _ResultType].Error, C._View[o].Out, S, C._View[o].Error, Never, C._View[o].Error, C._View[o], Pointer[G, q], False, True, _call_transform[Self.T, C._View[o]], invoke_on_err](self^, on_ok._unary_view(), Pointer(to=on_err)))
+
+    def redeem_with[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._View[o].Error, Y] -> C._View[o].Out where C._View[o].Arg == Self.T and C._View[o].Out == S and (C._View[o].Error == Never or Y == Never or C._View[o].Error == Y):
+        """Continue either branch with the selected handler Result."""
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return rebind_var[C._View[o].Out](_result_both[Self.T, Self.E, downcast[C._View[o].Out, _ResultType].Value, downcast[C._View[o].Out, _ResultType].Error, C._View[o].Out, S, C._View[o].Error, Y, _CommonError[C._View[o].Error, Y], C._View[o], Pointer[G, q], False, True, _call_transform[Self.T, C._View[o]], invoke_on_err](self^, on_ok._unary_view(), Pointer(to=on_err)))
+
+    def redeem_with[C: _UnaryViewable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._View[o].Error, G._View[q].Error] -> C._View[o].Out where C._View[o].Arg == Self.T and G._View[q].Arg == Self.E and C._View[o].Out == G._View[q].Out and (C._View[o].Error == Never or G._View[q].Error == Never or C._View[o].Error == G._View[q].Error):
+        """Continue either branch with the selected handler Result."""
+        return rebind_var[C._View[o].Out](_result_both[Self.T, Self.E, downcast[C._View[o].Out, _ResultType].Value, downcast[C._View[o].Out, _ResultType].Error, C._View[o].Out, G._View[q].Out, C._View[o].Error, G._View[q].Error, _CommonError[C._View[o].Error, G._View[q].Error], C._View[o], G._View[q], False, True, _call_transform[Self.T, C._View[o]], _call_transform[Self.E, G._View[q]]](self^, on_ok._unary_view(), on_err._unary_view()))
 
     @always_inline
     def value_or[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: _Unary[A, R]](deinit self, ref[o] on_err: C) raises Never -> Self.T where A == Self.E and R == Self.T:

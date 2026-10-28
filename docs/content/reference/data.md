@@ -37,6 +37,11 @@ transfers ownership, including disposal when the handler is skipped.
 these handlers for matching errors. Their predicate borrows the stored error,
 and a nonmatch retains it without calling the handler.
 
+`map_err`, `map_both`, `redeem` and `redeem_with` also borrow named shared
+chains. Two-handler methods accept any mix of chains and native functions.
+Exactly one handler runs for the original outcome; a returned failure or a
+native raise never invokes the other handler.
+
 `raise_on_err()` returns the success or raises the stored error with its exact
 type. This also finishes a Result pipeline directly; it consumes the carrier
 without copying its payload.

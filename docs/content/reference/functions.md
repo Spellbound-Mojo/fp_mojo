@@ -52,6 +52,12 @@ can also select a different accumulation policy over the same error type.
 Subsequent fluent operations use that destination family. Mapping itself does
 not combine errors or invoke the other callback after a native raise.
 
+These transformations accept reusable shared Kleisli handlers alongside native
+callbacks. Named chains are borrowed without copying their captures, and may
+also be passed to direct Result methods. Explicitly moving a handler transfers
+its captures to the operation. Error mapping still selects its destination
+from the source family's policy and the handler's result type.
+
 <!-- example: docs/examples/selected_error_mapping.mojo -->
 
 `ResultT[M, E]` changes its selected inner error through one base map, preserving
@@ -203,6 +209,12 @@ handler's effect. Exactly one handler consumes each original outcome; a
 returned stored failure or a native raise never invokes the opposite handler.
 Family `redeem` needs `ApplicativeError`, including Validation; family
 `redeem_with` also needs Monad. Deferred families keep the handlers deferred.
+
+Either handler can be a reusable shared Kleisli chain, including a composed
+chain. Mix chains and native functions in the same call; a named chain is
+borrowed, while `handler^` transfers ownership. Direct Result methods have the
+same behavior. Deferred outcomes retain the borrowed handlers until execution
+or disposal.
 
 Custom error-capable families retain their error layer and execution policy,
 even when their storage is native Result. Canonical and intrinsic Result
@@ -607,7 +619,8 @@ overrides that choice. Direct `Result.map(chain)` and
 `Pipeline.map`, `flat_map`, `filter_map`, `traverse`, `par_traverse`,
 `traverse_filter`, `flat_traverse`, `traverse_void`, `find_map`,
 `find_map_effect`, `fold_map_effect`, `sum_by_effect`, `then`, `recover`,
-`or_else`, `value_or`, `recover_if` and `or_else_if` borrow shared
+`or_else`, `value_or`, `recover_if`, `or_else_if`, `map_err`, `map_both`,
+`redeem` and `redeem_with` borrow shared
 chains directly. Passing `chain^` instead transfers ownership when the
 selected operation admits a consuming callback. For example,
 `pipeline[Reader[Int]](action^).map(chain)` retains a borrow until execution,

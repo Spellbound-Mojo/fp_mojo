@@ -1,7 +1,8 @@
 """Handle an original outcome while preserving its selected family."""
 from fp.data import Result, Ok, Err
 from fp.effects import Reader, ResultT, run
-from fp.functions import pipeline
+from fp.algebra import IdentityFamily
+from fp.functions import pipeline, kleisli
 
 
 def double(var value: Int) -> Int:
@@ -24,7 +25,8 @@ def main() raises:
         recovered += 1
         return 7
 
-    var pending = pipeline[Deferred](Deferred.fail[Int](String("missing"))).redeem(double, fallback).map(double).get()
+    var scale = kleisli[IdentityFamily](double)
+    var pending = pipeline[Deferred](Deferred.fail[Int](String("missing"))).redeem(scale, fallback).map(scale).get()
     print("before run:", recovered)
     print("recovered:", run[Environment](pending^, 0)._ok().value, "; handled:", recovered)
 

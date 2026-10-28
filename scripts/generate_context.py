@@ -1010,16 +1010,16 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
     for operation in error_operations("redeem"):
         primary, secondary = operation.callbacks
         selection = f"_OutcomeSelection[Self.I, Self.V, {operation.effect}]"
-        left = native_callbacks(primary.mode, selection + ".Success", primary.argument)
-        right = list(native_callbacks(secondary.mode, selection + ".Failure", secondary.argument, second=True))
+        left = native_callbacks(primary.mode, selection + ".Success", primary.argument, view=True)
+        right = list(native_callbacks(secondary.mode, selection + ".Failure", secondary.argument, second=True, view=True))
         for a, b in product(left, right):
             contract_name = "RedeemWithContract" if operation.effect else "RedeemContract"
             contract = f"{contract_name}[Self.I, Self.V, {a['adapter_type']}, {b['adapter_type']}]"
             params = callback_parameters((a, b))
-            native = a["adapter_type"] != "C" or b["adapter_type"] != "G"
+            native = a["is_native"] or b["is_native"]
             conditions = ["conforms_to(Self.I, ApplicativeError)"] if native else []
             for cb in (a, b):
-                if cb["adapter_type"] not in ("C", "G"):
+                if cb["is_native"]:
                     conditions += cb["conditions"]
             conditions += [contract + ".Compatible"]
             prelude = a.get("prelude", "") + b.get("prelude", "")
@@ -1040,10 +1040,10 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         operation = RESULT_OPERATIONS[name]
         two = len(operation.callbacks) == 2
         primary = operation.callbacks[0]
-        left = native_callbacks(primary.mode, primary.input("Self.I.Element[Self.V]", family + ".Failure"), primary.argument)
+        left = native_callbacks(primary.mode, primary.input("Self.I.Element[Self.V]", family + ".Failure"), primary.argument, view=True)
         if two:
             secondary = operation.callbacks[1]
-            right = list(native_callbacks(secondary.mode, secondary.input("Self.I.Element[Self.V]", family + ".Failure"), secondary.argument, second=True))
+            right = list(native_callbacks(secondary.mode, secondary.input("Self.I.Element[Self.V]", family + ".Failure"), secondary.argument, second=True, view=True))
             combinations = product(left, right)
         else:
             combinations = ((cb, None) for cb in left)
@@ -1059,7 +1059,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
             contract = f"{contract_name}[{family}, Self.V, {types}, {target}]"
             conditions = ["conforms_to(Self.I, ErrorMapping)", "conforms_to(Target, ErrorMapping)", contract + ".Compatible"]
             for cb in callbacks:
-                if cb["adapter_type"] not in ("C", "G"):
+                if cb["is_native"]:
                     conditions += cb["conditions"]
             prelude = "".join(cb.get("prelude", "") for cb in callbacks)
             built = ", ".join(cb["build"] for cb in callbacks)
@@ -1130,15 +1130,15 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         summary, detail = operation.documentation
         two = len(operation.callbacks) == 2
         primary = operation.callbacks[0]
-        left = list(native_callbacks(primary.mode, primary.input(T, Err, whole=Source), primary.argument, library=name not in ("or_else", "tap_err"), result_register=True if operation.conditional else None, view=name == "recover"))
+        left = list(native_callbacks(primary.mode, primary.input(T, Err, whole=Source), primary.argument, library=name not in ("or_else", "tap_err"), result_register=True if operation.conditional else None, view=primary.mode == "owned" and name != "or_else"))
         if two:
             secondary = operation.callbacks[1]
-            right = native_callbacks(secondary.mode, secondary.input(T, Err, whole=Source), secondary.argument, second=True, view=operation.selective)
+            right = native_callbacks(secondary.mode, secondary.input(T, Err, whole=Source), secondary.argument, second=True, view=secondary.mode == "owned")
             combinations = product(left, right)
         else:
             combinations = ((cb, None) for cb in left)
         for a, b in combinations:
-            if name in ("redeem", "redeem_with") and a["adapter_type"] == "C" and b["adapter_type"] == "G":
+            if name in ("redeem", "redeem_with") and not a["is_native"] and not b["is_native"]:
                 continue
             callbacks = [a] + ([b] if two else [])
             conditions = [f"conforms_to(Self.V, _ResultType)", f"Self.V == {Source}"] + sum(

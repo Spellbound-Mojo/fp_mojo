@@ -607,8 +607,8 @@
       ],
       "status": "selected",
       "families": "ApplicativeError for values, plus Monad for effects; canonical Result and intrinsic Result under families with neither ApplicativeError nor ErrorMapping preserve type-changing effect handlers",
-      "callbacks": "Both handlers consume their original payload; native closures borrowed, stored thin pointers owned, library receivers preserved",
-      "ownership": "Only the original branch selects a handler; inactive callbacks are disposed; branching requires repeatable handlers",
+      "callbacks": "Both handlers consume their original payload; native closures borrowed, stored thin pointers owned, library receivers preserved; named shared chains are borrowed in either callback position, including mixed native/chain calls",
+      "ownership": "Only the original branch selects a handler; inactive callbacks are disposed; branching requires repeatable handlers; borrowed chains keep their captures and explicit moves transfer ownership",
       "errors": "Exact family construction and deferred run errors; returned stored failures and native raises never invoke the opposite arm",
       "timing": "Selected custom families own materialization and execution even with native Result storage; deferred callbacks remain deferred",
       "owner": [
@@ -629,7 +629,11 @@
         "tests/compile_fail/context_error_capability_redeem_native.mojo",
         "tests/compile_fail/context_error_capability_redeem_library.mojo",
         "tests/compile_fail/context_error_capability_redeem_with_native.mojo",
-        "tests/compile_fail/context_error_capability_redeem_with_library.mojo"
+        "tests/compile_fail/context_error_capability_redeem_with_library.mojo",
+        "tests/runtime/test_context_outcome_callable_views.mojo",
+        "tests/ownership/test_context_outcome_callable_views_ownership.mojo",
+        "tests/compile_fail/outcome_callable_view_move.mojo",
+        "tests/compile_fail/outcome_callable_view_errors.mojo"
       ]
     },
     {
@@ -668,8 +672,8 @@
       ],
       "status": "selected",
       "families": "Selected ErrorMapping: ResultFamily, ValidationFamily, ResultT, OptionalT/ReaderT/StateT/WriterT over a mapping-capable Monad, and custom families; mapping does not require ApplicativeError or copyable State; intrinsic Result remains under families with neither ErrorMapping nor ApplicativeError",
-      "callbacks": "Consuming branch callbacks; native closures borrowed, stored thin pointers owned, library receivers preserved; optional Target follows existing positional bindings and admits Functor aliases with an ErrorMapping capability check",
-      "ownership": "One original branch consumes its payload and invokes its callback; unused owners are destroyed; exact payload/error and actual Reader run origins remain in the destination; State runs once without rollback/copy and Writer retains the exact log monoid",
+      "callbacks": "Consuming branch callbacks; native closures borrowed, stored thin pointers owned, library receivers preserved; optional Target follows existing positional bindings and admits Functor aliases with an ErrorMapping capability check; named shared chains are borrowed in either callback position, including mixed native/chain calls",
+      "ownership": "One original branch consumes its payload and invokes its callback; unused owners are destroyed; exact payload/error and actual Reader run origins remain in the destination; State runs once without rollback/copy and Writer retains the exact log monoid; borrowed chains keep their captures and explicit moves transfer ownership",
       "errors": "Exact family construction and callback errors remain native; Reader/State mapping construction is Never and their run errors stay deferred; Writer exposes its base construction error and preserves deferred base errors",
       "timing": "One two-arm family primitive; ResultT uses one base map, OptionalT its existing success adapter, and Reader/State/Writer one shared _BimapOp through existing hoists/Writer transport; sources run under their original family; raw target bases must be Monad, while explicitly admitted Monad targets remain independent of unusable defaults",
       "owner": [
@@ -705,7 +709,11 @@
         "tests/compile_fail/context_transport_error_mapping_default_reader.mojo",
         "tests/compile_fail/context_transport_error_mapping_default_state.mojo",
         "tests/compile_fail/context_transport_error_mapping_default_writer.mojo",
-        "tests/runtime/test_context_error_capability.mojo"
+        "tests/runtime/test_context_error_capability.mojo",
+        "tests/runtime/test_context_outcome_callable_views.mojo",
+        "tests/ownership/test_context_outcome_callable_views_ownership.mojo",
+        "tests/compile_fail/outcome_callable_view_move.mojo",
+        "tests/compile_fail/outcome_callable_view_errors.mojo"
       ]
     },
     {

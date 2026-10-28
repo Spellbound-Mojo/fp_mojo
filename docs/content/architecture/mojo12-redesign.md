@@ -3682,3 +3682,19 @@ Intrinsic Result `recover` and conditional recovery use the same views when
 the selected family has neither stored-error capability. The existing negative
 capability proofs keep this convenience from bypassing a mapping-only family
 or a selected transformer layer.
+
+### Reusable outcome transformations
+
+`map_err`, `map_both`, `redeem` and `redeem_with` use the same origin-indexed
+shared callback views as recovery. Each callback position admits its own
+native, owned library or borrowed library form. Shared views carry the same
+input, output and native error evidence as owned handlers; the existing
+mapping and outcome contracts retain capability and destination selection.
+Intrinsic Result forms remain disjoint from selected error policies.
+
+Direct Result outcome generation passes a view's context and canonical unary
+invoker to the existing `_result_both` owner. Native function signatures keep
+their existing inference boundary. There is no new branch engine or error
+conversion: only the original outcome chooses a handler, including when that
+handler returns a stored failure. Borrowed chains keep their captures and
+deferred origins; explicit moves retain disposal of inactive handlers.

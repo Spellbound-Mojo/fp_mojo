@@ -1,4 +1,4 @@
-# error: constraint
+# error: no matching method in call to 'map_both'
 from fp.data import Result, Ok
 def on_ok(value: Int) raises Int -> Int: raise value
 def on_err(var error: String) raises String -> Int: raise error^

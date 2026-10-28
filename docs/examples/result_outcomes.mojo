@@ -1,6 +1,7 @@
 """Map, observe and continue either Result branch without wrapper lambdas."""
 from fp.data import Result, Ok, Err
-from fp.functions import piped
+from fp.algebra import IdentityFamily, ResultFamily
+from fp.functions import pipeline, kleisli
 
 
 def format_invoice(value: Int) -> String: return "invoice: " + String(value)
@@ -25,14 +26,20 @@ def explain(var error: String) -> String: return "failed: " + error
 
 
 def main() raises:
+    var format_value = kleisli[IdentityFamily](format_invoice)
+    var format_error = kleisli[IdentityFamily](error_code)
+    var on_success = kleisli[ResultFamily[String]](accept)
+    var on_failure = kleisli[ResultFamily[String]](retry)
+    var final_value = kleisli[IdentityFamily](keep)
+    var final_error = kleisli[IdentityFamily](explain)
     for branch in range(3):
         var source = Result[Int, String](Ok(4)) if branch == 0 else Result[Int, String](Err(String("missing" if branch == 1 else "fatal")))
         var message = (
-            piped(source^)
-            .map_both(format_invoice, error_code)
+            pipeline(source^)
+            .map_both(format_value, format_error)
             .attempt_tap(audit)
-            .redeem_with(accept, retry)
-            .redeem(keep, explain)
+            .redeem_with(on_success, on_failure)
+            .redeem(final_value, final_error)
             .get()
         )
         print(message^.raise_on_err())

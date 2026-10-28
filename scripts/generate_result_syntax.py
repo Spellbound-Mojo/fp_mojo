@@ -196,7 +196,8 @@ def outcome_methods(piped=False):
     for name, (summary, detail) in OUTCOMES.items():
         operation = RESULT_OPERATIONS[name]
         primary, secondary = operation.callbacks
-        for first, second in product(('library', 'pure', 'raising'), repeat=2):
+        kinds = ('library', 'pure', 'raising') + (() if piped else ('view',))
+        for first, second in product(kinds, repeat=2):
             ok = callback(primary.mode, first, primary.argument)
             err = callback(secondary.mode, second, secondary.argument, second=True)
             # Infer native results independently before constraining equality.
@@ -207,21 +208,21 @@ def outcome_methods(piped=False):
             # avoids Mojo 1.1 unifying distinct embedded origins while inferring
             # two independently renamed native signatures.
             for c, k, f, payload, arg_parameter in ((ok, first, 'C', t, 'A'), (err, second, 'G', e, 'Q')):
-                if k == 'library': continue
+                if k in ('library', 'view'): continue
                 c.parameters = [p for p in c.parameters if not p.startswith(arg_parameter+':')]
                 c.payload = payload
                 raises = f' raises {c.error}' if k == 'raising' else ''
                 c.explicit[-1] = f'{f}: def(var {payload}){raises} -> {c.result}'
             params = ([f'T: {MD}', f'Failure: {MD}'] if piped else []) + ok.parameters + err.parameters
             explicit = ok.explicit + err.explicit
-            if name == 'redeem_with' and first != 'library':
+            if name == 'redeem_with' and first in ('pure', 'raising'):
                 explicit += [f'U: {MD} = downcast[R, _ResultType].Value', f'V: {MD} = downcast[R, _ResultType].Error']
             if explicit: params += ['//', *explicit]
             where = ([f'Self.Value == {source}'] if piped else [])
-            if name == 'redeem_with' and first != 'library':
+            if name == 'redeem_with' and first in ('pure', 'raising'):
                 where.append('R == Result[U, V]')
-            if first == 'library': where.append(f'{ok.payload} == {t}')
-            if second == 'library': where.append(f'{err.payload} == {e}')
+            if first in ('library', 'view'): where.append(f'{ok.payload} == {t}')
+            if second in ('library', 'view'): where.append(f'{err.payload} == {e}')
             if name != 'map_both': where.append(f'{ok.result} == {err.result}')
             if first != 'pure' and second != 'pure':
                 where.append(operation.error_constraint(ok.error, err.error))
@@ -238,8 +239,8 @@ def outcome_methods(piped=False):
             else:
                 contexts, builds, invokes = [], [], []
                 for c, k, arg, f, origin, payload in ((ok, first, 'on_ok', 'C', 'o', t), (err, second, 'on_err', 'G', 'q', e)):
-                    if k == 'library':
-                        contexts.append(f); builds.append(arg+'^'); invokes.append(f'_call_transform[{payload}, {f}]')
+                    if k in ('library', 'view'):
+                        contexts.append(c.type); builds.append(c.build); invokes.append(f'_call_transform[{payload}, {c.type}]')
                     else:
                         context = f'Pointer[{f}, {origin}]'
                         invoke = 'invoke_'+arg
@@ -252,6 +253,8 @@ def outcome_methods(piped=False):
             doc = summary
             if first == second == 'library':
                 doc += '\n\n        '+detail+' Execution is immediate. Native handlers are borrowed in place; library handlers are consumed and use their declared receiver mode, including disposal of the skipped handler. Payloads, captures and native raised errors keep their ownership and origins. No Copyable requirement is added.'
+                if not piped:
+                    doc += ' Named shared callable chains are borrowed; move either handler explicitly to transfer its captures.'
                 doc += '\n\n        Parameters:\n'
                 if piped: doc += '            T: The source success type, including its origins.\n            Failure: The source stored error type, including its origins.\n'
                 doc += '            C: The success handler type.\n            G: The error handler type.\n\n        Args:\n            on_ok: The handler consuming the success payload.\n            on_err: The handler consuming the error payload.\n\n        Returns:\n            '+summary+'\n\n        Raises:\n            The selected handler native error, unchanged. Both must share an error type, or one must be non-raising.\n        '
