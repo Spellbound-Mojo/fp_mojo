@@ -24,7 +24,6 @@ def main():
             .flat_tap_err(record_error)
             .or_else_if(can_retry, retry)
             .recover_if(missing, default_value)
-            .map(success)
-            .value_or(failure)
+            .fold_owned(success, failure)
         )
         print(result)

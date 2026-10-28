@@ -3735,3 +3735,19 @@ named-context reuse, exact error origins and ordinary Capture-valued operands
 together before replacing the current boundary. Type-level argument bundles
 remain the introductory syntax for bound calls; saved contexts remain useful
 for repeated direct and stateful admission.
+
+### Direct Result fold terminal
+
+Pipeline's `fold_owned` admits two handlers through the shared native
+signature description, including stored pointer ABI variants and shared
+Kleisli views. It forwards to Result's `_fold_result_owned` driver with the
+existing `_call_transform` adapters. No branch, catch, payload movement or
+handler disposal is repeated in the pipeline implementation. The result is a
+plain handler value; no intermediate Result is constructed and unwrapped.
+
+This is a native carrier terminal, like `raise_on_err` and `to_optional`,
+independent of the selected family's transformation policies. Both handler
+inputs and their common output must match exactly, including origins. Native
+errors are admitted against the selected context; library handler errors
+remain independent. Shared named chains retain their borrow origin, and owned
+handlers use the existing one-call receiver dispatch and inactive cleanup.

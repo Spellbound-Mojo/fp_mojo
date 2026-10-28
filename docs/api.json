@@ -114991,6 +114991,4706 @@
       "summary": "Infer the native effect from the callback and combine through the selected monoid."
      }
     ],
+    "fold_owned": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The success handler, consuming the success payload.",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The error handler, consuming the stored error payload.",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Error, G.Error]",
+      "parameters": [
+       {
+        "description": "The first library callback type, retaining its receiver and origins.",
+        "inferred": false,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The second library callback type, retaining its receiver and origins.",
+        "inferred": false,
+        "name": "G",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The selected handler value, without a pipeline wrapper.",
+       "type": "C.Out"
+      },
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var on_ok: C, var on_err: G) raises _CommonError[C.Error, G.Error] -> C.Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Success[Self.V] and G.Arg == _Failure[Self.V] and C.Out == G.Out and (C.Error == Never or G.Error == Never or C.Error == G.Error)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Error, G._View[q].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Out"
+      },
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, G: _UnaryViewable, q: ImmOrigin](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Error, G._View[q].Error] -> C.Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Success[Self.V] and G._View[q].Arg == _Failure[Self.V] and C.Out == G._View[q].Out and (C.Error == Never or G._View[q].Error == Never or C.Error == G._View[q].Error)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Error, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Out"
+      },
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) -> S](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Error, Never] -> C.Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Success[Self.V] and C.Out == S and (C.Error == Never or Never == Never or C.Error == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Error, Self.E]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) raises Self.E -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Out"
+      },
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Self.E -> S](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Error, Self.E] -> C.Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Success[Self.V] and C.Out == S and (C.Error == Never or Self.E == Never or C.Error == Self.E)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Error, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) raises Never -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Out"
+      },
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Never -> S](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Error, Never] -> C.Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Success[Self.V] and Self.E != Never and C.Out == S and (C.Error == Never or Never == Never or C.Error == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Error, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Out"
+      },
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, S: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[C.Error, Never] -> C.Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Success[Self.V] and not conforms_to(S, RegisterPassable) and C.Out == S and (C.Error == Never or Never == Never or C.Error == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Error, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Out"
+      },
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, S: RegisterPassable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[C.Error, Never] -> C.Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Success[Self.V] and C.Out == S and (C.Error == Never or Never == Never or C.Error == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Error, Y]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Out"
+      },
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[C.Error, Y] -> C.Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable) and C.Out == S and (C.Error == Never or Y == Never or C.Error == Y)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Error, Y]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Out"
+      },
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[C.Error, Y] -> C.Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and C.Out == S and (C.Error == Never or Y == Never or C.Error == Y)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C._View[o].Error, G.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C._View[o].Out"
+      },
+      "signature": "def fold_owned[C: _UnaryViewable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[C._View[o].Error, G.Error] -> C._View[o].Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._View[o].Arg == _Success[Self.V] and G.Arg == _Failure[Self.V] and C._View[o].Out == G.Out and (C._View[o].Error == Never or G.Error == Never or C._View[o].Error == G.Error)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C._View[o].Error, G._View[q].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C._View[o].Out"
+      },
+      "signature": "def fold_owned[C: _UnaryViewable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._View[o].Error, G._View[q].Error] -> C._View[o].Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._View[o].Arg == _Success[Self.V] and G._View[q].Arg == _Failure[Self.V] and C._View[o].Out == G._View[q].Out and (C._View[o].Error == Never or G._View[q].Error == Never or C._View[o].Error == G._View[q].Error)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C._View[o].Error, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C._View[o].Out"
+      },
+      "signature": "def fold_owned[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._View[o].Error, Never] -> C._View[o].Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._View[o].Arg == _Success[Self.V] and C._View[o].Out == S and (C._View[o].Error == Never or Never == Never or C._View[o].Error == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C._View[o].Error, Self.E]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) raises Self.E -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C._View[o].Out"
+      },
+      "signature": "def fold_owned[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Self.E -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._View[o].Error, Self.E] -> C._View[o].Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._View[o].Arg == _Success[Self.V] and C._View[o].Out == S and (C._View[o].Error == Never or Self.E == Never or C._View[o].Error == Self.E)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C._View[o].Error, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) raises Never -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C._View[o].Out"
+      },
+      "signature": "def fold_owned[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Never -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._View[o].Error, Never] -> C._View[o].Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._View[o].Arg == _Success[Self.V] and Self.E != Never and C._View[o].Out == S and (C._View[o].Error == Never or Never == Never or C._View[o].Error == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C._View[o].Error, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C._View[o].Out"
+      },
+      "signature": "def fold_owned[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[C._View[o].Error, Never] -> C._View[o].Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._View[o].Arg == _Success[Self.V] and not conforms_to(S, RegisterPassable) and C._View[o].Out == S and (C._View[o].Error == Never or Never == Never or C._View[o].Error == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C._View[o].Error, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C._View[o].Out"
+      },
+      "signature": "def fold_owned[C: _UnaryViewable, o: ImmOrigin, S: RegisterPassable & Deinitable](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[C._View[o].Error, Never] -> C._View[o].Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._View[o].Arg == _Success[Self.V] and C._View[o].Out == S and (C._View[o].Error == Never or Never == Never or C._View[o].Error == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C._View[o].Error, Y]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C._View[o].Out"
+      },
+      "signature": "def fold_owned[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[C._View[o].Error, Y] -> C._View[o].Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._View[o].Arg == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable) and C._View[o].Out == S and (C._View[o].Error == Never or Y == Never or C._View[o].Error == Y)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C._View[o].Error, Y]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C._View[o].Out"
+      },
+      "signature": "def fold_owned[C: _UnaryViewable, o: ImmOrigin, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[C._View[o].Error, Y] -> C._View[o].Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._View[o].Arg == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and C._View[o].Out == S and (C._View[o].Error == Never or Y == Never or C._View[o].Error == Y)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, G.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "G",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(var _Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[Never, G.Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G.Arg == _Failure[Self.V] and R == G.Out and (Never == Never or G.Error == Never or Never == G.Error)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, G._View[q].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "G",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, C: def(var _Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, G._View[q].Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G._View[q].Arg == _Failure[Self.V] and R == G._View[q].Out and (Never == Never or G._View[q].Error == Never or Never == G._View[q].Error)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) -> R",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var _Success[Self.V]) -> R, G: def(var _Failure[Self.V]) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Never == Never or Never == Never or Never == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Self.E]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) -> R",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) raises Self.E -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var _Success[Self.V]) -> R, G: def(var _Failure[Self.V]) raises Self.E -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Never == Never or Self.E == Never or Never == Self.E)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) -> R",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) raises Never -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var _Success[Self.V]) -> R, G: def(var _Failure[Self.V]) raises Never -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == S and (Never == Never or Never == Never or Never == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, //, C: def(var _Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: RegisterPassable & Deinitable, //, C: def(var _Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Never == Never or Never == Never or Never == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Y]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, Y: Movable & Deinitable, //, C: def(var _Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Y]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: RegisterPassable & Deinitable, Y: Movable & Deinitable, //, C: def(var _Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, Y] and R == S and (Never == Never or Y == Never or Never == Y)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, G.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "G",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) raises Self.E -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(var _Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[Self.E, G.Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G.Arg == _Failure[Self.V] and R == G.Out and (Self.E == Never or G.Error == Never or Self.E == G.Error)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, G._View[q].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "G",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) raises Self.E -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, C: def(var _Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Self.E, G._View[q].Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G._View[q].Arg == _Failure[Self.V] and R == G._View[q].Out and (Self.E == Never or G._View[q].Error == Never or Self.E == G._View[q].Error)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) raises Self.E -> R",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var _Success[Self.V]) raises Self.E -> R, G: def(var _Failure[Self.V]) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Self.E, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Self.E == Never or Never == Never or Self.E == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, Self.E]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) raises Self.E -> R",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) raises Self.E -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var _Success[Self.V]) raises Self.E -> R, G: def(var _Failure[Self.V]) raises Self.E -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Self.E, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Self.E == Never or Self.E == Never or Self.E == Self.E)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) raises Self.E -> R",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) raises Never -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var _Success[Self.V]) raises Self.E -> R, G: def(var _Failure[Self.V]) raises Never -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Self.E, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == S and (Self.E == Never or Never == Never or Self.E == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) raises Self.E -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, //, C: def(var _Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[Self.E, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(S, RegisterPassable) and R == S and (Self.E == Never or Never == Never or Self.E == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) raises Self.E -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: RegisterPassable & Deinitable, //, C: def(var _Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[Self.E, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Self.E == Never or Never == Never or Self.E == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, Y]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) raises Self.E -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, Y: Movable & Deinitable, //, C: def(var _Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[Self.E, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable) and R == S and (Self.E == Never or Y == Never or Self.E == Y)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Self.E, Y]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) raises Self.E -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: RegisterPassable & Deinitable, Y: Movable & Deinitable, //, C: def(var _Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[Self.E, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, Y] and R == S and (Self.E == Never or Y == Never or Self.E == Y)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, G.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "G",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) raises Never -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(var _Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[Never, G.Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and G.Arg == _Failure[Self.V] and R == G.Out and (Never == Never or G.Error == Never or Never == G.Error)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, G._View[q].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "G",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) raises Never -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, C: def(var _Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, G._View[q].Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and G._View[q].Arg == _Failure[Self.V] and R == G._View[q].Out and (Never == Never or G._View[q].Error == Never or Never == G._View[q].Error)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) raises Never -> R",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var _Success[Self.V]) raises Never -> R, G: def(var _Failure[Self.V]) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == S and (Never == Never or Never == Never or Never == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Self.E]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) raises Never -> R",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) raises Self.E -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var _Success[Self.V]) raises Never -> R, G: def(var _Failure[Self.V]) raises Self.E -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == S and (Never == Never or Self.E == Never or Never == Self.E)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) raises Never -> R",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) raises Never -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var _Success[Self.V]) raises Never -> R, G: def(var _Failure[Self.V]) raises Never -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and Self.E != Never and R == S and (Never == Never or Never == Never or Never == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) raises Never -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, //, C: def(var _Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) raises Never -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: RegisterPassable & Deinitable, //, C: def(var _Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == S and (Never == Never or Never == Never or Never == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Y]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) raises Never -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, Y: Movable & Deinitable, //, C: def(var _Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Y]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(var _Success[Self.V]) raises Never -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: RegisterPassable & Deinitable, Y: Movable & Deinitable, //, C: def(var _Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and _ErrorCompatible[Self.E, Y] and R == S and (Never == Never or Y == Never or Never == Y)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, G.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, var on_err: G) raises _CommonError[Never, G.Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and G.Arg == _Failure[Self.V] and R == G.Out and (Never == Never or G.Error == Never or Never == G.Error)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, G._View[q].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, G: _UnaryViewable, q: ImmOrigin](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, G._View[q].Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and G._View[q].Arg == _Failure[Self.V] and R == G._View[q].Out and (Never == Never or G._View[q].Error == Never or Never == G._View[q].Error)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Self.E]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) raises Self.E -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Self.E -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and R == S and (Never == Never or Self.E == Never or Never == Self.E)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) raises Never -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Never -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and Self.E != Never and R == S and (Never == Never or Never == Never or Never == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, S: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Y]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Y]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and R == S and (Never == Never or Y == Never or Never == Y)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, G.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: RegisterPassable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, var on_err: G) raises _CommonError[Never, G.Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G.Arg == _Failure[Self.V] and R == G.Out and (Never == Never or G.Error == Never or Never == G.Error)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, G._View[q].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: RegisterPassable & Deinitable, G: _UnaryViewable, q: ImmOrigin](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, G._View[q].Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G._View[q].Arg == _Failure[Self.V] and R == G._View[q].Out and (Never == Never or G._View[q].Error == Never or Never == G._View[q].Error)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: RegisterPassable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Never == Never or Never == Never or Never == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Self.E]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) raises Self.E -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: RegisterPassable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Self.E -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Never == Never or Self.E == Never or Never == Self.E)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) raises Never -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: RegisterPassable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Never -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == S and (Never == Never or Never == Never or Never == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: RegisterPassable & Deinitable, S: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: RegisterPassable & Deinitable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Never == Never or Never == Never or Never == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Y]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: RegisterPassable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, Y]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: RegisterPassable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, Y] and R == S and (Never == Never or Y == Never or Never == Y)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, G.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, var on_err: G) raises _CommonError[X, G.Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and G.Arg == _Failure[Self.V] and R == G.Out and (X == Never or G.Error == Never or X == G.Error)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, G._View[q].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, G: _UnaryViewable, q: ImmOrigin](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, G._View[q].Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and G._View[q].Arg == _Failure[Self.V] and R == G._View[q].Out and (X == Never or G._View[q].Error == Never or X == G._View[q].Error)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and R == S and (X == Never or Never == Never or X == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, Self.E]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) raises Self.E -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Self.E -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and R == S and (X == Never or Self.E == Never or X == Self.E)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) raises Never -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Never -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and Self.E != Never and R == S and (X == Never or Never == Never or X == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Never == Never or X == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and R == S and (X == Never or Never == Never or X == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, Y]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Y == Never or X == Y)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, Y]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and R == S and (X == Never or Y == Never or X == Y)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, G.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: RegisterPassable & Deinitable, X: Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, var on_err: G) raises _CommonError[X, G.Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and G.Arg == _Failure[Self.V] and R == G.Out and (X == Never or G.Error == Never or X == G.Error)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, G._View[q].Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: RegisterPassable & Deinitable, X: Movable & Deinitable, G: _UnaryViewable, q: ImmOrigin](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, G._View[q].Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and G._View[q].Arg == _Failure[Self.V] and R == G._View[q].Out and (X == Never or G._View[q].Error == Never or X == G._View[q].Error)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and R == S and (X == Never or Never == Never or X == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, Self.E]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) raises Self.E -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Self.E -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and R == S and (X == Never or Self.E == Never or X == Self.E)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "ref[q]",
+        "description": "",
+        "name": "on_err",
+        "type": "G",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "def(var _Failure[Self.V]) raises Never -> S",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Never -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and Self.E != Never and R == S and (X == Never or Never == Never or X == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Never == Never or X == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and R == S and (X == Never or Never == Never or X == Never)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, Y]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Y == Never or X == Y)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, Y]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "Y",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and _ErrorCompatible[Self.E, Y] and R == S and (X == Never or Y == Never or X == Y)",
+      "summary": "Consume the native Result and return the selected handler value directly."
+     }
+    ],
     "fold_until": [
      {
       "args": [

@@ -1072,6 +1072,24 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
     # Terminals consume native carriers and return the final value. Callback
     # admission is shared; each carrier owns its branch and cleanup semantics.
     result_conditions = ["conforms_to(Self.V, _ResultType)", f"Self.V == {Source}"]
+    # Fold the native Result directly. The existing branch driver owns payload
+    # movement, handler cleanup and error propagation; adapters only select
+    # callback signatures and preserve shared views of reusable chains.
+    left = native_callbacks("owned", T, "on_ok", view=True)
+    right = list(native_callbacks("owned", Err, "on_err", second=True, view=True))
+    for a, b in product(left, right):
+        params = callback_parameters([a, b])
+        output = a["result"]
+        error = f'_CommonError[{a["error"]}, {b["error"]}]'
+        conditions = result_conditions + a["conditions"] + b["conditions"] + [
+            f'{output} == {b["result"]}',
+            f'({a["error"]} == Never or {b["error"]} == Never or {a["error"]} == {b["error"]})',
+        ]
+        types = f'{T}, {Err}, {output}, {error}, {a["error"]}, {b["error"]}, {a["adapter_type"]}, {b["adapter_type"]}'
+        invoke = f'_fold_result_owned[{types}, _call_transform[{T}, {a["adapter_type"]}], _call_transform[{Err}, {b["adapter_type"]}, {output}]]'
+        body.append(f'\n    @always_inline\n    def fold_owned[{", ".join(params)}](deinit self, {a["argument"]}, {b["argument"]}) raises {error} -> {output} where {" and ".join(conditions)}:\n'
+                    '        """Consume the native Result and return the selected handler value directly."""\n'
+                    f'        return {invoke}(rebind_var[{Source}](self.value^), {a["build"]}, {b["build"]})\n')
     def value_terminal(name, mode, arg, summary, input_type, output_type, source_conditions, invoke):
         for cb in native_callbacks(mode, input_type, arg, view=mode == "owned"):
             params = callback_parameters([cb])
@@ -1314,6 +1332,7 @@ def documented(source):
             + "Returns:\n"
             + indent
             + ("    An owning fold stage; run(step) returns the target pipeline.\n" if name == "fold_effect" else
+               "    The selected handler value, without a pipeline wrapper.\n" if name == "fold_owned" else
                "    The moved payload or fallback, without a pipeline wrapper.\n" if name in ("value_or", "get_or", "get_or_else") else
                "    A native Optional containing the moved success, or empty on Err.\n" if name == "to_optional" else
                "    The moved Result success value, without a pipeline wrapper.\n" if name == "raise_on_err" else

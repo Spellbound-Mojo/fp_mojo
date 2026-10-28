@@ -189,9 +189,20 @@ All three methods preserve the success and stored error types. In particular,
 Raised errors propagate as native errors, including errors from predicates.
 
 The pipeline starts with `err[Int](message)`, selecting the missing success
-type once. After recovery, `.map(success).value_or(failure)` renders either
-branch as a plain String. No intermediate `.get()` or manual case extraction
-is needed, and the callbacks need no family or payload type annotations.
+type once. After recovery, `.fold_owned(success, failure)` renders either
+branch as a plain String. It consumes the Result, moves its active payload
+into the corresponding handler, and returns that handler's value. Both
+handlers return the same type, but only one runs. No intermediate `.get()` or
+manual case extraction is needed, and the callbacks need no family or payload
+type annotations. The order matches Result's `fold_owned`: success first,
+error second.
+
+Native handlers are borrowed, and named shared Kleisli chains remain reusable.
+Other library handlers are consumed, including cleanup of the skipped handler;
+each uses its declared shared, mutable or consuming receiver mode. Returned
+values and raised errors retain their exact types and origins. Select a custom
+native closure error with `.raising[E]()` before folding, as with other
+callbacks. A library handler retains its own declared error.
 
 ## Compose either outcome
 

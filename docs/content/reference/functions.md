@@ -7,7 +7,7 @@ The [pipeline tutorial](../tutorial/pipelines.md) starts with a complete program
 
 Use `.map(transform)` for selected payloads and `.then(stage)` for the whole
 value. Native collection operations execute immediately, and `.get()` extracts
-the stored carrier. Value terminals `value_or`, `get_or`, `get_or_else`, `raise_on_err` and `to_optional`
+the stored carrier. Value terminals `fold_owned`, `value_or`, `get_or`, `get_or_else`, `raise_on_err` and `to_optional`
 return their final value directly. For a reusable generic wrapper, follow the
 [contract-forwarding guide](../guides/generic-wrappers.md).
 
@@ -517,6 +517,32 @@ as `5830` and prints as `total: $58.30`. With `"19.99"`, `parse_cents` raises
 `PriceError`, no later stage runs, and the program prints
 `invalid price: 19.99`.
 The entry point selects `PriceError` once; subsequent pure stages retain Never.
+
+## Fold a Result into a value
+
+`pipeline(result^).fold_owned(on_ok, on_err)` consumes the native Result and
+returns the selected handler's value directly. This follows Cats Either's
+`fold`, using the library's existing success-first argument order and explicit
+owned-payload name. Both handlers return exactly the same type. Only the
+original branch selects a handler; a raised error propagates without invoking
+the other handler.
+
+<!-- example: docs/examples/selective_recovery.mojo -->
+
+Native callbacks are borrowed; stored thin pointers are saved by value. Named
+shared Kleisli chains are borrowed through their existing views, while moving
+one explicitly transfers its captures. Other library handlers are consumed,
+including destruction of the inactive handler. Their shared, mutable and
+consuming receiver modes all use the same one-call boundary. Move-only
+payloads and outputs require no copies.
+
+Use `.raising[E]()` for custom native callback errors. Library handlers retain
+their own errors; both handlers must share an error type, or one must have
+`Never`. Result origins and callback output origins are checked exactly.
+Like `raise_on_err` and `to_optional`, this terminal extracts a native Result
+carrier immediately. It does not run a deferred family or perform a family
+recovery operation. For a borrowed Result fold that preserves its source, use
+the direct `result.fold(on_ok, on_err)` method.
 
 ## Raise a stored Result error
 

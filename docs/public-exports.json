@@ -10942,6 +10942,332 @@
             "sha256": "9c7a9d4ada6d0c4c99846a676cac18b60336928bc7533032bc6cae61c61f8058"
           }
         ],
+        "fold_owned": [
+          {
+            "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var on_ok: C, var on_err: G) raises _CommonError[C.Error, G.Error] -> C.Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Success[Self.V] and G.Arg == _Failure[Self.V] and C.Out == G.Out and (C.Error == Never or G.Error == Never or C.Error == G.Error):",
+            "sha256": "f32fc2b7f6079e6a2df2597946fc70d0dceefc4c86e0bb555e715d0d7086f93e"
+          },
+          {
+            "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, G: _UnaryViewable, q: ImmOrigin](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Error, G._View[q].Error] -> C.Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Success[Self.V] and G._View[q].Arg == _Failure[Self.V] and C.Out == G._View[q].Out and (C.Error == Never or G._View[q].Error == Never or C.Error == G._View[q].Error):",
+            "sha256": "605282f96563bdf39033d65e539bde3ea2fd3ebe0b45979da6c715c1f256993e"
+          },
+          {
+            "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) -> S](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Error, Never] -> C.Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Success[Self.V] and C.Out == S and (C.Error == Never or Never == Never or C.Error == Never):",
+            "sha256": "0e94b5ee19123b94c21368be16d39cfd29da862c9015a8ce93af1726d991f472"
+          },
+          {
+            "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Self.E -> S](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Error, Self.E] -> C.Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Success[Self.V] and C.Out == S and (C.Error == Never or Self.E == Never or C.Error == Self.E):",
+            "sha256": "8603583b6f5cf03c9e2c69024851d9a711d982c37cd62b005ffbf8dbceb9089c"
+          },
+          {
+            "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Never -> S](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Error, Never] -> C.Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Success[Self.V] and Self.E != Never and C.Out == S and (C.Error == Never or Never == Never or C.Error == Never):",
+            "sha256": "fae85944c5c75763e03955e4aa2b937073108993a68c9f042635610a58bfa147"
+          },
+          {
+            "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, S: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[C.Error, Never] -> C.Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Success[Self.V] and not conforms_to(S, RegisterPassable) and C.Out == S and (C.Error == Never or Never == Never or C.Error == Never):",
+            "sha256": "9a9b9fa5e62e21692365119bfd17778cb5bce29e52d3ad73dbf209428412254e"
+          },
+          {
+            "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, S: RegisterPassable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[C.Error, Never] -> C.Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Success[Self.V] and C.Out == S and (C.Error == Never or Never == Never or C.Error == Never):",
+            "sha256": "669022b5c3b83e54c88666fcf08a0dd2620fd6bf80758c0046991b6978e3b765"
+          },
+          {
+            "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[C.Error, Y] -> C.Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable) and C.Out == S and (C.Error == Never or Y == Never or C.Error == Y):",
+            "sha256": "17e4a99f3e9e3e1c479ff2e5b1027a2fb4d9ccfd43006de44d4369bd65c7e3dd"
+          },
+          {
+            "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[C.Error, Y] -> C.Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and C.Out == S and (C.Error == Never or Y == Never or C.Error == Y):",
+            "sha256": "24cdb65db08d32d26968727fdc86ff85c33dbcb714b33826efe7cba232a56750"
+          },
+          {
+            "signature": "def fold_owned[C: _UnaryViewable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[C._View[o].Error, G.Error] -> C._View[o].Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._View[o].Arg == _Success[Self.V] and G.Arg == _Failure[Self.V] and C._View[o].Out == G.Out and (C._View[o].Error == Never or G.Error == Never or C._View[o].Error == G.Error):",
+            "sha256": "38584a5c03c5d20ac6aeac6a5e03a98dbbaf96cefb4405baf8a69d9c902b3df2"
+          },
+          {
+            "signature": "def fold_owned[C: _UnaryViewable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._View[o].Error, G._View[q].Error] -> C._View[o].Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._View[o].Arg == _Success[Self.V] and G._View[q].Arg == _Failure[Self.V] and C._View[o].Out == G._View[q].Out and (C._View[o].Error == Never or G._View[q].Error == Never or C._View[o].Error == G._View[q].Error):",
+            "sha256": "5741e8538f0956c6b6291595fb716b0b88caa3f8d1bb80384e0e1e41c7ffab14"
+          },
+          {
+            "signature": "def fold_owned[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._View[o].Error, Never] -> C._View[o].Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._View[o].Arg == _Success[Self.V] and C._View[o].Out == S and (C._View[o].Error == Never or Never == Never or C._View[o].Error == Never):",
+            "sha256": "94c682924649eda25a25019141c5537d5083e66b141f78818d496792bd008658"
+          },
+          {
+            "signature": "def fold_owned[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Self.E -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._View[o].Error, Self.E] -> C._View[o].Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._View[o].Arg == _Success[Self.V] and C._View[o].Out == S and (C._View[o].Error == Never or Self.E == Never or C._View[o].Error == Self.E):",
+            "sha256": "b047f315a3c97b2cb847c3eda5d7b2c963adcba7fd68e47c832a42c37f5492ed"
+          },
+          {
+            "signature": "def fold_owned[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Never -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._View[o].Error, Never] -> C._View[o].Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._View[o].Arg == _Success[Self.V] and Self.E != Never and C._View[o].Out == S and (C._View[o].Error == Never or Never == Never or C._View[o].Error == Never):",
+            "sha256": "5dd4320b5330aed6d8ee61d52dae99111c202fc7037d14f5dd02fd57b45c4f18"
+          },
+          {
+            "signature": "def fold_owned[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[C._View[o].Error, Never] -> C._View[o].Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._View[o].Arg == _Success[Self.V] and not conforms_to(S, RegisterPassable) and C._View[o].Out == S and (C._View[o].Error == Never or Never == Never or C._View[o].Error == Never):",
+            "sha256": "2871da4d4348daa4cd1410f1dac29f9fca76feeb808b698d82e6e40439f04b9a"
+          },
+          {
+            "signature": "def fold_owned[C: _UnaryViewable, o: ImmOrigin, S: RegisterPassable & Deinitable](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[C._View[o].Error, Never] -> C._View[o].Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._View[o].Arg == _Success[Self.V] and C._View[o].Out == S and (C._View[o].Error == Never or Never == Never or C._View[o].Error == Never):",
+            "sha256": "80f6de7d95990206cdd8b6f661d563bab89250d53b5163cc654077c5b6d4e04b"
+          },
+          {
+            "signature": "def fold_owned[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[C._View[o].Error, Y] -> C._View[o].Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._View[o].Arg == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable) and C._View[o].Out == S and (C._View[o].Error == Never or Y == Never or C._View[o].Error == Y):",
+            "sha256": "10640b382b089576fe7f39e68831c12fca6c5f44f5f935bfaa129e6d96c358a4"
+          },
+          {
+            "signature": "def fold_owned[C: _UnaryViewable, o: ImmOrigin, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[C._View[o].Error, Y] -> C._View[o].Out where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._View[o].Arg == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and C._View[o].Out == S and (C._View[o].Error == Never or Y == Never or C._View[o].Error == Y):",
+            "sha256": "fbcf280b5cfbeb490e8d08b7b4b6bbca205d1899630e8edd5f9af5386966f42a"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(var _Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[Never, G.Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G.Arg == _Failure[Self.V] and R == G.Out and (Never == Never or G.Error == Never or Never == G.Error):",
+            "sha256": "ffd05bed836696eb3c46941fb4680a988956f161465d4f008a88b38cc3c94025"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, C: def(var _Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, G._View[q].Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G._View[q].Arg == _Failure[Self.V] and R == G._View[q].Out and (Never == Never or G._View[q].Error == Never or Never == G._View[q].Error):",
+            "sha256": "04ef59f81b4a30883dc45f2c0463e0518552166853f2d1f9d5f537207a299ade"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var _Success[Self.V]) -> R, G: def(var _Failure[Self.V]) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "e7460aa058928b1b908b82c1666bc2a817e639202fc448b5b4891bec8aa84e1d"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var _Success[Self.V]) -> R, G: def(var _Failure[Self.V]) raises Self.E -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Never == Never or Self.E == Never or Never == Self.E):",
+            "sha256": "688d263638f94215fb0458301ad7df3e7fc2f83fb055f0bb23e036c0edf57cae"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var _Success[Self.V]) -> R, G: def(var _Failure[Self.V]) raises Never -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "bb8087d5f1a3e4b0e6d1f5dd888ad99b645ff950fb998a8bd6e9bd22a622d914"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, //, C: def(var _Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "5a87fb4012bdabb113b191727f044aac0f00ce1df05c44168b8d20380df69b0b"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: RegisterPassable & Deinitable, //, C: def(var _Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "170685623e028e2bbb7c0f5b1aa0e86cc7503f3f7c4cbbab1b8eb5cc92971ed6"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, Y: Movable & Deinitable, //, C: def(var _Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "616e745eefa1754158358a07df715a7c0a057099aa8b1bff2407c85d403e4fef"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: RegisterPassable & Deinitable, Y: Movable & Deinitable, //, C: def(var _Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, Y] and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "9c37ec4fa46581bb305f30d0900b43a9c63d13f17a697f3308ce902f794b33e2"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(var _Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[Self.E, G.Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G.Arg == _Failure[Self.V] and R == G.Out and (Self.E == Never or G.Error == Never or Self.E == G.Error):",
+            "sha256": "c99f6977634caa1eb0de86b71e17ffe14a52d6dc013a4f1d531e6386c3f50af6"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, C: def(var _Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Self.E, G._View[q].Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G._View[q].Arg == _Failure[Self.V] and R == G._View[q].Out and (Self.E == Never or G._View[q].Error == Never or Self.E == G._View[q].Error):",
+            "sha256": "37fec4ba85135187d1df8fc871614fbd81a2e47ab689864aa218c263aee99e3c"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var _Success[Self.V]) raises Self.E -> R, G: def(var _Failure[Self.V]) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Self.E, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Self.E == Never or Never == Never or Self.E == Never):",
+            "sha256": "574d0afdf28fd54b517e65f7e74da017638be980789f0a80e6cf0953b7f0c9c8"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var _Success[Self.V]) raises Self.E -> R, G: def(var _Failure[Self.V]) raises Self.E -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Self.E, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Self.E == Never or Self.E == Never or Self.E == Self.E):",
+            "sha256": "0c8dbe7cfefbd9be19b91a53d84fa286ee0bda78dcaedd325c94fc40b15ec1a1"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var _Success[Self.V]) raises Self.E -> R, G: def(var _Failure[Self.V]) raises Never -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Self.E, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == S and (Self.E == Never or Never == Never or Self.E == Never):",
+            "sha256": "9ab99ecac4cc74a593b7cb5ccb3d6fe3b9f82f26295e5ed0ce2b505c34e36202"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, //, C: def(var _Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[Self.E, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(S, RegisterPassable) and R == S and (Self.E == Never or Never == Never or Self.E == Never):",
+            "sha256": "879ec4dcb99d4404a1a65b69ce61fd96690094b8f5a66e106b4c98465fe9caf8"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: RegisterPassable & Deinitable, //, C: def(var _Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[Self.E, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Self.E == Never or Never == Never or Self.E == Never):",
+            "sha256": "75c1a98001f834c8e0c3f567c8c4695f0b911e3f2d32e96a276e2ffff1195216"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, Y: Movable & Deinitable, //, C: def(var _Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[Self.E, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable) and R == S and (Self.E == Never or Y == Never or Self.E == Y):",
+            "sha256": "9a3386eaa4a44a64bb136115b9d3f8147de33ea5f42de421b43fbbf985ea76c6"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: RegisterPassable & Deinitable, Y: Movable & Deinitable, //, C: def(var _Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[Self.E, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, Y] and R == S and (Self.E == Never or Y == Never or Self.E == Y):",
+            "sha256": "9db25c58701b416fac044b062c0b5b3b470bd1fbcc695e2f041ff7efb6343b5f"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(var _Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[Never, G.Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and G.Arg == _Failure[Self.V] and R == G.Out and (Never == Never or G.Error == Never or Never == G.Error):",
+            "sha256": "49f48db47cfe57145e68b8d2edaa298c631b108156f76d2a374b72b61deb3368"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, C: def(var _Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, G._View[q].Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and G._View[q].Arg == _Failure[Self.V] and R == G._View[q].Out and (Never == Never or G._View[q].Error == Never or Never == G._View[q].Error):",
+            "sha256": "298ef60c2e75129e7ef12c63e514a7f0aa89215b3aff33025fae910fd637bd79"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var _Success[Self.V]) raises Never -> R, G: def(var _Failure[Self.V]) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "538323720bf32b8f3584a425308dd8678f31d9c967b3c8722d731bcb00519519"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var _Success[Self.V]) raises Never -> R, G: def(var _Failure[Self.V]) raises Self.E -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == S and (Never == Never or Self.E == Never or Never == Self.E):",
+            "sha256": "7631bcf8ec12e39a314c0237a7bbfc7844953645ec709ea474cadfafbdfef4e1"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var _Success[Self.V]) raises Never -> R, G: def(var _Failure[Self.V]) raises Never -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and Self.E != Never and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "387697fc399d62701e8dfb1d1898a04214682916420b40581fa27675a95ad1c7"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, //, C: def(var _Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "30aa218579af9be3287254a4c3d66ee25f39f9d73388fc2b1d3ee45e6280d31b"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: RegisterPassable & Deinitable, //, C: def(var _Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "e6e7917cb1ab256e543d812ebd6fa56c7b52ddbb8c048c9af1269934c6022890"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, Y: Movable & Deinitable, //, C: def(var _Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "e9c93724cb38f25124631279e8922b71c877d59a4a6e8607e3e21144b402d9bf"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, o: ImmOrigin, S: RegisterPassable & Deinitable, Y: Movable & Deinitable, //, C: def(var _Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and _ErrorCompatible[Self.E, Y] and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "73d833ed6c710ae52cec9a04a2a989e74d6f6254c37e395f2d506c70bd931bd7"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, var on_err: G) raises _CommonError[Never, G.Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and G.Arg == _Failure[Self.V] and R == G.Out and (Never == Never or G.Error == Never or Never == G.Error):",
+            "sha256": "66cd30ca512e3ae4cb5f350b0f85e35d9209b6fdbc29622db0821a9637a03a12"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, G: _UnaryViewable, q: ImmOrigin](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, G._View[q].Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and G._View[q].Arg == _Failure[Self.V] and R == G._View[q].Out and (Never == Never or G._View[q].Error == Never or Never == G._View[q].Error):",
+            "sha256": "89eea01eb73a3d670cb813a15bc0cfa704d0172a56d513bf8b542fa55e03cea6"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "54b225335d3b982bf0029969dbb745c54aa9919622114088c93c22b5fe37dad1"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Self.E -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and R == S and (Never == Never or Self.E == Never or Never == Self.E):",
+            "sha256": "37c7be6755203500a38cf7915be3131bffc39a96d2395e12d89ab2f82097160a"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Never -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and Self.E != Never and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "d1eacbf67f01906687a92f1ed7028188e9b6a292dded0b42089410f16e85209e"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, S: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "e421b2ca0a9079e3deba0f211e7924700c37871a0734ccbb3e22b6fc2b5ea432"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "8dd533fecb780c3ba14489e183d001b4ef88400ed29e3d2c767279b10a8152da"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "400a2fac1ab73824454ca4901ee23804051fffafd77468991a1475888f87a899"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "ed3deeb9ba232ca5e9d4406b282541bf1ab1cd92ddf8b5295d547175e581356c"
+          },
+          {
+            "signature": "def fold_owned[R: RegisterPassable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, var on_err: G) raises _CommonError[Never, G.Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G.Arg == _Failure[Self.V] and R == G.Out and (Never == Never or G.Error == Never or Never == G.Error):",
+            "sha256": "ba46e964a016d3fe4ec49bd2eb871caf9a92878eb1c4f9595e5ed8d8da7832f8"
+          },
+          {
+            "signature": "def fold_owned[R: RegisterPassable & Deinitable, G: _UnaryViewable, q: ImmOrigin](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, G._View[q].Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G._View[q].Arg == _Failure[Self.V] and R == G._View[q].Out and (Never == Never or G._View[q].Error == Never or Never == G._View[q].Error):",
+            "sha256": "e63e83819740b82089d78b542824557a020cfb4a2ad5d876e2daf1a35fa03dfe"
+          },
+          {
+            "signature": "def fold_owned[R: RegisterPassable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "dbca4357d6c8ab6599663bb27764ebe649a9766837ad86da3c40b37958f95b77"
+          },
+          {
+            "signature": "def fold_owned[R: RegisterPassable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Self.E -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Never == Never or Self.E == Never or Never == Self.E):",
+            "sha256": "2a780104df04601604b27fb5b81a30b98f6c9127e9dd53354b768dd00d56ee1f"
+          },
+          {
+            "signature": "def fold_owned[R: RegisterPassable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Never -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "08d9ad44a02f28d654bcc12d28a40cc55416830c8f099093e62a13d6f3e8d828"
+          },
+          {
+            "signature": "def fold_owned[R: RegisterPassable & Deinitable, S: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "10e927886ec4c7bc247f909a017d017c5be892f0d1479ce997b29f5c6ddf91ef"
+          },
+          {
+            "signature": "def fold_owned[R: RegisterPassable & Deinitable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Never == Never or Never == Never or Never == Never):",
+            "sha256": "3b3211f191702ddc50f1904ebfe7ace235be6cfbd6b2af4d44d73fdf91b61cef"
+          },
+          {
+            "signature": "def fold_owned[R: RegisterPassable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable) and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "cbd2114cf3ce29234f39bc4829a3fb524e862315c0bb23aab108ae9b5c7b92c5"
+          },
+          {
+            "signature": "def fold_owned[R: RegisterPassable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[Never, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, Y] and R == S and (Never == Never or Y == Never or Never == Y):",
+            "sha256": "d142ca45ba7aaf26eea8b2797d6a55fdfaee899c141b9e695bd42614b09aba76"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, var on_err: G) raises _CommonError[X, G.Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and G.Arg == _Failure[Self.V] and R == G.Out and (X == Never or G.Error == Never or X == G.Error):",
+            "sha256": "b262910217d06de4617f4288dee73bf1b447dae8f4a559eda3b3bf1a1166ce89"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, G: _UnaryViewable, q: ImmOrigin](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, G._View[q].Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and G._View[q].Arg == _Failure[Self.V] and R == G._View[q].Out and (X == Never or G._View[q].Error == Never or X == G._View[q].Error):",
+            "sha256": "37c339036ac347078eeaade936388bb6675c68bfeec3e562003bd1b207a510af"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "d2a0b211df9a73876721a6cb57486b607cd7afaa7d38d982d42c16da05345312"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Self.E -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and R == S and (X == Never or Self.E == Never or X == Self.E):",
+            "sha256": "46cc3996bfb121a9d4e43556c2c2028036a49031102024ebbccfc67da0afca65"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Never -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and Self.E != Never and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "319bb9fb30efb40769e9d32e2c90ddaf6138431cd889bb207e81ef5dc7468537"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "dd1c9720fb8606f4dc58aba22d7cf63cd71f214eb20b8824b2b50aa99441c58b"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "60dffa1336a9ce9ce85146ee450e4c15acae9ca14679b5276b53e673c78013ec"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "fb970c87147e08465a74e5f9ddc30cb6149e28c040ca7d75f42ce0663964ec5a"
+          },
+          {
+            "signature": "def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, Y] and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "a0baa5db15748f52ae23f0e290828627cbfefc8693560222bfb4d2f9e0bfa637"
+          },
+          {
+            "signature": "def fold_owned[R: RegisterPassable & Deinitable, X: Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, var on_err: G) raises _CommonError[X, G.Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and G.Arg == _Failure[Self.V] and R == G.Out and (X == Never or G.Error == Never or X == G.Error):",
+            "sha256": "232cd4963b43381d7d5015a939e55ea2c89bd9f7135f453cf424374de4e62451"
+          },
+          {
+            "signature": "def fold_owned[R: RegisterPassable & Deinitable, X: Movable & Deinitable, G: _UnaryViewable, q: ImmOrigin](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, G._View[q].Error] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and G._View[q].Arg == _Failure[Self.V] and R == G._View[q].Out and (X == Never or G._View[q].Error == Never or X == G._View[q].Error):",
+            "sha256": "6fc45e3c494509737c93751421ebf389607a603df9c067ee34e42287c1271349"
+          },
+          {
+            "signature": "def fold_owned[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "32578fed21cbfd8496bdeaeec14e9726cbaecdaa2cedcdb2541c0cf2c1df0439"
+          },
+          {
+            "signature": "def fold_owned[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Self.E -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Self.E] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and R == S and (X == Never or Self.E == Never or X == Self.E):",
+            "sha256": "3917047d7ee7ccefe2ad868bc4d8905dfac2478d58fca77cb51a4eba35026cf4"
+          },
+          {
+            "signature": "def fold_owned[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Never -> S](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and Self.E != Never and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "57908f68f76ba5b82e5435167332482eec42c8a6d70bc2cf539a58e419213dd2"
+          },
+          {
+            "signature": "def fold_owned[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "8d3ff5808958e81808bd0bb57009f13c00b065470e0295932428431db17e7bc7"
+          },
+          {
+            "signature": "def fold_owned[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: RegisterPassable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and R == S and (X == Never or Never == Never or X == Never):",
+            "sha256": "b2cc0a7d40e6776b30939d581207ca54af69461b1c6850b11219310de295551a"
+          },
+          {
+            "signature": "def fold_owned[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable) and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "6b1fc1678ab020eee7eecdc36b6758d3379e283ecd34314ac8123699471b07a2"
+          },
+          {
+            "signature": "def fold_owned[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[_Success[Self.V]]) raises X thin -> R, on_err: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[X, Y] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and _ErrorCompatible[Self.E, Y] and R == S and (X == Never or Y == Never or X == Y):",
+            "sha256": "e2c297920bfd1fc5664e1aaf07ecaf40a87f9fd83c36ba8a4a62d337bc8b2994"
+          }
+        ],
         "value_or": [
           {
             "signature": "def value_or[C: UnaryContract & Movable & Deinitable](deinit self, var on_err: C) raises C.Error -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Arg == _Failure[Self.V] and C.Out == _Success[Self.V]:",
