@@ -961,6 +961,31 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Thread a carry through the remaining source, returning the final carry and collected outputs.
         """
         return _map_accumulate_owned[A, T, Y, NativeBinary[A, T, R, E, F, True], Self.I](NativeBinary[A, T, R, E, F, True](function.copy()), initial^, self._iterator^)
+
+    def fold_left[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](deinit self, var step: F, var initial: A) raises F.Error -> A where F.First == A and F.Second == Self.I.Element and F.Out == A and RepeatableBinary[F]:
+        """Consume a repeatable library step, preserving its mutable receiver and exact fold contract.
+        """
+        return _fold_left[A=A, F=F](step^, initial^, self._iterator^)
+
+    def reduce[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](deinit self, var step: F, *, var initial: A) raises F.Error -> A where F.First == A and F.Second == Self.I.Element and F.Out == A and RepeatableBinary[F]:
+        """Consume a repeatable library step, preserving its mutable receiver and exact fold contract.
+        """
+        return _reduce[A=A, F=F](step^, self._iterator^, initial=initial^)
+
+    def reduce_optional[F: BinaryContract & Movable & Deinitable](deinit self, var step: F) raises F.Error -> Optional[F.Out] where F.First == F.Out and F.Second == F.Out and Self.I.Element == F.Out and RepeatableBinary[F]:
+        """Consume a repeatable library step, preserving its mutable receiver and exact fold contract.
+        """
+        return _reduce_optional[F=F](step^, self._iterator^)
+
+    def reduce[F: BinaryContract & Movable & Deinitable](deinit self, var step: F) raises _ReductionFailure[F.Error] -> F.Out where F.First == F.Out and F.Second == F.Out and Self.I.Element == F.Out and RepeatableBinary[F]:
+        """Consume a repeatable library step, preserving its mutable receiver and exact fold contract.
+        """
+        return _reduce[F=F](step^, self._iterator^)
+
+    def fold_until[B: Movable & Deinitable, A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](deinit self, var step: F, var initial: A) raises F.Error -> ControlFlow[B, A] where F.First == A and F.Second == Self.I.Element and F.Out == ControlFlow[B, A] and RepeatableBinary[F]:
+        """Consume a repeatable library step, preserving its mutable receiver and exact fold contract.
+        """
+        return _fold_until[B=B, A=A, F=F](step^, initial^, self._iterator^)
     # --- end iterator expansion syntax ---
 
     # Native thin functions and closures keep their own admission signatures,

@@ -816,3 +816,20 @@ admission avoids an ambiguity with the all-memory native ref boundary; the
 pointer is copied into its owner and no admission borrow escapes. Library
 callbacks use the existing repeatable binary dispatch, including its receiver
 priority. Free functions and fluent methods enter the same private driver.
+
+## Owned steps in terminal folds
+
+Ordinary folds and reductions retain their borrowed `Binary` overloads and
+add owned repeatable callback admission. A named shared receiver therefore
+keeps its borrowed behavior, while a moved value or temporary uses the existing
+repeatable dispatch: mutable when available, otherwise shared. No callback
+state is copied by the driver, and consuming-only receivers are rejected.
+
+`_binary_repeated` supplies the same exclusive receiver context to non-empty
+reductions, ordinary folds, and early-exit folds. Its result parameter defaults
+to the accumulator; `fold_until` selects `ControlFlow[B,A]` explicitly. This
+shares the invocation bridge without conflating a break, source exhaustion,
+or a callback error. `_fold_left`, `_fold_until`, `_reduce_optional`, and
+`_reduce_value` continue to own traversal and error handling. Generated public
+admission forwards to these owners, and fluent methods forward to the public
+free operation with the callback type retained.

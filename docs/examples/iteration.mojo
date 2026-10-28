@@ -97,3 +97,4 @@ def main() raises:
     print("initial:", iterated(range(0)).scan_left(step^, 5).collect_list())
     print("stateful:", iterated(range(1, 4)).map(Running(0)).collect_list())
     print("changing weights:", iterated(range(1, 4)).scan_left(IncreasingWeight(1), 0).collect_list())
+    print("weighted fold:", iterated(range(1, 4)).fold_left(IncreasingWeight(1), 0))

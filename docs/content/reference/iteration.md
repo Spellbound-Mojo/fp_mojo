@@ -52,6 +52,27 @@ existing borrowed reuse. All lazy callbacks must be non-raising; return
 `Result` elements to represent domain failures. Native closures keep their
 existing signature and owned-capture requirements.
 
+## Stateful folds and reductions
+
+`fold_left`, `fold_until`, `reduce_optional` and both `reduce` forms accept
+owned shared or mutable library callbacks, through free functions and Iter
+methods. For example, `.fold_left(IncreasingWeight(1), 0)` returns `14` over
+`[1, 2, 3]`, retaining the changing weight between steps without an adapter
+or a closure. Move a named stateful step with `step^`.
+
+Named shared `Binary` callbacks remain borrowed and reusable. A moved or
+temporary callback uses its mutable receiver when available, otherwise its
+shared receiver. This also defines the choice for a callback implementing
+both contracts. Consuming-only callbacks are rejected, even for a source
+that happens to contain only one element.
+
+Empty initialized folds return the initializer without calling the step.
+Uninitialized reductions skip the step for singletons; empty input still
+produces Optional absence or the existing empty-reduction error. `fold_until`
+stops at the first `Break`. Exact callback errors stop before another pull;
+uninitialized `reduce` keeps its existing `ReductionStepError` wrapper.
+Move-only inputs, carry, captures and errors are released exactly once.
+
 ## Prefixes, indexed mapping and consuming terminals
 
 <!-- example: docs/examples/iteration_expansion.mojo -->

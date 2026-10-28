@@ -162,7 +162,7 @@ def terminals(mode):
             out+=emit(name,params,args,result,cond,body,summary,'This is a consuming terminal. Native callbacks are borrowed in place;\nshared library views borrow their receiver; other library callbacks are\nconsumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.',error,ind,docs=kind=='pure')
     return out
 
-def methods():return native_methods()+indexed('iter')+prefixes('iter')+terminals('iter')+branching('iter')+alignment('iter')+scans('iter')
+def methods():return native_methods()+indexed('iter')+prefixes('iter')+terminals('iter')+branching('iter')+alignment('iter')+scans('iter')+folds('iter')
 
 
 PARAMS.update({'U':'The callback result type, including origins.'})
@@ -346,4 +346,51 @@ def map_accumulate(mode):
             cond = f'{it}.Element == T and R == Tuple[A, Y] and ' + ('' if register else 'not ') + f'conforms_to(Tuple[A, Y], RegisterPassable) and F == ({signature})'
             adapter = f'NativeBinary[A, T, R, {error}, F, {raising}]'
             out += boundary(params, 'function: F', 'T', adapter, adapter + '(function.copy())', cond, error)
+    return out
+
+
+def folds(mode):
+    """Owned repeatable admission beside the existing borrowed fold overloads."""
+    free = mode == 'free'
+    it = '_Source[I]' if free else 'Self.I'
+    source = '_source(iterator^)' if free else 'self._iterator^'
+    out = ''
+    for name, initialized, control in [('fold_left', True, False), ('reduce', True, False),
+                                      ('reduce_optional', False, False), ('reduce', False, False),
+                                      ('fold_until', True, True)]:
+        params = ([f'B: {MD}'] if control else []) + ([f'A: {MD}'] if initialized else [])
+        if free:
+            params += [f'I: {MD}']
+        params += [f'F: BinaryContract & {MD}']
+        a = 'A' if initialized else 'F.Out'
+        t = 'F.Second' if initialized else 'F.Out'
+        result = f'ControlFlow[B, A]' if control else a
+        returned = f'Optional[{a}]' if name == 'reduce_optional' else result
+        error = '_ReductionFailure[F.Error]' if name == 'reduce' and not initialized else 'F.Error'
+        condition = (f'F.First == {a} and F.Second == {it}.Element and F.Out == {result}' if initialized
+                     else f'F.First == F.Out and F.Second == F.Out and {it}.Element == F.Out') + ' and RepeatableBinary[F]'
+        args = ([] if free else ['deinit self']) + ['var step: F']
+        if initialized and name != 'reduce':
+            args += ['var initial: A']
+        if free:
+            args += ['var iterator: I']
+        if initialized and name == 'reduce':
+            args += ['*', 'var initial: A']
+        if not free or name == 'reduce' and initialized:
+            explicit = (['B=B'] if control else []) + (['A=A'] if initialized else []) + ['F=F']
+            target = '_' + name if not free else 'fold_left'
+            values = ['step^'] + (['initial^'] if initialized and (name != 'reduce' or free) else [])
+            values += [source if not free else 'iterator^']
+            if initialized and name == 'reduce' and not free:
+                values += ['initial=initial^']
+            body = f'return {target}[{", ".join(explicit)}]({", ".join(values)})'
+        else:
+            driver = '_fold_until' if control else '_fold_left' if initialized else '_reduce_value' if name == 'reduce' else '_reduce_optional'
+            types = ([a, 'B', t] if control else [a, t] if initialized else [t])
+            types += [it, 'F.Error', 'Pointer[F, origin_of(step)]', f'_binary_repeated[{a}, {t}, F, origin_of(step), {result}]']
+            values = ['Pointer(to=step)'] + (['initial^'] if initialized else []) + [source]
+            body = f'return {driver}[{", ".join(types)}]({", ".join(values)})'
+        summary = 'Consume a repeatable library step, preserving its mutable receiver and exact fold contract.'
+        out += emit(name, params, args, returned, condition, body, summary,
+                    error=error, indent='' if free else '    ', docs=False)
     return out

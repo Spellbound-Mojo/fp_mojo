@@ -128,6 +128,13 @@ run in order: they do not reassociate operations, assume numeric types, or
 reduce SIMD lanes for you. `reduce_optional(add, range(0))` returns an empty
 `Optional`.
 
+A stateful library callback can be passed directly: the example's
+`.fold_left(IncreasingWeight(1), 0)` returns `14` without a separate callback
+adapter. A moved or temporary step is owned by the fold and uses its mutable
+receiver when available. Named shared callbacks remain borrowed and reusable.
+The same ownership choice works with `reduce_optional`, `reduce`, and
+`fold_until`; callbacks that can only be consumed once cannot serve a fold.
+
 `find`, `any` and `all` stop at the first result that decides the answer.
 `fold_until` stops on `Break`, with no extra pull from the source. Lazy
 `flatten` handles empty inner iterators, and exhausts an inner source before it

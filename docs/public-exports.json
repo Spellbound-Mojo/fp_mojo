@@ -2372,6 +2372,10 @@
     {
      "sha256": "838b3f456326349900ce78f94b8b0da4ed4e5ada038a2a9aea164b4f3a835dea",
      "signature": "def fold_left[A: Movable & Deinitable, I: Movable & Deinitable, F: Binary]( step: F, var initial: A, var iterator: I ) raises F.Error -> A where F.First == A and F.Second == _Source[I].Element and F.Out == A:"
+    },
+    {
+     "sha256": "1b8709a91dda319b2a13aa11373e8aab9983cb0a7c5149b6ba816434f7075b0b",
+     "signature": "def fold_left[A: Movable & Deinitable, I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var step: F, var initial: A, var iterator: I) raises F.Error -> A where F.First == A and F.Second == _Source[I].Element and F.Out == A and RepeatableBinary[F]:"
     }
    ],
    "provider": "iteration/folds"
@@ -21481,6 +21485,10 @@
     ],
     "fold_left": [
      {
+      "sha256": "35b4fdf67b7ee24c3cdf82a53e2c02f27d327867e96e0d2057207da144e83540",
+      "signature": "def fold_left[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](deinit self, var step: F, var initial: A) raises F.Error -> A where F.First == A and F.Second == Self.I.Element and F.Out == A and RepeatableBinary[F]:"
+     },
+     {
       "sha256": "fea2591f710d3cb8dbf74cb4f96b4ebb389366743cbbea175eaa949ab381c964",
       "signature": "def fold_left[A: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, var T) -> A]( deinit self, step: F, var initial: A ) -> A where Self.I.Element == T:"
      },
@@ -21526,6 +21534,10 @@
      }
     ],
     "fold_until": [
+     {
+      "sha256": "19132f91f14c3cc237a8ae574e782e084f6ad67803facf157b7f82e439cf1450",
+      "signature": "def fold_until[B: Movable & Deinitable, A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](deinit self, var step: F, var initial: A) raises F.Error -> ControlFlow[B, A] where F.First == A and F.Second == Self.I.Element and F.Out == ControlFlow[B, A] and RepeatableBinary[F]:"
+     },
      {
       "sha256": "134d81f4a6807342f513be665bb5e2006a6c8d6c46a28d414d89bdc8fd104cce",
       "signature": "def fold_until[A: Movable & Deinitable, Q: Movable & Deinitable, T: Movable & Deinitable, //, F: def(var A, var T) -> ControlFlow[Q, A], B: Movable & Deinitable = Q]( deinit self, step: F, var initial: A ) -> ControlFlow[B, A] where Self.I.Element == T and Q == B:"
@@ -21819,6 +21831,14 @@
     ],
     "reduce": [
      {
+      "sha256": "15ca9f31815337a98f4cf3731332b2a3974d8c05428acf2774060f28e1352096",
+      "signature": "def reduce[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](deinit self, var step: F, *, var initial: A) raises F.Error -> A where F.First == A and F.Second == Self.I.Element and F.Out == A and RepeatableBinary[F]:"
+     },
+     {
+      "sha256": "0b2c4b8461b3a1dd41118dc48ffd118f52caa0231d934e4e2f53a039e11121b3",
+      "signature": "def reduce[F: BinaryContract & Movable & Deinitable](deinit self, var step: F) raises _ReductionFailure[F.Error] -> F.Out where F.First == F.Out and F.Second == F.Out and Self.I.Element == F.Out and RepeatableBinary[F]:"
+     },
+     {
       "sha256": "675966d4236940f6e25c9a547b285f4575528bfbf94a939c0de444dc831c3ba3",
       "signature": "def reduce[T: Movable & Deinitable, //, F: def(var T, var T) -> T]( deinit self, step: F ) raises EmptyReductionError -> T where Self.I.Element == T:"
      },
@@ -21844,6 +21864,10 @@
      }
     ],
     "reduce_optional": [
+     {
+      "sha256": "d996f092b6b9103dd76c7b77dc0f5559374fc6093acddcdf46ad7eb5b429136f",
+      "signature": "def reduce_optional[F: BinaryContract & Movable & Deinitable](deinit self, var step: F) raises F.Error -> Optional[F.Out] where F.First == F.Out and F.Second == F.Out and Self.I.Element == F.Out and RepeatableBinary[F]:"
+     },
      {
       "sha256": "f37a3c5e083dd6e02d77ecde048592a88c0fdae82823864a72b629f3e08089ba",
       "signature": "def reduce_optional[T: Movable & Deinitable, //, F: def(var T, var T) -> T]( deinit self, step: F ) -> Optional[T] where Self.I.Element == T:"
@@ -22742,6 +22766,10 @@
     {
      "sha256": "838b3f456326349900ce78f94b8b0da4ed4e5ada038a2a9aea164b4f3a835dea",
      "signature": "def fold_left[A: Movable & Deinitable, I: Movable & Deinitable, F: Binary]( step: F, var initial: A, var iterator: I ) raises F.Error -> A where F.First == A and F.Second == _Source[I].Element and F.Out == A:"
+    },
+    {
+     "sha256": "1b8709a91dda319b2a13aa11373e8aab9983cb0a7c5149b6ba816434f7075b0b",
+     "signature": "def fold_left[A: Movable & Deinitable, I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var step: F, var initial: A, var iterator: I) raises F.Error -> A where F.First == A and F.Second == _Source[I].Element and F.Out == A and RepeatableBinary[F]:"
     }
    ],
    "provider": "iteration/folds"
@@ -22800,6 +22828,10 @@
     {
      "sha256": "1f1fdb952638a8d032dc4fcc3be2e382e53c921d6d6356b1384e00268ffba960",
      "signature": "def fold_until[B: Movable & Deinitable, A: Movable & Deinitable, I: Movable & Deinitable, F: Binary]( step: F, var initial: A, var iterator: I ) raises F.Error -> ControlFlow[B, A] where F.First == A and F.Second == _Source[I].Element and F.Out == ControlFlow[B, A]:"
+    },
+    {
+     "sha256": "82b2716c4b233dfc029c692d5c59d5efe7d420f0696b97f9991c8afb2e43baa7",
+     "signature": "def fold_until[B: Movable & Deinitable, A: Movable & Deinitable, I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var step: F, var initial: A, var iterator: I) raises F.Error -> ControlFlow[B, A] where F.First == A and F.Second == _Source[I].Element and F.Out == ControlFlow[B, A] and RepeatableBinary[F]:"
     }
    ],
    "provider": "iteration/folds"
@@ -23168,6 +23200,14 @@
     {
      "sha256": "821801b55061632b0898787bbbc003af674da833c56c1c36bf16a6af9a8905b2",
      "signature": "def reduce[I: Movable & Deinitable, F: Binary]( step: F, var iterator: I ) raises _ReductionFailure[F.Error] -> F.Out where F.First == F.Out and F.Second == F.Out and _Source[I].Element == F.Out:"
+    },
+    {
+     "sha256": "7506f35b212f138880cab1cdd963644794f4686126cd4e464b2edd221e8db1b7",
+     "signature": "def reduce[A: Movable & Deinitable, I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var step: F, var iterator: I, *, var initial: A) raises F.Error -> A where F.First == A and F.Second == _Source[I].Element and F.Out == A and RepeatableBinary[F]:"
+    },
+    {
+     "sha256": "528b6b22d704ce3fc4544027c413f4306f286700e0d00826b7980f035b268783",
+     "signature": "def reduce[I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var step: F, var iterator: I) raises _ReductionFailure[F.Error] -> F.Out where F.First == F.Out and F.Second == F.Out and _Source[I].Element == F.Out and RepeatableBinary[F]:"
     }
    ],
    "provider": "iteration/folds"
@@ -23222,6 +23262,10 @@
     {
      "sha256": "88ebdf5c2bbe92ca4ba0ac0a399619f1a663a402ecc0555566d65df92610a76f",
      "signature": "def reduce_optional[I: Movable & Deinitable, F: Binary]( step: F, var iterator: I ) raises F.Error -> Optional[F.Out] where F.First == F.Out and F.Second == F.Out and _Source[I].Element == F.Out:"
+    },
+    {
+     "sha256": "f9283b4c9a723110336b12d9d37302fb2d17d90604e7c6c654d01338710cb168",
+     "signature": "def reduce_optional[I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var step: F, var iterator: I) raises F.Error -> Optional[F.Out] where F.First == F.Out and F.Second == F.Out and _Source[I].Element == F.Out and RepeatableBinary[F]:"
     }
    ],
    "provider": "iteration/folds"

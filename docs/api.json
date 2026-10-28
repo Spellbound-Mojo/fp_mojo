@@ -18144,6 +18144,64 @@
      },
      "signature": "def fold_left[A: Movable & Deinitable, I: Movable & Deinitable, F: Binary](step: F, var initial: A, var iterator: I) raises F.Error -> A where F.First == A and F.Second == _Source[I].Element and F.Out == A",
      "summary": "Fold with a library `Binary` step, such as a partial with two remaining arguments."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "step",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "initial",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "iterator",
+       "type": "I",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "F.Error",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "BinaryContract & Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "A"
+     },
+     "signature": "def fold_left[A: Movable & Deinitable, I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var step: F, var initial: A, var iterator: I) raises F.Error -> A where F.First == A and F.Second == _Source[I].Element and F.Out == A and RepeatableBinary[F]",
+     "summary": "Consume a repeatable library step, preserving its mutable receiver and exact fold contract."
     }
    ],
    "provider": "iteration/folds",
@@ -268030,6 +268088,50 @@
      {
       "args": [
        {
+        "convention": "var",
+        "description": "",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "initial",
+        "type": "A",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F.Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "BinaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "A"
+      },
+      "signature": "def fold_left[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](deinit self, var step: F, var initial: A) raises F.Error -> A where F.First == A and F.Second == Self.I.Element and F.Out == A and RepeatableBinary[F]",
+      "summary": "Consume a repeatable library step, preserving its mutable receiver and exact fold contract."
+     },
+     {
+      "args": [
+       {
         "convention": "",
         "description": "The step, borrowed for the duration of the fold.",
         "name": "step",
@@ -268592,6 +268694,57 @@
      }
     ],
     "fold_until": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "initial",
+        "type": "A",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F.Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "B",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "BinaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "ControlFlow[B, A]"
+      },
+      "signature": "def fold_until[B: Movable & Deinitable, A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](deinit self, var step: F, var initial: A) raises F.Error -> ControlFlow[B, A] where F.First == A and F.Second == Self.I.Element and F.Out == ControlFlow[B, A] and RepeatableBinary[F]",
+      "summary": "Consume a repeatable library step, preserving its mutable receiver and exact fold contract."
+     },
      {
       "args": [
        {
@@ -272014,6 +272167,80 @@
      {
       "args": [
        {
+        "convention": "var",
+        "description": "",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "initial",
+        "type": "A",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F.Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "BinaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "A"
+      },
+      "signature": "def reduce[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](deinit self, var step: F, *, var initial: A) raises F.Error -> A where F.First == A and F.Second == Self.I.Element and F.Out == A and RepeatableBinary[F]",
+      "summary": "Consume a repeatable library step, preserving its mutable receiver and exact fold contract."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_ReductionFailure[F.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "BinaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "F.Out"
+      },
+      "signature": "def reduce[F: BinaryContract & Movable & Deinitable](deinit self, var step: F) raises _ReductionFailure[F.Error] -> F.Out where F.First == F.Out and F.Second == F.Out and Self.I.Element == F.Out and RepeatableBinary[F]",
+      "summary": "Consume a repeatable library step, preserving its mutable receiver and exact fold contract."
+     },
+     {
+      "args": [
+       {
         "convention": "",
         "description": "The step, borrowed.",
         "name": "step",
@@ -272277,6 +272504,36 @@
      }
     ],
     "reduce_optional": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F.Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "BinaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Optional[F.Out]"
+      },
+      "signature": "def reduce_optional[F: BinaryContract & Movable & Deinitable](deinit self, var step: F) raises F.Error -> Optional[F.Out] where F.First == F.Out and F.Second == F.Out and Self.I.Element == F.Out and RepeatableBinary[F]",
+      "summary": "Consume a repeatable library step, preserving its mutable receiver and exact fold contract."
+     },
      {
       "args": [
        {
@@ -280681,6 +280938,64 @@
      },
      "signature": "def fold_left[A: Movable & Deinitable, I: Movable & Deinitable, F: Binary](step: F, var initial: A, var iterator: I) raises F.Error -> A where F.First == A and F.Second == _Source[I].Element and F.Out == A",
      "summary": "Fold with a library `Binary` step, such as a partial with two remaining arguments."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "step",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "initial",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "iterator",
+       "type": "I",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "F.Error",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "BinaryContract & Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "A"
+     },
+     "signature": "def fold_left[A: Movable & Deinitable, I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var step: F, var initial: A, var iterator: I) raises F.Error -> A where F.First == A and F.Second == _Source[I].Element and F.Out == A and RepeatableBinary[F]",
+     "summary": "Consume a repeatable library step, preserving its mutable receiver and exact fold contract."
     }
    ],
    "provider": "iteration/folds",
@@ -281481,6 +281796,71 @@
      },
      "signature": "def fold_until[B: Movable & Deinitable, A: Movable & Deinitable, I: Movable & Deinitable, F: Binary](step: F, var initial: A, var iterator: I) raises F.Error -> ControlFlow[B, A] where F.First == A and F.Second == _Source[I].Element and F.Out == ControlFlow[B, A]",
      "summary": "Fold until `Break` with a library `Binary` step."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "step",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "initial",
+       "type": "A",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "iterator",
+       "type": "I",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "F.Error",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "BinaryContract & Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "ControlFlow[B, A]"
+     },
+     "signature": "def fold_until[B: Movable & Deinitable, A: Movable & Deinitable, I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var step: F, var initial: A, var iterator: I) raises F.Error -> ControlFlow[B, A] where F.First == A and F.Second == _Source[I].Element and F.Out == ControlFlow[B, A] and RepeatableBinary[F]",
+     "summary": "Consume a repeatable library step, preserving its mutable receiver and exact fold contract."
     }
    ],
    "provider": "iteration/folds",
@@ -286085,6 +286465,108 @@
      },
      "signature": "def reduce[I: Movable & Deinitable, F: Binary](step: F, var iterator: I) raises _ReductionFailure[F.Error] -> F.Out where F.First == F.Out and F.Second == F.Out and _Source[I].Element == F.Out",
      "summary": "Reduce with a library `Binary` step and no initial value."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "step",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "iterator",
+       "type": "I",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "initial",
+       "type": "A",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "F.Error",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "BinaryContract & Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "A"
+     },
+     "signature": "def reduce[A: Movable & Deinitable, I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var step: F, var iterator: I, *, var initial: A) raises F.Error -> A where F.First == A and F.Second == _Source[I].Element and F.Out == A and RepeatableBinary[F]",
+     "summary": "Consume a repeatable library step, preserving its mutable receiver and exact fold contract."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "step",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "iterator",
+       "type": "I",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_ReductionFailure[F.Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "BinaryContract & Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "F.Out"
+     },
+     "signature": "def reduce[I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var step: F, var iterator: I) raises _ReductionFailure[F.Error] -> F.Out where F.First == F.Out and F.Second == F.Out and _Source[I].Element == F.Out and RepeatableBinary[F]",
+     "summary": "Consume a repeatable library step, preserving its mutable receiver and exact fold contract."
     }
    ],
    "provider": "iteration/folds",
@@ -286673,6 +287155,50 @@
      },
      "signature": "def reduce_optional[I: Movable & Deinitable, F: Binary](step: F, var iterator: I) raises F.Error -> Optional[F.Out] where F.First == F.Out and F.Second == F.Out and _Source[I].Element == F.Out",
      "summary": "Reduce with a library `Binary` step; empty input gives `None`."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "step",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "iterator",
+       "type": "I",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "F.Error",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "BinaryContract & Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Optional[F.Out]"
+     },
+     "signature": "def reduce_optional[I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var step: F, var iterator: I) raises F.Error -> Optional[F.Out] where F.First == F.Out and F.Second == F.Out and _Source[I].Element == F.Out and RepeatableBinary[F]",
+     "summary": "Consume a repeatable library step, preserving its mutable receiver and exact fold contract."
     }
    ],
    "provider": "iteration/folds",

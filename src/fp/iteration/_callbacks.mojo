@@ -185,14 +185,15 @@ def _binary_fixed[A: Movable & Deinitable, T: Movable & Deinitable, F: Binary](
 
 
 def _binary_repeated[A: Movable & Deinitable, T: Movable & Deinitable,
-                     F: BinaryContract & Movable & Deinitable, o: MutOrigin](
+                     F: BinaryContract & Movable & Deinitable, o: MutOrigin,
+                     R: Movable & Deinitable = A](
     var accumulator: A, var value: T, function: Pointer[F, o]
-) raises F.Error capturing -> A:
+) raises F.Error capturing -> R:
     # The terminal driver borrows its context. Retain an exclusive receiver
     # explicitly so mutable callbacks need neither a copy nor a native closure.
     comptime assert RepeatableBinary[F]
-    comptime assert F.First == A and F.Second == T and F.Out == A
-    return rebind_var[A](_binary_repeated_as[F.Error](function[],
+    comptime assert F.First == A and F.Second == T and F.Out == R
+    return rebind_var[R](_binary_repeated_as[F.Error](function[],
         rebind_var[F.First](accumulator^), rebind_var[F.Second](value^)))
 
 
