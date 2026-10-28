@@ -16,7 +16,9 @@ implements each receiver mode it supports as its own trait:
 `RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or
 closure into a `NativeUnary`. Borrowing callables read their argument instead
 of taking it. `invoke_borrowed`, `invoke_borrowed_repeated` and
-`invoke_borrowed_once` provide shared, repeated exclusive and consuming calls.
+`invoke_borrowed_once` provide shared, repeated exclusive and owned one-call
+invocation. The latter accepts every receiver mode, preferring consuming,
+then mutable, then shared.
 `mut_ref(callback)` lends a named library callback to an operation that owns
 its callback, retaining the original state for inspection or reuse afterward.
 The movable `MutableRef` preserves every repeatable shape and its native origin.

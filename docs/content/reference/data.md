@@ -154,6 +154,13 @@ it in and calls it once, turning `Ok(12)` into `Ok("value 12")`.
 `fold_owned_once` consumes both `Show` handlers and calls only the one for the
 `Ok` branch, which prints `used once: value 12`.
 
+Both `fold_once` and `fold_owned_once` accept shared and mutable handlers too.
+The former borrows the Result payload; the latter moves it into the selected
+handler. Passing `mut_ref(on_ok)` and `mut_ref(on_err)` retains their state.
+The example folds `Ok(12)` this way, then prints handler counts `1 0`: only the
+success handler ran. A consuming receiver takes priority when a handler also
+supports mutable or shared calls.
+
 ## Capture a thunk’s outcome
 
 <!-- example: docs/examples/attempt_once.mojo -->

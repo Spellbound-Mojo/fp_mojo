@@ -244,7 +244,7 @@
       "stdout": "accepted: 42\nfallback: 7\n"
     },
     "docs/examples/result_once.mojo": {
-      "stdout": "used once: value 12\n"
+      "stdout": "used once: value 12\nfolded: 12\nhandler calls: 1 0\n"
     },
     "docs/examples/result_outcomes.mojo": {
       "stdout": "observed error: False\ninvoice: 4\nobserved error: True\ndefault invoice\nobserved error: True\nfailed: code 5\n"

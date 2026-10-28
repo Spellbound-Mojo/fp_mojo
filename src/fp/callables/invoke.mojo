@@ -8,11 +8,12 @@ from .protocols import BorrowCallable, BorrowMutableCallable, BorrowOnceCallable
 comptime BorrowCallCompatible[E: Movable & Deinitable, H: BorrowCallContract, T: AnyType = H.Payload]: Bool = (
     T == H.Payload and (_ErrorCompatible[E, H.Failure])
 )
-"""Whether `invoke_borrowed[E]` accepts handler `H` with a payload of type `T`.
+"""Whether a borrowed payload and selected error match handler `H` exactly.
 
 True when `T` is exactly `H.Payload`, including embedded origins, and `H`
 raises `E` or nothing. A generic function that forwards a borrowed callback
-carries it in its `where` clause.
+carries it in its `where` clause. Each invocation operation separately checks
+the receiver modes it needs.
 
 Parameters:
     E: The error type of the caller.
@@ -100,15 +101,22 @@ def invoke_borrowed_repeated[E: Movable & Deinitable, F: BorrowCallContract & Mo
         return rebind_var[F.Result](invoke_borrowed[E](rebind[D.Payload](value), rebind[D](function)))
 
 
-def invoke_borrowed_once[E: Movable & Deinitable, H: BorrowOnceCallable, T: AnyType](
+comptime _OnceBorrowAvailable[C: BorrowCallContract] = conforms_to(C, BorrowOnceCallable) or RepeatableBorrow[C]
+
+
+def invoke_borrowed_once[E: Movable & Deinitable, H: BorrowCallContract & Movable & Deinitable, T: AnyType](
     ref payload: T, var handler: H
 ) raises E -> H.Result where BorrowCallCompatible[E, H, T]:
-    """Call a `BorrowOnceCallable` once with a borrowed payload, consuming it.
+    """Consume a library handler and invoke it once with a borrowed payload.
+
+    A consuming receiver wins, followed by mutable and shared receivers.
+    The payload is never consumed. Pass `mut_ref(handler)` to retain the
+    original receiver and its updated state, including when it raises.
 
     Parameters:
         E: The error type the call raises: the handler's own error, or any
             type when the handler raises nothing.
-        H: The handler's type.
+        H: The borrowing handler contract with at least one receiver mode.
         T: The payload's type, which must be exactly `H.Payload`.
 
     Args:
@@ -121,12 +129,17 @@ def invoke_borrowed_once[E: Movable & Deinitable, H: BorrowOnceCallable, T: AnyT
     Raises:
         The handler's error, as `E`.
     """
-    # Native consuming and shared endpoint signatures require separate adapters;
-    # compatibility and error propagation remain shared with invoke_borrowed.
-    try:
-        return handler^.invoke_once(rebind[H.Payload](payload))
-    except error:
-        _propagate_error[E](error^)
+    comptime assert _OnceBorrowAvailable[H], "borrowed callback implements no receiver mode"
+    comptime if conforms_to(H, BorrowOnceCallable):
+        comptime D = downcast[H, BorrowOnceCallable]
+        comptime assert D.Payload == H.Payload and D.Result == H.Result and D.Failure == H.Failure
+        try:
+            return rebind_var[H.Result](rebind_var[D](handler^).invoke_once(rebind[D.Payload](payload)))
+        except error:
+            _propagate_error[E](error^)
+    else:
+        comptime assert RepeatableBorrow[H]
+        return invoke_borrowed_repeated[E](payload, handler)
 
 
 from .protocols import (UnaryContract, Unary, MutableUnary, OnceUnary,

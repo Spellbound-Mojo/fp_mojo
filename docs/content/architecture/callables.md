@@ -70,7 +70,11 @@ Borrowing callbacks use `RepeatableBorrow` and
 receiver choice. The payload remains borrowed independently of receiver
 mutation. The public contract and invocation owner replace the former private
 mutable-borrow trait and dispatcher; their private import names remain aliases
-for existing internal consumers. There is one receiver and error policy.
+for existing internal consumers. `invoke_borrowed_once[E]` owns the matching
+one-call policy: consuming, then mutable, then shared. `_borrow_once_as`
+only delegates to it; Result folds, Reader endpoints and borrowed transformations
+share that same policy. Both invocation operations preserve the exact payload,
+result and error metadata, including origins.
 
 `MutableRef` is the shared representation of an exclusive callback reference.
 `mut_ref` infers its type and mutable origin, while the previous internal unary,
@@ -236,7 +240,7 @@ site, which the library uses where closures cannot reach:
 
 ## Borrowed calls
 
-`BorrowCallable` and `BorrowOnceCallable` are the fixed-metadata forms for read
+`BorrowCallable`, `BorrowMutableCallable` and `BorrowOnceCallable` provide read
 access: `Payload`, `Result` and `Failure` are exact native types shared through
 `BorrowCallContract`. `invoke_borrowed` calls a `BorrowCallable` with a borrowed
 payload; iterator predicates, `while_loop` predicates and Result folds use this

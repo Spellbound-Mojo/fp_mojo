@@ -58,7 +58,10 @@ such as a partial, or a `BorrowCallable` for borrowed folds. Folds take
 capturing callbacks, which `fp.match` clauses cannot; a match checks every case
 when the program compiles and allows guards. `fold_once` and `fold_owned_once`
 consume both handler owners, call only the selected one and let native
-destruction release the other.
+destruction release the other. Each handler may have a shared, mutable or
+consuming receiver. The existing one-call dispatch selects consuming, then
+mutable, then shared; `mut_ref` retains state without changing branch selection.
+Both handlers must be invocable even when one branch is inactive.
 
 ### Derived Result combinators
 
@@ -98,7 +101,8 @@ extends the existing retention adapter to own the whole Result: observer success
 returns that retained Result, and observer failure replaces it.
 
 The callable layer owns borrowed receiver dispatch and payload retention. Its
-one-call dispatch prefers `BorrowOnceCallable`, otherwise `BorrowCallable`;
+public `invoke_borrowed_once` prefers `BorrowOnceCallable`, then
+`BorrowMutableCallable`, then `BorrowCallable`;
 Reader endpoints and `local` use that same dispatch. Result's leaf module does
 not depend on algebra instances, which already depend on Result. Its adapters
 supply the native Result mapping boundary while the callable helpers remain

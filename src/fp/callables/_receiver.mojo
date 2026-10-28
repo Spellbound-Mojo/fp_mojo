@@ -2,7 +2,7 @@
 from std.builtin.rebind import downcast, rebind_var, rebind
 from fp._internal.errors import _ErrorCompatible, _propagate_error
 from fp.callables.protocols import CallContract, UnaryContract, Unary, MutableUnary, OnceUnary, BinaryContract, Binary, OnceBinary, MutableBinary, ThunkContract, OnceThunk, MutableThunk, BorrowCallContract, BorrowCallable, BorrowOnceCallable, BorrowMutableCallable
-from fp.callables.invoke import RepeatableBorrow, invoke_borrowed_repeated, RepeatableUnary, RepeatableBinary, RepeatableThunk, call_once, call_repeated, invoke_borrowed, invoke_borrowed_once
+from fp.callables.invoke import _OnceBorrowAvailable, RepeatableBorrow, invoke_borrowed_repeated, RepeatableUnary, RepeatableBinary, RepeatableThunk, call_once, call_repeated, invoke_borrowed, invoke_borrowed_once
 from fp.callables.protocols import BorrowMutableCallable as _MutableBorrow
 from fp.callables.invoke import RepeatableBorrow as _RepeatableBorrow, invoke_borrowed_repeated as _borrow_repeated_as
 
@@ -47,19 +47,11 @@ comptime _MutableUnaryRef[F: UnaryContract & Movable & Deinitable, o: MutOrigin]
 comptime _MutableBinaryRef[F: BinaryContract & Movable & Deinitable, o: MutOrigin] = MutableRef[F, o]
 
 
-comptime _OnceBorrowAvailable[C: BorrowCallContract] = conforms_to(C, BorrowOnceCallable) or _RepeatableBorrow[C]
-
-
 def _borrow_once_as[E: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable, T: AnyType](
     ref value: T, var function: F
 ) raises E -> F.Result where T == F.Payload and _ErrorCompatible[E, F.Failure]:
-    """One borrowed-argument call; prefer a consuming receiver when available."""
-    comptime if conforms_to(F, BorrowOnceCallable):
-        comptime D = downcast[F, BorrowOnceCallable]
-        return rebind_var[F.Result](invoke_borrowed_once[E](rebind[D.Payload](value), rebind_var[D](function^)))
-    else:
-        comptime assert _RepeatableBorrow[F], "borrowed callback implements no receiver mode"
-        return _borrow_repeated_as[E](value, function)
+    """Delegate one borrowed-argument call to the canonical receiver dispatcher."""
+    return invoke_borrowed_once[E](value, function^)
 
 
 # Error-adapting forms: a caller combining several callbacks raises one common

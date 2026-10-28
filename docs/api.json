@@ -11129,7 +11129,7 @@
   },
   "callables.BorrowCallCompatible": {
    "aliases": [],
-   "description": "True when `T` is exactly `H.Payload`, including embedded origins, and `H`\nraises `E` or nothing. A generic function that forwards a borrowed callback\ncarries it in its `where` clause.",
+   "description": "True when `T` is exactly `H.Payload`, including embedded origins, and `H`\nraises `E` or nothing. A generic function that forwards a borrowed callback\ncarries it in its `where` clause. Each invocation operation separately checks\nthe receiver modes it needs.",
    "fields": [],
    "kind": "alias",
    "methods": {},
@@ -11158,7 +11158,7 @@
    ],
    "provider": "callables/invoke",
    "signature": "comptime BorrowCallCompatible[E: Movable & Deinitable, H: BorrowCallContract, T: AnyType = H.Payload]: Bool = ( T == H.Payload and (_ErrorCompatible[E, H.Failure]) )",
-   "summary": "Whether `invoke_borrowed[E]` accepts handler `H` with a payload of type `T`.",
+   "summary": "Whether a borrowed payload and selected error match handler `H` exactly.",
    "traits": []
   },
   "callables.BorrowCallContract": {
@@ -15169,7 +15169,7 @@
        "variadic": false
       }
      ],
-     "description": "",
+     "description": "A consuming receiver wins, followed by mutable and shared receivers.\nThe payload is never consumed. Pass `mut_ref(handler)` to retain the\noriginal receiver and its updated state, including when it raises.",
      "error": "E",
      "parameters": [
       {
@@ -15180,10 +15180,10 @@
        "variadic": false
       },
       {
-       "description": "The handler's type.",
+       "description": "The borrowing handler contract with at least one receiver mode.",
        "inferred": false,
        "name": "H",
-       "type": "BorrowOnceCallable",
+       "type": "BorrowCallContract & Movable & Deinitable",
        "variadic": false
       },
       {
@@ -15200,8 +15200,8 @@
       "doc": "The handler's result.",
       "type": "H.Result"
      },
-     "signature": "def invoke_borrowed_once[E: Movable & Deinitable, H: BorrowOnceCallable, T: AnyType](ref payload: T, var handler: H) raises E -> H.Result where BorrowCallCompatible[E, H, T]",
-     "summary": "Call a `BorrowOnceCallable` once with a borrowed payload, consuming it."
+     "signature": "def invoke_borrowed_once[E: Movable & Deinitable, H: BorrowCallContract & Movable & Deinitable, T: AnyType](ref payload: T, var handler: H) raises E -> H.Result where BorrowCallCompatible[E, H, T]",
+     "summary": "Consume a library handler and invoke it once with a borrowed payload."
     }
    ],
    "provider": "callables/invoke",
@@ -30302,21 +30302,21 @@
         "variadic": false
        }
       ],
-      "description": "Both handlers move in; the one that does not run is destroyed. No\n`Copyable` requirement is added. A result may refer to owners that\noutlive the call, never into a consumed handler.",
+      "description": "Both handlers move in; the one that does not run is destroyed. The\nselected handler uses consuming, then mutable, then shared receiver\npriority. Pass `mut_ref(handler)` to retain its original state. No\n`Copyable` requirement is added. A result may refer to owners that\noutlive the call, never into a consumed handler.",
       "error": "_ResultFailure[F.Failure, G.Failure]",
       "parameters": [
        {
-        "description": "The success handler's type, a `BorrowOnceCallable` taking `T`.",
+        "description": "The success handler's type, an invocable `BorrowCallContract` taking `T`.",
         "inferred": false,
         "name": "F",
-        "type": "BorrowOnceCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        },
        {
-        "description": "The error handler's type, a `BorrowOnceCallable` taking `E`.",
+        "description": "The error handler's type, an invocable `BorrowCallContract` taking `E`.",
         "inferred": false,
         "name": "G",
-        "type": "BorrowOnceCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -30326,8 +30326,8 @@
        "doc": "The result of the handler that ran.",
        "type": "F.Result"
       },
-      "signature": "def fold_once[F: BorrowOnceCallable, G: BorrowOnceCallable](self, var on_ok: F, var on_err: G) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure)",
-      "summary": "Fold with two consuming handlers: borrow the payload, and call only the selected handler."
+      "signature": "def fold_once[F: BorrowCallContract & Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](self, var on_ok: F, var on_err: G) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure)",
+      "summary": "Consume two handlers, borrow the payload and call only the selected handler."
      }
     ],
     "fold_owned": [
@@ -30738,21 +30738,21 @@
         "variadic": false
        }
       ],
-      "description": "",
+      "description": "Handlers may use any receiver mode: consuming wins, then mutable,\nthen shared. Only the selected handler runs; both owners are\ndestroyed. Pass `mut_ref(handler)` to retain a reusable original.",
       "error": "_ResultFailure[F.Error, G.Error]",
       "parameters": [
        {
-        "description": "The success handler's type, a `OnceUnary` taking `T`.",
+        "description": "The success handler's type, an invocable `UnaryContract` taking `T`.",
         "inferred": false,
         "name": "F",
-        "type": "OnceUnary",
+        "type": "UnaryContract & Movable & Deinitable",
         "variadic": false
        },
        {
-        "description": "The error handler's type, a `OnceUnary` taking `E`.",
+        "description": "The error handler's type, an invocable `UnaryContract` taking `E`.",
         "inferred": false,
         "name": "G",
-        "type": "OnceUnary",
+        "type": "UnaryContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -30762,8 +30762,8 @@
        "doc": "The result of the handler that ran.",
        "type": "F.Out"
       },
-      "signature": "def fold_owned_once[F: OnceUnary, G: OnceUnary](deinit self, var on_ok: F, var on_err: G) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error)",
-      "summary": "Consume the Result and two consuming handlers, and move the payload into the selected one."
+      "signature": "def fold_owned_once[F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var on_ok: F, var on_err: G) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error)",
+      "summary": "Consume the Result and two handlers, moving its payload into the selected one."
      }
     ],
     "followed_by": [
@@ -320645,7 +320645,7 @@
    "summary": "Functor, Filterable, FunctorFilter, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Semigroup and Monoid over native values, with explicit instances."
   },
   "callables": {
-   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n| one borrowed argument | `BorrowCallable.invoke` | `BorrowMutableCallable.invoke_mut` | `BorrowOnceCallable.invoke_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. Borrowing callables read their argument instead\nof taking it. `invoke_borrowed`, `invoke_borrowed_repeated` and\n`invoke_borrowed_once` provide shared, repeated exclusive and consuming calls.\n`mut_ref(callback)` lends a named library callback to an operation that owns\nits callback, retaining the original state for inspection or reuse afterward.\nThe movable `MutableRef` preserves every repeatable shape and its native origin.\n`CallContract` is the shared result/error metadata of owned-argument callables.\n`RepeatableBorrow` admits shared or mutable borrowing receivers. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped`, `Tupled`, `MappedPair` and `Identity` from `fp.functions` implement these\nprotocols.\n\n`as_binary` stores a plain binary function or thin pointer in `NativeBinary`.\nIt preserves two owned argument types and the exact result and error types.\nNamed adapters can be reused by shared borrow in `zip_with`, `map_with_index`,\n`scan_map` and `scan_left`. The factory does not infer capturing closures.\n`BinarySignature[A, B, R, E].capture(closure)` selects the signature before\ncapturing a binary closure into the same adapter. Its error defaults to `Never`.\n`BorrowSignature[A, R, E].capture(callback)` stores a predicate, observer or\nprojection in `NativeBorrow`. Named uses share the adapter; each call reads\nits payload. Native closures and thin pointer aliases retain their exact types.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Lazy `map`, `filter_map`, `flat_map`, `scan_left` | Native callbacks and shared or mutable library unary/binary values |\n| `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| `fori_loop_mut` | A named shared or mutable library binary body, borrowed exclusively; updated receiver state remains in the caller. |\n| Iterator filter, prefix, partition, search and count predicates | Native predicates, `BorrowCallable` and owned `BorrowMutableCallable` |\n| Family `filter` and `filter_not` | Native predicates, shared views and owned `BorrowMutableCallable` or `BorrowCallable`; `mut_ref` preserves caller-owned state. |\n| `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `Thunk`, `MutableThunk` or `OnceThunk`; consuming, then mutable, then shared receiver priority |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
+   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n| one borrowed argument | `BorrowCallable.invoke` | `BorrowMutableCallable.invoke_mut` | `BorrowOnceCallable.invoke_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. Borrowing callables read their argument instead\nof taking it. `invoke_borrowed`, `invoke_borrowed_repeated` and\n`invoke_borrowed_once` provide shared, repeated exclusive and owned one-call\ninvocation. The latter accepts every receiver mode, preferring consuming,\nthen mutable, then shared.\n`mut_ref(callback)` lends a named library callback to an operation that owns\nits callback, retaining the original state for inspection or reuse afterward.\nThe movable `MutableRef` preserves every repeatable shape and its native origin.\n`CallContract` is the shared result/error metadata of owned-argument callables.\n`RepeatableBorrow` admits shared or mutable borrowing receivers. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped`, `Tupled`, `MappedPair` and `Identity` from `fp.functions` implement these\nprotocols.\n\n`as_binary` stores a plain binary function or thin pointer in `NativeBinary`.\nIt preserves two owned argument types and the exact result and error types.\nNamed adapters can be reused by shared borrow in `zip_with`, `map_with_index`,\n`scan_map` and `scan_left`. The factory does not infer capturing closures.\n`BinarySignature[A, B, R, E].capture(closure)` selects the signature before\ncapturing a binary closure into the same adapter. Its error defaults to `Never`.\n`BorrowSignature[A, R, E].capture(callback)` stores a predicate, observer or\nprojection in `NativeBorrow`. Named uses share the adapter; each call reads\nits payload. Native closures and thin pointer aliases retain their exact types.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Lazy `map`, `filter_map`, `flat_map`, `scan_left` | Native callbacks and shared or mutable library unary/binary values |\n| `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| `fori_loop_mut` | A named shared or mutable library binary body, borrowed exclusively; updated receiver state remains in the caller. |\n| Iterator filter, prefix, partition, search and count predicates | Native predicates, `BorrowCallable` and owned `BorrowMutableCallable` |\n| Family `filter` and `filter_not` | Native predicates, shared views and owned `BorrowMutableCallable` or `BorrowCallable`; `mut_ref` preserves caller-owned state. |\n| `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `Thunk`, `MutableThunk` or `OnceThunk`; consuming, then mutable, then shared receiver priority |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
    "summary": "How the library calls user code: callable protocols, receiver dispatch and native functions as values."
   },
   "combinators": {

@@ -7,8 +7,8 @@ from fp.callables._retention import _Retain
 from fp.callables._transforms import _Retained, _ObserveOnce
 from fp.callables.protocols import Binary
 from fp.callables._identity import Identity
-from fp.callables.protocols import Unary, OnceUnary, UnaryContract, BorrowCallable, BorrowOnceCallable
-from fp.callables.invoke import call_once, invoke_borrowed, invoke_borrowed_once
+from fp.callables.protocols import Unary, OnceUnary, UnaryContract, BorrowCallable
+from fp.callables.invoke import call_once, invoke_borrowed, invoke_borrowed_once, _OnceUnaryAvailable, _OnceBorrowAvailable
 from fp.adt.data import Cases, Data, Value, _ChoiceType
 from std.builtin.rebind import rebind_var, downcast
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
@@ -463,17 +463,19 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             _borrowed_transform[Self.E, F.Out, G.Error, G, origin_of(on_err), invoke_err]](
                 self^, Pointer(to=on_ok), Pointer(to=on_err))
 
-    def fold_once[F: BorrowOnceCallable, G: BorrowOnceCallable](self, var on_ok: F, var on_err: G
+    def fold_once[F: BorrowCallContract & Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](self, var on_ok: F, var on_err: G
     ) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure):
-        """Fold with two consuming handlers: borrow the payload, and call only the selected handler.
+        """Consume two handlers, borrow the payload and call only the selected handler.
 
-        Both handlers move in; the one that does not run is destroyed. No
+        Both handlers move in; the one that does not run is destroyed. The
+        selected handler uses consuming, then mutable, then shared receiver
+        priority. Pass `mut_ref(handler)` to retain its original state. No
         `Copyable` requirement is added. A result may refer to owners that
         outlive the call, never into a consumed handler.
 
         Parameters:
-            F: The success handler's type, a `BorrowOnceCallable` taking `T`.
-            G: The error handler's type, a `BorrowOnceCallable` taking `E`.
+            F: The success handler's type, an invocable `BorrowCallContract` taking `T`.
+            G: The error handler's type, an invocable `BorrowCallContract` taking `E`.
 
         Args:
             on_ok: The handler for `Ok`, consumed.
@@ -486,19 +488,24 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             The error of the handler that ran; both raise one error type, or
             one of them nothing.
         """
+        comptime assert _OnceBorrowAvailable[F] and _OnceBorrowAvailable[G], "Result.fold_once: both handlers must implement a receiver mode"
         comptime Z = _ResultFailure[F.Failure, G.Failure]
         comptime assert _ErrorCompatible[Z, F.Failure] and _ErrorCompatible[Z, G.Failure]
         if self.is_ok():
             return invoke_borrowed_once[Z](self._ok().value, on_ok^)
         return rebind_var[F.Result](invoke_borrowed_once[Z](self._err().value, on_err^))
 
-    def fold_owned_once[F: OnceUnary, G: OnceUnary](deinit self, var on_ok: F, var on_err: G
+    def fold_owned_once[F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var on_ok: F, var on_err: G
     ) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error):
-        """Consume the Result and two consuming handlers, and move the payload into the selected one.
+        """Consume the Result and two handlers, moving its payload into the selected one.
+
+        Handlers may use any receiver mode: consuming wins, then mutable,
+        then shared. Only the selected handler runs; both owners are
+        destroyed. Pass `mut_ref(handler)` to retain a reusable original.
 
         Parameters:
-            F: The success handler's type, a `OnceUnary` taking `T`.
-            G: The error handler's type, a `OnceUnary` taking `E`.
+            F: The success handler's type, an invocable `UnaryContract` taking `T`.
+            G: The error handler's type, an invocable `UnaryContract` taking `E`.
 
         Args:
             on_ok: The handler for `Ok`, consumed.
@@ -511,6 +518,7 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             The error of the handler that ran; both raise one error type, or
             one of them nothing.
         """
+        comptime assert _OnceUnaryAvailable[F] and _OnceUnaryAvailable[G], "Result.fold_owned_once: both handlers must implement a receiver mode"
         return _fold_result_owned[Self.T, Self.E, F.Out, _ResultFailure[F.Error, G.Error], F.Error, G.Error, F, G,
             _call_transform[Self.T, F], _call_transform[Self.E, G, F.Out]](self^, on_ok^, on_err^)
 
