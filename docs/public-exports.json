@@ -7852,6 +7852,10 @@
      {
       "sha256": "13b20d5a595e692ea3e6f78e96091bcd04caa2cb7eb3fdfc15b397db5742ab5c",
       "signature": "def fold_left[A: Movable & Deinitable, F: Binary]( deinit self, step: F, var initial: A ) raises F.Error -> Piped[A] where F.First == A and F.Second == _Source[Self.Value].Element and F.Out == A:"
+     },
+     {
+      "sha256": "b6003719e01e2fe1e297cbf0932f8ebb59c8efc67446eb04cb8c8f3b9bff5b23",
+      "signature": "def fold_left[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable]( deinit self, var step: F, var initial: A ) raises F.Error -> Piped[A] where F.First == A and F.Second == _Source[Self.Value].Element and F.Out == A and RepeatableBinary[F]:"
      }
     ],
     "fold_map": [
@@ -12999,8 +13003,8 @@
     ],
     "fold_left": [
      {
-      "sha256": "f3245f6494542c505a6f1db0079e11adf72bc1e30a1f19733786d1a54d290696",
-      "signature": "def fold_left[A: Movable & Deinitable, C: Binary](deinit self, var step: C, var initial: A) raises C.Error -> Pipeline[_NativeFamily[A], A, Self.E] where C.First == A and C.Second == _FoldElement[Self.V] and C.Out == A:"
+      "sha256": "4a8174da367c3c3f67f3b25218d0a50a4b161d428c2237276b78136e066a3821",
+      "signature": "def fold_left[A: Movable & Deinitable, C: BinaryContract & Movable & Deinitable](deinit self, var step: C, var initial: A) raises C.Error -> Pipeline[_NativeFamily[A], A, Self.E] where C.First == A and C.Second == _FoldElement[Self.V] and RepeatableBinary[C] and C.Out == A:"
      },
      {
       "sha256": "68f015504ea4b2cf449a41c6db231188d16105c860add2149166c8bc5f318021",
@@ -13471,8 +13475,8 @@
     ],
     "fold_until": [
      {
-      "sha256": "712ee108a6de2feb37e33ad1969994f276112f6047a59ded367c38d23344daa3",
-      "signature": "def fold_until[A: Movable & Deinitable, C: Binary, //, B: Movable & Deinitable](deinit self, var step: C, var initial: A) raises C.Error -> Pipeline[_NativeFamily[ControlFlow[B, A]], ControlFlow[B, A], Self.E] where C.First == A and C.Second == _FoldElement[Self.V] and C.Out == ControlFlow[B, A]:"
+      "sha256": "fe3639458be8b016b903595df4eb42287feef379ccd52ffb28a9bea88053ec78",
+      "signature": "def fold_until[A: Movable & Deinitable, C: BinaryContract & Movable & Deinitable, //, B: Movable & Deinitable](deinit self, var step: C, var initial: A) raises C.Error -> Pipeline[_NativeFamily[ControlFlow[B, A]], ControlFlow[B, A], Self.E] where C.First == A and C.Second == _FoldElement[Self.V] and RepeatableBinary[C] and C.Out == ControlFlow[B, A]:"
      },
      {
       "sha256": "56d848de296a281a4a7f890b3205c1d3a84d03c5eb95ddb7c430db3cd35ab1f7",
@@ -18311,8 +18315,8 @@
     ],
     "reduce_optional": [
      {
-      "sha256": "8aad719e4e375a8b9d54328bf5c243f13cfdd302800919c65baa9b4feb4e1cf7",
-      "signature": "def reduce_optional[C: Binary](deinit self, var step: C) raises C.Error -> Pipeline[_NativeFamily[Optional[C.Out]], Optional[C.Out], Self.E] where C.First == _FoldElement[Self.V] and C.Second == _FoldElement[Self.V] and C.Out == _FoldElement[Self.V]:"
+      "sha256": "6e303c08d240277f0fb5300e93b74fc0ac2720d270abcfa0657664c424b1817e",
+      "signature": "def reduce_optional[C: BinaryContract & Movable & Deinitable](deinit self, var step: C) raises C.Error -> Pipeline[_NativeFamily[Optional[C.Out]], Optional[C.Out], Self.E] where C.First == _FoldElement[Self.V] and C.Second == _FoldElement[Self.V] and RepeatableBinary[C] and C.Out == _FoldElement[Self.V]:"
      },
      {
       "sha256": "071e1920e6da2f6c1cb6978df00c02d336c9976f19dbc0b3cb795027242b8ac2",

@@ -280,6 +280,13 @@ literal no-value signatures handled separately from generic value results.
 Plain raising search predicates keep their thin representation, including
 explicit `Never`; thin and closure entry points share terminal execution.
 
+Selected Pipeline folds consume a `BinaryContract` admitted by
+`RepeatableBinary`, then transfer that same owner into the standalone fold.
+Piped’s owned `fold_left` follows the same route; its named shared overload
+keeps borrowing. The facades add no callback reference type, traversal,
+receiver selection or cleanup policy. Their generated signatures use the
+existing binary contract metadata, including exact native errors and origins.
+
 ## Errors
 
 Non-raising and raising callbacks have separate overloads, and a raising terminal

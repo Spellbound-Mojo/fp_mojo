@@ -74090,6 +74090,50 @@
       },
       "signature": "def fold_left[A: Movable & Deinitable, F: Binary](deinit self, step: F, var initial: A) raises F.Error -> Piped[A] where F.First == A and F.Second == _Source[Self.Value].Element and F.Out == A",
       "summary": "Fold immediately with a library `Binary` step and its exact error."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback owner, consumed. Pass `mut_ref(step)` to retain its state.",
+        "name": "step",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The initial accumulator, consumed.",
+        "name": "initial",
+        "type": "A",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "F.Error",
+      "parameters": [
+       {
+        "description": "The accumulator type, preserved at each step.",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "A shared or mutable binary callback with matching operand types.",
+        "inferred": false,
+        "name": "F",
+        "type": "BinaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The callback's exact error; failure stops before another pull.",
+      "returns": {
+       "doc": "A Piped accumulator after the source is exhausted.",
+       "type": "Piped[A]"
+      },
+      "signature": "def fold_left[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](deinit self, var step: F, var initial: A) raises F.Error -> Piped[A] where F.First == A and F.Second == _Source[Self.Value].Element and F.Out == A and RepeatableBinary[F]",
+      "summary": "Consume a repeatable step and fold through its mutable or shared receiver."
      }
     ],
     "fold_map": [
@@ -146344,7 +146388,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The fold step; closures are borrowed, thin pointers owned, library Binary steps consumed.",
+        "description": "The fold step; closures are borrowed, thin pointers owned, repeatable library steps consumed.",
         "name": "step",
         "type": "C",
         "variadic": false
@@ -146371,7 +146415,7 @@
         "description": "The first library callback type, retaining its receiver and origins.",
         "inferred": false,
         "name": "C",
-        "type": "Binary",
+        "type": "BinaryContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -146381,7 +146425,7 @@
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
        "type": "Pipeline[_NativeFamily[A], A, Self.E]"
       },
-      "signature": "def fold_left[A: Movable & Deinitable, C: Binary](deinit self, var step: C, var initial: A) raises C.Error -> Pipeline[_NativeFamily[A], A, Self.E] where C.First == A and C.Second == _FoldElement[Self.V] and C.Out == A",
+      "signature": "def fold_left[A: Movable & Deinitable, C: BinaryContract & Movable & Deinitable](deinit self, var step: C, var initial: A) raises C.Error -> Pipeline[_NativeFamily[A], A, Self.E] where C.First == A and C.Second == _FoldElement[Self.V] and RepeatableBinary[C] and C.Out == A",
       "summary": "Consume the source in order through the canonical terminal fold."
      },
      {
@@ -152681,7 +152725,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The fold step; closures are borrowed, thin pointers owned, library Binary steps consumed.",
+        "description": "The fold step; closures are borrowed, thin pointers owned, repeatable library steps consumed.",
         "name": "step",
         "type": "C",
         "variadic": false
@@ -152708,7 +152752,7 @@
         "description": "The first library callback type, retaining its receiver and origins.",
         "inferred": true,
         "name": "C",
-        "type": "Binary",
+        "type": "BinaryContract & Movable & Deinitable",
         "variadic": false
        },
        {
@@ -152725,7 +152769,7 @@
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
        "type": "Pipeline[_NativeFamily[ControlFlow[B, A]], ControlFlow[B, A], Self.E]"
       },
-      "signature": "def fold_until[A: Movable & Deinitable, C: Binary, //, B: Movable & Deinitable](deinit self, var step: C, var initial: A) raises C.Error -> Pipeline[_NativeFamily[ControlFlow[B, A]], ControlFlow[B, A], Self.E] where C.First == A and C.Second == _FoldElement[Self.V] and C.Out == ControlFlow[B, A]",
+      "signature": "def fold_until[A: Movable & Deinitable, C: BinaryContract & Movable & Deinitable, //, B: Movable & Deinitable](deinit self, var step: C, var initial: A) raises C.Error -> Pipeline[_NativeFamily[ControlFlow[B, A]], ControlFlow[B, A], Self.E] where C.First == A and C.Second == _FoldElement[Self.V] and RepeatableBinary[C] and C.Out == ControlFlow[B, A]",
       "summary": "Consume the source in order through the canonical terminal fold."
      },
      {
@@ -223106,7 +223150,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The fold step; closures are borrowed, thin pointers owned, library Binary steps consumed.",
+        "description": "The fold step; closures are borrowed, thin pointers owned, repeatable library steps consumed.",
         "name": "step",
         "type": "C",
         "variadic": false
@@ -223119,7 +223163,7 @@
         "description": "The first library callback type, retaining its receiver and origins.",
         "inferred": false,
         "name": "C",
-        "type": "Binary",
+        "type": "BinaryContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -223129,7 +223173,7 @@
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
        "type": "Pipeline[_NativeFamily[Optional[C.Out]], Optional[C.Out], Self.E]"
       },
-      "signature": "def reduce_optional[C: Binary](deinit self, var step: C) raises C.Error -> Pipeline[_NativeFamily[Optional[C.Out]], Optional[C.Out], Self.E] where C.First == _FoldElement[Self.V] and C.Second == _FoldElement[Self.V] and C.Out == _FoldElement[Self.V]",
+      "signature": "def reduce_optional[C: BinaryContract & Movable & Deinitable](deinit self, var step: C) raises C.Error -> Pipeline[_NativeFamily[Optional[C.Out]], Optional[C.Out], Self.E] where C.First == _FoldElement[Self.V] and C.Second == _FoldElement[Self.V] and RepeatableBinary[C] and C.Out == _FoldElement[Self.V]",
       "summary": "Consume the source in order through the canonical terminal fold."
      },
      {

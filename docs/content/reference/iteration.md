@@ -56,9 +56,12 @@ existing signature and owned-capture requirements.
 
 `fold_left`, `fold_until`, `reduce_optional` and both `reduce` forms accept
 owned shared or mutable library callbacks, through free functions and Iter
-methods. For example, `.fold_left(IncreasingWeight(1), 0)` returns `14` over
+methods. Selected `Pipeline.fold_left`, `reduce_optional` and `fold_until`
+accept the same callbacks; `Piped.fold_left` also accepts owned mutable steps. For example, `.fold_left(IncreasingWeight(1), 0)` returns `14` over
 `[1, 2, 3]`, retaining the changing weight between steps without an adapter
-or a closure. Move a named stateful step with `step^`.
+or a closure. Move a named stateful step with `step^`, or pass `mut_ref(step)` to inspect
+or reuse its state afterward. The example folds through a selected Pipeline
+with a borrowed mutable reference, then prints its next weight, `4`.
 
 Named shared `Binary` callbacks remain borrowed and reusable. A moved or
 temporary callback uses its mutable receiver when available, otherwise its

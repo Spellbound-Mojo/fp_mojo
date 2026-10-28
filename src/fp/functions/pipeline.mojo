@@ -34,7 +34,7 @@ from fp.algebra._traversal import _FlattenAfter, _CompactAfter, _traverse_then, 
 from fp.algebra._derived import _map2_as, product as _family_product
 from fp.callables._transforms import _Pair, _ValueThunk, _Apply
 from fp.callables.native import _Binary, _RaisingBinary, _NativeBinaryRef
-from fp.callables.invoke import RepeatableBorrow
+from fp.callables.invoke import RepeatableBinary, RepeatableBorrow
 from fp.callables._receiver import _OnceBorrowAvailable
 from fp.callables._transforms import _ObserveOnce
 from fp.callables.protocols import BinaryContract
@@ -6998,6 +6998,27 @@ struct Piped[Value: Movable & Deinitable](Movable):
     ) raises F.Error -> Piped[A] where F.First == A and F.Second == _Source[Self.Value].Element and F.Out == A:
         """Fold immediately with a library `Binary` step and its exact error."""
         return Piped(_fold_left(step, initial^, self.value^))
+
+    def fold_left[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](
+        deinit self, var step: F, var initial: A
+    ) raises F.Error -> Piped[A] where F.First == A and F.Second == _Source[Self.Value].Element and F.Out == A and RepeatableBinary[F]:
+        """Consume a repeatable step and fold through its mutable or shared receiver.
+
+        Parameters:
+            A: The accumulator type, preserved at each step.
+            F: A shared or mutable binary callback with matching operand types.
+
+        Args:
+            step: The callback owner, consumed. Pass `mut_ref(step)` to retain its state.
+            initial: The initial accumulator, consumed.
+
+        Returns:
+            A Piped accumulator after the source is exhausted.
+
+        Raises:
+            The callback's exact error; failure stops before another pull.
+        """
+        return Piped(_fold_left(step^, initial^, self.value^))
 
     def get(deinit self) -> Self.Value:
         """End the chain and return the value.

@@ -239,13 +239,15 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         )
 
     # Folds share the existing source normalization and terminal drivers. Their
-    # callbacks need a shared Binary receiver, matching the standalone folds.
+    # owned callbacks use the same repeatable receiver contract as standalone folds.
     for name in ("fold_left", "reduce_optional", "fold_until"):
         element = "_FoldElement[Self.V]"
         initial = name != "reduce_optional"
         accumulator = "A" if initial else element
         for kind in ("library", "pure", "raising", "never"):
-            cb = callback("binary", kind, (accumulator, element), "step", repeatable=True)
+            cb = callback("binary", kind, (accumulator, element), "step")
+            if kind == "library":
+                cb["conditions"] += ["RepeatableBinary[C]"]
             result = "A" if initial else f"Optional[{cb['result']}]"
             expected = accumulator
             if name == "fold_until":
@@ -266,7 +268,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
                     cb["params"] += ["//", f"B: {MD}"]
             args = cb["argument"] + (", var initial: A" if initial else "")
             params = ([f"A: {MD}"] if initial else []) + cb["params"]
-            build = "step" if kind == "library" else cb["build"]
+            build = cb["build"]
             entry = f"_context_{name}" + ("[B=B]" if name == "fold_until" else "")
             expr = f"{entry}({build}, " + ("initial^, " if initial else "") + "self.value^)"
             emit(
@@ -1272,7 +1274,7 @@ def documented(source):
         "on_ok": "The success handler, consuming the success payload.",
         "on_err": "The error handler, consuming the stored error payload.",
         "value": "The carrier, consumed.",
-        "step": "The fold step; closures are borrowed, thin pointers owned, library Binary steps consumed.",
+        "step": "The fold step; closures are borrowed, thin pointers owned, repeatable library steps consumed.",
         "initial": "The initial accumulator, consumed.",
         "other": "The already evaluated second carrier, consumed.",
         "old": "The payload to compare against, consumed.",

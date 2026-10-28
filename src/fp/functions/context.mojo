@@ -29,7 +29,7 @@ from fp.algebra._traversal import _FlattenAfter, _Discard, _EffectVoid, _travers
 from fp.algebra._effect_combinators import _IfEffect, _if_effect, _AllLive, _BoolLive, _PredicateStep, _SearchStep, _EffectFold, _fold_effect, _fold_map_effect
 from fp.algebra._accumulation import _FirstPresent
 from fp.callables.native import _NativeOwnedArg, _NativeUnaryRef, _NativeBorrowRef, _NativeBorrow, _NativeThunkRef, _NativeThunk, NativeUnary, _NativeBinaryRef, _NativeBinary
-from fp.callables.invoke import RepeatableBorrow
+from fp.callables.invoke import RepeatableBorrow, RepeatableBinary
 from fp.callables._receiver import _OnceBorrowAvailable
 from fp.callables._transforms import _ObserveOnce
 from fp.callables.protocols import UnaryContract, BorrowCallable, BorrowCallContract, ThunkContract, BinaryContract, Binary
@@ -622,7 +622,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[J, R, Self.E](call_once(NativeUnary[Self.V, R, X, def(var _NativeOwnedArg[Self.V]) raises X thin -> R, True](function), rebind_var[NativeUnary[Self.V, R, X, def(var _NativeOwnedArg[Self.V]) raises X thin -> R, True].Arg](self.value^)))
 
     @always_inline
-    def fold_left[A: Movable & Deinitable, C: Binary](deinit self, var step: C, var initial: A) raises C.Error -> Pipeline[_NativeFamily[A], A, Self.E] where C.First == A and C.Second == _FoldElement[Self.V] and C.Out == A:
+    def fold_left[A: Movable & Deinitable, C: BinaryContract & Movable & Deinitable](deinit self, var step: C, var initial: A) raises C.Error -> Pipeline[_NativeFamily[A], A, Self.E] where C.First == A and C.Second == _FoldElement[Self.V] and RepeatableBinary[C] and C.Out == A:
         """Consume the source in order through the canonical terminal fold.
 
         Parameters:
@@ -630,7 +630,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            step: The fold step; closures are borrowed, thin pointers owned, library Binary steps consumed.
+            step: The fold step; closures are borrowed, thin pointers owned, repeatable library steps consumed.
             initial: The initial accumulator, consumed.
 
         Returns:
@@ -639,7 +639,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         Raises:
             The exact callback or family error; it never becomes a stored Result error.
         """
-        return Pipeline[_NativeFamily[A], A, Self.E](_context_fold_left(step, initial^, self.value^))
+        return Pipeline[_NativeFamily[A], A, Self.E](_context_fold_left(step^, initial^, self.value^))
 
     @always_inline
     def fold_left[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var A, var _FoldElement[Self.V]) -> R](deinit self, ref[o] step: C, var initial: A) raises Never -> Pipeline[_NativeFamily[A], A, Self.E] where R == A:
@@ -657,14 +657,14 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[_NativeFamily[A], A, Self.E](_context_fold_left(_NativeBinaryRef[A, _FoldElement[Self.V], R, Never, C, True, o](Pointer(to=step)), initial^, self.value^))
 
     @always_inline
-    def reduce_optional[C: Binary](deinit self, var step: C) raises C.Error -> Pipeline[_NativeFamily[Optional[C.Out]], Optional[C.Out], Self.E] where C.First == _FoldElement[Self.V] and C.Second == _FoldElement[Self.V] and C.Out == _FoldElement[Self.V]:
+    def reduce_optional[C: BinaryContract & Movable & Deinitable](deinit self, var step: C) raises C.Error -> Pipeline[_NativeFamily[Optional[C.Out]], Optional[C.Out], Self.E] where C.First == _FoldElement[Self.V] and C.Second == _FoldElement[Self.V] and RepeatableBinary[C] and C.Out == _FoldElement[Self.V]:
         """Consume the source in order through the canonical terminal fold.
 
         Parameters:
             C: The first library callback type, retaining its receiver and origins.
 
         Args:
-            step: The fold step; closures are borrowed, thin pointers owned, library Binary steps consumed.
+            step: The fold step; closures are borrowed, thin pointers owned, repeatable library steps consumed.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -672,7 +672,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         Raises:
             The exact callback or family error; it never becomes a stored Result error.
         """
-        return Pipeline[_NativeFamily[Optional[C.Out]], Optional[C.Out], Self.E](_context_reduce_optional(step, self.value^))
+        return Pipeline[_NativeFamily[Optional[C.Out]], Optional[C.Out], Self.E](_context_reduce_optional(step^, self.value^))
 
     @always_inline
     def reduce_optional[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _FoldElement[Self.V], var _FoldElement[Self.V]) -> R](deinit self, ref[o] step: C) raises Never -> Pipeline[_NativeFamily[Optional[R]], Optional[R], Self.E] where R == _FoldElement[Self.V]:
@@ -690,7 +690,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[_NativeFamily[Optional[R]], Optional[R], Self.E](_context_reduce_optional(_NativeBinaryRef[_FoldElement[Self.V], _FoldElement[Self.V], R, Never, C, True, o](Pointer(to=step)), self.value^))
 
     @always_inline
-    def fold_until[A: Movable & Deinitable, C: Binary, //, B: Movable & Deinitable](deinit self, var step: C, var initial: A) raises C.Error -> Pipeline[_NativeFamily[ControlFlow[B, A]], ControlFlow[B, A], Self.E] where C.First == A and C.Second == _FoldElement[Self.V] and C.Out == ControlFlow[B, A]:
+    def fold_until[A: Movable & Deinitable, C: BinaryContract & Movable & Deinitable, //, B: Movable & Deinitable](deinit self, var step: C, var initial: A) raises C.Error -> Pipeline[_NativeFamily[ControlFlow[B, A]], ControlFlow[B, A], Self.E] where C.First == A and C.Second == _FoldElement[Self.V] and RepeatableBinary[C] and C.Out == ControlFlow[B, A]:
         """Consume the source in order through the canonical terminal fold.
 
         Parameters:
@@ -699,7 +699,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             B: The early termination payload, including its origins.
 
         Args:
-            step: The fold step; closures are borrowed, thin pointers owned, library Binary steps consumed.
+            step: The fold step; closures are borrowed, thin pointers owned, repeatable library steps consumed.
             initial: The initial accumulator, consumed.
 
         Returns:
@@ -708,7 +708,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         Raises:
             The exact callback or family error; it never becomes a stored Result error.
         """
-        return Pipeline[_NativeFamily[ControlFlow[B, A]], ControlFlow[B, A], Self.E](_context_fold_until[B=B](step, initial^, self.value^))
+        return Pipeline[_NativeFamily[ControlFlow[B, A]], ControlFlow[B, A], Self.E](_context_fold_until[B=B](step^, initial^, self.value^))
 
     @always_inline
     def fold_until[A: Movable & Deinitable, B: Movable & Deinitable, o: ImmOrigin, //, C: def(var A, var _FoldElement[Self.V]) -> ControlFlow[B, A]](deinit self, ref[o] step: C, var initial: A) raises Never -> Pipeline[_NativeFamily[ControlFlow[B, A]], ControlFlow[B, A], Self.E] where ControlFlow[B, A] == ControlFlow[B, A]:

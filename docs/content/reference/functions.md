@@ -42,6 +42,13 @@ including Result handlers and the existing `fold_left(step, initial)` and
 native closures retain their borrow origins. Generic native error parameters
 may include `Never` without a separate non-Never constraint.
 
+`fold_left`, `reduce_optional` and `fold_until` accept owned shared or mutable
+library steps. They use the standalone fold’s mutable-first receiver choice.
+Pass `mut_ref(step)` to retain the callback state, including after a failure.
+The existing `Piped.fold_left` also accepts owned mutable steps and keeps
+borrowing named shared steps. All forms preserve early stopping, exact errors
+and move-only accumulator ownership.
+
 <!-- example: docs/examples/selected_pipeline.mojo -->
 
 `raising[E]()` selects native callback admission. It does not change stored

@@ -2,8 +2,8 @@
 from fp.iteration import fold_left, reduce_optional
 from fp.iteration import map, filter, filter_map, flat_map, scan_left, collect_list
 from fp.iteration import iterated
-from fp.functions import partial
-from fp.callables import MutableUnary, MutableBinary
+from fp.functions import partial, pipeline
+from fp.callables import MutableUnary, MutableBinary, mut_ref
 from std.testing import assert_equal
 
 def add(var total: Int, var value: Int) -> Int:
@@ -98,3 +98,6 @@ def main() raises:
     print("stateful:", iterated(range(1, 4)).map(Running(0)).collect_list())
     print("changing weights:", iterated(range(1, 4)).scan_left(IncreasingWeight(1), 0).collect_list())
     print("weighted fold:", iterated(range(1, 4)).fold_left(IncreasingWeight(1), 0))
+    var step_weight = IncreasingWeight(1)
+    print("pipeline fold:", pipeline[Int]([1,2,3]).fold_left(mut_ref(step_weight),0).get())
+    print("next weight:", step_weight.weight)
