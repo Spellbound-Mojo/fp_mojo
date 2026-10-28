@@ -111001,6 +111001,50 @@
        }
       ],
       "description": "",
+      "error": "_CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, C._View[o]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "J",
+        "type": "Applicative",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]], Self.E]"
+      },
+      "signature": "def flat_traverse[C: _UnaryViewable, o: ImmOrigin, //, J: Applicative = _ViewTarget[C, o]](deinit self, ref[o] function: C) raises _CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, C._View[o]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]]] -> Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and C._View[o].Arg == Self.I.Element[Self.V] and _TraverseCompatible[_FlatteningTraversal[Self.I], Self.V, C._View[o]] and _FlatteningTraversal[Self.I].TargetCompatible[J, Self.V, C._View[o]] and _CarrierCompatible[J, C._View[o].Out] and _MapCompatible[J, _FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]] and _CarrierCompatible[_FlatteningTraversal[Self.I], J.Element[C._View[o].Out]] and _BindCompatible[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]]], Identity[_FlatteningTraversal[Self.I].Element[J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]]]",
+      "summary": "Traverse and finish inside the selected target effect."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "_CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]]]]]",
       "parameters": [
        {
@@ -179519,6 +179563,50 @@
        }
       ],
       "description": "",
+      "error": "_CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, C._View[o]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, C._View[o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "J",
+        "type": "Applicative",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, C._View[o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]], Self.E]"
+      },
+      "signature": "def traverse_filter[C: _UnaryViewable, o: ImmOrigin, //, J: Applicative = _ViewTarget[C, o]](deinit self, ref[o] function: C) raises _CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, C._View[o]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, C._View[o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]]] -> Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, C._View[o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, FunctorFilter) and C._View[o].Arg == Self.I.Element[Self.V] and _TraverseCompatible[_SelectingTraversal[Self.I], Self.V, C._View[o]] and _SelectingTraversal[Self.I].TargetCompatible[J, Self.V, C._View[o]] and _CarrierCompatible[J, C._View[o].Out] and _MapCompatible[J, _SelectingTraversal[Self.I].Traversed[J, Self.V, C._View[o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]] and J.Element[C._View[o].Out] == Optional[_ListElement[J.Element[C._View[o].Out]]]",
+      "summary": "Traverse and finish inside the selected target effect."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "_CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]]]]]",
       "parameters": [
        {
@@ -180417,6 +180505,50 @@
        }
       ],
       "description": "",
+      "error": "J._LoopError[Self.V, C._View[o], _Discard[J.Element[C._View[o].Out]]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "J",
+        "type": "Applicative",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[J, J._Looped[Self.V, C._View[o], _Discard[J.Element[C._View[o].Out]]], Self.E]"
+      },
+      "signature": "def traverse_void[C: _UnaryViewable, o: ImmOrigin, //, J: Applicative = _ViewTarget[C, o]](deinit self, ref[o] function: C) raises J._LoopError[Self.V, C._View[o], _Discard[J.Element[C._View[o].Out]]] -> Pipeline[J, J._Looped[Self.V, C._View[o], _Discard[J.Element[C._View[o].Out]]], Self.E] where not conforms_to(Self.V, _ResultType) and C._View[o].Arg == _FoldElement[Self.V] and _CarrierCompatible[J, C._View[o].Out] and RepeatableUnary[C._View[o]] and J._LoopCompatible[Self.V, C._View[o], _Discard[J.Element[C._View[o].Out]]]",
+      "summary": "Traverse effects and discard successful payloads, retaining source Result errors."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "J._LoopError[Self.V, _NativeUnaryRef[_FoldElement[Self.V], R, Never, C, False, o], _Discard[J.Element[R]]]",
       "parameters": [
        {
@@ -180756,6 +180888,50 @@
        "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, Composition[False, 1, C, _EffectVoid[J, C.Out]]], Self.E]"
       },
       "signature": "def traverse_void[C: UnaryContract & Movable & Deinitable, //, J: Applicative = _InferredApplicative[C.Out]](deinit self, var function: C) raises (ResultFamily[_Failure[Self.V]].TraverseError[J, Self.V, _ErrorProbe[Self.I.Element[Self.V], J.Mapped[C.Out, _Fill[J.Element[C.Out], NoneType]], _CommonError[C.Error, J.MapError[C.Out, _Fill[J.Element[C.Out], NoneType]]]]] if Self.I == ResultFamily[_Failure[Self.V]] else _Traversing[Self.I].TraverseError[J, Self.V, Composition[False, 1, C, _EffectVoid[J, C.Out]]]) -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, Composition[False, 1, C, _EffectVoid[J, C.Out]]], Self.E] where conforms_to(Self.V, _ResultType) and C.Arg == Self.I.Element[Self.V] and _CarrierCompatible[J, C.Out] and conforms_to(Self.I, Traversable) and _TraverseCompatible[_Traversing[Self.I], Self.V, Composition[False, 1, C, _EffectVoid[J, C.Out]]] and _Traversing[Self.I].TargetCompatible[J, Self.V, Composition[False, 1, C, _EffectVoid[J, C.Out]]] and _MapCompatible[J, C.Out, _Fill[J.Element[C.Out], NoneType]]",
+      "summary": "Traverse effects and discard successful payloads, retaining source Result errors."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "(ResultFamily[_Failure[Self.V]].TraverseError[J, Self.V, _ErrorProbe[Self.I.Element[Self.V], J.Mapped[C._View[o].Out, _Fill[J.Element[C._View[o].Out], NoneType]], _CommonError[C._View[o].Error, J.MapError[C._View[o].Out, _Fill[J.Element[C._View[o].Out], NoneType]]]]] if Self.I == ResultFamily[_Failure[Self.V]] else _Traversing[Self.I].TraverseError[J, Self.V, Composition[False, 1, C._View[o], _EffectVoid[J, C._View[o].Out]]])",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "C",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "J",
+        "type": "Applicative",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, Composition[False, 1, C._View[o], _EffectVoid[J, C._View[o].Out]]], Self.E]"
+      },
+      "signature": "def traverse_void[C: _UnaryViewable, o: ImmOrigin, //, J: Applicative = _ViewTarget[C, o]](deinit self, ref[o] function: C) raises (ResultFamily[_Failure[Self.V]].TraverseError[J, Self.V, _ErrorProbe[Self.I.Element[Self.V], J.Mapped[C._View[o].Out, _Fill[J.Element[C._View[o].Out], NoneType]], _CommonError[C._View[o].Error, J.MapError[C._View[o].Out, _Fill[J.Element[C._View[o].Out], NoneType]]]]] if Self.I == ResultFamily[_Failure[Self.V]] else _Traversing[Self.I].TraverseError[J, Self.V, Composition[False, 1, C._View[o], _EffectVoid[J, C._View[o].Out]]]) -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, Composition[False, 1, C._View[o], _EffectVoid[J, C._View[o].Out]]], Self.E] where conforms_to(Self.V, _ResultType) and C._View[o].Arg == Self.I.Element[Self.V] and _CarrierCompatible[J, C._View[o].Out] and conforms_to(Self.I, Traversable) and _TraverseCompatible[_Traversing[Self.I], Self.V, Composition[False, 1, C._View[o], _EffectVoid[J, C._View[o].Out]]] and _Traversing[Self.I].TargetCompatible[J, Self.V, Composition[False, 1, C._View[o], _EffectVoid[J, C._View[o].Out]]] and _MapCompatible[J, C._View[o].Out, _Fill[J.Element[C._View[o].Out], NoneType]]",
       "summary": "Traverse effects and discard successful payloads, retaining source Result errors."
      },
      {

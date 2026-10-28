@@ -3588,3 +3588,17 @@ explicit move still selects the consuming callback surface where admitted.
 Deferred computations retain the borrow or the moved owner, respectively.
 Mutable-only and consuming-only chains do not acquire shared-call capability.
 Source, stored-error and returned-computation origins remain checked by Mojo.
+
+### Shared chains in derived traversal
+
+`traverse_filter`, `flat_traverse` and `traverse_void` use the same borrowed
+callback description and selected-family evidence as basic traversal. Their
+existing postprocessing descriptors continue to own compaction, flattening
+and discard. Native source loops and the Result-specific discard path keep
+their distinct evaluation and stored-error behavior.
+
+The addition is four generated admission boundaries, with no new execution or
+ownership implementation. Shared views preserve the receiver origin through
+deferred target effects; owned payloads still move through the original
+traversal or loop. Retained payload/error origins and exact raised errors are
+unchanged, and unsupported nested carriers are rejected at admission.

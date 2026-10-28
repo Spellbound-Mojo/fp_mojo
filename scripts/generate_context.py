@@ -639,7 +639,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         element = "Self.I.Element[Self.V]"
         identity = f"Identity[{element}]"
         callbacks = ([dict(params=[],argument="",adapter_type=identity,build=f"{identity}()",result=element,error="Never",conditions=[])]
-                     if sequence else owning_callbacks("owned", element, "function"))
+                     if sequence else owning_callbacks("owned", element, "function", view=True))
         for cb in callbacks:
             params = inferred_target_parameters(cb)
             c, result = cb["adapter_type"], cb["result"]
@@ -667,7 +667,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
             element = "Self.I.Element[Self.V]" if retained_error else "_FoldElement[Self.V]"
             identity = f"Identity[{element}]"
             callbacks = ([dict(params=[],argument="",adapter_type=identity,build=f"{identity}()",result=element,error="Never",conditions=[])]
-                         if operation.sequence else owning_callbacks("owned", element, "function"))
+                         if operation.sequence else owning_callbacks("owned", element, "function", view=True))
             for cb in callbacks:
                 params = inferred_target_parameters(cb)
                 c, result = cb["adapter_type"], cb["result"]

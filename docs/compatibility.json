@@ -324,7 +324,7 @@
       ],
       "status": "selected",
       "families": "Traversable source with FunctorFilter for compaction or Monad for flattening; Applicative target; native Optional, Result and List targets are inferred when J is omitted",
-      "callbacks": "Consuming native or library callback; sequence uses Identity. Source and target determine repeatability.",
+      "callbacks": "Consuming native or library callback; sequence uses Identity. Source and target determine repeatability. Shared chains are borrowed directly and supply their selected target family.",
       "ownership": "Move-only payloads survive compaction and flattening when the target does not duplicate them.",
       "errors": "Source errors remain inside target effects; nested Result errors preserve the source family and origins.",
       "timing": "Compaction and flattening run inside the target; source traversal retains its callback-construction timing.",
@@ -338,7 +338,11 @@
         "tests/runtime/test_context_traversal_composition_native.mojo",
         "tests/ownership/test_context_traversal_composition_ownership.mojo",
         "docs/examples/traversal_composition.mojo",
-        "tests/compile_fail/inferred_derived_origin.mojo"
+        "tests/compile_fail/inferred_derived_origin.mojo",
+        "tests/runtime/test_context_derived_callable_views.mojo",
+        "tests/ownership/test_context_derived_callable_views_ownership.mojo",
+        "tests/compile_fail/derived_callable_view_move.mojo",
+        "tests/compile_fail/derived_callable_view_origin.mojo"
       ]
     },
     {
@@ -349,7 +353,7 @@
       ],
       "status": "selected",
       "families": "Native iterator/owned iterable, or Result traversal; Applicative target; native Optional, Result and List targets are inferred when J is omitted",
-      "callbacks": "Consuming repeated transform for native sources; Result traversal can consume a single-use callback.",
+      "callbacks": "Consuming repeated transform for native sources; Result traversal can consume a single-use callback. Shared chains are borrowed directly and supply their selected target family.",
       "ownership": "Discards successful payloads without an output collection. Array inputs use safe temporary storage.",
       "errors": "Source Result errors remain nested; target failures and native raised errors stay distinct.",
       "timing": "Uses target loop timing for native sources and source traversal timing for Result.",
@@ -363,7 +367,11 @@
         "tests/runtime/test_context_traversal_composition_effects.mojo",
         "tests/ownership/test_context_traversal_composition_ownership.mojo",
         "docs/examples/traversal_composition.mojo",
-        "tests/compile_fail/inferred_derived_origin.mojo"
+        "tests/compile_fail/inferred_derived_origin.mojo",
+        "tests/runtime/test_context_derived_callable_views.mojo",
+        "tests/ownership/test_context_derived_callable_views_ownership.mojo",
+        "tests/compile_fail/derived_callable_view_move.mojo",
+        "tests/compile_fail/derived_callable_view_origin.mojo"
       ]
     },
     {

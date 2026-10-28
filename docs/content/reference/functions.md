@@ -413,6 +413,10 @@ when the target does not need to duplicate them; List branching requires copies.
 
 These derived methods also infer native Optional, Result and List targets;
 their explicit `[Target]` form keeps custom target policies available.
+`traverse_filter`, `flat_traverse` and `traverse_void` also accept reusable
+Kleisli chains directly. They borrow the shared chain and inherit its selected
+effect family, so a Reader chain needs no repeated `[Reader[...]]` argument.
+Keep the chain alive until a deferred result finishes.
 
 `traverse_filter(transform)` consumes payloads into effects containing
 Optional values, then compacts them through the source's FunctorFilter.
@@ -577,7 +581,8 @@ family, including custom policies and Reader; an explicit `[Target]` still
 overrides that choice. Direct `Result.map(chain)` and
 `Result.flat_map(chain)` work as well; `flat_map` sequences the returned Result.
 
-`Pipeline.map`, `flat_map`, `filter_map`, `traverse` and `par_traverse` borrow
+`Pipeline.map`, `flat_map`, `filter_map`, `traverse`, `par_traverse`,
+`traverse_filter`, `flat_traverse` and `traverse_void` borrow
 shared chains directly. Passing `chain^` instead transfers ownership when the
 selected operation admits a consuming callback. For example,
 `pipeline[Reader[Int]](action^).map(chain)` retains a borrow until execution,

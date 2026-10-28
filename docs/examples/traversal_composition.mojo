@@ -1,6 +1,7 @@
 """Flatten and filter effectful results with fluent traversal combinators."""
 from fp.data import Result, Ok, Err
-from fp.functions import pipeline
+from fp.functions import pipeline, kleisli
+from fp.algebra import ResultFamily
 from std.testing import assert_equal, assert_true
 
 
@@ -21,7 +22,8 @@ def select_even(value: Int) -> Result[Optional[Int], String]:
 
 def main() raises:
     var values: List[Int] = [1, 2, 3]
-    var expanded = pipeline(values.copy()).flat_traverse(expand).raise_on_err()
+    var expander = kleisli[ResultFamily[String]](expand)
+    var expanded = pipeline(values.copy()).flat_traverse(expander).raise_on_err()
     var kept = pipeline(expanded^).filter_effect(keep_even).raise_on_err()
     assert_equal(kept, [10, 2, 20, 30])
     print("kept:", kept)
@@ -29,6 +31,9 @@ def main() raises:
     var selected = pipeline(values^).traverse_filter(select_even).raise_on_err()
     assert_equal(selected, [20])
     print("selected:", selected)
+
+    # Reuse the same chain when only success or failure matters.
+    assert_true(pipeline(List[Int]([4, 5])).traverse_void(expander).get().is_ok())
 
     var groups: List[Result[List[Int], String]] = [expand(1), expand(2)]
     var flattened = pipeline(groups^).flat_sequence().raise_on_err()
