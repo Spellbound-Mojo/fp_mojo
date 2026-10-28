@@ -50,6 +50,7 @@ and error types on the callable itself. Each receiver mode is a separate trait:
 | one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |
 | two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |
 | no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |
+| one borrowed argument | `BorrowCallable.invoke` | `BorrowMutableCallable.invoke_mut` | `BorrowOnceCallable.invoke_once` |
 
 A type implements only the modes it supports. Two free functions choose the mode:
 
@@ -58,6 +59,21 @@ A type implements only the modes it supports. Two free functions choose the mode
   exclusive access. Generic code asserts `RepeatableUnary[F]`,
   `RepeatableBinary[F]` or `RepeatableThunk[F]` first, which is how a
   consuming-only callback is rejected before anything runs.
+
+Borrowing callbacks use `RepeatableBorrow` and
+`invoke_borrowed_repeated[E](payload, callback)` for the same exclusive-first
+receiver choice. The payload remains borrowed independently of receiver
+mutation. The public contract and invocation owner replace the former private
+mutable-borrow trait and dispatcher; their private import names remain aliases
+for existing internal consumers. There is one receiver and error policy.
+
+Lazy iterator predicate owners and consuming searches both use
+`iteration._callbacks._predicate_repeated`, which retains exclusive access to
+the stored callback through a typed pointer. Filtering, prefixes and branch
+routing keep their existing drivers; searches keep `_find` and `_quantify`.
+Counting uses the existing borrowed-to-owned unary adapter and accumulation
+policy. Owned search admission derives the element directly from the source,
+so ordinary and generic callers do not select a separate element parameter.
 
 `as_unary(f)` moves a native function or closure into a `NativeUnary`, a `Unary`. `Partial`
 implements `Thunk`, `Unary` or `Binary` when zero, one or two arguments remain;

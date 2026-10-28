@@ -11226,6 +11226,45 @@
     "BorrowCallContract"
    ]
   },
+  "callables.BorrowMutableCallable": {
+   "aliases": [],
+   "description": "The payload is never consumed or retained. `invoke_borrowed_repeated`\nselects this receiver before a shared receiver when both are available.",
+   "fields": [],
+   "kind": "trait",
+   "methods": {
+    "invoke_mut": [
+     {
+      "args": [
+       {
+        "convention": "ref",
+        "description": "The argument, borrowed only for this call.",
+        "name": "payload",
+        "type": "Self.Payload",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.Failure capturing",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "`Failure`, the callable's exact error; `Never` for a pure call.",
+      "returns": {
+       "doc": "The result, retaining its native type and origins.",
+       "type": "Self.Result"
+      },
+      "signature": "def invoke_mut(mut self, ref payload: Self.Payload) raises Self.Failure capturing -> Self.Result",
+      "summary": "Call with exclusive receiver access and a borrowed payload."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "callables/protocols",
+   "signature": "trait BorrowMutableCallable(BorrowCallContract, Movable, Deinitable)",
+   "summary": "A repeatable callable that mutates its receiver while borrowing its argument.",
+   "traits": [
+    "BorrowCallContract"
+   ]
+  },
   "callables.BorrowOnceCallable": {
    "aliases": [],
    "description": "`Result.fold_once` and Reader's `action` take one. `invoke_borrowed_once`\ncalls it.",
@@ -12989,6 +13028,26 @@
    "provider": "callables/invoke",
    "signature": "comptime RepeatableBinary[F: BinaryContract] = conforms_to(F, Binary) or conforms_to(F, MutableBinary)",
    "summary": "Whether a binary callback stays usable after a call; `call_repeated` requires it.",
+   "traits": []
+  },
+  "callables.RepeatableBorrow": {
+   "aliases": [],
+   "description": "",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The borrowing callback's contract type.",
+     "inferred": false,
+     "name": "C",
+     "type": "BorrowCallContract",
+     "variadic": false
+    }
+   ],
+   "provider": "callables/invoke",
+   "signature": "comptime RepeatableBorrow[C: BorrowCallContract] = conforms_to(C, BorrowCallable) or conforms_to(C, BorrowMutableCallable)",
+   "summary": "Whether a borrowing callback has a shared or mutable receiver for repeated calls.",
    "traits": []
   },
   "callables.RepeatableThunk": {
@@ -14874,6 +14933,65 @@
    "provider": "callables/invoke",
    "summary": ""
   },
+  "callables.invoke_borrowed_repeated": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "ref",
+       "description": "The payload, borrowed only for this call.",
+       "name": "value",
+       "type": "T",
+       "variadic": false
+      },
+      {
+       "convention": "mut",
+       "description": "The named callback, borrowed exclusively for this call.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "Receiver state remains in the caller. Neither receiver nor payload is copied\nor consumed, and a consuming-only receiver is rejected.",
+     "error": "E",
+     "parameters": [
+      {
+       "description": "The exact error or an allowed widening from Never.",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The repeatable borrowing callback type.",
+       "inferred": false,
+       "name": "F",
+       "type": "BorrowCallContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The exact borrowed payload type, including origins.",
+       "inferred": false,
+       "name": "T",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The callback's error unchanged, as E.",
+     "returns": {
+      "doc": "The callback's result, preserving native types and origins.",
+      "type": "F.Result"
+     },
+     "signature": "def invoke_borrowed_repeated[E: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable, T: AnyType](ref value: T, mut function: F) raises E -> F.Result where BorrowCallCompatible[E, F, T] and RepeatableBorrow[F]",
+     "summary": "Borrow a payload and call an exclusive receiver, falling back to shared invocation."
+    }
+   ],
+   "provider": "callables/invoke",
+   "summary": ""
+  },
   "combinators.all_effect": {
    "description": "",
    "kind": "function",
@@ -15666,7 +15784,7 @@
        "description": "",
        "inferred": false,
        "name": "C",
-       "type": "BorrowCallable",
+       "type": "BorrowCallContract & Movable & Deinitable",
        "variadic": false
       }
      ],
@@ -15676,7 +15794,7 @@
       "doc": "",
       "type": "_Filter[_Source[I].Element, _Source[I], C]"
      },
-     "signature": "def filter[I: Movable & Deinitable, C: BorrowCallable](var predicate: C, var source: I) -> _Filter[_Source[I].Element, _Source[I], C] where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool and C.Failure == Never",
+     "signature": "def filter[I: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var predicate: C, var source: I) -> _Filter[_Source[I].Element, _Source[I], C] where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]",
      "summary": "Lazily keep the elements a `BorrowCallable` predicate accepts."
     }
    ],
@@ -16379,7 +16497,7 @@
        "description": "",
        "inferred": false,
        "name": "C",
-       "type": "BorrowCallable",
+       "type": "BorrowCallContract & Movable & Deinitable",
        "variadic": false
       }
      ],
@@ -16389,7 +16507,7 @@
       "doc": "",
       "type": "_Filter[_Source[I].Element, _Source[I], C, True]"
      },
-     "signature": "def filter_not[I: Movable & Deinitable, C: BorrowCallable](var predicate: C, var source: I) -> _Filter[_Source[I].Element, _Source[I], C, True] where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool and C.Failure == Never",
+     "signature": "def filter_not[I: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var predicate: C, var source: I) -> _Filter[_Source[I].Element, _Source[I], C, True] where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]",
      "summary": "Lazily retain rejected elements with an owned library borrowing predicate."
     }
    ],
@@ -265054,6 +265172,36 @@
      {
       "args": [
        {
+        "convention": "var",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C.Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Bool"
+      },
+      "signature": "def all[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) raises C.Failure -> Bool where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and RepeatableBorrow[C]",
+      "summary": "Search with an owned repeatable borrowing predicate, preferring its mutable receiver."
+     },
+     {
+      "args": [
+       {
         "convention": "",
         "description": "The predicate, borrowed.",
         "name": "predicate",
@@ -265384,6 +265532,36 @@
      }
     ],
     "any": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C.Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Bool"
+      },
+      "signature": "def any[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) raises C.Failure -> Bool where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and RepeatableBorrow[C]",
+      "summary": "Search with an owned repeatable borrowing predicate, preferring its mutable receiver."
+     },
      {
       "args": [
        {
@@ -266309,7 +266487,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -266319,7 +266497,7 @@
        "doc": "",
        "type": "Int"
       },
-      "signature": "def count_where[C: BorrowCallable](deinit self, var predicate: C) raises C.Failure -> Int where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool",
+      "signature": "def count_where[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) raises C.Failure -> Int where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and RepeatableBorrow[C]",
       "summary": "Count accepted candidates, borrowing each once; empty input returns zero."
      },
      {
@@ -266491,7 +266669,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -266501,7 +266679,7 @@
        "doc": "",
        "type": "Iter[DropWhileIterator[downcast[C.Payload, Movable & Deinitable], Self.I, C]]"
       },
-      "signature": "def drop_while[C: BorrowCallable](deinit self, var predicate: C) -> Iter[DropWhileIterator[downcast[C.Payload, Movable & Deinitable], Self.I, C]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never",
+      "signature": "def drop_while[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) -> Iter[DropWhileIterator[downcast[C.Payload, Movable & Deinitable], Self.I, C]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]",
       "summary": "Discard the matching prefix; yield the first rejection and stop testing."
      },
      {
@@ -266727,7 +266905,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -266737,7 +266915,7 @@
        "doc": "",
        "type": "Iter[FilterIterator[Self.I.Element, Self.I, C]]"
       },
-      "signature": "def filter[C: BorrowCallable](deinit self, var predicate: C) -> Iter[FilterIterator[Self.I.Element, Self.I, C]] where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and C.Failure == Never",
+      "signature": "def filter[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) -> Iter[FilterIterator[Self.I.Element, Self.I, C]] where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]",
       "summary": "Lazily retain elements with a library borrowing predicate."
      }
     ],
@@ -267240,7 +267418,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -267250,11 +267428,41 @@
        "doc": "",
        "type": "Iter[FilterNotIterator[Self.I.Element, Self.I, C]]"
       },
-      "signature": "def filter_not[C: BorrowCallable](deinit self, var predicate: C) -> Iter[FilterNotIterator[Self.I.Element, Self.I, C]] where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and C.Failure == Never",
+      "signature": "def filter_not[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) -> Iter[FilterNotIterator[Self.I.Element, Self.I, C]] where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]",
       "summary": "Lazily retain rejected elements with an owned library predicate."
      }
     ],
     "find": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "predicate",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C.Failure",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Optional[Self.I.Element]"
+      },
+      "signature": "def find[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) raises C.Failure -> Optional[Self.I.Element] where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and RepeatableBorrow[C]",
+      "summary": "Search with an owned repeatable borrowing predicate, preferring its mutable receiver."
+     },
      {
       "args": [
        {
@@ -272523,7 +272731,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        },
        {
@@ -272540,7 +272748,7 @@
        "doc": "",
        "type": "PartitionBranches[downcast[C.Payload, Movable & Deinitable], Self.I, C, P]"
       },
-      "signature": "def partition[C: BorrowCallable, P: _BufferPolicy](deinit self, var predicate: C, *, var buffer: P) -> PartitionBranches[downcast[C.Payload, Movable & Deinitable], Self.I, C, P] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never",
+      "signature": "def partition[C: BorrowCallContract & Movable & Deinitable, P: _BufferPolicy](deinit self, var predicate: C, *, var buffer: P) -> PartitionBranches[downcast[C.Payload, Movable & Deinitable], Self.I, C, P] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]",
       "summary": "Lazily split accepted and rejected elements into independent iterators."
      },
      {
@@ -274435,7 +274643,7 @@
         "description": "",
         "inferred": false,
         "name": "C",
-        "type": "BorrowCallable",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -274445,7 +274653,7 @@
        "doc": "",
        "type": "Iter[TakeWhileIterator[downcast[C.Payload, Movable & Deinitable], Self.I, C]]"
       },
-      "signature": "def take_while[C: BorrowCallable](deinit self, var predicate: C) -> Iter[TakeWhileIterator[downcast[C.Payload, Movable & Deinitable], Self.I, C]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never",
+      "signature": "def take_while[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) -> Iter[TakeWhileIterator[downcast[C.Payload, Movable & Deinitable], Self.I, C]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]",
       "summary": "Yield the initial matching prefix; consume and discard its first rejection."
      },
      {
@@ -276866,6 +277074,50 @@
      },
      "signature": "def all[I: Movable & Deinitable, C: BorrowCallable](predicate: C, var source: I) raises C.Failure -> Bool where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool",
      "summary": "Whether a `BorrowCallable` predicate accepts every element."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "predicate",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "I",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "C.Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "C",
+       "type": "BorrowCallContract & Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Bool"
+     },
+     "signature": "def all[I: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var predicate: C, var source: I) raises C.Failure -> Bool where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool and RepeatableBorrow[C]",
+     "summary": "Search with an owned repeatable borrowing predicate, preferring its mutable receiver."
     }
    ],
    "provider": "iteration/adapters",
@@ -277330,6 +277582,50 @@
      },
      "signature": "def any[I: Movable & Deinitable, C: BorrowCallable](predicate: C, var source: I) raises C.Failure -> Bool where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool",
      "summary": "Whether a `BorrowCallable` predicate accepts some element."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "predicate",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "I",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "C.Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "C",
+       "type": "BorrowCallContract & Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Bool"
+     },
+     "signature": "def any[I: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var predicate: C, var source: I) raises C.Failure -> Bool where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool and RepeatableBorrow[C]",
+     "summary": "Search with an owned repeatable borrowing predicate, preferring its mutable receiver."
     }
    ],
    "provider": "iteration/adapters",
@@ -278314,7 +278610,7 @@
        "description": "",
        "inferred": false,
        "name": "C",
-       "type": "BorrowCallable",
+       "type": "BorrowCallContract & Movable & Deinitable",
        "variadic": false
       },
       {
@@ -278331,7 +278627,7 @@
       "doc": "",
       "type": "Int"
      },
-     "signature": "def count_where[C: BorrowCallable, V: Movable & Deinitable](var predicate: C, var source: V) raises C.Failure -> Int where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool",
+     "signature": "def count_where[C: BorrowCallContract & Movable & Deinitable, V: Movable & Deinitable](var predicate: C, var source: V) raises C.Failure -> Int where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and RepeatableBorrow[C]",
      "summary": "Count accepted candidates, borrowing each once; empty input returns zero."
     },
     {
@@ -278512,7 +278808,7 @@
        "description": "",
        "inferred": false,
        "name": "C",
-       "type": "BorrowCallable",
+       "type": "BorrowCallContract & Movable & Deinitable",
        "variadic": false
       },
       {
@@ -278529,7 +278825,7 @@
       "doc": "",
       "type": "DropWhileIterator[downcast[C.Payload, Movable & Deinitable], _Source[V], C]"
      },
-     "signature": "def drop_while[C: BorrowCallable, V: Movable & Deinitable](var predicate: C, var source: V) -> DropWhileIterator[downcast[C.Payload, Movable & Deinitable], _Source[V], C] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never",
+     "signature": "def drop_while[C: BorrowCallContract & Movable & Deinitable, V: Movable & Deinitable](var predicate: C, var source: V) -> DropWhileIterator[downcast[C.Payload, Movable & Deinitable], _Source[V], C] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]",
      "summary": "Discard the matching prefix; yield the first rejection and stop testing."
     },
     {
@@ -278827,7 +279123,7 @@
        "description": "",
        "inferred": false,
        "name": "C",
-       "type": "BorrowCallable",
+       "type": "BorrowCallContract & Movable & Deinitable",
        "variadic": false
       }
      ],
@@ -278837,7 +279133,7 @@
       "doc": "",
       "type": "_Filter[_Source[I].Element, _Source[I], C]"
      },
-     "signature": "def filter[I: Movable & Deinitable, C: BorrowCallable](var predicate: C, var source: I) -> _Filter[_Source[I].Element, _Source[I], C] where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool and C.Failure == Never",
+     "signature": "def filter[I: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var predicate: C, var source: I) -> _Filter[_Source[I].Element, _Source[I], C] where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]",
      "summary": "Lazily keep the elements a `BorrowCallable` predicate accepts."
     }
    ],
@@ -279540,7 +279836,7 @@
        "description": "",
        "inferred": false,
        "name": "C",
-       "type": "BorrowCallable",
+       "type": "BorrowCallContract & Movable & Deinitable",
        "variadic": false
       }
      ],
@@ -279550,7 +279846,7 @@
       "doc": "",
       "type": "_Filter[_Source[I].Element, _Source[I], C, True]"
      },
-     "signature": "def filter_not[I: Movable & Deinitable, C: BorrowCallable](var predicate: C, var source: I) -> _Filter[_Source[I].Element, _Source[I], C, True] where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool and C.Failure == Never",
+     "signature": "def filter_not[I: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var predicate: C, var source: I) -> _Filter[_Source[I].Element, _Source[I], C, True] where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]",
      "summary": "Lazily retain rejected elements with an owned library borrowing predicate."
     }
    ],
@@ -279785,6 +280081,50 @@
      },
      "signature": "def find[I: Movable & Deinitable, C: BorrowCallable](predicate: C, var source: I) raises C.Failure -> Optional[_Source[I].Element] where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool",
      "summary": "Return the first element a `BorrowCallable` predicate accepts."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "predicate",
+       "type": "C",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "I",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "C.Failure",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "C",
+       "type": "BorrowCallContract & Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "Optional[_Source[I].Element]"
+     },
+     "signature": "def find[I: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var predicate: C, var source: I) raises C.Failure -> Optional[_Source[I].Element] where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool and RepeatableBorrow[C]",
+     "summary": "Search with an owned repeatable borrowing predicate, preferring its mutable receiver."
     }
    ],
    "provider": "iteration/adapters",
@@ -286304,7 +286644,7 @@
        "description": "",
        "inferred": false,
        "name": "C",
-       "type": "BorrowCallable",
+       "type": "BorrowCallContract & Movable & Deinitable",
        "variadic": false
       },
       {
@@ -286328,7 +286668,7 @@
       "doc": "",
       "type": "PartitionBranches[downcast[C.Payload, Movable & Deinitable], _Source[V], C, P]"
      },
-     "signature": "def partition[C: BorrowCallable, V: Movable & Deinitable, P: _BufferPolicy](var predicate: C, var source: V, *, var buffer: P) -> PartitionBranches[downcast[C.Payload, Movable & Deinitable], _Source[V], C, P] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never",
+     "signature": "def partition[C: BorrowCallContract & Movable & Deinitable, V: Movable & Deinitable, P: _BufferPolicy](var predicate: C, var source: V, *, var buffer: P) -> PartitionBranches[downcast[C.Payload, Movable & Deinitable], _Source[V], C, P] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]",
      "summary": "Lazily split accepted and rejected elements into independent iterators."
     },
     {
@@ -289361,7 +289701,7 @@
        "description": "",
        "inferred": false,
        "name": "C",
-       "type": "BorrowCallable",
+       "type": "BorrowCallContract & Movable & Deinitable",
        "variadic": false
       },
       {
@@ -289378,7 +289718,7 @@
       "doc": "",
       "type": "TakeWhileIterator[downcast[C.Payload, Movable & Deinitable], _Source[V], C]"
      },
-     "signature": "def take_while[C: BorrowCallable, V: Movable & Deinitable](var predicate: C, var source: V) -> TakeWhileIterator[downcast[C.Payload, Movable & Deinitable], _Source[V], C] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never",
+     "signature": "def take_while[C: BorrowCallContract & Movable & Deinitable, V: Movable & Deinitable](var predicate: C, var source: V) -> TakeWhileIterator[downcast[C.Payload, Movable & Deinitable], _Source[V], C] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]",
      "summary": "Yield the initial matching prefix; consume and discard its first rejection."
     },
     {
@@ -317231,7 +317571,7 @@
    "summary": "Functor, Filterable, FunctorFilter, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Semigroup and Monoid over native values, with explicit instances."
   },
   "callables": {
-   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. `BorrowCallable` and `BorrowOnceCallable` borrow\ntheir argument instead of taking it, and `invoke_borrowed` and\n`invoke_borrowed_once` call them. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped`, `Tupled`, `MappedPair` and `Identity` from `fp.functions` implement these\nprotocols.\n\n`as_binary` stores a plain binary function or thin pointer in `NativeBinary`.\nIt preserves two owned argument types and the exact result and error types.\nNamed adapters can be reused by shared borrow in `zip_with`, `map_with_index`,\n`scan_map` and `scan_left`. The factory does not infer capturing closures.\n`BinarySignature[A, B, R, E].capture(closure)` selects the signature before\ncapturing a binary closure into the same adapter. Its error defaults to `Never`.\n`BorrowSignature[A, R, E].capture(callback)` stores a predicate, observer or\nprojection in `NativeBorrow`. Named uses share the adapter; each call reads\nits payload. Native closures and thin pointer aliases retain their exact types.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Lazy `map`, `filter_map`, `flat_map`, `scan_left` | Native callbacks and shared or mutable library unary/binary values |\n| `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| `fori_loop_mut` | A named shared or mutable library binary body, borrowed exclusively; updated receiver state remains in the caller. |\n| Iteration predicates, `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `OnceThunk` |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
+   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n| one borrowed argument | `BorrowCallable.invoke` | `BorrowMutableCallable.invoke_mut` | `BorrowOnceCallable.invoke_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. Borrowing callables read their argument instead\nof taking it. `invoke_borrowed`, `invoke_borrowed_repeated` and\n`invoke_borrowed_once` provide shared, repeated exclusive and consuming calls.\n`RepeatableBorrow` admits shared or mutable borrowing receivers. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped`, `Tupled`, `MappedPair` and `Identity` from `fp.functions` implement these\nprotocols.\n\n`as_binary` stores a plain binary function or thin pointer in `NativeBinary`.\nIt preserves two owned argument types and the exact result and error types.\nNamed adapters can be reused by shared borrow in `zip_with`, `map_with_index`,\n`scan_map` and `scan_left`. The factory does not infer capturing closures.\n`BinarySignature[A, B, R, E].capture(closure)` selects the signature before\ncapturing a binary closure into the same adapter. Its error defaults to `Never`.\n`BorrowSignature[A, R, E].capture(callback)` stores a predicate, observer or\nprojection in `NativeBorrow`. Named uses share the adapter; each call reads\nits payload. Native closures and thin pointer aliases retain their exact types.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Lazy `map`, `filter_map`, `flat_map`, `scan_left` | Native callbacks and shared or mutable library unary/binary values |\n| `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| `fori_loop_mut` | A named shared or mutable library binary body, borrowed exclusively; updated receiver state remains in the caller. |\n| Iterator filter, prefix, partition, search and count predicates | Native predicates, `BorrowCallable` and owned `BorrowMutableCallable` |\n| `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `OnceThunk` |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
    "summary": "How the library calls user code: callable protocols, receiver dispatch and native functions as values."
   },
   "combinators": {

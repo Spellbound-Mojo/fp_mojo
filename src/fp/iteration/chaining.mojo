@@ -12,7 +12,7 @@ from fp.iteration.indexed import ZipWithIterator, IndexedMapIterator, zip_with a
 from fp.iteration.prefixes import TakeWhileIterator, DropWhileIterator, take_while as _take_while, drop_while as _drop_while
 from fp.iteration._callbacks import _LazyPredicate, _IndexedBinary, _LazyUnary
 from fp.iteration.branching import _BufferPolicy, PartitionBranches, PartitionMapBranches, UnzipBranches, partition as _partition, partition_map as _partition_map, unzip as _unzip
-from fp.callables.invoke import RepeatableUnary
+from fp.callables.invoke import RepeatableUnary, RepeatableBorrow
 from fp.iteration.terminals import first as _first, last as _last, is_empty as _is_empty, count as _count, contains as _contains, to_non_empty_list as _to_non_empty_list, combine_all_optional as _combine_all_optional, _count_where, _for_each, _collect_fold
 from fp.data.non_empty_list import NonEmptyList
 from fp.algebra.contracts import AnyContract, AllContract, FindContract, FindMapContract, FoldMapContract, FoldContract
@@ -345,7 +345,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """
         return Iter(_take_while(predicate^, self._iterator^))
 
-    def take_while[C: BorrowCallable](deinit self, var predicate: C) -> Iter[TakeWhileIterator[downcast[C.Payload, Movable & Deinitable], Self.I, C]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never:
+    def take_while[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) -> Iter[TakeWhileIterator[downcast[C.Payload, Movable & Deinitable], Self.I, C]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]:
         """Yield the initial matching prefix; consume and discard its first rejection.
         """
         return Iter(_take_while(predicate^, self._iterator^))
@@ -378,7 +378,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """
         return Iter(_drop_while(predicate^, self._iterator^))
 
-    def drop_while[C: BorrowCallable](deinit self, var predicate: C) -> Iter[DropWhileIterator[downcast[C.Payload, Movable & Deinitable], Self.I, C]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never:
+    def drop_while[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) -> Iter[DropWhileIterator[downcast[C.Payload, Movable & Deinitable], Self.I, C]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]:
         """Discard the matching prefix; yield the first rejection and stop testing.
         """
         return Iter(_drop_while(predicate^, self._iterator^))
@@ -523,7 +523,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """
         return _count_where(_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=predicate)), self._iterator^)
 
-    def count_where[C: BorrowCallable](deinit self, var predicate: C) raises C.Failure -> Int where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool:
+    def count_where[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) raises C.Failure -> Int where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and RepeatableBorrow[C]:
         """Count accepted candidates, borrowing each once; empty input returns zero.
         """
         return _count_where(predicate^, self._iterator^)
@@ -643,7 +643,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """
         return _partition[T=T](predicate^, self._iterator^, buffer=buffer^)
 
-    def partition[C: BorrowCallable, P: _BufferPolicy](deinit self, var predicate: C, *, var buffer: P) -> PartitionBranches[downcast[C.Payload, Movable & Deinitable], Self.I, C, P] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never:
+    def partition[C: BorrowCallContract & Movable & Deinitable, P: _BufferPolicy](deinit self, var predicate: C, *, var buffer: P) -> PartitionBranches[downcast[C.Payload, Movable & Deinitable], Self.I, C, P] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]:
         """Lazily split accepted and rejected elements into independent iterators.
         """
         return _partition(predicate^, self._iterator^, buffer=buffer^)
@@ -986,6 +986,21 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Consume a repeatable library step, preserving its mutable receiver and exact fold contract.
         """
         return _fold_until[B=B, A=A, F=F](step^, initial^, self._iterator^)
+
+    def find[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) raises C.Failure -> Optional[Self.I.Element] where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and RepeatableBorrow[C]:
+        """Search with an owned repeatable borrowing predicate, preferring its mutable receiver.
+        """
+        return _find[C=C](predicate^, self._iterator^)
+
+    def any[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) raises C.Failure -> Bool where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and RepeatableBorrow[C]:
+        """Search with an owned repeatable borrowing predicate, preferring its mutable receiver.
+        """
+        return _any[C=C](predicate^, self._iterator^)
+
+    def all[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) raises C.Failure -> Bool where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and RepeatableBorrow[C]:
+        """Search with an owned repeatable borrowing predicate, preferring its mutable receiver.
+        """
+        return _all[C=C](predicate^, self._iterator^)
     # --- end iterator expansion syntax ---
 
     # Native thin functions and closures keep their own admission signatures,
@@ -1181,8 +1196,8 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Lazily filter with a retained shared predicate."""
         return Iter(_filter(predicate._borrow_view(), self._iterator^))
 
-    def filter[C: BorrowCallable](deinit self, var predicate: C
-    ) -> Iter[FilterIterator[Self.I.Element, Self.I, C]] where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and C.Failure == Never:
+    def filter[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C
+    ) -> Iter[FilterIterator[Self.I.Element, Self.I, C]] where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]:
         """Lazily retain elements with a library borrowing predicate."""
         return Iter(_filter(predicate^, self._iterator^))
 
@@ -1217,8 +1232,8 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Lazily filter with a retained shared predicate."""
         return Iter(_filter_not(predicate._borrow_view(), self._iterator^))
 
-    def filter_not[C: BorrowCallable](deinit self, var predicate: C
-    ) -> Iter[FilterNotIterator[Self.I.Element, Self.I, C]] where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and C.Failure == Never:
+    def filter_not[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C
+    ) -> Iter[FilterNotIterator[Self.I.Element, Self.I, C]] where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]:
         """Lazily retain rejected elements with an owned library predicate."""
         return Iter(_filter_not(predicate^, self._iterator^))
 

@@ -622,6 +622,7 @@ def main():
         ('iteration/alignment.mojo', lambda path: path.read_text()),
         ('iteration/scans.mojo', lambda path: path.read_text()),
         ('iteration/folds.mojo', lambda path: spliced(path, iterator_syntax.folds('free'), iterator_syntax.START, iterator_syntax.END, iterator_syntax.HEADER)),
+        ('iteration/adapters.mojo', lambda path: spliced(path, iterator_syntax.predicate_searches('free'), iterator_syntax.START, iterator_syntax.END, iterator_syntax.HEADER)),
         ('algebra/conditional.mojo', lambda path: path.read_text()),
         ('data/_result.mojo', lambda path: spliced(path, result_syntax.methods(), result_syntax.START, result_syntax.END, result_syntax.HEADER)),
         ('iteration/reductions.mojo', lambda path: spliced(path, combinator_syntax.terminal_methods('free'), combinator_syntax.START, combinator_syntax.END, combinator_syntax.HEADER)),

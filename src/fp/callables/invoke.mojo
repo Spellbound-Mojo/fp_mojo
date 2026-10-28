@@ -2,7 +2,7 @@
 
 from std.builtin.rebind import rebind_var, rebind, downcast
 from fp._internal.errors import _ErrorCompatible, _compatible, _propagate_error
-from .protocols import BorrowCallable, BorrowOnceCallable, BorrowCallContract
+from .protocols import BorrowCallable, BorrowMutableCallable, BorrowOnceCallable, BorrowCallContract
 
 
 comptime BorrowCallCompatible[E: Movable & Deinitable, H: BorrowCallContract, T: AnyType = H.Payload]: Bool = (
@@ -55,6 +55,49 @@ def invoke_borrowed[E: Movable & Deinitable, H: BorrowCallable, T: AnyType](
     except error:
         comptime assert _ErrorCompatible[E, type_of(error)]
         _propagate_error[E](error^)
+
+
+comptime RepeatableBorrow[C: BorrowCallContract] = conforms_to(C, BorrowCallable) or conforms_to(C, BorrowMutableCallable)
+"""Whether a borrowing callback has a shared or mutable receiver for repeated calls.
+
+Parameters:
+    C: The borrowing callback's contract type.
+"""
+
+
+def invoke_borrowed_repeated[E: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable, T: AnyType](
+    ref value: T, mut function: F
+) raises E -> F.Result where BorrowCallCompatible[E, F, T] and RepeatableBorrow[F]:
+    """Borrow a payload and call an exclusive receiver, falling back to shared invocation.
+
+    Receiver state remains in the caller. Neither receiver nor payload is copied
+    or consumed, and a consuming-only receiver is rejected.
+
+    Parameters:
+        E: The exact error or an allowed widening from Never.
+        F: The repeatable borrowing callback type.
+        T: The exact borrowed payload type, including origins.
+
+    Args:
+        value: The payload, borrowed only for this call.
+        function: The named callback, borrowed exclusively for this call.
+
+    Returns:
+        The callback's result, preserving native types and origins.
+
+    Raises:
+        The callback's error unchanged, as E.
+    """
+    comptime if conforms_to(F, BorrowMutableCallable):
+        comptime D = downcast[F, BorrowMutableCallable]
+        try:
+            return rebind_var[F.Result](rebind[D](function).invoke_mut(rebind[D.Payload](value)))
+        except error:
+            comptime assert _ErrorCompatible[E, type_of(error)]
+            _propagate_error[E](error^)
+    else:
+        comptime D = downcast[F, BorrowCallable]
+        return rebind_var[F.Result](invoke_borrowed[E](rebind[D.Payload](value), rebind[D](function)))
 
 
 def invoke_borrowed_once[E: Movable & Deinitable, H: BorrowOnceCallable, T: AnyType](

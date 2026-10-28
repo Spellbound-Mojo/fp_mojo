@@ -13,8 +13,8 @@ kernel as typed failures.
 from std.builtin.rebind import downcast, rebind_var
 from fp.callables.native import _LazyUnary, _LazyOptional, _call_native_borrow, _call_native_binary
 from fp.data.control import ControlFlow
-from fp.callables.protocols import BorrowCallable, UnaryContract, Binary, BinaryContract
-from fp.callables.invoke import BorrowCallCompatible, invoke_borrowed, RepeatableUnary, RepeatableBinary
+from fp.callables.protocols import BorrowCallContract, BorrowCallable, UnaryContract, Binary, BinaryContract
+from fp.callables.invoke import BorrowCallCompatible, invoke_borrowed, invoke_borrowed_repeated, RepeatableBorrow, RepeatableUnary, RepeatableBinary
 from fp.callables._receiver import _unary_repeated_as, _binary_repeated_as
 
 
@@ -79,10 +79,12 @@ def _call_lazy_predicate[T: Movable & Deinitable, F: _LazyPredicate[T]](
 def _apply_lazy_predicate[T: Movable & Deinitable, F: Movable & Deinitable](
     mut function: F, value: T
 ) -> Bool:
-    comptime if conforms_to(F, BorrowCallable):
-        comptime C = downcast[F, BorrowCallable]
+    comptime if conforms_to(F, BorrowCallContract):
+        comptime C = downcast[F, BorrowCallContract & Movable & Deinitable]
         comptime assert C.Failure == Never, "filter: non-raising callable required"
-        return _predicate_callable[T, C, Never](value, rebind[C](function))
+        comptime assert C.Payload == T and C.Result == Bool and RepeatableBorrow[C], "filter: repeatable borrowing predicate required"
+        ref callback = rebind[C](function)
+        return _predicate_repeated[T, C, origin_of(callback), Never](value, Pointer(to=callback))
     elif F == def(T) thin -> Bool:
         return rebind[def(T) thin -> Bool](function)(value)
     else:
@@ -209,6 +211,15 @@ def _predicate_callable[T: Movable & Deinitable, C: BorrowCallable, E: Movable &
 ) raises E capturing -> Bool:
     comptime assert BorrowCallCompatible[E, C, T] and C.Result == Bool, "predicate: exact payload, Bool result and compatible error required"
     return rebind_var[Bool](invoke_borrowed[E](value, function))
+
+
+def _predicate_repeated[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable,
+                        o: MutOrigin, E: Movable & Deinitable = C.Failure](
+    value: T, function: Pointer[C, o]
+) raises E capturing -> Bool where BorrowCallCompatible[E, C, T] and C.Result == Bool and RepeatableBorrow[C]:
+    # Lazy owners and terminal contexts retain the same exclusive receiver.
+    # Invocation and error adaptation belong to the callable protocol owner.
+    return rebind_var[Bool](invoke_borrowed_repeated[E](value, function[]))
 
 
 # The lazy binary bridge needs mutable access to owned native captures, unlike

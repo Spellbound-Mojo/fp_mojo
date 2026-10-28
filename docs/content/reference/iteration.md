@@ -73,6 +73,28 @@ stops at the first `Break`. Exact callback errors stop before another pull;
 uninitialized `reduce` keeps its existing `ReductionStepError` wrapper.
 Move-only inputs, carry, captures and errors are released exactly once.
 
+## Stateful borrowing predicates
+
+`BorrowMutableCallable` stores predicate state in a normal callable struct.
+Pass it directly to `filter`, `filter_not`, `take_while`, `drop_while`,
+`partition`, `find`, `any`, `all`, or `count_where`, including their fluent
+methods. Each operation owns one callback and borrows each candidate;
+move-only input values need no copy. A moved or temporary callback prefers
+its mutable receiver when it also implements a shared receiver.
+
+Filters, prefixes and partitioning remain lazy and require `Failure = Never`.
+Construction does not invoke the predicate. Prefixes retain their boundary
+rules, and partitioning still requires an explicit buffer policy. Searches
+and counting preserve typed callback errors, including `StopIteration`, and
+stop before another source pull on failure. `find`, `any`, and `all` keep
+their existing short-circuit and empty-input behavior.
+
+Named shared predicates remain borrowed in searches; named standard predicate
+adapters retain their existing reuse in lazy operations. To inspect mutable
+state after individual calls, use `invoke_borrowed_repeated[E]` with a named
+callback. Move it into an iterator operation with `predicate^` when that
+operation should own the state.
+
 ## Prefixes, indexed mapping and consuming terminals
 
 <!-- example: docs/examples/iteration_expansion.mojo -->

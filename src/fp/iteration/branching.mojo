@@ -6,9 +6,9 @@ from std.os import abort
 from std.builtin.rebind import downcast, rebind_var
 from fp._internal.exclusive import _ExclusiveCell, _exclusive
 from fp.callables.products import _take_pair, _OptionalCell
-from fp.callables.protocols import BorrowCallable, UnaryContract
+from fp.callables.protocols import BorrowCallable, BorrowCallContract, UnaryContract
 from fp.callables._views import _UnaryViewable, _BorrowViewable
-from fp.callables.invoke import RepeatableUnary
+from fp.callables.invoke import RepeatableUnary, RepeatableBorrow
 from fp.data._result import Result, Ok, Err, _ResultType
 from ._advance import _Source, _source, _next_optional
 from ._callbacks import _LazyUnary, _LazyPredicate, _apply_lazy_unary, _apply_lazy_predicate
@@ -325,7 +325,7 @@ def partition[T: Movable & Deinitable, V: Movable & Deinitable, P: _BufferPolicy
     """
     return _branches[T, T](_source(source^), _Partition[T, F](predicate^), buffer^)
 
-def partition[C: BorrowCallable, V: Movable & Deinitable, P: _BufferPolicy](var predicate: C, var source: V, *, var buffer: P) -> PartitionBranches[downcast[C.Payload, Movable & Deinitable], _Source[V], C, P] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never:
+def partition[C: BorrowCallContract & Movable & Deinitable, V: Movable & Deinitable, P: _BufferPolicy](var predicate: C, var source: V, *, var buffer: P) -> PartitionBranches[downcast[C.Payload, Movable & Deinitable], _Source[V], C, P] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]:
     """Lazily split accepted and rejected elements into independent iterators.
     """
     return _branches[downcast[C.Payload, Movable & Deinitable], downcast[C.Payload, Movable & Deinitable]](_source(source^), _Partition[downcast[C.Payload, Movable & Deinitable], C](predicate^), buffer^)

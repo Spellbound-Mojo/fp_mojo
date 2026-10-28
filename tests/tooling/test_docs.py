@@ -11,7 +11,7 @@ import docs_contract
 class DocumentationContractTests(unittest.TestCase):
     def test_complete_reviewed_inventory(self):
         result = docs_contract.audit_docs()
-        self.assertEqual(result['exports'], 405)
+        self.assertEqual(result['exports'], 408)
         self.assertEqual(result['modules'], 10)
         self.assertEqual(result['examples'], 116)
 

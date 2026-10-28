@@ -34,7 +34,7 @@ def prefixes(mode):
         desc='Yield the initial matching prefix; consume and discard its first rejection.' if taking else 'Discard the matching prefix; yield the first rejection and stop testing.'
         for kind in ['thin','native','library','view']:
             shared = callback('borrow', 'view', 'predicate') if kind == 'view' else None
-            params=list(shared.parameters) if shared else [f'T: {MD}'] if kind!='library' else [f'C: {callable_protocol("borrow", repeatable=True)}']
+            params=list(shared.parameters) if shared else [f'T: {MD}'] if kind!='library' else [f'C: {callable_protocol("borrow")} & {MD}']
             if mode=='free':params += [f'V: {MD}']
             cb=shared.type if shared else 'C' if kind=='library' else 'def(T) thin -> Bool' if kind=='thin' else 'F'
             if kind=='native': params+=['//', 'F: _LazyPredicate[T]']
@@ -43,6 +43,7 @@ def prefixes(mode):
             it='_Source[V]' if mode=='free' else 'Self.I'
             condition=it+'.Element == '+t
             if metadata:condition+=f' and {metadata.result} == Bool and {metadata.error} == Never'
+            if kind == 'library':condition+=' and RepeatableBorrow[C]'
             args=[shared.argument if shared else 'var predicate: '+cb]+(['var source: V'] if mode=='free' else [])
             result=f'{"Take" if taking else "Drop"}WhileIterator[{t}, {it}, {cb}]'
             build=shared.build if shared else 'predicate'+('' if kind=='thin' else '^')
@@ -135,7 +136,7 @@ def terminals(mode):
                 params=list(shared.parameters)
                 t=f'downcast[{shared.payload}, {MD}]' if borrow else shared.payload
             else:
-                params=[f'C: {callable_protocol("borrow", repeatable=True)}' if borrow else f'F: {callable_protocol("owned")} & {MD}']
+                params=[f'C: {callable_protocol("borrow")} & {MD}' if borrow else f'F: {callable_protocol("owned")} & {MD}']
                 metadata=callable_metadata('borrow' if borrow else 'owned', 'C' if borrow else 'F')
                 t=f'downcast[{metadata.inputs[0]}, {MD}]' if borrow else metadata.inputs[0]
             if mode=='free':params+=[f'V: {MD}']
@@ -155,6 +156,7 @@ def terminals(mode):
             args=([arg,'var source: V'] if mode=='free' else ['deinit self',arg])
             result='Int' if borrow else 'NoneType' if name=='for_each' else 'M.Value'
             cond=it+'.Element == '+t+' and '+cr+' == '+('Bool' if borrow else 'NoneType' if name=='for_each' else 'Optional[M.Value]')
+            if borrow and kind == 'library':cond+=' and RepeatableBorrow[C]'
             error=e if name!='collect_fold' else 'M.Error' if kind=='pure' else 'E' if kind=='raising' else f'_CommonError[{e}, M.Error]'
             if name=='collect_fold' and kind=='raising':cond+=' and _ErrorCompatible[E, M.Error]'
             body=f'return _{name}'+(f'[M=M, E={error}]' if name=='collect_fold' else '')+f'({val}, {src})'
@@ -162,7 +164,7 @@ def terminals(mode):
             out+=emit(name,params,args,result,cond,body,summary,'This is a consuming terminal. Native callbacks are borrowed in place;\nshared library views borrow their receiver; other library callbacks are\nconsumed. Failure stops before the next pull and\nkeeps its exact native type, including callback StopIteration. Move-only\ninputs and results retain their origins; no intermediate collection is built.',error,ind,docs=kind=='pure')
     return out
 
-def methods():return native_methods()+indexed('iter')+prefixes('iter')+terminals('iter')+branching('iter')+alignment('iter')+scans('iter')+folds('iter')
+def methods():return native_methods()+indexed('iter')+prefixes('iter')+terminals('iter')+branching('iter')+alignment('iter')+scans('iter')+folds('iter')+predicate_searches('iter')
 
 
 PARAMS.update({'U':'The callback result type, including origins.'})
@@ -183,7 +185,7 @@ def branching(mode):
             if shared:
                 params=list(shared.parameters)
             elif kind=='library':
-                params=[f'C: {callable_protocol("borrow", repeatable=True)}'] if ispart else [f'F: {callable_protocol("owned")} & {MD}']
+                params=[f'C: {callable_protocol("borrow")} & {MD}'] if ispart else [f'F: {callable_protocol("owned")} & {MD}']
             else:
                 params=[f'T: {MD}']+([] if ispart else [f'U: {MD}'])
             if mode=='free':params+=[f'V: {MD}']
@@ -200,6 +202,7 @@ def branching(mode):
             if kind=='native':params+=['//', 'F: _LazyPredicate[T]' if ispart else 'F: _LazyUnary[T, U]']
             condition=f'{it}.Element == {t}'
             if ispart and metadata:condition+=f' and {metadata.result} == Bool and {metadata.error} == Never'
+            if ispart and kind == 'library':condition+=' and RepeatableBorrow[C]'
             if not ispart:condition+=f' and conforms_to({u}, _ResultType)'
             if not ispart and metadata:condition+=f' and {metadata.error} == Never and RepeatableUnary[{cb}]'
             result=f'PartitionBranches[{t}, {it}, {cb}, P]' if ispart else f'PartitionMapBranches[{t}, {u}, {it}, {cb}, P]'
@@ -393,4 +396,26 @@ def folds(mode):
         summary = 'Consume a repeatable library step, preserving its mutable receiver and exact fold contract.'
         out += emit(name, params, args, returned, condition, body, summary,
                     error=error, indent='' if free else '    ', docs=False)
+    return out
+
+
+def predicate_searches(mode):
+    """Own repeatable predicates while retaining the existing borrowed entries."""
+    free = mode == 'free'
+    it = '_Source[I]' if free else 'Self.I'
+    t = it + '.Element'
+    out = ''
+    for name in ('find', 'any', 'all'):
+        params = ([f'I: {MD}'] if free else []) + [f'C: BorrowCallContract & {MD}']
+        args = ['var predicate: C', 'var source: I'] if free else ['deinit self', 'var predicate: C']
+        result = f'Optional[{t}]' if name == 'find' else 'Bool'
+        condition = f'conforms_to({t}, {MD}) and C.Payload == {t} and C.Result == Bool and RepeatableBorrow[C]'
+        if free:
+            driver = '_find' if name == 'find' else '_quantify'
+            body = f'return {driver}[{t}, {it}, C.Failure, Pointer[C, origin_of(predicate)], _predicate_repeated[{t}, C, origin_of(predicate)]](Pointer(to=predicate), _source(source^)' + (')' if name == 'find' else ', ' + str(name == 'any') + ')')
+        else:
+            body = f'return _{name}[C=C](predicate^, self._iterator^)'
+        out += emit(name, params, args, result, condition, body,
+                    'Search with an owned repeatable borrowing predicate, preferring its mutable receiver.',
+                    error='C.Failure', indent='' if free else '    ', docs=False)
     return out

@@ -1,10 +1,20 @@
 """Keep an owned native closure reusable as a library callable."""
 from fp.functions import pipeline, as_unary, as_binary
 from fp.iteration import iterated
-from fp.callables import BinarySignature, BorrowSignature
+from fp.callables import BinarySignature, BorrowSignature, BorrowMutableCallable
 
 
 def add(var first: Int, var second: Int) -> Int: return first + second
+
+
+@fieldwise_init
+struct EveryOther(BorrowMutableCallable):
+    comptime Payload = Int
+    comptime Result = Bool
+    var calls: Int
+    def invoke_mut(mut self, ref value: Int) -> Bool:
+        self.calls += 1
+        return self.calls % 2 == 0
 
 
 def main():
@@ -28,3 +38,4 @@ def main():
     var selected = BorrowSignature[Int, Bool].capture(below)
     print("captured predicate:", iterated(range(5)).filter(selected).collect_list())
     print("reused predicate:", pipeline[Int]([1, 4, 2]).filter(selected).get())
+    print("stateful predicate:", iterated(range(5)).filter(EveryOther(0)).collect_list())

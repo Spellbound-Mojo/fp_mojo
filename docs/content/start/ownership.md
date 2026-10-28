@@ -71,7 +71,7 @@ Each callable protocol states how its receiver is used:
 | Access | Protocol examples | Meaning |
 |---|---|---|
 | Shared | `Unary`, `Binary`, `Thunk`, `BorrowCallable` | The callable is read; it can be called any number of times. |
-| Exclusive | `MutableUnary`, `MutableBinary`, `MutableThunk` | The callable is mutated in place; calls are sequential. |
+| Exclusive | `MutableUnary`, `MutableBinary`, `MutableThunk`, `BorrowMutableCallable` | The callable is mutated in place; calls are sequential. |
 | Consuming | `OnceUnary`, `OnceBinary`, `OnceThunk`, `BorrowOnceCallable` | The callable is consumed by its single call. |
 
 Argument conventions are independent of receiver access: a shared callable can
@@ -96,6 +96,7 @@ partial application, composition or a reusable owner for captured state.
 | Store a plain binary function as a library value | `as_binary(function)` or `as_binary(pointer)` | Copies a thin pointer into an adapter with two owned arguments. Supported binary iterator operations borrow a named adapter. |
 | Store a binary closure as a library value | `BinarySignature[A, B, R, E].capture(closure^)` | Selects the two input types, result and error before capturing the closure. `E` defaults to `Never`; the adapter retains the closure's ownership and origins. |
 | Reuse a captured predicate or projection | `BorrowSignature[A, R, E].capture(callback^)` | Owns the callback and its captures; named uses borrow the adapter and each call reads the payload. `E` defaults to `Never`. |
+| Keep predicate state between iterator calls | `BorrowMutableCallable` | `invoke_mut(mut self, ref payload)` mutates the receiver while borrowing each payload. Filter, prefix, partition, search and count operations own one callback for their entire run. |
 | Retain callback state across a conditional loop | `while_loop_mut(predicate, body, carry)` | Borrows a named unary body exclusively and retains its state, including after errors; the predicate only reads the carry. |
 | Retain callback state across a counted loop | `fori_loop_mut(lower, upper, body, carry)` | Borrows a named library body exclusively; state remains in the caller, including after an error. |
 | Control receiver mutation or consumption explicitly | A callable struct | Implement the shared, mutable or consuming protocol required by the operation. |

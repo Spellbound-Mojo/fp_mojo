@@ -1,7 +1,8 @@
 """Lazy prefix adapters with retained, non-raising runtime predicates."""
 from std.iter import Iterator, IterableOwned
 from std.builtin.rebind import downcast, rebind_var
-from fp.callables.protocols import BorrowCallable
+from fp.callables.protocols import BorrowCallable, BorrowCallContract
+from fp.callables.invoke import RepeatableBorrow
 from fp.callables._views import _BorrowViewable
 from fp.callables.products import _OptionalCell
 from ._advance import _Source, _source, _next_fused
@@ -93,7 +94,7 @@ def take_while[T: Movable & Deinitable, V: Movable & Deinitable, //, F: _LazyPre
     """
     return _Prefix[T, _Source[V], F, True](predicate^, _source(source^), True, False)
 
-def take_while[C: BorrowCallable, V: Movable & Deinitable](var predicate: C, var source: V) -> TakeWhileIterator[downcast[C.Payload, Movable & Deinitable], _Source[V], C] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never:
+def take_while[C: BorrowCallContract & Movable & Deinitable, V: Movable & Deinitable](var predicate: C, var source: V) -> TakeWhileIterator[downcast[C.Payload, Movable & Deinitable], _Source[V], C] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]:
     """Yield the initial matching prefix; consume and discard its first rejection.
     """
     return _Prefix[downcast[C.Payload, Movable & Deinitable], _Source[V], C, True](predicate^, _source(source^), True, False)
@@ -128,7 +129,7 @@ def drop_while[T: Movable & Deinitable, V: Movable & Deinitable, //, F: _LazyPre
     """
     return _Prefix[T, _Source[V], F, False](predicate^, _source(source^), True, False)
 
-def drop_while[C: BorrowCallable, V: Movable & Deinitable](var predicate: C, var source: V) -> DropWhileIterator[downcast[C.Payload, Movable & Deinitable], _Source[V], C] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never:
+def drop_while[C: BorrowCallContract & Movable & Deinitable, V: Movable & Deinitable](var predicate: C, var source: V) -> DropWhileIterator[downcast[C.Payload, Movable & Deinitable], _Source[V], C] where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]:
     """Discard the matching prefix; yield the first rejection and stop testing.
     """
     return _Prefix[downcast[C.Payload, Movable & Deinitable], _Source[V], C, False](predicate^, _source(source^), True, False)

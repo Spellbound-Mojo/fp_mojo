@@ -1,6 +1,7 @@
 """Consuming searches, counts, sinks and optional aggregation."""
 from std.builtin.rebind import downcast
-from fp.callables.protocols import UnaryContract, BorrowCallable
+from fp.callables.protocols import UnaryContract, BorrowCallContract, BorrowCallable
+from fp.callables.invoke import RepeatableBorrow
 from fp.callables._views import _UnaryViewable, _BorrowViewable
 from fp.callables.native import _Unary, _RaisingUnary, _NativeUnaryRef, _Borrowing, _RaisingBorrowing, _NativeBorrowRef
 from fp.callables._transforms import _BorrowedUnary
@@ -70,7 +71,7 @@ struct _CollectFold[M: Monoid](_Accumulate):
         return _Combine[Self.M].combine(acc^, item.unsafe_take())
 
 
-def _count_where[C: BorrowCallable, V: Movable & Deinitable](var predicate: C, var source: V) raises C.Failure -> Int:
+def _count_where[C: BorrowCallContract & Movable & Deinitable, V: Movable & Deinitable](var predicate: C, var source: V) raises C.Failure -> Int where RepeatableBorrow[C]:
     comptime T = downcast[C.Payload, Movable & Deinitable]
     comptime assert C.Result == Bool and _Source[V].Element == T
     return _map_accumulate[_Source[V], _BorrowedUnary[T, C], _CountAccepted, C.Failure](
@@ -263,7 +264,7 @@ def count_where[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & 
     """
     return _count_where(_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=predicate)), source^)
 
-def count_where[C: BorrowCallable, V: Movable & Deinitable](var predicate: C, var source: V) raises C.Failure -> Int where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool:
+def count_where[C: BorrowCallContract & Movable & Deinitable, V: Movable & Deinitable](var predicate: C, var source: V) raises C.Failure -> Int where _Source[V].Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and RepeatableBorrow[C]:
     """Count accepted candidates, borrowing each once; empty input returns zero.
     """
     return _count_where(predicate^, source^)

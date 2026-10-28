@@ -51,6 +51,20 @@ its source does not change the adapter. Use `.invoke(value)` for a direct call,
 recover it. Callbacks that require mutable access to their captures need an
 explicit mutable callable or an operation that owns that mutable callback.
 
+For a predicate or observer with mutable state, implement
+`BorrowMutableCallable`. It fixes `Payload`, `Result`, and optional `Failure`
+(`Never` by default), and defines `invoke_mut(mut self, ref payload)`.
+The example's `EveryOther` keeps its counter between filter calls while
+borrowing each input. This needs no native closure capture annotation.
+
+`invoke_borrowed_repeated[E](value, callback)` borrows a named callback
+exclusively and preserves its updated state in the caller. It prefers
+`invoke_mut` when available, otherwise `BorrowCallable.invoke`; neither the
+callback nor payload is consumed or copied. `RepeatableBorrow[C]` records
+that choice for generic code and excludes consuming-only callbacks. The
+result retains its native type and origins. Errors must match `E`, with
+widening permitted from `Never`, as with `invoke_borrowed`.
+
 A procedure with no return value differs from a function returning `NoneType`.
 Pipeline and composition mismatch diagnostics name the former
 `type_of(None) (no return value)`. Declare an explicit `-> NoneType` result

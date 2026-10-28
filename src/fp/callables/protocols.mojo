@@ -244,6 +244,27 @@ trait BorrowCallable(BorrowCallContract, Movable, Deinitable):
         ...
 
 
+trait BorrowMutableCallable(BorrowCallContract, Movable, Deinitable):
+    """A repeatable callable that mutates its receiver while borrowing its argument.
+
+    The payload is never consumed or retained. `invoke_borrowed_repeated`
+    selects this receiver before a shared receiver when both are available.
+    """
+    def invoke_mut(mut self, ref payload: Self.Payload) raises Self.Failure capturing -> Self.Result:
+        """Call with exclusive receiver access and a borrowed payload.
+
+        Args:
+            payload: The argument, borrowed only for this call.
+
+        Returns:
+            The result, retaining its native type and origins.
+
+        Raises:
+            `Failure`, the callable's exact error; `Never` for a pure call.
+        """
+        ...
+
+
 trait BorrowOnceCallable(BorrowCallContract, Movable, Deinitable):
     """A callable that borrows its argument and is called at most once, consuming its state.
 

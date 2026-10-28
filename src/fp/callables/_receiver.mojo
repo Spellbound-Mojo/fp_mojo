@@ -3,6 +3,8 @@ from std.builtin.rebind import downcast, rebind_var, rebind
 from fp._internal.errors import _ErrorCompatible, _propagate_error
 from fp.callables.protocols import UnaryContract, Unary, MutableUnary, OnceUnary, BinaryContract, Binary, OnceBinary, MutableBinary, ThunkContract, OnceThunk, BorrowCallContract, BorrowCallable, BorrowOnceCallable
 from fp.callables.invoke import RepeatableUnary, RepeatableBinary, RepeatableThunk, call_once, call_repeated, invoke_borrowed, invoke_borrowed_once
+from fp.callables.protocols import BorrowMutableCallable as _MutableBorrow
+from fp.callables.invoke import RepeatableBorrow as _RepeatableBorrow, invoke_borrowed_repeated as _borrow_repeated_as
 
 
 @fieldwise_init
@@ -68,30 +70,7 @@ struct _MutableBinaryRef[F: BinaryContract & Movable & Deinitable, o: MutOrigin]
         return self.call_mut(first^, second^)
 
 
-trait _MutableBorrow(BorrowCallContract, Movable, Deinitable):
-    # Internal owned-native and factory adapters need exclusive invocation.
-    # Public borrowing callbacks keep their existing shared/consuming modes.
-    def invoke_mut(mut self, ref payload: Self.Payload) raises Self.Failure capturing -> Self.Result:
-        ...
-
-
-comptime _RepeatableBorrow[C: BorrowCallContract] = conforms_to(C, BorrowCallable) or conforms_to(C, _MutableBorrow)
 comptime _OnceBorrowAvailable[C: BorrowCallContract] = conforms_to(C, BorrowOnceCallable) or _RepeatableBorrow[C]
-
-
-def _borrow_repeated_as[E: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable, T: AnyType](
-    ref value: T, mut function: F
-) raises E -> F.Result where T == F.Payload and _ErrorCompatible[E, F.Failure] and _RepeatableBorrow[F]:
-    comptime if conforms_to(F, _MutableBorrow):
-        comptime D = downcast[F, _MutableBorrow]
-        try:
-            return rebind_var[F.Result](rebind[D](function).invoke_mut(rebind[D.Payload](value)))
-        except error:
-            comptime assert _ErrorCompatible[E, type_of(error)]
-            _propagate_error[E](error^)
-    else:
-        comptime D = downcast[F, BorrowCallable]
-        return rebind_var[F.Result](invoke_borrowed[E](rebind[D.Payload](value), rebind[D](function)))
 
 
 def _borrow_once_as[E: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable, T: AnyType](
