@@ -104,8 +104,8 @@ of its source variable.
 `BinarySignature[A, B, R, E].capture` selects the entire signature before
 admitting a closure. The selected type supplies every input, result and error;
 only the callback's concrete `F` is inferred at the static method boundary.
-Four generated admission forms distinguish pure/raising and value/no-value
-signatures. They reuse `_Binary` and `_RaisingBinary` for value signatures and
+Six generated admission forms distinguish pure, literal `raises Never` and
+typed raising callbacks, each with value/no-value signatures. They reuse `_Binary` and `_RaisingBinary` for value signatures and
 spell native no-value traits literally. Each delegates storage to `NativeBinary`.
 There is no new invocation, error handling, receiver policy or capture copy.
 Plain declarations retain Mojo's contextual conversions: for example, selecting
@@ -116,6 +116,25 @@ an incompatible callback. The rejection fixtures exercise mutable arguments,
 wrong input/result/error types, wrong arity and noncallables without an explicit
 `F` binding. The normal `as_binary` factory keeps its thin-only admission;
 existing explicitly typed `NativeBinary` construction also remains available.
+
+`BorrowSignature[A, R, E].capture` applies the same selected-signature policy
+for a read-only payload. Both selectors share the closure admission generator.
+`NativeBorrow` exposes the existing `_NativeBorrow` owner, retained as an alias,
+and adds `_BorrowViewable` shared views and native-function accessors. Its
+optional cell and `_call_native_borrow` remain the sole storage and invocation
+owners. Capturing never invokes the callback, copies owned captures or owns
+the inspected payload. Returned borrowed origins remain native origins.
+
+Thin pointers use the existing `variants` ABI descriptors. Admission infers
+only the complete pointer type `F`, then compares it to a signature whose
+input and result ABI parameters default from the selected `A` and `R`.
+This preserves aliased pointers: matching a borrowed pointer against a spelled
+function argument loses aliases on Mojo 1.2. Fresh trait-bounded parameters
+retain register evidence that is lost when a projection is embedded directly
+inside a function type. The alternatives explicitly partition the selected
+ABIs; a default `downcast` alone does not make an incompatible candidate
+nonviable. Literal `raises Never` and literal no-return signatures stay distinct.
+These boundaries only copy an admitted pointer into the existing owner.
 
 Mojo 1.1 records a native function's signature only when the value passes
 through a parameter of that exact function type (`F: def(A) -> R`); a plain

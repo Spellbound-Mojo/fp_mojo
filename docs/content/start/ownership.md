@@ -95,6 +95,7 @@ partial application, composition or a reusable owner for captured state.
 | Store a native unary callback as a library value | `as_unary(function)` or `as_unary(closure^)` | Owns the callback without changing its argument, result or error types. Shared callback entry points can borrow the adapter later. |
 | Store a plain binary function as a library value | `as_binary(function)` or `as_binary(pointer)` | Copies a thin pointer into an adapter with two owned arguments. Supported binary iterator operations borrow a named adapter. |
 | Store a binary closure as a library value | `BinarySignature[A, B, R, E].capture(closure^)` | Selects the two input types, result and error before capturing the closure. `E` defaults to `Never`; the adapter retains the closure's ownership and origins. |
+| Reuse a captured predicate or projection | `BorrowSignature[A, R, E].capture(callback^)` | Owns the callback and its captures; named uses borrow the adapter and each call reads the payload. `E` defaults to `Never`. |
 | Retain callback state across a counted loop | `fori_loop_mut(lower, upper, body, carry)` | Borrows a named library body exclusively; state remains in the caller, including after an error. |
 | Control receiver mutation or consumption explicitly | A callable struct | Implement the shared, mutable or consuming protocol required by the operation. |
 

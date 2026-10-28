@@ -25,6 +25,9 @@ Named adapters can be reused by shared borrow in `zip_with`, `map_with_index`,
 `scan_map` and `scan_left`. The factory does not infer capturing closures.
 `BinarySignature[A, B, R, E].capture(closure)` selects the signature before
 capturing a binary closure into the same adapter. Its error defaults to `Never`.
+`BorrowSignature[A, R, E].capture(callback)` stores a predicate, observer or
+projection in `NativeBorrow`. Named uses share the adapter; each call reads
+its payload. Native closures and thin pointer aliases retain their exact types.
 
 Where each consumer enters:
 
@@ -57,3 +60,4 @@ from .invoke import (
     BorrowCallCompatible, invoke_borrowed, invoke_borrowed_once,
 )
 from .native import NativeUnary, as_unary, NativeBinary, as_binary, BinarySignature
+from .native import NativeBorrow, BorrowSignature

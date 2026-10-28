@@ -6,6 +6,9 @@ from native_signatures import (
     native_dispatch,
     NATIVE_INVOCATIONS,
     native_factories,
+    native_adapter,
+    variants,
+    Operand,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -16,6 +19,8 @@ BINARY_START = "# --- native binary admission (generated) ---\n"
 BINARY_END = "# --- end native binary admission ---\n"
 CAPTURE_START = "    # --- native binary capture (generated) ---\n"
 CAPTURE_END = "    # --- end native binary capture ---\n"
+BORROW_CAPTURE_START = "    # --- native borrow capture (generated) ---\n"
+BORROW_CAPTURE_END = "    # --- end native borrow capture ---\n"
 
 def markers(name):
     indent = "        " if NATIVE_INVOCATIONS[name].view else "    "
@@ -129,20 +134,27 @@ BINARY_PARAMETERS = {
 }
 
 
-def binary_capture_methods():
+def capture_methods(mode):
     """Admit a closure after its complete native signature has been selected."""
+    payloads, native_inputs, pure, effect, public_owner = {
+        'binary': (['Self.A', 'Self.B'], 'var Self.A, var Self.B', '_Binary', '_RaisingBinary', 'NativeBinary'),
+        'borrow': (['Self.A'], 'Self.A', '_Borrowing', '_RaisingBorrowing', 'NativeBorrow'),
+    }[mode]
     out = []
-    for raising in (False, True):
+    for effect_kind in ('pure', 'never', 'typed'):
+        raising = effect_kind != 'pure'
         for void in (False, True):
-            failure = "Self.E" if raising else "Never"
-            if void:
-                bound = "def(var Self.A, var Self.B)" + (" raises Self.E" if raising else "")
+            failure = "Self.E" if effect_kind == 'typed' else "Never"
+            if void or effect_kind == 'never':
+                bound = "def(" + native_inputs + ")" + (" raises " + failure if raising else "")
+                if not void:
+                    bound += ' -> Self.R'
             else:
-                bound = ("_RaisingBinary[Self.A, Self.B, Self.R, Self.E]" if raising
-                         else "_Binary[Self.A, Self.B, Self.R]")
-            conditions = ([] if raising else ["Self.E == Never"]) + [
+                bound = (effect if raising else pure) + '[' + ', '.join(
+                    [*payloads, 'Self.R', *(['Self.E'] if raising else [])]) + ']'
+            conditions = ["Self.E != Never" if effect_kind == 'typed' else "Self.E == Never"] + [
                 "Self.R " + ("==" if void else "!=") + " type_of(None)"]
-            owner = f"NativeBinary[Self.A, Self.B, Self.R, {failure}, F, {raising}]"
+            owner = native_adapter(mode, payloads, 'Self.R', failure, 'F', raising, owner=public_owner)
             out.append(f'''    @staticmethod
     def capture[F: {bound}](var function: F) -> {owner} where {" and ".join(conditions)}:
         """Capture a callback with the selected signature without invoking it.
@@ -154,12 +166,65 @@ def binary_capture_methods():
             function: The callback, moved into the adapter with its captures.
 
         Returns:
-            A `NativeBinary` preserving the callback's types and ownership.
+            A `{public_owner}` preserving the callback's types and ownership.
         """
         return {owner}(function^)
 
 ''')
     return "".join(out)
+
+
+def borrow_capture_pointers():
+    """Match the complete pointer type after selecting its native ABI.
+
+    Matching a spelled pointer argument loses aliases in Mojo 1.2. Keep F
+    intact and compare it to the selected signature instead. Fresh bounded
+    parameters, defaulted from the selection, retain register ABI evidence;
+    projecting a type inside the native signature loses that evidence.
+    Borrowing only admits/copies a pointer and does not retain its origin.
+    """
+    out = []
+    for effect_kind in ('pure', 'never', 'typed'):
+        raising = effect_kind != 'pure'
+        failure = 'Self.E' if effect_kind == 'typed' else 'Never'
+        for void in (False, True):
+            for abi in variants([Operand('Self.A', 'r', read_parameter='B')], None if void else 'S'):
+                parameters = [('F', 'Copyable & Deinitable'), ('q', 'ImmOrigin')]
+                declarations = [f'{name}: {bound}' for name, bound in parameters]
+                for name, bound in abi.parameters:
+                    selected = 'Self.A' if name == 'B' else 'Self.R'
+                    default = f'downcast[{selected}, {bound}]' if 'RegisterPassable' in bound else selected
+                    declarations.append(f'{name}: {bound} = {default}')
+                signature = f'def({abi.payloads[0]})' + (' raises ' + failure if raising else '') + ' thin' + ('' if void else ' -> S')
+                owner = native_adapter('borrow', ['Self.A'], 'Self.R', failure, 'F', raising, owner='NativeBorrow')
+                guards = [condition.replace('conforms_to(S,', 'conforms_to(Self.R,') for condition in abi.conditions]
+                guards += [f'conforms_to({"Self.A" if name == "B" else "Self.R"}, {"TrivialRegisterPassable" if name == "B" else "RegisterPassable"})'
+                           for name, bound in abi.parameters if 'RegisterPassable' in bound]
+                conditions = [f'F == ({signature})', *guards,
+                              'Self.E != Never' if effect_kind == 'typed' else 'Self.E == Never',
+                              'Self.R ' + ('==' if void else '!=') + ' type_of(None)',
+                              *([] if void else ['S == Self.R'])]
+                descriptions = dict(F="The pointer's exact native type, inferred without expanding aliases.",
+                                    q='The temporary pointer admission borrow, not stored in the adapter.',
+                                    B='The selected register input, defaulted from the payload type.',
+                                    S='The selected native result, defaulted from the result type.')
+                documented = ''.join(f'            {name}: {descriptions[name]}\n' for name, _ in [*parameters, *abi.parameters])
+                out.append(f'''    @staticmethod
+    def capture[{", ".join(declarations)}](ref[q] function: F) -> {owner} where {" and ".join(conditions)}:
+        """Store a thin pointer with the selected read-only signature.
+
+        Parameters:
+{documented}
+        Args:
+            function: The native pointer, copied into the existing callback owner.
+
+        Returns:
+            A `NativeBorrow` preserving the pointer's exact signature.
+        """
+        return {owner}(function.copy())
+
+''')
+    return ''.join(out)
 
 
 def source(text=None):
@@ -177,7 +242,10 @@ def source(text=None):
     text = before + BINARY_START + pointer_factories("binary", ["A", "B"], "as_binary", owner="NativeBinary") + BINARY_END + after
     before, remaining = text.split(CAPTURE_START, 1)
     _, after = remaining.split(CAPTURE_END, 1)
-    text = before + CAPTURE_START + binary_capture_methods() + CAPTURE_END + after
+    text = before + CAPTURE_START + capture_methods('binary') + CAPTURE_END + after
+    before, remaining = text.split(BORROW_CAPTURE_START, 1)
+    _, after = remaining.split(BORROW_CAPTURE_END, 1)
+    text = before + BORROW_CAPTURE_START + capture_methods('borrow') + borrow_capture_pointers() + BORROW_CAPTURE_END + after
     return text.rstrip() + "\n"
 
 

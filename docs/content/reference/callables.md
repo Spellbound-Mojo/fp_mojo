@@ -35,6 +35,22 @@ The example uses `BinarySignature[Int, Int, String]` for a formatter that owns
 its prefix, without naming the closure's generated type or a raising flag.
 A closure containing only borrowed references can be passed by name.
 
+Use `BorrowSignature[A, R, E].capture(callback)` to store a native predicate,
+observer or projection that reads its payload. For example,
+`BorrowSignature[Int, Bool].capture(below)` produces a `NativeBorrow` reusable
+by name in `iterated(values).filter(selected)` and `pipeline[Int](values).filter(selected)`.
+The callback and its captures belong to the adapter; each invocation only
+borrows its payload. Move an owned capture into it with `capture(callback^)`.
+This avoids defining a callable struct simply to reuse a captured predicate.
+
+`E` defaults to `Never`; supply the exact error type for a raising callback.
+Plain functions, capturing closures and stored thin pointers (including type
+aliases) are accepted. Named pointer capture copies the pointer, so reassigning
+its source does not change the adapter. Use `.invoke(value)` for a direct call,
+`.function()` to borrow the native callback or `adapter^.into_function()` to
+recover it. Callbacks that require mutable access to their captures need an
+explicit mutable callable or an operation that owns that mutable callback.
+
 A procedure with no return value differs from a function returning `NoneType`.
 Pipeline and composition mismatch diagnostics name the former
 `type_of(None) (no return value)`. Declare an explicit `-> NoneType` result

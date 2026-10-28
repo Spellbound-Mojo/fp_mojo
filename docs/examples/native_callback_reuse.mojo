@@ -1,7 +1,7 @@
 """Keep an owned native closure reusable as a library callable."""
 from fp.functions import pipeline, as_unary, as_binary
 from fp.iteration import iterated
-from fp.callables import BinarySignature
+from fp.callables import BinarySignature, BorrowSignature
 
 
 def add(var first: Int, var second: Int) -> Int: return first + second
@@ -23,3 +23,8 @@ def main():
         return sum_prefix + String(first + second)
     var format = BinarySignature[Int, Int, String].capture(format_sum^)
     print("captured binary:", format(2, 3), format(4, 5))
+    var limit = 3
+    def below(value: Int) {limit} -> Bool: return value < limit
+    var selected = BorrowSignature[Int, Bool].capture(below)
+    print("captured predicate:", iterated(range(5)).filter(selected).collect_list())
+    print("reused predicate:", pipeline[Int]([1, 4, 2]).filter(selected).get())

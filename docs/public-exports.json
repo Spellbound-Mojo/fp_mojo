@@ -1474,12 +1474,20 @@
       "signature": "def capture[F: def(var Self.A, var Self.B)](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Never, F, False] where Self.E == Never and Self.R == type_of(None):"
      },
      {
-      "sha256": "2d2831ee8d5ccd324bf5bb6ebd6e2ac043f7d057faf4a9ef51b52328b4390afb",
-      "signature": "def capture[F: _RaisingBinary[Self.A, Self.B, Self.R, Self.E]](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Self.E, F, True] where Self.R != type_of(None):"
+      "sha256": "0d010eee0ae59998ba5d9829f7625d9ee48b03c9fea0006b74d0d79fe98a65b2",
+      "signature": "def capture[F: def(var Self.A, var Self.B) raises Never -> Self.R](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Never, F, True] where Self.E == Never and Self.R != type_of(None):"
      },
      {
-      "sha256": "9d91b65d6e60f4e5e46e68219c3829b526fb162543e94451065f6e9a0098645d",
-      "signature": "def capture[F: def(var Self.A, var Self.B) raises Self.E](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Self.E, F, True] where Self.R == type_of(None):"
+      "sha256": "d3a3f9ac44775f193e43d2bffe470f1b2a8a9f42661b734c14917dd55c51e384",
+      "signature": "def capture[F: def(var Self.A, var Self.B) raises Never](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Never, F, True] where Self.E == Never and Self.R == type_of(None):"
+     },
+     {
+      "sha256": "bbfb603bef0449e2045a60ff1c4ccd69bb42c7acd0669072e9b8c5d646eee330",
+      "signature": "def capture[F: _RaisingBinary[Self.A, Self.B, Self.R, Self.E]](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Self.E, F, True] where Self.E != Never and Self.R != type_of(None):"
+     },
+     {
+      "sha256": "71e4de84dcddeec0ff9ef65a98f7a5aa868dc3d7109146b4013044b91f191ca9",
+      "signature": "def capture[F: def(var Self.A, var Self.B) raises Self.E](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Self.E, F, True] where Self.E != Never and Self.R == type_of(None):"
      }
     ]
    },
@@ -1528,6 +1536,113 @@
     ]
    },
    "provider": "callables/protocols"
+  },
+  "callables.BorrowSignature": {
+   "declarations": [
+    "struct BorrowSignature[A: AnyType, R: Movable & Deinitable, E: Movable & Deinitable = Never]:"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "capture": [
+     {
+      "sha256": "135aab4c805adc1ad088c4fcd6d69263aeee720a9f65cc9cc54b7b74ee734fea",
+      "signature": "def capture[F: _Borrowing[Self.A, Self.R]](var function: F) -> NativeBorrow[Self.A, Self.R, Never, F, False] where Self.E == Never and Self.R != type_of(None):"
+     },
+     {
+      "sha256": "38f7058ccaf808f585d9e1be3ebcbc163dc0fb7131ecb82f490e6287fea50aba",
+      "signature": "def capture[F: def(Self.A)](var function: F) -> NativeBorrow[Self.A, Self.R, Never, F, False] where Self.E == Never and Self.R == type_of(None):"
+     },
+     {
+      "sha256": "eb82cd0f03ff0de5deb93ddc3875a06c17efbc49d306395f5df7b6bc1826be61",
+      "signature": "def capture[F: def(Self.A) raises Never -> Self.R](var function: F) -> NativeBorrow[Self.A, Self.R, Never, F, True] where Self.E == Never and Self.R != type_of(None):"
+     },
+     {
+      "sha256": "db60f9e31956518546de19bb380cba5b66bc917ccfaaa79425b3d33c3fe045f9",
+      "signature": "def capture[F: def(Self.A) raises Never](var function: F) -> NativeBorrow[Self.A, Self.R, Never, F, True] where Self.E == Never and Self.R == type_of(None):"
+     },
+     {
+      "sha256": "b154df4db5513d821c0a21bf5521a6a6ccdbb650fb6c3b001181fa56510410c4",
+      "signature": "def capture[F: _RaisingBorrowing[Self.A, Self.R, Self.E]](var function: F) -> NativeBorrow[Self.A, Self.R, Self.E, F, True] where Self.E != Never and Self.R != type_of(None):"
+     },
+     {
+      "sha256": "475b9c84cfc29236ade057eba3a73f9ebc9174ab9359729c3348b7224f515806",
+      "signature": "def capture[F: def(Self.A) raises Self.E](var function: F) -> NativeBorrow[Self.A, Self.R, Self.E, F, True] where Self.E != Never and Self.R == type_of(None):"
+     },
+     {
+      "sha256": "e9d91929b2e7d6f47d35bea7ac3e377f1ac06930a265398e0870b716d5695d94",
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, S: Movable & Deinitable = Self.R](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, False] where F == (def(Self.A) thin -> S) and not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.R, RegisterPassable) and Self.E == Never and Self.R != type_of(None) and S == Self.R:"
+     },
+     {
+      "sha256": "ec11afd5ad1d1cd0bbd66f6643ee4b4e573acef68426d8888c8439a63ed73352",
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, S: RegisterPassable & Deinitable = downcast[Self.R, RegisterPassable & Deinitable]](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, False] where F == (def(Self.A) thin -> S) and not conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.R, RegisterPassable) and Self.E == Never and Self.R != type_of(None) and S == Self.R:"
+     },
+     {
+      "sha256": "c22ef2ca7e3d5518263f53714a604124bfa585d8b9be947ee27f93e8f728e9b7",
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, B: TrivialRegisterPassable = downcast[Self.A, TrivialRegisterPassable], S: Movable & Deinitable = Self.R](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, False] where F == (def(B) thin -> S) and B == Self.A and not conforms_to(Self.R, RegisterPassable) and conforms_to(Self.A, TrivialRegisterPassable) and Self.E == Never and Self.R != type_of(None) and S == Self.R:"
+     },
+     {
+      "sha256": "1a046695e42bcb26c76b6287541260d9e92d03ba3fa767b1e6b7c0f294ec8a15",
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, B: TrivialRegisterPassable = downcast[Self.A, TrivialRegisterPassable], S: RegisterPassable & Deinitable = downcast[Self.R, RegisterPassable & Deinitable]](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, False] where F == (def(B) thin -> S) and B == Self.A and conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.R, RegisterPassable) and Self.E == Never and Self.R != type_of(None) and S == Self.R:"
+     },
+     {
+      "sha256": "6fc470f4c369ff2d0fb8010c7ebebcd16f08b1b62463941f0efa67960906eb31",
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, False] where F == (def(Self.A) thin) and not conforms_to(Self.A, TrivialRegisterPassable) and Self.E == Never and Self.R == type_of(None):"
+     },
+     {
+      "sha256": "bd0d95d1606b35a53ae88acfd745a7c06bd9b7de6d1b374864f728a73f1a2677",
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, B: TrivialRegisterPassable = downcast[Self.A, TrivialRegisterPassable]](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, False] where F == (def(B) thin) and B == Self.A and conforms_to(Self.A, TrivialRegisterPassable) and Self.E == Never and Self.R == type_of(None):"
+     },
+     {
+      "sha256": "4b473fc20b18938a167b983260b17ab89bbda0e79ccf5793496783b2325c9428",
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, S: Movable & Deinitable = Self.R](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, True] where F == (def(Self.A) raises Never thin -> S) and not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.R, RegisterPassable) and Self.E == Never and Self.R != type_of(None) and S == Self.R:"
+     },
+     {
+      "sha256": "6d785ac1f97aea75c5fc444da135198e18b45b47309a56d4771c0d955ae1336a",
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, S: RegisterPassable & Deinitable = downcast[Self.R, RegisterPassable & Deinitable]](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, True] where F == (def(Self.A) raises Never thin -> S) and not conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.R, RegisterPassable) and Self.E == Never and Self.R != type_of(None) and S == Self.R:"
+     },
+     {
+      "sha256": "65d35f250e5bf954dae1642074235cc65a69a1fb3958c04a61a29f6526191a08",
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, B: TrivialRegisterPassable = downcast[Self.A, TrivialRegisterPassable], S: Movable & Deinitable = Self.R](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, True] where F == (def(B) raises Never thin -> S) and B == Self.A and not conforms_to(Self.R, RegisterPassable) and conforms_to(Self.A, TrivialRegisterPassable) and Self.E == Never and Self.R != type_of(None) and S == Self.R:"
+     },
+     {
+      "sha256": "9ae4d7535b2409e05fb0d0a2b8c2b87d533074be09ff7f47de97dde9389ef7f1",
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, B: TrivialRegisterPassable = downcast[Self.A, TrivialRegisterPassable], S: RegisterPassable & Deinitable = downcast[Self.R, RegisterPassable & Deinitable]](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, True] where F == (def(B) raises Never thin -> S) and B == Self.A and conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.R, RegisterPassable) and Self.E == Never and Self.R != type_of(None) and S == Self.R:"
+     },
+     {
+      "sha256": "527a7d7ebbd6618ebe320e6acc8900baa417b785443884a8533c422834901a18",
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, True] where F == (def(Self.A) raises Never thin) and not conforms_to(Self.A, TrivialRegisterPassable) and Self.E == Never and Self.R == type_of(None):"
+     },
+     {
+      "sha256": "6ce04f38354975bee5e2cf485cb9a8c3aec6da6eb10379be1e6c0bdfffcc0001",
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, B: TrivialRegisterPassable = downcast[Self.A, TrivialRegisterPassable]](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, True] where F == (def(B) raises Never thin) and B == Self.A and conforms_to(Self.A, TrivialRegisterPassable) and Self.E == Never and Self.R == type_of(None):"
+     },
+     {
+      "sha256": "5e690d877861b26a272bc86ad083c86f2b9749fde0b58336516a7bbd8694f849",
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, S: Movable & Deinitable = Self.R](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Self.E, F, True] where F == (def(Self.A) raises Self.E thin -> S) and not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.R, RegisterPassable) and Self.E != Never and Self.R != type_of(None) and S == Self.R:"
+     },
+     {
+      "sha256": "263cf0d355919fc5119a47e44225d964e9720b2a4d68add3279fee64b936d763",
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, S: RegisterPassable & Deinitable = downcast[Self.R, RegisterPassable & Deinitable]](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Self.E, F, True] where F == (def(Self.A) raises Self.E thin -> S) and not conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.R, RegisterPassable) and Self.E != Never and Self.R != type_of(None) and S == Self.R:"
+     },
+     {
+      "sha256": "559124bc5da7011b5287f272b696ebb1fb29a5fd456b7c871379823bbacbc3b3",
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, B: TrivialRegisterPassable = downcast[Self.A, TrivialRegisterPassable], S: Movable & Deinitable = Self.R](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Self.E, F, True] where F == (def(B) raises Self.E thin -> S) and B == Self.A and not conforms_to(Self.R, RegisterPassable) and conforms_to(Self.A, TrivialRegisterPassable) and Self.E != Never and Self.R != type_of(None) and S == Self.R:"
+     },
+     {
+      "sha256": "13be985d69c40b230023a945bd347f09b5c534f9c22e41bb9e0910fd43e40290",
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, B: TrivialRegisterPassable = downcast[Self.A, TrivialRegisterPassable], S: RegisterPassable & Deinitable = downcast[Self.R, RegisterPassable & Deinitable]](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Self.E, F, True] where F == (def(B) raises Self.E thin -> S) and B == Self.A and conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.R, RegisterPassable) and Self.E != Never and Self.R != type_of(None) and S == Self.R:"
+     },
+     {
+      "sha256": "30f5d72c902a5fb3aa1b1d2f8ab0f1bb5ce74dadd880eeb9a4e635fbd43a82c7",
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Self.E, F, True] where F == (def(Self.A) raises Self.E thin) and not conforms_to(Self.A, TrivialRegisterPassable) and Self.E != Never and Self.R == type_of(None):"
+     },
+     {
+      "sha256": "a659d8548940d59e5ff5b156104c8b503818888c405e750c0fb3ddf6ee267600",
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, B: TrivialRegisterPassable = downcast[Self.A, TrivialRegisterPassable]](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Self.E, F, True] where F == (def(B) raises Self.E thin) and B == Self.A and conforms_to(Self.A, TrivialRegisterPassable) and Self.E != Never and Self.R == type_of(None):"
+     }
+    ]
+   },
+   "provider": "callables/native"
   },
   "callables.MutableBinary": {
    "declarations": [
@@ -1596,6 +1711,33 @@
      {
       "sha256": "65c3ea9a910699f34c3c6b595b685291a194b615c6bd7878a941a640252c4fd0",
       "signature": "def into_function(deinit self) -> Self.F:"
+     }
+    ]
+   },
+   "provider": "callables/native"
+  },
+  "callables.NativeBorrow": {
+   "declarations": [
+    "struct NativeBorrow[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable,"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "function": [
+     {
+      "sha256": "d1c160031933531b372446bb13cd04509ea0e9b6f2254cffc123448673689921",
+      "signature": "def function(ref self) -> ref[self._function._value] Self.F:"
+     }
+    ],
+    "into_function": [
+     {
+      "sha256": "65c3ea9a910699f34c3c6b595b685291a194b615c6bd7878a941a640252c4fd0",
+      "signature": "def into_function(deinit self) -> Self.F:"
+     }
+    ],
+    "invoke": [
+     {
+      "sha256": "b1bcae3d4a195410754f232fcfad7d110aa678d07944f69ed8fa0cde52e416c1",
+      "signature": "def invoke(self, ref payload: Self.P) raises Self.E capturing -> Self.R:"
      }
     ]
    },

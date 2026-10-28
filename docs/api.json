@@ -10988,6 +10988,66 @@
         "description": "The callback's exact native type, inferred at this boundary.",
         "inferred": false,
         "name": "F",
+        "type": "def(var Self.A, var Self.B) raises Never -> Self.R",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBinary` preserving the callback's types and ownership.",
+       "type": "NativeBinary[Self.A, Self.B, Self.R, Never, F, True]"
+      },
+      "signature": "def capture[F: def(var Self.A, var Self.B) raises Never -> Self.R](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Never, F, True] where Self.E == Never and Self.R != type_of(None)",
+      "summary": "Capture a callback with the selected signature without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, moved into the adapter with its captures.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The callback's exact native type, inferred at this boundary.",
+        "inferred": false,
+        "name": "F",
+        "type": "def(var Self.A, var Self.B) raises Never",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBinary` preserving the callback's types and ownership.",
+       "type": "NativeBinary[Self.A, Self.B, Self.R, Never, F, True]"
+      },
+      "signature": "def capture[F: def(var Self.A, var Self.B) raises Never](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Never, F, True] where Self.E == Never and Self.R == type_of(None)",
+      "summary": "Capture a callback with the selected signature without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, moved into the adapter with its captures.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The callback's exact native type, inferred at this boundary.",
+        "inferred": false,
+        "name": "F",
         "type": "_RaisingBinary[Self.A, Self.B, Self.R, Self.E]",
         "variadic": false
        }
@@ -10998,7 +11058,7 @@
        "doc": "A `NativeBinary` preserving the callback's types and ownership.",
        "type": "NativeBinary[Self.A, Self.B, Self.R, Self.E, F, True]"
       },
-      "signature": "def capture[F: _RaisingBinary[Self.A, Self.B, Self.R, Self.E]](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Self.E, F, True] where Self.R != type_of(None)",
+      "signature": "def capture[F: _RaisingBinary[Self.A, Self.B, Self.R, Self.E]](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Self.E, F, True] where Self.E != Never and Self.R != type_of(None)",
       "summary": "Capture a callback with the selected signature without invoking it."
      },
      {
@@ -11028,7 +11088,7 @@
        "doc": "A `NativeBinary` preserving the callback's types and ownership.",
        "type": "NativeBinary[Self.A, Self.B, Self.R, Self.E, F, True]"
       },
-      "signature": "def capture[F: def(var Self.A, var Self.B) raises Self.E](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Self.E, F, True] where Self.R == type_of(None)",
+      "signature": "def capture[F: def(var Self.A, var Self.B) raises Self.E](var function: F) -> NativeBinary[Self.A, Self.B, Self.R, Self.E, F, True] where Self.E != Never and Self.R == type_of(None)",
       "summary": "Capture a callback with the selected signature without invoking it."
      }
     ]
@@ -11204,6 +11264,1036 @@
    "traits": [
     "BorrowCallContract"
    ]
+  },
+  "callables.BorrowSignature": {
+   "aliases": [],
+   "description": "`BorrowSignature[A, R].capture(callback)` returns a `NativeBorrow` that\nborrows `A` on each invocation and returns `R`. Supply `E` for a raising\ncallback. Plain functions, capturing closures and stored thin pointers are\naccepted. Construction never calls the callback or copies its captures.\n\nInput, result and error selection precede callback admission, so invalid\nconventions do not require signature inference from an incompatible native\ncallback. `type_of(None)` denotes no return value; `NoneType` remains an\nexplicit result type. Both pure and explicitly `raises Never` callbacks\ncan use the default `E = Never`.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "capture": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, moved into the adapter with its captures.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The callback's exact native type, inferred at this boundary.",
+        "inferred": false,
+        "name": "F",
+        "type": "_Borrowing[Self.A, Self.R]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the callback's types and ownership.",
+       "type": "NativeBorrow[Self.A, Self.R, Never, F, False]"
+      },
+      "signature": "def capture[F: _Borrowing[Self.A, Self.R]](var function: F) -> NativeBorrow[Self.A, Self.R, Never, F, False] where Self.E == Never and Self.R != type_of(None)",
+      "summary": "Capture a callback with the selected signature without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, moved into the adapter with its captures.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The callback's exact native type, inferred at this boundary.",
+        "inferred": false,
+        "name": "F",
+        "type": "def(Self.A)",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the callback's types and ownership.",
+       "type": "NativeBorrow[Self.A, Self.R, Never, F, False]"
+      },
+      "signature": "def capture[F: def(Self.A)](var function: F) -> NativeBorrow[Self.A, Self.R, Never, F, False] where Self.E == Never and Self.R == type_of(None)",
+      "summary": "Capture a callback with the selected signature without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, moved into the adapter with its captures.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The callback's exact native type, inferred at this boundary.",
+        "inferred": false,
+        "name": "F",
+        "type": "def(Self.A) raises Never -> Self.R",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the callback's types and ownership.",
+       "type": "NativeBorrow[Self.A, Self.R, Never, F, True]"
+      },
+      "signature": "def capture[F: def(Self.A) raises Never -> Self.R](var function: F) -> NativeBorrow[Self.A, Self.R, Never, F, True] where Self.E == Never and Self.R != type_of(None)",
+      "summary": "Capture a callback with the selected signature without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, moved into the adapter with its captures.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The callback's exact native type, inferred at this boundary.",
+        "inferred": false,
+        "name": "F",
+        "type": "def(Self.A) raises Never",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the callback's types and ownership.",
+       "type": "NativeBorrow[Self.A, Self.R, Never, F, True]"
+      },
+      "signature": "def capture[F: def(Self.A) raises Never](var function: F) -> NativeBorrow[Self.A, Self.R, Never, F, True] where Self.E == Never and Self.R == type_of(None)",
+      "summary": "Capture a callback with the selected signature without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, moved into the adapter with its captures.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The callback's exact native type, inferred at this boundary.",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingBorrowing[Self.A, Self.R, Self.E]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the callback's types and ownership.",
+       "type": "NativeBorrow[Self.A, Self.R, Self.E, F, True]"
+      },
+      "signature": "def capture[F: _RaisingBorrowing[Self.A, Self.R, Self.E]](var function: F) -> NativeBorrow[Self.A, Self.R, Self.E, F, True] where Self.E != Never and Self.R != type_of(None)",
+      "summary": "Capture a callback with the selected signature without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, moved into the adapter with its captures.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The callback's exact native type, inferred at this boundary.",
+        "inferred": false,
+        "name": "F",
+        "type": "def(Self.A) raises Self.E",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the callback's types and ownership.",
+       "type": "NativeBorrow[Self.A, Self.R, Self.E, F, True]"
+      },
+      "signature": "def capture[F: def(Self.A) raises Self.E](var function: F) -> NativeBorrow[Self.A, Self.R, Self.E, F, True] where Self.E != Never and Self.R == type_of(None)",
+      "summary": "Capture a callback with the selected signature without invoking it."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "The native pointer, copied into the existing callback owner.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The pointer's exact native type, inferred without expanding aliases.",
+        "inferred": false,
+        "name": "F",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The temporary pointer admission borrow, not stored in the adapter.",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "The selected native result, defaulted from the result type.",
+        "inferred": false,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the pointer's exact signature.",
+       "type": "NativeBorrow[Self.A, Self.R, Never, F, False]"
+      },
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, S: Movable & Deinitable = Self.R](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, False] where F == (def(Self.A) thin -> S) and not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.R, RegisterPassable) and Self.E == Never and Self.R != type_of(None) and S == Self.R",
+      "summary": "Store a thin pointer with the selected read-only signature."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "The native pointer, copied into the existing callback owner.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The pointer's exact native type, inferred without expanding aliases.",
+        "inferred": false,
+        "name": "F",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The temporary pointer admission borrow, not stored in the adapter.",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "The selected native result, defaulted from the result type.",
+        "inferred": false,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the pointer's exact signature.",
+       "type": "NativeBorrow[Self.A, Self.R, Never, F, False]"
+      },
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, S: RegisterPassable & Deinitable = downcast[Self.R, RegisterPassable & Deinitable]](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, False] where F == (def(Self.A) thin -> S) and not conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.R, RegisterPassable) and Self.E == Never and Self.R != type_of(None) and S == Self.R",
+      "summary": "Store a thin pointer with the selected read-only signature."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "The native pointer, copied into the existing callback owner.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The pointer's exact native type, inferred without expanding aliases.",
+        "inferred": false,
+        "name": "F",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The temporary pointer admission borrow, not stored in the adapter.",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "The selected register input, defaulted from the payload type.",
+        "inferred": false,
+        "name": "B",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "The selected native result, defaulted from the result type.",
+        "inferred": false,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the pointer's exact signature.",
+       "type": "NativeBorrow[Self.A, Self.R, Never, F, False]"
+      },
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, B: TrivialRegisterPassable = downcast[Self.A, TrivialRegisterPassable], S: Movable & Deinitable = Self.R](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, False] where F == (def(B) thin -> S) and B == Self.A and not conforms_to(Self.R, RegisterPassable) and conforms_to(Self.A, TrivialRegisterPassable) and Self.E == Never and Self.R != type_of(None) and S == Self.R",
+      "summary": "Store a thin pointer with the selected read-only signature."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "The native pointer, copied into the existing callback owner.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The pointer's exact native type, inferred without expanding aliases.",
+        "inferred": false,
+        "name": "F",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The temporary pointer admission borrow, not stored in the adapter.",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "The selected register input, defaulted from the payload type.",
+        "inferred": false,
+        "name": "B",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "The selected native result, defaulted from the result type.",
+        "inferred": false,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the pointer's exact signature.",
+       "type": "NativeBorrow[Self.A, Self.R, Never, F, False]"
+      },
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, B: TrivialRegisterPassable = downcast[Self.A, TrivialRegisterPassable], S: RegisterPassable & Deinitable = downcast[Self.R, RegisterPassable & Deinitable]](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, False] where F == (def(B) thin -> S) and B == Self.A and conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.R, RegisterPassable) and Self.E == Never and Self.R != type_of(None) and S == Self.R",
+      "summary": "Store a thin pointer with the selected read-only signature."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "The native pointer, copied into the existing callback owner.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The pointer's exact native type, inferred without expanding aliases.",
+        "inferred": false,
+        "name": "F",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The temporary pointer admission borrow, not stored in the adapter.",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the pointer's exact signature.",
+       "type": "NativeBorrow[Self.A, Self.R, Never, F, False]"
+      },
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, False] where F == (def(Self.A) thin) and not conforms_to(Self.A, TrivialRegisterPassable) and Self.E == Never and Self.R == type_of(None)",
+      "summary": "Store a thin pointer with the selected read-only signature."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "The native pointer, copied into the existing callback owner.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The pointer's exact native type, inferred without expanding aliases.",
+        "inferred": false,
+        "name": "F",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The temporary pointer admission borrow, not stored in the adapter.",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "The selected register input, defaulted from the payload type.",
+        "inferred": false,
+        "name": "B",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the pointer's exact signature.",
+       "type": "NativeBorrow[Self.A, Self.R, Never, F, False]"
+      },
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, B: TrivialRegisterPassable = downcast[Self.A, TrivialRegisterPassable]](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, False] where F == (def(B) thin) and B == Self.A and conforms_to(Self.A, TrivialRegisterPassable) and Self.E == Never and Self.R == type_of(None)",
+      "summary": "Store a thin pointer with the selected read-only signature."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "The native pointer, copied into the existing callback owner.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The pointer's exact native type, inferred without expanding aliases.",
+        "inferred": false,
+        "name": "F",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The temporary pointer admission borrow, not stored in the adapter.",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "The selected native result, defaulted from the result type.",
+        "inferred": false,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the pointer's exact signature.",
+       "type": "NativeBorrow[Self.A, Self.R, Never, F, True]"
+      },
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, S: Movable & Deinitable = Self.R](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, True] where F == (def(Self.A) raises Never thin -> S) and not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.R, RegisterPassable) and Self.E == Never and Self.R != type_of(None) and S == Self.R",
+      "summary": "Store a thin pointer with the selected read-only signature."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "The native pointer, copied into the existing callback owner.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The pointer's exact native type, inferred without expanding aliases.",
+        "inferred": false,
+        "name": "F",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The temporary pointer admission borrow, not stored in the adapter.",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "The selected native result, defaulted from the result type.",
+        "inferred": false,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the pointer's exact signature.",
+       "type": "NativeBorrow[Self.A, Self.R, Never, F, True]"
+      },
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, S: RegisterPassable & Deinitable = downcast[Self.R, RegisterPassable & Deinitable]](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, True] where F == (def(Self.A) raises Never thin -> S) and not conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.R, RegisterPassable) and Self.E == Never and Self.R != type_of(None) and S == Self.R",
+      "summary": "Store a thin pointer with the selected read-only signature."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "The native pointer, copied into the existing callback owner.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The pointer's exact native type, inferred without expanding aliases.",
+        "inferred": false,
+        "name": "F",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The temporary pointer admission borrow, not stored in the adapter.",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "The selected register input, defaulted from the payload type.",
+        "inferred": false,
+        "name": "B",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "The selected native result, defaulted from the result type.",
+        "inferred": false,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the pointer's exact signature.",
+       "type": "NativeBorrow[Self.A, Self.R, Never, F, True]"
+      },
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, B: TrivialRegisterPassable = downcast[Self.A, TrivialRegisterPassable], S: Movable & Deinitable = Self.R](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, True] where F == (def(B) raises Never thin -> S) and B == Self.A and not conforms_to(Self.R, RegisterPassable) and conforms_to(Self.A, TrivialRegisterPassable) and Self.E == Never and Self.R != type_of(None) and S == Self.R",
+      "summary": "Store a thin pointer with the selected read-only signature."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "The native pointer, copied into the existing callback owner.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The pointer's exact native type, inferred without expanding aliases.",
+        "inferred": false,
+        "name": "F",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The temporary pointer admission borrow, not stored in the adapter.",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "The selected register input, defaulted from the payload type.",
+        "inferred": false,
+        "name": "B",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "The selected native result, defaulted from the result type.",
+        "inferred": false,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the pointer's exact signature.",
+       "type": "NativeBorrow[Self.A, Self.R, Never, F, True]"
+      },
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, B: TrivialRegisterPassable = downcast[Self.A, TrivialRegisterPassable], S: RegisterPassable & Deinitable = downcast[Self.R, RegisterPassable & Deinitable]](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, True] where F == (def(B) raises Never thin -> S) and B == Self.A and conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.R, RegisterPassable) and Self.E == Never and Self.R != type_of(None) and S == Self.R",
+      "summary": "Store a thin pointer with the selected read-only signature."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "The native pointer, copied into the existing callback owner.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The pointer's exact native type, inferred without expanding aliases.",
+        "inferred": false,
+        "name": "F",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The temporary pointer admission borrow, not stored in the adapter.",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the pointer's exact signature.",
+       "type": "NativeBorrow[Self.A, Self.R, Never, F, True]"
+      },
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, True] where F == (def(Self.A) raises Never thin) and not conforms_to(Self.A, TrivialRegisterPassable) and Self.E == Never and Self.R == type_of(None)",
+      "summary": "Store a thin pointer with the selected read-only signature."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "The native pointer, copied into the existing callback owner.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The pointer's exact native type, inferred without expanding aliases.",
+        "inferred": false,
+        "name": "F",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The temporary pointer admission borrow, not stored in the adapter.",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "The selected register input, defaulted from the payload type.",
+        "inferred": false,
+        "name": "B",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the pointer's exact signature.",
+       "type": "NativeBorrow[Self.A, Self.R, Never, F, True]"
+      },
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, B: TrivialRegisterPassable = downcast[Self.A, TrivialRegisterPassable]](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Never, F, True] where F == (def(B) raises Never thin) and B == Self.A and conforms_to(Self.A, TrivialRegisterPassable) and Self.E == Never and Self.R == type_of(None)",
+      "summary": "Store a thin pointer with the selected read-only signature."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "The native pointer, copied into the existing callback owner.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The pointer's exact native type, inferred without expanding aliases.",
+        "inferred": false,
+        "name": "F",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The temporary pointer admission borrow, not stored in the adapter.",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "The selected native result, defaulted from the result type.",
+        "inferred": false,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the pointer's exact signature.",
+       "type": "NativeBorrow[Self.A, Self.R, Self.E, F, True]"
+      },
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, S: Movable & Deinitable = Self.R](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Self.E, F, True] where F == (def(Self.A) raises Self.E thin -> S) and not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.R, RegisterPassable) and Self.E != Never and Self.R != type_of(None) and S == Self.R",
+      "summary": "Store a thin pointer with the selected read-only signature."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "The native pointer, copied into the existing callback owner.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The pointer's exact native type, inferred without expanding aliases.",
+        "inferred": false,
+        "name": "F",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The temporary pointer admission borrow, not stored in the adapter.",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "The selected native result, defaulted from the result type.",
+        "inferred": false,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the pointer's exact signature.",
+       "type": "NativeBorrow[Self.A, Self.R, Self.E, F, True]"
+      },
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, S: RegisterPassable & Deinitable = downcast[Self.R, RegisterPassable & Deinitable]](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Self.E, F, True] where F == (def(Self.A) raises Self.E thin -> S) and not conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.R, RegisterPassable) and Self.E != Never and Self.R != type_of(None) and S == Self.R",
+      "summary": "Store a thin pointer with the selected read-only signature."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "The native pointer, copied into the existing callback owner.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The pointer's exact native type, inferred without expanding aliases.",
+        "inferred": false,
+        "name": "F",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The temporary pointer admission borrow, not stored in the adapter.",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "The selected register input, defaulted from the payload type.",
+        "inferred": false,
+        "name": "B",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "The selected native result, defaulted from the result type.",
+        "inferred": false,
+        "name": "S",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the pointer's exact signature.",
+       "type": "NativeBorrow[Self.A, Self.R, Self.E, F, True]"
+      },
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, B: TrivialRegisterPassable = downcast[Self.A, TrivialRegisterPassable], S: Movable & Deinitable = Self.R](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Self.E, F, True] where F == (def(B) raises Self.E thin -> S) and B == Self.A and not conforms_to(Self.R, RegisterPassable) and conforms_to(Self.A, TrivialRegisterPassable) and Self.E != Never and Self.R != type_of(None) and S == Self.R",
+      "summary": "Store a thin pointer with the selected read-only signature."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "The native pointer, copied into the existing callback owner.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The pointer's exact native type, inferred without expanding aliases.",
+        "inferred": false,
+        "name": "F",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The temporary pointer admission borrow, not stored in the adapter.",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "The selected register input, defaulted from the payload type.",
+        "inferred": false,
+        "name": "B",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "The selected native result, defaulted from the result type.",
+        "inferred": false,
+        "name": "S",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the pointer's exact signature.",
+       "type": "NativeBorrow[Self.A, Self.R, Self.E, F, True]"
+      },
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, B: TrivialRegisterPassable = downcast[Self.A, TrivialRegisterPassable], S: RegisterPassable & Deinitable = downcast[Self.R, RegisterPassable & Deinitable]](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Self.E, F, True] where F == (def(B) raises Self.E thin -> S) and B == Self.A and conforms_to(Self.A, TrivialRegisterPassable) and conforms_to(Self.R, RegisterPassable) and Self.E != Never and Self.R != type_of(None) and S == Self.R",
+      "summary": "Store a thin pointer with the selected read-only signature."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "The native pointer, copied into the existing callback owner.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The pointer's exact native type, inferred without expanding aliases.",
+        "inferred": false,
+        "name": "F",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The temporary pointer admission borrow, not stored in the adapter.",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the pointer's exact signature.",
+       "type": "NativeBorrow[Self.A, Self.R, Self.E, F, True]"
+      },
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Self.E, F, True] where F == (def(Self.A) raises Self.E thin) and not conforms_to(Self.A, TrivialRegisterPassable) and Self.E != Never and Self.R == type_of(None)",
+      "summary": "Store a thin pointer with the selected read-only signature."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[q]",
+        "description": "The native pointer, copied into the existing callback owner.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The pointer's exact native type, inferred without expanding aliases.",
+        "inferred": false,
+        "name": "F",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The temporary pointer admission borrow, not stored in the adapter.",
+        "inferred": false,
+        "name": "q",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "The selected register input, defaulted from the payload type.",
+        "inferred": false,
+        "name": "B",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A `NativeBorrow` preserving the pointer's exact signature.",
+       "type": "NativeBorrow[Self.A, Self.R, Self.E, F, True]"
+      },
+      "signature": "def capture[F: Copyable & Deinitable, q: ImmOrigin, B: TrivialRegisterPassable = downcast[Self.A, TrivialRegisterPassable]](ref[q] function: F) -> NativeBorrow[Self.A, Self.R, Self.E, F, True] where F == (def(B) raises Self.E thin) and B == Self.A and conforms_to(Self.A, TrivialRegisterPassable) and Self.E != Never and Self.R == type_of(None)",
+      "summary": "Store a thin pointer with the selected read-only signature."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The borrowed payload type.",
+     "inferred": false,
+     "name": "A",
+     "type": "AnyType",
+     "variadic": false
+    },
+    {
+     "description": "The result type.",
+     "inferred": false,
+     "name": "R",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The exact error type, defaulting to `Never`.",
+     "inferred": false,
+     "name": "E",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "callables/native",
+   "signature": "struct BorrowSignature[A: AnyType, R: Movable & Deinitable, E: Movable & Deinitable = Never]",
+   "summary": "Select a read-only native signature before storing a callback.",
+   "traits": []
   },
   "callables.MutableBinary": {
    "aliases": [],
@@ -11492,6 +12582,129 @@
     "Copyable",
     "ImplicitlyCopyable",
     "_BinaryViewable"
+   ]
+  },
+  "callables.NativeBorrow": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Payload"
+    },
+    {
+     "description": "",
+     "name": "Result"
+    },
+    {
+     "description": "",
+     "name": "Failure"
+    }
+   ],
+   "description": "The adapter owns the callback and its captures, while `invoke` borrows the\npayload. Named adapters can be reused by shared borrow in supported predicate,\nobserver and projection operations. Moving one transfers its captures;\ncopying is available only when the stored native function is copyable.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "function": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A reference to the exact native callback, retaining its captures.",
+       "type": "ref[self._function._value] Self.F"
+      },
+      "signature": "def function(ref self) -> ref[self._function._value] Self.F",
+      "summary": "Borrow the stored native callback with the receiver's mutability."
+     }
+    ],
+    "into_function": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The stored callback, moved out without copying or calling it.",
+       "type": "Self.F"
+      },
+      "signature": "def into_function(deinit self) -> Self.F",
+      "summary": "Consume the adapter and recover its native callback and captures."
+     }
+    ],
+    "invoke": [
+     {
+      "args": [
+       {
+        "convention": "ref",
+        "description": "The value to inspect without consuming it.",
+        "name": "payload",
+        "type": "Self.P",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.E capturing",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The callback's exact native error type.",
+      "returns": {
+       "doc": "The callback's exact result, including its declared origins.",
+       "type": "Self.R"
+      },
+      "signature": "def invoke(self, ref payload: Self.P) raises Self.E capturing -> Self.R",
+      "summary": "Invoke the stored callback while keeping the payload borrowed."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The borrowed payload type.",
+     "inferred": false,
+     "name": "P",
+     "type": "AnyType",
+     "variadic": false
+    },
+    {
+     "description": "The result type.",
+     "inferred": false,
+     "name": "R",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The exact error type, or `Never` for a non-raising callback.",
+     "inferred": false,
+     "name": "E",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The stored native function's type.",
+     "inferred": false,
+     "name": "F",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "Whether the native signature declares an error effect.",
+     "inferred": false,
+     "name": "raising",
+     "type": "Bool",
+     "variadic": false
+    }
+   ],
+   "provider": "callables/native",
+   "signature": "struct NativeBorrow[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](BorrowCallable, _BorrowViewable, Copyable where conforms_to(F, Copyable))",
+   "summary": "A native read-only callback, captured through `BorrowSignature`.",
+   "traits": [
+    "BorrowCallContract",
+    "BorrowCallable",
+    "Copyable",
+    "_BorrowViewable"
    ]
   },
   "callables.NativeUnary": {
@@ -311161,7 +312374,7 @@
    "summary": "Functor, Filterable, FunctorFilter, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Semigroup and Monoid over native values, with explicit instances."
   },
   "callables": {
-   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. `BorrowCallable` and `BorrowOnceCallable` borrow\ntheir argument instead of taking it, and `invoke_borrowed` and\n`invoke_borrowed_once` call them. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped`, `Tupled`, `MappedPair` and `Identity` from `fp.functions` implement these\nprotocols.\n\n`as_binary` stores a plain binary function or thin pointer in `NativeBinary`.\nIt preserves two owned argument types and the exact result and error types.\nNamed adapters can be reused by shared borrow in `zip_with`, `map_with_index`,\n`scan_map` and `scan_left`. The factory does not infer capturing closures.\n`BinarySignature[A, B, R, E].capture(closure)` selects the signature before\ncapturing a binary closure into the same adapter. Its error defaults to `Never`.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Lazy `map`, `filter_map`, `flat_map`, `scan_left` | Native callbacks and shared or mutable library unary/binary values |\n| `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| `fori_loop_mut` | A named shared or mutable library binary body, borrowed exclusively; updated receiver state remains in the caller. |\n| Iteration predicates, `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `OnceThunk` |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
+   "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. `BorrowCallable` and `BorrowOnceCallable` borrow\ntheir argument instead of taking it, and `invoke_borrowed` and\n`invoke_borrowed_once` call them. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped`, `Tupled`, `MappedPair` and `Identity` from `fp.functions` implement these\nprotocols.\n\n`as_binary` stores a plain binary function or thin pointer in `NativeBinary`.\nIt preserves two owned argument types and the exact result and error types.\nNamed adapters can be reused by shared borrow in `zip_with`, `map_with_index`,\n`scan_map` and `scan_left`. The factory does not infer capturing closures.\n`BinarySignature[A, B, R, E].capture(closure)` selects the signature before\ncapturing a binary closure into the same adapter. Its error defaults to `Never`.\n`BorrowSignature[A, R, E].capture(callback)` stores a predicate, observer or\nprojection in `NativeBorrow`. Named uses share the adapter; each call reads\nits payload. Native closures and thin pointer aliases retain their exact types.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Lazy `map`, `filter_map`, `flat_map`, `scan_left` | Native callbacks and shared or mutable library unary/binary values |\n| `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| `fori_loop_mut` | A named shared or mutable library binary body, borrowed exclusively; updated receiver state remains in the caller. |\n| Iteration predicates, `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `OnceThunk` |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",
    "summary": "How the library calls user code: callable protocols, receiver dispatch and native functions as values."
   },
   "combinators": {
