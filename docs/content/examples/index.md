@@ -128,3 +128,4 @@ The [selected workflow](../reference/functions.md#select-family-and-native-error
 
 - [Composable resource scopes](../reference/effects.md#composable-native-resources) acquire lazily and release in reverse order.
 - [IO execution](../reference/effects.md#io-cancellation-and-finalization) separates cancellation from errors and retains finalizer failures.
+- [Shared coordination](../reference/effects.md#shared-state-and-coordination) uses Ref, Deferred, Semaphore and Queue through IO.

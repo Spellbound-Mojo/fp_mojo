@@ -4264,6 +4264,33 @@
    },
    "provider": "effects/protocols"
   },
+  "effects.Deferred": {
+   "declarations": [
+    "struct Deferred[T: Copyable & Deinitable](Copyable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "complete": [
+     {
+      "sha256": "49c120ad7ae08f243ab5c7e22ec7bfb10814ec2cc8dbcf790982cb7cc5176956",
+      "signature": "def complete[E: Movable & Deinitable](self, var value: Self.T) -> _RefModify[Optional[Self.T], Bool, E, _Complete[Self.T]]:"
+     }
+    ],
+    "get": [
+     {
+      "sha256": "4b7bd2154bf87968827700cc97ba9edfd88f0a767b1f5c3aae5656f35384cfbc",
+      "signature": "def get[E: Movable & Deinitable](self) -> _AwaitSome[Self.T, _RefInspect[Optional[Self.T], E, _Copy[Optional[Self.T]]]]:"
+     }
+    ],
+    "try_get": [
+     {
+      "sha256": "9a972479b289d98839308931b940fbee61050339ac8f545db17efd7efb39fe14",
+      "signature": "def try_get[E: Movable & Deinitable](self) -> _RefInspect[Optional[Self.T], E, _Copy[Optional[Self.T]]]:"
+     }
+    ]
+   },
+   "provider": "effects/coordination"
+  },
   "effects.EffectFailure": {
    "declarations": [
     "struct EffectFailure[E: Movable & Deinitable](Movable, Copyable where conforms_to(E, Copyable)):"
@@ -4278,6 +4305,45 @@
     ]
    },
    "provider": "effects/outcomes"
+  },
+  "effects.Fiber": {
+   "declarations": [
+    "struct Fiber[P: ReaderAction](Movable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "cancel": [
+     {
+      "sha256": "53910f97ee7607936381a26bd5fb87e2f036ce3e98bb5db6b6d760aa63cdbed3",
+      "signature": "def cancel(deinit self) -> IOContract[Self.P].Out:"
+     }
+    ],
+    "done": [
+     {
+      "sha256": "ebc0565e3c2eaa033471aa2546d454ac4b829e16d14d7f705b383da116c94dc5",
+      "signature": "def done(self) -> Bool:"
+     }
+    ],
+    "join": [
+     {
+      "sha256": "dd77a1ae68ebc5ddabe4e227385e3fb1359d96cbe9202f5174cdb79a444fcc1b",
+      "signature": "def join(deinit self) -> IOContract[Self.P].Out:"
+     }
+    ],
+    "join_io": [
+     {
+      "sha256": "e47c5b16e7ff1559b68aae82c9be97a63226935c4b803e670773808f38e43029",
+      "signature": "def join_io(deinit self) -> _JoinFiber[Self.P]:"
+     }
+    ],
+    "request_cancel": [
+     {
+      "sha256": "12a4cd9d5f35c0870e98620f25468ca81e3790c03931fe323f94cabed8222399",
+      "signature": "def request_cancel(self):"
+     }
+    ]
+   },
+   "provider": "effects/fibers"
   },
   "effects.IO": {
    "declarations": [
@@ -4493,6 +4559,13 @@
    "kind": "type or alias",
    "provider": "effects/outcomes"
   },
+  "effects.Permit": {
+   "declarations": [
+    "struct Permit(Movable):"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/coordination"
+  },
   "effects.Project": {
    "declarations": [
     "trait Project:"
@@ -4507,6 +4580,45 @@
     ]
    },
    "provider": "effects/protocols"
+  },
+  "effects.Queue": {
+   "declarations": [
+    "struct Queue[T: Movable & Deinitable](Copyable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "offer": [
+     {
+      "sha256": "7748d920be2369c9bde584bf3631d7b3a814aa4541ea6acec20281dc92f6b3cb",
+      "signature": "def offer[E: Movable & Deinitable](self, var value: Self.T) -> _Offer[Self.T, E]:"
+     }
+    ],
+    "size": [
+     {
+      "sha256": "80a40e455acc580b159b5e993a698220b8900119050059f162822b154c71af2e",
+      "signature": "def size[E: Movable & Deinitable](self) -> _RefInspect[Deque[Self.T], E, _Size[Self.T]]:"
+     }
+    ],
+    "take": [
+     {
+      "sha256": "af27066cd276587455dbbd52a0d259515ba4303222707dfa7484ad26a65e31eb",
+      "signature": "def take[E: Movable & Deinitable](self) -> _AwaitSome[Self.T, _RefModify[Deque[Self.T], Optional[Self.T], E, _TryTake[Self.T]]]:"
+     }
+    ],
+    "try_offer": [
+     {
+      "sha256": "c0f55e71664f69668c774ded88fa3574b8900cae976c68cb5078dcf008768e69",
+      "signature": "def try_offer[E: Movable & Deinitable](self, var value: Self.T) -> _RefModify[Deque[Self.T], Optional[Self.T], E, _TryOffer[Self.T]]:"
+     }
+    ],
+    "try_take": [
+     {
+      "sha256": "0550e23c7a79fbab615065aafda2da6c7a3d8d53cc17bd1501ab2a318085a301",
+      "signature": "def try_take[E: Movable & Deinitable](self) -> _RefModify[Deque[Self.T], Optional[Self.T], E, _TryTake[Self.T]]:"
+     }
+    ]
+   },
+   "provider": "effects/coordination"
   },
   "effects.Reader": {
    "declarations": [
@@ -4618,6 +4730,67 @@
    },
    "provider": "effects/reader"
   },
+  "effects.Ref": {
+   "declarations": [
+    "struct Ref[T: Movable & Deinitable](Copyable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "get": [
+     {
+      "sha256": "74ceb17aef684e601e79f1364286eac5f714d2653d5f6a5c841ba0e59b808e2b",
+      "signature": "def get[E: Movable & Deinitable](self) -> _RefInspect[Self.T, E, _Copy[Self.T]] where conforms_to(Self.T, Copyable):"
+     }
+    ],
+    "get_and_set": [
+     {
+      "sha256": "f0bd1f30c669d3aa9c82976d1787dd1f058c65fbc549d95350e3abe19709d925",
+      "signature": "def get_and_set[E: Movable & Deinitable](self, var value: Self.T) -> _RefModify[Self.T, Self.T, E, _BindFirst[_Pair[Self.T, Self.T]]]:"
+     }
+    ],
+    "inspect": [
+     {
+      "sha256": "27064f7670d12968280186d98c8269320f555aa35378f57653692c1ead10362c",
+      "signature": "def inspect[F: BorrowCallContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> _RefInspect[Self.T, E, F] where F.Payload == Self.T and _ErrorCompatible[E, F.Failure] and _OnceBorrowAvailable[F]:"
+     },
+     {
+      "sha256": "761e8e9f6a30ada4adc7b82806fccbab0b827eca9f5a955b1ea59f7f179e2227",
+      "signature": "def inspect[P: AnyType, A: Movable & Deinitable, //, E: Movable & Deinitable, F: _Borrowing[P, A]](self, var function: F) -> _RefInspect[Self.T, E, _NativeBorrow[P, A, Never, F, False]] where P == Self.T:"
+     },
+     {
+      "sha256": "7e986766dd73d27b7785d53130992f07402b368aec406cb4264b186e26f42c39",
+      "signature": "def inspect[P: AnyType, A: Movable & Deinitable, X: Movable & Deinitable, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, A, X]](self, var function: F) -> _RefInspect[Self.T, E, _NativeBorrow[P, A, X, F, True]] where P == Self.T and _ErrorCompatible[E, X]:"
+     }
+    ],
+    "modify": [
+     {
+      "sha256": "6cc6fa82d2e3479ff7af013be63ec6b4b050d22e0398e6984025d862da2e306f",
+      "signature": "def modify[E: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](self, var function: F) -> _RefModify[Self.T, A, E, F] where F.Arg == Self.T and F.Out == Tuple[Self.T, A] and F.Error == Never and _OnceUnaryAvailable[F]:"
+     },
+     {
+      "sha256": "43d4631a92f3d40a05c3a190e60d32d7c68b2adebe622ffc4ab1213522cd5610",
+      "signature": "def modify[P: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, A: Movable & Deinitable, F: _Unary[P, R]](self, var function: F) -> _RefModify[Self.T, A, E, NativeUnary[P, R, Never, F, False]] where P == Self.T and R == Tuple[P, A]:"
+     }
+    ],
+    "set": [
+     {
+      "sha256": "f261605c737f70276053745fc4ad0e7eb1d1652a9cc295f4d50cfd74bc861ab5",
+      "signature": "def set[E: Movable & Deinitable](self, var value: Self.T) -> _RefModify[Self.T, NoneType, E, _Update[_Replace[Self.T]]]:"
+     }
+    ],
+    "update": [
+     {
+      "sha256": "8db6ac40258464ac24a1f853a754a2fd5b2278824ac7f8a87d23ac311b3ca42f",
+      "signature": "def update[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> _RefModify[Self.T, NoneType, E, _Update[F]] where F.Arg == Self.T and F.Out == Self.T and F.Error == Never and _OnceUnaryAvailable[F]:"
+     },
+     {
+      "sha256": "bae860c3fcfe375aebd5fd1d51b38295770eeb9adabb75f58ef1a39394f96977",
+      "signature": "def update[P: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: _Unary[P, R]](self, var function: F) -> _RefModify[Self.T, NoneType, E, _Update[NativeUnary[P, R, Never, F, False]]] where P == Self.T and R == Self.T:"
+     }
+    ]
+   },
+   "provider": "effects/coordination"
+  },
   "effects.Resource": {
    "declarations": [
     "struct Resource[O: _OpenScope](_ResourceType):"
@@ -4688,6 +4861,33 @@
    ],
    "kind": "type or alias",
    "provider": "effects/layers"
+  },
+  "effects.Semaphore": {
+   "declarations": [
+    "struct Semaphore(Copyable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "acquire": [
+     {
+      "sha256": "83588ecd8dbc2cd26f1ddb78671df4549dc7ed59584c84b4c75b7923db8186fb",
+      "signature": "def acquire[E: Movable & Deinitable](self) -> _AwaitSome[Permit, _RefModify[Int, Optional[Permit], E, _Reserve]]:"
+     }
+    ],
+    "available": [
+     {
+      "sha256": "e274ee46d118bbb9387743a09045b1f29fdcf3fea5109bffa7fda70689df5991",
+      "signature": "def available[E: Movable & Deinitable](self) -> _RefInspect[Int, E, _Copy[Int]]:"
+     }
+    ],
+    "with_permit": [
+     {
+      "sha256": "9835a1bc2cba56675aeb2235300c96aca3bd7002703ebdfaa2042c2c3a507857",
+      "signature": "def with_permit[P: ReaderAction](self, var program: P) -> BindContract[IO[IOContract[P].Error], _AwaitSome[Permit, _RefModify[Int, Optional[Permit], IOContract[P].Error, _Reserve]], _WithPermit[P]].Out where IOContract[P].Compatible:"
+     }
+    ]
+   },
+   "provider": "effects/coordination"
   },
   "effects.State": {
    "declarations": [
@@ -5270,6 +5470,16 @@
     }
    ],
    "provider": "effects/io"
+  },
+  "effects.unsafe_start": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "db2419b197d1812b8cd3e0c505c5f98059052136778b0c7c7ce8cadc49f04009",
+     "signature": "def unsafe_start[P: ReaderAction](var program: P) raises -> Fiber[P] where IOContract[P].Compatible:"
+    }
+   ],
+   "provider": "effects/fibers"
   },
   "effects.use_resource": {
    "kind": "function",

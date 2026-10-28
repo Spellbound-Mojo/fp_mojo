@@ -341,6 +341,9 @@
     },
     "docs/examples/writer_capabilities.mojo": {
       "stdout": "output: [saved] ; observed: [saved]\nnested output: [nested] ; observed: [nested] ; state: 42\nfailed: True ; retained output: [attempted]\n"
+    },
+    "docs/examples/coordination.mojo": {
+      "stdout": "counter: 1\ndeferred: ready\nprotected: 42\nqueue: first second\n"
     }
   },
   "version": 1

@@ -7,7 +7,11 @@ Changing one requires an explicit design decision and updated documentation.
 
 1. **Ordinary Mojo only.** The library is used through normal imports,
    functions, closures, structs, traits and parameters. There is no parser,
-   transpiler, source rewriting, mandatory code generation, FFI or Python runtime.
+   transpiler, source rewriting, mandatory code generation or Python runtime.
+   The optional 64-bit Linux fiber backend uses public Mojo FFI for POSIX
+   thread creation and joining; core operations require no foreign runtime.
+   Its [thread ownership contract](algebra.md#fibers-and-shared-coordination)
+   is an explicit, narrowly scoped exception.
 2. **Add the smallest missing piece.** When a native capability covers part of
    a contract, add only the missing adapter or specialization, reuse native
    control flow, ownership and storage, and state the exact gap it fills.
@@ -62,7 +66,8 @@ and is [measured cold](../contributing/benchmarks.md#measuring-compile-time).
 The library covers function composition and partial application, sequential
 folds and lazy iteration, typed results, algebraic and inductive data types with
 exhaustive pattern matching, functional control flow, and algebraic interfaces
-with monad transformers, consumed resource scopes, and cooperative IO execution.
+with monad transformers, consumed resource scopes, cooperative IO execution,
+explicitly started fibers, and shared coordination.
 Recursion is over finite acyclic data; general
 well-founded recursion is outside this contract. The scope also includes
 documented laws and device-compatible specializations of the non-allocating,

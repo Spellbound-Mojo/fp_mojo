@@ -41432,6 +41432,109 @@
     "Tell"
    ]
   },
+  "effects.Deferred": {
+   "aliases": [],
+   "description": "A successful completion wins once. get waits cooperatively; try_get never\nwaits for completion. Use Queue to transfer move-only payloads.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "complete": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The completion owner; destroyed if completion already occurred.",
+        "name": "value",
+        "type": "Self.T",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The selected IO error type.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO[E] recipe yielding whether this attempt completed the cell.",
+       "type": "_RefModify[Optional[Self.T], Bool, E, _Complete[Self.T]]"
+      },
+      "signature": "def complete[E: Movable & Deinitable](self, var value: Self.T) -> _RefModify[Optional[Self.T], Bool, E, _Complete[Self.T]]",
+      "summary": "Defer completion; return True only for the winning caller."
+     }
+    ],
+    "get": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The selected IO error type.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO[E] recipe yielding a copy of the completed T.",
+       "type": "_AwaitSome[Self.T, _RefInspect[Optional[Self.T], E, _Copy[Optional[Self.T]]]]"
+      },
+      "signature": "def get[E: Movable & Deinitable](self) -> _AwaitSome[Self.T, _RefInspect[Optional[Self.T], E, _Copy[Optional[Self.T]]]]",
+      "summary": "Wait for completion, releasing the lock between cancellation checks."
+     }
+    ],
+    "try_get": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The selected IO error type.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO[E] recipe yielding Optional[T], copying a completed payload.",
+       "type": "_RefInspect[Optional[Self.T], E, _Copy[Optional[Self.T]]]"
+      },
+      "signature": "def try_get[E: Movable & Deinitable](self) -> _RefInspect[Optional[Self.T], E, _Copy[Optional[Self.T]]]",
+      "summary": "Defer a snapshot, absent until completed."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The copyable completion payload.",
+     "inferred": false,
+     "name": "T",
+     "type": "Copyable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/coordination",
+   "signature": "struct Deferred[T: Copyable & Deinitable](Copyable)",
+   "summary": "A shared, single-assignment value; waiting readers receive copies.",
+   "traits": [
+    "Copyable"
+   ]
+  },
   "effects.EffectFailure": {
    "aliases": [],
    "description": "Errors retain their occurrence order: body first, then finalizers from the\ninnermost scope outwards. Neither errors nor their borrowed origins are\nerased. Native resource scopes always set canceled to False.",
@@ -41481,6 +41584,104 @@
    "traits": [
     "Copyable"
    ]
+  },
+  "effects.Fiber": {
+   "aliases": [],
+   "description": "Construct with unsafe_start. Dropping requests cancellation and waits for\nthe worker and its finalizers; this can block indefinitely in native code\nwhich does not cooperate. Join explicitly to observe errors. The concrete\nprogram type preserves captured origins and move-only values.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "cancel": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The joined outcome, preserving any body and finalizer errors.",
+       "type": "IOContract[Self.P].Out"
+      },
+      "signature": "def cancel(deinit self) -> IOContract[Self.P].Out",
+      "summary": "Request cancellation, wait for finalization, and return its outcome."
+     }
+    ],
+    "done": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "True when the worker has published its final outcome.",
+       "type": "Bool"
+      },
+      "signature": "def done(self) -> Bool",
+      "summary": "Check whether execution and all entered finalizers have completed."
+     }
+    ],
+    "join": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Its success, accumulated exact errors, or cancellation.",
+       "type": "IOContract[Self.P].Out"
+      },
+      "signature": "def join(deinit self) -> IOContract[Self.P].Out",
+      "summary": "Wait synchronously and consume the worker's exact outcome."
+     }
+    ],
+    "join_io": [
+     {
+      "args": [],
+      "description": "Dropping this unopened recipe still drops and joins the owned fiber.\nChild errors survive parent cancellation, with the canceled flag set.",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An owned IO recipe in the child's error family.",
+       "type": "_JoinFiber[Self.P]"
+      },
+      "signature": "def join_io(deinit self) -> _JoinFiber[Self.P]",
+      "summary": "Defer joining; parent cancellation cancels and waits for the child."
+     }
+    ],
+    "request_cancel": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": null,
+      "signature": "def request_cancel(self)",
+      "summary": "Request cancellation without waiting for the worker to stop."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "A compatible IO recipe and its captured owners.",
+     "inferred": false,
+     "name": "P",
+     "type": "ReaderAction",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/fibers",
+   "signature": "struct Fiber[P: ReaderAction](Movable)",
+   "summary": "A single owned worker, joined before its captured owners can be destroyed.",
+   "traits": []
   },
   "effects.IO": {
    "aliases": [],
@@ -42539,6 +42740,18 @@
    "summary": "An IO outcome: absent for cancellation, present Ok for success or Err for failure.",
    "traits": []
   },
+  "effects.Permit": {
+   "aliases": [],
+   "description": "Acquire through Semaphore. Never copy or manually construct permit owners.\nDropping a canceled acquisition restores its reserved permit exactly once.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [],
+   "provider": "effects/coordination",
+   "signature": "struct Permit(Movable)",
+   "summary": "One owned semaphore permit, returned automatically when destroyed.",
+   "traits": []
+  },
   "effects.Project": {
    "aliases": [
     {
@@ -42604,6 +42817,165 @@
    "signature": "trait Project",
    "summary": "Borrow a selected environment or state without copying the whole value.",
    "traits": []
+  },
+  "effects.Queue": {
+   "aliases": [],
+   "description": "offer/take wait cooperatively; try_offer/try_take make one locked attempt.\nA completed enqueue or dequeue survives late cancellation; an unobserved\nremoved owner is destroyed. No rollback or waiter fairness is promised.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "offer": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The owner to enqueue; destroyed if canceled before acceptance.",
+        "name": "value",
+        "type": "Self.T",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The selected IO error type.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO[E] recipe yielding unit after the enqueue.",
+       "type": "_Offer[Self.T, E]"
+      },
+      "signature": "def offer[E: Movable & Deinitable](self, var value: Self.T) -> _Offer[Self.T, E]",
+      "summary": "Wait for space and enqueue once, retaining the owner while waiting."
+     }
+    ],
+    "size": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The selected IO error type.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO[E] recipe yielding an instantaneous queue size.",
+       "type": "_RefInspect[Deque[Self.T], E, _Size[Self.T]]"
+      },
+      "signature": "def size[E: Movable & Deinitable](self) -> _RefInspect[Deque[Self.T], E, _Size[Self.T]]",
+      "summary": "Defer reading the number of buffered values."
+     }
+    ],
+    "take": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The selected IO error type.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO[E] recipe yielding the next owned T.",
+       "type": "_AwaitSome[Self.T, _RefModify[Deque[Self.T], Optional[Self.T], E, _TryTake[Self.T]]]"
+      },
+      "signature": "def take[E: Movable & Deinitable](self) -> _AwaitSome[Self.T, _RefModify[Deque[Self.T], Optional[Self.T], E, _TryTake[Self.T]]]",
+      "summary": "Wait for and transfer the oldest buffered value."
+     }
+    ],
+    "try_offer": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The owner to enqueue.",
+        "name": "value",
+        "type": "Self.T",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The selected IO error type.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO[E] recipe yielding None when accepted or Some(T) when full.",
+       "type": "_RefModify[Deque[Self.T], Optional[Self.T], E, _TryOffer[Self.T]]"
+      },
+      "signature": "def try_offer[E: Movable & Deinitable](self, var value: Self.T) -> _RefModify[Deque[Self.T], Optional[Self.T], E, _TryOffer[Self.T]]",
+      "summary": "Attempt enqueue once; return the original owner if the queue is full."
+     }
+    ],
+    "try_take": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The selected IO error type.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO[E] recipe yielding Optional[T] without copying the payload.",
+       "type": "_RefModify[Deque[Self.T], Optional[Self.T], E, _TryTake[Self.T]]"
+      },
+      "signature": "def try_take[E: Movable & Deinitable](self) -> _RefModify[Deque[Self.T], Optional[Self.T], E, _TryTake[Self.T]]",
+      "summary": "Attempt dequeue once; return absence if empty."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The exact owned payload, including move-only values.",
+     "inferred": false,
+     "name": "T",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/coordination",
+   "signature": "struct Queue[T: Movable & Deinitable](Copyable)",
+   "summary": "A bounded shared FIFO, transferring payloads without requiring copies.",
+   "traits": [
+    "Copyable"
+   ]
   },
   "effects.Reader": {
    "aliases": [],
@@ -43421,6 +43793,459 @@
     "_LocalLifting"
    ]
   },
+  "effects.Ref": {
+   "aliases": [],
+   "description": "Copies share the cell. Operations construct deferred IO recipes. Callbacks\nand state destructors run under the lock and must not reenter the same Ref.\nLock waits are cancelable; a running native callback is not preempted. No\nfairness is promised. Completed updates survive late cancellation.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "get": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The selected IO error type.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO[E] snapshot; available only when T is Copyable.",
+       "type": "_RefInspect[Self.T, E, _Copy[Self.T]]"
+      },
+      "signature": "def get[E: Movable & Deinitable](self) -> _RefInspect[Self.T, E, _Copy[Self.T]] where conforms_to(Self.T, Copyable)",
+      "summary": "Defer copying the current value while holding the lock."
+     }
+    ],
+    "get_and_set": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The replacement owner.",
+        "name": "value",
+        "type": "Self.T",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The selected IO error type.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO[E] recipe yielding the previous T without copying it.",
+       "type": "_RefModify[Self.T, Self.T, E, _BindFirst[_Pair[Self.T, Self.T]]]"
+      },
+      "signature": "def get_and_set[E: Movable & Deinitable](self, var value: Self.T) -> _RefModify[Self.T, Self.T, E, _BindFirst[_Pair[Self.T, Self.T]]]",
+      "summary": "Replace the state and transfer the previous owner to the caller."
+     }
+    ],
+    "inspect": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The observation callback, consumed when the recipe runs.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A borrowing callable with a result independent of the cell borrow.",
+        "inferred": true,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The exact compatible IO error type.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO[E] observation preserving native errors as EffectFailure.",
+       "type": "_RefInspect[Self.T, E, F]"
+      },
+      "signature": "def inspect[F: BorrowCallContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> _RefInspect[Self.T, E, F] where F.Payload == Self.T and _ErrorCompatible[E, F.Failure] and _OnceBorrowAvailable[F]",
+      "summary": "Borrow the locked state once; capture exact E/Never errors and unlock."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Borrowing[P, A]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_RefInspect[Self.T, E, _NativeBorrow[P, A, Never, F, False]]"
+      },
+      "signature": "def inspect[P: AnyType, A: Movable & Deinitable, //, E: Movable & Deinitable, F: _Borrowing[P, A]](self, var function: F) -> _RefInspect[Self.T, E, _NativeBorrow[P, A, Never, F, False]] where P == Self.T",
+      "summary": "Adapt a non-raising native borrowing observation."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "AnyType",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_RaisingBorrowing[P, A, X]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_RefInspect[Self.T, E, _NativeBorrow[P, A, X, F, True]]"
+      },
+      "signature": "def inspect[P: AnyType, A: Movable & Deinitable, X: Movable & Deinitable, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, A, X]](self, var function: F) -> _RefInspect[Self.T, E, _NativeBorrow[P, A, X, F, True]] where P == Self.T and _ErrorCompatible[E, X]",
+      "summary": "Adapt a native observation with its exact compatible error type."
+     }
+    ],
+    "modify": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback transferred into the deferred operation.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "E selects the IO family; A is the explicit result type. Raising updates\nare rejected because consuming the old state would lose it on failure.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The selected IO error type.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The owned result type, independent of the cell's borrow.",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "A once-callable non-raising transformation from T to (T, A).",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO[E] recipe yielding A after replacing the state.",
+       "type": "_RefModify[Self.T, A, E, F]"
+      },
+      "signature": "def modify[E: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](self, var function: F) -> _RefModify[Self.T, A, E, F] where F.Arg == Self.T and F.Out == Tuple[Self.T, A] and F.Error == Never and _OnceUnaryAvailable[F]",
+      "summary": "Atomically consume state and return (new state, result), without raising."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Unary[P, R]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_RefModify[Self.T, A, E, NativeUnary[P, R, Never, F, False]]"
+      },
+      "signature": "def modify[P: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, A: Movable & Deinitable, F: _Unary[P, R]](self, var function: F) -> _RefModify[Self.T, A, E, NativeUnary[P, R, Never, F, False]] where P == Self.T and R == Tuple[P, A]",
+      "summary": "Adapt a non-raising native state update; spell modify[E, A]."
+     }
+    ],
+    "set": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The replacement owner, retained until execution or destruction.",
+        "name": "value",
+        "type": "Self.T",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The selected IO error type.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO[E] recipe yielding unit after replacement.",
+       "type": "_RefModify[Self.T, NoneType, E, _Update[_Replace[Self.T]]]"
+      },
+      "signature": "def set[E: Movable & Deinitable](self, var value: Self.T) -> _RefModify[Self.T, NoneType, E, _Update[_Replace[Self.T]]]",
+      "summary": "Replace and destroy the previous value when the recipe executes."
+     }
+    ],
+    "update": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The owned state transformation.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A once-callable non-raising transformation from T to T.",
+        "inferred": true,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The selected IO error type.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO[E] recipe yielding NoneType after the update.",
+       "type": "_RefModify[Self.T, NoneType, E, _Update[F]]"
+      },
+      "signature": "def update[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> _RefModify[Self.T, NoneType, E, _Update[F]] where F.Arg == Self.T and F.Out == Self.T and F.Error == Never and _OnceUnaryAvailable[F]",
+      "summary": "Defer an atomic non-raising transformation, yielding unit."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Unary[P, R]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_RefModify[Self.T, NoneType, E, _Update[NativeUnary[P, R, Never, F, False]]]"
+      },
+      "signature": "def update[P: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: _Unary[P, R]](self, var function: F) -> _RefModify[Self.T, NoneType, E, _Update[NativeUnary[P, R, Never, F, False]]] where P == Self.T and R == Self.T",
+      "summary": "Adapt a non-raising native state transformation."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The exact owned state type; callbacks cannot borrow it out of the cell.",
+     "inferred": false,
+     "name": "T",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/coordination",
+   "signature": "struct Ref[T: Movable & Deinitable](Copyable)",
+   "summary": "A shared cell with serialized updates, including move-only state.",
+   "traits": [
+    "Copyable"
+   ]
+  },
   "effects.Resource": {
    "aliases": [
     {
@@ -43939,6 +44764,101 @@
    "signature": "comptime ResultT[M: Monad, E: Movable & Deinitable]: Monad & ApplicativeError & ErrorMapping & _Lifting = ResultFamily[E] if M == IdentityFamily else _ResultT[M, E]",
    "summary": "Result over the base Monad `M`: a value is `M`'s carrier of `Result[A, E]`; over Identity, `ResultFamily[E]`.",
    "traits": []
+  },
+  "effects.Semaphore": {
+   "aliases": [],
+   "description": "No fairness ordering is promised. with_permit uses IO's existing guarantee\nscope so all entered success, failure and cancellation paths release.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "acquire": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The selected IO error type.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO[E] recipe yielding one move-only Permit.",
+       "type": "_AwaitSome[Permit, _RefModify[Int, Optional[Permit], E, _Reserve]]"
+      },
+      "signature": "def acquire[E: Movable & Deinitable](self) -> _AwaitSome[Permit, _RefModify[Int, Optional[Permit], E, _Reserve]]",
+      "summary": "Wait for and return a single owned permit; dropping it releases."
+     }
+    ],
+    "available": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The selected IO error type.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO[E] recipe yielding an instantaneous count.",
+       "type": "_RefInspect[Int, E, _Copy[Int]]"
+      },
+      "signature": "def available[E: Movable & Deinitable](self) -> _RefInspect[Int, E, _Copy[Int]]",
+      "summary": "Defer reading the current unreserved permit count."
+     }
+    ],
+    "with_permit": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The owned body to enter after acquiring a permit.",
+        "name": "program",
+        "type": "P",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A compatible concrete IO program.",
+        "inferred": false,
+        "name": "P",
+        "type": "ReaderAction",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO recipe preserving the body's value and error types. The permit\nis returned on success, failure, cancellation, or an unopened drop.",
+       "type": "BindContract[IO[IOContract[P].Error], _AwaitSome[Permit, _RefModify[Int, Optional[Permit], IOContract[P].Error, _Reserve]], _WithPermit[P]].Out"
+      },
+      "signature": "def with_permit[P: ReaderAction](self, var program: P) -> BindContract[IO[IOContract[P].Error], _AwaitSome[Permit, _RefModify[Int, Optional[Permit], IOContract[P].Error, _Reserve]], _WithPermit[P]].Out where IOContract[P].Compatible",
+      "summary": "Defer acquiring a permit, running the program, and releasing it."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "effects/coordination",
+   "signature": "struct Semaphore(Copyable)",
+   "summary": "A shared permit count with cancelable acquisition and owned release.",
+   "traits": [
+    "Copyable"
+   ]
   },
   "effects.State": {
    "aliases": [],
@@ -48108,6 +49028,44 @@
     }
    ],
    "provider": "effects/io",
+   "summary": ""
+  },
+  "effects.unsafe_start": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The owned program, consumed once by the worker on success.",
+       "name": "program",
+       "type": "P",
+       "variadic": false
+      }
+     ],
+     "description": "The caller must ensure that every captured value, its callbacks, and its\ndestructors may run on a different thread, and that shared mutations are\nsynchronized. Mojo has no Send/Sync proof; origin checking alone does not\nestablish this safety. This is not a lightweight fiber scheduler.",
+     "error": "Error",
+     "parameters": [
+      {
+       "description": "The complete concrete IO program type, without erased origins.",
+       "inferred": false,
+       "name": "P",
+       "type": "ReaderAction",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "Error if the platform is unsupported or pthread_create fails. Failure\ndestroys the unopened program without running its finalizers.",
+     "returns": {
+      "doc": "A move-only handle which joins before releasing the program's state.",
+      "type": "Fiber[P]"
+     },
+     "signature": "def unsafe_start[P: ReaderAction](var program: P) raises -> Fiber[P] where IOContract[P].Compatible",
+     "summary": "Start one 64-bit Linux OS thread immediately, transferring an IO recipe to it."
+    }
+   ],
+   "provider": "effects/fibers",
    "summary": ""
   },
   "effects.use_resource": {
@@ -310219,7 +311177,7 @@
    "summary": "Typed results, early termination and bridges between raised and stored errors."
   },
   "effects": {
-   "description": "| Family | Value | Additional operations |\n|---|---|---|\n| `ReaderT[M, R]` | A `ReaderAction`: borrows `R` when run, returns `M`'s carrier | `action`, `run`, `lift`, `ask`, `asks`, `local` |\n| `StateT[M, S]` | A `StateAction`: consumes `S` when run, returns `M`'s carrier of `(A, S)` | `action`, `run`, `lift`, `get`, `inspect`, `put`, `modify` |\n| `WriterT[M, W]` | A `WriterValue` wrapping `M`'s carrier of `(W.Value, A)` | `writer`, `run_writer`, `lift`, `tell`, `listen`, `censor` |\n| `OptionalT[M]` | `M`'s carrier of `Optional[A]` | `lift` |\n| `ResultT[M, E]` | `M`'s carrier of `Result[A, E]` | `lift` |\n\n`Reader[R]`, `State[S]` and `Writer[W]` are the transformers over\n`IdentityFamily`; `OptionalT` and `ResultT` over Identity are `OptionalFamily`\nand `ResultFamily[E]` themselves. Each family is a `Monad` of `fp.algebra`, so\n`map`, `pure`, `flat_map`, `map2_lazy` and `traverse` apply to its values.\nReader and State values are deferred computations: nothing runs until `run`.\n\nAsk/Local and Stateful are compile-time capability dictionaries. Reader and\nState select their own environment or state; LiftAsk, LiftLocal and\nLiftStateful explicitly select a capability from the immediate base. Generic\nprograms use the selected dictionary's Family for algebra operations.\nTell/Listen/Censor select a log; LiftTell, LiftListen and LiftCensor transport\nthose operations through one layer. Listen pairs the payload with an observed\nlog, while censor transforms only the selected computation's output log.\n\nTransformer order matters. `StateT` over `Result` returns no state on failure;\n`ResultT` over `State` can return a failed `Result` together with the updated\nstate. Neither rolls back external mutation. For `ResultT[State[S], E]`, run\nwith `run[State[S]]`, whose result is `Tuple[Result[A, E], S]`, and lift\nState's operations into the ResultT layer; for `StateT[ResultFamily[E], S]`,\nrun with that StateT, whose result is `Result[Tuple[A, S], E]`.\n\n| Stack | Evaluation order | Final shape |\n|---|---|---|\n| `WriterT[Reader[R], W]` | `run_writer`, then Reader `run` | `(log, value)` |\n| `ReaderT[Writer[W], R]` | Reader `run`, then `run_writer` | `(log, value)` |\n| `WriterT[State[S], W]` | `run_writer`, then State `run` | `((log, value), state)` |\n| `StateT[Writer[W], S]` | State `run`, then `run_writer` | `(log, (value, state))` |\n\n`OptionalT[ResultT[M, E]]` carries `M[Result[Optional[A], E]]`, and\n`ResultT[OptionalT[M], E]` carries `M[Optional[Result[A, E]]]`. Either an\nabsence or a stored error skips later callbacks and lazy right operands,\nwithout converting one failure kind into the other. Native exceptions from any\nstage propagate with their exact types instead of becoming `Result` data.\n\nTraversal into a layer delegates to the base's traversal loop with the layer's\naccumulation rule, so the count of pulls and callback calls is the same over\neager, deferred and third-party bases. A deferred computation can be copied or\nreplayed only when its stored inputs and callbacks support it; copying an owner\ndoes not make a consuming callback reusable.",
+   "description": "| Family | Value | Additional operations |\n|---|---|---|\n| `ReaderT[M, R]` | A `ReaderAction`: borrows `R` when run, returns `M`'s carrier | `action`, `run`, `lift`, `ask`, `asks`, `local` |\n| `StateT[M, S]` | A `StateAction`: consumes `S` when run, returns `M`'s carrier of `(A, S)` | `action`, `run`, `lift`, `get`, `inspect`, `put`, `modify` |\n| `WriterT[M, W]` | A `WriterValue` wrapping `M`'s carrier of `(W.Value, A)` | `writer`, `run_writer`, `lift`, `tell`, `listen`, `censor` |\n| `OptionalT[M]` | `M`'s carrier of `Optional[A]` | `lift` |\n| `ResultT[M, E]` | `M`'s carrier of `Result[A, E]` | `lift` |\n\n`Reader[R]`, `State[S]` and `Writer[W]` are the transformers over\n`IdentityFamily`; `OptionalT` and `ResultT` over Identity are `OptionalFamily`\nand `ResultFamily[E]` themselves. Each family is a `Monad` of `fp.algebra`, so\n`map`, `pure`, `flat_map`, `map2_lazy` and `traverse` apply to its values.\nReader and State values are deferred computations: nothing runs until `run`.\n\nAsk/Local and Stateful are compile-time capability dictionaries. Reader and\nState select their own environment or state; LiftAsk, LiftLocal and\nLiftStateful explicitly select a capability from the immediate base. Generic\nprograms use the selected dictionary's Family for algebra operations.\nTell/Listen/Censor select a log; LiftTell, LiftListen and LiftCensor transport\nthose operations through one layer. Listen pairs the payload with an observed\nlog, while censor transforms only the selected computation's output log.\n\nTransformer order matters. `StateT` over `Result` returns no state on failure;\n`ResultT` over `State` can return a failed `Result` together with the updated\nstate. Neither rolls back external mutation. For `ResultT[State[S], E]`, run\nwith `run[State[S]]`, whose result is `Tuple[Result[A, E], S]`, and lift\nState's operations into the ResultT layer; for `StateT[ResultFamily[E], S]`,\nrun with that StateT, whose result is `Result[Tuple[A, S], E]`.\n\n| Stack | Evaluation order | Final shape |\n|---|---|---|\n| `WriterT[Reader[R], W]` | `run_writer`, then Reader `run` | `(log, value)` |\n| `ReaderT[Writer[W], R]` | Reader `run`, then `run_writer` | `(log, value)` |\n| `WriterT[State[S], W]` | `run_writer`, then State `run` | `((log, value), state)` |\n| `StateT[Writer[W], S]` | State `run`, then `run_writer` | `(log, (value, state))` |\n\n`OptionalT[ResultT[M, E]]` carries `M[Result[Optional[A], E]]`, and\n`ResultT[OptionalT[M], E]` carries `M[Optional[Result[A, E]]]`. Either an\nabsence or a stored error skips later callbacks and lazy right operands,\nwithout converting one failure kind into the other. Native exceptions from any\nstage propagate with their exact types instead of becoming `Result` data.\n\nTraversal into a layer delegates to the base's traversal loop with the layer's\naccumulation rule, so the count of pulls and callback calls is the same over\neager, deferred and third-party bases. A deferred computation can be copied or\nreplayed only when its stored inputs and callbacks support it; copying an owner\ndoes not make a consuming callback reusable.\n\nResource owns consumed acquisition and release scopes. IO uses the existing\nReader, Result and Optional families for typed outcomes and cooperative\ncancellation. Ref, Deferred, Semaphore and Queue construct IO recipes over\nshared state. The optional Fiber backend requires explicit unsafe_start and\nits documented thread-safety obligations.",
    "summary": "Reader, State and Writer computations and the OptionalT and ResultT layers, over any base Monad."
   },
   "functions": {

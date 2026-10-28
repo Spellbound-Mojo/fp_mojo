@@ -339,3 +339,63 @@ scope into IO. It checks cancellation before acquisition and after release;
 there is no cancellation gap that can abandon an acquired value. Its callbacks
 are native synchronous operations, not general origin-dependent IO callbacks.
 `IOContract[P]` exposes admission and result types for generic host runners.
+
+## Shared state and coordination
+
+`Ref[T]`, `Deferred[T]`, `Semaphore` and `Queue[T]` are shared handles: copying
+one shares its state. Their operations construct IO recipes, so constructing
+an update or wait does not execute it. Each method takes an explicit IO error
+selection, such as `counter.get[Error]()`.
+
+<!-- example: docs/examples/coordination.mojo -->
+
+| Primitive | Operations | Ownership and waiting |
+|---|---|---|
+| `Ref[T]` | `get`, `inspect`, `update`, `modify`, `set`, `get_and_set` | Serialized state access; copying a value requires Copyable T |
+| `Deferred[T]` | `complete`, `try_get`, `get` | One completion wins; waiting readers receive copies |
+| `Semaphore` | `available`, `acquire`, `with_permit` | Acquisition returns an owned Permit; dropping it releases |
+| `Queue[T]` | `size`, `try_offer`, `offer`, `try_take`, `take` | Bounded FIFO transfer, including move-only payloads |
+
+`Ref.modify[E, A](callback)` atomically transforms T into `(T, A)`. The callback
+must not raise: it owns the old T and must return its replacement. Use `inspect`
+for a borrowing observation which may raise E. Neither operation lets a result
+borrow the temporary cell access. Callbacks and state destructors must not
+reenter the same Ref while it is locked. `get_and_set` transfers the previous
+owner and does not require a copy.
+
+Deferred accepts Copyable values and returns True from only its first successful
+`complete`. Queue is the alternative when values must be transferred. Its
+`try_offer` returns None when accepted and Some(original_value) when full.
+Semaphore requires a nonnegative initial count; Queue requires positive capacity.
+`with_permit(program)` releases its permit after success, failure or cancellation.
+A zero-permit semaphore cannot grant a permit; a waiting acquisition can still
+be canceled.
+
+Waits check cancellation between short sleeps and promise no waiter fairness.
+Native callbacks execute synchronously under the cell lock and cannot be
+preempted. Cancellation does not undo an update, enqueue or dequeue that already
+completed. If cancellation prevents delivery of a removed queue value, that
+owned value is destroyed.
+
+## Owned fibers
+
+`unsafe_start(program)` immediately starts an IO recipe on one OS thread and
+returns a move-only `Fiber[P]`. The current backend supports 64-bit Linux.
+`fiber.join()` consumes the handle and returns its exact Outcome; `fiber.cancel()`
+requests cancellation and joins. Use `fiber.request_cancel()` to signal without
+waiting, and `fiber.done()` to check completion.
+
+Starting a fiber is explicitly unsafe because Mojo has no Send/Sync proof. The
+caller must ensure captured values, callbacks and destructors may cross threads,
+referenced owners remain valid until join, and shared mutations are synchronized.
+An accepted native closure is not evidence of thread safety. The library's shared
+coordination handles provide synchronization for their own state; payloads and
+callbacks retain their own obligations.
+
+`fiber.join_io()` consumes the handle into an IO recipe. Once entered, parent
+cancellation signals the child and waits for all entered child finalizers. Child
+errors are retained, even during cancellation. Dropping a Fiber or an unopened
+join recipe also requests cancellation and waits, discarding its outcome.
+Joining can block indefinitely when native code or masked finalization does not
+cooperate. Explicitly join to inspect failures. This backend uses OS threads;
+it does not provide Cats-effect's lightweight scheduler.

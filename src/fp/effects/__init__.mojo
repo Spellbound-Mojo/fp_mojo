@@ -47,6 +47,12 @@ accumulation rule, so the count of pulls and callback calls is the same over
 eager, deferred and third-party bases. A deferred computation can be copied or
 replayed only when its stored inputs and callbacks support it; copying an owner
 does not make a consuming callback reusable.
+
+Resource owns consumed acquisition and release scopes. IO uses the existing
+Reader, Result and Optional families for typed outcomes and cooperative
+cancellation. Ref, Deferred, Semaphore and Queue construct IO recipes over
+shared state. The optional Fiber backend requires explicit unsafe_start and
+its documented thread-safety obligations.
 """
 from .protocols import Project, Ask, Local, Stateful, Tell, Listen, Censor, ReaderAction, StateAction, ReaderFamily, StateFamily, WriterFamily
 from .reader import ReaderT, Reader
@@ -59,3 +65,5 @@ from .projections import LiftProject, asks, inspect
 from .outcomes import EffectFailure, Outcome
 from .resources import Resource, ResourceContract, resource, pure_resource
 from .io import IO, IOContract, IOContext, CancellationToken, delay, run_io, capture_io, guarantee, uncancelable, canceled, sleep_io, use_resource
+from .fibers import Fiber, unsafe_start
+from .coordination import Ref, Deferred, Semaphore, Permit, Queue

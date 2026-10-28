@@ -1105,3 +1105,71 @@ capture boundary. `capture_io(program)` places that boundary before stored-error
 recovery, so `IO[E].or_else(handler, capture_io(program))` can recover it. Delay,
 guarantee, resource execution and host runs already capture their protected
 native calls. Cancellation remains separate from this error recovery.
+
+## Fibers and shared coordination
+
+The optional fiber backend starts one OS thread per IO recipe using the public
+Mojo `std.ffi` interface to POSIX `pthread_create` and `pthread_join`. Its current
+contract is 64-bit Linux; other targets reject `unsafe_start` before opening the
+program. It is deliberately separate from the portable synchronous IO boundary.
+This is an explicit exception to the no-FFI core principle, not a compiler or
+standard-library modification. Mojo's unfinished native async types are not used.
+
+`unsafe_start(program)` transfers the complete concrete program type into an
+ArcPointer allocation. A specialized C-ABI entry point receives a typed pointer;
+there is no erased closure registry or origin cast. The owner retains that stable
+allocation until a successful join. The destructor explicitly consumes that
+owner after joining: Mojo may otherwise destroy an unused field before entering
+the destructor body. Only the worker accesses the program and
+result before join; completion and cancellation use atomics. A failed thread
+creation destroys the unopened program. A failed join aborts rather than freeing
+state which a worker might still use.
+
+Mojo has no Send/Sync proof. The caller must ensure every captured value,
+callback and destructor is safe on the worker thread, all referenced owners stay
+valid until join, and concurrent mutation is synchronized. Preserving the
+concrete type does not establish thread safety. In particular, accepting a
+native mutable capture does not prove exclusive access across threads.
+`unsafe_start` marks this obligation explicitly.
+
+A Fiber owns its join obligation. `request_cancel` only signals;
+`join` waits and transfers the outcome; `cancel` signals and joins. Destruction
+signals and joins too, then discards the outcome. `join_io` defers an owned join:
+a cancellation observed after entry signals the child, waits for its finalizers,
+and retains child errors with the cancellation flag. An unopened join dropped
+or skipped by an already-canceled outer run still destroys and joins its owned
+Fiber, but does not expose its discarded errors. Cancellation remains cooperative:
+unresponsive native code, masked waits or finalizers can block joining forever.
+This backend provides OS-thread concurrency, not lightweight scheduling.
+
+Ref is the single owner of shared-state synchronization. Its ArcPointer cell
+contains an atomic mutex and an owned optional slot. A guard releases the lock;
+all state accesses derive through that guard. `modify[E, A]` consumes T and
+returns `(T, A)` without raising, so failure cannot lose consumed state. `inspect`
+borrows T and captures exact native errors; outputs cannot borrow the temporary
+cell access. `get`, `update`, `set` and `get_and_set` derive from these two drivers.
+Native signatures infer their input and result independently before exact type
+checks. The explicit A avoids a Mojo 1.2 nested-tuple inference crash without
+weakening the result contract.
+
+The guard is destroyed before cancellation settles a returned value: that
+value's destructor may itself access the Ref. Callbacks and replaced state
+owners' destructors still execute under the lock and must not reenter that
+same cell. Lock contention sleeps between cancellation checks; no fairness or
+lock-free progress is promised. Updates already completed survive cancellation.
+
+Deferred uses `Ref[Optional[T]]` for a single winning completion. Readers copy
+T, so this primitive requires Copyable payloads. Semaphore uses `Ref[Int]` and
+returns a move-only Permit. Destroying a permit performs a masked increment
+through the same Ref driver; cancellation after reservation therefore restores
+the count. `with_permit` derives from existing flat_map and guarantee, including
+unopened owner destruction, without another lifecycle runner.
+
+Queue uses `Ref[std.collections.Deque[T]]` for bounded FIFO transfer, including
+move-only T. A full `try_offer` returns the rejected owner; `offer` retains it
+across retries. `try_take` transfers the head, while `take` waits. A common
+optional-result polling driver serves Deferred, Semaphore and Queue reads.
+Queue writes need an owned retry state because their rejected payload cannot
+be copied. All retries release the lock before sleeping and observing
+cancellation. Accepted enqueues and completed dequeues are not rolled back;
+a canceled, unobserved dequeued owner is destroyed exactly once.
