@@ -18,6 +18,7 @@ SOURCE_MODULES = (
     ('functions', 'callables/_identity'),
     ('functions', 'functions/kleisli'),
     ('functions', 'functions/flipped'),
+    ('functions', 'functions/tupled'),
     ('functions', 'functions/partial'),
     ('iteration', 'iteration/folds'),
     ('iteration', 'iteration/adapters'),

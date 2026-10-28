@@ -1,9 +1,10 @@
 """Move both elements out of a native pair without copying either."""
 from std.builtin.rebind import rebind_var, rebind, downcast
 from std.memory import MaybeUninit
-from .protocols import UnaryContract, OnceUnary, MutableUnary
-from .invoke import call_once, RepeatableUnary
-from ._receiver import _MutableUnaryRef
+from .protocols import UnaryContract, OnceUnary, MutableUnary, BinaryContract
+from .invoke import call_once, RepeatableUnary, _OnceBinaryAvailable
+from ._receiver import _MutableUnaryRef, _binary_once_as
+from fp._internal.errors import _ErrorCompatible
 
 
 comptime _OptionalCell[T: Movable & Deinitable]: Movable & Deinitable = Optional[T]
@@ -21,6 +22,16 @@ def _take_pair[A: Movable & Deinitable, B: Movable & Deinitable](
         else:
             second.unsafe_ptr().unsafe_write(rebind_var[B](value^))
     pair^.consume_elements(put)
+
+
+def _call_pair_as[E: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](
+    var function: F, var pair: Tuple[F.First, F.Second]
+) raises E -> F.Out where _ErrorCompatible[E, F.Error] and _OnceBinaryAvailable[F]:
+    """Transfer a native pair to one binary call through the canonical receiver."""
+    var first = MaybeUninit[F.First]()
+    var second = MaybeUninit[F.Second]()
+    _take_pair(pair^, first, second)
+    return _binary_once_as[E](function^, first^.unsafe_assume_init(), second^.unsafe_assume_init())
 
 
 @fieldwise_init

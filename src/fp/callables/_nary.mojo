@@ -8,8 +8,8 @@ slots; every slot is consumed before the possibly raising native call.
 from std.builtin.rebind import downcast, rebind_var
 from std.memory import MaybeUninit
 from .protocols import Unary
-from .products import _take_pair, _OptionalCell
-from .native import _NativeOwnedArg, _call_native, _call_native_binary, _Unary, _RaisingUnary, _Binary, _RaisingBinary
+from .products import _call_pair_as, _OptionalCell
+from .native import _NativeOwnedArg, _call_native, _NativeBinaryRef, _Unary, _RaisingUnary, _Binary, _RaisingBinary
 
 comptime _Nary1[A0: Movable & Deinitable, R: Movable & Deinitable] = _Unary[A0, R]
 comptime _RaisingNary1[A0: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable] = _RaisingUnary[A0, R, X]
@@ -51,12 +51,7 @@ struct _NativeNary2[A0: Movable & Deinitable, A1: Movable & Deinitable, R: Movab
     comptime Error = Self.X
     var function: Pointer[Self.F, Self.o]
     def call(self, var arg: Self.Arg) raises Self.X -> Self.R:
-        var slot0 = MaybeUninit[Self.A0]()
-        var slot1 = MaybeUninit[Self.A1]()
-        _take_pair(arg^, slot0, slot1)
-        var a0 = slot0^.unsafe_assume_init()
-        var a1 = slot1^.unsafe_assume_init()
-        return _call_native_binary[Self.A0, Self.A1, Self.R, Self.X, Self.F, Self.raising](self.function[], a0^, a1^)
+        return _call_pair_as[Self.X](_NativeBinaryRef[Self.A0, Self.A1, Self.R, Self.X, Self.F, Self.raising, Self.o](self.function), arg^)
 
 struct _OwnedNativeNary2[A0: Movable & Deinitable, A1: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool](Unary, Copyable where conforms_to(F, Copyable)):
     # Deferred families retain the pointer value, never a borrow of its local

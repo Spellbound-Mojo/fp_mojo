@@ -2,7 +2,7 @@
 
 `fp.functions` provides eager application with `identity` and `pipe`, function
 composition with `flow` and `compose`, argument flipping with `flip`, and partial
-application with `partial`. The reusable callables implement the fixed-arity
+application with `partial`, and explicit pair adaptation with `tupled`. The reusable callables implement the fixed-arity
 protocols in [fp.callables](callables.md). Pipelines and compositions share the
 same stage planner and traversal.
 
@@ -16,6 +16,7 @@ flow(f0, f1, ..., fn)(args)      = fn(...f1(f0(args))...)
 compose(fn, ..., f1, f0)(args)   = fn(...f1(f0(args))...)
 flip(f)(a, b, rest)              = f(b, a, rest)
 partial(f, a, b)(rest)           = f(copy(a), copy(b), rest)
+tupled(f)((a, b))               = f(a, b)
 ```
 
 These equations describe logical calls. `args` is zero, one or two arguments for
@@ -44,6 +45,24 @@ an `Err`. `Result.flat_map` calls the next computation only for `Ok`; an `Err`
 passes through unchanged. Generic code uses `flat_map[ResultFamily[E]]`, and
 native `Optional.and_then` keeps its standard meaning. Separately,
 `std.iter.chain` concatenates sequences.
+
+## Pair adaptation
+
+`Tupled` changes a binary callable's input shape to one native pair. The factory
+moves the callback; its shared, mutable and consuming methods borrow or move
+that same owner through existing receiver views. The unary shared-view marker
+allows named wrappers to be reused without copying captures. Native factories
+use the existing ABI descriptor and `NativeBinary`, rather than a new native
+call boundary. Captured binary closures use `BinarySignature.capture` first.
+
+`callables.products._call_pair_as` owns pair-to-binary invocation. It delegates
+element transfer to `_take_pair` and receiver/error selection to
+`_binary_once_as`. `Tupled`, native two-argument n-ary application, and library
+callbacks in lazy zip/index mapping share this owner. Lazy native callbacks
+retain their existing mutable native invocation convention; that branch still
+uses the same `_take_pair` ownership primitive. Adapting a pair never changes
+which receiver mode a consumer requests, promotes an error without the existing
+compatibility proof, or unpacks tuples implicitly in composition.
 
 ## Pipelines
 

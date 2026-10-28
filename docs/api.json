@@ -222289,6 +222289,143 @@
    "summary": "Admission and result metadata for selected effect-returning outcome handling.",
    "traits": []
   },
+  "functions.Tupled": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Arg"
+    },
+    {
+     "description": "",
+     "name": "Out"
+    },
+    {
+     "description": "",
+     "name": "Error"
+    }
+   ],
+   "description": "`tupled(function)((first, second))` calls the binary function with the two\nowned elements. Nothing runs during construction. Captures, input elements\nand raised errors are transferred without copying; result origins remain\nthose of the underlying callback.\n\nShared, mutable and consuming calls retain the wrapped receiver's modes.\nNamed shared wrappers can be reused by borrow in supported unary callback\noperations. An explicit move transfers the wrapper and its stored callback.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "__call__": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The two arguments, consumed.",
+        "name": "pair",
+        "type": "Self.Arg",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The callback's exact error type.",
+      "returns": {
+       "doc": "The callback's result, unchanged.",
+       "type": "Self.Out"
+      },
+      "signature": "def __call__(self, var pair: Self.Arg) raises Self.Error -> Self.Out",
+      "summary": "Call through a shared receiver, as `call` does."
+     }
+    ],
+    "call": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The two arguments, consumed without copying either element.",
+        "name": "pair",
+        "type": "Self.Arg",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The callback's exact error type.",
+      "returns": {
+       "doc": "The callback's result, unchanged.",
+       "type": "Self.Out"
+      },
+      "signature": "def call(self, var pair: Self.Arg) raises Self.Error -> Self.Out",
+      "summary": "Call the wrapped binary callback through a shared receiver."
+     }
+    ],
+    "call_mut": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The two arguments, consumed.",
+        "name": "pair",
+        "type": "Self.Arg",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The callback's exact error type.",
+      "returns": {
+       "doc": "The callback's result, unchanged.",
+       "type": "Self.Out"
+      },
+      "signature": "def call_mut(mut self, var pair: Self.Arg) raises Self.Error -> Self.Out",
+      "summary": "Call with exclusive access, retaining callback state between calls."
+     }
+    ],
+    "call_once": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The two arguments, consumed.",
+        "name": "pair",
+        "type": "Self.Arg",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The callback's exact error type.",
+      "returns": {
+       "doc": "The callback's result, unchanged.",
+       "type": "Self.Out"
+      },
+      "signature": "def call_once(deinit self, var pair: Self.Arg) raises Self.Error -> Self.Out",
+      "summary": "Call once, consuming both the wrapper and its pair argument."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The wrapped binary callable's type.",
+     "inferred": false,
+     "name": "F",
+     "type": "BinaryContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "functions/tupled",
+   "signature": "struct Tupled[F: BinaryContract & Movable & Deinitable](Movable, UnaryContract, Unary where conforms_to(F, Binary), _UnaryViewable where conforms_to(F, Binary), MutableUnary where RepeatableBinary[F], OnceUnary where _OnceBinaryAvailable[F], Copyable where conforms_to(F, Copyable),)",
+   "summary": "A binary callback consuming one pair, returned by `tupled`.",
+   "traits": [
+    "Copyable",
+    "MutableUnary",
+    "OnceUnary",
+    "Unary",
+    "UnaryContract",
+    "_UnaryViewable"
+   ]
+  },
   "functions.as_binary": {
    "description": "",
    "kind": "function",
@@ -241455,6 +241592,1156 @@
     }
    ],
    "provider": "functions/context",
+   "summary": ""
+  },
+  "functions.tupled": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The callback, moved into the wrapper.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "Construction moves the callable without invoking it. The result keeps its\nreceiver capabilities, argument, output and error types. Use it to compose\na binary callback after a tuple-producing stage or to map a sequence of pairs.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The binary library callable's type.",
+       "inferred": false,
+       "name": "F",
+       "type": "BinaryContract & Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable taking `Tuple[F.First, F.Second]`.",
+      "type": "Tupled[F]"
+     },
+     "signature": "def tupled[F: BinaryContract & Movable & Deinitable](var function: F) -> Tupled[F] where _OnceBinaryAvailable[F]",
+     "summary": "Adapt a binary callable to consume a single native pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The temporary pointer admission borrow's origin.",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, R, Never, type_of(function), False]]"
+     },
+     "signature": "def tupled[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A, var B) thin -> R) -> Tupled[NativeBinary[A, B, R, Never, type_of(function), False]]",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, R, Never, type_of(function), False]]"
+     },
+     "signature": "def tupled[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, //](function: def(var A, var B) thin -> R) -> Tupled[NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable)",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, R, Never, type_of(function), False]]"
+     },
+     "signature": "def tupled[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, //](function: def(var A, var B) thin -> R) -> Tupled[NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, R, Never, type_of(function), False]]"
+     },
+     "signature": "def tupled[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](function: def(var A, var B) thin -> R) -> Tupled[NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable)",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, R, Never, type_of(function), False]]"
+     },
+     "signature": "def tupled[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //](function: def(var A, var B) thin -> R) -> Tupled[NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, R, Never, type_of(function), False]]"
+     },
+     "signature": "def tupled[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, //](function: def(var A, var B) thin -> R) -> Tupled[NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(B, RegisterPassable)",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, R, Never, type_of(function), False]]"
+     },
+     "signature": "def tupled[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, //](function: def(var A, var B) thin -> R) -> Tupled[NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable)",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, R, Never, type_of(function), False]]"
+     },
+     "signature": "def tupled[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](function: def(var A, var B) thin -> R) -> Tupled[NativeBinary[A, B, R, Never, type_of(function), False]]",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) thin",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The temporary pointer admission borrow's origin.",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, type_of(None), Never, type_of(function), False]]"
+     },
+     "signature": "def tupled[A: Movable & Deinitable, B: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A, var B) thin) -> Tupled[NativeBinary[A, B, type_of(None), Never, type_of(function), False]]",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) thin",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, type_of(None), Never, type_of(function), False]]"
+     },
+     "signature": "def tupled[A: Movable & Deinitable, B: RegisterPassable & Deinitable, //](function: def(var A, var B) thin) -> Tupled[NativeBinary[A, B, type_of(None), Never, type_of(function), False]] where not conforms_to(A, RegisterPassable)",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) thin",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, type_of(None), Never, type_of(function), False]]"
+     },
+     "signature": "def tupled[A: RegisterPassable & Deinitable, B: Movable & Deinitable, //](function: def(var A, var B) thin) -> Tupled[NativeBinary[A, B, type_of(None), Never, type_of(function), False]] where not conforms_to(B, RegisterPassable)",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) thin",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, type_of(None), Never, type_of(function), False]]"
+     },
+     "signature": "def tupled[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, //](function: def(var A, var B) thin) -> Tupled[NativeBinary[A, B, type_of(None), Never, type_of(function), False]]",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The temporary pointer admission borrow's origin.",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, R, E, type_of(function), True]]"
+     },
+     "signature": "def tupled[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A, var B) raises E thin -> R) -> Tupled[NativeBinary[A, B, R, E, type_of(function), True]]",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, R, E, type_of(function), True]]"
+     },
+     "signature": "def tupled[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R) -> Tupled[NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable)",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, R, E, type_of(function), True]]"
+     },
+     "signature": "def tupled[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R) -> Tupled[NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, R, E, type_of(function), True]]"
+     },
+     "signature": "def tupled[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R) -> Tupled[NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable)",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, R, E, type_of(function), True]]"
+     },
+     "signature": "def tupled[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R) -> Tupled[NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable)",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, R, E, type_of(function), True]]"
+     },
+     "signature": "def tupled[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R) -> Tupled[NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(B, RegisterPassable)",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, R, E, type_of(function), True]]"
+     },
+     "signature": "def tupled[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R) -> Tupled[NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(R, RegisterPassable)",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native result type.",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, R, E, type_of(function), True]]"
+     },
+     "signature": "def tupled[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin -> R) -> Tupled[NativeBinary[A, B, R, E, type_of(function), True]]",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The temporary pointer admission borrow's origin.",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, type_of(None), E, type_of(function), True]]"
+     },
+     "signature": "def tupled[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(var A, var B) raises E thin) -> Tupled[NativeBinary[A, B, type_of(None), E, type_of(function), True]]",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, type_of(None), E, type_of(function), True]]"
+     },
+     "signature": "def tupled[A: Movable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin) -> Tupled[NativeBinary[A, B, type_of(None), E, type_of(function), True]] where not conforms_to(A, RegisterPassable)",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, type_of(None), E, type_of(function), True]]"
+     },
+     "signature": "def tupled[A: RegisterPassable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin) -> Tupled[NativeBinary[A, B, type_of(None), E, type_of(function), True]] where not conforms_to(B, RegisterPassable)",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The binary native function or stored pointer.",
+       "name": "function",
+       "type": "def(var A, var B) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "The pointer is stored without invoking it. Native signature admission\ndelegates to the same binary library-callable wrapper.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The first owned argument's type.",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The second owned argument's type.",
+       "inferred": true,
+       "name": "B",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The native error type.",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "A `Tupled` callable consuming the pair's two elements.",
+      "type": "Tupled[NativeBinary[A, B, type_of(None), E, type_of(function), True]]"
+     },
+     "signature": "def tupled[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, //](function: def(var A, var B) raises E thin) -> Tupled[NativeBinary[A, B, type_of(None), E, type_of(function), True]]",
+     "summary": "Adapt a plain binary function or stored thin pointer to one owned pair."
+    }
+   ],
+   "provider": "functions/tupled",
    "summary": ""
   },
   "iteration.AlignIterator": {
@@ -289808,7 +291095,7 @@
    "summary": "Reader, State and Writer computations and the OptionalT and ResultT layers, over any base Monad."
   },
   "functions": {
-   "description": "Use `pipe(value, f, g)` to apply stages now, `flow(f, g)` or `compose(g, f)` to\nbuild a reusable composition, and `piped(value).then(f).get()` to chain any\nnumber of stages one call at a time. `flip` swaps two arguments and `partial`\nbinds leading arguments.\n\nTwo-stage `flow` and `compose` can mix a plain function or stored thin pointer\nwith a library callable directly, in either position. Compositions own their\nstages and preserve their shared, mutable or consuming receiver capabilities.\nInferred two-stage `pipe` also accepts a native/library pair, borrowing its\nshared library stage for immediate execution.\n\nExtend saved compositions with `.then(next)` or adapt a unary chain's inputs\nwith `.compose(before)`. `as_binary(function)` stores a plain binary function\nor thin pointer as a reusable library callback when an adapter is needed.\n\n`Piped.map(transform)` preserves supported native containers, mapping their\npayloads immediately through `fp.algebra`. Use `.map[Family](transform)` for an\nexplicit Functor instance, including third-party containers. `filter(predicate)`\nalso runs immediately, preserving containers that can represent rejection; `fold_left(step, initial)` consumes an iterable\nimmediately and keeps the accumulator in the chain. `get()` extracts the stored\nvalue. Use `then(function)` to transform the whole value and `iterated` for lazy\nelement mapping and filtering.\n\nA stage is a plain function, a closure promoted with `as_unary`, or a library\nvalue that implements `Unary`, such as a `Partial` or a `Composition`. Each\nstage's input must equal the previous stage's result. Values move from stage to\nstage without copies, stages are borrowed, and a raised error stops the chain\nwith its own type; a returned `Result` is ordinary data.\n\n`kleisli[Family](f).then(g)` composes effectful functions through the family's\nmonadic bind. Its `map` transforms successful payloads; ordinary container\n`map(chain)` borrows the chain automatically, including in lazy iterators.",
+   "description": "Use `pipe(value, f, g)` to apply stages now, `flow(f, g)` or `compose(g, f)` to\nbuild a reusable composition, and `piped(value).then(f).get()` to chain any\nnumber of stages one call at a time. `flip` swaps two arguments and `partial`\nbinds leading arguments. `tupled(function)` adapts a binary callback to one\nnative pair without copying either element.\n\nTwo-stage `flow` and `compose` can mix a plain function or stored thin pointer\nwith a library callable directly, in either position. Compositions own their\nstages and preserve their shared, mutable or consuming receiver capabilities.\nInferred two-stage `pipe` also accepts a native/library pair, borrowing its\nshared library stage for immediate execution.\n\nExtend saved compositions with `.then(next)` or adapt a unary chain's inputs\nwith `.compose(before)`. `as_binary(function)` stores a plain binary function\nor thin pointer as a reusable library callback when an adapter is needed.\n\n`Piped.map(transform)` preserves supported native containers, mapping their\npayloads immediately through `fp.algebra`. Use `.map[Family](transform)` for an\nexplicit Functor instance, including third-party containers. `filter(predicate)`\nalso runs immediately, preserving containers that can represent rejection; `fold_left(step, initial)` consumes an iterable\nimmediately and keeps the accumulator in the chain. `get()` extracts the stored\nvalue. Use `then(function)` to transform the whole value and `iterated` for lazy\nelement mapping and filtering.\n\nA stage is a plain function, a closure promoted with `as_unary`, or a library\nvalue that implements `Unary`, such as a `Partial` or a `Composition`. Each\nstage's input must equal the previous stage's result. Values move from stage to\nstage without copies, stages are borrowed, and a raised error stops the chain\nwith its own type; a returned `Result` is ordinary data.\n\n`kleisli[Family](f).then(g)` composes effectful functions through the family's\nmonadic bind. Its `map` transforms successful payloads; ordinary container\n`map(chain)` borrows the chain automatically, including in lazy iterators.",
    "summary": "Pipelines, compositions, argument flipping and partial application."
   },
   "iteration": {

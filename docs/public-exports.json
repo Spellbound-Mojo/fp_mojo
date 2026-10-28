@@ -13345,6 +13345,33 @@
       },
       "provider": "functions/flipped"
     },
+    "functions.Tupled": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct Tupled[F: BinaryContract & Movable & Deinitable]("
+      ],
+      "methods": {
+        "call": [
+          {
+            "signature": "def call(self, var pair: Self.Arg) raises Self.Error -> Self.Out:",
+            "sha256": "6f449b2b36b7f7eba3675e4e768672a713de47dedab30f7b2804bc09e5f257a5"
+          }
+        ],
+        "call_mut": [
+          {
+            "signature": "def call_mut(mut self, var pair: Self.Arg) raises Self.Error -> Self.Out:",
+            "sha256": "3c20d51e70c1875bc966ca26769597bf13d5ea37738eb0fbbae3a53a50fa1df5"
+          }
+        ],
+        "call_once": [
+          {
+            "signature": "def call_once(deinit self, var pair: Self.Arg) raises Self.Error -> Self.Out:",
+            "sha256": "5d0bfb6e8a949fbdc32a7adde13e9eebc93f88e1eba9aa448dd07a31d9090085"
+          }
+        ]
+      },
+      "provider": "functions/tupled"
+    },
     "functions.Partial": {
       "kind": "type or alias",
       "declarations": [
@@ -18311,6 +18338,112 @@
         }
       ],
       "provider": "functions/flipped"
+    },
+    "functions.tupled": {
+      "kind": "function",
+      "overloads": [
+        {
+          "signature": "def tupled[F: BinaryContract & Movable & Deinitable](var function: F) -> Tupled[F] where _OnceBinaryAvailable[F]:",
+          "sha256": "5165738f68229ce9d075c10c6725ecd2e243890a18c6132878bd7d4070a46c3d"
+        },
+        {
+          "signature": "def tupled[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A, var B) thin -> R ) -> Tupled[NativeBinary[A, B, R, Never, type_of(function), False]]:",
+          "sha256": "7a4e54c2c775daac4ce6d3bc56d22fdf5ab0280aa5ce4a83e832e3ea5462f2f1"
+        },
+        {
+          "signature": "def tupled[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, //]( function: def(var A, var B) thin -> R ) -> Tupled[NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable):",
+          "sha256": "a115fb5236838dde97a229e6d956104317cbb93b7b4f7c94a4986da2ef47c316"
+        },
+        {
+          "signature": "def tupled[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, //]( function: def(var A, var B) thin -> R ) -> Tupled[NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable):",
+          "sha256": "b6c9d656006fa78e8dc40da0e6193b5878715991c9f6ff20b56b9ed97eed8d22"
+        },
+        {
+          "signature": "def tupled[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //]( function: def(var A, var B) thin -> R ) -> Tupled[NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable):",
+          "sha256": "8448c4033f7beeffd27232f42def5a58de28474943ef010de39ffc35f55b6d0e"
+        },
+        {
+          "signature": "def tupled[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //]( function: def(var A, var B) thin -> R ) -> Tupled[NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):",
+          "sha256": "df6be7bcf4a3db51fc07d8dd68b60586693952caf6d2430317c1052209b6d16f"
+        },
+        {
+          "signature": "def tupled[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, //]( function: def(var A, var B) thin -> R ) -> Tupled[NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(B, RegisterPassable):",
+          "sha256": "ba0b6303ee168f2e51ed4ecd464014ed23001b8f849acd1171b980aa73d588d5"
+        },
+        {
+          "signature": "def tupled[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, //]( function: def(var A, var B) thin -> R ) -> Tupled[NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable):",
+          "sha256": "f848d8ae7b09790619214a6832721b27d7a15a9ca2d902722233f8b190c24b04"
+        },
+        {
+          "signature": "def tupled[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //]( function: def(var A, var B) thin -> R ) -> Tupled[NativeBinary[A, B, R, Never, type_of(function), False]]:",
+          "sha256": "b2c2b62c4f8cc151e391025606a2b133b128f09529797a508489b32c2655cf10"
+        },
+        {
+          "signature": "def tupled[A: Movable & Deinitable, B: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A, var B) thin ) -> Tupled[NativeBinary[A, B, type_of(None), Never, type_of(function), False]]:",
+          "sha256": "1c898e07819b6bc6fe63ed2555970c5ec2029f4e2ea9ff3994e78d3758adbbcc"
+        },
+        {
+          "signature": "def tupled[A: Movable & Deinitable, B: RegisterPassable & Deinitable, //]( function: def(var A, var B) thin ) -> Tupled[NativeBinary[A, B, type_of(None), Never, type_of(function), False]] where not conforms_to(A, RegisterPassable):",
+          "sha256": "43804ecfd4773ba28129f66674625e0a068164170e12f9b29983e9780bf1d343"
+        },
+        {
+          "signature": "def tupled[A: RegisterPassable & Deinitable, B: Movable & Deinitable, //]( function: def(var A, var B) thin ) -> Tupled[NativeBinary[A, B, type_of(None), Never, type_of(function), False]] where not conforms_to(B, RegisterPassable):",
+          "sha256": "9071ede960f250666f79c99010ccc5404f67e5fe67f3d283295cb3af2cb44efa"
+        },
+        {
+          "signature": "def tupled[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, //]( function: def(var A, var B) thin ) -> Tupled[NativeBinary[A, B, type_of(None), Never, type_of(function), False]]:",
+          "sha256": "64fc4a5961882d6f2be7a7635f9f05680ff40417d8ef240c152b095da4ee113b"
+        },
+        {
+          "signature": "def tupled[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A, var B) raises E thin -> R ) -> Tupled[NativeBinary[A, B, R, E, type_of(function), True]]:",
+          "sha256": "3d0ed2ff81c1d0dd79d9a47ba46efdc0cd00b6af6f2299f87515b51e234ebe2d"
+        },
+        {
+          "signature": "def tupled[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R ) -> Tupled[NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable):",
+          "sha256": "3cc40e7ef99ac9506fa83bae4a35523c5d6ff7ba6c7b3924336dc379d4766170"
+        },
+        {
+          "signature": "def tupled[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R ) -> Tupled[NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable):",
+          "sha256": "14256aa6368639bdb618c7e67a01f1b89fa1a1a741560d53c196b58417b23fbe"
+        },
+        {
+          "signature": "def tupled[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R ) -> Tupled[NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable):",
+          "sha256": "bf0ae69b31fbe49378c0ee2accab987065dc428f6e435ba0158f929903a72216"
+        },
+        {
+          "signature": "def tupled[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R ) -> Tupled[NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):",
+          "sha256": "8478c7122dfd7404e5d3a206351b41293ebd31ad15a4fd3edfe8c19c433d3fe2"
+        },
+        {
+          "signature": "def tupled[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R ) -> Tupled[NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(B, RegisterPassable):",
+          "sha256": "9840b871148afe2fdc805a13e95f0abebe042620e83b564a82ad9ae5f1915ef8"
+        },
+        {
+          "signature": "def tupled[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R ) -> Tupled[NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(R, RegisterPassable):",
+          "sha256": "5e3d8307e732c37370c4097d3c5cf637f90e14185addc3b4ee26c06dc73ab702"
+        },
+        {
+          "signature": "def tupled[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin -> R ) -> Tupled[NativeBinary[A, B, R, E, type_of(function), True]]:",
+          "sha256": "7cd11758edf338edf34aae06e7884881d6825f7603cf11696b3e6d25d8b90dd7"
+        },
+        {
+          "signature": "def tupled[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //]( ref[q] function: def(var A, var B) raises E thin ) -> Tupled[NativeBinary[A, B, type_of(None), E, type_of(function), True]]:",
+          "sha256": "2ec5b8b88358a9abee5557938a611e11244a5bf26cd5d0e7b98c47e5e3bc94ae"
+        },
+        {
+          "signature": "def tupled[A: Movable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin ) -> Tupled[NativeBinary[A, B, type_of(None), E, type_of(function), True]] where not conforms_to(A, RegisterPassable):",
+          "sha256": "62a8a6a17aa8509e21bef70dd14f4da0a822933869d6821a80de8d93ed0cf604"
+        },
+        {
+          "signature": "def tupled[A: RegisterPassable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin ) -> Tupled[NativeBinary[A, B, type_of(None), E, type_of(function), True]] where not conforms_to(B, RegisterPassable):",
+          "sha256": "f5ce60697a40360f84978b4e5e6ec0afe9406722f83e4471d4751951d7ae8a32"
+        },
+        {
+          "signature": "def tupled[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, E: Movable & Deinitable, //]( function: def(var A, var B) raises E thin ) -> Tupled[NativeBinary[A, B, type_of(None), E, type_of(function), True]]:",
+          "sha256": "becf53a3048b3fc4e72d69dba682817d1155353c98781ceb8e39496def750d36"
+        }
+      ],
+      "provider": "functions/tupled"
     },
     "functions.partial": {
       "kind": "function",

@@ -1,5 +1,5 @@
 """Reuse ordinary function chains across selected pipeline operations."""
-from fp.functions import pipeline, flow, compose, partial
+from fp.functions import pipeline, flow, compose, partial, tupled
 from fp.iteration import iterated
 from fp.data import Result, Ok, Err
 from std.testing import assert_equal
@@ -8,6 +8,7 @@ from std.testing import assert_equal
 def add_one(value: Int) -> Int: return value + 1
 def double(value: Int) -> Int: return value * 2
 def add(left: Int, right: Int) -> Int: return left + right
+def with_fee(subtotal: Int) -> Tuple[Int, Int]: return (subtotal, 2)
 def scale(factor: Int, value: Int) -> Int: return factor * value
 def display(value: Int) -> String: return "price=" + String(value)
 def excited(var value: String) -> String: return value + "!"
@@ -45,3 +46,5 @@ def main() raises:
     print("extended reverse:", mirrored^.then(display)(2))
     var combined = rendered^.compose(add)
     print("combined:", combined(2, 3))
+    var charged = flow(with_fee, tupled(add))
+    print("pair stage:", charged(6))

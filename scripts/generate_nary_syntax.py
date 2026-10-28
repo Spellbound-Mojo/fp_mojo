@@ -43,8 +43,8 @@ slots; every slot is consumed before the possibly raising native call.
 from std.builtin.rebind import downcast, rebind_var
 from std.memory import MaybeUninit
 from .protocols import Unary
-from .products import _take_pair, _OptionalCell
-from .native import _NativeOwnedArg, _call_native, _call_native_binary, _Unary, _RaisingUnary, _Binary, _RaisingBinary
+from .products import _call_pair_as, _OptionalCell
+from .native import _NativeOwnedArg, _call_native, _NativeBinaryRef, _Unary, _RaisingUnary, _Binary, _RaisingBinary
 ''']
     for n in range(1,MAX+1):
         names=[f'A{i}' for i in range(n)]
@@ -63,10 +63,11 @@ struct _NativeNary{n}[{params}, R: {MD}, X: {MD}, F: {MD}, raising: Bool, o: Imm
     var function: Pointer[Self.F, Self.o]
     def call(self, var arg: Self.Arg) raises Self.X -> Self.R:
 ''')
-        out.extend(f'        var slot{i} = MaybeUninit[Self.A{i}]()\n' for i in range(n))
+        own=', '.join('Self.'+a for a in names)
         if n == 2:
-            out.append('        _take_pair(arg^, slot0, slot1)\n')
+            out.append('        return _call_pair_as[Self.X](_NativeBinaryRef[Self.A0, Self.A1, Self.R, Self.X, Self.F, Self.raising, Self.o](self.function), arg^)\n')
         else:
+            out.extend(f'        var slot{i} = MaybeUninit[Self.A{i}]()\n' for i in range(n))
             captures=', '.join(f'ref slot{i}' for i in range(n))
             out.append(f'        def store[index: Int](var value: Self.Arg.Ts[index]) {{{captures}}}:\n')
             for i in range(n):
@@ -76,22 +77,21 @@ struct _NativeNary{n}[{params}, R: {MD}, X: {MD}, F: {MD}, raising: Bool, o: Imm
                     branch = f'comptime if index == {i}' if i == 0 else 'else' if i == n-1 else f'elif index == {i}'
                     out.append(f'            {branch}:\n                slot{i}.unsafe_ptr().unsafe_write(rebind_var[Self.A{i}](value^))\n')
             out.append('        arg^.consume_elements(store)\n')
-        out.extend(f'        var a{i} = slot{i}^.unsafe_assume_init()\n' for i in range(n))
-        own=', '.join('Self.'+a for a in names)
-        invocation = native_invocation(
-            "o" * n, ["Self." + name for name in names],
-            [f"a{i}" for i in range(n)], result="Self.R", error="Self.X",
-            function_type="Self.F", function="self.function[]", raising="Self.raising",
-        )
-        if invocation is not None:
-            out.append(f'        return {invocation}\n')
-        else:
-            out.append(native_dispatch(
+            out.extend(f'        var a{i} = slot{i}^.unsafe_assume_init()\n' for i in range(n))
+            invocation = native_invocation(
                 "o" * n, ["Self." + name for name in names],
                 [f"a{i}" for i in range(n)], result="Self.R", error="Self.X",
-                function_type="Self.F", function="self.function[]",
-                raising="Self.raising", indent="        ", known_owned=True,
-            ))
+                function_type="Self.F", function="self.function[]", raising="Self.raising",
+            )
+            if invocation is not None:
+                out.append(f'        return {invocation}\n')
+            else:
+                out.append(native_dispatch(
+                    "o" * n, ["Self." + name for name in names],
+                    [f"a{i}" for i in range(n)], result="Self.R", error="Self.X",
+                    function_type="Self.F", function="self.function[]",
+                    raising="Self.raising", indent="        ", known_owned=True,
+                ))
         out.append(f'''
 struct _OwnedNativeNary{n}[{params}, R: {MD}, X: {MD}, F: {MD}, raising: Bool](Unary, Copyable where conforms_to(F, Copyable)):
     # Deferred families retain the pointer value, never a borrow of its local

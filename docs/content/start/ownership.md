@@ -87,6 +87,7 @@ partial application, composition or a reusable owner for captured state.
 | Call an existing function or capture local values | Native function or closure | The operation's signature determines whether it borrows or owns the callback. Captured references retain their origins. |
 | Bind leading positional arguments | `partial(function, prefix...)` | Copies the bound arguments when built and on every invocation; the remaining arguments are borrowed. Use a closure for keyword binding or owned/mutable remaining arguments. |
 | Compose ordinary transformations | `flow(first, second)` or `compose(second, first)` | Passes each whole result to the next stage; `flow` reads left to right. |
+| Apply a binary callback to a pair | `tupled(function)` | Owns the callback, consumes both pair elements without copies, and retains shared, mutable or consuming receiver requirements. |
 | Compose functions returning an effect | `kleisli[Family](first).then(second)` | Uses that family's bind: for example, Result stops at Err and Optional stops at absence. |
 | Store a native unary callback as a library value | `as_unary(function)` or `as_unary(closure^)` | Owns the callback without changing its argument, result or error types. Shared callback entry points can borrow the adapter later. |
 | Store a plain binary function as a library value | `as_binary(function)` or `as_binary(pointer)` | Copies a thin pointer into an adapter with two owned arguments. Supported binary iterator operations borrow a named adapter. |

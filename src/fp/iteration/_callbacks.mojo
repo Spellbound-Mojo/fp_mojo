@@ -204,7 +204,8 @@ def _predicate_callable[T: Movable & Deinitable, C: BorrowCallable, E: Movable &
 from fp.callables.native import _Binary
 from fp.callables.protocols import BinaryContract
 from fp.callables.invoke import RepeatableBinary
-from fp.callables.products import _take_pair
+from fp.callables.products import _take_pair, _call_pair_as
+from fp.callables._receiver import _MutableBinaryRef
 from std.memory import MaybeUninit
 
 
@@ -240,26 +241,30 @@ def _apply_lazy_pair[A: Movable & Deinitable, B: Movable & Deinitable,
                      R: Movable & Deinitable, F: Movable & Deinitable, indexed: Bool](
     mut function: F, var arg: Tuple[A, B]
 ) -> R:
-    var left = MaybeUninit[A]()
-    var right = MaybeUninit[B]()
-    _take_pair(arg^, left, right)
-    var first = left^.unsafe_assume_init()
-    var second = right^.unsafe_assume_init()
     comptime if conforms_to(F, BinaryContract):
         comptime C = downcast[F, BinaryContract & Movable & Deinitable]
         comptime assert RepeatableBinary[C] and C.Error == Never and C.First == A and C.Second == B and C.Out == R
-        return rebind_var[R](_binary_repeated_as[Never](rebind[C](function), rebind_var[C.First](first^), rebind_var[C.Second](second^)))
-    elif F == def(var A, var B) thin -> R:
-        return rebind[def(var A, var B) thin -> R](function)(first^, second^)
-    elif indexed:
-        # Literal-Int and fully generic binary signatures have distinct native
-        # witness tables on Mojo 1.1. Only their invocation boundary differs.
-        comptime assert A == Int
-        return _apply_lazy_indexed[B, R, F](function, rebind_var[Int](first^), second^)
+        ref callback = rebind[C](function)
+        return rebind_var[R](_call_pair_as[Never](
+            _MutableBinaryRef[C, origin_of(callback)](Pointer(to=callback)),
+            rebind_var[Tuple[C.First, C.Second]](arg^)))
     else:
-        comptime Fn = downcast[F, _Binary[A, B, R]]
-        comptime assert conforms_to(Fn, _Binary[A, B, R])
-        return _call_lazy_binary[A, B, R, Fn](rebind[Fn](function), first^, second^)
+        var left = MaybeUninit[A]()
+        var right = MaybeUninit[B]()
+        _take_pair(arg^, left, right)
+        var first = left^.unsafe_assume_init()
+        var second = right^.unsafe_assume_init()
+        comptime if F == def(var A, var B) thin -> R:
+            return rebind[def(var A, var B) thin -> R](function)(first^, second^)
+        elif indexed:
+            # Literal-Int and fully generic binary signatures have distinct native
+            # witness tables on Mojo 1.1. Only their invocation boundary differs.
+            comptime assert A == Int
+            return _apply_lazy_indexed[B, R, F](function, rebind_var[Int](first^), second^)
+        else:
+            comptime Fn = downcast[F, _Binary[A, B, R]]
+            comptime assert conforms_to(Fn, _Binary[A, B, R])
+            return _call_lazy_binary[A, B, R, Fn](rebind[Fn](function), first^, second^)
 
 
 comptime _LazyScanStep[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable] = def(var A, var T) -> Tuple[A,Y]

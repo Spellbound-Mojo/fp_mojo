@@ -688,6 +688,21 @@ first stage's exact result. `flow(add_one, partial(scale, 3))` and
 `compose(partial(scale, 3), add_one)` both produce `9` for input `2`.
 The binary `combine` in the example yields snapshots `[0, 2, 8, 22]`.
 
+Use `tupled(function)` when a binary callback needs to consume one pair.
+For example, `flow(with_fee, tupled(add))` passes the subtotal and fee to `add`,
+and `pipeline[Tuple[Int, Int]]([(2, 3)]).map(tupled(add))` produces a List
+containing `5`. Plain functions, stored thin pointers and library binary
+callables work directly. Capturing binary closures first use
+`BinarySignature[A, B, R, E].capture(closure^)` from `fp.callables`.
+
+The wrapper owns its callback and consumes exactly `Tuple[First, Second]`,
+without copying captures or pair elements. Shared, mutable and consuming calls
+retain the underlying receiver requirements and exact native error type.
+Shared wrappers can be reused by name in supported unary operations; moving
+one transfers ownership. A mutable-only wrapper uses `call_mut`, and a
+consuming wrapper uses `wrapper^.call_once(pair)` or a compatible operation.
+Composition still passes tuples whole unless this adapter is explicit.
+
 Use `.then(next)` to grow an existing composition one stage at a time. A plain
 function, stored thin pointer or library stage is accepted directly. Move a
 named chain with `chain^.then(next)`; the result owns its stages and construction
